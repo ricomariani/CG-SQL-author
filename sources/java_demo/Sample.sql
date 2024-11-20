@@ -210,8 +210,8 @@ begin
 end;
 
 /* this is a demo procedure, it's rather silly... */
-@attribute(cql:vault_sensitive)
-@attribute(cql:custom_type_for_encoded_column)
+[[vault_sensitive]]
+[[custom_type_for_encoded_column]]
 create proc JavaDemo()
 begin
   /* add the table we will be using */

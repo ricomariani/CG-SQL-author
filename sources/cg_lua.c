@@ -2865,7 +2865,7 @@ static void cg_lua_fragment_elseif_list(ast_node *ast, ast_node *elsenode, charb
 // This handles the expression fragment case, this is rewritten so that
 // the arguments of the expression fragment become columns of one row of table
 // e.g.
-// @attribute(cql:shared_fragment)
+// [[shared_fragment]]
 // create proc ex_frag(x integer)
 // begin
 //    select x + 2 * x as result;

@@ -58,7 +58,7 @@ create table `use g1`(
   name2 text
 ) @recreate(gr1);
 
-@attribute(cql:deterministic)
+[[deterministic]]
 declare select function my_func(x text) text;
 
 create index gr1_index on g1(name);
@@ -261,13 +261,13 @@ create table create_second
 ) @create(7);
 
 
-@attribute(cql:blob_storage)
+[[blob_storage]]
 create table blob_storage_at_create_table(
   x integer,
   y text
 ) @create(5);
 
-@attribute(cql:blob_storage)
+[[blob_storage]]
 create table blob_storage_baseline_table(
   x integer,
   y text
@@ -285,25 +285,25 @@ begin
   select 1;
 end;
 
-@attribute(cql:backing_table)
+[[backing_table]]
 create table backing(
  k blob primary key,
  v blob not null
 );
 
-@attribute(cql:backed_by=backing)
+[[backed_by=backing]]
 create table backed(
   x integer primary key,
   y integer
 );
 
-@attribute(cql:backing_table)
+[[backing_table]]
 create table recreate_backing(
  k blob primary key,
  v blob not null
 ) @recreate(foo);
 
-@attribute(cql:backed_by=recreate_backing)
+[[backed_by=recreate_backing]]
 create table recreate_backed(
   x integer primary key,
   y integer

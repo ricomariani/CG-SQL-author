@@ -160,7 +160,7 @@ This usually means a column is missing in the REFERENCES part of the declaration
 
 When using the `cql_cursor_to_blob` function or its equivalent shorthand `C:to_blob` the cursor
 must be declared like so `cursor C like table_name` where `table_name` is the name of
-a table marked for blob storage  (`[[blob storage]]`, or `@attribute(cql:blob_storage`).  If this is
+a table marked for blob storage  (`[[blob storage]]`).  If this is
 not the case then the type of the resulting blob cannot be inferred.  If you do not want/need
 the type to be inferred you can use the form `cql_cursor_to_blob(a_cursor, a_blob)` or equivalently
 `a_cursor:to_blob(a_blob)` in which case no inferred type is required.
@@ -1771,7 +1771,7 @@ out C;
 
 -----
 
-### CQL0224: a CALL statement inside SQL may call only a shared fragment i.e. @attribute(cql:shared_fragment)
+### CQL0224: a CALL statement inside SQL may call only a shared fragment i.e. [[shared_fragment]]
 
 Inside of a WITH clause you can create a CTE by calling a shared fragment like so:
 
@@ -1790,7 +1790,7 @@ or you can use a nested select expression like
 However `shared_proc` must define a shareable fragment, like so:
 
 ```
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 create proc shared_proc(lim_ integer)
 begin
    select * from somewhere limit lim_;
@@ -1920,9 +1920,9 @@ The named procedure has the `autodrop` annotation (to automatically drop a tempo
 
 ### CQL0239: 'annotation' column does not exist in result set 'column_name'
 
-The `@attribute(cql:identity=(col1, col2, ...))` form has been used to list the identity columns of a stored procedures result set.  These columns must exist in the result set and they must be unique.  The indicated column name is not part of the result of the procedure that is being annotated.
+The `[[identity=(col1, col2, ...)]]` form has been used to list the identity columns of a stored procedures result set.  These columns must exist in the result set and they must be unique.  The indicated column name is not part of the result of the procedure that is being annotated.
 
-The `@attribute(cql:vault_sensitive=(col1, col2, ...)` form has been used to list the columns of a stored procedures
+The `[[vault_sensitive=(col1, col2, ...]]` form has been used to list the columns of a stored procedures
 result set. These columns must exist in the result set. The indicated column name will be encoded if they are sensitive
 and the cursor that produced the result_set is a DML.
 
@@ -1930,7 +1930,7 @@ and the cursor that produced the result_set is a DML.
 
 ### CQL0240: identity annotation can only go on a procedure that returns a result set 'procedure_name'
 
-The `@attribute(cql:identity=(col1, col2,...))` form has been used to list the identity columns of a stored procedures result set.  These columns must exist in the result set and they must be unique.  In this case, the named procedure doesn't even return a result set.  Probably there is a copy/pasta going on.  The identity attribute can likely be removed.
+The `[[identity=(col1, col2,...)]]` form has been used to list the identity columns of a stored procedures result set.  These columns must exist in the result set and they must be unique.  In this case, the named procedure doesn't even return a result set.  Probably there is a copy/pasta going on.  The identity attribute can likely be removed.
 
 -----
 
@@ -2645,7 +2645,7 @@ to be corrected.
 
 The attribute `attribute_name` doesn't take a value.
 
-When marking a statement with `@attribute(cql:<attribute_name>)` there is no need
+When marking a statement with `[[<attribute_name>]]` there is no need
 for an attribute value.
 
 -----
@@ -2654,7 +2654,7 @@ for an attribute value.
 
 The `attribute_name` attribute can only be assigned to specific statements.
 
-The marking `@attribute(cql:<attribute_name>)` only makes sense on specific statement. It's likely
+The marking `[[<attribute_name>]]` only makes sense on specific statement. It's likely
 been put somewhere strange, If it isn't obviously on the wrong thing, look into
 possibly how the source is after macro expansion.
 
@@ -2664,7 +2664,7 @@ possibly how the source is after macro expansion.
 
 The `ok_table_scan` can only be placed on a create procedure statement.
 
-The marking `@attribute(cql:ok_table_scan=...)` indicates that the procedure may scan
+The marking `[[ok_table_scan=...]]` indicates that the procedure may scan
 the indicated tables. This marking doesn't make sense on other kinds of statements.
 
 -----
@@ -3250,7 +3250,7 @@ The attribute itself does nothing other than hopefully cause you to read this do
 `CHECK` expressions and partial indexes (`CREATE INDEX` with a `WHERE` clause) require that the expressions
 be deterministic.  User defined functions may or may not be deterministic.
 
-Use @attribute(cql:deterministic) on a UDF declaration (declare select function...) to mark it deterministic and allow its use in an index.
+Use [[deterministic) on a UDF declaration (declare select function...]] to mark it deterministic and allow its use in an index.
 
 ----
 
@@ -3349,14 +3349,14 @@ The encode context column will be used to encode sensitive fields, it can't be e
 ### CQL0401: encode context column must be specified if strict encode context column mode is enabled
 
 encode context column must be specified in vault_sensitive attribute with format:
-@attribute(cql:vault_sensitive=(encode_context_col, (col1, col2, ...))
+[[vault_sensitive=(encode_context_col, (col1, col2, ...)]]
 
 ----
 
 ### CQL0402: encode context column in vault_sensitive attribute must match the specified type in strict mode
 
 encode context column must match the specified type in vault_sensitive attribute with format:
-@attribute(cql:vault_sensitive=(encode_context_col, (col1, col2, ...))
+[[vault_sensitive=(encode_context_col, (col1, col2, ...)]]
 
 ----
 
@@ -3587,12 +3587,12 @@ CALL some_proc(some_other_proc(t), t);
 
 ----
 
-### CQL0427: LIKE CTE form may only be used inside a shared fragment at the top level i.e. @attribute(cql:shared_fragment) 'procedure_name'
+### CQL0427: LIKE CTE form may only be used inside a shared fragment at the top level i.e. [[shared_fragment]] 'procedure_name'
 
 When creating a shared fragment you can specify "table parameters" by defining their shape like so:
 
 ```
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 create proc shared_proc(lim_ integer)
 begin
    with source(*) LIKE any_shape
@@ -3629,7 +3629,7 @@ is being called does not have any table bindings.
 Example:
 
 ```
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 create proc my_fragment(lim integer not null)
 begin
  select * from a_location limit lim;
@@ -3650,7 +3650,7 @@ In a CALL clause to access a shared fragment the table bindings are missing a ta
 Example:
 
 ```
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 create proc my_fragment(lim integer not null)
 begin
  with source LIKE source_shape
@@ -3673,7 +3673,7 @@ that does not exist.
 Example:
 
 ```
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 create proc my_fragment(lim integer not null)
 begin
  with source LIKE source_shape
@@ -3698,7 +3698,7 @@ present in the shared fragment.
 Example:
 
 ```
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 create proc my_fragment(lim integer not null)
 begin
  with source LIKE (select 1 x, 2 y)
@@ -3724,7 +3724,7 @@ that is missing a required column.
 Example:
 
 ```
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 create proc my_fragment(lim integer not null)
 begin
  with source LIKE (select 1 x, 2 y)
@@ -3749,7 +3749,7 @@ of a SQL statement.
 Example:
 
 ```
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 create proc my_fragment(lim integer not null)
 begin
  select * from somewhere limit lim;
@@ -3853,7 +3853,7 @@ This is not valid for any fragment type.
 Example:
 
 ```
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 create proc my_fragment(lim integer not null)
 begin
   /* something has to go here */
@@ -3899,14 +3899,14 @@ It is wise to name the CTEs in shared fragments such that they are unlikely to e
 
 -----
 
-### CQL0445: @attribute(cql:try_is_proc_body) accepts no values
+### CQL0445: [[try_is_proc_body]] accepts no values
 
 The attribute `cql:try_is_proc_body` cannot be used with any values (e.g.,
 `cql:try_is_proc_body=(...)`).
 
 -----
 
-### CQL0446: @attribute(cql:try_is_proc_body) cannot be used more than once per procedure
+### CQL0446: [[try_is_proc_body]] cannot be used more than once per procedure
 
 The purpose of `cql:try_is_proc_body` is to indicate that a particular `TRY`
 block contains what should be considered to be the true body of the procedure.
@@ -4048,7 +4048,7 @@ Where the named type `view_name` is a view, not a table.
 
 -----
 
-### CQL0457: the indicated table is not marked with @attribute(cql:blob_storage) 'table_name'
+### CQL0457: the indicated table is not marked with [[blob_storage]] 'table_name'
 
 The CQL forms `SET [blob] FROM CURSOR [cursor]` and `FETCH [cursor] FROM [blob]` require
 that the blob variable be declared with a type kind and the type of the blob
@@ -4060,7 +4060,7 @@ In this case the blob was declared like:
 DECLARE blob_var blob<table_name>
 ```
 
-but the indicated table is missing the necessary attribute `@attribute(cql:blob_storage)`.
+but the indicated table is missing the necessary attribute `[[blob_storage]]`.
 
 This attribute is necessary so that CQL can enforce additional rules on the table
 to ensure that it is viable for blob storage.  For instance, the table can have no
@@ -4070,7 +4070,7 @@ primary key, no foreign keys, and may not be used in normal SQL statements.
 
 ### CQL0458: the indicated table may only be used for blob storage 'table_name'
 
-The indicated table has been marked with `@attribute(cql:blob_storage)`.  This means
+The indicated table has been marked with `[[blob_storage]]`.  This means
 that it isn't a real table -- it will have no SQL schema.  Since it's only a storage
 shape, it cannot be used in normal operations that use tables such as `DROP TABLE`,
 `CREATE INDEX`, or inside of `SELECT` statements.
@@ -4083,7 +4083,7 @@ helpful for such tables.  But otherwise, blob storage isn't really a table at al
 
 ### CQL0459: table is not suitable for use as blob storage: [reason] 'table_name'
 
-The indicated table was marked with `@attribute(cql:blob_storage)`.  This indicates
+The indicated table was marked with `[[blob_storage]]`.  This indicates
 that the table is going to be used to define the shape of blobs that could be
 stored in the database. It isn't going to be a "real" table.
 
@@ -4214,7 +4214,7 @@ The indicated name is not a valid table or view.
 When using a shared fragment like an expression, the shared fragment may contain a nested select with a WITH statement that calls other fragments, like this:
 
 ```sql
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 create proc expression_frag()
 begin
   select (
@@ -4230,7 +4230,7 @@ However the nested fragment(s) cannot take any arguments. The inner fragment mus
 
 -----
 
-### CQL0468: @attribute(cql:shared_fragment) may only be placed on a CREATE PROC statement 'proc_name'
+### CQL0468: [[shared_fragment]] may only be placed on a CREATE PROC statement 'proc_name'
 
 In order to use a shared fragment the compiler must see the full body of the fragment, this is
 because the fragment will be inlined into the SQL in which it appears.  As a consequence it
@@ -4240,7 +4240,7 @@ Example:
 
 ```sql
 -- incorrect, the compiler needs to see the whole body of the shared fragment
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 declare proc x() (x integer);
 
 create proc y()
@@ -4255,7 +4255,7 @@ Instead provide the whole body of the fragment.
 Example:
 
 ```sql
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 create proc x()
 begin
   select 1 x; -- the procedure body must be present
@@ -4374,7 +4374,7 @@ Interface with the name provided in `cql:implements` attribute does not exist
 
 ### CQL0483: table is not suitable for use as backing storage: [reason] 'table_name'
 
-The indicated table was marked with `@attribute(cql:backing_table)`.  This indicates
+The indicated table was marked with `[[backing_table]]`.  This indicates
 that the table is going to be used to as a generic storage location stored in the database.
 
 There are a number of reasons why a table might not be a valid as backing storage.
@@ -4422,7 +4422,7 @@ Make sure the redeclaration of the function is consistent with the original decl
 
 ### CQL0487: table is not suitable as backed storage: [reason] 'table_name'
 
-The indicated table was marked with `@attribute(cql:backing_table)`.  This indicates
+The indicated table was marked with `[[backing_table]]`.  This indicates
 that the table is going to be used to as a generic storage location stored in the database.
 
 There are a number of reasons why a table might not be a valid as backing storage.
@@ -4441,7 +4441,7 @@ This error indicates that one of these items is present. The specific cause is i
 ### CQL0488: the indicated table is not declared for backed storage 'table_name'
 
 When declaring a backed table, you must specify the physical table that will hold its data.  The backed table
-is marked with `@attribute(cql:backed_by=table_name)`.  The backing table is marked with `@attribute(cql:backing)`.
+is marked with `[[backed_by=table_name)`.  The backing table is marked with `@attribute(cql:backing]]`.
 The backing and backed_by attributes applies extra checks to tables to ensure they are suitable candidates.
 
 This error indicates that the named table is not marked as a backed table.
@@ -4467,7 +4467,7 @@ possible to use them manually, hence they are error checked.
 ### CQL0491: argument 1 must be a table name that is a backed table 'cql_blob_create'
 
 When using the `cql_blob_create` helper function, the first argument must be a valid backed table (i.e. one that
-was marked with `@attribute(cql:backed_by=some_backing_table))`.  The type signature of this table is used
+was marked with `[[backed_by=some_backing_table)]]`.  The type signature of this table is used
 to create a hash valid for the type of the blob that is created.  This error indicates that the first argument
 is not even an identifier, much less a table name that is backed.  There are more specific errors if the table
 is not found or the table is not backed.  Note that normally this error doesn't happen because this functions is
@@ -4515,7 +4515,7 @@ you want by creating an index on the backing storage and then using the blob acc
 a column or check colulmns in a trigger.  For instance this index is pretty normal:
 
 ```
-@attribute(cql:backing_table)
+[[backing_table]]
 create table backing (
   k blob primary key,
   v blob not null
@@ -4617,7 +4617,7 @@ This is done if the code expects to target SQLite version 3.33 or lower.
 `cql:alias_of` must have a string argument to indicate the underlying function name that the aliased function references. For example:
 
 ```sql
-@attribute(cql:alias_of=foo)
+[[alias_of=foo]]
 declare function bar() int
 ```
 

@@ -713,7 +713,7 @@ end;
 -- +   cql_finalize_stmt(C_stmt)
 -- +   cql_finalize_stmt(C2_stmt)
 -- +   return _rc_
-@attribute(cql:vault_sensitive)
+[[vault_sensitive]]
 proc easy_fetch()
 begin
   declare C cursor for select * from bar;
@@ -1862,7 +1862,7 @@ begin
 end;
 
 
-@attribute(cql:suppress_result_set)
+[[suppress_result_set]]
 proc simple_select()
 begin
   select 1 x;
@@ -2186,7 +2186,7 @@ end;
 -- TODO, identity was only interesting for partial compare on the rowset
 -- this really doesn't make much sense in the LUA world but some thinking
 -- could be needed here.
-@attribute(cql:identity=(id))
+[[identity=(id)]]
 proc simple_identity()
 begin
   select 1 as id, 2 as data;
@@ -2198,7 +2198,7 @@ end;
 -- + function complex_identity_fetch_results(_db_)
 -- +  _rc_, stmt = complex_identity(_db_)
 -- +  _rc_, result_set = cql_fetch_all_rows(stmt, "III", { "col1", "col2", "data" })
-@attribute(cql:identity=(col1, col2))
+[[identity=(col1, col2)]]
 proc complex_identity()
 begin
   select 1 as col1, 2 as col2, 3 as data;
@@ -2212,7 +2212,7 @@ end;
 -- + _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
 -- + function out_cursor_identity_fetch_results(_db_)
 -- + result_set = { _result_ }
-@attribute(cql:identity=(id))
+[[identity=(id)]]
 proc out_cursor_identity()
 begin
   declare C cursor for select 1 as id, 2 as data;
@@ -2231,7 +2231,7 @@ create table radioactive(
 -- + function radioactive_proc_fetch_results(_db_)
 -- +  _rc_, result_set = cql_fetch_all_rows(stmt, "Is", { "id", "data" })
 -- TODO vault_sensitive is not yet supported, we'll have to figure out some kind of plan for what this means
-@attribute(cql:vault_sensitive)
+[[vault_sensitive]]
 proc radioactive_proc()
 begin
   select * from radioactive;
@@ -2259,7 +2259,7 @@ create temp table table2( id integer);
 -- TEST: autodrop attribute
 -- + function autodropper(_db_)
 -- TODO -- this attribute is not yet supported but it's also really unpopular...
-@attribute(cql:autodrop=(table1, table2))
+[[autodrop=(table1, table2)]]
 proc autodropper()
 begin
    select 1 a, 2 b;
@@ -2571,7 +2571,7 @@ end;
 -- + table.insert(_rows_, cql_clone_row(x))
 -- + return _rc_, _rows_
 -- TODO whatever vault sensitive means here needs to be explored
-@attribute(cql:vault_sensitive)
+[[vault_sensitive]]
 proc out_union_dml()
 begin
   declare x cursor for select * from radioactive;
@@ -2584,7 +2584,7 @@ end;
 -- + C_row_count_ = #(C_result_set_)
 -- + C = C_result_set_[C_row_num_]
 -- TODO whatever vault sensitive means here needs to be explored
-@attribute(cql:vault_sensitive)
+[[vault_sensitive]]
 proc out_union_dml_for_call()
 begin
   declare C cursor for call out_union_dml();
@@ -2732,7 +2732,7 @@ end;
 -- TEST: no getters generated for this function
 -- lua has no getters but we can verify that there are no errors for using the form
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
-@attribute(cql:suppress_getters)
+[[suppress_getters]]
 proc lotsa_columns_no_getters()
 begin
   select * from bar;
@@ -2744,7 +2744,7 @@ end;
 -- + "SELECT id, name, rate, type, size FROM bar"
 -- + function sproc_with_copy_fetch_results(_db_)
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
-@attribute(cql:generate_copy)
+[[generate_copy]]
 proc sproc_with_copy()
 begin
   select * from bar;
@@ -2776,7 +2776,7 @@ end;
 -- +function emit_object_with_setters_fetch_results(o, x, i, l, b, d, t, bl)
 -- +  _result_ = emit_object_with_setters(o, x, i, l, b, d, t, bl)
 -- +  result_set = { _result_ }
-@attribute(cql:emit_setters)
+[[emit_setters]]
 proc emit_object_with_setters(
   o object not null,
   x object not null,
@@ -2807,7 +2807,7 @@ end;
 -- + function emit_setters_with_nullables_fetch_results(o, x, i, l, b, d, t, bl)
 -- + _result_ = emit_setters_with_nullables(o, x, i, l, b, d, t, bl)
 -- + result_set = { _result_ }
-@attribute(cql:emit_setters)
+[[emit_setters]]
 proc emit_setters_with_nullables(
   o object,
   x object,
@@ -2830,7 +2830,7 @@ end;
 -- + return _rc_, _result_stmt
 -- + function no_out_with_setters_fetch_results(_db_)
 -- + _rc_, stmt = no_out_with_setters(_db_)
-@attribute(cql:emit_setters)
+[[emit_setters]]
 proc no_out_with_setters()
 begin
   select * from bar;
@@ -2841,7 +2841,7 @@ end;
 -- + "SELECT id, name, rate, type, size FROM bar")
 -- + return _rc_, _result_stmt
 -- - function lotsa_columns_no_result_set_fetch_results(_db_)
-@attribute(cql:suppress_result_set)
+[[suppress_result_set]]
 proc lotsa_columns_no_result_set()
 begin
   select * from bar;
@@ -2894,8 +2894,8 @@ create table vault_non_sensitive(
 -- +  _rc_, stmt = vault_sensitive_with_values_proc(_db_)
 -- +  _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
 -- +  return _rc_, result_set
-@attribute(cql:vault_sensitive=(id, name))
-@attribute(cql:custom_type_for_encoded_column)
+[[vault_sensitive=(id, name)]]
+[[custom_type_for_encoded_column]]
 proc vault_sensitive_with_values_proc()
 begin
   select * from vault_mixed_sensitive;
@@ -2909,8 +2909,8 @@ end;
 -- +function vault_not_nullable_sensitive_with_values_proc_fetch_results(_db_)
 -- +  _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
 -- +  return _rc_, result_set
-@attribute(cql:vault_sensitive=(id, name))
-@attribute(cql:custom_type_for_encoded_column)
+[[vault_sensitive=(id, name)]]
+[[custom_type_for_encoded_column]]
 proc vault_not_nullable_sensitive_with_values_proc()
 begin
   select * from vault_mixed_not_nullable_sensitive;
@@ -2924,7 +2924,7 @@ end;
 -- + function vault_sensitive_mixed_proc_fetch_results(_db_)
 -- +  _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
 -- +  return _rc_, result_set
-@attribute(cql:vault_sensitive)
+[[vault_sensitive]]
 proc vault_sensitive_mixed_proc()
 begin
   select * from vault_mixed_sensitive;
@@ -2938,7 +2938,7 @@ end;
 -- + function vault_union_all_table_proc_fetch_results(_db_)
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
 -- + return _rc_, result_set
-@attribute(cql:vault_sensitive)
+[[vault_sensitive]]
 proc vault_union_all_table_proc()
 begin
   select * from vault_mixed_sensitive
@@ -2955,7 +2955,7 @@ end;
 -- + _rc_, stmt = vault_alias_column_proc(_db_)
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "s", { "alias_name" })
 -- + return _rc_, result_set
-@attribute(cql:vault_sensitive=alias_name)
+[[vault_sensitive=alias_name]]
 proc vault_alias_column_proc()
 begin
   select name as alias_name from vault_mixed_sensitive;
@@ -2969,7 +2969,7 @@ end;
 -- + _rc_, stmt = vault_alias_column_name_proc(_db_)
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "s", { "alias_name" })
 -- + return _rc_, result_set
-@attribute(cql:vault_sensitive=alias_name)
+[[vault_sensitive=alias_name]]
 proc vault_alias_column_name_proc()
 begin
   select name as alias_name from vault_mixed_sensitive;
@@ -2983,7 +2983,7 @@ end;
 -- + "SELECT name FROM vault_mixed_sensitive"
 -- + _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
 -- - fetch_results
-@attribute(cql:vault_sensitive)
+[[vault_sensitive]]
 proc vault_cursor_proc()
 begin
   declare C cursor for select name from vault_mixed_sensitive;
@@ -2996,7 +2996,7 @@ end;
 -- + "SELECT id, name, title, type FROM vault_mixed_sensitive")
 -- + function vault_sensitive_with_context_and_sensitive_columns_proc_fetch_results(_db_)
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
-@attribute(cql:vault_sensitive=(title, (id, name)))
+[[vault_sensitive=(title, (id, name))]]
 proc vault_sensitive_with_context_and_sensitive_columns_proc()
 begin
  select * from vault_mixed_sensitive;
@@ -3008,7 +3008,7 @@ end;
 -- + "SELECT id, name, title, type FROM vault_mixed_sensitive"
 -- + function vault_sensitive_with_no_context_and_sensitive_columns_proc_fetch_results(_db_)
 -- + _rc_, stmt = vault_sensitive_with_no_context_and_sensitive_columns_proc(_db_)
-@attribute(cql:vault_sensitive=((id, name)))
+[[vault_sensitive=((id, name))]]
 proc vault_sensitive_with_no_context_and_sensitive_columns_proc()
 begin
  select * from vault_mixed_sensitive;
@@ -3018,7 +3018,7 @@ end;
 -- TODO figure out what vaulting means to lua if anything
 -- + function vault_sensitive_with_context_and_no_sensitive_columns_proc_fetch_results(_db_)
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
-@attribute(cql:vault_sensitive=(title, (id, name)))
+[[vault_sensitive=(title, (id, name))]]
 proc vault_sensitive_with_context_and_no_sensitive_columns_proc()
 begin
  select * from vault_non_sensitive;
@@ -3743,7 +3743,7 @@ set t2 := (select name from bar if nothing or null then "garbonzo");
 -- TEST: verify private exports and binding
 -- private doesn't mean anything in Lua
 -- + function private_proc()
-@attribute(cql:private)
+[[private]]
 proc private_proc(out x integer)
 begin
   set x := 1;
@@ -3754,7 +3754,7 @@ end;
 -- + function private_out_union_fetch_results()
 -- + table.insert(_rows_, cql_clone_row(C))
 -- + return _rows_
-@attribute(cql:private)
+[[private]]
 proc private_out_union()
 begin
   declare C cursor like select 1 a_field;
@@ -3784,7 +3784,7 @@ end;
 -- + C.a_field = 1
 -- + table.insert(_rows_, cql_clone_row(C))
 -- + return _rows_
-@attribute(cql:suppress_getters)
+[[suppress_getters]]
 proc no_getters_out_union()
 begin
   declare C cursor like select 1 a_field;
@@ -3810,7 +3810,7 @@ end;
 -- lua never has getters so private is kind of moot
 -- + function suppress_results_out_union_fetch_results()
 -- + table.insert(_rows_, cql_clone_row(C))
-@attribute(cql:suppress_result_set)
+[[suppress_result_set]]
 proc suppress_results_out_union()
 begin
   declare C cursor like select 1 a_field;
@@ -3839,7 +3839,7 @@ end;
 -- + "SELECT 1"
 -- + return _rc_, _result_stmt, x
 -- - private_result_fetch_results
-@attribute(cql:private)
+[[private]]
 proc private_result(out x integer)
 begin
   select 1 x;
@@ -3847,8 +3847,8 @@ end;
 
 -- TEST: private proc forward ref results in static prototype
 -- this doesn't mean anything in Lua, no result set
--- + @ATTRIBUTE(cql:private)
-@attribute(cql:private)
+-- + [[private]]
+[[private]]
 declare proc private_fwd_ref(x integer not null);
 
 -- TEST: ensure out args set to null for ref types
@@ -4206,7 +4206,7 @@ end;
 
 -- TEST: Contracts should not be emitted for private procs
 -- - cql_contract_argument_notnull
-@attribute(cql:private)
+[[private]]
 proc private_proc_without_a_contract(t text not null)
 begin
 end;
@@ -4540,7 +4540,7 @@ end;
 
 -- TEST: make sure we don't emit this into the output
 -- - function shared_frag
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc shared_frag()
 begin
  select 1234 shared_something; -- hence no cql_code return type
@@ -4567,7 +4567,7 @@ end;
 
 
 -- used in the following test
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc shared_conditional(x integer not null)
 begin
   if x == 1 then
@@ -4643,7 +4643,7 @@ end;
 
 -- used in the following test, this is silly fragment
 -- but it forces complex push and pop of variable state
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc nested_shared_proc(x_ integer not null)
 begin
   if x_ <= 5 then
@@ -4784,7 +4784,7 @@ end;
 -- + "SELECT 1234 as shared_something",
 -- + ")",
 -- + ")"
-@attribute(cql:private)
+[[private]]
 proc simple_shared_frag()
 begin
   select * from (call shared_frag());
@@ -4830,7 +4830,7 @@ end;
 -- + })
 @emit_constants some_constants;
 
-@attribute(cql:blob_storage)
+[[blob_storage]]
 create table structured_storage(
   id integer not null,
   name text not null
@@ -5063,7 +5063,7 @@ end;
 -- + _rc_, _tmp_object_0 = simple_child_proc_fetch_results(_db_)
 -- + C.c = _tmp_object_0
 -- + table.insert(_rows_, cql_clone_row(C))
-@attribute(cql:emit_setters)
+[[emit_setters]]
 proc simple_container_proc()
 begin
   declare C cursor like (a integer, b integer not null, c object<simple_child_proc set>);
@@ -5098,13 +5098,13 @@ begin
   end;
 end;
 
-@attribute(cql:backing_table)
+[[backing_table]]
 create table backing(
   k blob primary key,
   v blob
 );
 
-@attribute(cql:backed_by=backing)
+[[backed_by=backing]]
 create table backed(
   pk int primary key,
   flag bool not null,
@@ -5130,7 +5130,7 @@ create table backed(
 -- = FROM backing AS T
 -- = WHERE bgetkey_type(T.k) = -5417664364642960231
 -- + ") SELECT rowid, pk, flag, id, name, age, storage FROM backed"
-@attribute(cql:private)
+[[private]]
 proc explain_equery_plan_backed(out x bool not null)
 begin
   explain query plan select * from backed;

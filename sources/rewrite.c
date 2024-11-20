@@ -2408,7 +2408,7 @@ static ast_node *rewrite_backed_expr_list(backed_expr_list_info *info, uint32_t 
 // proc statement out of thin air and then parse it, adding it to the set of shared fragments.
 // The generated procedure looks like this:
 //
-// @ATTRIBUTE(cql:shared_fragment)
+// [[shared_fragment]]
 // CREATE PROC _backed ()
 // BEGIN
 //   SELECT
@@ -2522,7 +2522,7 @@ cql_noexport void rewrite_shared_fragment_from_backed_table(ast_node *_Nonnull b
       )
     );
 
-  // create the proc wrapper and add @attribute(cql:shared_fragment)
+  // create the proc wrapper and add [[shared_fragment]]
   ast_node *stmt_and_attr =
     new_ast_stmt_and_attr(
       new_ast_misc_attrs(

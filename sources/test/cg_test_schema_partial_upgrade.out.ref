@@ -25,7 +25,7 @@ CREATE TABLE sqlite_master (
 );
 
 -- declare full schema of tables and views to be upgraded and their dependencies -- 
-@ATTRIBUTE(cql:deterministic)
+[[deterministic]]
 DECLARE SELECT FUNC my_func (x TEXT) TEXT;
 
 DECLARE SELECT FUNC filter_ (id INT) INT!;
@@ -196,7 +196,7 @@ CREATE TEMP TABLE test_cql_schema_facets_saved(
 DECLARE test_tables_dict_ OBJECT<cql_string_dictionary>;
 
 -- helper proc for creating the dictionary of table defs from sqlite_master
-@attribute(cql:private)
+[[private]]
 PROC test_get_table_defs()
 BEGIN
   DECLARE C CURSOR FOR SELECT name, sql from sqlite_master where type = 'table';
@@ -210,7 +210,7 @@ BEGIN
 END;
 
 -- helper proc for creating the schema version table
-@attribute(cql:private)
+[[private]]
 PROC test_create_cql_schema_facets_if_needed()
 BEGIN
   CREATE TABLE IF NOT EXISTS test_cql_schema_facets(
@@ -220,7 +220,7 @@ BEGIN
 END;
 
 -- helper proc for creating the rebuilt facets table
-@attribute(cql:private)
+[[private]]
 PROC test_create_cql_schema_rebuilt_tables_if_needed()
 BEGIN
   CREATE TEMP TABLE IF NOT EXISTS cql_schema_rebuilt_tables(
@@ -229,7 +229,7 @@ BEGIN
 END;
 
 -- helper proc for saving the schema version table
-@attribute(cql:private)
+[[private]]
 PROC test_save_cql_schema_facets()
 BEGIN
   DROP TABLE IF EXISTS test_cql_schema_facets_saved;
@@ -249,7 +249,7 @@ BEGIN
 END;
 
 -- helper proc for getting the schema version CRC for a version index
-@attribute(cql:private)
+[[private]]
 PROC test_cql_get_version_crc(_v INTEGER NOT NULL, out _crc LONG INTEGER NOT NULL)
 BEGIN
   SET _crc := cql_facet_find(test_facets, printf('cql_schema_v%d', _v));
@@ -296,14 +296,14 @@ BEGIN
 
 END;
 -- drop all the views we know
-@attribute(cql:private)
+[[private]]
 PROC test_cql_drop_all_views()
 BEGIN
   DROP VIEW IF EXISTS another_live_view;
 END;
 
 -- create all the views we know
-@attribute(cql:private)
+[[private]]
 PROC test_cql_create_all_views()
 BEGIN
   CREATE VIEW another_live_view AS
@@ -313,7 +313,7 @@ END;
 
 
 -- drop all the indices that are deleted or changing
-@attribute(cql:private)
+[[private]]
 PROC test_cql_drop_all_indices()
 BEGIN
   IF cql_facet_find(test_facets, 'not_shared_present_index_index_crc') != -4019575091142856767 THEN
@@ -324,7 +324,7 @@ BEGIN
 END;
 
 -- create all the indices we need
-@attribute(cql:private)
+[[private]]
 PROC test_cql_create_all_indices()
 BEGIN
   IF cql_facet_find(test_facets, 'not_shared_present_index_index_crc') != -4019575091142856767 THEN
@@ -334,14 +334,14 @@ BEGIN
 END;
 
 -- drop all the triggers we know
-@attribute(cql:private)
+[[private]]
 PROC test_cql_drop_all_triggers()
 BEGIN
   DROP TRIGGER IF EXISTS not_shared_trigger;
 END;
 
 -- create all the triggers we know
-@attribute(cql:private)
+[[private]]
 PROC test_cql_create_all_triggers()
 BEGIN
   CREATE TRIGGER not_shared_trigger
@@ -352,7 +352,7 @@ BEGIN
 END;
 
 -- recreate all the non-virtual @recreate tables that might have changed
-@attribute(cql:private)
+[[private]]
 PROC test_cql_recreate_non_virtual_tables()
 BEGIN
   IF cql_facet_find(test_facets, 'all_nonvirtual_tables_crc') == 2282658103124508505 RETURN; 
@@ -360,14 +360,14 @@ BEGIN
 END;
 
 -- recreate all the virtual @recreate tables that might have changed
-@attribute(cql:private)
+[[private]]
 PROC test_cql_recreate_virtual_tables()
 BEGIN
   IF cql_facet_find(test_facets, 'all_virtual_tables_crc') == 2282658103124508505 RETURN; 
   CALL test_cql_set_facet_version('all_virtual_tables_crc', 2282658103124508505);
 END;
 
-@attribute(cql:private)
+[[private]]
 PROC test_setup_facets()
 BEGIN
   TRY
@@ -383,7 +383,7 @@ BEGIN
 END;
 
 DECLARE FUNCTION _cql_contains_column_def(needle TEXT, haystack TEXT) BOOL NOT NULL;
-@attribute(cql:private)
+[[private]]
 PROC test_column_exists(table_ TEXT NOT NULL, col_info TEXT NOT NULL, OUT exists_ BOOL NOT NULL)
 BEGIN
   IF test_tables_dict_ IS NULL THROW;
@@ -391,7 +391,7 @@ BEGIN
   SET exists_ := _cql_contains_column_def(table_str, col_info);
 END;
 
-@attribute(cql:private)
+[[private]]
 PROC test_table_exists(table_ TEXT NOT NULL, OUT exists_ BOOL NOT NULL)
 BEGIN
   IF test_tables_dict_ IS NULL THROW;
@@ -400,7 +400,7 @@ BEGIN
 END;
 
 
-@attribute(cql:private)
+[[private]]
 PROC test_perform_upgrade_steps(include_virtual_tables BOOL NOT NULL)
 BEGIN
   LET facet := cql_compressed('cql_schema_crc_no_virtual');
@@ -498,7 +498,7 @@ BEGIN
     SELECT rebuild_facet FROM cql_schema_rebuilt_tables;
 END;
 
-@attribute(cql:private)
+[[private]]
 PROC test_perform_needed_upgrades(include_virtual_tables BOOL NOT NULL)
 BEGIN
   -- check for downgrade --
@@ -514,7 +514,7 @@ BEGIN
   END IF;
 END;
 
-@attribute(cql:private)
+[[private]]
 PROC test_helper(include_virtual_tables BOOL NOT NULL)
 BEGIN
   DECLARE schema_crc LONG INTEGER NOT NULL;

@@ -254,20 +254,36 @@ cql_noexport void gen_misc_attr_value(ast_node *ast) {
 static void gen_misc_attr(ast_node *ast) {
   Contract(is_ast_misc_attr(ast));
 
-  gen_printf("@ATTRIBUTE(");
-  if (is_ast_dot(ast->left)) {
-    gen_name(ast->left->left);
-    gen_printf(":");
+  bool_t is_cql =
+    is_ast_dot(ast->left) && 
+    is_ast_str(ast->left->left) &&
+    !StrCaseCmp("cql", ((str_ast_node *)(ast->left->left))->value);
+
+  if (is_cql) {
+    gen_printf("[[");
     gen_name(ast->left->right);
   }
   else {
-    gen_name(ast->left);
+    gen_printf("@ATTRIBUTE(");
+    if (is_ast_dot(ast->left)) {
+      gen_name(ast->left->left);
+      gen_printf(":");
+      gen_name(ast->left->right);
+    }
+    else {
+      gen_name(ast->left);
+    }
   }
   if (ast->right) {
     gen_printf("=");
     gen_misc_attr_value(ast->right);
   }
-  gen_printf(")\n");
+  if (is_cql) {
+    gen_printf("]]\n");
+  }
+  else {
+    gen_printf(")\n");
+  }
 }
 
 cql_noexport void gen_misc_attrs(ast_node *list) {

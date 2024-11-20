@@ -3702,7 +3702,7 @@ static void cql_usage() {
 //
 // * procedures, views, and tables can get a doc comment add to their misc attributes
 //   * if the node is one of those, we look for a recent saved comment and make an
-//     attribute node eqivalent to @attribute(cql:doc_comment="your comment")
+//     attribute node eqivalent to [[doc_comment="your comment"]]
 // * once this is done, if there are attributes, we wrap the statement with the attributes
 //   using new_ast_stmt_and_attr
 // * otherwise we just return the statement as no wrapper is needed

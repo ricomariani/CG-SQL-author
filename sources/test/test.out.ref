@@ -1452,13 +1452,13 @@ SELECT RAISE(ABORT, 'abort it');
 
 SELECT RAISE(ROLLBACK, 'roll it back');
 
-@ATTRIBUTE(cql:identity=(id))
+[[identity=(id)]]
 PROC simple_identity ()
 BEGIN
   SELECT 1 AS id, 2 AS data;
 END;
 
-@ATTRIBUTE(cql:identity=(col1, col2))
+[[identity=(col1, col2)]]
 PROC complex_identity ()
 BEGIN
   SELECT 1 AS col1, 2 AS col2, 3 AS data;
@@ -2224,7 +2224,7 @@ LET z := "abc\n123\r\n\x02lmnop''";
 
 @KEEP_TABLE_NAME_IN_ALIASES;
 
-@ATTRIBUTE(cql:backing_table)
+[[backing_table]]
 CREATE TABLE backing(
   k BLOB! PRIMARY KEY,
   v BLOB
@@ -2238,9 +2238,9 @@ UPDATE foo
   INNER JOIN baz ON bar.id = baz.id
   WHERE bar.name = 'x' AND foo.id = bar.id;
 
-@ATTRIBUTE(cql:private)
-@ATTRIBUTE(cql:potato=bar)
-@ATTRIBUTE(cql:garbonzo=(bar, baz))
+[[private]]
+[[potato=bar]]
+[[garbonzo=(bar, baz)]]
 @ATTRIBUTE(other:something)
 PROC foo ()
 BEGIN

@@ -1118,7 +1118,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:backing_table)
+    [[backing_table]]
     CREATE TABLE backing(
       k BLOB PRIMARY KEY,
       v BLOB!
@@ -1175,7 +1175,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:backed_by=backing)
+    [[backed_by=backing]]
     CREATE TABLE backed(
       id INT PRIMARY KEY,
       name TEXT!,
@@ -1526,11 +1526,11 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:doc_comment="/** comment for the table */")
+    [[doc_comment="/** comment for the table */"]]
     CREATE TABLE potato_table(
-      @ATTRIBUTE(cql:doc_comment="/** for the id column */")
+      [[doc_comment="/** for the id column */"]]
       potato_id INT,
-      @ATTRIBUTE(cql:doc_comment="/** for the name column */")
+      [[doc_comment="/** for the name column */"]]
       @ATTRIBUTE(normal_attribute)
       potato_name TEXT
     )
@@ -1642,7 +1642,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:backed_by=backing)
+    [[backed_by=backing]]
     CREATE TABLE name(
       first TEXT!,
       middle TEXT,
@@ -1715,7 +1715,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:backed_by=backing)
+    [[backed_by=backing]]
     CREATE TABLE every_type(
       bool_column BOOL!,
       int32_column INT!,
@@ -1824,7 +1824,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:backed_by=backing)
+    [[backed_by=backing]]
     CREATE TABLE continents(
       country TEXT!,
       africa TEXT!,
@@ -1957,7 +1957,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:backed_by=backing)
+    [[backed_by=backing]]
     CREATE TABLE pks_not_first_columns(
       a BOOL!,
       b INT!,
@@ -2066,7 +2066,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:backed_by=backing)
+    [[backed_by=backing]]
     CREATE TABLE only_pks_nonnull(
       a BOOL!,
       b INT!,
@@ -2175,7 +2175,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:backed_by=backing)
+    [[backed_by=backing]]
     CREATE TABLE some_non_pk_nonnull(
       a BOOL!,
       b INT!,
@@ -2284,7 +2284,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:backed_by=backing)
+    [[backed_by=backing]]
     CREATE TABLE _starts_with_underscore(
       foo INT! PRIMARY KEY,
       bar TEXT
@@ -2344,7 +2344,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:backed_by=backing)
+    [[backed_by=backing]]
     CREATE TABLE ends_with_underscore_(
       foo TEXT PRIMARY KEY,
       bar INT
@@ -3861,7 +3861,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:autotest=((dummy_test, (Foo, (id, name), (1, NULL), (2, "hi")))))
+    [[autotest=((dummy_test, (Foo, (id, name), (1, NULL), (2, "hi"))))]]
     PROC null_attribute ()
     BEGIN
     SELECT *
@@ -3953,7 +3953,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:doc_comment="/**\n * some potato\n */")
+    [[doc_comment="/**\n * some potato\n */"]]
     PROC potato (i INT, b REAL, c TEXT)
     BEGIN
     SELECT 1 AS x;
@@ -4038,7 +4038,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:implements=interface1)
+    [[implements=interface1]]
     PROC test_interface1_implementation_correct (id_ INT, name_ TEXT)
     BEGIN
     SELECT id_ AS id, name_ AS name;
@@ -5048,7 +5048,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE PROC cql_throw (code INT!) USING TRANSACTION
 
     {
@@ -5071,7 +5071,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE PROC cql_cursor_to_blob (C CURSOR, OUT result BLOB!) USING TRANSACTION
 
     {
@@ -5100,7 +5100,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE PROC cql_cursor_from_blob (C CURSOR, b BLOB) USING TRANSACTION
 
     {
@@ -5400,7 +5400,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_partition_create () CREATE OBJECT<partitioning>!
 
     {
@@ -5423,7 +5423,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_partition_cursor (p OBJECT<partitioning>!, key CURSOR, value CURSOR) BOOL!
 
     {
@@ -5461,7 +5461,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_extract_partition (p OBJECT<partitioning>!, key CURSOR) CREATE OBJECT!
 
     {
@@ -5494,7 +5494,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_string_dictionary_create () CREATE OBJECT<cql_string_dictionary>!
 
     {
@@ -5517,7 +5517,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_string_dictionary_add (dict OBJECT<cql_string_dictionary>!, key TEXT!, value TEXT!) BOOL!
 
     {
@@ -5555,7 +5555,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_string_dictionary_find (dict OBJECT<cql_string_dictionary>!, key TEXT) TEXT
 
     {
@@ -5588,7 +5588,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_long_dictionary_create () CREATE OBJECT<cql_long_dictionary>!
 
     {
@@ -5611,7 +5611,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_long_dictionary_add (dict OBJECT<cql_long_dictionary>!, key TEXT!, value LONG!) BOOL!
 
     {
@@ -5649,7 +5649,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_long_dictionary_find (dict OBJECT<cql_long_dictionary>!, key TEXT) LONG
 
     {
@@ -5682,7 +5682,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_real_dictionary_create () CREATE OBJECT<cql_real_dictionary>!
 
     {
@@ -5705,7 +5705,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_real_dictionary_add (dict OBJECT<cql_real_dictionary>!, key TEXT!, value REAL!) BOOL!
 
     {
@@ -5743,7 +5743,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_real_dictionary_find (dict OBJECT<cql_real_dictionary>!, key TEXT) REAL
 
     {
@@ -5776,7 +5776,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_object_dictionary_create () CREATE OBJECT<cql_object_dictionary>!
 
     {
@@ -5799,7 +5799,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_object_dictionary_add (dict OBJECT<cql_object_dictionary>!, key TEXT!, value OBJECT!) BOOL!
 
     {
@@ -5837,7 +5837,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_object_dictionary_find (dict OBJECT<cql_object_dictionary>!, key TEXT) OBJECT
 
     {
@@ -5870,7 +5870,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_blob_dictionary_create () CREATE OBJECT<cql_blob_dictionary>!
 
     {
@@ -5893,7 +5893,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_blob_dictionary_add (dict OBJECT<cql_blob_dictionary>!, key TEXT!, value BLOB!) BOOL!
 
     {
@@ -5931,7 +5931,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_blob_dictionary_find (dict OBJECT<cql_blob_dictionary>!, key TEXT) BLOB
 
     {
@@ -5964,7 +5964,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_cursor_format (C CURSOR) CREATE TEXT!
 
     {
@@ -5991,7 +5991,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_box_int (x INT) CREATE OBJECT<cql_box>!
 
     {
@@ -6019,7 +6019,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_unbox_int (box OBJECT<cql_box>) INT
 
     {
@@ -6047,7 +6047,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_box_real (x REAL) CREATE OBJECT<cql_box>!
 
     {
@@ -6075,7 +6075,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_unbox_real (box OBJECT<cql_box>) REAL
 
     {
@@ -6103,7 +6103,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_box_bool (x BOOL) CREATE OBJECT<cql_box>!
 
     {
@@ -6131,7 +6131,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_unbox_bool (box OBJECT<cql_box>) BOOL
 
     {
@@ -6159,7 +6159,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_box_long (x LONG) CREATE OBJECT<cql_box>!
 
     {
@@ -6187,7 +6187,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_unbox_long (box OBJECT<cql_box>) LONG
 
     {
@@ -6215,7 +6215,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_box_text (x TEXT) CREATE OBJECT<cql_box>!
 
     {
@@ -6243,7 +6243,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_unbox_text (box OBJECT<cql_box>) TEXT
 
     {
@@ -6271,7 +6271,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_box_blob (x BLOB) CREATE OBJECT<cql_box>!
 
     {
@@ -6299,7 +6299,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_unbox_blob (box OBJECT<cql_box>) BLOB
 
     {
@@ -6327,7 +6327,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_box_object (x OBJECT) CREATE OBJECT<cql_box>!
 
     {
@@ -6355,7 +6355,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_unbox_object (box OBJECT<cql_box>) OBJECT
 
     {
@@ -6383,7 +6383,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_box_get_type (box OBJECT<cql_box>) INT!
 
     {
@@ -6411,7 +6411,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_string_list_create () CREATE OBJECT<cql_string_list>!
 
     {
@@ -6434,7 +6434,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_string_list_set_at (list OBJECT<cql_string_list>!, index_ INT!, value_ TEXT!) OBJECT<cql_string_list>!
 
     {
@@ -6473,7 +6473,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_string_list_get_at (list OBJECT<cql_string_list>!, index_ INT!) TEXT
 
     {
@@ -6506,7 +6506,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_string_list_count (list OBJECT<cql_string_list>!) INT!
 
     {
@@ -6534,7 +6534,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_string_list_add (list OBJECT<cql_string_list>!, string TEXT!) OBJECT<cql_string_list>!
 
     {
@@ -6568,7 +6568,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_blob_list_create () CREATE OBJECT<cql_blob_list>!
 
     {
@@ -6591,7 +6591,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_blob_list_set_at (list OBJECT<cql_blob_list>!, index_ INT!, value_ BLOB!) OBJECT<cql_blob_list>!
 
     {
@@ -6630,7 +6630,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_blob_list_get_at (list OBJECT<cql_blob_list>!, index_ INT!) BLOB
 
     {
@@ -6663,7 +6663,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_blob_list_count (list OBJECT<cql_blob_list>!) INT!
 
     {
@@ -6691,7 +6691,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_blob_list_add (list OBJECT<cql_blob_list>!, value BLOB!) OBJECT<cql_blob_list>!
 
     {
@@ -6725,7 +6725,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_long_list_create () CREATE OBJECT<cql_long_list>!
 
     {
@@ -6748,7 +6748,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_long_list_set_at (list OBJECT<cql_long_list>!, index_ INT!, value_ LONG!) OBJECT<cql_long_list>!
 
     {
@@ -6787,7 +6787,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_long_list_get_at (list OBJECT<cql_long_list>!, index_ INT!) LONG!
 
     {
@@ -6820,7 +6820,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_long_list_count (list OBJECT<cql_long_list>!) INT!
 
     {
@@ -6848,7 +6848,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_long_list_add (list OBJECT<cql_long_list>!, value_ LONG!) OBJECT<cql_long_list>!
 
     {
@@ -6882,7 +6882,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_real_list_create () CREATE OBJECT<cql_real_list>!
 
     {
@@ -6905,7 +6905,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_real_list_set_at (list OBJECT<cql_real_list>!, index_ INT!, value_ REAL!) OBJECT<cql_real_list>!
 
     {
@@ -6944,7 +6944,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_real_list_get_at (list OBJECT<cql_real_list>!, index_ INT!) REAL!
 
     {
@@ -6977,7 +6977,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_real_list_count (list OBJECT<cql_real_list>!) INT!
 
     {
@@ -7005,7 +7005,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_real_list_add (list OBJECT<cql_real_list>!, value_ REAL!) OBJECT<cql_real_list>!
 
     {
@@ -7039,7 +7039,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_cursor_column_count (C CURSOR) INT!
 
     {
@@ -7066,7 +7066,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_cursor_column_type (C CURSOR, icol INT!) INT!
 
     {
@@ -7098,7 +7098,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_cursor_get_bool (C CURSOR, icol INT!) BOOL
 
     {
@@ -7130,7 +7130,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_cursor_get_int (C CURSOR, icol INT!) INT
 
     {
@@ -7162,7 +7162,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_cursor_get_long (C CURSOR, icol INT!) LONG
 
     {
@@ -7194,7 +7194,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_cursor_get_real (C CURSOR, icol INT!) REAL
 
     {
@@ -7226,7 +7226,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_cursor_get_text (C CURSOR, icol INT!) TEXT
 
     {
@@ -7258,7 +7258,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_cursor_get_blob (C CURSOR, icol INT!) BLOB
 
     {
@@ -7290,7 +7290,7 @@
 
     The statement ending at line XXXX
 
-    @ATTRIBUTE(cql:builtin)
+    [[builtin]]
     DECLARE FUNC cql_cursor_get_object (C CURSOR, icol INT!) OBJECT
 
     {

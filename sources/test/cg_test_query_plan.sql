@@ -10,21 +10,21 @@
 -- + DECLARE SELECT FUNC is_declare_func_wall (id LONG) BOOL!;
 -- + DECLARE SELECT FUNC array_num_at (array_object_ptr LONG!, idx INT!) LONG;
 -- + DECLARE SELECT FUNC select_virtual_table (b TEXT) (id LONG, t TEXT, b BLOB, r REAL);
--- + @attribute(cql:deterministic)
+-- + [[deterministic]]
 -- + DECLARE SELECT FUNC bgetkey_type (x BLOB!) LONG!;
--- + @attribute(cql:deterministic)
+-- + [[deterministic]]
 -- + DECLARE SELECT FUNC bgetval_type (x BLOB!) LONG!;
--- + @attribute(cql:deterministic)
+-- + [[deterministic]]
 -- + DECLARE SELECT FUNC bgetkey NO CHECK BLOB;
--- + @attribute(cql:deterministic)
+-- + [[deterministic]]
 -- + DECLARE SELECT FUNC bgetval NO CHECK BLOB;
--- + @attribute(cql:deterministic)
+-- + [[deterministic]]
 -- + DECLARE SELECT FUNC bcreatekey NO CHECK BLOB;
--- + @attribute(cql:deterministic)
+-- + [[deterministic]]
 -- + DECLARE SELECT FUNC bcreateval NO CHECK BLOB;
--- + @attribute(cql:deterministic)
+-- + [[deterministic]]
 -- + DECLARE SELECT FUNC bupdatekey NO CHECK BLOB;
--- + @attribute(cql:deterministic)
+-- + [[deterministic]]
 -- + DECLARE SELECT FUNC bupdateval NO CHECK BLOB;
 -- + DECLARE SELECT FUNC stuff () INT!;
 -- + PROC create_schema()
@@ -106,7 +106,7 @@
 -- +     b BLOB,
 -- +     r REAL
 -- +   );
--- +   @attribute(cql:backing_table)
+-- +   [[backing_table]]
 -- +   CREATE TABLE backing(
 -- +     k BLOB PRIMARY KEY,
 -- +     v BLOB!
@@ -140,7 +140,7 @@
 -- +   ) WITHOUT ROWID;
 -- + END;
 --
--- + @attribute(cql:backed_by=backing)
+-- + [[backed_by=backing]]
 -- + CREATE TABLE backed(
 -- +   id INT PRIMARY KEY,
 -- +   name TEXT
@@ -181,7 +181,7 @@
 -- + PROC populate_query_plan_2()
 -- + PROC populate_query_plan_20()
 --
--- + @attribute(cql:shared_fragment)
+-- + [[shared_fragment]]
 -- + PROC split_commas (str TEXT)
 -- + BEGIN
 -- + WITH
@@ -197,7 +197,7 @@
 -- +   WHERE tok <> "";
 -- + END;
 --
--- + @attribute(cql:shared_fragment)
+-- + [[shared_fragment]]
 -- + PROC ids_from_string (str TEXT)
 -- + BEGIN
 -- + WITH
@@ -229,27 +229,27 @@
 -- +   END;
 -- + END;
 --
--- + @attribute(cql:shared_fragment)
--- + @attribute(cql:query_plan_branch=11)
+-- + [[shared_fragment]]
+-- + [[query_plan_branch=11]]
 -- + PROC frag1 (x INT)
 -- + BEGIN
 -- + SELECT 2 AS a;
 -- + END;
 --
--- + @attribute(cql:shared_fragment)
--- + @attribute(cql:query_plan_branch=4)
+-- + [[shared_fragment]]
+-- + [[query_plan_branch=4]]
 -- + PROC frag2 (y INT)
 -- + BEGIN
 -- + SELECT 40 AS b;
 -- + END;
 -- 
--- + @attribute(cql:shared_fragment)
+-- + [[shared_fragment]]
 -- + PROC frag3 (z INT)
 -- + BEGIN
 -- + SELECT 100 AS c;
 -- + END;
 -- 
--- + @attribute(cql:shared_fragment)
+-- + [[shared_fragment]]
 -- + PROC frag_with_select ()
 -- + BEGIN
 -- + WITH
@@ -260,14 +260,14 @@
 -- +   FROM cte;
 -- + END;
 -- 
--- + @attribute(cql:shared_fragment)
--- + @attribute(cql:query_plan_branch=2)
+-- + [[shared_fragment]]
+-- + [[query_plan_branch=2]]
 -- + PROC frag_with_select_nothing ()
 -- + BEGIN
 -- + SELECT 1 AS a;
 -- + END;
 -- 
--- + @attribute(cql:shared_fragment)
+-- + [[shared_fragment]]
 -- + PROC frag (v INT!)
 -- + BEGIN
 -- + SELECT v AS val;
@@ -348,22 +348,22 @@
 -- +   CALL printf("\n]\n");
 -- +   CALL printf("}");
 -- + END;
-@attribute(cql:no_table_scan)
+[[no_table_scan]]
 create table `table one`(id int primary key, name text);
 
 -- duplicate, no problem!  only one will be emitted for SQLite
-@attribute(cql:no_table_scan)
+[[no_table_scan]]
 create table `table one`(id int primary key, name text);
 
-@attribute(cql:no_table_scan)
+[[no_table_scan]]
 create table t2(id int primary key, name text);
 create table t3(id int primary key, name text);
 create table t4(id long int primary key autoincrement, data blob);
 create table t5(id long int, foreign key (id) references t4(id) on update cascade on delete cascade);
 create table t6(id int primary key, name text) @delete(1);
-@attribute(cql:no_table_scan)
+[[no_table_scan]]
 create table scan_ok(id int);
-@attribute(cql:no_table_scan)
+[[no_table_scan]]
 create table foo(id int);
 create table _foo(id int);
 create table foo_(id int);
@@ -503,7 +503,7 @@ begin
 end;
 
 -- ok_table_scan attr
-@attribute(cql:ok_table_scan=(scan_ok, t3))
+[[ok_table_scan=(scan_ok, t3)]]
 proc use_ok_table_scan_attr()
 begin
   select * from scan_ok;
@@ -526,7 +526,7 @@ create table C(
  id int!,
  name text);
 
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 PROC split_commas(str text)
 BEGIN
   WITH splitter(tok, rest) AS (
@@ -540,7 +540,7 @@ BEGIN
   SELECT tok FROM splitter WHERE tok <> "";
 END;
 
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 PROC ids_from_string(str text)
 BEGIN
   WITH toks(tok) AS (CALL split_commas(str))
@@ -557,8 +557,8 @@ begin
   and C.id not in (select * from E);
 end;
 
-@attribute(cql:shared_fragment)
-@attribute(cql:query_plan_branch=011)
+[[shared_fragment]]
+[[query_plan_branch=011]]
 PROC frag1(x int)
 BEGIN
   IF x == 2 THEN
@@ -568,8 +568,8 @@ BEGIN
   END IF;
 END;
 
-@attribute(cql:shared_fragment)
-@attribute(cql:query_plan_branch=4)
+[[shared_fragment]]
+[[query_plan_branch=4]]
 PROC frag2(y int)
 BEGIN
   IF y == 2 THEN
@@ -585,8 +585,8 @@ BEGIN
   END IF;
 END;
 
-@attribute(cql:shared_fragment)
-@attribute(cql:query_plan_branch=1)
+[[shared_fragment]]
+[[query_plan_branch=1]]
 PROC frag3(z int)
 BEGIN
   IF z == 2 THEN
@@ -596,8 +596,8 @@ BEGIN
   END IF;
 END;
 
-@attribute(cql:shared_fragment)
-@attribute(cql:query_plan_branch=1)
+[[shared_fragment]]
+[[query_plan_branch=1]]
 PROC frag_with_select() BEGIN
   IF TRUE THEN
     WITH cte(a) AS (SELECT 1 a)
@@ -607,8 +607,8 @@ PROC frag_with_select() BEGIN
   END IF;
 END;
 
-@attribute(cql:shared_fragment)
-@attribute(cql:query_plan_branch=2)
+[[shared_fragment]]
+[[query_plan_branch=2]]
 PROC frag_with_select_nothing() BEGIN
   IF TRUE THEN
     SELECT 1 a;
@@ -617,7 +617,7 @@ PROC frag_with_select_nothing() BEGIN
   END IF;
 END;
 
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 PROC frag(v int!) BEGIN
   select v val;
 END;
@@ -656,13 +656,13 @@ BEGIN
     select_virtual_table("dec") two;
 END;
 
-@attribute(cql:backing_table)
+[[backing_table]]
 create table backing(
   k blob primary key,
   v blob not null
 );
 
-@attribute(cql:backed_by=backing)
+[[backed_by=backing]]
 create table backed(
   id integer primary key,
   name text
@@ -671,28 +671,28 @@ create table backed(
 -- blob access stubs, it doesn't matter what they return, they aren't
 -- semantically checked, but we do want them in the UDF output
 
-@attribute(cql:deterministic)
+[[deterministic]]
 DECLARE SELECT FUNCTION bgetkey_type(x blob not null) long not null;
 
-@attribute(cql:deterministic)
+[[deterministic]]
 DECLARE SELECT FUNCTION bgetval_type(x blob not null) long not null;
 
-@attribute(cql:deterministic)
+[[deterministic]]
 declare select function bgetkey no check blob;
 
-@attribute(cql:deterministic)
+[[deterministic]]
 declare select function bgetval no check blob;
 
-@attribute(cql:deterministic)
+[[deterministic]]
 declare select function bcreatekey no check blob;
 
-@attribute(cql:deterministic)
+[[deterministic]]
 declare select function bcreateval no check blob;
 
-@attribute(cql:deterministic)
+[[deterministic]]
 declare select function bupdatekey no check blob;
 
-@attribute(cql:deterministic)
+[[deterministic]]
 declare select function bupdateval no check blob;
 
 create index backing_index on backing(bgetkey_type(k));
@@ -716,7 +716,7 @@ begin
   let bool_to_int_cast := (select cast(b1 as int));
 end;
 
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc notnull_int_frag(v int!) BEGIN
   select v val;
 end;

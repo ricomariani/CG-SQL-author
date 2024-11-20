@@ -588,8 +588,8 @@ cql_noexport ast_node *get_func_params(ast_node *ast) {
 //  - find_ast_misc_attr_callback if misc_attr node is found
 // Let's take the example below and see what values will be passed to callbacks
 // e.g:
-//  @attribute(cql:foo=(baa, (name, 'nelly')))
-//  @attribute(cql:base=raoul)
+//  [[foo=(baa, (name, 'nelly'))]]
+//  [[base=raoul]]
 //  create procedure sample()
 //  begin
 //    select * from baa;

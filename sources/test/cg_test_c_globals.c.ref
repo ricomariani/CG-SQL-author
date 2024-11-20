@@ -91,21 +91,21 @@ extern CQL_WARN_UNUSED cql_code cql_cursor_from_blob(sqlite3 *_Nonnull _db_, cql
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE PROC cql_throw (code INT!) USING TRANSACTION;
 */
 
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE PROC cql_cursor_to_blob (C CURSOR, OUT result BLOB!) USING TRANSACTION;
 */
 
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE PROC cql_cursor_from_blob (C CURSOR, b BLOB) USING TRANSACTION;
 */
 

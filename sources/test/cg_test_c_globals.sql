@@ -8,7 +8,7 @@
 -- TEST
 -- this generates nothing in the header
 -- - blobshape
-@attribute(cql:blob_storage)
+[[blob_storage]]
 create table blobshape(
   id integer not null,
   t text

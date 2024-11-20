@@ -260,7 +260,7 @@ static void cg_schema_helpers(charbuf *decls) {
   bprintf(decls, "DECLARE %s_tables_dict_ OBJECT<cql_string_dictionary>;\n\n", global_proc_name);
 
   bprintf(decls, "-- helper proc for creating the dictionary of table defs from sqlite_master\n");
-  bprintf(decls, "@attribute(cql:private)\n");
+  bprintf(decls, "[[private]]\n");
   bprintf(decls, "PROC %s_get_table_defs()\n", global_proc_name);
   bprintf(decls, "BEGIN\n");
   bprintf(decls, "  DECLARE C CURSOR FOR SELECT name, sql from sqlite_master where type = 'table';\n");
@@ -274,7 +274,7 @@ static void cg_schema_helpers(charbuf *decls) {
   bprintf(decls, "END;\n\n");
 
   bprintf(decls, "-- helper proc for creating the schema version table\n");
-  bprintf(decls, "@attribute(cql:private)\n");
+  bprintf(decls, "[[private]]\n");
   bprintf(decls, "PROC %s_create_cql_schema_facets_if_needed()\n", global_proc_name);
   bprintf(decls, "BEGIN\n");
   bprintf(decls, "  CREATE TABLE IF NOT EXISTS %s_cql_schema_facets(\n", global_proc_name);
@@ -284,7 +284,7 @@ static void cg_schema_helpers(charbuf *decls) {
   bprintf(decls, "END;\n\n");
 
   bprintf(decls, "-- helper proc for creating the rebuilt facets table\n");
-  bprintf(decls, "@attribute(cql:private)\n");
+  bprintf(decls, "[[private]]\n");
   bprintf(decls, "PROC %s_create_cql_schema_rebuilt_tables_if_needed()\n", global_proc_name);
   bprintf(decls, "BEGIN\n");
   bprintf(decls, "  CREATE TEMP TABLE IF NOT EXISTS cql_schema_rebuilt_tables(\n");
@@ -293,7 +293,7 @@ static void cg_schema_helpers(charbuf *decls) {
   bprintf(decls, "END;\n\n");
 
   bprintf(decls, "-- helper proc for saving the schema version table\n");
-  bprintf(decls, "@attribute(cql:private)\n");
+  bprintf(decls, "[[private]]\n");
   bprintf(decls, "PROC %s_save_cql_schema_facets()\n", global_proc_name);
   bprintf(decls, "BEGIN\n");
   bprintf(decls, "  DROP TABLE IF EXISTS %s_cql_schema_facets_saved;\n", global_proc_name);
@@ -313,7 +313,7 @@ static void cg_schema_helpers(charbuf *decls) {
   bprintf(decls, "END;\n\n");
 
   bprintf(decls, "-- helper proc for getting the schema version CRC for a version index\n");
-  bprintf(decls, "@attribute(cql:private)\n");
+  bprintf(decls, "[[private]]\n");
   bprintf(decls, "PROC %s_cql_get_version_crc(_v INTEGER NOT NULL, out _crc LONG INTEGER NOT NULL)\n", global_proc_name);
   bprintf(decls, "BEGIN\n");
   bprintf(decls, "  SET _crc := cql_facet_find(%s_facets, printf('cql_schema_v%%d', _v));\n", global_proc_name);
@@ -796,7 +796,7 @@ static void emit_full_drop(ast_node *target_ast, charbuf *decls) {
 
   CHARBUF_OPEN(out);
 
-  bprintf(&out, "\n@attribute(cql:private)");
+  bprintf(&out, "\n[[private]]");
   bprintf(&out, "\nPROC %s_%s_full_drop()\n", global_proc_name, target_name);
   bprintf(&out, "BEGIN\n");
 
@@ -950,7 +950,7 @@ static void cg_schema_manage_triggers(charbuf *output, int32_t *drops, int32_t *
 
   if (options.schema_exclusive) {
     bprintf(output, "\n-- get all the trigger names, store them in a result set\n");
-    bprintf(output, "@attribute(cql:private)\n");
+    bprintf(output, "[[private]]\n");
     bprintf(output, "PROC %s_cql_get_all_triggers()\n", global_proc_name);
     bprintf(output, "BEGIN\n");
     bprintf(output, "  DECLARE C CURSOR FOR SELECT name from sqlite_master where type = 'trigger';\n");
@@ -961,7 +961,7 @@ static void cg_schema_manage_triggers(charbuf *output, int32_t *drops, int32_t *
     bprintf(output, "END;\n\n");
 
     bprintf(output, "-- drop all the triggers using the fetched names\n");
-    bprintf(output, "@attribute(cql:private)\n");
+    bprintf(output, "[[private]]\n");
     bprintf(output, "PROC %s_cql_drop_all_triggers()\n", global_proc_name);
     bprintf(output, "BEGIN\n");
     bprintf(output, "  DECLARE C CURSOR FOR CALL %s_cql_get_all_triggers();\n", global_proc_name);
@@ -976,7 +976,7 @@ static void cg_schema_manage_triggers(charbuf *output, int32_t *drops, int32_t *
   }
   else if (*drops) {
     bprintf(output, "-- drop all the triggers we know\n");
-    bprintf(output, "@attribute(cql:private)\n");
+    bprintf(output, "[[private]]\n");
     bprintf(output, "PROC %s_cql_drop_all_triggers()\n", global_proc_name);
     bprintf(output, "BEGIN\n");
     bprintf(output, "%s", drop.ptr);
@@ -985,7 +985,7 @@ static void cg_schema_manage_triggers(charbuf *output, int32_t *drops, int32_t *
 
   if (*creates) {
     bprintf(output, "-- create all the triggers we know\n");
-    bprintf(output, "@attribute(cql:private)\n");
+    bprintf(output, "[[private]]\n");
     bprintf(output, "PROC %s_cql_create_all_triggers()\n", global_proc_name);
     bprintf(output, "BEGIN\n");
     bindent(output, &create, 2);
@@ -1045,7 +1045,7 @@ static void cg_schema_manage_views(charbuf *output, int32_t *drops, int32_t *cre
 
   if (options.schema_exclusive) {
     bprintf(output, "\n-- get all the view names, store them in a result set\n");
-    bprintf(output, "@attribute(cql:private)\n");
+    bprintf(output, "[[private]]\n");
     bprintf(output, "PROC %s_cql_get_all_views()\n", global_proc_name);
     bprintf(output, "BEGIN\n");
     bprintf(output, "  DECLARE C CURSOR FOR SELECT name from sqlite_master where type = 'view';\n");
@@ -1056,7 +1056,7 @@ static void cg_schema_manage_views(charbuf *output, int32_t *drops, int32_t *cre
     bprintf(output, "END;\n\n");
 
     bprintf(output, "-- drop all the views using the fetched names\n");
-    bprintf(output, "@attribute(cql:private)\n");
+    bprintf(output, "[[private]]\n");
     bprintf(output, "PROC %s_cql_drop_all_views()\n", global_proc_name);
     bprintf(output, "BEGIN\n");
     bprintf(output, "  DECLARE C CURSOR FOR CALL %s_cql_get_all_views();\n", global_proc_name);
@@ -1071,7 +1071,7 @@ static void cg_schema_manage_views(charbuf *output, int32_t *drops, int32_t *cre
   }
   else if (*drops) {
     bprintf(output, "-- drop all the views we know\n");
-    bprintf(output, "@attribute(cql:private)\n");
+    bprintf(output, "[[private]]\n");
     bprintf(output, "PROC %s_cql_drop_all_views()\n", global_proc_name);
     bprintf(output, "BEGIN\n");
     bprintf(output, "%s", drop.ptr);
@@ -1080,7 +1080,7 @@ static void cg_schema_manage_views(charbuf *output, int32_t *drops, int32_t *cre
 
   if (*creates) {
     bprintf(output, "-- create all the views we know\n");
-    bprintf(output, "@attribute(cql:private)\n");
+    bprintf(output, "[[private]]\n");
     bprintf(output, "PROC %s_cql_create_all_views()\n", global_proc_name);
     bprintf(output, "BEGIN\n");
     bindent(output, &create, 2);
@@ -1191,7 +1191,7 @@ static void cg_schema_manage_indices(charbuf *output, int32_t *drops, int32_t *c
 
   if (options.schema_exclusive) {
     bprintf(output, "\n-- get all the unknown index names, store them in a result set\n");
-    bprintf(output, "@attribute(cql:private)\n");
+    bprintf(output, "[[private]]\n");
     bprintf(output, "PROC %s_cql_get_unknown_indices()\n", global_proc_name);
     bprintf(output, "BEGIN\n");
     bprintf(output, "  DECLARE C CURSOR FOR SELECT name from sqlite_master where type = 'index'\n");
@@ -1207,7 +1207,7 @@ static void cg_schema_manage_indices(charbuf *output, int32_t *drops, int32_t *c
     bprintf(output, "END;\n\n");
 
     bprintf(output, "-- drop all the indices using the fetched names\n");
-    bprintf(output, "@attribute(cql:private)\n");
+    bprintf(output, "[[private]]\n");
     bprintf(output, "PROC %s_cql_drop_unknown_indices()\n", global_proc_name);
     bprintf(output, "BEGIN\n");
     bprintf(output, "  DECLARE C CURSOR FOR CALL %s_cql_get_unknown_indices();\n", global_proc_name);
@@ -1225,7 +1225,7 @@ static void cg_schema_manage_indices(charbuf *output, int32_t *drops, int32_t *c
 
   if (*drops) {
     bprintf(output, "\n-- drop all the indices that are deleted or changing\n");
-    bprintf(output, "@attribute(cql:private)\n");
+    bprintf(output, "[[private]]\n");
     bprintf(output, "PROC %s_cql_drop_all_indices()\n", global_proc_name);
     bprintf(output, "BEGIN\n");
     bprintf(output, "%s", drop.ptr);
@@ -1234,7 +1234,7 @@ static void cg_schema_manage_indices(charbuf *output, int32_t *drops, int32_t *c
 
   if (*creates) {
     bprintf(output, "-- create all the indices we need\n");
-    bprintf(output, "@attribute(cql:private)\n");
+    bprintf(output, "[[private]]\n");
     bprintf(output, "PROC %s_cql_create_all_indices()\n", global_proc_name);
     bprintf(output, "BEGIN\n");
     bprintf(output, "%s", create.ptr);
@@ -1288,7 +1288,7 @@ static void emit_group_drop(CSTR group_name, charbuf *decls, symtab *recreate_gr
 
   CHARBUF_OPEN(out);
 
-  bprintf(&out, "\n@attribute(cql:private)");
+  bprintf(&out, "\n[[private]]");
   bprintf(&out, "\nPROC %s_%s_group_drop()\n", global_proc_name, group_name);
   bprintf(&out, "BEGIN\n");
 
@@ -1540,7 +1540,7 @@ static void cg_schema_manage_recreate_tables(
   crc_t all_virtual_tables_crc = crc_charbuf(&recreate_only_virtual_tables);
   crc_t all_nonvirtual_tables_crc = crc_charbuf(&recreate_without_virtual_tables);
   bprintf(output, "-- recreate all the non-virtual @recreate tables that might have changed\n");
-  bprintf(output, "@attribute(cql:private)\n");
+  bprintf(output, "[[private]]\n");
   bprintf(output, "PROC %s_cql_recreate_non_virtual_tables()\n", global_proc_name);
   bprintf(output, "BEGIN\n");
   bprintf(output, "  IF cql_facet_find(%s_facets, 'all_nonvirtual_tables_crc') == %lld RETURN; \n",
@@ -1553,7 +1553,7 @@ static void cg_schema_manage_recreate_tables(
   bprintf(output, "END;\n\n");
 
   bprintf(output, "-- recreate all the virtual @recreate tables that might have changed\n");
-  bprintf(output, "@attribute(cql:private)\n");
+  bprintf(output, "[[private]]\n");
   bprintf(output, "PROC %s_cql_recreate_virtual_tables()\n", global_proc_name);
   bprintf(output, "BEGIN\n");
   bprintf(output, "  IF cql_facet_find(%s_facets, 'all_virtual_tables_crc') == %lld RETURN; \n",
@@ -1773,7 +1773,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
 
   // code to read the facets into the hash table
 
-  bprintf(&preamble, "@attribute(cql:private)\n");
+  bprintf(&preamble, "[[private]]\n");
   bprintf(&preamble, "PROC %s_setup_facets()\n", global_proc_name);
   bprintf(&preamble, "BEGIN\n");
   bprintf(&preamble, "  TRY\n");
@@ -1790,7 +1790,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
 
   bprintf(&preamble, "DECLARE FUNCTION _cql_contains_column_def(needle TEXT, haystack TEXT) BOOL NOT NULL;\n");
 
-  bprintf(&preamble, "@attribute(cql:private)\n");
+  bprintf(&preamble, "[[private]]\n");
   bprintf(&preamble, "PROC %s_column_exists(table_ TEXT NOT NULL, col_info TEXT NOT NULL, OUT exists_ BOOL NOT NULL)\n", global_proc_name);
   bprintf(&preamble, "BEGIN\n");
   bprintf(&preamble, "  IF %s_tables_dict_ IS NULL THROW;\n", global_proc_name);
@@ -1798,7 +1798,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   bprintf(&preamble, "  SET exists_ := _cql_contains_column_def(table_str, col_info);\n");
   bprintf(&preamble, "END;\n\n");
 
-  bprintf(&preamble, "@attribute(cql:private)\n");
+  bprintf(&preamble, "[[private]]\n");
   bprintf(&preamble, "PROC %s_table_exists(table_ TEXT NOT NULL, OUT exists_ BOOL NOT NULL)\n", global_proc_name);
   bprintf(&preamble, "BEGIN\n");
   bprintf(&preamble, "  IF %s_tables_dict_ IS NULL THROW;\n", global_proc_name);
@@ -1808,7 +1808,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
 
   // the main upgrade worker
 
-  bprintf(&main, "\n@attribute(cql:private)\n");
+  bprintf(&main, "\n[[private]]\n");
   bprintf(&main, "PROC %s_perform_upgrade_steps(include_virtual_tables BOOL NOT NULL)\n", global_proc_name);
   bprintf(&main, "BEGIN\n");
   bprintf(&main, "  LET facet := cql_compressed('cql_schema_crc_no_virtual');\n");
@@ -2109,7 +2109,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   if (drops.used > 1) {
     bprintf(&main, "    CALL %s_cql_drop_tables();\n", global_proc_name);
 
-    bprintf(&preamble, "@attribute(cql:private)\n");
+    bprintf(&preamble, "[[private]]\n");
     bprintf(&preamble, "PROC %s_cql_drop_tables()\n", global_proc_name);
     bprintf(&preamble, "BEGIN\n");
     bprintf(&preamble, "%s", drops.ptr);
@@ -2167,7 +2167,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   bprintf(&main, "    SELECT rebuild_facet FROM cql_schema_rebuilt_tables;\n");
   bprintf(&main, "END;\n\n");
 
-  bprintf(&main, "@attribute(cql:private)\n");
+  bprintf(&main, "[[private]]\n");
   bprintf(&main, "PROC %s_perform_needed_upgrades(include_virtual_tables BOOL NOT NULL)\n", global_proc_name);
   bprintf(&main, "BEGIN\n");
   bprintf(&main, "  -- check for downgrade --\n");
@@ -2182,7 +2182,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   bprintf(&main, "  END IF;\n");
   bprintf(&main, "END;\n\n");
 
-  bprintf(&main, "@attribute(cql:private)\n");
+  bprintf(&main, "[[private]]\n");
   bprintf(&main, "PROC %s_helper(include_virtual_tables BOOL NOT NULL)\n", global_proc_name);
   bprintf(&main, "BEGIN\n");
   bprintf(&main, "  DECLARE schema_crc LONG INTEGER NOT NULL;\n");

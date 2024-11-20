@@ -4829,7 +4829,7 @@ static void cg_fragment_elseif_list(ast_node *ast, ast_node *elsenode, charbuf *
 // arguments of the expression fragment become columns of one row of table
 //
 // e.g.
-// @attribute(cql:shared_fragment)
+// [[shared_fragment]]
 // create proc ex_frag(x integer)
 // begin
 //    select x + 2 * x as result;
@@ -7851,7 +7851,7 @@ static void cg_one_autodrop(CSTR _Nonnull name, ast_node *_Nonnull misc_attr_val
 // If a stored proc is marked with the autodrop annotation when we automatically
 // drop the indicated tables when the proc is finished running.  The attributes
 // should look like this:
-// @attribute(cql:autodrop=(table1, table2, ,...))
+// [[autodrop=(table1, table2, ,...)]]
 static void cg_autodrops(ast_node *misc_attrs, charbuf *output) {
   if (!misc_attrs) {
      return;

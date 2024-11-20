@@ -5367,7 +5367,7 @@ select * from MyView;
 -- * error: % common table name shadows previously declared table or view 'foo'
 -- * error: % common table name shadows previously declared table or view 'MyView'
 -- +2 error:
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc shadows_an_existing_table()
 begin
   with
@@ -5385,7 +5385,7 @@ end;
 -- + {stmt_and_attr}: ok
 -- + {create_proc_stmt}: does_not_shadow_an_existing_table: { x: integer notnull } dml_proc
 -- - error:
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc does_not_shadow_an_existing_table()
 begin
   with
@@ -5409,7 +5409,7 @@ select * from does_not_shadow_an_existing_table;
 -- + {create_proc_stmt}: err
 -- * error: % fragments may not have an empty body 'empty_fragment'
 -- +1 error:
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc empty_fragment()
 begin
 end;
@@ -5421,7 +5421,7 @@ end;
 -- + {name shared_fragment}
 -- + {create_proc_stmt}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
 -- - error:
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc a_shared_frag(x int!, y int!)
 begin
   select 1 x, 2 y, 3.0 z;
@@ -5448,7 +5448,7 @@ select a_shared_frag.* from (call a_shared_frag(1, 2));
 -- putting "select nothing" in an else clause.
 -- + {select_nothing_stmt}: conditional_no_else: { x: integer notnull }
 -- - error
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc conditional_no_else()
 begin
   if 1 then
@@ -5469,7 +5469,7 @@ end;
 -- TEST: select nothing expands to whatever is needed to give no rows
 -- + {select_nothing_stmt}: select: { x: integer notnull }
 -- - error
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc conditional_else_nothing()
 begin
   if 1 then
@@ -5482,7 +5482,7 @@ end;
 -- TEST: create a conditional fragment with matching like clauses in both branches
 -- + {create_proc_stmt}: ok_conditional_duplicate_cte_names: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
 -- - error:
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc ok_conditional_duplicate_cte_names()
 begin
   if 1 then
@@ -5499,7 +5499,7 @@ end;
 -- * error: % bogus_cte, all must have the same column count
 -- diagnostics also present
 -- +4 error:
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc bogus_conditional_duplicate_cte_names()
 begin
   /* note that these branches return the same type so the proc looks ok
@@ -5520,7 +5520,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % shared fragments with conditionals must have exactly one SELECT, or WITH...SELECT in each statement list 'bogus_conditional_two_selects'
 -- +1 error:
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc bogus_conditional_two_selects()
 begin
   if 1 then
@@ -5535,7 +5535,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % shared fragments with conditionals must have exactly SELECT, or WITH...SELECT in each statement list 'bogus_conditional_non_select'
 -- +1 error:
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc bogus_conditional_non_select()
 begin
   if 1 then
@@ -5549,7 +5549,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % shared fragments with conditionals must have exactly one SELECT, or WITH...SELECT in each statement list 'bogus_conditional_empty_clause'
 -- +1 error:
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc bogus_conditional_empty_clause()
 begin
   if 1 then
@@ -5562,7 +5562,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % shared fragments with conditionals must have exactly one SELECT, or WITH...SELECT in each statement list 'bogus_conditional_empty_else_clause'
 -- +1 error:
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc bogus_conditional_empty_else_clause()
 begin
   if 1 then
@@ -5584,7 +5584,7 @@ call a_shared_frag();
 -- + {name shared_fragment}
 -- + {create_proc_stmt}: shared_frag2: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
 -- - error:
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc shared_frag2(x int!, y int!)
 begin
   with source(*) LIKE a_shared_frag
@@ -5610,7 +5610,7 @@ declare proc frag_type() (id integer<job>, name text);
 -- + {create_proc_stmt}: shared_frag3: { id: integer<job>, name: text } dml_proc
 -- + {cte_table}: source: { id: integer<job>, name: text }
 -- - error:
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc shared_frag3()
 begin
   with source(*) LIKE frag_type
@@ -5639,7 +5639,7 @@ with
 -- + {with_select_stmt}: err
 -- * error: % must be a cursor, proc, table, or view 'there_is_no_such_source'
 -- +1 error:
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc shared_frag_bad_like()
 begin
   with source(*) LIKE there_is_no_such_source
@@ -5648,14 +5648,14 @@ end;
 
 -- TEST: try to use LIKE outside of a procedure
 -- + {with_select_stmt}: err
--- * error: % LIKE CTE form may only be used inside a shared fragment at the top level i.e. @attribute(cql:shared_fragment)
+-- * error: % LIKE CTE form may only be used inside a shared fragment at the top level i.e. [[shared_fragment]]
 -- +1 error:
 with source(*) LIKE there_is_no_such_source
 select 1 x, 2 y, 3.0 z;
 
 -- TEST: try to use LIKE in a procedure that is not a shared fragment
 -- + {with_select_stmt}: err
--- * error: % LIKE CTE form may only be used inside a shared fragment at the top level i.e. @attribute(cql:shared_fragment) 'not_a_shared_fragment'
+-- * error: % LIKE CTE form may only be used inside a shared fragment at the top level i.e. [[shared_fragment]] 'not_a_shared_fragment'
 -- +1 error:
 proc not_a_shared_fragment()
 begin
@@ -5743,9 +5743,9 @@ with
 
 -- TEST: try to use LIKE in a procedure that is a shared fragment but not at the top level
 -- + {with_select_stmt}: err
--- * error: % LIKE CTE form may only be used inside a shared fragment at the top level i.e. @attribute(cql:shared_fragment) 'bogus_like_in_shared'
+-- * error: % LIKE CTE form may only be used inside a shared fragment at the top level i.e. [[shared_fragment]] 'bogus_like_in_shared'
 -- +1 error:
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc bogus_like_in_shared()
 begin
   with data(*) AS (
@@ -5759,7 +5759,7 @@ end;
 -- + {with_select_stmt}: err
 -- * error: % too few column names specified in common table expression 'source'
 -- +1 error:
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc shared_frag_bad_like_decl()
 begin
   with source(u) LIKE a_shared_frag
@@ -5770,7 +5770,7 @@ end;
 -- + {with_select_stmt}: err
 -- * error: % duplicate name in list 'id'
 -- +1 error:
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc shared_frag_bogus_cte_columns()
 begin
   with source(id, id) LIKE (select 1 x, 2 y)
@@ -5813,7 +5813,7 @@ select * from some_cte;
 
 -- TEST: the call form must call a shared fragment
 -- + {with_select_stmt}: err
--- * error: % a CALL statement inside SQL may call only a shared fragment i.e. @attribute(cql:shared_fragment) 'return_with_attr'
+-- * error: % a CALL statement inside SQL may call only a shared fragment i.e. [[shared_fragment]] 'return_with_attr'
 -- +1 error:
 with some_cte(*) as (call return_with_attr())
 select * from some_cte;
@@ -5828,7 +5828,7 @@ select * from some_cte;
 -- TEST: shared_fragment attribute (correct usage, has with clause)
 -- + {create_proc_stmt}: test_shared_fragment_with_CTEs: { x: integer notnull, y: text, z: longint } dml_proc
 -- - error:
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc test_shared_fragment_with_CTEs(id_ int!)
 begin
   with
@@ -5840,7 +5840,7 @@ end;
 -- TEST: shared_fragment attribute (correct usage)
 -- + {create_proc_stmt}: test_shared_fragment_without_CTEs: { id: integer notnull, name: text, rate: longint } dml_proc
 -- - error:
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc test_shared_fragment_without_CTEs(id_ int!)
 begin
   select id, name, rate from bar where id = id_;
@@ -5851,7 +5851,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % shared fragments must consist of exactly one top level statement 'test_shared_fragment_wrong_form'
 -- +1 error:
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc test_shared_fragment_wrong_form()
 begin
   select * from bar;
@@ -5863,7 +5863,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % shared fragments cannot have any out or in/out parameters 'x'
 -- +1 error:
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc test_shared_fragment_bad_args(out x integer)
 begin
   select * from bar;
@@ -5874,7 +5874,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % shared fragments may only have IF, SELECT, or WITH...SELECT at the top level 'test_shared_fragment_wrong_form_not_select'
 -- +1 error:
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc test_shared_fragment_wrong_form_not_select()
 begin
   declare x integer;
@@ -7502,7 +7502,7 @@ set an_int := proc2(1);
 
 -- TEST: user proc calls can't happen inside of SQL
 -- + {call}: err
--- * error: % a function call to a procedure inside SQL may call only a shared fragment i.e. @attribute(cql:shared_fragment) 'proc_with_single_output'
+-- * error: % a function call to a procedure inside SQL may call only a shared fragment i.e. [[shared_fragment]] 'proc_with_single_output'
 -- +1 error:
 set an_int := (select proc_with_single_output(1, an_int, an_int));
 
@@ -9650,7 +9650,7 @@ end;
 -- + {name dummy_result_set}: ok
 -- + {create_proc_stmt}: autotest_all_attribute: { id: integer notnull, name: text, rate: longint } dml_proc
 -- - error:
-@attribute(cql:autotest=(dummy_test, dummy_table, dummy_insert, dummy_select, dummy_result_set))
+[[autotest=(dummy_test, dummy_table, dummy_insert, dummy_select, dummy_result_set)]]
 proc autotest_all_attribute()
 begin
   select * from bar;
@@ -9680,7 +9680,7 @@ end;
 -- + {int 777}: ok
 -- + {create_proc_stmt}: autotest_dummy_test_with_others_attributes: { id: integer notnull, name: text, rate: longint } dml_proc
 -- - error:
-@attribute(cql:autotest=(dummy_table, (dummy_test, (bar, (id, name), (1, 'Nelly'), (-2, 'Babeth')), (foo, (id), (777)))))
+[[autotest=(dummy_table, (dummy_test, (bar, (id, name), (1, 'Nelly'), (-2, 'Babeth')), (foo, (id), (777))))]]
 proc autotest_dummy_test_with_others_attributes()
 begin
   select * from bar;
@@ -9700,7 +9700,7 @@ end;
 -- + {int 2}: ok
 -- + {create_proc_stmt}: autotest_dummy_test_without_other_attributes: { id: integer notnull, name: text, rate: longint } dml_proc
 -- - error:
-@attribute(cql:autotest=((dummy_test, (bar, (id), (1), (2)))))
+[[autotest=((dummy_test, (bar, (id), (1), (2))))]]
 proc autotest_dummy_test_without_other_attributes()
 begin
   select * from bar;
@@ -9713,7 +9713,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % autotest attribute 'dummy_test' has invalid value type in 'id'
 -- +1 error:
-@attribute(cql:autotest=(dummy_table, (dummy_test, (bar, (id), (one)))))
+[[autotest=(dummy_table, (dummy_test, (bar, (id), (one))))]]
 proc autotest_dummy_test_invalid_col_str_value()
 begin
   select * from bar;
@@ -9726,7 +9726,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % autotest attribute 'dummy_test' has invalid value type in 'id'
 -- +1 error:
-@attribute(cql:autotest=((dummy_test, (bar, (id), (0.1)))))
+[[autotest=((dummy_test, (bar, (id), (0.1))))]]
 proc autotest_dummy_test_invalid_col_dbl_value()
 begin
   select * from bar;
@@ -9736,7 +9736,7 @@ end;
 -- + {misc_attrs}: ok
 -- + {create_proc_stmt}: autotest_dummy_test_long_col_with_int_value: { id: integer notnull, name: text, rate: longint } dml_proc
 -- - error:
-@attribute(cql:autotest=((dummy_test, (bar, (rate), (1)))))
+[[autotest=((dummy_test, (bar, (rate), (1))))]]
 proc autotest_dummy_test_long_col_with_int_value()
 begin
   select * from bar;
@@ -9748,7 +9748,7 @@ end;
 -- + {int 1}
 -- + {create_proc_stmt}: autotest_dummy_test_neg_long_col_with_int_value: { id: integer notnull, name: text, rate: longint } dml_proc
 -- - error:
-@attribute(cql:autotest=((dummy_test, (bar, (rate), (-1)))))
+[[autotest=((dummy_test, (bar, (rate), (-1))))]]
 proc autotest_dummy_test_neg_long_col_with_int_value()
 begin
   select * from bar;
@@ -9761,7 +9761,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % autotest attribute 'dummy_test' has invalid value type in 'id'
 -- +1 error:
-@attribute(cql:autotest=(dummy_table, (dummy_test, (bar, (id) , ('bogus')))))
+[[autotest=(dummy_table, (dummy_test, (bar, (id) , ('bogus'))))]]
 proc autotest_dummy_test_invalid_col_strlit_value()
 begin
   select * from bar;
@@ -9774,7 +9774,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % autotest attribute 'dummy_test' has invalid value type in 'id'
 -- +1 error:
-@attribute(cql:autotest=(dummy_table, (dummy_test, (bar, (id), (1L)))))
+[[autotest=(dummy_table, (dummy_test, (bar, (id), (1L))))]]
 proc autotest_dummy_test_invalid_col_lng_value()
 begin
   select * from bar;
@@ -9787,7 +9787,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % autotest attribute has incorrect format (column name should be nested) in 'dummy_test'
 -- +1 error:
-@attribute(cql:autotest=(dummy_table, (dummy_test, (bar, id, (1), (2)))))
+[[autotest=(dummy_table, (dummy_test, (bar, id, (1), (2))))]]
 proc autotest_dummy_test_invalid_col_format()
 begin
   select * from bar;
@@ -9800,7 +9800,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % autotest attribute has incorrect format (too many column values) in 'dummy_test'
 -- +1 error:
-@attribute(cql:autotest=(dummy_table, (dummy_test, (bar, (id), (1, 2)))))
+[[autotest=(dummy_table, (dummy_test, (bar, (id), (1, 2))))]]
 proc autotest_dummy_test_too_many_value_format()
 begin
   select * from bar;
@@ -9813,7 +9813,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % autotest attribute has incorrect format (mismatch number of column and values) in 'dummy_test'
 -- +1 error:
-@attribute(cql:autotest=(dummy_table, (dummy_test, (bar, (id, name), (1)))))
+[[autotest=(dummy_table, (dummy_test, (bar, (id, name), (1))))]]
 proc autotest_dummy_test_missing_value_format()
 begin
   select * from bar;
@@ -9826,7 +9826,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % autotest attribute has incorrect format (column value should be nested) in 'dummy_test'
 -- +1 error:
-@attribute(cql:autotest=(dummy_table, (dummy_test, (bar, (id, name)))))
+[[autotest=(dummy_table, (dummy_test, (bar, (id, name))))]]
 proc autotest_dummy_test_no_value_format()
 begin
   select * from bar;
@@ -9839,7 +9839,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % autotest attribute has incorrect format (table name should be nested) in 'dummy_test'
 -- +1 error:
-@attribute(cql:autotest=(dummy_table, (dummy_test, (1, (id), (1)))))
+[[autotest=(dummy_table, (dummy_test, (1, (id), (1))))]]
 proc autotest_bogus_table_name_format()
 begin
   select * from bar;
@@ -9852,7 +9852,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % autotest attribute has incorrect format (column name should be nested) in 'dummy_test'
 -- +1 error:
-@attribute(cql:autotest=(dummy_table, (dummy_test, (bar, (1), (1)))))
+[[autotest=(dummy_table, (dummy_test, (bar, (1), (1))))]]
 proc autotest_bogus_colum_name_format()
 begin
   select * from bar;
@@ -9865,7 +9865,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % autotest attribute has incorrect format (column value should be nested) in 'dummy_test'
 -- +1 error:
-@attribute(cql:autotest=(dummy_table, (dummy_test, (bar, (id), 1))))
+[[autotest=(dummy_table, (dummy_test, (bar, (id), 1)))]]
 proc autotest_colum_value_incorrect_format()
 begin
   select * from bar;
@@ -9879,7 +9879,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % autotest attribute 'dummy_test' has non existent column 'bogus_col'
 -- +1 error:
-@attribute(cql:autotest=(dummy_table, (dummy_test, (bar, (bogus_col), (1), (2)))))
+[[autotest=(dummy_table, (dummy_test, (bar, (bogus_col), (1), (2))))]]
 proc autotest_dummy_test_bogus_col_name()
 begin
   select * from bar;
@@ -9892,7 +9892,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % autotest attribute 'dummy_test' has non existent table 'bogus_table'
 -- +1 error:
-@attribute(cql:autotest=(dummy_table, (dummy_test, (bogus_table, (id), (1), (2)))))
+[[autotest=(dummy_table, (dummy_test, (bogus_table, (id), (1), (2))))]]
 proc autotest_dummy_test_bogus_table_name()
 begin
   select * from bar;
@@ -9904,7 +9904,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % autotest attribute name is not valid 'dummy_bogus'
 -- +1 error:
-@attribute(cql:autotest=(dummy_bogus))
+[[autotest=(dummy_bogus)]]
 proc autotest_dummy_bogus()
 begin
   select * from bar;
@@ -9917,7 +9917,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % autotest has incorrect format 'found nested attributes that don't start with dummy_test'
 -- +1 error:
-@attribute(cql:autotest=(dummy_table, (dummy_bogus)))
+[[autotest=(dummy_table, (dummy_bogus))]]
 proc autotest_bogus_nested_attribute()
 begin
   select * from bar;
@@ -9929,7 +9929,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % autotest has incorrect format 'found nested attributes that don't start with dummy_test'
 -- +1 error:
-@attribute(cql:autotest=(dummy_test, (bar, (id), (1))))
+[[autotest=(dummy_test, (bar, (id), (1)))]]
 proc autotest_dummy_test_not_nested()
 begin
   select * from bar;
@@ -9941,7 +9941,7 @@ end;
 -- * error: % autotest attribute name is not valid 'bar'
 -- * error: % autotest has incorrect format 'found nested attributes that don't start with dummy_test'
 -- +2 error:
-@attribute(cql:autotest=(dummy_test, bar, ((id, name),(1, 'x'))))
+[[autotest=(dummy_test, bar, ((id, name),(1, 'x')))]]
 proc autotest_dummy_test_not_nested_2()
 begin
   select * from bar;
@@ -9952,7 +9952,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % autotest attribute has incorrect format (table name should be nested) in 'dummy_test'
 -- +1 error:
-@attribute(cql:autotest=((dummy_test, ((bar, (id), (1), (2))))))
+[[autotest=((dummy_test, ((bar, (id), (1), (2)))))]]
 proc autotest_dummy_test_with_col_double_nested()
 begin
   select * from bar;
@@ -9964,7 +9964,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % autotest has incorrect format 'no test types specified'
 -- +1 error:
-@attribute(cql:autotest=dummy_table)
+[[autotest=dummy_table]]
 proc autotest_incorrect_formatting()
 begin
   select * from bar;
@@ -9985,7 +9985,7 @@ create table not_a_temp_table( id integer);
 -- + {name table2}: ok
 -- + {create_proc_stmt}: autodropper: { id: integer } dml_proc
 -- + {name autodropper}: autodropper: { id: integer } dml_proc
-@attribute(cql:autodrop=(table1, table2))
+[[autodrop=(table1, table2)]]
 proc autodropper()
 begin
   select * from table1;
@@ -9997,7 +9997,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % autodrop temp table does not exist 'not_an_object'
 -- +1 error:
-@attribute(cql:autodrop=(not_an_object))
+[[autodrop=(not_an_object)]]
 proc autodropper_not_an_objecte()
 begin
   select * from table1;
@@ -10009,7 +10009,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % autodrop target is not a table 'ViewShape'
 -- +1 error:
-@attribute(cql:autodrop=(ViewShape))
+[[autodrop=(ViewShape)]]
 proc autodropper_dropping_view()
 begin
   select * from table1;
@@ -10021,7 +10021,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % autodrop target must be a temporary table 'not_a_temp_table'
 -- +1 error:
-@attribute(cql:autodrop=(not_a_temp_table))
+[[autodrop=(not_a_temp_table)]]
 proc autodropper_not_temp_table()
 begin
   select * from table1;
@@ -10033,7 +10033,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % autodrop annotation can only go on a procedure that returns a result set 'autodrop_not_really_a_result_set_proc'
 -- +1 error:
-@attribute(cql:autodrop=(table1, table2))
+[[autodrop=(table1, table2)]]
 proc autodrop_not_really_a_result_set_proc()
 begin
   declare i integer;
@@ -10045,7 +10045,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % autodrop annotation can only go on a procedure that uses the database 'autodrop_no_db'
 -- +1 error:
-@attribute(cql:autodrop=(table1, table2))
+[[autodrop=(table1, table2)]]
 procedure autodrop_no_db()
 begin
   cursor C like select 1 id;
@@ -10281,7 +10281,7 @@ CREATE TABLE fk_strict_success_loose(
 -- TEST: create proc with an invalid column name in the  identity attribute
 -- * error: % procedure identity column does not exist in result set 'col3'
 -- +1 error:
-@attribute(cql:identity=(col1, col3))
+[[identity=(col1, col3)]]
 proc invalid_identity()
 begin
   select 1 as col1, 2 as col2, 3 as data;
@@ -10290,7 +10290,7 @@ end;
 -- TEST: create proc with an identity attribute but it has no result
 -- * error: % identity annotation can only go on a procedure that returns a result set 'no_result_set_identity'
 -- +1 error:
-@attribute(cql:identity=(col1, col3))
+[[identity=(col1, col3)]]
 proc no_result_set_identity()
 begin
   declare x integer;  /* no op */
@@ -12653,7 +12653,7 @@ declare proc sens_result_proc () (t text @sensitive);
 -- TEST this is compatible with the above declaration, it won't be if SENSITIVE is not preserved.
 -- + {create_proc_stmt}: sens_result_proc: { t: text sensitive } dml_proc
 -- - error:
-@attribute(cql:autotest=(dummy_test))
+[[autotest=(dummy_test)]]
 proc sens_result_proc()
 begin
   select * from sens_table;
@@ -12669,7 +12669,7 @@ declare proc incompatible_result_proc () (t text);
 -- + The above must be identical.
 -- * error: % procedure declarations/definitions do not match 'incompatible_result_proc'
 -- + {create_proc_stmt}: err
-@attribute(cql:autotest=(dummy_test))
+[[autotest=(dummy_test)]]
 proc incompatible_result_proc ()
 begin
   select 1 t;
@@ -13147,7 +13147,7 @@ create table fk_to_non_key(
 -- + {int 2}: ok
 -- + {create_proc_stmt}: self_ref_proc_table: { id: integer notnull, id2: integer } dml_proc
 -- - error:
-@attribute(cql:autotest=((dummy_test, (self_ref1, (id, id2), (1, null), (2, 1)))))
+[[autotest=((dummy_test, (self_ref1, (id, id2), (1, null), (2, 1))))]]
 proc self_ref_proc_table()
 begin
   select * from self_ref1;
@@ -13160,7 +13160,7 @@ end;
 -- + {name ok_table_scan}
 -- + {name foo}: ok
 -- - error:
-@attribute(cql:ok_table_scan=foo)
+[[ok_table_scan=foo]]
 proc ok_table_scan()
 begin
   select * from foo;
@@ -13175,7 +13175,7 @@ end;
 -- + {int 1}: err
 -- * error: % ok_table_scan attribute must be a name
 -- +1 error:
-@attribute(cql:ok_table_scan=(foo, 1))
+[[ok_table_scan=(foo, 1)]]
 proc ok_table_scan_value()
 begin
   select * from foo;
@@ -13187,8 +13187,8 @@ end;
 -- + {name foo}
 -- * error: % table name in ok_table_scan does not exist 'bogus'
 -- +1 error:
-@attribute(cql:ok_table_scan=bogus)
-@attribute(cql:attr)
+[[ok_table_scan=bogus]]
+[[attr]]
 proc ok_table_scan_bogus()
 begin
   select * from foo;
@@ -13199,7 +13199,7 @@ end;
 -- + {int 1}: err
 -- * error: % ok_table_scan attribute must be a name
 -- +1 error:
-@attribute(cql:ok_table_scan=1)
+[[ok_table_scan=1]]
 proc ok_table_scan_value_int()
 begin
   select * from foo;
@@ -13210,7 +13210,7 @@ end;
 -- + {select_stmt}: err
 -- * error: % ok_table_scan attribute can only be used in a create procedure statement
 -- +1 error:
-@attribute(cql:ok_table_scan=foo)
+[[ok_table_scan=foo]]
 select * from foo;
 
 -- TEST: no_scan_table attribution is not on create table node
@@ -13219,14 +13219,14 @@ select * from foo;
 -- + {select_stmt}: err
 -- * error: % no_table_scan attribute may only be added to a create table statement
 -- +1 error:
-@attribute(cql:no_table_scan)
+[[no_table_scan]]
 select * from foo;
 
 -- TEST: no_scan_table attribution on create table node
 -- + {stmt_and_attr}: ok
 -- + {misc_attrs}: ok
 -- - error:
-@attribute(cql:no_table_scan)
+[[no_table_scan]]
 create table no_table_scan(id text);
 
 -- TEST: no_scan_table attribution with a value
@@ -13236,7 +13236,7 @@ create table no_table_scan(id text);
 -- + {select_stmt}: err
 -- * error: % a value should not be assigned to no_table_scan attribute
 -- +1 error:
-@attribute(cql:no_table_scan=1)
+[[no_table_scan=1]]
 select * from foo;
 
 -- TEST: test select with values clause
@@ -15903,7 +15903,7 @@ set x1 := cast(x1 as integer<y_coord>);
 -- + {select_stmt}: err
 -- * error: % vault_sensitive attribute may only be added to a create procedure statement
 -- +1 error:
-@attribute(cql:vault_sensitive)
+[[vault_sensitive]]
 select * from foo;
 
 -- TEST: vault_sensitive attribution with invalid value
@@ -15911,7 +15911,7 @@ select * from foo;
 -- * error: % vault_sensitive column does not exist in result set 'bogus'
 -- * error: % vault_sensitive column does not exist in result set 'nan'
 -- +2 error:
-@attribute(cql:vault_sensitive=(bogus, nan))
+[[vault_sensitive=(bogus, nan)]]
 proc vault_sensitive_with_invalid_values()
 begin
   select * from bar;
@@ -15920,7 +15920,7 @@ end;
 -- TEST: vault_sensitive attribution with valid value
 -- + {stmt_and_attr}: ok
 -- - error:
-@attribute(cql:vault_sensitive=(name, rate))
+[[vault_sensitive=(name, rate)]]
 proc vault_sensitive_with_valid_values()
 begin
   select * from bar;
@@ -15929,7 +15929,7 @@ end;
 -- TEST: vault_sensitive attribution with invalid single column
 -- * error: % vault_sensitive column does not exist in result set 'bogus'
 -- +1 error:
-@attribute(cql:vault_sensitive=bogus)
+[[vault_sensitive=bogus]]
 proc vault_sensitive_with_invalid_single_column()
 begin
   select * from bar;
@@ -15942,7 +15942,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % all arguments must be names 'vault_sensitive'
 -- +1 error:
-@attribute(cql:vault_sensitive=1)
+[[vault_sensitive=1]]
 proc vault_sensitive_with_not_string_value_proc_val()
 begin
 end;
@@ -15954,7 +15954,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % all arguments must be names 'vault_sensitive'
 -- +1 error:
-@attribute(cql:vault_sensitive=(name, 1, 'lol'))
+[[vault_sensitive=(name, 1, 'lol')]]
 proc vault_sensitive_with_not_strings_value_proc_val()
 begin
 end;
@@ -15966,7 +15966,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % all arguments must be names 'vault_sensitive'
 -- +1 error:
-@attribute(cql:vault_sensitive='lol')
+[[vault_sensitive='lol']]
 proc vault_sensitive_with_lit_string_value_proc_val()
 begin
 end;
@@ -15976,7 +15976,7 @@ end;
 -- * error: % vault_sensitive column does not exist in result set 'bogus'
 -- * error: % vault_sensitive column does not exist in result set 'nan'
 -- +2 error:
-@attribute(cql:vault_sensitive=(bogus, (nan)))
+[[vault_sensitive=(bogus, (nan))]]
 proc vault_sensitive_with_invalid_encode_context_columns()
 begin
   select * from bar;
@@ -15989,7 +15989,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % all arguments must be names 'vault_sensitive'
 -- +1 error:
-@attribute(cql:vault_sensitive=(1, (name)))
+[[vault_sensitive=(1, (name))]]
 proc vault_sensitive_with_not_string_vault_context_proc_val()
 begin
 end;
@@ -16001,7 +16001,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % all arguments must be names 'vault_sensitive'
 -- +1 error:
-@attribute(cql:vault_sensitive=('lol', (name)))
+[[vault_sensitive=('lol', (name))]]
 proc vault_sensitive_with_literal_string_vault_context_proc_val()
 begin
 end;
@@ -16013,7 +16013,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % all arguments must be names 'vault_sensitive'
 -- +1 error:
-@attribute(cql:vault_sensitive=(name, (1)))
+[[vault_sensitive=(name, (1))]]
 proc vault_sensitive_with_not_string_vault_column_proc_val()
 begin
 end;
@@ -16034,7 +16034,7 @@ create table bar_with_sensitive(
 -- + {create_proc_stmt}: err
 -- * error: % encode context column can't be sensitive 'name'
 -- +1 error:
-@attribute(cql:vault_sensitive=(name, (id, title)))
+[[vault_sensitive=(name, (id, title))]]
 proc vault_sensitive_with_sensitive_encode_context_column_proc_val()
 begin
   select * from bar_with_sensitive;
@@ -16046,7 +16046,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % all arguments must be names 'vault_sensitive'
 -- +1 error:
-@attribute(cql:vault_sensitive=(intro, (id, (title))))
+[[vault_sensitive=(intro, (id, (title)))]]
 proc vault_sensitive_with_invalid_nested_vault_column_proc_val()
 begin
   select * from bar_with_sensitive;
@@ -16058,7 +16058,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % encode context column can be only specified once 'id'
 -- +1 error:
-@attribute(cql:vault_sensitive=(intro, (name), id))
+[[vault_sensitive=(intro, (name), id)]]
 proc vault_sensitive_with_multi_encode_context_columns_proc_val()
 begin
   select * from bar_with_sensitive;
@@ -16067,7 +16067,7 @@ end;
 -- TEST: vault_sensitive attribution with valid context and encode columns
 -- + {stmt_and_attr}: ok
 -- - error:
-@attribute(cql:vault_sensitive=(intro, (name, title)))
+[[vault_sensitive=(intro, (name, title))]]
 proc vault_sensitive_with_valid_context_and_encode_columns()
 begin
   select * from bar_with_sensitive;
@@ -16083,7 +16083,7 @@ end;
 -- + {misc_attrs}: err
 -- * error: % context column must be specified if strict encode context column mode is enabled
 -- +1 error:
-@attribute(cql:vault_sensitive=(name, rate))
+[[vault_sensitive=(name, rate)]]
 proc vault_sensitive_with_only_encode_columns_strict_mode()
 begin
   select * from bar;
@@ -16094,7 +16094,7 @@ end;
 -- + {misc_attrs}: err
 -- * error: % context column must be specified if strict encode context column mode is enabled
 -- +1 error:
-@attribute(cql:vault_sensitive=name)
+[[vault_sensitive=name]]
 proc vault_sensitive_with_only_encode_column_strict_mode()
 begin
   select * from bar;
@@ -16105,7 +16105,7 @@ end;
 -- + {misc_attrs}: err
 -- * error: % context column must be specified if strict encode context column mode is enabled
 -- +1 error:
-@attribute(cql:vault_sensitive)
+[[vault_sensitive]]
 proc vault_sensitive_with_no_columns_strict_mode()
 begin
   select * from bar;
@@ -16114,7 +16114,7 @@ end;
 -- TEST: vault_sensitive attribution with integer encode context
 -- + {stmt_and_attr}: ok
 -- - error:
-@attribute(cql:vault_sensitive=(id, (name)))
+[[vault_sensitive=(id, (name))]]
 proc vault_sensitive_with_integer_encode_context()
 begin
   select * from bar;
@@ -16130,7 +16130,7 @@ end;
 -- + {misc_attrs}: err
 -- * error: % vault context column in vault_senstive attribute must match the specified type in strict mode 'vault_sensitive'
 -- +1 error:
-@attribute(cql:vault_sensitive=(name, (rate)))
+[[vault_sensitive=(name, (rate))]]
 proc vault_sensitive_encode_context_integer_strict_mode()
 begin
   select * from bar;
@@ -16151,7 +16151,7 @@ end;
 -- + {misc_attrs}: err
 -- * error: % vault context column in vault_senstive attribute must match the specified type in strict mode 'vault_sensitive'
 -- +1 error:
-@attribute(cql:vault_sensitive=(name, (rate)))
+[[vault_sensitive=(name, (rate))]]
 proc vault_sensitive_encode_context_long_integer_strict_mode()
 begin
   select * from bar;
@@ -16172,7 +16172,7 @@ end;
 -- + {misc_attrs}: err
 -- * error: % vault context column in vault_senstive attribute must match the specified type in strict mode 'vault_sensitive'
 -- +1 error:
-@attribute(cql:vault_sensitive=(name, (rate)))
+[[vault_sensitive=(name, (rate))]]
 proc vault_sensitive_encode_context_real_strict_mode()
 begin
   select * from bar;
@@ -16193,7 +16193,7 @@ end;
 -- + {misc_attrs}: err
 -- * error: % vault context column in vault_senstive attribute must match the specified type in strict mode 'vault_sensitive'
 -- +1 error:
-@attribute(cql:vault_sensitive=(name, (rate)))
+[[vault_sensitive=(name, (rate))]]
 proc vault_sensitive_encode_context_bool_strict_mode()
 begin
   select * from bar;
@@ -16214,7 +16214,7 @@ end;
 -- + {misc_attrs}: err
 -- * error: % vault context column in vault_senstive attribute must match the specified type in strict mode 'vault_sensitive'
 -- +1 error:
-@attribute(cql:vault_sensitive=(name, (rate)))
+[[vault_sensitive=(name, (rate))]]
 proc vault_sensitive_encode_context_blob_strict_mode()
 begin
   select * from bar;
@@ -16235,7 +16235,7 @@ end;
 -- + {misc_attrs}: err
 -- * error: % vault context column in vault_senstive attribute must match the specified type in strict mode 'vault_sensitive'
 -- +1 error:
-@attribute(cql:vault_sensitive=(id, (name, rate)))
+[[vault_sensitive=(id, (name, rate))]]
 proc vault_sensitive_with_integer_encode_context_strict_mode()
 begin
   select * from bar;
@@ -16244,7 +16244,7 @@ end;
 -- TEST: vault_sensitive attribution with text encode context
 -- + {stmt_and_attr}: ok
 -- - error:
-@attribute(cql:vault_sensitive=(name, (rate)))
+[[vault_sensitive=(name, (rate))]]
 proc vault_sensitive_with_text_encode_context_strict_mode()
 begin
   select * from bar;
@@ -16264,7 +16264,7 @@ end;
 -- + {stmt_and_attr}: ok
 -- + {misc_attrs}: ok
 -- - error:
-@attribute(cql:vault_sensitive)
+[[vault_sensitive]]
 proc vault_sensitive_proc()
 begin
 end;
@@ -16274,7 +16274,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % vault_sensitive annotation can only go on a procedure that uses the database
 -- +1 error:
-@attribute(cql:vault_sensitive)
+[[vault_sensitive]]
 proc vault_sensitive_proc_dml()
 begin
   declare y text;
@@ -19275,7 +19275,7 @@ end;
 proc try_blocks_can_successfully_verify_initialization(out a text not null, out rc int!)
 begin
   set rc := 0;
-  @attribute(cql:try_is_proc_body)
+  [[try_is_proc_body]]
   @attribute(some_other_attribute)
   try
     -- we're okay because it's initialized in the TRY...
@@ -19296,7 +19296,7 @@ proc try_blocks_can_fail_to_verify_initialization(out a text not null, out rc in
 begin
   set rc := 0;
   @attribute(some_other_attribute)
-  @attribute(cql:try_is_proc_body)
+  [[try_is_proc_body]]
   try
     -- `a` is not initialized soon enough so we get an error...
   catch
@@ -19310,15 +19310,15 @@ end;
 -- + {create_proc_stmt}: err
 -- + {stmt_and_attr}: err
 -- + {trycatch_stmt}: err
--- * error: % @attribute(cql:try_is_proc_body) cannot be used more than once per procedure
+-- * error: % [[try_is_proc_body]] cannot be used more than once per procedure
 -- +1 error:
 proc try_is_proc_body_may_only_appear_once()
 begin
-  @attribute(cql:try_is_proc_body)
+  [[try_is_proc_body]]
   try
   catch
   end;
-  @attribute(cql:try_is_proc_body)
+  [[try_is_proc_body]]
   try
   catch
   end;
@@ -19328,11 +19328,11 @@ end;
 -- + {create_proc_stmt}: err
 -- + {stmt_and_attr}: err
 -- + {trycatch_stmt}: err
--- * error: % @attribute(cql:try_is_proc_body) accepts no values
+-- * error: % [[try_is_proc_body]] accepts no values
 -- +1 error:
 proc try_is_proc_body_accepts_no_values()
 begin
-  @attribute(cql:try_is_proc_body=(foo))
+  [[try_is_proc_body=(foo)]]
   try
   catch
   end;
@@ -20251,7 +20251,7 @@ end;
 -- TEST: verify that we can identify a well shaped conditional fragment
 -- + {create_proc_stmt}: conditional_frag: { id: integer notnull } dml_proc
 -- - error:
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc conditional_frag(bb int!)
 begin
   if bb == 1 then
@@ -20280,7 +20280,7 @@ end;
 -- TEST: base fragment that uses possible_conflict, this will later cause conflicts
 -- no issues with just this
 -- - error:
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc fragtest_0_0()
 begin
  with
@@ -20292,7 +20292,7 @@ end;
 -- TEST: base fragment that uses inner frag 0, this will later cause conflicts
 -- no issues with just this
 -- - error:
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc fragtest_0_1()
 begin
  with
@@ -20304,7 +20304,7 @@ end;
 -- TEST: base fragment that uses inner frag 1, this will later cause conflicts
 -- no issues with just this
 -- - error:
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc fragtest_0_2()
 begin
  with
@@ -20332,7 +20332,7 @@ with source(*) as (select 1 x)
 
 -- TEST: a base fragment that is perfectly legal
 -- - error:
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc fragtest_1_0()
 begin
  with
@@ -20347,7 +20347,7 @@ end;
 -- + Procedure 'fragtest_1_0' has a different CTE that is also named 'possible_conflict'
 -- + The above originated from CALL fragtest_1_0 USING possible_conflict AS source
 -- +1 error:
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc fragtest_1_1()
 begin
  with
@@ -20359,7 +20359,7 @@ end;
 -- TEST: here 'possible_conflict' won't conflict because it is entirely local
 -- setting this up the select ahead
 -- - error:
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc fragtest_2_0()
 begin
  with
@@ -20371,7 +20371,7 @@ end;
 -- that will not cause any issues
 -- +  {create_proc_stmt}: fragtest_2_1: { x: integer notnull } dml_proc
 -- - error:
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc fragtest_2_1()
 begin
  with
@@ -20392,7 +20392,7 @@ with possible_conflict(*) as (select 1 x)
 -- but it doesn't count as a conflict because it's just the formal name
 -- + {with_select_stmt}: select: { x: integer notnull }
 -- - error:
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc frag_not_really_a_conflict()
 begin
  with
@@ -20401,7 +20401,7 @@ begin
 end;
 
 -- TEST: test doc comments being rewritten as attributes
--- + @ATTRIBUTE(cql:doc_comment="/** This is a doc comment */")
+-- + [[doc_comment="/** This is a doc comment */"]]
 -- + PROC doc_comment_proc ()
 -- - error:
 /** This is a doc comment */
@@ -20575,7 +20575,7 @@ select @columns(like arg_shape arguments) from (select 1 xyzzy);
 -- TEST: create a shared fragment with no from clause
 -- + {create_proc_stmt}: inline_math: { result: integer } dml_proc
 -- - error:
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc inline_math(x_ integer, y_ integer)
 begin
   select x_ + y_ result;
@@ -20598,7 +20598,7 @@ end;
 
 -- TEST: the fragment is ok on its own
 -- but you can't use this fragment as an inline function
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc inline_math_bad(x integer, y integer)
 begin
   select x + y sum from (select 1 z);
@@ -20616,7 +20616,7 @@ end;
 
 -- TEST: the fragment is ok on its own
 -- it has a compound query so you can't use it in an expression
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc inline_math_bad2()
 begin
   select 1 x
@@ -20635,7 +20635,7 @@ begin
 end;
 
 -- TEST: the fragment has an error, can't use it
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc inline_math_bad3()
 begin
   select not 'x' y;
@@ -20653,7 +20653,7 @@ end;
 
 -- TEST: the fragment is ok on its own
 -- it can't be used as an expression because it selects 2 values
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc inline_math_bad4()
 begin
   select 1 x, 2 y;
@@ -20679,7 +20679,7 @@ begin
   select 1 where inline_math(2); -- wrong number of args
 end;
 
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc inline_frag(x integer)
 begin
   select 1 x;
@@ -20695,13 +20695,13 @@ begin
   select 1 where inline_frag(distinct 2);
 end;
 
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 declare proc declared_shared_fragment() (x integer);
 
 -- TEST: try declare a fragment and use it without doing create proc
 -- + {create_proc_stmt}: err
 -- + {shared_cte}: err
--- * error: % @attribute(cql:shared_fragment) may only be placed on a CREATE PROC statement 'declared_shared_fragment'
+-- * error: % [[shared_fragment]] may only be placed on a CREATE PROC statement 'declared_shared_fragment'
 -- +1 error:
 proc uses_declared_shared_fragment()
 begin
@@ -20720,13 +20720,13 @@ begin
   select 1 where inline_frag(2) filter (where 1);
 end;
 
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc no_args_frag()
 begin
   select 1 x, 2 y, 3.0 z;
 end;
 
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc nested_expression_fragment(x int!, y int!)
 begin
   select (
@@ -20744,7 +20744,7 @@ begin
   select nested_expression_fragment(1, 2) val;
 end;
 
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc nested_expression_fragment_with_args1(x int!, y int!)
 begin
   select (
@@ -20763,7 +20763,7 @@ begin
   select nested_expression_fragment_with_args1(1, 2) val;
 end;
 
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc nested_expression_fragment_with_args2(x int!, y int!)
 begin
   select (
@@ -20894,7 +20894,7 @@ select sign(-1);
 -- TEST: simple backing table
 -- + {create_table_stmt}: simple_backing_table: { k: blob notnull primary_key, v: blob notnull } backing
 -- - error:
-@attribute(cql:backing_table)
+[[backing_table]]
 create table simple_backing_table(
   k blob primary key,
   v blob not null
@@ -20904,7 +20904,7 @@ create table simple_backing_table(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as backing storage: it does not have a primary key 'simple_backing_table_missing_pk'
 -- +1 error:
-@attribute(cql:backing_table)
+[[backing_table]]
 create table simple_backing_table_missing_pk(
   k blob not null,
   v blob not null
@@ -20914,7 +20914,7 @@ create table simple_backing_table_missing_pk(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as backing storage: it has only primary key columns 'simple_backing_table_only_pk'
 -- +1 error:
-@attribute(cql:backing_table)
+[[backing_table]]
 create table simple_backing_table_only_pk(
   k blob not null,
   v blob not null,
@@ -20925,7 +20925,7 @@ create table simple_backing_table_only_pk(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as backing storage: it has an expression in its primary key 'length(k)'
 -- +1 error:
-@attribute(cql:backing_table)
+[[backing_table]]
 create table simple_backing_table_expr_key(
   k blob,
   v blob,
@@ -20935,7 +20935,7 @@ create table simple_backing_table_expr_key(
 -- TEST: simple backing table with versions and pk external
 -- + {create_table_stmt}: simple_backing_table_with_versions: { k: blob notnull partial_pk, v: blob notnull } deleted backing @create(1) @delete(22)
 -- - error:
-@attribute(cql:backing_table)
+[[backing_table]]
 create table simple_backing_table_with_versions(
   k blob not null,
   v blob not null,
@@ -20945,13 +20945,13 @@ create table simple_backing_table_with_versions(
 -- TEST: simple backed table
 -- + {create_table_stmt}: simple_backed_table: { id: integer notnull primary_key, name: text<cool_text> notnull } backed
 -- - error:
-@attribute(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 create table simple_backed_table(
   id integer primary key,
   name text<cool_text> not null
 );
 
-@attribute(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 CREATE TABLE backed (
  status_id int primary key,
  global_connection_state long
@@ -20996,7 +20996,7 @@ create index oh_no_you_dont on simple_backed_table(id);
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as backed storage: it does not have a primary key 'no_pk_backed_table'
 -- +1 error:
-@attribute(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 create table no_pk_backed_table(
   id integer,
   name text not null
@@ -21006,7 +21006,7 @@ create table no_pk_backed_table(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as backed storage: it has only primary key columns 'only_pk_backed_table'
 -- +1 error:
-@attribute(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 create table only_pk_backed_table(
   id integer primary key
 );
@@ -21014,7 +21014,7 @@ create table only_pk_backed_table(
 -- TEST: simple backed table loose pk
 -- + {create_table_stmt}: simple_backed_table_2: { id: integer notnull partial_pk, name: text notnull } backed
 -- - error:
-@attribute(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 create table simple_backed_table_2(
   id integer,
   name text not null,
@@ -21025,7 +21025,7 @@ create table simple_backed_table_2(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as backed storage: it has an expression in its primary key 'id / 2'
 -- +1 error:
-@attribute(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 create table simple_backed_table_expr_key(
   id integer,
   name text not null,
@@ -21036,7 +21036,7 @@ create table simple_backed_table_expr_key(
 -- {create_table_stmt}: err
 -- * error: % table is not suitable for use as backed storage: it is declared using schema directives (@create or @delete 'simple_backed_table_with_versions'
 -- +1 error:
-@attribute(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 create table simple_backed_table_with_versions(
   id integer primary key,
   name text not null
@@ -21046,7 +21046,7 @@ create table simple_backed_table_with_versions(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as backing storage: column 'id' has a column that is not a blob in 'has_non_blob_columns'
 -- +1 error
-@attribute(cql:backing_table)
+[[backing_table]]
 create table has_non_blob_columns(
   id integer primary key,
   v blob not null
@@ -21056,7 +21056,7 @@ create table has_non_blob_columns(
 -- + {create_virtual_table_stmt}: err
 -- * error: % table is not suitable for use as backing storage: it is a virtual table 'virtual_backing_illegal'
 -- +1 error:
-@attribute(cql:backing_table)
+[[backing_table]]
 create virtual table virtual_backing_illegal using module_name(args) as (
   id integer,
   t text
@@ -21066,7 +21066,7 @@ create virtual table virtual_backing_illegal using module_name(args) as (
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as backing storage: it is redundantly marked TEMP 'temp_backing'
 -- +1 error:
-@attribute(cql:backing_table)
+[[backing_table]]
 create temp table temp_backing(
   id integer,
   t text
@@ -21076,7 +21076,7 @@ create temp table temp_backing(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as backing storage: it is redundantly marked WITHOUT ROWID 'norowid_backing'
 -- +1 error:
-@attribute(cql:backing_table)
+[[backing_table]]
 create table norowid_backing(
   k blob,
   v blob
@@ -21086,7 +21086,7 @@ create table norowid_backing(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as backing storage: it has at least one invalid constraint 'constraint_backing'
 -- +1 error:
-@attribute(cql:backing_table)
+[[backing_table]]
 create table constraint_backing(
   k blob primary key,
   v blob,
@@ -21096,7 +21096,7 @@ create table constraint_backing(
 -- TEST: table with column with primary key can be backing store
 -- + {create_table_stmt}: pk_col_backing: { k: blob notnull primary_key, v: blob } backing
 -- - error:
-@attribute(cql:backing_table)
+[[backing_table]]
 create table pk_col_backing(
   k blob primary key,
   v blob
@@ -21106,7 +21106,7 @@ create table pk_col_backing(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as backing storage: column 'id' has a foreign key in 'fk_col_backing'
 -- +1 error:
-@attribute(cql:backing_table)
+[[backing_table]]
 create table fk_col_backing(
   id integer references foo(id),
   t text
@@ -21116,7 +21116,7 @@ create table fk_col_backing(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as backing storage: column 'id' has a unique key in 'uk_col_backing'
 -- +1 error:
-@attribute(cql:backing_table)
+[[backing_table]]
 create table uk_col_backing(
   id integer unique,
   t text
@@ -21126,7 +21126,7 @@ create table uk_col_backing(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as backing storage: column 'v' is a hidden column in 'hidden_col_backing'
 -- +1 error:
-@attribute(cql:backing_table)
+[[backing_table]]
 create table hidden_col_backing(
   k blob primary key,
   v blob hidden not null
@@ -21136,7 +21136,7 @@ create table hidden_col_backing(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as backing storage: column 'id' specifies auto increment in 'autoinc_col_backing'
 -- +1 error:
-@attribute(cql:backing_table)
+[[backing_table]]
 create table autoinc_col_backing(
   id integer primary key autoincrement,
   v blob not null
@@ -21145,7 +21145,7 @@ create table autoinc_col_backing(
 -- TEST: table with conflict clause is ok for backing store
 -- + {create_table_stmt}: conflict_clause_col_backing: { k: blob notnull primary_key, v: blob notnull } backing
 -- - error:
-@attribute(cql:backing_table)
+[[backing_table]]
 create table conflict_clause_col_backing(
   k blob primary key on conflict abort,
   v blob not null
@@ -21155,7 +21155,7 @@ create table conflict_clause_col_backing(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as backing storage: column 'id' has a check expression in 'check_col_backing'
 -- +1 error:
-@attribute(cql:backing_table)
+[[backing_table]]
 create table check_col_backing(
   k blob primary key,
   id integer check(id = 5)
@@ -21165,7 +21165,7 @@ create table check_col_backing(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as backing storage: column 't' specifies collation order in 'collate_col_backing'
 -- +1 error:
-@attribute(cql:backing_table)
+[[backing_table]]
 create table collate_col_backing(
   k blob primary key,
   t text collate nocase
@@ -21175,7 +21175,7 @@ create table collate_col_backing(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as backing storage: column 'id' has a default value in 'default_value_col_backing'
 -- +1 error:
-@attribute(cql:backing_table)
+[[backing_table]]
 create table default_value_col_backing(
   id integer default 5,
   v blob not null
@@ -21185,7 +21185,7 @@ create table default_value_col_backing(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as backing storage: column 'v' has delete attribute in 'deleted_col_backing'
 -- +1 error:
-@attribute(cql:backing_table)
+[[backing_table]]
 create table deleted_col_backing(
   k blob primary key,
   v blob @delete(11)
@@ -21195,7 +21195,7 @@ create table deleted_col_backing(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as backing storage: column 'v' has create attribute in 'created_col_backing'
 -- +1 error:
-@attribute(cql:backing_table)
+[[backing_table]]
 create table created_col_backing(
   k blob primary key,
   v blob @create(11)
@@ -21204,7 +21204,7 @@ create table created_col_backing(
 -- TEST: table with @recreate is ok, it's really only interesting for in-memory tables
 -- + {create_table_stmt}: recreate_backing: { k: blob notnull primary_key, v: blob notnull } backing @recreate
 -- - error
-@attribute(cql:backing_table)
+[[backing_table]]
 create table recreate_backing(
   k blob primary key,
   v blob not null
@@ -21214,7 +21214,7 @@ create table recreate_backing(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as backing storage: it does not have exactly two blob columns 'one_col_backing'
 -- +1 error:
-@attribute(cql:backing_table)
+[[backing_table]]
 create table one_col_backing(
   k blob primary key
 );
@@ -21223,7 +21223,7 @@ create table one_col_backing(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as backed storage: it is declared using schema directives (@create or @delete 'simple_backed_table_versions'
 -- +1 error:
-@attribute(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 create table simple_backed_table_versions(
   id integer primary key,
   name text not null
@@ -21233,7 +21233,7 @@ create table simple_backed_table_versions(
 -- + {create_virtual_table_stmt}: err
 -- * error: % table is not suitable for use as backed storage: it is a virtual table 'virtual_backed_illegal'
 -- +1 error:
-@attribute(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 create virtual table virtual_backed_illegal using module_name(args) as (
   id integer,
   t text
@@ -21243,7 +21243,7 @@ create virtual table virtual_backed_illegal using module_name(args) as (
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as backed storage: it is redundantly marked TEMP 'temp_backed'
 -- +1 error:
-@attribute(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 create temp table temp_backed(
   id integer,
   t text
@@ -21253,7 +21253,7 @@ create temp table temp_backed(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as backed storage: backing table does not exist 'not_exists_table'
 -- +1 error:
-@attribute(cql:backed_by=not_exists_table)
+[[backed_by=not_exists_table]]
 create table backed_by_not_exists(
   id integer,
   t text
@@ -21263,7 +21263,7 @@ create table backed_by_not_exists(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as backed storage: table exists but is not a valid backing table 'foo'
 -- +1 error:
-@attribute(cql:backed_by=foo)
+[[backed_by=foo]]
 create table backed_by_non_backing(
   id integer,
   t text
@@ -21273,7 +21273,7 @@ create table backed_by_non_backing(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as backed storage: it is redundantly marked WITHOUT ROWID 'norowid_backed'
 -- +1 error:
-@attribute(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 create table norowid_backed(
   id integer,
   t text
@@ -21283,7 +21283,7 @@ create table norowid_backed(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as backed storage: it has at least one invalid constraint 'constraint_backed'
 -- +1 error:
-@attribute(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 create table constraint_backed(
   id integer,
   t text,
@@ -21293,7 +21293,7 @@ create table constraint_backed(
 -- TEST: table with column with primary key can be backed store
 -- + {create_table_stmt}: pk_col_backed: { id: integer notnull primary_key, t: text } backed
 -- - error:
-@attribute(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 create table pk_col_backed(
   id integer primary key,
   t text
@@ -21303,7 +21303,7 @@ create table pk_col_backed(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as backed storage: column 'id' has a foreign key in 'fk_col_backed'
 -- +1 error:
-@attribute(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 create table fk_col_backed(
   id integer references foo(id),
   t text
@@ -21313,7 +21313,7 @@ create table fk_col_backed(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as backed storage: column 'id' has a unique key in 'uk_col_backed'
 -- +1 error:
-@attribute(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 create table uk_col_backed(
   id integer unique,
   t text
@@ -21323,7 +21323,7 @@ create table uk_col_backed(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as backed storage: column 'id' is a hidden column in 'hidden_col_backed'
 -- +1 error:
-@attribute(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 create table hidden_col_backed(
   id integer hidden,
   t text
@@ -21333,7 +21333,7 @@ create table hidden_col_backed(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as backed storage: column 'id' specifies auto increment in 'autoinc_col_backed'
 -- +1 error:
-@attribute(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 create table autoinc_col_backed(
   id integer primary key autoincrement,
   t text
@@ -21342,7 +21342,7 @@ create table autoinc_col_backed(
 -- TEST: table with autoinc column cannot be backed store
 -- + {create_table_stmt}: conflict_clause_col_backed: { id: integer notnull primary_key, t: text } backed
 -- - error:
-@attribute(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 create table conflict_clause_col_backed(
   id integer primary key on conflict abort,
   t text
@@ -21352,7 +21352,7 @@ create table conflict_clause_col_backed(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as backed storage: column 'id' has a check expression in 'check_col_backed'
 -- +1 error:
-@attribute(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 create table check_col_backed(
   id integer check(id = 5),
   t text
@@ -21362,7 +21362,7 @@ create table check_col_backed(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as backed storage: column 't' specifies collation order in 'collate_col_backed'
 -- +1 error:
-@attribute(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 create table collate_col_backed(
   id integer,
   t text collate nocase
@@ -21371,7 +21371,7 @@ create table collate_col_backed(
 -- TEST: table with default value on column -- ok for backed store
 -- + {create_table_stmt}: default_value_col_backed: { id: integer notnull primary_key, x: integer notnull has_default, t: text } backed
 -- - error:
-@attribute(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 create table default_value_col_backed(
   id integer primary key,
   x int! default 7,
@@ -21382,7 +21382,7 @@ create table default_value_col_backed(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as backed storage: column 't' has delete attribute in 'deleted_col_backed'
 -- +1 error:
-@attribute(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 create table deleted_col_backed(
   id integer,
   t text @delete(7)
@@ -21392,7 +21392,7 @@ create table deleted_col_backed(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as backed storage: column 't' has create attribute in 'created_col_backed'
 -- +1 error:
-@attribute(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 create table created_col_backed(
   id integer,
   t text @create(7)
@@ -21402,7 +21402,7 @@ create table created_col_backed(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as backed storage: @recreate attribute doesn't match the backing table 'recreate_backed'
 -- +1 error:
-@attribute(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 create table recreate_backed(
   id integer primary key,
   t text
@@ -21412,13 +21412,13 @@ create table recreate_backed(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as backed storage: @recreate group doesn't match the backing table 'recreate_backed_wrong_group'
 -- +1 error:
-@attribute(cql:backed_by=recreate_backing)
+[[backed_by=recreate_backing]]
 create table recreate_backed_wrong_group(
   id integer primary key,
   t text
 ) @recreate(wrong_group_name);
 
-@attribute(cql:blob_storage)
+[[blob_storage]]
 create table structured_storage(
   id int!,
   name text not null
@@ -21496,13 +21496,13 @@ begin
   C:from_blob(a_blob);
 end;
 
-@attribute(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 create table basic_table(
   id integer primary key,
   name text<cool_text>
 );
 
-@attribute(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 create table basic_table2(
   id integer primary key,
   name text
@@ -21786,7 +21786,7 @@ end;
 -- TEST: table with lots of default values
 -- + {create_table_stmt}: bt_default: { pk1: integer notnull has_default partial_pk, pk2: integer notnull has_default partial_pk, x: integer has_default, y: integer has_default } backed
 -- - error
-@attribute(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 create table bt_default(
   pk1 integer default 2222,
   pk2 integer default 99,
@@ -22102,7 +22102,7 @@ end;
 
 -- TEST: blob storage types must use cql:blob_storage
 -- + {call_stmt}: err
--- * error: % the indicated table is not marked with @attribute(cql:blob_storage) 'foo'
+-- * error: % the indicated table is not marked with [[blob_storage]] 'foo'
 -- +1 error:
 proc blob_serialization_not_storage_table()
 begin
@@ -22143,7 +22143,7 @@ create index oh_no_you_dont on structured_storage(id);
 -- + {create_virtual_table_stmt}: err
 -- * error: % table is not suitable for use as blob storage: it is a virtual table 'virtual_blob_storage_illegal'
 -- +1 error:
-@attribute(cql:blob_storage)
+[[blob_storage]]
 create virtual table virtual_blob_storage_illegal using module_name(args) as (
   id integer,
   t text
@@ -22153,7 +22153,7 @@ create virtual table virtual_blob_storage_illegal using module_name(args) as (
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as blob storage: it is redundantly marked TEMP 'temp_blob_storage'
 -- +1 error:
-@attribute(cql:blob_storage)
+[[blob_storage]]
 create temp table temp_blob_storage(
   id integer,
   t text
@@ -22163,7 +22163,7 @@ create temp table temp_blob_storage(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as blob storage: it is redundantly marked WITHOUT ROWID 'norowid_blob_storage'
 -- +1 error:
-@attribute(cql:blob_storage)
+[[blob_storage]]
 create table norowid_blob_storage(
   id integer,
   t text
@@ -22173,7 +22173,7 @@ create table norowid_blob_storage(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as blob storage: it has at least one constraint 'constraint_blob_storage'
 -- +1 error:
-@attribute(cql:blob_storage)
+[[blob_storage]]
 create table constraint_blob_storage(
   id integer,
   t text,
@@ -22184,7 +22184,7 @@ create table constraint_blob_storage(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as blob storage: column 'id' has a primary key in 'pk_col_blob_storage'
 -- +1 error:
-@attribute(cql:blob_storage)
+[[blob_storage]]
 create table pk_col_blob_storage(
   id integer primary key,
   t text
@@ -22194,7 +22194,7 @@ create table pk_col_blob_storage(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as blob storage: column 'id' has a foreign key in 'fk_col_blob_storage'
 -- +1 error:
-@attribute(cql:blob_storage)
+[[blob_storage]]
 create table fk_col_blob_storage(
   id integer references foo(id),
   t text
@@ -22204,7 +22204,7 @@ create table fk_col_blob_storage(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as blob storage: column 'id' has a unique key in 'uk_col_blob_storage'
 -- +1 error:
-@attribute(cql:blob_storage)
+[[blob_storage]]
 create table uk_col_blob_storage(
   id integer unique,
   t text
@@ -22214,7 +22214,7 @@ create table uk_col_blob_storage(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as blob storage: column 'id' is a hidden column in 'hidden_col_blob_storage'
 -- +1 error:
-@attribute(cql:blob_storage)
+[[blob_storage]]
 create table hidden_col_blob_storage(
   id integer hidden,
   t text
@@ -22224,7 +22224,7 @@ create table hidden_col_blob_storage(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as blob storage: column 'id' has a check expression in 'check_col_blob_storage'
 -- +1 error:
-@attribute(cql:blob_storage)
+[[blob_storage]]
 create table check_col_blob_storage(
   id integer check(id = 5),
   t text
@@ -22234,7 +22234,7 @@ create table check_col_blob_storage(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as blob storage: column 't' specifies collation order in 'collate_col_blob_storage'
 -- +1 error:
-@attribute(cql:blob_storage)
+[[blob_storage]]
 create table collate_col_blob_storage(
   id integer,
   t text collate nocase
@@ -22244,7 +22244,7 @@ create table collate_col_blob_storage(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as blob storage: column 'id' has a default value in 'default_value_col_blob_storage'
 -- +1 error:
-@attribute(cql:blob_storage)
+[[blob_storage]]
 create table default_value_col_blob_storage(
   id integer default 5,
   t text
@@ -22254,7 +22254,7 @@ create table default_value_col_blob_storage(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as blob storage: column 't' has been deleted in 'deleted_col_blob_storage'
 -- +1 error:
-@attribute(cql:blob_storage)
+[[blob_storage]]
 create table deleted_col_blob_storage(
   id integer,
   t text @delete(7)
@@ -22264,7 +22264,7 @@ create table deleted_col_blob_storage(
 -- + {create_table_stmt}: err
 -- * error: % table is not suitable for use as blob storage: it is declared using @recreate 'recreate_blob_storage'
 -- +1 error:
-@attribute(cql:blob_storage)
+[[blob_storage]]
 create table recreate_blob_storage(
   id integer,
   t text
@@ -22290,7 +22290,7 @@ select * from structured_storage;
 create table has_row_check_table (a text not null, b text);
 
 -- used in the following tests
-@attribute(cql:blob_storage)
+[[blob_storage]]
 create table has_row_check_blob (a text not null, b text);
 
 -- TEST: accessing an auto cursor field of a nonnull reference type is not
@@ -22448,8 +22448,8 @@ end;
 -- + @ATTRIBUTE(potato:potato)
 -- + @ATTRIBUTE(potato=potato)
 -- + @ATTRIBUTE(potato)
--- + @ATTRIBUTE(cql:potato=potato)
--- + @ATTRIBUTE(cql:potato)
+-- + [[potato=potato]]
+-- + [[potato]]
 -- + @ATTRIBUTE(cql=cql)
 -- + @ATTRIBUTE(cql)
 -- + {misc_attrs}: err
@@ -22460,11 +22460,11 @@ end;
 @attribute(potato:potato)
 @attribute(potato=potato)
 @attribute(potato)
-@attribute(cql:potato=potato)
-@attribute(cql:potato)
+[[potato=potato]]
+[[potato]]
 @attribute(cql=cql)
 @attribute(cql)
-@attribute(cql:vault_sensitive=(privacy_context, (some_column)))
+[[vault_sensitive=(privacy_context, (some_column))]]
 proc attribute_test()
 begin
   select 'x' some_column;
@@ -22904,7 +22904,7 @@ end;
 -- + PROC test_interface1_implementation_correct (id_ INT, name_ TEXT)
 -- + {create_proc_stmt}: test_interface1_implementation_correct: { id: integer, name: text } dml_proc
 -- - error:
-@attribute(cql:implements=interface1)
+[[implements=interface1]]
 proc test_interface1_implementation_correct(id_ INT, name_ TEXT)
 begin
   select id_ id, name_ name;
@@ -22915,7 +22915,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % column types returned by proc need to be the same as defined on the interface (expected integer; found integer notnull) 'id'
 -- +1 error:
-@attribute(cql:implements=interface1)
+[[implements=interface1]]
 proc test_interface1_implementation_wrong_nullability(id_ INT not null)
 begin
   select id_ id, "5" col2;
@@ -22926,7 +22926,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % column types returned by proc need to be the same as defined on the interface (expected integer; found text notnull) 'id'
 -- +1 error:
-@attribute(cql:implements=interface1)
+[[implements=interface1]]
 proc test_interface1_implementation_wrong_type(id_ TEXT not null)
 begin
   select id_ id, "5" col2;
@@ -22936,7 +22936,7 @@ end;
 -- + PROC test_interface1_implementation_wrong_order (id_ INT, name_ TEXT)
 -- + {create_proc_stmt}: test_interface1_implementation_wrong_order: { name: text, id: integer } dml_proc
 -- - error:
-@attribute(cql:implements=interface1)
+[[implements=interface1]]
 proc test_interface1_implementation_wrong_order(id_ INT, name_ TEXT)
 begin
   select name_ name, id_ id;
@@ -22947,7 +22947,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % procedure 'test_interface1_implementation_wrong_name' is missing column 'id' of interface 'interface1'
 -- +1 error:
-@attribute(cql:implements=interface1)
+[[implements=interface1]]
 proc test_interface1_implementation_wrong_name(id_ INT, name_ TEXT)
 begin
   select id_ id2, name_ name;
@@ -22958,7 +22958,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % procedure 'test_interface1_missing_column' is missing column 'name' of interface 'interface2'
 -- +1 error:
-@attribute(cql:implements=interface2)
+[[implements=interface2]]
 proc test_interface1_missing_column(id_ INT, name_ TEXT)
 begin
   select id_ id;
@@ -22970,7 +22970,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % interface not found 'missing_interface'
 -- +1 error:
-@attribute(cql:implements=missing_interface)
+[[implements=missing_interface]]
 proc test_interface1_missing_interface(id_ INT, name_ TEXT)
 begin
   select id_ id, name_ name;
@@ -23004,8 +23004,8 @@ declare interface interface_foo2 (id2 int!, name text not null);
 -- + {create_proc_stmt}: err
 -- * error: % procedure 'interface_proc1' is missing column 'id2' of interface 'interface_foo2'
 -- +1 error:
-@attribute(cql:implements=interface_foo1)
-@attribute(cql:implements=interface_foo2)
+[[implements=interface_foo1]]
+[[implements=interface_foo2]]
 proc interface_proc1()
 begin
    select 1 id, "2" name;
@@ -23014,8 +23014,8 @@ end;
 -- TEST: two interfaces, both supported
 -- + create_proc_stmt}: interface_proc2: { id: integer notnull, name: text notnull, id2: integer
 -- - error:
-@attribute(cql:implements=interface_foo1)
-@attribute(cql:implements=interface_foo2)
+[[implements=interface_foo1]]
+[[implements=interface_foo2]]
 proc interface_proc2()
 begin
    select 1 id, "2" name, 3 id2;
@@ -23541,7 +23541,7 @@ end;
 -- + {name some_native_func}: ok
 -- + {declare_func_stmt}: integer notnull
 -- - error:
-@attribute(cql:alias_of=some_native_func)
+[[alias_of=some_native_func]]
 declare function an_alias_func(x int!) int!;
 
 -- TEST: cql:alias_of attribution on declare proc stmt
@@ -23552,7 +23552,7 @@ declare function an_alias_func(x int!) int!;
 -- + {name some_native_func}: ok
 -- + {declare_proc_stmt}: ok
 -- - error:
-@attribute(cql:alias_of=some_native_func)
+[[alias_of=some_native_func]]
 declare proc an_alias_proc(x int!);
 
 -- TEST: cql:alias_of attribution on invalid statement
@@ -23561,7 +23561,7 @@ declare proc an_alias_proc(x int!);
 -- + {declare_select_func_stmt}: err
 -- * error: % alias_of attribute may only be added to a declare function or declare proc statement
 -- +1 error:
-@attribute(cql:alias_of=barfoo)
+[[alias_of=barfoo]]
 declare select function foobaz(x int!) int!;
 
 -- TEST: cql:alias_of attribution invalid value
@@ -23570,7 +23570,7 @@ declare select function foobaz(x int!) int!;
 -- + {declare_func_stmt}: err
 -- * error: % alias_of attribute must be a non-empty string argument
 -- +1 error:
-@attribute(cql:alias_of)
+[[alias_of]]
 declare function an_alias_func_bad(x int!) int!;
 
 -- setup for invalid child test, private proc

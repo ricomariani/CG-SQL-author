@@ -19,21 +19,21 @@ DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 DECLARE SELECT FUNC is_declare_func_wall (id LONG) BOOL!;
 DECLARE SELECT FUNC array_num_at (array_object_ptr LONG!, idx INT!) LONG;
 DECLARE SELECT FUNC select_virtual_table (b TEXT) (id LONG, t TEXT, b BLOB, r REAL);
-@attribute(cql:deterministic)
+[[deterministic]]
 DECLARE SELECT FUNC bgetkey_type (x BLOB!) LONG!;
-@attribute(cql:deterministic)
+[[deterministic]]
 DECLARE SELECT FUNC bgetval_type (x BLOB!) LONG!;
-@attribute(cql:deterministic)
+[[deterministic]]
 DECLARE SELECT FUNC bgetkey NO CHECK BLOB;
-@attribute(cql:deterministic)
+[[deterministic]]
 DECLARE SELECT FUNC bgetval NO CHECK BLOB;
-@attribute(cql:deterministic)
+[[deterministic]]
 DECLARE SELECT FUNC bcreatekey NO CHECK BLOB;
-@attribute(cql:deterministic)
+[[deterministic]]
 DECLARE SELECT FUNC bcreateval NO CHECK BLOB;
-@attribute(cql:deterministic)
+[[deterministic]]
 DECLARE SELECT FUNC bupdatekey NO CHECK BLOB;
-@attribute(cql:deterministic)
+[[deterministic]]
 DECLARE SELECT FUNC bupdateval NO CHECK BLOB;
 DECLARE SELECT FUNC stuff () INT!;
 PROC create_schema()
@@ -115,7 +115,7 @@ BEGIN
     b BLOB,
     r REAL
   );
-  @attribute(cql:backing_table)
+  [[backing_table]]
   CREATE TABLE backing(
     k BLOB PRIMARY KEY,
     v BLOB!
@@ -149,7 +149,7 @@ BEGIN
   ) WITHOUT ROWID;
 END;
 
-@attribute(cql:backed_by=backing)
+[[backed_by=backing]]
 CREATE TABLE backed(
   id INT PRIMARY KEY,
   name TEXT
@@ -548,7 +548,7 @@ BEGIN
   END;
 END;
 
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 PROC split_commas (str TEXT)
 BEGIN
 WITH
@@ -564,7 +564,7 @@ SELECT tok
   WHERE tok <> "";
 END;
 
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 PROC ids_from_string (str TEXT)
 BEGIN
 WITH
@@ -596,27 +596,27 @@ BEGIN
   END;
 END;
 
-@attribute(cql:shared_fragment)
-@attribute(cql:query_plan_branch=11)
+[[shared_fragment]]
+[[query_plan_branch=11]]
 PROC frag1 (x INT)
 BEGIN
 SELECT 2 AS a;
 END;
 
-@attribute(cql:shared_fragment)
-@attribute(cql:query_plan_branch=4)
+[[shared_fragment]]
+[[query_plan_branch=4]]
 PROC frag2 (y INT)
 BEGIN
 SELECT 40 AS b;
 END;
 
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 PROC frag3 (z INT)
 BEGIN
 SELECT 100 AS c;
 END;
 
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 PROC frag_with_select ()
 BEGIN
 WITH
@@ -627,14 +627,14 @@ SELECT *
   FROM cte;
 END;
 
-@attribute(cql:shared_fragment)
-@attribute(cql:query_plan_branch=2)
+[[shared_fragment]]
+[[query_plan_branch=2]]
 PROC frag_with_select_nothing ()
 BEGIN
 SELECT 1 AS a;
 END;
 
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 PROC frag (v INT!)
 BEGIN
 SELECT v AS val;
@@ -788,7 +788,7 @@ BEGIN
   END;
 END;
 
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 PROC notnull_int_frag (v INT!)
 BEGIN
 SELECT v AS val;
@@ -828,7 +828,7 @@ BEGIN
   END;
 END;
 
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 PROC simple_blob_fragment (x BLOB)
 BEGIN
 SELECT 1 AS xx;
@@ -851,7 +851,7 @@ BEGIN
   END;
 END;
 
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 PROC simple_object_fragment (x OBJECT)
 BEGIN
 SELECT 1 AS xx;
@@ -874,13 +874,13 @@ BEGIN
   END;
 END;
 
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 PROC qp_take_inner_blob (foo BLOB)
 BEGIN
 SELECT foo AS inner_a;
 END;
 
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 PROC qp_take_blob (foo BLOB)
 BEGIN
 WITH
@@ -943,13 +943,13 @@ BEGIN
   END;
 END;
 
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 PROC object_frag (o OBJECT)
 BEGIN
 SELECT 1 AS x;
 END;
 
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 PROC outer_frag ()
 BEGIN
 SELECT *

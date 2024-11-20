@@ -332,9 +332,6 @@ BEGIN
 END;
 ```
 
->NOTE: This appendix uses the more modern form `[[foo]]` instead of the
->equivalent `@attribute(cql:foo)`
-
 Now we can do something like:
 
 ```sql

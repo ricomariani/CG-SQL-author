@@ -1,5 +1,5 @@
 
-@ATTRIBUTE(cql:deterministic)
+[[deterministic]]
 DECLARE SELECT FUNC my_func (x TEXT) TEXT;
 
 DECLARE SELECT FUNC filter_ (id INT) INT!;
@@ -154,13 +154,13 @@ CREATE TABLE create_second(
   `an id` INT REFERENCES `create first` (`an id`)
 ) @CREATE(7);
 
-@ATTRIBUTE(cql:blob_storage)
+[[blob_storage]]
 CREATE TABLE blob_storage_at_create_table(
   x INT,
   y TEXT
 ) @CREATE(5);
 
-@ATTRIBUTE(cql:blob_storage)
+[[blob_storage]]
 CREATE TABLE blob_storage_baseline_table(
   x INT,
   y TEXT
@@ -170,25 +170,25 @@ CREATE TABLE unsub_recreated(
   anything TEXT
 ) @RECREATE;
 
-@ATTRIBUTE(cql:backing_table)
+[[backing_table]]
 CREATE TABLE backing(
   k BLOB PRIMARY KEY,
   v BLOB!
 );
 
-@ATTRIBUTE(cql:backed_by=backing)
+[[backed_by=backing]]
 CREATE TABLE backed(
   x INT PRIMARY KEY,
   y INT
 );
 
-@ATTRIBUTE(cql:backing_table)
+[[backing_table]]
 CREATE TABLE recreate_backing(
   k BLOB PRIMARY KEY,
   v BLOB!
 ) @RECREATE(foo);
 
-@ATTRIBUTE(cql:backed_by=recreate_backing)
+[[backed_by=recreate_backing]]
 CREATE TABLE recreate_backed(
   x INT PRIMARY KEY,
   y INT

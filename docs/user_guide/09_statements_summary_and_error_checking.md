@@ -774,7 +774,9 @@ the exact placement.  Each attribute notation has the general form:
 The _namespace_ portion is optional and attributes with
 special meaning to the compiler are all in the `cql:` namespace.
 e.g. @attribute(cql:private).  This form is so common that the special
-abbreviation `[[foo]]`` can be used instead of `@attribute(cql:foo)`.
+abbreviation `[[foo]]`` can be used instead of `@attribute(cql:foo)` and
+all the builtin attributes are in the `cql` namespace so we can always use
+ `[[foo]]`.  All examples in the documentation use this form.
 
 * The _attribute-name_ can be any valid name
 * Each _attribute-value_ can be:

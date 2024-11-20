@@ -91,7 +91,7 @@ cql_string_literal(_literal_16_The_statement_ending_at_line_read_test_results, "
 // Generated from cql-verify.sql:1
 
 /*
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE PROC cql_throw (code INT!) USING TRANSACTION;
 */
 
@@ -151,7 +151,7 @@ cql_int64 last_rowid = 0;
 // Generated from cql-verify.sql:76
 
 /*
-@ATTRIBUTE(cql:private)
+[[private]]
 PROC setup ()
 BEGIN
   CREATE TABLE test_results(
@@ -201,7 +201,7 @@ cql_cleanup:
 // Generated from cql-verify.sql:100
 
 /*
-@ATTRIBUTE(cql:private)
+[[private]]
 PROC find_test_output_line (expectation_line INT!, OUT test_output_line INT!)
 BEGIN
   TRY
@@ -283,7 +283,7 @@ cql_cleanup:
 // Generated from cql-verify.sql:119
 
 /*
-@ATTRIBUTE(cql:private)
+[[private]]
 PROC find_next (pattern TEXT!, test_output_line INT!, OUT found INT!)
 BEGIN
   CURSOR C FOR
@@ -348,7 +348,7 @@ cql_cleanup:
 // Generated from cql-verify.sql:130
 
 /*
-@ATTRIBUTE(cql:private)
+[[private]]
 PROC find_same (pattern TEXT!, OUT found INT!)
 BEGIN
   SET found := ( SELECT data LIKE "%" || pattern || "%"
@@ -397,7 +397,7 @@ cql_cleanup:
 // Generated from cql-verify.sql:140
 
 /*
-@ATTRIBUTE(cql:private)
+[[private]]
 PROC find_count (pattern TEXT!, test_output_line INT!, OUT found INT!)
 BEGIN
   SET found := ( SELECT count(*)
@@ -437,7 +437,7 @@ cql_cleanup:
 // Generated from cql-verify.sql:157
 
 /*
-@ATTRIBUTE(cql:private)
+[[private]]
 PROC prev_line (test_output_line INT!, OUT prev INT!)
 BEGIN
   SET prev := ( SELECT line
@@ -487,7 +487,7 @@ cql_cleanup:
 // Generated from cql-verify.sql:175
 
 /*
-@ATTRIBUTE(cql:private)
+[[private]]
 PROC dump_source (line1 INT!, line2 INT!, current_line INT!)
 BEGIN
   CURSOR C FOR
@@ -565,7 +565,7 @@ cql_cleanup:
 // Generated from cql-verify.sql:198
 
 /*
-@ATTRIBUTE(cql:private)
+[[private]]
 PROC dump_output (test_output_line INT!, pat TEXT!)
 BEGIN
   LET p := ( SELECT "%" || pat || "%" );
@@ -663,7 +663,7 @@ cql_cleanup:
 // Generated from cql-verify.sql:227
 
 /*
-@ATTRIBUTE(cql:private)
+[[private]]
 PROC print_fail_details (pat TEXT!, test_output_line INT!, expected INT!)
 BEGIN
   LET found := find_count(pat, test_output_line);
@@ -739,7 +739,7 @@ cql_cleanup:
 // Generated from cql-verify.sql:256
 
 /*
-@ATTRIBUTE(cql:private)
+[[private]]
 PROC print_error_block (test_output_line INT!, pat TEXT!, expectation_line INT!, expected INT!)
 BEGIN
   CALL printf("test results:\n");
@@ -784,7 +784,7 @@ cql_cleanup:
 // Generated from cql-verify.sql:272
 
 /*
-@ATTRIBUTE(cql:private)
+[[private]]
 PROC match_multiline (buffer TEXT!, OUT result BOOL!)
 BEGIN
   SET result := FALSE;
@@ -1024,7 +1024,7 @@ cql_cleanup:
 // Generated from cql-verify.sql:366
 
 /*
-@ATTRIBUTE(cql:private)
+[[private]]
 PROC do_match (buffer TEXT!, expectation_line INT!)
 BEGIN
   TRY
@@ -1066,7 +1066,7 @@ cql_cleanup:
 // Generated from cql-verify.sql:381
 
 /*
-@ATTRIBUTE(cql:private)
+[[private]]
 PROC process ()
 BEGIN
   CURSOR C FOR
@@ -1126,7 +1126,7 @@ cql_cleanup:
 // Generated from cql-verify.sql:417
 
 /*
-@ATTRIBUTE(cql:private)
+[[private]]
 PROC read_test_results (result_name TEXT!)
 BEGIN
   LET result_file := cql_fopen(result_name, "r");
@@ -1220,7 +1220,7 @@ cql_cleanup:
 // Generated from cql-verify.sql:442
 
 /*
-@ATTRIBUTE(cql:private)
+[[private]]
 PROC read_test_file (sql_name TEXT!)
 BEGIN
   LET sql_file := cql_fopen(sql_name, "r");
@@ -1300,7 +1300,7 @@ cql_cleanup:
 // Generated from cql-verify.sql:449
 
 /*
-@ATTRIBUTE(cql:private)
+[[private]]
 PROC load_data (sql_name TEXT!, result_name TEXT!)
 BEGIN
   CALL read_test_results(result_name);
@@ -1328,7 +1328,7 @@ cql_cleanup:
 // Generated from cql-verify.sql:466
 
 /*
-@ATTRIBUTE(cql:private)
+[[private]]
 PROC parse_args (args OBJECT<cql_string_list>!)
 BEGIN
   LET argc := cql_string_list_count(args);

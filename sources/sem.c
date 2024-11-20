@@ -538,7 +538,7 @@ static global_notnull_improvement_item *global_notnull_improvements;
 static loop_analysis_state current_loop_analysis_state = LOOP_ANALYSIS_STATE_NONE;
 
 // True if the procedure currently being analyzed contains a TRY block that has
-// been annotated with @attribute(cql:try_is_proc_body). Such an annotation
+// been annotated with [[try_is_proc_body]]. Such an annotation
 // implies that, conceptually, the main logic of the procedure exists entirely
 // within the TRY block; any surrounding code typically exists only for the
 // purpose of atypical error reporting or logging.
@@ -1673,8 +1673,8 @@ typedef struct encode_info {
 // (1) extract encode_info struct from the net info.
 // (2) report error case if invalid format is detected.
 // There are two types of formats for vault_sensitive
-// (a) @attribute(cql:vault_sensitive=(<col1>, <col2>, ...))
-// (b) @attribute(cql:vault_sensitive=(<context_col>, (<col1>, <col2>, ...)))
+// (a) [[vault_sensitive=(<col1>, <col2>, ...)]]
+// (b) [[vault_sensitive=(<context_col>, (<col1>, <col2>, ...))]]
 // format (b) has extra encode context column specified.
 // both encode context column and encode columns need to be present in resultSet
 static void sem_find_ast_misc_attr_vault_sensitive_callback(
@@ -1697,7 +1697,7 @@ static void sem_find_ast_misc_attr_vault_sensitive_callback(
   encode_info *info = (encode_info *)context;
   ast_node *misc_attrs = info->misc_attrs;
 
-  // case @attribute(cql:vault_sensitive)
+  // case [[vault_sensitive]]
   // all sensitive columns in the result set will be encoded without context column.
   if (ast_misc_attr_value_list == NULL) {
     // report error if strict mode is on for encode context column
@@ -1705,7 +1705,7 @@ static void sem_find_ast_misc_attr_vault_sensitive_callback(
     return;
   }
 
-  // case @attribute(cql:vault_sensitive=col)
+  // case [[vault_sensitive=col]]
   // only col is encoded without context column
   if (!is_ast_misc_attr_value_list(ast_misc_attr_value_list)) {
     // detect invalid string column
@@ -1727,8 +1727,8 @@ static void sem_find_ast_misc_attr_vault_sensitive_callback(
   }
 
   // find out if we are dealing with format (a) or format (b)
-  // (a) @attribute(cql:vault_sensitive=(<col1>, <col2>, ...))
-  // (b) @attribute(cql:vault_sensitive=(<context_col>, (<col1>, <col2>, ...)))
+  // (a) [[vault_sensitive=(<col1>, <col2>, ...)]]
+  // (b) [[vault_sensitive=(<context_col>, (<col1>, <col2>, ...))]]
   // if we see nested column list, it's format (b) with context column, otherwise format (a).
   bool_t has_nested_columns = false;
   for (ast_node *list = ast_misc_attr_value_list; list; list = list->right) {
@@ -1739,7 +1739,7 @@ static void sem_find_ast_misc_attr_vault_sensitive_callback(
   }
 
   // format (a) without context column
-  // case @attribute(cql:vault_sensitive=(col1, col2, ...))
+  // case [[vault_sensitive=(col1, col2, ...)]]
   if (!has_nested_columns) {
     vault_sensitive_encode_columns(ast_misc_attr_value_list, info->encode_columns, misc_attrs);
     // report error if strict mode is on for encode context column
@@ -1748,7 +1748,7 @@ enforce_encode_context_column_with_strict_mode(misc_attrs);
   }
 
   // format (b) with context column
-  // case @attribute(cql:vault_sensitive=(context_col, (col1, col2, ...)))
+  // case [[vault_sensitive=(context_col, (col1, col2, ...))]]
   uint32_t context_col_count = 0;
   for (ast_node *list = ast_misc_attr_value_list; list; list = list->right) {
     ast_node *misc_attr_value = list->left;
@@ -10474,7 +10474,7 @@ static void sem_validate_expression_fragment(ast_node *ast, ast_node *proc) {
   if (!is_proc_shared_fragment(proc)) {
     report_error(ast,
       "CQL0224: a function call to a procedure inside SQL may call "
-      "only a shared fragment i.e. @attribute(cql:shared_fragment)", proc_name);
+      "only a shared fragment i.e. [[shared_fragment]]", proc_name);
     record_error(ast);
     return;
   }
@@ -12994,7 +12994,7 @@ static void make_distinct_table_params_list_callback(void *context, CSTR cte_nam
 // This is a recursive check for any embedded CTEs that have names that will conflict with a given binding
 // this can get quite complicated.  Here's an example:
 //
-// @attribute(cql:shared_fragment)
+// [[shared_fragment]]
 // create proc too()
 // begin
 //  with
@@ -13003,7 +13003,7 @@ static void make_distinct_table_params_list_callback(void *context, CSTR cte_nam
 //    select * from foo;
 // end;
 //
-// @attribute(cql:shared_fragment)
+// [[shared_fragment]]
 // create proc goo()
 // begin
 //  with
@@ -13355,13 +13355,13 @@ static void sem_shared_cte(ast_node *cte_body) {
   EXTRACT_STRING(proc_name, proc_name_ast);
   ast_node *proc_stmt = find_proc(proc_name);
   if (!is_proc_shared_fragment(proc_stmt)) {
-    report_error(proc_name_ast, "CQL0224: a CALL statement inside SQL may call only a shared fragment i.e. @attribute(cql:shared_fragment)", proc_name);
+    report_error(proc_name_ast, "CQL0224: a CALL statement inside SQL may call only a shared fragment i.e. [[shared_fragment]]", proc_name);
     record_error(cte_body);
     goto cleanup;
   }
 
   if (!is_ast_create_proc_stmt(proc_stmt)) {
-    report_error(proc_name_ast, "CQL0468: @attribute(cql:shared_fragment) may only be placed on a CREATE PROC statement", proc_name);
+    report_error(proc_name_ast, "CQL0468: [[shared_fragment]] may only be placed on a CREATE PROC statement", proc_name);
     record_error(cte_body);
     goto cleanup;
   }
@@ -13412,7 +13412,7 @@ static void sem_cte_table(ast_node *ast)  {
 
       report_error(cte_body,
           "CQL0427: LIKE CTE form may only be used inside a shared fragment at the top level"
-          " i.e. @attribute(cql:shared_fragment)", name);
+          " i.e. [[shared_fragment]]", name);
 
       record_error(ast);
       return;
@@ -18053,7 +18053,7 @@ cql_noexport void sem_validate_cursor_blob_compat(
   }
 
   if (!is_table_blob_storage(table_ast)) {
-    report_error(blob, "CQL0457: the indicated table is not marked with @attribute(cql:blob_storage)", kind);
+    report_error(blob, "CQL0457: the indicated table is not marked with [[blob_storage]]", kind);
     record_error(ast_error);
     return;
   }
@@ -19504,7 +19504,7 @@ static void sem_find_ast_misc_attr_callback(
     for (ast_node *list = ast_misc_attr_value_list; list; list = list->right) {
       ast_node *misc_attr_value = list->left;
       // We found a nested dummy_test with info
-      // @attribute(cql:autotest=(..., (dummy_test, ...))))
+      // [[autotest=(..., (dummy_test, ...)))]]
       if (is_ast_misc_attr_value_list(misc_attr_value)) {
         if (sem_autotest_dummy_test(misc_attr_value, context)) {
           if (*error) {
@@ -19625,7 +19625,7 @@ static void sem_one_autodrop(CSTR name, ast_node *misc_attr_value, void *context
 
 // If a stored proc is marked with the autodrop annotation then we automatically drop the indicated
 // tables when the proc is finished running.  The attributes should look like this:
-// @attribute(cql:autodrop=(table1, table2, ,...))
+// [[autodrop=(table1, table2, ,...)]]
 static uint32_t sem_autodrops(ast_node *misc_attrs) {
   Contract(is_ast_misc_attrs(misc_attrs));
   record_ok(misc_attrs);
@@ -19664,7 +19664,7 @@ static void verify_identical_table_params_callback(void *context, CSTR name, ast
 // If a stored proc is marked with the shared_fragment attribute, we check for the simple
 // shared form of one select statement, with no OUT or IN/OUT args
 // The attribute should look like this:
-// @attribute(cql:shared_fragment)
+// [[shared_fragment]]
 static void sem_shared_fragment(ast_node *misc_attrs, ast_node *create_proc_stmt) {
   Contract(is_ast_create_proc_stmt(create_proc_stmt));
   Contract(is_ast_misc_attrs(misc_attrs));
@@ -20099,8 +20099,8 @@ static void sem_misc_attrs_no_table_scan(
 // This function validate the semantic of vault_sensitive attribute. The attribute does not take a value
 // and can only be used in create proc statement.
 // The vault_sensitive attribution should look like this:
-// @attribute(cql:vault_sensitive=(<column_name1>, <column_name2>, ...)) or
-// @attribute(cql:vault_sensitive=(<context_column_name>, (<column_name1>, <column_name2>, ...)))
+// [[vault_sensitive=(<column_name1>, <column_name2>, ...)]] or
+// [[vault_sensitive=(<context_column_name>, (<column_name1>, <column_name2>, ...))]]
 // <context_column_name> can be any column name in the resultset, and will be passed in as encoding context param
 // <column_name1>, <column_name2>, ... are the column names to be encoded if eligible.
 static void sem_misc_attrs_vault_sensitive(
@@ -20340,8 +20340,8 @@ static void sem_create_proc_stmt(ast_node *ast) {
 
     // If a stored proc is marked with the vault_sensitive annotation then we validate
     // both the encode context and encode columns.  The attributes should look like this:
-    // @attribute(cql:vault_sensitve=(col1, col2, ,...)) or
-    // @attribute(cql:vault_sensitve=(context_col, (col1, col2, ,...)))
+    // [[vault_sensitve=(col1, col2, ,...)]] or
+    // [[vault_sensitve=(context_col, (col1, col2, ,...))]]
     annotation_target = "vault_sensitive";
     if (exists_attribute_str(misc_attrs, annotation_target)) {
       encode_info info;
@@ -20366,7 +20366,7 @@ static void sem_create_proc_stmt(ast_node *ast) {
 
     // If a stored proc is marked with the identity annotation then we generate the
     // "sameness" helper method that checks those columns.  The attributes should look like this:
-    // @attribute(cql:identity=(col1, col2, ,...))
+    // [[identity=(col1, col2, ,...)]]
     uint32_t identity_count = sem_column_name_annotation(misc_attrs, find_identity_columns, "procedure identity");
     if (is_error(misc_attrs)) {
       goto cleanup;
@@ -23285,14 +23285,14 @@ static void sem_proc_savepoint_stmt(ast_node *ast)
   record_ok(ast);
 }
 
-// If @attribute(cql:try_is_proc_body) is present, performs additional analysis
+// If [[try_is_proc_body]] is present, performs additional analysis
 // using the try/catch AST provided as `context` such that the statement list of
 // the TRY is treated as though it were the main body of the procedure. In
 // particular, it ensures that all parameters of the current procedure have been
 // initialized by the end of the TRY and prevents `sem_inside_create_proc_stmt`
 // from later doing the same at the end of the procedure.
 //
-// The reason why @attribute(cql:try_is_proc_body) is needed is that users, for
+// The reason why [[try_is_proc_body]] is needed is that users, for
 // various reasons, sometimes need to wrap certain stored procedures in a
 // try/catch such that custom error handling or logging can be implemented. In
 // doing so, however, they break our assumptions about things like
@@ -23307,7 +23307,7 @@ static void sem_proc_savepoint_stmt(ast_node *ast)
 //   #define LOGGING_PROC_BEGIN \
 //     BEGIN \
 //       LET error_in_try := FALSE; \
-//       @attribute(cql:try_is_proc_body) \
+//       [[try_is_proc_body]] \
 //       TRY
 //
 //   #define LOGGING_PROC_END \
@@ -23336,7 +23336,7 @@ static void sem_proc_savepoint_stmt(ast_node *ast)
 // within what is, conceptually, the main body of the procedure (i.e., the TRY)
 // and then not worry about it later on.
 //
-// NOTE: It is very possible to misuse @attribute(cql:try_is_proc_body) such
+// NOTE: It is very possible to misuse [[try_is_proc_body]] such
 // that parameter initialization checking becomes useless. There is nothing we
 // can do about that here: We must simply assume the programmer has used it
 // appropriately.
@@ -23356,7 +23356,7 @@ void sem_find_ast_misc_attr_trycatch_is_proc_body_callback(
   ast_node *ast = context;
 
   if (ast_misc_attr_value_list) {
-    report_error(ast_misc_attr_value_list, "CQL0445: @attribute(cql:try_is_proc_body) accepts no values", NULL);
+    report_error(ast_misc_attr_value_list, "CQL0445: [[try_is_proc_body]] accepts no values", NULL);
     record_error(ast);
     return;
   }
@@ -23364,7 +23364,7 @@ void sem_find_ast_misc_attr_trycatch_is_proc_body_callback(
   if (current_proc_contains_try_is_proc_body) {
     report_error(
       context,
-      "CQL0446: @attribute(cql:try_is_proc_body) cannot be used more than once per procedure",
+      "CQL0446: [[try_is_proc_body]] cannot be used more than once per procedure",
       NULL
     );
     record_error(ast);

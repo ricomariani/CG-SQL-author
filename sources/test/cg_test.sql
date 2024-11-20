@@ -832,7 +832,7 @@ end;
 -- + cql_finalize_stmt(&C_stmt);
 -- + cql_teardown_row(C);
 -- + cql_finalize_stmt(&C2_stmt);
-@attribute(cql:vault_sensitive)
+[[vault_sensitive]]
 proc easy_fetch()
 begin
   declare C cursor for select * from bar;
@@ -1965,7 +1965,7 @@ begin
   end;
 end;
 
-@attribute(cql:suppress_result_set)
+[[suppress_result_set]]
 proc simple_select()
 begin
   select 1 x;
@@ -2272,7 +2272,7 @@ end;
 -- TEST: create proc with a single-column identity attribute
 -- + cql_uint16 simple_identity_identity_columns[] = { 1,
 -- + DECLARE PROC simple_identity () (id INT!, data INT!);
-@attribute(cql:identity=(id))
+[[identity=(id)]]
 proc simple_identity()
 begin
   select 1 as id, 2 as data;
@@ -2280,7 +2280,7 @@ end;
 
 -- TEST: create proc with a multi-column identity attribute
 -- + cql_uint16 complex_identity_identity_columns[] = { 2,
-@attribute(cql:identity=(col1, col2))
+[[identity=(col1, col2)]]
 proc complex_identity()
 begin
   select 1 as col1, 2 as col2, 3 as data;
@@ -2288,7 +2288,7 @@ end;
 
 -- TEST: create proc with a out cursor and identity column
 -- + cql_uint16 out_cursor_identity_identity_columns[] = { 1,
-@attribute(cql:identity=(id))
+[[identity=(id)]]
 proc out_cursor_identity()
 begin
   declare C cursor for select 1 as id, 2 as data;
@@ -2305,7 +2305,7 @@ create table radioactive(
 -- + CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
 -- + CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED, // data
 -- + void radioactive_proc_set_encoding(cql_int32 col, cql_bool encode) {
-@attribute(cql:vault_sensitive)
+[[vault_sensitive]]
 proc radioactive_proc()
 begin
  select * from radioactive;
@@ -2346,7 +2346,7 @@ create temp table table2( id int);
 
 -- TEST: autodrop attribute
 -- + .autodrop_tables = "table1\0table2\0",
-@attribute(cql:autodrop=(table1, table2))
+[[autodrop=(table1, table2)]]
 proc autodropper()
 begin
    select 1 a, 2 b;
@@ -2706,7 +2706,7 @@ end;
 -- This just sets up a call to a procedure that proceduce a dml out union result set
 -- + out_union_dml_info.db = _db_;
 -- + cql_results_from_data(_rc_, &_rows_, &out_union_dml_info, (cql_result_set_ref *)_result_set_);
-@attribute(cql:vault_sensitive)
+[[vault_sensitive]]
 proc out_union_dml()
 begin
   declare x cursor for select * from radioactive;
@@ -2718,7 +2718,7 @@ end;
 -- + cql_copyoutrow(_db_, (cql_result_set_ref)C_result_set_, C_row_num_, 2,
 -- +                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.id,
 -- +                CQL_DATA_TYPE_STRING, &C.data);
-@attribute(cql:vault_sensitive)
+[[vault_sensitive]]
 proc out_union_dml_for_call()
 begin
   declare C cursor for call out_union_dml();
@@ -2887,7 +2887,7 @@ end;
 -- +  CQL_DATA_TYPE_INT64, // rate
 -- +  CQL_DATA_TYPE_INT32, // type
 -- +  CQL_DATA_TYPE_DOUBLE, // size
-@attribute(cql:suppress_getters)
+[[suppress_getters]]
 proc lotsa_columns_no_getters()
 begin
   select * from bar;
@@ -2896,7 +2896,7 @@ end;
 
 -- TEST: a copy function will be generated
 -- + cql_code sproc_with_copy(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt)
-@attribute(cql:generate_copy)
+[[generate_copy]]
 proc sproc_with_copy()
 begin
   select * from bar;
@@ -2906,7 +2906,7 @@ end;
 -- all this stuff goes in the header file so it's no longer present here
 -- - emit_object_with_setters_get_o
 -- - emit_object_with_setters_set_o
-@attribute(cql:emit_setters)
+[[emit_setters]]
 proc emit_object_with_setters(
   o object!,
   x object!,
@@ -2926,7 +2926,7 @@ end;
 -- all this stuff goes in the header file so it's no longer present here
 -- - emit_setters_with_nullables_get_o
 -- - emit_setters_with_nullables_set_o
-@attribute(cql:emit_setters)
+[[emit_setters]]
 proc emit_setters_with_nullables(
   o object,
   x object,
@@ -2947,7 +2947,7 @@ end;
 -- all this stuff goes in the header file so it's no longer present here
 -- - no_out_with_setters_get_id
 -- - no_out_with_setters_set_id
-@attribute(cql:emit_setters)
+[[emit_setters]]
 proc no_out_with_setters()
 begin
   select * from bar;
@@ -2961,7 +2961,7 @@ end;
 -- - lotsa_columns_no_result_set_refs_offset
 -- - lotsa_columns_no_result_set_col_offsets
 -- - lotsa_columns_no_result_set_result_count
-@attribute(cql:suppress_result_set)
+[[suppress_result_set]]
 proc lotsa_columns_no_result_set()
 begin
   select * from bar;
@@ -3007,8 +3007,8 @@ create table vault_non_sensitive(
 -- + CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED, // name
 -- + CQL_DATA_TYPE_STRING, // title
 -- + CQL_DATA_TYPE_INT64, // type
-@attribute(cql:vault_sensitive=(id, name))
-@attribute(cql:custom_type_for_encoded_column)
+[[vault_sensitive=(id, name)]]
+[[custom_type_for_encoded_column]]
 proc vault_sensitive_with_values_proc()
 begin
  select * from vault_mixed_sensitive;
@@ -3019,8 +3019,8 @@ end;
 -- + CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_ENCODED, // name
 -- + CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_NOT_NULL, // title
 -- + CQL_DATA_TYPE_INT64 | CQL_DATA_TYPE_NOT_NULL, // type
-@attribute(cql:vault_sensitive=(id, name))
-@attribute(cql:custom_type_for_encoded_column)
+[[vault_sensitive=(id, name)]]
+[[custom_type_for_encoded_column]]
 proc vault_not_nullable_sensitive_with_values_proc()
 begin
  select * from vault_mixed_not_nullable_sensitive;
@@ -3031,7 +3031,7 @@ end;
 -- + CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED, // name
 -- + CQL_DATA_TYPE_STRING, // title
 -- + CQL_DATA_TYPE_INT64 | CQL_DATA_TYPE_ENCODED, // type
-@attribute(cql:vault_sensitive)
+[[vault_sensitive]]
 proc vault_sensitive_with_no_values_proc()
 begin
  select * from vault_mixed_sensitive;
@@ -3042,7 +3042,7 @@ end;
 -- + CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED, // name
 -- + CQL_DATA_TYPE_STRING, // title
 -- + CQL_DATA_TYPE_INT64 | CQL_DATA_TYPE_ENCODED, // type
-@attribute(cql:vault_sensitive)
+[[vault_sensitive]]
 proc vault_union_all_table_proc()
 begin
  select * from vault_mixed_sensitive
@@ -3052,7 +3052,7 @@ end;
 
 -- TEST: vault on alias column name
 -- + CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED, // alias_name
-@attribute(cql:vault_sensitive=alias_name)
+[[vault_sensitive=alias_name]]
 proc vault_alias_column_proc()
 begin
  select name as alias_name from vault_mixed_sensitive;
@@ -3060,7 +3060,7 @@ end;
 
 -- TEST: vault on alias column name
 -- + CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED, // alias_name
-@attribute(cql:vault_sensitive=alias_name)
+[[vault_sensitive=alias_name]]
 proc vault_alias_column_name_proc()
 begin
  select name as alias_name from vault_mixed_sensitive;
@@ -3069,7 +3069,7 @@ end;
 -- TEST: vault a column in cursor result
 -- + cql_multifetch(_rc_, C_stmt, 1,
 -- +                CQL_DATA_TYPE_STRING, &C.name);
-@attribute(cql:vault_sensitive)
+[[vault_sensitive]]
 proc vault_cursor_proc()
 begin
   declare C cursor for select name from vault_mixed_sensitive;
@@ -3081,7 +3081,7 @@ end;
 -- + CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED, // name
 -- + CQL_DATA_TYPE_STRING, // title
 -- + CQL_DATA_TYPE_INT64, // type
-@attribute(cql:vault_sensitive=(title, (id, name)))
+[[vault_sensitive=(title, (id, name))]]
 proc vault_sensitive_with_context_and_sensitive_columns_proc()
 begin
  select * from vault_mixed_sensitive;
@@ -3092,7 +3092,7 @@ end;
 -- + CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED, // name
 -- + CQL_DATA_TYPE_STRING, // title
 -- + CQL_DATA_TYPE_INT64, // type
-@attribute(cql:vault_sensitive=((id, name)))
+[[vault_sensitive=((id, name))]]
 proc vault_sensitive_with_no_context_and_sensitive_columns_proc()
 begin
  select * from vault_mixed_sensitive;
@@ -3103,7 +3103,7 @@ end;
 -- + CQL_DATA_TYPE_STRING, // name
 -- + CQL_DATA_TYPE_STRING, // title
 -- + CQL_DATA_TYPE_INT64, // type
-@attribute(cql:vault_sensitive=(title, (id, name)))
+[[vault_sensitive=(title, (id, name))]]
 proc vault_sensitive_with_context_and_no_sensitive_columns_proc()
 begin
  select * from vault_non_sensitive;
@@ -3823,7 +3823,7 @@ set t2 := (select name from bar if nothing or null then "garbonzo");
 -- TEST: verify private exports and binding
 -- + DECLARE PROC private_proc (OUT x INT);
 -- + static void private_proc(cql_nullable_int32 *_Nonnull x)
-@attribute(cql:private)
+[[private]]
 proc private_proc(out x int)
 begin
   set x := 1;
@@ -3836,7 +3836,7 @@ end;
 -- + static void private_out_union_fetch_results(private_out_union_result_set_ref _Nullable *_Nonnull _result_set_) {
 -- -- no getter
 -- - private_out_union_get_a_field
-@attribute(cql:private)
+[[private]]
 proc private_out_union()
 begin
   declare C cursor like select 1 a_field;
@@ -3848,7 +3848,7 @@ end;
 -- TEST: verify that when alt_prefix is set, alt_prefix is the prefix of emitted function name.
 -- + void c_proc_with_alt_prefix(cql_nullable_int32 *_Nonnull x)
 -- - void proc_with_alt_prefix(cql_nullable_int32 *_Nonnull x)
-@attribute(cql:alt_prefix=c_)
+[[alt_prefix=c_]]
 proc proc_with_alt_prefix(out x int)
 begin
   set x := 1;
@@ -3875,7 +3875,7 @@ end;
 -- + void no_getters_out_union_fetch_results(no_getters_out_union_result_set_ref _Nullable *_Nonnull _result_set_) {
 -- -- no getter
 -- - no_getters_out_union_get_a_field
-@attribute(cql:suppress_getters)
+[[suppress_getters]]
 proc no_getters_out_union()
 begin
   declare C cursor like select 1 a_field;
@@ -3905,7 +3905,7 @@ end;
 -- + void suppress_results_out_union_fetch_results(suppress_results_out_union_result_set_ref _Nullable *_Nonnull _result_set_) {
 -- -- no getter
 -- - suppress_results_out_union_get_a_field
-@attribute(cql:suppress_result_set)
+[[suppress_result_set]]
 proc suppress_results_out_union()
 begin
   declare C cursor like select 1 a_field;
@@ -3931,7 +3931,7 @@ end;
 -- + DECLARE PROC private_result (OUT x INT) (x INT!);
 -- + static CQL_WARN_UNUSED cql_code private_result(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_nullable_int32 *_Nonnull x) {
 -- -- cql_code private_result_fetch_results
-@attribute(cql:private)
+[[private]]
 proc private_result(out x int)
 begin
   select 1 x;
@@ -3939,7 +3939,7 @@ end;
 
 -- TEST: private proc forward ref results in static prototype
 -- + static void private_fwd_ref(cql_int32 x);
-@attribute(cql:private)
+[[private]]
 declare proc private_fwd_ref(x int!);
 
 -- TEST: ensure out args set to null for ref types
@@ -4298,7 +4298,7 @@ end;
 
 -- TEST: Contracts should not be emitted for private procs
 -- - cql_contract_argument_notnull((void *)t, 1);
-@attribute(cql:private)
+[[private]]
 proc private_proc_without_a_contract(t text!)
 begin
 end;
@@ -4698,7 +4698,7 @@ end;
 
 -- TEST: make sure we don't emit this into the output
 -- - cql_code
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc shared_frag()
 begin
  select 1234 shared_something; -- hence no cql_code return type
@@ -4728,7 +4728,7 @@ begin
 end;
 
 -- used in the following test
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc shared_conditional(x int!)
 begin
   if x == 1 then
@@ -4810,7 +4810,7 @@ end;
 
 -- used in the following test, this is silly fragment
 -- but it forces complex push and pop of variable state
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc nested_shared_proc(x_ int!)
 begin
   if x_ <= 5 then
@@ -4958,7 +4958,7 @@ end;
 -- + "FROM (",
 -- + "SELECT 1234 AS shared_something",
 -- + ")"
-@attribute(cql:private)
+[[private]]
 proc simple_shared_frag()
 begin
   select * from (call shared_frag());
@@ -4966,7 +4966,7 @@ end;
 
 
 -- used in the next test
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc shared_frag_else_nothing(id_ int)
 begin
   if id_ > 0 then
@@ -5018,7 +5018,7 @@ end;
 
 @emit_constants some_constants;
 
-@attribute(cql:blob_storage)
+[[blob_storage]]
 create table structured_storage(
   id int!,
   name text!
@@ -5266,7 +5266,7 @@ end;
 -- this stuff all goes in the header now, should be nothing here
 -- - simple_container_proc_get_a_is_null
 -- - simple_container_proc_get_a_value
-@attribute(cql:emit_setters)
+[[emit_setters]]
 proc simple_container_proc()
 begin
   declare C cursor like (a int, b int!, c object<simple_child_proc set>);
@@ -5290,13 +5290,13 @@ end;
 @blob_update_key bupdatekey offset;
 @blob_update_val bupdateval;
 
-@attribute(cql:backing_table)
+[[backing_table]]
 create table backing(
   k blob primary key,
   v blob
 );
 
-@attribute(cql:backed_by=backing)
+[[backed_by=backing]]
 create table backed(
   flag bool!,
   id long,
@@ -5308,7 +5308,7 @@ create table backed(
   pk int primary key
 );
 
-@attribute(cql:backed_by=backing)
+[[backed_by=backing]]
 create table backed2(
   pk1 int,
   pk2 int,
@@ -5527,7 +5527,7 @@ end;
 -- + WHERE bgetkey_type(T.k) = -5417664364642960231
 -- + SELECT rowid, flag, id, name, age, storage, pk
 -- + FROM backed
-@attribute(cql:private)
+[[private]]
 proc explain_query_plan_backed(out x bool!)
 begin
   explain query plan select * from backed;
@@ -5553,7 +5553,7 @@ end;
 -- go back to the other way
 @blob_get_val bgetval;
 
-@attribute(cql:backed_by=backing)
+[[backed_by=backing]]
 create table small_backed(
   pk int primary key,
   x text,
@@ -5843,7 +5843,7 @@ begin
 end;
 
 -- TEST: cql:alias_of attribution
-@attribute(cql:alias_of=some_native_func)
+[[alias_of=some_native_func]]
 declare function an_alias_func(x int!) int!;
 
 -- TEST: create a table with a weird name and a weird column

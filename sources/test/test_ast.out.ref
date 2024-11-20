@@ -2,7 +2,7 @@
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -19,7 +19,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -51,7 +51,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -79,7 +79,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -96,7 +96,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -130,7 +130,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -156,7 +156,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -174,7 +174,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -192,7 +192,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -210,7 +210,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -228,7 +228,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -245,7 +245,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -279,7 +279,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -305,7 +305,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -323,7 +323,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -341,7 +341,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -359,7 +359,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -377,7 +377,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -394,7 +394,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -428,7 +428,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -454,7 +454,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -472,7 +472,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -490,7 +490,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -508,7 +508,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -526,7 +526,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -543,7 +543,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -577,7 +577,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -603,7 +603,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -621,7 +621,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -639,7 +639,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -657,7 +657,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -675,7 +675,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -692,7 +692,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -726,7 +726,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -752,7 +752,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -770,7 +770,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -788,7 +788,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -806,7 +806,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -824,7 +824,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -845,7 +845,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -867,7 +867,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -887,7 +887,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -909,7 +909,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -929,7 +929,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -951,7 +951,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -971,7 +971,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -993,7 +993,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1013,7 +1013,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1035,7 +1035,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1055,7 +1055,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1077,7 +1077,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1097,7 +1097,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1119,7 +1119,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1139,7 +1139,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1160,7 +1160,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1177,7 +1177,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1194,7 +1194,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1211,7 +1211,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1228,7 +1228,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1245,7 +1245,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1262,7 +1262,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1279,7 +1279,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1297,7 +1297,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1315,7 +1315,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1333,7 +1333,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1351,7 +1351,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1369,7 +1369,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1387,7 +1387,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1405,7 +1405,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1423,7 +1423,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1437,7 +1437,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1453,7 +1453,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1486,7 +1486,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1512,7 +1512,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1533,7 +1533,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1560,7 +1560,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1577,7 +1577,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1594,7 +1594,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1611,7 +1611,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1628,7 +1628,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1642,7 +1642,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1658,7 +1658,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1691,7 +1691,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1717,7 +1717,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1738,7 +1738,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1765,7 +1765,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1782,7 +1782,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1799,7 +1799,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1816,7 +1816,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1833,7 +1833,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1847,7 +1847,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1863,7 +1863,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1896,7 +1896,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1923,7 +1923,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1944,7 +1944,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1971,7 +1971,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -1988,7 +1988,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2005,7 +2005,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2022,7 +2022,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2039,7 +2039,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2053,7 +2053,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2069,7 +2069,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2102,7 +2102,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2129,7 +2129,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2150,7 +2150,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2177,7 +2177,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2194,7 +2194,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2211,7 +2211,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2228,7 +2228,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2245,7 +2245,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2265,7 +2265,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2291,7 +2291,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2316,7 +2316,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2341,7 +2341,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2366,7 +2366,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2391,7 +2391,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2416,7 +2416,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2441,7 +2441,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2466,7 +2466,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2483,7 +2483,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2500,7 +2500,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2517,7 +2517,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2534,7 +2534,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2551,7 +2551,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2568,7 +2568,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2585,7 +2585,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2602,7 +2602,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2619,7 +2619,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2636,7 +2636,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2657,7 +2657,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2672,7 +2672,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2687,7 +2687,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2702,7 +2702,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2717,7 +2717,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2732,7 +2732,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2747,7 +2747,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2762,7 +2762,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2777,7 +2777,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2792,7 +2792,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2848,7 +2848,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2875,7 +2875,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2892,7 +2892,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -2917,7 +2917,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -12174,7 +12174,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:identity=(id))
+[[identity=(id)]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -12211,7 +12211,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:identity=(col1, col2))
+[[identity=(col1, col2)]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -16983,7 +16983,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backing_table)
+[[backing_table]]
   {stmt_and_attr}
   | {misc_attrs}
   | | {misc_attr}
@@ -17065,9 +17065,9 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:private)
-@ATTRIBUTE(cql:potato=bar)
-@ATTRIBUTE(cql:garbonzo=(bar, baz))
+[[private]]
+[[potato=bar]]
+[[garbonzo=(bar, baz)]]
 @ATTRIBUTE(other:something)
   {stmt_and_attr}
   | {misc_attrs}

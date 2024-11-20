@@ -88,7 +88,7 @@ end;
 
 -- TEST: a copy function will be generated
 -- + #define sproc_copy_func_copy(result_set, result_set_to, from, count)
-@attribute(cql:generate_copy)
+[[generate_copy]]
 create proc sproc_copy_func()
 begin
   select * from foo;
@@ -98,7 +98,7 @@ end;
 -- +  return cql_result_set_get_object_col((cql_result_set_ref)result_set, 0, 0);
 -- + static inline void emit_object_with_setters_set_o(emit_object_with_setters_result_set_ref _Nonnull result_set, cql_object_ref _Nonnull new_value) {
 -- +  cql_result_set_set_object_col((cql_result_set_ref)result_set, 0, 0, new_value);
-@attribute(cql:emit_setters)
+[[emit_setters]]
 create proc emit_object_with_setters(o object not null)
 begin
   declare C cursor like emit_object_with_setters arguments;
@@ -128,7 +128,7 @@ end;
 -- +   return (simple_child_proc_result_set_ref _Nullable )(cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 2) ? NULL : cql_result_set_get_object_col((cql_result_set_ref)result_set, row, 2));
 -- + static inline void simple_container_proc_set_c(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row, simple_child_proc_result_set_ref _Nullable new_value) {
 -- +   cql_result_set_set_object_col((cql_result_set_ref)result_set, row, 2, (cql_object_ref)new_value);
-@attribute(cql:emit_setters)
+[[emit_setters]]
 create proc simple_container_proc()
 begin
   declare C cursor like (a integer, b integer not null, c object<simple_child_proc set>);

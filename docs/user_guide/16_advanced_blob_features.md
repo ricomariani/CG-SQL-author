@@ -52,7 +52,7 @@ can be added only at the end, and only if they are nullable. Here we add
 `source` to the schema in a hypothetical "version 6".
 
 ```sql
-@attribute(cql:blob_storage)
+[[blob_storage]]
 create table news_info(
   who text,
   what text,
@@ -226,7 +226,7 @@ The code samples below illustrate some of the more common blob operations
 that are likely to come up.
 
 ```sql
-@attribute(cql:blob_storage)
+[[blob_storage]]
 create table news_info(
   who text,
   what text,
@@ -368,7 +368,7 @@ in the usual way.  A simple backing table is just a key/value store and
 looks like this:
 
 ```sql
-@ATTRIBUTE(cql:backing_table)
+[[backing_table]]
 CREATE TABLE backing(
   k BLOB PRIMARY KEY,
   v BLOB NOT NULL
@@ -393,14 +393,14 @@ any names but as they will be frequently used short names like "k" and
 Backed tables look like this:
 
 ```sql
-@ATTRIBUTE(cql:backed_by=backing)
+[[backed_by=backing]]
 CREATE TABLE backed(
   id INTEGER PRIMARY KEY,
   name TEXT NOT NULL,
   bias REAL
 );
 
-@ATTRIBUTE(cql:backed_by=backing)
+[[backed_by=backing]]
 CREATE TABLE backed2(
   id INTEGER PRIMARY KEY,
   name TEXT NOT NULL
@@ -433,7 +433,7 @@ is to automatically create a shared fragment just like the view we could
 have made.  The shared fragment looks like this:
 
 ```sql
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 CREATE PROC _backed ()
 BEGIN
   SELECT
@@ -471,7 +471,7 @@ even having to know the hash function.
 As a second example, the expanded code for `backed2` is shown below:
 
 ```sql
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 CREATE PROC _backed2 ()
 BEGIN
   SELECT
@@ -578,7 +578,9 @@ Now with this in mind we can see that it would be very beneficial to
 also add this:
 
 ```sql
-[[deterministic]] declare select function bgetkey_type(b blob) long;
+[[deterministic]] 
+declare select function bgetkey_type(b blob) long;
+
 CREATE INDEX backing_index ON backing(bgetkey_type(k));
 ```
 
@@ -910,7 +912,7 @@ that shows a few more variations that might be created. In this examples
 keys and values need to be mutated.
 
 ```sql
-@attribute(cql:backed_by=backing)
+[[backed_by=backing]]
 create table sample(
  name text,
  state long,

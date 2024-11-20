@@ -749,7 +749,7 @@ static void cg_test_helpers_dummy_test(ast_node *stmt) {
 
     // backing tables need their attribute
     if (is_backing(ast_to_emit->sem->sem_type)) {
-      bprintf(&gen_create_tables, "@attribute(cql:backing_table)\n");
+      bprintf(&gen_create_tables, "[[backing_table]]\n");
     }
 
     // backed tables are declared not created, emit them into their own stream
@@ -759,7 +759,7 @@ static void cg_test_helpers_dummy_test(ast_node *stmt) {
       EXTRACT_MISC_ATTRS(ast_to_emit, misc_attrs);
       out = &gen_declare_backed;
       CSTR backing_table_name = get_named_string_attribute_value(misc_attrs, "backed_by");
-      bprintf(out, "@attribute(cql:backed_by=%s)\n", backing_table_name);
+      bprintf(out, "[[backed_by=%s]]\n", backing_table_name);
     }
 
     // First thing we need is the CREATE DDL for the item in question, make that now
@@ -812,7 +812,7 @@ static void cg_test_helpers_dummy_test(ast_node *stmt) {
       EXTRACT_MISC_ATTRS(any_func, misc_attrs);
       bool_t deterministic = misc_attrs && !!find_named_attr(misc_attrs, "deterministic");
       if (deterministic) {
-        bprintf(&gen_declare_funcs, "@attribute(cql:deterministic)\n");
+        bprintf(&gen_declare_funcs, "[[deterministic]]\n");
       }
       gen_one_stmt(any_func);
       bprintf(&gen_declare_funcs, ";\n");
@@ -1134,13 +1134,13 @@ static void test_helpers_find_ast_misc_attr_callback(
     for (ast_node *list = ast_misc_attr_value_list; list; list = list->right) {
       ast_node *misc_attr_value = list->left;
       // We found a nested list which should be nested dummy_test with info
-      // @attribute(cql:autotest=(..., (dummy_test, ...), ...))
+      // [[autotest=(..., (dummy_test, ...), ...)]]
       if (is_ast_misc_attr_value_list(misc_attr_value)) {
         collect_dummy_test_info(misc_attr_value, context);
         cg_test_helpers_dummy_test(stmt);
       }
       // we found autotest attribution
-      // @attribute(cql:autotest=(dummy_table, dummy_test, dummy_insert, dummy_select, dummy_result_set))
+      // [[autotest=(dummy_table, dummy_test, dummy_insert, dummy_select, dummy_result_set)]]
       else {
         // In principle, any option can be combined with any other but some only make sense for procs with
         // a result.

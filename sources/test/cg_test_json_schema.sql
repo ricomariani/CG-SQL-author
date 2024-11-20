@@ -703,7 +703,7 @@ create table recreated_in_a_group(
 
 -- TEST: emit backing table
 -- + "isBacking" : 1,
-@attribute(cql:backing_table)
+[[backing_table]]
 create table backing(
   k blob primary key,
   v blob!
@@ -717,7 +717,7 @@ create table backing(
 -- + "typeHash" : -5886701367367956936,
 -- + "typeHash" : -6639502068221071091,
 -- + "typeHash" : 4276741016019094617,
-@attribute(cql:backed_by=backing)
+[[backed_by=backing]]
 create table backed(
   id integer primary key,
   name text!,
@@ -1220,7 +1220,7 @@ end;
 
 -- TEST: make sure that null values in the attributes are lowercase in json
 -- +  "value" : [["dummy_test", ["Foo", ["id", "name"], [1, null], [2, "hi"]]]]
-@attribute(cql:autotest=((dummy_test, (Foo, (id, name), (1, null), (2, "hi")))))
+[[autotest=((dummy_test, (Foo, (id, name), (1, null), (2, "hi"))))]]
 proc null_attribute()
 begin
   select * from Foo;
@@ -1387,7 +1387,7 @@ declare const group const_group (
 
 -- TEST: shared fragment that we can use
 -- invisible to JSON
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc shared_frag_proc()
 begin
   with
@@ -1435,7 +1435,7 @@ end;
 
 -- Shared fragment function form we can use
 -- we will verify this creates a dependency on T2
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc shared_func()
 begin
   select (select max(id) from T2) result;
@@ -1554,10 +1554,10 @@ create table t_for_unsub(
 -- + "name" : "id"
 -- + "type" : "integer",
 -- + "isNotNull" : 0
-@attribute(cql:java_package=test)
+[[java_package=test]]
 DECLARE INTERFACE interface1 (id INT);
 
-@attribute(cql:implements=interface1)
+[[implements=interface1]]
 proc test_interface1_implementation_correct(id_ INT, name_ TEXT)
 begin
   select id_ id, name_ name;
@@ -1565,7 +1565,7 @@ end;
 
 -- TEST: checking type hashes
 -- + "typeHash" : -3904228771888844557,
-@attribute(cql:backed_by=backing)
+[[backed_by=backing]]
 CREATE TABLE name (
   first TEXT NOT NULL,
   middle TEXT,
@@ -1575,7 +1575,7 @@ CREATE TABLE name (
 
 -- TEST: checking type hashes
 -- + "typeHash" : 2569358707010711297,
-@attribute(cql:backed_by=backing)
+[[backed_by=backing]]
 CREATE TABLE every_type (
   bool_column BOOL NOT NULL,
   int32_column INT NOT NULL,
@@ -1588,7 +1588,7 @@ CREATE TABLE every_type (
 
 -- TEST: checking type hashes
 -- + "typeHash" : 2065415439301712821,
-@attribute(cql:backed_by=backing)
+[[backed_by=backing]]
 CREATE TABLE continents (
   country TEXT NOT NULL,
   africa TEXT NOT NULL,
@@ -1603,7 +1603,7 @@ CREATE TABLE continents (
 
 -- TEST: checking type hashes
 -- + "typeHash" : 286092548604229473,
-@attribute(cql:backed_by=backing)
+[[backed_by=backing]]
 CREATE TABLE pks_not_first_columns (
   a BOOL NOT NULL,
   b INT NOT NULL,
@@ -1616,7 +1616,7 @@ CREATE TABLE pks_not_first_columns (
 
 -- TEST: checking type hashes
 -- + "typeHash" : 1318301014930005084,
-@attribute(cql:backed_by=backing)
+[[backed_by=backing]]
 CREATE TABLE only_pks_nonnull (
   a BOOL NOT NULL,
   b INT NOT NULL,
@@ -1629,7 +1629,7 @@ CREATE TABLE only_pks_nonnull (
 
 -- TEST: checking type hashes
 -- + "typeHash" : 4076753061676181061,
-@attribute(cql:backed_by=backing)
+[[backed_by=backing]]
 CREATE TABLE some_non_pk_nonnull (
   a BOOL NOT NULL,
   b INT NOT NULL,
@@ -1642,7 +1642,7 @@ CREATE TABLE some_non_pk_nonnull (
 
 -- TEST: checking type hashes
 -- + "typeHash" : 8853590320677483837,
-@attribute(cql:backed_by=backing)
+[[backed_by=backing]]
 CREATE TABLE _starts_with_underscore (
   foo INT NOT NULL PRIMARY KEY,
   bar TEXT
@@ -1650,7 +1650,7 @@ CREATE TABLE _starts_with_underscore (
 
 -- TEST: checking type hashes
 -- + "typeHash" : -4787200482362537033,
-@attribute(cql:backed_by=backing)
+[[backed_by=backing]]
 CREATE TABLE ends_with_underscore_ (
   foo TEXT PRIMARY KEY,
   bar INT

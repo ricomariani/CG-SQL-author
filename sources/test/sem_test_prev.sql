@@ -492,7 +492,7 @@ create table unsub_resub_trickery(id integer);
 
 -- TEST backing table ok
 -- - error:
-@attribute(cql:backing_table)
+[[backing_table]]
 create table backing (
   k blob primary key,
   v blob
@@ -501,7 +501,7 @@ create table backing (
 -- TEST backed table ok
 -- + {create_table_stmt}: backed: { id: integer notnull primary_key, val: text notnull } validated backed
 -- - error:
-@attribute(cql:backed_by=backing)
+[[backed_by=backing]]
 create table backed (
   id int not null primary key,
   val text not null
@@ -510,7 +510,7 @@ create table backed (
 -- TEST new backed table ok, ok to add backed tables with no create attributes even if we are on higher version
 -- + {create_table_stmt}: new_backed_table: { id: integer notnull primary_key, val: text notnull } backed
 -- - error:
-@attribute(cql:backed_by=backing)
+[[backed_by=backing]]
 create table new_backed_table (
   id int not null primary key,
   val text not null
@@ -1106,7 +1106,7 @@ create table unsub_resub_trickery(id integer);
 
 -- TEST backing table ok
 -- - error:
-@attribute(cql:backing_table)
+[[backing_table]]
 create table backing (
   k blob primary key,
   v blob
@@ -1115,7 +1115,7 @@ create table backing (
 -- TEST backed table ok even though it changed a lot
 -- + {create_table_stmt}: backed: { guid: integer notnull primary_key, gal: text } backed
 -- - error:
-@attribute(cql:backed_by=backing)
+[[backed_by=backing]]
 create table backed (
   guid int not null primary key,
   gal text

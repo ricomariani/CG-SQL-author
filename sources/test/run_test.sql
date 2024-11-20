@@ -170,21 +170,21 @@ declare enum longs long (
 
 proc make_schema()
 begin
-  @attribute(cql:backing_table)
+  [[backing_table]]
   create table backing(
     `the key` blob primary key,
     `the value` blob!
   );
 end;
 
-@attribute(cql:backed_by=backing)
+[[backed_by=backing]]
 create table backed (
   id int primary key,
   `value one` int!,
   `value two` int!
 );
 
-@attribute(cql:backed_by=backing)
+[[backed_by=backing]]
 create table backed2 (
   id int primary key,
   `value one` int
@@ -1310,14 +1310,14 @@ BEGIN
   EXPECT!(2 == (select count(*) from mixed)); -- rollback successful
 END);
 
-@attribute(cql:identity=(id, code, bl))
-@attribute(cql:generate_copy)
+[[identity=(id, code, bl)]]
+[[generate_copy]]
 proc get_mixed(lim int!)
 begin
   select * from mixed limit lim;
 end;
 
-@attribute(cql:generate_copy)
+[[generate_copy]]
 proc get_one_from_mixed(id_ int!)
 begin
   cursor C for select * from mixed where id = id_;
@@ -2788,7 +2788,7 @@ BEGIN
   EXPECT_SQL_TOO!((x1 OR x0 OR x0 OR x0 AND x0) != ((((x1 OR x0) OR x0) OR x0) AND x0));
 END);
 
-@attribute(cql:vault_sensitive)
+[[vault_sensitive]]
 proc load_encoded_table()
 begin
   create table all_types_encoded_table(
@@ -2815,7 +2815,7 @@ begin
   select * from all_types_encoded_table;
 end;
 
-@attribute(cql:vault_sensitive=(context, (b0, i0, l0, d0, s0, bl0, b1, i1, l1, d1, s1, bl1)))
+[[vault_sensitive=(context, (b0, i0, l0, d0, s0, bl0, b1, i1, l1, d1, s1, bl1))]]
 proc load_encoded_with_context_table()
 begin
   create table all_types_encoded_with_context_table(
@@ -2844,7 +2844,7 @@ begin
   select * from all_types_encoded_with_context_table;
 end;
 
-@attribute(cql:vault_sensitive)
+[[vault_sensitive]]
 proc load_encoded_cursor()
 begin
   cursor C for select * from all_types_encoded_table;
@@ -2852,7 +2852,7 @@ begin
   out C;
 end;
 
-@attribute(cql:vault_sensitive)
+[[vault_sensitive]]
 proc out_union_dml()
 begin
   declare x cursor for select * from all_types_encoded_table;
@@ -2860,7 +2860,7 @@ begin
   out union x;
 end;
 
-@attribute(cql:vault_sensitive)
+[[vault_sensitive]]
 proc out_union_not_dml()
 begin
   declare bogus cursor for select 1; -- just to make the proc dml to test a non dml cursor x with vault.
@@ -2883,7 +2883,7 @@ begin
   out union x;
 end;
 
-@attribute(cql:vault_sensitive)
+[[vault_sensitive]]
 proc load_decoded_out_union()
 begin
   cursor C for call out_union_dml();
@@ -2891,7 +2891,7 @@ begin
   out C;
 end;
 
-@attribute(cql:vault_sensitive)
+[[vault_sensitive]]
 proc load_decoded_multi_out_union()
 begin
   cursor C for call out_union_dml();
@@ -2903,7 +2903,7 @@ begin
   out union C1;
 end;
 
-@attribute(cql:vault_sensitive=(z, (y)))
+[[vault_sensitive=(z, (y))]]
 proc out_union_dml_with_encode_context()
 begin
   create table some_type_encoded_table(x int, y text @sensitive, z text);
@@ -3019,7 +3019,7 @@ BEGIN
   EXPECT!(E.o is s);
 END);
 
-@attribute(cql:vault_sensitive=(y))
+[[vault_sensitive=(y)]]
 proc load_some_encoded_field()
 begin
   create table some_encoded_field_table(x int, y text @sensitive);
@@ -3038,7 +3038,7 @@ BEGIN
   EXPECT!(C.y IS 'bogus');
 END);
 
-@attribute(cql:vault_sensitive=(z, (y)))
+[[vault_sensitive=(z, (y))]]
 proc load_some_encoded_field_with_encode_context()
 begin
   create table some_encoded_field_context_table(x int, y text @sensitive, z text);
@@ -3058,7 +3058,7 @@ BEGIN
   EXPECT!(C.z IS 'context');
 END);
 
-@attribute(cql:emit_setters)
+[[emit_setters]]
 proc load_all_types_table()
 begin
   create table all_types_table(
@@ -3103,7 +3103,7 @@ end;
 -- will not do the job -- you have to use the result set helper
 -- to get the auto-cleanup.  If you are using the statement
 -- as with a direct CQL call, you are out of luck
-@attribute(cql:autodrop=(temp_table_one, temp_table_two, temp_table_three))
+[[autodrop=(temp_table_one, temp_table_two, temp_table_three)]]
 proc read_three_tables_and_autodrop()
 begin
   call init_temp_tables();
@@ -4121,14 +4121,14 @@ BEGIN
   EXPECT!(NOT D);
 END);
 
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc f1(pattern text)
 begin
   with source(*) LIKE (select 1 id, "x" t)
   select * from source where t like pattern;
 end;
 
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc f2(pattern text, idstart int!, idend int!, lim int!)
 begin
   with
@@ -4138,7 +4138,7 @@ begin
   limit lim;
 end;
 
-@attribute(cql:private)
+[[private]]
 proc shared_consumer()
 begin
   with
@@ -4164,7 +4164,7 @@ BEGIN
   EXPECT!(not C);
 END);
 
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc select_nothing_user(flag bool!)
 begin
   if flag then
@@ -4187,7 +4187,7 @@ BEGIN
   EXPECT!(NOT Y);
 END);
 
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc get_values()
 begin
   select 1 id, 'x' t
@@ -4218,7 +4218,7 @@ BEGIN
   drop table x;
 END);
 
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc conditional_values_base(x_ int)
 begin
   if x_ == 2 then
@@ -4230,7 +4230,7 @@ begin
   end if;
 end;
 
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc conditional_values(x_ int!)
 begin
   if x_ == 1 then
@@ -4310,7 +4310,7 @@ BEGIN
   EXPECT!(not E);
 END);
 
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc skip_notnulls(a_ int!, b_ bool!, c_ long!, d_ real!, e_ text!, f_ blob!, g_ object!)
 begin
   if a_ == 0 then
@@ -4349,7 +4349,7 @@ BEGIN
   EXPECT!(not C);
 END);
 
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc skip_nullables(
   a_ int,
   b_ bool,
@@ -4395,7 +4395,7 @@ BEGIN
   EXPECT!(not C);
 END);
 
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc abs_func(x int!)
 begin
   select case
@@ -4404,19 +4404,19 @@ begin
   end x;
 end;
 
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc max_func(x int!, y int!)
 begin
   select case when x <= y then y else x end result;
 end;
 
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc ten()
 begin
   select 10 ten;
 end;
 
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 proc numbers(lim int!)
 begin
   with N(x) as (
@@ -4502,34 +4502,34 @@ declare proc alltypes_notnull() (
   str_nn text!
 );
 
-@attribute(cql:blob_storage)
+[[blob_storage]]
 create table storage_notnull(
   like alltypes_notnull
 );
 
-@attribute(cql:blob_storage)
+[[blob_storage]]
 create table storage_nullable(
   like alltypes_nullable
 );
 
-@attribute(cql:blob_storage)
+[[blob_storage]]
 create table storage_both(
   like alltypes_notnull,
   like alltypes_nullable
 );
 
-@attribute(cql:blob_storage)
+[[blob_storage]]
 create table storage_with_extras(
   like alltypes_notnull,
   x int!
 );
 
-@attribute(cql:blob_storage)
+[[blob_storage]]
 create table storage_one_int(
   x int!
 );
 
-@attribute(cql:blob_storage)
+[[blob_storage]]
 create table storage_one_long(
   x long!
 );
@@ -6665,7 +6665,7 @@ BEGIN
   EXPECT!(1 == (select id from backed2));
 END);
 
-@attribute(cql:backed_by=backing)
+[[backed_by=backing]]
 create table backed_table_with_defaults(
   pk1 int default 1000,
   pk2 int default 2000,

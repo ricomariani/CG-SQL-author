@@ -692,21 +692,21 @@ cql_string_literal(_literal_26_abc_my_proc_check_type, "abc");
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE PROC cql_throw (code INT!) USING TRANSACTION;
 */
 
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE PROC cql_cursor_to_blob (C CURSOR, OUT result BLOB!) USING TRANSACTION;
 */
 
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE PROC cql_cursor_from_blob (C CURSOR, b BLOB) USING TRANSACTION;
 */
 cql_int32 c_runtime_generation = 0;
@@ -1338,7 +1338,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:vault_sensitive)
+[[vault_sensitive]]
 PROC easy_fetch ()
 BEGIN
   CURSOR C FOR
@@ -4664,7 +4664,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:suppress_result_set)
+[[suppress_result_set]]
 PROC simple_select ()
 BEGIN
   SELECT 1 AS x;
@@ -5472,7 +5472,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:identity=(id))
+[[identity=(id)]]
 PROC simple_identity ()
 BEGIN
   SELECT 1 AS id, 2 AS data;
@@ -5550,7 +5550,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:identity=(col1, col2))
+[[identity=(col1, col2)]]
 PROC complex_identity ()
 BEGIN
   SELECT 1 AS col1, 2 AS col2, 3 AS data;
@@ -5632,7 +5632,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:identity=(id))
+[[identity=(id)]]
 PROC out_cursor_identity ()
 BEGIN
   CURSOR C FOR
@@ -5727,7 +5727,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:vault_sensitive)
+[[vault_sensitive]]
 PROC radioactive_proc ()
 BEGIN
   SELECT *
@@ -5892,7 +5892,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:autodrop=(table1, table2))
+[[autodrop=(table1, table2)]]
 PROC autodropper ()
 BEGIN
   SELECT 1 AS a, 2 AS b;
@@ -7101,7 +7101,7 @@ CQL_WARN_UNUSED cql_code read_out_union_values(sqlite3 *_Nonnull _db_, cql_int32
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:vault_sensitive)
+[[vault_sensitive]]
 PROC out_union_dml ()
 BEGIN
   CURSOR x FOR
@@ -7201,7 +7201,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:vault_sensitive)
+[[vault_sensitive]]
 PROC out_union_dml_for_call ()
 BEGIN
   CURSOR C FOR
@@ -7750,7 +7750,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:suppress_getters)
+[[suppress_getters]]
 PROC lotsa_columns_no_getters ()
 BEGIN
   SELECT *
@@ -7838,7 +7838,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:generate_copy)
+[[generate_copy]]
 PROC sproc_with_copy ()
 BEGIN
   SELECT *
@@ -7926,7 +7926,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:emit_setters)
+[[emit_setters]]
 PROC emit_object_with_setters (o OBJECT!, x OBJECT!, i INT!, l LONG!, b BOOL!, d REAL!, t TEXT!, bl BLOB!)
 BEGIN
   CURSOR C LIKE emit_object_with_setters ARGUMENTS;
@@ -8044,7 +8044,7 @@ void emit_object_with_setters(cql_object_ref _Nonnull o, cql_object_ref _Nonnull
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:emit_setters)
+[[emit_setters]]
 PROC emit_setters_with_nullables (o OBJECT, x OBJECT, i INT, l LONG, b BOOL, d REAL, t TEXT, bl BLOB)
 BEGIN
   CURSOR C LIKE emit_setters_with_nullables ARGUMENTS;
@@ -8157,7 +8157,7 @@ void emit_setters_with_nullables(cql_object_ref _Nullable o, cql_object_ref _Nul
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:emit_setters)
+[[emit_setters]]
 PROC no_out_with_setters ()
 BEGIN
   SELECT *
@@ -8245,7 +8245,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:suppress_result_set)
+[[suppress_result_set]]
 PROC lotsa_columns_no_result_set ()
 BEGIN
   SELECT *
@@ -8335,8 +8335,8 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:vault_sensitive=(id, name))
-@ATTRIBUTE(cql:custom_type_for_encoded_column)
+[[vault_sensitive=(id, name)]]
+[[custom_type_for_encoded_column]]
 PROC vault_sensitive_with_values_proc ()
 BEGIN
   SELECT *
@@ -8425,8 +8425,8 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:vault_sensitive=(id, name))
-@ATTRIBUTE(cql:custom_type_for_encoded_column)
+[[vault_sensitive=(id, name)]]
+[[custom_type_for_encoded_column]]
 PROC vault_not_nullable_sensitive_with_values_proc ()
 BEGIN
   SELECT *
@@ -8515,7 +8515,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:vault_sensitive)
+[[vault_sensitive]]
 PROC vault_sensitive_with_no_values_proc ()
 BEGIN
   SELECT *
@@ -8604,7 +8604,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:vault_sensitive)
+[[vault_sensitive]]
 PROC vault_union_all_table_proc ()
 BEGIN
   SELECT *
@@ -8699,7 +8699,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:vault_sensitive=alias_name)
+[[vault_sensitive=alias_name]]
 PROC vault_alias_column_proc ()
 BEGIN
   SELECT name AS alias_name
@@ -8779,7 +8779,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:vault_sensitive=alias_name)
+[[vault_sensitive=alias_name]]
 PROC vault_alias_column_name_proc ()
 BEGIN
   SELECT name AS alias_name
@@ -8859,7 +8859,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:vault_sensitive)
+[[vault_sensitive]]
 PROC vault_cursor_proc ()
 BEGIN
   CURSOR C FOR
@@ -8911,7 +8911,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:vault_sensitive=(title, (id, name)))
+[[vault_sensitive=(title, (id, name))]]
 PROC vault_sensitive_with_context_and_sensitive_columns_proc ()
 BEGIN
   SELECT *
@@ -9000,7 +9000,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:vault_sensitive=((id, name)))
+[[vault_sensitive=((id, name))]]
 PROC vault_sensitive_with_no_context_and_sensitive_columns_proc ()
 BEGIN
   SELECT *
@@ -9089,7 +9089,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:vault_sensitive=(title, (id, name)))
+[[vault_sensitive=(title, (id, name))]]
 PROC vault_sensitive_with_context_and_no_sensitive_columns_proc ()
 BEGIN
   SELECT *
@@ -11568,7 +11568,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:private)
+[[private]]
 PROC private_proc (OUT x INT)
 BEGIN
   SET x := 1;
@@ -11590,7 +11590,7 @@ static void private_proc(cql_nullable_int32 *_Nonnull x) {
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:private)
+[[private]]
 PROC private_out_union ()
 BEGIN
   CURSOR C LIKE SELECT 1 AS a_field;
@@ -11654,7 +11654,7 @@ static void private_out_union_fetch_results(private_out_union_result_set_ref _Nu
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:alt_prefix=c_)
+[[alt_prefix=c_]]
 PROC proc_with_alt_prefix (OUT x INT)
 BEGIN
   SET x := 1;
@@ -11731,7 +11731,7 @@ CQL_WARN_UNUSED cql_code use_private_out_union(sqlite3 *_Nonnull _db_) {
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:suppress_getters)
+[[suppress_getters]]
 PROC no_getters_out_union ()
 BEGIN
   CURSOR C LIKE SELECT 1 AS a_field;
@@ -11848,7 +11848,7 @@ CQL_WARN_UNUSED cql_code use_no_getters_out_union(sqlite3 *_Nonnull _db_) {
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:suppress_result_set)
+[[suppress_result_set]]
 PROC suppress_results_out_union ()
 BEGIN
   CURSOR C LIKE SELECT 1 AS a_field;
@@ -11965,7 +11965,7 @@ CQL_WARN_UNUSED cql_code use_suppress_results_out_union(sqlite3 *_Nonnull _db_) 
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:private)
+[[private]]
 PROC private_result (OUT x INT)
 BEGIN
   SELECT 1 AS x;
@@ -11998,7 +11998,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:private)
+[[private]]
 DECLARE PROC private_fwd_ref (x INT!);
 */
 static void private_fwd_ref(cql_int32 x);
@@ -12586,7 +12586,7 @@ void public_proc_with_a_contract(cql_string_ref _Nonnull t) {
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:private)
+[[private]]
 PROC private_proc_without_a_contract (t TEXT!)
 BEGIN
 END;
@@ -13830,7 +13830,7 @@ void or_preserves_temps(cql_nullable_int64 a, cql_nullable_int64 b, cql_nullable
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC shared_frag ()
 BEGIN
   SELECT 1234 AS shared_something;
@@ -13919,7 +13919,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC shared_conditional (x INT!)
 BEGIN
   IF x = 1 THEN
@@ -14076,7 +14076,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC nested_shared_proc (x_ INT!)
 BEGIN
   IF x_ <= 5 THEN
@@ -14360,7 +14360,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:private)
+[[private]]
 PROC simple_shared_frag ()
 BEGIN
   SELECT *
@@ -14400,7 +14400,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC shared_frag_else_nothing (id_ INT)
 BEGIN
   IF id_ > 0 THEN
@@ -15552,7 +15552,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:emit_setters)
+[[emit_setters]]
 PROC simple_container_proc ()
 BEGIN
   CURSOR C LIKE (a INT, b INT!, c OBJECT<simple_child_proc SET>);
@@ -16346,7 +16346,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:private)
+[[private]]
 PROC explain_query_plan_backed (OUT x BOOL!)
 BEGIN
   EXPLAIN QUERY PLAN

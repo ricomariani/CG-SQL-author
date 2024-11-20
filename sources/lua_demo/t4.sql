@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 create proc foo(x integer)
 begin
    if x is 7 then

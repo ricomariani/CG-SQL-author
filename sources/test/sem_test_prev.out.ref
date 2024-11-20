@@ -2,7 +2,7 @@
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_partition_create () CREATE OBJECT<partitioning>!;
 
   {stmt_and_attr}: ok
@@ -21,7 +21,7 @@ DECLARE FUNC cql_partition_create () CREATE OBJECT<partitioning>!;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_partition_cursor (p OBJECT<partitioning>!, key CURSOR, value CURSOR) BOOL!;
 
   {stmt_and_attr}: ok
@@ -55,7 +55,7 @@ DECLARE FUNC cql_partition_cursor (p OBJECT<partitioning>!, key CURSOR, value CU
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_extract_partition (p OBJECT<partitioning>!, key CURSOR) CREATE OBJECT!;
 
   {stmt_and_attr}: ok
@@ -85,7 +85,7 @@ DECLARE FUNC cql_extract_partition (p OBJECT<partitioning>!, key CURSOR) CREATE 
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_string_dictionary_create () CREATE OBJECT<cql_string_dictionary>!;
 
   {stmt_and_attr}: ok
@@ -104,7 +104,7 @@ DECLARE FUNC cql_string_dictionary_create () CREATE OBJECT<cql_string_dictionary
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_string_dictionary_add (dict OBJECT<cql_string_dictionary>!, key TEXT!, value TEXT!) BOOL!;
 
   {stmt_and_attr}: ok
@@ -140,7 +140,7 @@ DECLARE FUNC cql_string_dictionary_add (dict OBJECT<cql_string_dictionary>!, key
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_string_dictionary_find (dict OBJECT<cql_string_dictionary>!, key TEXT) TEXT;
 
   {stmt_and_attr}: ok
@@ -168,7 +168,7 @@ DECLARE FUNC cql_string_dictionary_find (dict OBJECT<cql_string_dictionary>!, ke
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_string_dictionary> : call add AS cql_string_dictionary_add;
 
   {stmt_and_attr}: ok
@@ -188,7 +188,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_string_dictionary> : call find AS cql_string_dictionary_find;
 
   {stmt_and_attr}: ok
@@ -208,7 +208,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_string_dictionary> : array set AS cql_string_dictionary_add;
 
   {stmt_and_attr}: ok
@@ -228,7 +228,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_string_dictionary> : array get AS cql_string_dictionary_find;
 
   {stmt_and_attr}: ok
@@ -248,7 +248,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_long_dictionary_create () CREATE OBJECT<cql_long_dictionary>!;
 
   {stmt_and_attr}: ok
@@ -267,7 +267,7 @@ DECLARE FUNC cql_long_dictionary_create () CREATE OBJECT<cql_long_dictionary>!;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_long_dictionary_add (dict OBJECT<cql_long_dictionary>!, key TEXT!, value LONG!) BOOL!;
 
   {stmt_and_attr}: ok
@@ -303,7 +303,7 @@ DECLARE FUNC cql_long_dictionary_add (dict OBJECT<cql_long_dictionary>!, key TEX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_long_dictionary_find (dict OBJECT<cql_long_dictionary>!, key TEXT) LONG;
 
   {stmt_and_attr}: ok
@@ -331,7 +331,7 @@ DECLARE FUNC cql_long_dictionary_find (dict OBJECT<cql_long_dictionary>!, key TE
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_long_dictionary> : call add AS cql_long_dictionary_add;
 
   {stmt_and_attr}: ok
@@ -351,7 +351,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_long_dictionary> : call find AS cql_long_dictionary_find;
 
   {stmt_and_attr}: ok
@@ -371,7 +371,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_long_dictionary> : array set AS cql_long_dictionary_add;
 
   {stmt_and_attr}: ok
@@ -391,7 +391,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_long_dictionary> : array get AS cql_long_dictionary_find;
 
   {stmt_and_attr}: ok
@@ -411,7 +411,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_real_dictionary_create () CREATE OBJECT<cql_real_dictionary>!;
 
   {stmt_and_attr}: ok
@@ -430,7 +430,7 @@ DECLARE FUNC cql_real_dictionary_create () CREATE OBJECT<cql_real_dictionary>!;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_real_dictionary_add (dict OBJECT<cql_real_dictionary>!, key TEXT!, value REAL!) BOOL!;
 
   {stmt_and_attr}: ok
@@ -466,7 +466,7 @@ DECLARE FUNC cql_real_dictionary_add (dict OBJECT<cql_real_dictionary>!, key TEX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_real_dictionary_find (dict OBJECT<cql_real_dictionary>!, key TEXT) REAL;
 
   {stmt_and_attr}: ok
@@ -494,7 +494,7 @@ DECLARE FUNC cql_real_dictionary_find (dict OBJECT<cql_real_dictionary>!, key TE
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_real_dictionary> : call add AS cql_real_dictionary_add;
 
   {stmt_and_attr}: ok
@@ -514,7 +514,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_real_dictionary> : call find AS cql_real_dictionary_find;
 
   {stmt_and_attr}: ok
@@ -534,7 +534,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_real_dictionary> : array set AS cql_real_dictionary_add;
 
   {stmt_and_attr}: ok
@@ -554,7 +554,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_real_dictionary> : array get AS cql_real_dictionary_find;
 
   {stmt_and_attr}: ok
@@ -574,7 +574,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_object_dictionary_create () CREATE OBJECT<cql_object_dictionary>!;
 
   {stmt_and_attr}: ok
@@ -593,7 +593,7 @@ DECLARE FUNC cql_object_dictionary_create () CREATE OBJECT<cql_object_dictionary
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_object_dictionary_add (dict OBJECT<cql_object_dictionary>!, key TEXT!, value OBJECT!) BOOL!;
 
   {stmt_and_attr}: ok
@@ -629,7 +629,7 @@ DECLARE FUNC cql_object_dictionary_add (dict OBJECT<cql_object_dictionary>!, key
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_object_dictionary_find (dict OBJECT<cql_object_dictionary>!, key TEXT) OBJECT;
 
   {stmt_and_attr}: ok
@@ -657,7 +657,7 @@ DECLARE FUNC cql_object_dictionary_find (dict OBJECT<cql_object_dictionary>!, ke
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_object_dictionary> : call add AS cql_object_dictionary_add;
 
   {stmt_and_attr}: ok
@@ -677,7 +677,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_object_dictionary> : call find AS cql_object_dictionary_find;
 
   {stmt_and_attr}: ok
@@ -697,7 +697,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_object_dictionary> : array set AS cql_object_dictionary_add;
 
   {stmt_and_attr}: ok
@@ -717,7 +717,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_object_dictionary> : array get AS cql_object_dictionary_find;
 
   {stmt_and_attr}: ok
@@ -737,7 +737,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_blob_dictionary_create () CREATE OBJECT<cql_blob_dictionary>!;
 
   {stmt_and_attr}: ok
@@ -756,7 +756,7 @@ DECLARE FUNC cql_blob_dictionary_create () CREATE OBJECT<cql_blob_dictionary>!;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_blob_dictionary_add (dict OBJECT<cql_blob_dictionary>!, key TEXT!, value BLOB!) BOOL!;
 
   {stmt_and_attr}: ok
@@ -792,7 +792,7 @@ DECLARE FUNC cql_blob_dictionary_add (dict OBJECT<cql_blob_dictionary>!, key TEX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_blob_dictionary_find (dict OBJECT<cql_blob_dictionary>!, key TEXT) BLOB;
 
   {stmt_and_attr}: ok
@@ -820,7 +820,7 @@ DECLARE FUNC cql_blob_dictionary_find (dict OBJECT<cql_blob_dictionary>!, key TE
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_blob_dictionary> : call add AS cql_blob_dictionary_add;
 
   {stmt_and_attr}: ok
@@ -840,7 +840,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_blob_dictionary> : call find AS cql_blob_dictionary_find;
 
   {stmt_and_attr}: ok
@@ -860,7 +860,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_blob_dictionary> : array set AS cql_blob_dictionary_add;
 
   {stmt_and_attr}: ok
@@ -880,7 +880,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_blob_dictionary> : array get AS cql_blob_dictionary_find;
 
   {stmt_and_attr}: ok
@@ -900,7 +900,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_cursor_format (C CURSOR) CREATE TEXT!;
 
   {stmt_and_attr}: ok
@@ -923,7 +923,7 @@ DECLARE FUNC cql_cursor_format (C CURSOR) CREATE TEXT!;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_box_int (x INT) CREATE OBJECT<cql_box>!;
 
   {stmt_and_attr}: ok
@@ -947,7 +947,7 @@ DECLARE FUNC cql_box_int (x INT) CREATE OBJECT<cql_box>!;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_unbox_int (box OBJECT<cql_box>) INT;
 
   {stmt_and_attr}: ok
@@ -969,7 +969,7 @@ DECLARE FUNC cql_unbox_int (box OBJECT<cql_box>) INT;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_box_real (x REAL) CREATE OBJECT<cql_box>!;
 
   {stmt_and_attr}: ok
@@ -993,7 +993,7 @@ DECLARE FUNC cql_box_real (x REAL) CREATE OBJECT<cql_box>!;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_unbox_real (box OBJECT<cql_box>) REAL;
 
   {stmt_and_attr}: ok
@@ -1015,7 +1015,7 @@ DECLARE FUNC cql_unbox_real (box OBJECT<cql_box>) REAL;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_box_bool (x BOOL) CREATE OBJECT<cql_box>!;
 
   {stmt_and_attr}: ok
@@ -1039,7 +1039,7 @@ DECLARE FUNC cql_box_bool (x BOOL) CREATE OBJECT<cql_box>!;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_unbox_bool (box OBJECT<cql_box>) BOOL;
 
   {stmt_and_attr}: ok
@@ -1061,7 +1061,7 @@ DECLARE FUNC cql_unbox_bool (box OBJECT<cql_box>) BOOL;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_box_long (x LONG) CREATE OBJECT<cql_box>!;
 
   {stmt_and_attr}: ok
@@ -1085,7 +1085,7 @@ DECLARE FUNC cql_box_long (x LONG) CREATE OBJECT<cql_box>!;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_unbox_long (box OBJECT<cql_box>) LONG;
 
   {stmt_and_attr}: ok
@@ -1107,7 +1107,7 @@ DECLARE FUNC cql_unbox_long (box OBJECT<cql_box>) LONG;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_box_text (x TEXT) CREATE OBJECT<cql_box>!;
 
   {stmt_and_attr}: ok
@@ -1131,7 +1131,7 @@ DECLARE FUNC cql_box_text (x TEXT) CREATE OBJECT<cql_box>!;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_unbox_text (box OBJECT<cql_box>) TEXT;
 
   {stmt_and_attr}: ok
@@ -1153,7 +1153,7 @@ DECLARE FUNC cql_unbox_text (box OBJECT<cql_box>) TEXT;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_box_blob (x BLOB) CREATE OBJECT<cql_box>!;
 
   {stmt_and_attr}: ok
@@ -1177,7 +1177,7 @@ DECLARE FUNC cql_box_blob (x BLOB) CREATE OBJECT<cql_box>!;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_unbox_blob (box OBJECT<cql_box>) BLOB;
 
   {stmt_and_attr}: ok
@@ -1199,7 +1199,7 @@ DECLARE FUNC cql_unbox_blob (box OBJECT<cql_box>) BLOB;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_box_object (x OBJECT) CREATE OBJECT<cql_box>!;
 
   {stmt_and_attr}: ok
@@ -1223,7 +1223,7 @@ DECLARE FUNC cql_box_object (x OBJECT) CREATE OBJECT<cql_box>!;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_unbox_object (box OBJECT<cql_box>) OBJECT;
 
   {stmt_and_attr}: ok
@@ -1245,7 +1245,7 @@ DECLARE FUNC cql_unbox_object (box OBJECT<cql_box>) OBJECT;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_box_get_type (box OBJECT<cql_box>) INT!;
 
   {stmt_and_attr}: ok
@@ -1268,7 +1268,7 @@ DECLARE FUNC cql_box_get_type (box OBJECT<cql_box>) INT!;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP BOOL : call box AS cql_box_bool;
 
   {stmt_and_attr}: ok
@@ -1287,7 +1287,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP INT : call box AS cql_box_int;
 
   {stmt_and_attr}: ok
@@ -1306,7 +1306,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP LONG : call box AS cql_box_long;
 
   {stmt_and_attr}: ok
@@ -1325,7 +1325,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP REAL : call box AS cql_box_real;
 
   {stmt_and_attr}: ok
@@ -1344,7 +1344,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP TEXT : call box AS cql_box_text;
 
   {stmt_and_attr}: ok
@@ -1363,7 +1363,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP BLOB : call box AS cql_box_blob;
 
   {stmt_and_attr}: ok
@@ -1382,7 +1382,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT : call box AS cql_box_object;
 
   {stmt_and_attr}: ok
@@ -1401,7 +1401,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_box> : call to_bool AS cql_unbox_bool;
 
   {stmt_and_attr}: ok
@@ -1421,7 +1421,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_box> : call to_int AS cql_unbox_int;
 
   {stmt_and_attr}: ok
@@ -1441,7 +1441,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_box> : call to_long AS cql_unbox_long;
 
   {stmt_and_attr}: ok
@@ -1461,7 +1461,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_box> : call to_real AS cql_unbox_real;
 
   {stmt_and_attr}: ok
@@ -1481,7 +1481,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_box> : call to_text AS cql_unbox_text;
 
   {stmt_and_attr}: ok
@@ -1501,7 +1501,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_box> : call to_blob AS cql_unbox_blob;
 
   {stmt_and_attr}: ok
@@ -1521,7 +1521,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_box> : call to_object AS cql_unbox_object;
 
   {stmt_and_attr}: ok
@@ -1541,7 +1541,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_box> : call type AS cql_box_get_type;
 
   {stmt_and_attr}: ok
@@ -1561,7 +1561,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 TYPE cql_string_list OBJECT<cql_string_list>;
 
   {stmt_and_attr}: ok
@@ -1577,7 +1577,7 @@ TYPE cql_string_list OBJECT<cql_string_list>;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_string_list_create () CREATE OBJECT<cql_string_list>!;
 
   {stmt_and_attr}: ok
@@ -1596,7 +1596,7 @@ DECLARE FUNC cql_string_list_create () CREATE OBJECT<cql_string_list>!;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_string_list_set_at (list OBJECT<cql_string_list>!, index_ INT!, value_ TEXT!) OBJECT<cql_string_list>!;
 
   {stmt_and_attr}: ok
@@ -1633,7 +1633,7 @@ DECLARE FUNC cql_string_list_set_at (list OBJECT<cql_string_list>!, index_ INT!,
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_string_list_get_at (list OBJECT<cql_string_list>!, index_ INT!) TEXT;
 
   {stmt_and_attr}: ok
@@ -1662,7 +1662,7 @@ DECLARE FUNC cql_string_list_get_at (list OBJECT<cql_string_list>!, index_ INT!)
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_string_list_count (list OBJECT<cql_string_list>!) INT!;
 
   {stmt_and_attr}: ok
@@ -1686,7 +1686,7 @@ DECLARE FUNC cql_string_list_count (list OBJECT<cql_string_list>!) INT!;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_string_list_add (list OBJECT<cql_string_list>!, string TEXT!) OBJECT<cql_string_list>!;
 
   {stmt_and_attr}: ok
@@ -1717,7 +1717,7 @@ DECLARE FUNC cql_string_list_add (list OBJECT<cql_string_list>!, string TEXT!) O
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_string_list> : array set AS cql_string_list_set_at;
 
   {stmt_and_attr}: ok
@@ -1737,7 +1737,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_string_list> : array get AS cql_string_list_get_at;
 
   {stmt_and_attr}: ok
@@ -1757,7 +1757,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_string_list> : call add AS cql_string_list_add;
 
   {stmt_and_attr}: ok
@@ -1777,7 +1777,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_string_list> : get count AS cql_string_list_count;
 
   {stmt_and_attr}: ok
@@ -1797,7 +1797,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 TYPE cql_blob_list OBJECT<cql_blob_list>;
 
   {stmt_and_attr}: ok
@@ -1813,7 +1813,7 @@ TYPE cql_blob_list OBJECT<cql_blob_list>;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_blob_list_create () CREATE OBJECT<cql_blob_list>!;
 
   {stmt_and_attr}: ok
@@ -1832,7 +1832,7 @@ DECLARE FUNC cql_blob_list_create () CREATE OBJECT<cql_blob_list>!;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_blob_list_set_at (list OBJECT<cql_blob_list>!, index_ INT!, value_ BLOB!) OBJECT<cql_blob_list>!;
 
   {stmt_and_attr}: ok
@@ -1869,7 +1869,7 @@ DECLARE FUNC cql_blob_list_set_at (list OBJECT<cql_blob_list>!, index_ INT!, val
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_blob_list_get_at (list OBJECT<cql_blob_list>!, index_ INT!) BLOB;
 
   {stmt_and_attr}: ok
@@ -1898,7 +1898,7 @@ DECLARE FUNC cql_blob_list_get_at (list OBJECT<cql_blob_list>!, index_ INT!) BLO
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_blob_list_count (list OBJECT<cql_blob_list>!) INT!;
 
   {stmt_and_attr}: ok
@@ -1922,7 +1922,7 @@ DECLARE FUNC cql_blob_list_count (list OBJECT<cql_blob_list>!) INT!;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_blob_list_add (list OBJECT<cql_blob_list>!, value BLOB!) OBJECT<cql_blob_list>!;
 
   {stmt_and_attr}: ok
@@ -1953,7 +1953,7 @@ DECLARE FUNC cql_blob_list_add (list OBJECT<cql_blob_list>!, value BLOB!) OBJECT
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_blob_list> : array set AS cql_blob_list_set_at;
 
   {stmt_and_attr}: ok
@@ -1973,7 +1973,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_blob_list> : array get AS cql_blob_list_get_at;
 
   {stmt_and_attr}: ok
@@ -1993,7 +1993,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_blob_list> : call add AS cql_blob_list_add;
 
   {stmt_and_attr}: ok
@@ -2013,7 +2013,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_blob_list> : get count AS cql_blob_list_count;
 
   {stmt_and_attr}: ok
@@ -2033,7 +2033,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 TYPE cql_long_list OBJECT<cql_long_list>;
 
   {stmt_and_attr}: ok
@@ -2049,7 +2049,7 @@ TYPE cql_long_list OBJECT<cql_long_list>;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_long_list_create () CREATE OBJECT<cql_long_list>!;
 
   {stmt_and_attr}: ok
@@ -2068,7 +2068,7 @@ DECLARE FUNC cql_long_list_create () CREATE OBJECT<cql_long_list>!;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_long_list_set_at (list OBJECT<cql_long_list>!, index_ INT!, value_ LONG!) OBJECT<cql_long_list>!;
 
   {stmt_and_attr}: ok
@@ -2105,7 +2105,7 @@ DECLARE FUNC cql_long_list_set_at (list OBJECT<cql_long_list>!, index_ INT!, val
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_long_list_get_at (list OBJECT<cql_long_list>!, index_ INT!) LONG!;
 
   {stmt_and_attr}: ok
@@ -2135,7 +2135,7 @@ DECLARE FUNC cql_long_list_get_at (list OBJECT<cql_long_list>!, index_ INT!) LON
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_long_list_count (list OBJECT<cql_long_list>!) INT!;
 
   {stmt_and_attr}: ok
@@ -2159,7 +2159,7 @@ DECLARE FUNC cql_long_list_count (list OBJECT<cql_long_list>!) INT!;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_long_list_add (list OBJECT<cql_long_list>!, value_ LONG!) OBJECT<cql_long_list>!;
 
   {stmt_and_attr}: ok
@@ -2190,7 +2190,7 @@ DECLARE FUNC cql_long_list_add (list OBJECT<cql_long_list>!, value_ LONG!) OBJEC
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_long_list> : array set AS cql_long_list_set_at;
 
   {stmt_and_attr}: ok
@@ -2210,7 +2210,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_long_list> : array get AS cql_long_list_get_at;
 
   {stmt_and_attr}: ok
@@ -2230,7 +2230,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_long_list> : call add AS cql_long_list_add;
 
   {stmt_and_attr}: ok
@@ -2250,7 +2250,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_long_list> : get count AS cql_long_list_count;
 
   {stmt_and_attr}: ok
@@ -2270,7 +2270,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 TYPE cql_real_list OBJECT<cql_real_list>;
 
   {stmt_and_attr}: ok
@@ -2286,7 +2286,7 @@ TYPE cql_real_list OBJECT<cql_real_list>;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_real_list_create () CREATE OBJECT<cql_real_list>!;
 
   {stmt_and_attr}: ok
@@ -2305,7 +2305,7 @@ DECLARE FUNC cql_real_list_create () CREATE OBJECT<cql_real_list>!;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_real_list_set_at (list OBJECT<cql_real_list>!, index_ INT!, value_ REAL!) OBJECT<cql_real_list>!;
 
   {stmt_and_attr}: ok
@@ -2342,7 +2342,7 @@ DECLARE FUNC cql_real_list_set_at (list OBJECT<cql_real_list>!, index_ INT!, val
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_real_list_get_at (list OBJECT<cql_real_list>!, index_ INT!) REAL!;
 
   {stmt_and_attr}: ok
@@ -2372,7 +2372,7 @@ DECLARE FUNC cql_real_list_get_at (list OBJECT<cql_real_list>!, index_ INT!) REA
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_real_list_count (list OBJECT<cql_real_list>!) INT!;
 
   {stmt_and_attr}: ok
@@ -2396,7 +2396,7 @@ DECLARE FUNC cql_real_list_count (list OBJECT<cql_real_list>!) INT!;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_real_list_add (list OBJECT<cql_real_list>!, value_ REAL!) OBJECT<cql_real_list>!;
 
   {stmt_and_attr}: ok
@@ -2427,7 +2427,7 @@ DECLARE FUNC cql_real_list_add (list OBJECT<cql_real_list>!, value_ REAL!) OBJEC
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_real_list> : array set AS cql_real_list_set_at;
 
   {stmt_and_attr}: ok
@@ -2447,7 +2447,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_real_list> : array get AS cql_real_list_get_at;
 
   {stmt_and_attr}: ok
@@ -2467,7 +2467,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_real_list> : call add AS cql_real_list_add;
 
   {stmt_and_attr}: ok
@@ -2487,7 +2487,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP OBJECT<cql_real_list> : get count AS cql_real_list_count;
 
   {stmt_and_attr}: ok
@@ -2507,7 +2507,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_cursor_column_count (C CURSOR) INT!;
 
   {stmt_and_attr}: ok
@@ -2529,7 +2529,7 @@ DECLARE FUNC cql_cursor_column_count (C CURSOR) INT!;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_cursor_column_type (C CURSOR, icol INT!) INT!;
 
   {stmt_and_attr}: ok
@@ -2557,7 +2557,7 @@ DECLARE FUNC cql_cursor_column_type (C CURSOR, icol INT!) INT!;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_cursor_get_bool (C CURSOR, icol INT!) BOOL;
 
   {stmt_and_attr}: ok
@@ -2584,7 +2584,7 @@ DECLARE FUNC cql_cursor_get_bool (C CURSOR, icol INT!) BOOL;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_cursor_get_int (C CURSOR, icol INT!) INT;
 
   {stmt_and_attr}: ok
@@ -2611,7 +2611,7 @@ DECLARE FUNC cql_cursor_get_int (C CURSOR, icol INT!) INT;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_cursor_get_long (C CURSOR, icol INT!) LONG;
 
   {stmt_and_attr}: ok
@@ -2638,7 +2638,7 @@ DECLARE FUNC cql_cursor_get_long (C CURSOR, icol INT!) LONG;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_cursor_get_real (C CURSOR, icol INT!) REAL;
 
   {stmt_and_attr}: ok
@@ -2665,7 +2665,7 @@ DECLARE FUNC cql_cursor_get_real (C CURSOR, icol INT!) REAL;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_cursor_get_text (C CURSOR, icol INT!) TEXT;
 
   {stmt_and_attr}: ok
@@ -2692,7 +2692,7 @@ DECLARE FUNC cql_cursor_get_text (C CURSOR, icol INT!) TEXT;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_cursor_get_blob (C CURSOR, icol INT!) BLOB;
 
   {stmt_and_attr}: ok
@@ -2719,7 +2719,7 @@ DECLARE FUNC cql_cursor_get_blob (C CURSOR, icol INT!) BLOB;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE FUNC cql_cursor_get_object (C CURSOR, icol INT!) OBJECT;
 
   {stmt_and_attr}: ok
@@ -2746,7 +2746,7 @@ DECLARE FUNC cql_cursor_get_object (C CURSOR, icol INT!) OBJECT;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP CURSOR : call format AS cql_cursor_format;
 
   {stmt_and_attr}: ok
@@ -2765,7 +2765,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP CURSOR : call count AS cql_cursor_column_count;
 
   {stmt_and_attr}: ok
@@ -2784,7 +2784,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP CURSOR : call type AS cql_cursor_column_type;
 
   {stmt_and_attr}: ok
@@ -2803,7 +2803,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP CURSOR : call get_bool AS cql_cursor_get_bool;
 
   {stmt_and_attr}: ok
@@ -2822,7 +2822,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP CURSOR : call get_int AS cql_cursor_get_int;
 
   {stmt_and_attr}: ok
@@ -2841,7 +2841,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP CURSOR : call get_long AS cql_cursor_get_long;
 
   {stmt_and_attr}: ok
@@ -2860,7 +2860,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP CURSOR : call get_real AS cql_cursor_get_real;
 
   {stmt_and_attr}: ok
@@ -2879,7 +2879,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP CURSOR : call get_text AS cql_cursor_get_text;
 
   {stmt_and_attr}: ok
@@ -2898,7 +2898,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP CURSOR : call get_blob AS cql_cursor_get_blob;
 
   {stmt_and_attr}: ok
@@ -2917,7 +2917,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP CURSOR : call get_object AS cql_cursor_get_object;
 
   {stmt_and_attr}: ok
@@ -2936,7 +2936,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE PROC cql_throw (code INT!) USING TRANSACTION;
 
   {stmt_and_attr}: ok
@@ -2959,7 +2959,7 @@ DECLARE PROC cql_throw (code INT!) USING TRANSACTION;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 TYPE bool BOOL;
 
   {stmt_and_attr}: ok
@@ -2974,7 +2974,7 @@ TYPE bool BOOL;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 TYPE int INT;
 
   {stmt_and_attr}: ok
@@ -2989,7 +2989,7 @@ TYPE int INT;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 TYPE integer INT;
 
   {stmt_and_attr}: ok
@@ -3004,7 +3004,7 @@ TYPE integer INT;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 TYPE long LONG;
 
   {stmt_and_attr}: ok
@@ -3019,7 +3019,7 @@ TYPE long LONG;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 TYPE real REAL;
 
   {stmt_and_attr}: ok
@@ -3034,7 +3034,7 @@ TYPE real REAL;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 TYPE text TEXT;
 
   {stmt_and_attr}: ok
@@ -3049,7 +3049,7 @@ TYPE text TEXT;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 TYPE object OBJECT;
 
   {stmt_and_attr}: ok
@@ -3064,7 +3064,7 @@ TYPE object OBJECT;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 TYPE blob BLOB;
 
   {stmt_and_attr}: ok
@@ -3079,7 +3079,7 @@ TYPE blob BLOB;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 TYPE long_int LONG;
 
   {stmt_and_attr}: ok
@@ -3094,7 +3094,7 @@ TYPE long_int LONG;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE CONST GROUP cql_data_types (
   CQL_DATA_TYPE_NULL = 0,
   CQL_DATA_TYPE_INT32 = 1,
@@ -3164,7 +3164,7 @@ DECLARE CONST GROUP cql_data_types (
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE PROC cql_cursor_to_blob (C CURSOR, OUT result BLOB!) USING TRANSACTION;
 
   {stmt_and_attr}: ok
@@ -3193,7 +3193,7 @@ DECLARE PROC cql_cursor_to_blob (C CURSOR, OUT result BLOB!) USING TRANSACTION;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP CURSOR : call to_blob AS cql_cursor_to_blob;
 
   {stmt_and_attr}: ok
@@ -3212,7 +3212,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE PROC cql_cursor_from_blob (C CURSOR, b BLOB) USING TRANSACTION;
 
   {stmt_and_attr}: ok
@@ -3239,7 +3239,7 @@ DECLARE PROC cql_cursor_from_blob (C CURSOR, b BLOB) USING TRANSACTION;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 @OP CURSOR : call from_blob AS cql_cursor_from_blob;
 
   {stmt_and_attr}: ok
@@ -5403,7 +5403,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backing_table)
+[[backing_table]]
 CREATE TABLE backing(
   k BLOB PRIMARY KEY,
   v BLOB
@@ -5437,7 +5437,7 @@ CREATE TABLE backing(
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backed_by=backing)
+[[backed_by=backing]]
 CREATE TABLE backed(
   id INT! PRIMARY KEY,
   val TEXT!
@@ -5474,7 +5474,7 @@ CREATE TABLE backed(
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backed_by=backing)
+[[backed_by=backing]]
 CREATE TABLE new_backed_table(
   id INT! PRIMARY KEY,
   val TEXT!
@@ -7797,7 +7797,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backing_table)
+[[backing_table]]
 CREATE TABLE backing(
   k BLOB PRIMARY KEY,
   v BLOB
@@ -7831,7 +7831,7 @@ CREATE TABLE backing(
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backed_by=backing)
+[[backed_by=backing]]
 CREATE TABLE backed(
   guid INT! PRIMARY KEY,
   gal TEXT

@@ -121,21 +121,21 @@ typedef struct simple_container_proc_row {
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE PROC cql_throw (code INT!) USING TRANSACTION;
 */
 
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE PROC cql_cursor_to_blob (C CURSOR, OUT result BLOB!) USING TRANSACTION;
 */
 
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE PROC cql_cursor_from_blob (C CURSOR, b BLOB) USING TRANSACTION;
 */
 
@@ -324,7 +324,7 @@ void emit_object_result_set_fetch_results(emit_object_result_set_result_set_ref 
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:generate_copy)
+[[generate_copy]]
 PROC sproc_copy_func ()
 BEGIN
   SELECT *
@@ -433,7 +433,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:emit_setters)
+[[emit_setters]]
 PROC emit_object_with_setters (o OBJECT!)
 BEGIN
   CURSOR C LIKE emit_object_with_setters ARGUMENTS;
@@ -585,7 +585,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:emit_setters)
+[[emit_setters]]
 PROC simple_container_proc ()
 BEGIN
   CURSOR C LIKE (a INT, b INT!, c OBJECT<simple_child_proc SET>);

@@ -90,19 +90,19 @@ begin
   select * from test;
 end;
 
-@attribute(cql:vault_sensitive)
+[[vault_sensitive]]
 proc foo2()
 begin
   select * from test;
 end;
 
-@attribute(cql:vault_sensitive=(x))
+[[vault_sensitive=(x)]]
 proc foo3()
 begin
   select * from test;
 end;
 
-@attribute(cql:vault_sensitive=(a,(x)))
+[[vault_sensitive=(a,(x))]]
 proc foo4()
 begin
   select * from test;
@@ -260,8 +260,3 @@ void foo2_set_encoding(cql_int32 col, cql_bool encode) {
 
 This lets you disable or enable encoding of a column dyamically, so you
 can roll out encoding to say 1% of your users in a trial.
-
-And finally, the abbreviated syntax for `cql:` attributes works here as
-always so `[[vault_sensitive]]` or `[[vault_sensitive=(x,y)]]` are less
-verbose options to `@attribute(cql:vault_sensitive=(x,y))` and they are
-totally equivalent.

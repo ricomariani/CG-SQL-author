@@ -1056,13 +1056,13 @@ select raise(fail, 'fail it');
 select raise(abort, 'abort it');
 select raise(rollback, 'roll it back');
 
-@attribute(cql:identity=(id))
+[[identity=(id)]]
 create proc simple_identity()
 begin
   select 1 as id, 2 as data;
 end;
 
-@attribute(cql:identity=(col1, col2))
+[[identity=(col1, col2)]]
 create proc complex_identity()
 begin
   select 1 as col1, 2 as col2, 3 as data;
@@ -1707,7 +1707,7 @@ let z := "abc\n" "123\r\n\x02" "lmnop''";
 
 @keep_table_name_in_aliases;
 
-@attribute(cql:backing_table)
+[[backing_table]]
 create table backing(
   k blob not null primary key,
   v blob

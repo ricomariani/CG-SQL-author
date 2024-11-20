@@ -211,7 +211,7 @@ static bool_t qp_func_callback(
 
 // For shared fragments with conditionals, choose one branch and discard the conditional.
 // A one-indexed integer provided by "context" chooses the branch - default is 1 (first branch).
-// Starting from 1 rather than 0 seems more intuitive for the use of @attribute(cql:query_plan_branch)
+// Starting from 1 rather than 0 seems more intuitive for the use of [[query_plan_branch]]
 static bool_t if_stmt_callback(
   struct ast_node *_Nonnull ast,
   void *_Nullable context,
@@ -352,14 +352,14 @@ static void cg_qp_sql_stmt(ast_node *ast) {
   if (ast->sem->delete_version <= 0 && !is_alias_ast(ast)) {
     charbuf *out = schema_stmts;
     if (is_backing(ast->sem->sem_type)) {
-      bprintf(out, "@attribute(cql:backing_table)\n");
+      bprintf(out, "[[backing_table]]\n");
     }
     if (is_backed(ast->sem->sem_type)) {
       out = backed_tables;
 
       EXTRACT_MISC_ATTRS(ast, misc_attrs);
       CSTR backing_table_name = get_named_string_attribute_value(misc_attrs, "backed_by");
-      bprintf(out, "@attribute(cql:backed_by=%s)\n", backing_table_name);
+      bprintf(out, "[[backed_by=%s]]\n", backing_table_name);
     }
     gen_set_output_buffer(out);
     gen_statement_with_callbacks(ast, cg_qp_callbacks);
@@ -439,10 +439,10 @@ static void cg_qp_create_proc_stmt(ast_node *ast) {
     gen_sql_callback _Nullable variables_callback_saved = cg_qp_callbacks->variables_callback;
     cg_qp_callbacks->variables_callback = NULL;
 
-    bprintf(query_plans, "@attribute(cql:shared_fragment)\n");
+    bprintf(query_plans, "[[shared_fragment]]\n");
 
     if (if_stmt_branch_context > 1) {
-      bprintf(query_plans, "@attribute(cql:query_plan_branch=%lld)\n", (llint_t)if_stmt_branch_context);
+      bprintf(query_plans, "[[query_plan_branch=%lld]]\n", (llint_t)if_stmt_branch_context);
     }
 
     gen_set_output_buffer(query_plans);
@@ -578,7 +578,7 @@ static void cg_qp_emit_declare_func(charbuf *output) {
       EXTRACT_MISC_ATTRS(any_func, misc_attrs);
       bool_t deterministic = misc_attrs && !!find_named_attr(misc_attrs, "deterministic");
       if (deterministic) {
-        bprintf(output, "@attribute(cql:deterministic)\n");
+        bprintf(output, "[[deterministic]]\n");
       }
 
       gen_statement_with_callbacks(any_func, cg_qp_callbacks);

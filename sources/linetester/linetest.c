@@ -79,7 +79,7 @@ cql_string_literal(_literal_7_r_read_file, "r");
 // Generated from linetest.sql:1
 
 /*
-@ATTRIBUTE(cql:builtin)
+[[builtin]]
 DECLARE PROC cql_throw (code INT!) USING TRANSACTION;
 */
 
@@ -132,7 +132,7 @@ cql_string_ref actual_name = NULL;
 // Generated from linetest.sql:69
 
 /*
-@ATTRIBUTE(cql:private)
+[[private]]
 PROC setup ()
 BEGIN
   CREATE TABLE linedata(
@@ -182,7 +182,7 @@ cql_cleanup:
 // Generated from linetest.sql:77
 
 /*
-@ATTRIBUTE(cql:private)
+[[private]]
 PROC add_linedata (source_ TEXT!, procname_ TEXT!, line_ INT!, data_ TEXT!, physical_line_ INT!)
 BEGIN
   INSERT INTO linedata(source, procname, line, data, physical_line) VALUES(source_, procname_, line_, data_, physical_line_);
@@ -228,7 +228,7 @@ cql_cleanup:
 // Generated from linetest.sql:87
 
 /*
-@ATTRIBUTE(cql:private)
+[[private]]
 PROC dump_proc_records (source_ TEXT!, procname_ TEXT!)
 BEGIN
   CURSOR C FOR
@@ -298,7 +298,7 @@ cql_cleanup:
 // Generated from linetest.sql:97
 
 /*
-@ATTRIBUTE(cql:private)
+[[private]]
 PROC dump (procname TEXT!)
 BEGIN
   CALL printf("%s: difference encountered\n", procname);
@@ -334,7 +334,7 @@ cql_cleanup:
 // Generated from linetest.sql:156
 
 /*
-@ATTRIBUTE(cql:private)
+[[private]]
 PROC compare_lines ()
 BEGIN
   CURSOR p FOR
@@ -554,7 +554,7 @@ cql_cleanup:
 // Generated from linetest.sql:229
 
 /*
-@ATTRIBUTE(cql:private)
+[[private]]
 PROC read_file (input_name TEXT!, source TEXT!)
 BEGIN
   LET prefix1 := '#define _PROC_ ';
@@ -727,7 +727,7 @@ cql_cleanup:
 // Generated from linetest.sql:246
 
 /*
-@ATTRIBUTE(cql:private)
+[[private]]
 PROC parse_args (args OBJECT<cql_string_list>!)
 BEGIN
   LET argc := cql_string_list_count(args);

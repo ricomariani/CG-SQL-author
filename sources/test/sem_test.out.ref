@@ -19785,7 +19785,7 @@ test/sem_test.sql:XXXX:1: error: in cte_decl : CQL0437: common table name shadow
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC shadows_an_existing_table ()
 BEGIN
   WITH
@@ -19897,7 +19897,7 @@ test/sem_test.sql:XXXX:1: error: in cte_decl : CQL0437: common table name shadow
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC does_not_shadow_an_existing_table ()
 BEGIN
   WITH
@@ -20014,7 +20014,7 @@ SELECT *
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC empty_fragment ()
 BEGIN
 END;
@@ -20033,7 +20033,7 @@ test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0440: fragments may no
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC a_shared_frag (x INT!, y INT!)
 BEGIN
   SELECT 1 AS x, 2 AS y, 3.0 AS z;
@@ -20175,7 +20175,7 @@ test/sem_test.sql:XXXX:1: error: in table_star : CQL0054: table not found 'a_sha
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC conditional_no_else ()
 BEGIN
   IF 1 THEN
@@ -20237,7 +20237,7 @@ test/sem_test.sql:XXXX:1: error: in select_nothing_stmt : CQL0496: SELECT NOTHIN
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC conditional_else_nothing ()
 BEGIN
   IF 1 THEN
@@ -20284,7 +20284,7 @@ END;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC ok_conditional_duplicate_cte_names ()
 BEGIN
   IF 1 THEN
@@ -20380,7 +20380,7 @@ END;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC bogus_conditional_duplicate_cte_names ()
 BEGIN
   IF 1 THEN
@@ -20484,7 +20484,7 @@ only in 2nd: id integer notnull
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC bogus_conditional_two_selects ()
 BEGIN
   IF 1 THEN
@@ -20565,7 +20565,7 @@ test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0443: shared fragments with c
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC bogus_conditional_non_select ()
 BEGIN
   IF 1 THEN
@@ -20617,7 +20617,7 @@ test/sem_test.sql:XXXX:1: error: in declare_vars_type : CQL0443: shared fragment
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC bogus_conditional_empty_clause ()
 BEGIN
   IF 1 THEN
@@ -20663,7 +20663,7 @@ test/sem_test.sql:XXXX:1: error: in cond_action : CQL0443: shared fragments with
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC bogus_conditional_empty_else_clause ()
 BEGIN
   IF 1 THEN
@@ -20718,7 +20718,7 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0434: shared fragments may no
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC shared_frag2 (x INT!, y INT!)
 BEGIN
   WITH
@@ -20841,7 +20841,7 @@ DECLARE PROC frag_type () (id INT<job>, name TEXT);
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC shared_frag3 ()
 BEGIN
   WITH
@@ -21024,7 +21024,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0070: expressions of different kind
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC shared_frag_bad_like ()
 BEGIN
   WITH
@@ -21086,7 +21086,7 @@ WITH
   source (*) LIKE there_is_no_such_source
 SELECT 1 AS x, 2 AS y, 3.0 AS z;
 
-test/sem_test.sql:XXXX:1: error: in like : CQL0427: LIKE CTE form may only be used inside a shared fragment at the top level i.e. @attribute(cql:shared_fragment)
+test/sem_test.sql:XXXX:1: error: in like : CQL0427: LIKE CTE form may only be used inside a shared fragment at the top level i.e. [[shared_fragment]]
 
   {with_select_stmt}: err
   | {with}
@@ -21133,7 +21133,7 @@ BEGIN
   SELECT 1 AS x, 2 AS y, 3.0 AS z;
 END;
 
-test/sem_test.sql:XXXX:1: error: in like : CQL0427: LIKE CTE form may only be used inside a shared fragment at the top level i.e. @attribute(cql:shared_fragment) 'not_a_shared_fragment'
+test/sem_test.sql:XXXX:1: error: in like : CQL0427: LIKE CTE form may only be used inside a shared fragment at the top level i.e. [[shared_fragment]] 'not_a_shared_fragment'
 
   {create_proc_stmt}: err
   | {name not_a_shared_fragment}: err
@@ -21860,7 +21860,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in express
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC bogus_like_in_shared ()
 BEGIN
   WITH
@@ -21873,7 +21873,7 @@ BEGIN
   SELECT 1 AS x, 2 AS y, 3.0 AS z;
 END;
 
-test/sem_test.sql:XXXX:1: error: in like : CQL0427: LIKE CTE form may only be used inside a shared fragment at the top level i.e. @attribute(cql:shared_fragment) 'bogus_like_in_shared'
+test/sem_test.sql:XXXX:1: error: in like : CQL0427: LIKE CTE form may only be used inside a shared fragment at the top level i.e. [[shared_fragment]] 'bogus_like_in_shared'
 
   {stmt_and_attr}: err
   | {misc_attrs}: ok
@@ -21946,7 +21946,7 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0427: LIKE CTE form may only be us
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC shared_frag_bad_like_decl ()
 BEGIN
   WITH
@@ -22005,7 +22005,7 @@ test/sem_test.sql:XXXX:1: error: in cte_decl : CQL0101: too few column names spe
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC shared_frag_bogus_cte_columns ()
 BEGIN
   WITH
@@ -22356,7 +22356,7 @@ WITH
 SELECT *
   FROM some_cte;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0224: a CALL statement inside SQL may call only a shared fragment i.e. @attribute(cql:shared_fragment) 'return_with_attr'
+test/sem_test.sql:XXXX:1: error: in str : CQL0224: a CALL statement inside SQL may call only a shared fragment i.e. [[shared_fragment]] 'return_with_attr'
 
   {with_select_stmt}: err
   | {with}
@@ -22423,7 +22423,7 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0323: calls to undeclared pro
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC test_shared_fragment_with_CTEs (id_ INT!)
 BEGIN
   WITH
@@ -22558,7 +22558,7 @@ END;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC test_shared_fragment_without_CTEs (id_ INT!)
 BEGIN
   SELECT id, name, rate
@@ -22612,7 +22612,7 @@ END;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC test_shared_fragment_wrong_form ()
 BEGIN
   SELECT *
@@ -22668,7 +22668,7 @@ test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0179: shared fragments must c
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC test_shared_fragment_bad_args (OUT x INT)
 BEGIN
   SELECT *
@@ -22712,7 +22712,7 @@ test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0208: shared fragments cannot
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC test_shared_fragment_wrong_form_not_select ()
 BEGIN
   DECLARE x INT;
@@ -28038,7 +28038,7 @@ The statement ending at line XXXX
 
 SET an_int := ( SELECT proc_with_single_output(1, an_int, an_int) );
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0224: a function call to a procedure inside SQL may call only a shared fragment i.e. @attribute(cql:shared_fragment) 'proc_with_single_output'
+test/sem_test.sql:XXXX:1: error: in call : CQL0224: a function call to a procedure inside SQL may call only a shared fragment i.e. [[shared_fragment]] 'proc_with_single_output'
 
   {assign}: err
   | {name an_int}: an_int: integer variable was_set
@@ -36577,7 +36577,7 @@ test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0189: procedure declar
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:autotest=(dummy_test, dummy_table, dummy_insert, dummy_select, dummy_result_set))
+[[autotest=(dummy_test, dummy_table, dummy_insert, dummy_select, dummy_result_set)]]
 PROC autotest_all_attribute ()
 BEGIN
   SELECT *
@@ -36623,7 +36623,7 @@ END;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:autotest=(dummy_table, (dummy_test, (bar, (id, name), (1, 'Nelly'), (-2, 'Babeth')), (foo, (id), (777)))))
+[[autotest=(dummy_table, (dummy_test, (bar, (id, name), (1, 'Nelly'), (-2, 'Babeth')), (foo, (id), (777))))]]
 PROC autotest_dummy_test_with_others_attributes ()
 BEGIN
   SELECT *
@@ -36692,7 +36692,7 @@ END;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:autotest=((dummy_test, (bar, (id), (1), (2)))))
+[[autotest=((dummy_test, (bar, (id), (1), (2))))]]
 PROC autotest_dummy_test_without_other_attributes ()
 BEGIN
   SELECT *
@@ -36743,7 +36743,7 @@ END;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:autotest=(dummy_table, (dummy_test, (bar, (id), (one)))))
+[[autotest=(dummy_table, (dummy_test, (bar, (id), (one))))]]
 PROC autotest_dummy_test_invalid_col_str_value ()
 BEGIN
   SELECT *
@@ -36795,7 +36795,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0276: autotest attribute 'dummy_tes
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:autotest=((dummy_test, (bar, (id), (0.1)))))
+[[autotest=((dummy_test, (bar, (id), (0.1))))]]
 PROC autotest_dummy_test_invalid_col_dbl_value ()
 BEGIN
   SELECT *
@@ -36845,7 +36845,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0276: autotest attribute 'dummy_tes
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:autotest=((dummy_test, (bar, (rate), (1)))))
+[[autotest=((dummy_test, (bar, (rate), (1))))]]
 PROC autotest_dummy_test_long_col_with_int_value ()
 BEGIN
   SELECT *
@@ -36893,7 +36893,7 @@ END;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:autotest=((dummy_test, (bar, (rate), (-1)))))
+[[autotest=((dummy_test, (bar, (rate), (-1))))]]
 PROC autotest_dummy_test_neg_long_col_with_int_value ()
 BEGIN
   SELECT *
@@ -36942,7 +36942,7 @@ END;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:autotest=(dummy_table, (dummy_test, (bar, (id), ('bogus')))))
+[[autotest=(dummy_table, (dummy_test, (bar, (id), ('bogus'))))]]
 PROC autotest_dummy_test_invalid_col_strlit_value ()
 BEGIN
   SELECT *
@@ -36994,7 +36994,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0276: autotest attribute 'dummy_tes
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:autotest=(dummy_table, (dummy_test, (bar, (id), (1L)))))
+[[autotest=(dummy_table, (dummy_test, (bar, (id), (1L))))]]
 PROC autotest_dummy_test_invalid_col_lng_value ()
 BEGIN
   SELECT *
@@ -37046,7 +37046,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0276: autotest attribute 'dummy_tes
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:autotest=(dummy_table, (dummy_test, (bar, id, (1), (2)))))
+[[autotest=(dummy_table, (dummy_test, (bar, id, (1), (2))))]]
 PROC autotest_dummy_test_invalid_col_format ()
 BEGIN
   SELECT *
@@ -37100,7 +37100,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0273: autotest attribute has incorr
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:autotest=(dummy_table, (dummy_test, (bar, (id), (1, 2)))))
+[[autotest=(dummy_table, (dummy_test, (bar, (id), (1, 2))))]]
 PROC autotest_dummy_test_too_many_value_format ()
 BEGIN
   SELECT *
@@ -37154,7 +37154,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0273: autotest attribute has incorr
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:autotest=(dummy_table, (dummy_test, (bar, (id, name), (1)))))
+[[autotest=(dummy_table, (dummy_test, (bar, (id, name), (1))))]]
 PROC autotest_dummy_test_missing_value_format ()
 BEGIN
   SELECT *
@@ -37208,7 +37208,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0273: autotest attribute has incorr
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:autotest=(dummy_table, (dummy_test, (bar, (id, name)))))
+[[autotest=(dummy_table, (dummy_test, (bar, (id, name))))]]
 PROC autotest_dummy_test_no_value_format ()
 BEGIN
   SELECT *
@@ -37259,7 +37259,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0273: autotest attribute has incorr
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:autotest=(dummy_table, (dummy_test, (1, (id), (1)))))
+[[autotest=(dummy_table, (dummy_test, (1, (id), (1))))]]
 PROC autotest_bogus_table_name_format ()
 BEGIN
   SELECT *
@@ -37311,7 +37311,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attr_value_list : CQL0273: autotest att
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:autotest=(dummy_table, (dummy_test, (bar, (1), (1)))))
+[[autotest=(dummy_table, (dummy_test, (bar, (1), (1))))]]
 PROC autotest_bogus_colum_name_format ()
 BEGIN
   SELECT *
@@ -37363,7 +37363,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0273: autotest attribute has incorr
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:autotest=(dummy_table, (dummy_test, (bar, (id), 1))))
+[[autotest=(dummy_table, (dummy_test, (bar, (id), 1)))]]
 PROC autotest_colum_value_incorrect_format ()
 BEGIN
   SELECT *
@@ -37414,7 +37414,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0273: autotest attribute has incorr
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:autotest=(dummy_table, (dummy_test, (bar, (bogus_col), (1), (2)))))
+[[autotest=(dummy_table, (dummy_test, (bar, (bogus_col), (1), (2))))]]
 PROC autotest_dummy_test_bogus_col_name ()
 BEGIN
   SELECT *
@@ -37469,7 +37469,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0275: autotest attribute 'dummy_tes
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:autotest=(dummy_table, (dummy_test, (bogus_table, (id), (1), (2)))))
+[[autotest=(dummy_table, (dummy_test, (bogus_table, (id), (1), (2))))]]
 PROC autotest_dummy_test_bogus_table_name ()
 BEGIN
   SELECT *
@@ -37524,7 +37524,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0274: autotest attribute 'dummy_tes
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:autotest=(dummy_bogus))
+[[autotest=(dummy_bogus)]]
 PROC autotest_dummy_bogus ()
 BEGIN
   SELECT *
@@ -37564,7 +37564,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0278: autotest attribute name is no
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:autotest=(dummy_table, (dummy_bogus)))
+[[autotest=(dummy_table, (dummy_bogus))]]
 PROC autotest_bogus_nested_attribute ()
 BEGIN
   SELECT *
@@ -37607,7 +37607,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0277: autotest has incorrect format
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:autotest=(dummy_test, (bar, (id), (1))))
+[[autotest=(dummy_test, (bar, (id), (1)))]]
 PROC autotest_dummy_test_not_nested ()
 BEGIN
   SELECT *
@@ -37656,7 +37656,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0277: autotest has incorrect format
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:autotest=(dummy_test, bar, ((id, name), (1, 'x'))))
+[[autotest=(dummy_test, bar, ((id, name), (1, 'x')))]]
 PROC autotest_dummy_test_not_nested_2 ()
 BEGIN
   SELECT *
@@ -37710,7 +37710,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attr_value_list : CQL0277: autotest has
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:autotest=((dummy_test, ((bar, (id), (1), (2))))))
+[[autotest=((dummy_test, ((bar, (id), (1), (2)))))]]
 PROC autotest_dummy_test_with_col_double_nested ()
 BEGIN
   SELECT *
@@ -37764,7 +37764,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attr_value_list : CQL0273: autotest att
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:autotest=dummy_table)
+[[autotest=dummy_table]]
 PROC autotest_incorrect_formatting ()
 BEGIN
   SELECT *
@@ -37857,7 +37857,7 @@ CREATE TABLE not_a_temp_table(
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:autodrop=(table1, table2))
+[[autodrop=(table1, table2)]]
 PROC autodropper ()
 BEGIN
   SELECT *
@@ -37897,7 +37897,7 @@ END;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:autodrop=(not_an_object))
+[[autodrop=(not_an_object)]]
 PROC autodropper_not_an_objecte ()
 BEGIN
   SELECT *
@@ -37937,7 +37937,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attr_value_list : CQL0181: autodrop tem
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:autodrop=(ViewShape))
+[[autodrop=(ViewShape)]]
 PROC autodropper_dropping_view ()
 BEGIN
   SELECT *
@@ -37977,7 +37977,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attr_value_list : CQL0182: autodrop tar
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:autodrop=(not_a_temp_table))
+[[autodrop=(not_a_temp_table)]]
 PROC autodropper_not_temp_table ()
 BEGIN
   SELECT *
@@ -38017,7 +38017,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attr_value_list : CQL0183: autodrop tar
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:autodrop=(table1, table2))
+[[autodrop=(table1, table2)]]
 PROC autodrop_not_really_a_result_set_proc ()
 BEGIN
   DECLARE i INT;
@@ -38046,7 +38046,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0234: autodrop annotation ca
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:autodrop=(table1, table2))
+[[autodrop=(table1, table2)]]
 PROC autodrop_no_db ()
 BEGIN
   CURSOR C LIKE SELECT 1 AS id;
@@ -38865,7 +38865,7 @@ CREATE TABLE fk_strict_success_loose(
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:identity=(col1, col3))
+[[identity=(col1, col3)]]
 PROC invalid_identity ()
 BEGIN
   SELECT 1 AS col1, 2 AS col2, 3 AS data;
@@ -38916,7 +38916,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0239: procedure identity col
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:identity=(col1, col3))
+[[identity=(col1, col3)]]
 PROC no_result_set_identity ()
 BEGIN
   DECLARE x INT;
@@ -47429,7 +47429,7 @@ DECLARE PROC sens_result_proc () (t TEXT @SENSITIVE);
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:autotest=(dummy_test))
+[[autotest=(dummy_test)]]
 PROC sens_result_proc ()
 BEGIN
   SELECT *
@@ -47481,7 +47481,7 @@ DECLARE PROC incompatible_result_proc () (t TEXT);
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:autotest=(dummy_test))
+[[autotest=(dummy_test)]]
 PROC incompatible_result_proc ()
 BEGIN
   SELECT 1 AS t;
@@ -49226,7 +49226,7 @@ test/sem_test.sql:XXXX:1: error: in name_list : CQL0272: columns referenced in t
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:autotest=((dummy_test, (self_ref1, (id, id2), (1, NULL), (2, 1)))))
+[[autotest=((dummy_test, (self_ref1, (id, id2), (1, NULL), (2, 1))))]]
 PROC self_ref_proc_table ()
 BEGIN
   SELECT *
@@ -49283,7 +49283,7 @@ END;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:ok_table_scan=foo)
+[[ok_table_scan=foo]]
 PROC ok_table_scan ()
 BEGIN
   SELECT *
@@ -49320,7 +49320,7 @@ END;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:ok_table_scan=(foo, 1))
+[[ok_table_scan=(foo, 1)]]
 PROC ok_table_scan_value ()
 BEGIN
   SELECT *
@@ -49362,8 +49362,8 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0325: ok_table_scan attribute must 
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:ok_table_scan=bogus)
-@ATTRIBUTE(cql:attr)
+[[ok_table_scan=bogus]]
+[[attr]]
 PROC ok_table_scan_bogus ()
 BEGIN
   SELECT *
@@ -49407,7 +49407,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0326: the table name in ok_t
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:ok_table_scan=1)
+[[ok_table_scan=1]]
 PROC ok_table_scan_value_int ()
 BEGIN
   SELECT *
@@ -49446,7 +49446,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0325: ok_table_scan attribute must 
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:ok_table_scan=foo)
+[[ok_table_scan=foo]]
 SELECT *
   FROM foo;
 
@@ -49478,7 +49478,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0329: ok_table_scan attribut
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:no_table_scan)
+[[no_table_scan]]
 SELECT *
   FROM foo;
 
@@ -49509,7 +49509,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0328: no_table_scan attribut
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:no_table_scan)
+[[no_table_scan]]
 CREATE TABLE no_table_scan(
   id TEXT
 );
@@ -49534,7 +49534,7 @@ CREATE TABLE no_table_scan(
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:no_table_scan=1)
+[[no_table_scan=1]]
 SELECT *
   FROM foo;
 
@@ -58931,7 +58931,7 @@ test/sem_test.sql:XXXX:1: error: in cast_expr : CQL0070: expressions of differen
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:vault_sensitive)
+[[vault_sensitive]]
 SELECT *
   FROM foo;
 
@@ -58962,7 +58962,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0328: vault_sensitive attrib
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:vault_sensitive=(bogus, nan))
+[[vault_sensitive=(bogus, nan)]]
 PROC vault_sensitive_with_invalid_values ()
 BEGIN
   SELECT *
@@ -59005,7 +59005,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0239: vault_sensitive column
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:vault_sensitive=(name, rate))
+[[vault_sensitive=(name, rate)]]
 PROC vault_sensitive_with_valid_values ()
 BEGIN
   SELECT *
@@ -59045,7 +59045,7 @@ END;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:vault_sensitive=bogus)
+[[vault_sensitive=bogus]]
 PROC vault_sensitive_with_invalid_single_column ()
 BEGIN
   SELECT *
@@ -59084,7 +59084,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0239: vault_sensitive column
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:vault_sensitive=1)
+[[vault_sensitive=1]]
 PROC vault_sensitive_with_not_string_value_proc_val ()
 BEGIN
 END;
@@ -59104,7 +59104,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0363: all arguments must be names '
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:vault_sensitive=(name, 1, 'lol'))
+[[vault_sensitive=(name, 1, 'lol')]]
 PROC vault_sensitive_with_not_strings_value_proc_val ()
 BEGIN
 END;
@@ -59129,7 +59129,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0363: all arguments must be names '
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:vault_sensitive='lol')
+[[vault_sensitive='lol']]
 PROC vault_sensitive_with_lit_string_value_proc_val ()
 BEGIN
 END;
@@ -59149,7 +59149,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0363: all arguments must be names '
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:vault_sensitive=(bogus, (nan)))
+[[vault_sensitive=(bogus, (nan))]]
 PROC vault_sensitive_with_invalid_encode_context_columns ()
 BEGIN
   SELECT *
@@ -59193,7 +59193,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0239: vault_sensitive column
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:vault_sensitive=(1, (name)))
+[[vault_sensitive=(1, (name))]]
 PROC vault_sensitive_with_not_string_vault_context_proc_val ()
 BEGIN
 END;
@@ -59217,7 +59217,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0363: all arguments must be names '
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:vault_sensitive=('lol', (name)))
+[[vault_sensitive=('lol', (name))]]
 PROC vault_sensitive_with_literal_string_vault_context_proc_val ()
 BEGIN
 END;
@@ -59241,7 +59241,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0363: all arguments must be names '
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:vault_sensitive=(name, (1)))
+[[vault_sensitive=(name, (1))]]
 PROC vault_sensitive_with_not_string_vault_column_proc_val ()
 BEGIN
 END;
@@ -59316,7 +59316,7 @@ CREATE TABLE bar_with_sensitive(
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:vault_sensitive=(name, (id, title)))
+[[vault_sensitive=(name, (id, title))]]
 PROC vault_sensitive_with_sensitive_encode_context_column_proc_val ()
 BEGIN
   SELECT *
@@ -59361,7 +59361,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0400: encode context column 
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:vault_sensitive=(intro, (id, (title))))
+[[vault_sensitive=(intro, (id, (title)))]]
 PROC vault_sensitive_with_invalid_nested_vault_column_proc_val ()
 BEGIN
   SELECT *
@@ -59407,7 +59407,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attr_value_list : CQL0363: all argument
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:vault_sensitive=(intro, (name), id))
+[[vault_sensitive=(intro, (name), id)]]
 PROC vault_sensitive_with_multi_encode_context_columns_proc_val ()
 BEGIN
   SELECT *
@@ -59452,7 +59452,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0408: encode context column 
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:vault_sensitive=(intro, (name, title)))
+[[vault_sensitive=(intro, (name, title))]]
 PROC vault_sensitive_with_valid_context_and_encode_columns ()
 BEGIN
   SELECT *
@@ -59502,7 +59502,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:vault_sensitive=(name, rate))
+[[vault_sensitive=(name, rate)]]
 PROC vault_sensitive_with_only_encode_columns_strict_mode ()
 BEGIN
   SELECT *
@@ -59544,7 +59544,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0401: context column must be
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:vault_sensitive=name)
+[[vault_sensitive=name]]
 PROC vault_sensitive_with_only_encode_column_strict_mode ()
 BEGIN
   SELECT *
@@ -59583,7 +59583,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0401: context column must be
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:vault_sensitive)
+[[vault_sensitive]]
 PROC vault_sensitive_with_no_columns_strict_mode ()
 BEGIN
   SELECT *
@@ -59621,7 +59621,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0401: context column must be
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:vault_sensitive=(id, (name)))
+[[vault_sensitive=(id, (name))]]
 PROC vault_sensitive_with_integer_encode_context ()
 BEGIN
   SELECT *
@@ -59669,7 +59669,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:vault_sensitive=(name, (rate)))
+[[vault_sensitive=(name, (rate))]]
 PROC vault_sensitive_encode_context_integer_strict_mode ()
 BEGIN
   SELECT *
@@ -59726,7 +59726,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:vault_sensitive=(name, (rate)))
+[[vault_sensitive=(name, (rate))]]
 PROC vault_sensitive_encode_context_long_integer_strict_mode ()
 BEGIN
   SELECT *
@@ -59783,7 +59783,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:vault_sensitive=(name, (rate)))
+[[vault_sensitive=(name, (rate))]]
 PROC vault_sensitive_encode_context_real_strict_mode ()
 BEGIN
   SELECT *
@@ -59840,7 +59840,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:vault_sensitive=(name, (rate)))
+[[vault_sensitive=(name, (rate))]]
 PROC vault_sensitive_encode_context_bool_strict_mode ()
 BEGIN
   SELECT *
@@ -59897,7 +59897,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:vault_sensitive=(name, (rate)))
+[[vault_sensitive=(name, (rate))]]
 PROC vault_sensitive_encode_context_blob_strict_mode ()
 BEGIN
   SELECT *
@@ -59954,7 +59954,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:vault_sensitive=(id, (name, rate)))
+[[vault_sensitive=(id, (name, rate))]]
 PROC vault_sensitive_with_integer_encode_context_strict_mode ()
 BEGIN
   SELECT *
@@ -59999,7 +59999,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0402: vault context column i
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:vault_sensitive=(name, (rate)))
+[[vault_sensitive=(name, (rate))]]
 PROC vault_sensitive_with_text_encode_context_strict_mode ()
 BEGIN
   SELECT *
@@ -60054,7 +60054,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:vault_sensitive)
+[[vault_sensitive]]
 PROC vault_sensitive_proc ()
 BEGIN
 END;
@@ -60071,7 +60071,7 @@ END;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:vault_sensitive)
+[[vault_sensitive]]
 PROC vault_sensitive_proc_dml ()
 BEGIN
   DECLARE y TEXT;
@@ -70577,7 +70577,7 @@ The statement ending at line XXXX
 PROC try_blocks_can_successfully_verify_initialization (OUT a TEXT!, OUT rc INT!)
 BEGIN
   SET rc := 0;
-  @ATTRIBUTE(cql:try_is_proc_body)
+  [[try_is_proc_body]]
   @ATTRIBUTE(some_other_attribute)
   TRY
     SET a := "text";
@@ -70632,7 +70632,7 @@ PROC try_blocks_can_fail_to_verify_initialization (OUT a TEXT!, OUT rc INT!)
 BEGIN
   SET rc := 0;
   @ATTRIBUTE(some_other_attribute)
-  @ATTRIBUTE(cql:try_is_proc_body)
+  [[try_is_proc_body]]
   TRY
   CATCH
     SET rc := 1;
@@ -70685,17 +70685,17 @@ The statement ending at line XXXX
 
 PROC try_is_proc_body_may_only_appear_once ()
 BEGIN
-  @ATTRIBUTE(cql:try_is_proc_body)
+  [[try_is_proc_body]]
   TRY
   CATCH
   END;
-  @ATTRIBUTE(cql:try_is_proc_body)
+  [[try_is_proc_body]]
   TRY
   CATCH
   END;
 END;
 
-test/sem_test.sql:XXXX:1: error: in trycatch_stmt : CQL0446: @attribute(cql:try_is_proc_body) cannot be used more than once per procedure
+test/sem_test.sql:XXXX:1: error: in trycatch_stmt : CQL0446: [[try_is_proc_body]] cannot be used more than once per procedure
 
   {create_proc_stmt}: err
   | {name try_is_proc_body_may_only_appear_once}: err
@@ -70720,13 +70720,13 @@ The statement ending at line XXXX
 
 PROC try_is_proc_body_accepts_no_values ()
 BEGIN
-  @ATTRIBUTE(cql:try_is_proc_body=(foo))
+  [[try_is_proc_body=(foo)]]
   TRY
   CATCH
   END;
 END;
 
-test/sem_test.sql:XXXX:1: error: in misc_attr_value_list : CQL0445: @attribute(cql:try_is_proc_body) accepts no values
+test/sem_test.sql:XXXX:1: error: in misc_attr_value_list : CQL0445: [[try_is_proc_body]] accepts no values
 
   {create_proc_stmt}: err
   | {name try_is_proc_body_accepts_no_values}: err
@@ -74629,7 +74629,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0169: constant group not found 'not
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC conditional_frag (bb INT!)
 BEGIN
   IF bb = 1 THEN
@@ -74830,7 +74830,7 @@ END;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC fragtest_0_0 ()
 BEGIN
   WITH
@@ -74921,7 +74921,7 @@ END;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC fragtest_0_1 ()
 BEGIN
   WITH
@@ -75000,7 +75000,7 @@ END;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC fragtest_0_2 ()
 BEGIN
   WITH
@@ -75198,7 +75198,7 @@ SELECT *
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC fragtest_1_0 ()
 BEGIN
   WITH
@@ -75289,7 +75289,7 @@ END;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC fragtest_1_1 ()
 BEGIN
   WITH
@@ -75371,7 +75371,7 @@ The above originated from CALL fragtest_1_0 USING possible_conflict AS source
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC fragtest_2_0 ()
 BEGIN
   WITH
@@ -75435,7 +75435,7 @@ END;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC fragtest_2_1 ()
 BEGIN
   WITH
@@ -75576,7 +75576,7 @@ SELECT *
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC frag_not_really_a_conflict ()
 BEGIN
   WITH
@@ -75647,7 +75647,7 @@ END;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:doc_comment="/** This is a doc comment */")
+[[doc_comment="/** This is a doc comment */"]]
 PROC doc_comment_proc ()
 BEGIN
 END;
@@ -76511,7 +76511,7 @@ SELECT xyzzy
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC inline_math (x_ INT, y_ INT)
 BEGIN
   SELECT x_ + y_ AS result;
@@ -76652,7 +76652,7 @@ END;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC inline_math_bad (x INT, y INT)
 BEGIN
   SELECT x + y AS sum
@@ -76755,7 +76755,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0450: a shared fragment used like 
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC inline_math_bad2 ()
 BEGIN
   SELECT 1 AS x
@@ -76839,7 +76839,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0450: a shared fragment used like 
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC inline_math_bad3 ()
 BEGIN
   SELECT NOT 'x' AS y;
@@ -76910,7 +76910,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0213: procedure had errors, can't 
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC inline_math_bad4 ()
 BEGIN
   SELECT 1 AS x, 2 AS y;
@@ -77019,7 +77019,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0212: too few arguments provided t
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC inline_frag (x INT)
 BEGIN
   SELECT 1 AS x;
@@ -77096,7 +77096,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0451: procedure as function call i
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 DECLARE PROC declared_shared_fragment () (x INT);
 
   {stmt_and_attr}: ok
@@ -77125,7 +77125,7 @@ BEGIN
     FROM x;
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0468: @attribute(cql:shared_fragment) may only be placed on a CREATE PROC statement 'declared_shared_fragment'
+test/sem_test.sql:XXXX:1: error: in str : CQL0468: [[shared_fragment]] may only be placed on a CREATE PROC statement 'declared_shared_fragment'
 
   {create_proc_stmt}: err
   | {name uses_declared_shared_fragment}: err
@@ -77199,7 +77199,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0451: procedure as function call i
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC no_args_frag ()
 BEGIN
   SELECT 1 AS x, 2 AS y, 3.0 AS z;
@@ -77244,7 +77244,7 @@ END;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC nested_expression_fragment (x INT!, y INT!)
 BEGIN
   SELECT (   WITH
@@ -77364,7 +77364,7 @@ END;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC nested_expression_fragment_with_args1 (x INT!, y INT!)
 BEGIN
   SELECT (   WITH
@@ -77494,7 +77494,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0467: a shared fragment used like 
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:shared_fragment)
+[[shared_fragment]]
 PROC nested_expression_fragment_with_args2 (x INT!, y INT!)
 BEGIN
   SELECT ( SELECT f.x
@@ -78299,7 +78299,7 @@ SELECT sign(-1);
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backing_table)
+[[backing_table]]
 CREATE TABLE simple_backing_table(
   k BLOB PRIMARY KEY,
   v BLOB!
@@ -78334,7 +78334,7 @@ CREATE TABLE simple_backing_table(
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backing_table)
+[[backing_table]]
 CREATE TABLE simple_backing_table_missing_pk(
   k BLOB!,
   v BLOB!
@@ -78370,7 +78370,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backing_table)
+[[backing_table]]
 CREATE TABLE simple_backing_table_only_pk(
   k BLOB!,
   v BLOB!,
@@ -78416,7 +78416,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backing_table)
+[[backing_table]]
 CREATE TABLE simple_backing_table_expr_key(
   k BLOB,
   v BLOB,
@@ -78463,7 +78463,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backing_table)
+[[backing_table]]
 CREATE TABLE simple_backing_table_with_versions(
   k BLOB!,
   v BLOB!,
@@ -78511,7 +78511,7 @@ CREATE TABLE simple_backing_table_with_versions(
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 CREATE TABLE simple_backed_table(
   id INT PRIMARY KEY,
   name TEXT<cool_text>!
@@ -78548,7 +78548,7 @@ CREATE TABLE simple_backed_table(
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 CREATE TABLE backed(
   status_id INT PRIMARY KEY,
   global_connection_state LONG
@@ -78712,7 +78712,7 @@ test/sem_test.sql:XXXX:1: error: in create_index_stmt : CQL0493: backed storage 
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 CREATE TABLE no_pk_backed_table(
   id INT,
   name TEXT!
@@ -78748,7 +78748,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 CREATE TABLE only_pk_backed_table(
   id INT PRIMARY KEY
 );
@@ -78778,7 +78778,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 CREATE TABLE simple_backed_table_2(
   id INT,
   name TEXT!,
@@ -78820,7 +78820,7 @@ CREATE TABLE simple_backed_table_2(
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 CREATE TABLE simple_backed_table_expr_key(
   id INT,
   name TEXT!,
@@ -78866,7 +78866,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 CREATE TABLE simple_backed_table_with_versions(
   id INT PRIMARY KEY,
   name TEXT!
@@ -78910,7 +78910,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backing_table)
+[[backing_table]]
 CREATE TABLE has_non_blob_columns(
   id INT PRIMARY KEY,
   v BLOB!
@@ -78947,7 +78947,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backing_table)
+[[backing_table]]
 CREATE VIRTUAL TABLE virtual_backing_illegal USING module_name (args) AS (
   id INT,
   t TEXT
@@ -78987,7 +78987,7 @@ test/sem_test.sql:XXXX:1: error: in create_virtual_table_stmt : CQL0483: table i
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backing_table)
+[[backing_table]]
 CREATE TEMP TABLE temp_backing(
   id INT,
   t TEXT
@@ -79021,7 +79021,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backing_table)
+[[backing_table]]
 CREATE TABLE norowid_backing(
   k BLOB,
   v BLOB
@@ -79055,7 +79055,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backing_table)
+[[backing_table]]
 CREATE TABLE constraint_backing(
   k BLOB PRIMARY KEY,
   v BLOB,
@@ -79099,7 +79099,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backing_table)
+[[backing_table]]
 CREATE TABLE pk_col_backing(
   k BLOB PRIMARY KEY,
   v BLOB
@@ -79133,7 +79133,7 @@ CREATE TABLE pk_col_backing(
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backing_table)
+[[backing_table]]
 CREATE TABLE fk_col_backing(
   id INT REFERENCES foo (id),
   t TEXT
@@ -79174,7 +79174,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backing_table)
+[[backing_table]]
 CREATE TABLE uk_col_backing(
   id INT UNIQUE,
   t TEXT
@@ -79209,7 +79209,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backing_table)
+[[backing_table]]
 CREATE TABLE hidden_col_backing(
   k BLOB PRIMARY KEY,
   v BLOB HIDDEN!
@@ -79247,7 +79247,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backing_table)
+[[backing_table]]
 CREATE TABLE autoinc_col_backing(
   id INT PRIMARY KEY AUTOINCREMENT,
   v BLOB!
@@ -79285,7 +79285,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backing_table)
+[[backing_table]]
 CREATE TABLE conflict_clause_col_backing(
   k BLOB PRIMARY KEY ON CONFLICT ABORT,
   v BLOB!
@@ -79321,7 +79321,7 @@ CREATE TABLE conflict_clause_col_backing(
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backing_table)
+[[backing_table]]
 CREATE TABLE check_col_backing(
   k BLOB PRIMARY KEY,
   id INT CHECK(id = 5) 
@@ -79361,7 +79361,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backing_table)
+[[backing_table]]
 CREATE TABLE collate_col_backing(
   k BLOB PRIMARY KEY,
   t TEXT COLLATE nocase
@@ -79399,7 +79399,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backing_table)
+[[backing_table]]
 CREATE TABLE default_value_col_backing(
   id INT DEFAULT 5,
   v BLOB!
@@ -79436,7 +79436,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backing_table)
+[[backing_table]]
 CREATE TABLE deleted_col_backing(
   k BLOB PRIMARY KEY,
   v BLOB @DELETE(11)
@@ -79475,7 +79475,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backing_table)
+[[backing_table]]
 CREATE TABLE created_col_backing(
   k BLOB PRIMARY KEY,
   v BLOB @CREATE(11)
@@ -79514,7 +79514,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backing_table)
+[[backing_table]]
 CREATE TABLE recreate_backing(
   k BLOB PRIMARY KEY,
   v BLOB!
@@ -79550,7 +79550,7 @@ CREATE TABLE recreate_backing(
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backing_table)
+[[backing_table]]
 CREATE TABLE one_col_backing(
   k BLOB PRIMARY KEY
 );
@@ -79579,7 +79579,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 CREATE TABLE simple_backed_table_versions(
   id INT PRIMARY KEY,
   name TEXT!
@@ -79623,7 +79623,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 CREATE VIRTUAL TABLE virtual_backed_illegal USING module_name (args) AS (
   id INT,
   t TEXT
@@ -79664,7 +79664,7 @@ test/sem_test.sql:XXXX:1: error: in create_virtual_table_stmt : CQL0487: table i
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 CREATE TEMP TABLE temp_backed(
   id INT,
   t TEXT
@@ -79699,7 +79699,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backed_by=not_exists_table)
+[[backed_by=not_exists_table]]
 CREATE TABLE backed_by_not_exists(
   id INT,
   t TEXT
@@ -79734,7 +79734,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backed_by=foo)
+[[backed_by=foo]]
 CREATE TABLE backed_by_non_backing(
   id INT,
   t TEXT
@@ -79769,7 +79769,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 CREATE TABLE norowid_backed(
   id INT,
   t TEXT
@@ -79804,7 +79804,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 CREATE TABLE constraint_backed(
   id INT,
   t TEXT,
@@ -79847,7 +79847,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 CREATE TABLE pk_col_backed(
   id INT PRIMARY KEY,
   t TEXT
@@ -79882,7 +79882,7 @@ CREATE TABLE pk_col_backed(
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 CREATE TABLE fk_col_backed(
   id INT REFERENCES foo (id),
   t TEXT
@@ -79924,7 +79924,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 CREATE TABLE uk_col_backed(
   id INT UNIQUE,
   t TEXT
@@ -79960,7 +79960,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 CREATE TABLE hidden_col_backed(
   id INT HIDDEN,
   t TEXT
@@ -79996,7 +79996,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 CREATE TABLE autoinc_col_backed(
   id INT PRIMARY KEY AUTOINCREMENT,
   t TEXT
@@ -80034,7 +80034,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 CREATE TABLE conflict_clause_col_backed(
   id INT PRIMARY KEY ON CONFLICT ABORT,
   t TEXT
@@ -80070,7 +80070,7 @@ CREATE TABLE conflict_clause_col_backed(
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 CREATE TABLE check_col_backed(
   id INT CHECK(id = 5) ,
   t TEXT
@@ -80109,7 +80109,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 CREATE TABLE collate_col_backed(
   id INT,
   t TEXT COLLATE nocase
@@ -80146,7 +80146,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 CREATE TABLE default_value_col_backed(
   id INT PRIMARY KEY,
   x INT! DEFAULT 7,
@@ -80191,7 +80191,7 @@ CREATE TABLE default_value_col_backed(
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 CREATE TABLE deleted_col_backed(
   id INT,
   t TEXT @DELETE(7)
@@ -80229,7 +80229,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 CREATE TABLE created_col_backed(
   id INT,
   t TEXT @CREATE(7)
@@ -80267,7 +80267,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 CREATE TABLE recreate_backed(
   id INT PRIMARY KEY,
   t TEXT
@@ -80305,7 +80305,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backed_by=recreate_backing)
+[[backed_by=recreate_backing]]
 CREATE TABLE recreate_backed_wrong_group(
   id INT PRIMARY KEY,
   t TEXT
@@ -80344,7 +80344,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:blob_storage)
+[[blob_storage]]
 CREATE TABLE structured_storage(
   id INT!,
   name TEXT!
@@ -80664,7 +80664,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0455: blob variable must have a typ
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 CREATE TABLE basic_table(
   id INT PRIMARY KEY,
   name TEXT<cool_text>
@@ -80700,7 +80700,7 @@ CREATE TABLE basic_table(
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 CREATE TABLE basic_table2(
   id INT PRIMARY KEY,
   name TEXT
@@ -81906,7 +81906,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0488: the indicated t
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:backed_by=simple_backing_table)
+[[backed_by=simple_backing_table]]
 CREATE TABLE bt_default(
   pk1 INT DEFAULT 2222,
   pk2 INT DEFAULT 99,
@@ -83479,7 +83479,7 @@ BEGIN
   CALL cql_cursor_from_blob(C, b);
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0457: the indicated table is not marked with @attribute(cql:blob_storage) 'foo'
+test/sem_test.sql:XXXX:1: error: in str : CQL0457: the indicated table is not marked with [[blob_storage]] 'foo'
 
   {create_proc_stmt}: err
   | {name blob_serialization_not_storage_table}: err
@@ -83575,7 +83575,7 @@ test/sem_test.sql:XXXX:1: error: in create_index_stmt : CQL0458: the indicated t
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:blob_storage)
+[[blob_storage]]
 CREATE VIRTUAL TABLE virtual_blob_storage_illegal USING module_name (args) AS (
   id INT,
   t TEXT
@@ -83615,7 +83615,7 @@ test/sem_test.sql:XXXX:1: error: in create_virtual_table_stmt : CQL0459: table i
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:blob_storage)
+[[blob_storage]]
 CREATE TEMP TABLE temp_blob_storage(
   id INT,
   t TEXT
@@ -83649,7 +83649,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0459: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:blob_storage)
+[[blob_storage]]
 CREATE TABLE norowid_blob_storage(
   id INT,
   t TEXT
@@ -83683,7 +83683,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0459: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:blob_storage)
+[[blob_storage]]
 CREATE TABLE constraint_blob_storage(
   id INT,
   t TEXT,
@@ -83725,7 +83725,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0459: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:blob_storage)
+[[blob_storage]]
 CREATE TABLE pk_col_blob_storage(
   id INT PRIMARY KEY,
   t TEXT
@@ -83761,7 +83761,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0459: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:blob_storage)
+[[blob_storage]]
 CREATE TABLE fk_col_blob_storage(
   id INT REFERENCES foo (id),
   t TEXT
@@ -83802,7 +83802,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0459: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:blob_storage)
+[[blob_storage]]
 CREATE TABLE uk_col_blob_storage(
   id INT UNIQUE,
   t TEXT
@@ -83837,7 +83837,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0459: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:blob_storage)
+[[blob_storage]]
 CREATE TABLE hidden_col_blob_storage(
   id INT HIDDEN,
   t TEXT
@@ -83872,7 +83872,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0459: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:blob_storage)
+[[blob_storage]]
 CREATE TABLE check_col_blob_storage(
   id INT CHECK(id = 5) ,
   t TEXT
@@ -83910,7 +83910,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0459: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:blob_storage)
+[[blob_storage]]
 CREATE TABLE collate_col_blob_storage(
   id INT,
   t TEXT COLLATE nocase
@@ -83946,7 +83946,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0459: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:blob_storage)
+[[blob_storage]]
 CREATE TABLE default_value_col_blob_storage(
   id INT DEFAULT 5,
   t TEXT
@@ -83982,7 +83982,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0459: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:blob_storage)
+[[blob_storage]]
 CREATE TABLE deleted_col_blob_storage(
   id INT,
   t TEXT @DELETE(7)
@@ -84019,7 +84019,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0459: table is not su
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:blob_storage)
+[[blob_storage]]
 CREATE TABLE recreate_blob_storage(
   id INT,
   t TEXT
@@ -84111,7 +84111,7 @@ CREATE TABLE has_row_check_table(
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:blob_storage)
+[[blob_storage]]
 CREATE TABLE has_row_check_blob(
   a TEXT!,
   b TEXT
@@ -84643,11 +84643,11 @@ The statement ending at line XXXX
 @ATTRIBUTE(potato:potato)
 @ATTRIBUTE(potato=potato)
 @ATTRIBUTE(potato)
-@ATTRIBUTE(cql:potato=potato)
-@ATTRIBUTE(cql:potato)
+[[potato=potato]]
+[[potato]]
 @ATTRIBUTE(cql=cql)
 @ATTRIBUTE(cql)
-@ATTRIBUTE(cql:vault_sensitive=(privacy_context, (some_column)))
+[[vault_sensitive=(privacy_context, (some_column))]]
 PROC attribute_test ()
 BEGIN
   SELECT 'x' AS some_column;
@@ -86294,7 +86294,7 @@ END;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:implements=interface1)
+[[implements=interface1]]
 PROC test_interface1_implementation_correct (id_ INT, name_ TEXT)
 BEGIN
   SELECT id_ AS id, name_ AS name;
@@ -86345,7 +86345,7 @@ END;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:implements=interface1)
+[[implements=interface1]]
 PROC test_interface1_implementation_wrong_nullability (id_ INT!)
 BEGIN
   SELECT id_ AS id, "5" AS col2;
@@ -86394,7 +86394,7 @@ test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0485: column types ret
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:implements=interface1)
+[[implements=interface1]]
 PROC test_interface1_implementation_wrong_type (id_ TEXT!)
 BEGIN
   SELECT id_ AS id, "5" AS col2;
@@ -86443,7 +86443,7 @@ test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0485: column types ret
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:implements=interface1)
+[[implements=interface1]]
 PROC test_interface1_implementation_wrong_order (id_ INT, name_ TEXT)
 BEGIN
   SELECT name_ AS name, id_ AS id;
@@ -86494,7 +86494,7 @@ END;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:implements=interface1)
+[[implements=interface1]]
 PROC test_interface1_implementation_wrong_name (id_ INT, name_ TEXT)
 BEGIN
   SELECT id_ AS id2, name_ AS name;
@@ -86547,7 +86547,7 @@ test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0484: procedure 'test_
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:implements=interface2)
+[[implements=interface2]]
 PROC test_interface1_missing_column (id_ INT, name_ TEXT)
 BEGIN
   SELECT id_ AS id;
@@ -86595,7 +86595,7 @@ test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0484: procedure 'test_
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:implements=missing_interface)
+[[implements=missing_interface]]
 PROC test_interface1_missing_interface (id_ INT, name_ TEXT)
 BEGIN
   SELECT id_ AS id, name_ AS name;
@@ -86751,8 +86751,8 @@ DECLARE INTERFACE interface_foo2 (id2 INT!, name TEXT!);
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:implements=interface_foo1)
-@ATTRIBUTE(cql:implements=interface_foo2)
+[[implements=interface_foo1]]
+[[implements=interface_foo2]]
 PROC interface_proc1 ()
 BEGIN
   SELECT 1 AS id, "2" AS name;
@@ -86801,8 +86801,8 @@ test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0484: procedure 'inter
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:implements=interface_foo1)
-@ATTRIBUTE(cql:implements=interface_foo2)
+[[implements=interface_foo1]]
+[[implements=interface_foo2]]
 PROC interface_proc2 ()
 BEGIN
   SELECT 1 AS id, "2" AS name, 3 AS id2;
@@ -88649,7 +88649,7 @@ test/sem_test.sql:XXXX:1: error: in update_stmt : CQL0157: count of columns diff
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:alias_of=some_native_func)
+[[alias_of=some_native_func]]
 DECLARE FUNC an_alias_func (x INT!) INT!;
 
   {stmt_and_attr}: ok
@@ -88673,7 +88673,7 @@ DECLARE FUNC an_alias_func (x INT!) INT!;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:alias_of=some_native_func)
+[[alias_of=some_native_func]]
 DECLARE PROC an_alias_proc (x INT!);
 
   {stmt_and_attr}: ok
@@ -88697,7 +88697,7 @@ DECLARE PROC an_alias_proc (x INT!);
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:alias_of=barfoo)
+[[alias_of=barfoo]]
 DECLARE SELECT FUNC foobaz (x INT!) INT!;
 
 test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0499: alias_of attribute may only be added to a declare function or declare proc statement
@@ -88723,7 +88723,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0499: alias_of attribute may
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:alias_of)
+[[alias_of]]
 DECLARE FUNC an_alias_func_bad (x INT!) INT!;
 
 test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0500: alias_of attribute must be a non-empty string argument.
@@ -88748,7 +88748,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0500: alias_of attribute mus
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:private)
+[[private]]
 PROC invalid_child_proc ()
 BEGIN
   SELECT 1 AS x, 2 AS y;
@@ -88788,7 +88788,7 @@ END;
 
 The statement ending at line XXXX
 
-@ATTRIBUTE(cql:suppress_result_set)
+[[suppress_result_set]]
 PROC invalid_child_proc_2 ()
 BEGIN
   SELECT 1 AS x, 2 AS y;

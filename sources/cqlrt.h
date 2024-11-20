@@ -65,7 +65,15 @@ typedef struct cql_object {
   void *_Nonnull ptr;
   void (*_Nonnull finalize)(void *_Nonnull ptr);
 } cql_object;
+
+// Adds a reference count to the object.
+// @param obj The  object to be retained.
+// void cql_object_retain(cql_object_ref _Nullable obj);
 #define cql_object_retain(object) cql_retain((cql_type_ref)object);
+
+// Subtracts a reference count from the object.  When it reaches 0, the object SHOULD be freed.
+// @param str The object to be released.
+// void cql_object_release(cql_object_ref _Nullable obj);
 #define cql_object_release(object) cql_release((cql_type_ref)object);
 
 // builtin statement box
@@ -89,8 +97,17 @@ typedef struct cql_partitioning {
   const void *_Nonnull ptr;
 } cql_partitioning;
 
+// Adds a reference count to the blob.
+// @param blob The blob to be retained.
+// void cql_blob_retain(cql_blob_ref _Nullable blob);
 #define cql_blob_retain(object) cql_retain((cql_type_ref)object);
+
+// Subtracts a reference count from the blob.  When it reaches 0, the blob SHOULD be freed.
+// @param str The blob to be released.
+// void cql_blob_release(cql_blob_ref _Nullable blob);
 #define cql_blob_release(object) cql_release((cql_type_ref)object);
+
+
 cql_blob_ref _Nonnull cql_blob_ref_new(const void *_Nonnull data, cql_uint32 size);
 #define cql_get_blob_bytes(data) (data->ptr)
 #define cql_get_blob_size(data) (data->size)
@@ -103,8 +120,21 @@ typedef struct cql_string {
   cql_type base;
   const char *_Nullable ptr;
 } cql_string;
+
+// Construct a new string object.
+// @param cstr The C string to be stored.
+// @return A string object of the type defined by cql_string_ref.
+// cql_string_ref cql_string_ref_new(const char *cstr);
 cql_string_ref _Nonnull cql_string_ref_new(const char *_Nonnull cstr);
+
+// Adds a reference count to the string object.
+// @param str The string object to be retained.
+// void cql_string_retain(cql_string_ref _Nullable str);
 #define cql_string_retain(string) cql_retain((cql_type_ref)string);
+
+// Subtracts a reference count from the string object.  When it reaches 0, the string SHOULD be freed.
+// @param str The string object to be released.
+// void cql_string_release(cql_string_ref _Nullable str);
 #define cql_string_release(string) cql_release((cql_type_ref)string);
 
 #define cql_string_literal(name, text) \
@@ -129,7 +159,13 @@ cql_string_ref _Nonnull cql_string_ref_new(const char *_Nonnull cstr);
   }; \
   cql_string_ref name = &name##_
 
+// Compares two string objects.
+// @param str1 The first string to compare.
+// @param str2 The second string to compare.
+// @return < 0 if str1 is less than str2, > 0 if str2 is less than str1, = 0 if str1 is equal to str2.
+// int cql_string_compare(cql_string_ref str1, cql_string_ref str2);
 int cql_string_compare(cql_string_ref _Nonnull s1, cql_string_ref _Nonnull s2);
+
 cql_hash_code cql_string_hash(cql_string_ref _Nullable str);
 cql_bool cql_string_equal(cql_string_ref _Nullable s1, cql_string_ref _Nullable s2);
 int cql_string_like(cql_string_ref _Nonnull s1, cql_string_ref _Nonnull s2);
@@ -216,8 +252,18 @@ cql_result_set_ref _Nonnull cql_result_set_create(
   cql_int32 count,
   cql_result_set_meta meta);
 
+// Adds a reference count to the result_set object.
+// NOTE: This MUST be implemented as a macro, as it takes a result set as a param, which has an undefined type.
+// @param result_set The result set object to be retained.
+// void cql_result_set_retain(** _Nullable result_set);
 #define cql_result_set_retain(result_set) cql_retain((cql_type_ref)result_set);
+
+// Subtracts a reference count from the result_set object.  When it reaches 0, the result_set SHOULD be freed.
+// NOTE: This MUST be implemented as a macro, as it takes a result set as a param, which has an undefined type.
+// @param result_set The result set object to be released.
+// void cql_result_set_release(** _Nullable result_set);
 #define cql_result_set_release(result_set) cql_release((cql_type_ref)result_set);
+
 #define cql_result_set_note_ownership_transferred(result_set)
 #define cql_result_set_get_meta(result_set) (&((cql_result_set_ref)result_set)->meta)
 #define cql_result_set_get_data(result_set) ((cql_result_set_ref)result_set)->data

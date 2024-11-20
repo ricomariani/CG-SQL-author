@@ -366,7 +366,8 @@ cql_noexport bool_t rewrite_one_def(ast_node *head) {
       ast_node *new_head = new_ast_col_key_list(col_def, NULL);
       ast_set_right(head, new_head);
       head = new_head;
-    } else {
+    }
+    else {
       Invariant(is_ast_col_key_list(head));
       Invariant(is_ast_shape_def(head->left));
 
@@ -1267,7 +1268,8 @@ static ast_node *rewrite_gen_case_expr(ast_node *var1, ast_node *var2, bool_t re
     if (report_column_name) {
       CSTR name_lit = dup_printf("'%s'", sptr1->names[i]);  // this turns into literal name
       val = new_ast_str(name_lit);
-    } else {
+    }
+    else {
       ast_node *arg_list = NULL;
       CHARBUF_OPEN(format_output);
 
@@ -1383,7 +1385,8 @@ cql_noexport void rewrite_data_type_if_needed(ast_node *ast) {
   ast_node *data_type = NULL;
   if (is_ast_create_data_type(ast)) {
     data_type = ast->left;
-  } else {
+  }
+  else {
     data_type = ast;
   }
 
@@ -1438,7 +1441,8 @@ cql_noexport void rewrite_nullable_to_notnull(ast_node *_Nonnull ast) {
   if (is_id(ast)) {
     EXTRACT_STRING(name, ast);
     id_or_dot = new_ast_str(name);
-  } else {
+  }
+  else {
     Invariant(is_ast_dot(ast));
     EXTRACT_NAME_AND_SCOPE(ast);
     id_or_dot = new_ast_dot(new_ast_str(scope), new_ast_str(name));
@@ -2793,7 +2797,8 @@ static ast_node *rewrite_create_blob_args(create_blob_args_info *info) {
           EXTRACT_NUM_TYPE(num_type, node);
           EXTRACT_NUM_VALUE(val, node);
           def_value = new_ast_num(num_type, val);
-        } else {
+        }
+        else {
           EXTRACT_STRING(value, node);
           def_value = new_ast_str(value);
         }

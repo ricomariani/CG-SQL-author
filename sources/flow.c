@@ -440,12 +440,14 @@ static void merge_effects(sem_t *type, sem_t flag, int32_t delta_sum) {
     // number of branches (which means every branch made the same improvement),
     // so we can consider the entire branch group to have made the improvement.
     flow_set_flag_for_type(flag, type);
-  } else if (delta_sum < 0) {
+  }
+  else if (delta_sum < 0) {
     // The delta sum is negative, so at least one of the branches unset the
     // flag. We must, therefore, consider the entire branch group as having
     // unset the flag.
     flow_unset_flag_for_type(flag, type);
-  } else {
+  }
+  else {
     // If `delta_sum` is 0, that means all branches were neutral with respect to
     // the flag. If `delta_sum` is positive, but less than `branch_count`, that
     // means some branches improved it and the rest were netural. Since all
@@ -642,7 +644,8 @@ cql_noexport void _flow_pop_context_branch() {
     //   END IF;
     //   -- x could be safely considered nonnull here
     current_context->parent->branch_group.branch_count--;
-  } else {
+  }
+  else {
     // Add the history of the branch to the total set of branch histories for
     // the current branch group.
     append_history(&current_context->history, current_context->parent->branch_group.branch_histories);

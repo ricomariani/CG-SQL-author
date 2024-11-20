@@ -485,9 +485,11 @@ static void cg_var_nullability_annotation(charbuf *output, sem_t sem_type) {
     // `cql_string_ref _Nullable *_Nonnull t`, whereas `TEXT t INOUT NOT NULL`
     // should become `cql_string_ref _Nonnull *_Nonnull t`.
     bprintf(output, "_Nullable ");
-  } else if (is_not_nullable(sem_type)) {
+  }
+  else if (is_not_nullable(sem_type)) {
     bprintf(output, "_Nonnull ");
-  } else {
+  }
+  else {
     bprintf(output, "_Nullable ");
   }
 }
@@ -543,7 +545,7 @@ static void cg_var_decl(charbuf *output, sem_t sem_type, CSTR base_name, bool_t 
 
     case SEM_TYPE_INTEGER:
       if (notnull) {
-        bprintf(output, "%s %s", rt->cql_int32, name.ptr);
+        bprintf(output, "cql_int32 %s", name.ptr);
         cg_emit_zero_init(output, is_full_decl);
       }
       else {
@@ -553,44 +555,44 @@ static void cg_var_decl(charbuf *output, sem_t sem_type, CSTR base_name, bool_t 
       break;
 
     case SEM_TYPE_TEXT:
-      bprintf(output, "%s ", rt->cql_string_ref);
+      bprintf(output, "cql_string_ref ");
       if (!is_full_decl) {
         cg_var_nullability_annotation(output, sem_type);
       }
       bprintf(output, "%s", name.ptr);
       cg_emit_null_init(output, is_full_decl);
       if (is_full_decl) {
-        bprintf(cg_cleanup_output, "  %s(%s);\n", rt->cql_string_release, name.ptr);
+        bprintf(cg_cleanup_output, "  cql_string_release(%s);\n", name.ptr);
       }
       break;
 
     case SEM_TYPE_BLOB:
-      bprintf(output, "%s ", rt->cql_blob_ref);
+      bprintf(output, "cql_blob_ref ");
       if (!is_full_decl) {
         cg_var_nullability_annotation(output, sem_type);
       }
       bprintf(output, "%s", name.ptr);
       cg_emit_null_init(output, is_full_decl);
       if (is_full_decl) {
-        bprintf(cg_cleanup_output, "  %s(%s);\n", rt->cql_blob_release, name.ptr);
+        bprintf(cg_cleanup_output, "  cql_blob_release(%s);\n", name.ptr);
       }
       break;
 
     case SEM_TYPE_OBJECT:
-      bprintf(output, "%s ", rt->cql_object_ref);
+      bprintf(output, "cql_object_ref ");
       if (!is_full_decl) {
         cg_var_nullability_annotation(output, sem_type);
       }
       bprintf(output, "%s", name.ptr);
       cg_emit_null_init(output, is_full_decl);
       if (is_full_decl) {
-        bprintf(cg_cleanup_output, "  %s(%s);\n", rt->cql_object_release, name.ptr);
+        bprintf(cg_cleanup_output, "  cql_object_release(%s);\n", name.ptr);
       }
       break;
 
     case SEM_TYPE_LONG_INTEGER:
       if (notnull) {
-        bprintf(output, "%s %s", rt->cql_int64, name.ptr);
+        bprintf(output, "cql_int64 %s", name.ptr);
         cg_emit_zero_init(output, is_full_decl);
       }
       else {
@@ -601,7 +603,7 @@ static void cg_var_decl(charbuf *output, sem_t sem_type, CSTR base_name, bool_t 
 
     case SEM_TYPE_REAL:
       if (notnull) {
-        bprintf(output, "%s %s", rt->cql_double, name.ptr);
+        bprintf(output, "cql_double %s", name.ptr);
         cg_emit_zero_init(output, is_full_decl);
       }
       else {
@@ -612,7 +614,7 @@ static void cg_var_decl(charbuf *output, sem_t sem_type, CSTR base_name, bool_t 
 
     case SEM_TYPE_BOOL:
       if (notnull) {
-        bprintf(output, "%s %s", rt->cql_bool, name.ptr);
+        bprintf(output, "cql_bool %s", name.ptr);
         cg_emit_zero_init(output, is_full_decl);
       }
       else {
@@ -955,7 +957,7 @@ static void cg_store(charbuf *output, CSTR var, sem_t sem_type_var, sem_t sem_ty
 
   // Normalize floats and bools for storage
   if (is_real(sem_type_var) && !is_real(sem_type_expr)) {
-    bprintf(&adjusted_value, "(%s)(%s)", rt->cql_double, value);
+    bprintf(&adjusted_value, "(cql_double)(%s)", value);
     value = adjusted_value.ptr;
   }
 
@@ -1074,11 +1076,11 @@ static void cg_binary_compare(ast_node *ast, CSTR op, charbuf *is_null, charbuf 
     if (logical_not) {
       bprintf(&comparison, "%s", "!");
     }
-    bprintf(&comparison, "%s(%s, %s)", rt->cql_blob_equal, l_value.ptr, r_value.ptr);
+    bprintf(&comparison, "cql_blob_equal(%s, %s)", l_value.ptr, r_value.ptr);
   }
   else {
     // otherwise other string comparisons
-    bprintf(&comparison, "%s(%s, %s) %s 0", rt->cql_string_compare, l_value.ptr, r_value.ptr, op);
+    bprintf(&comparison, "cql_string_compare(%s, %s) %s 0", l_value.ptr, r_value.ptr, op);
   }
 
   if (needs_paren(ast, pri_new, pri)) {
@@ -1334,7 +1336,8 @@ static void cg_expr_is(ast_node *ast, CSTR op, charbuf *is_null, charbuf *value,
   if (is_ast_null(l)) {
     cg_expr_is_null(r, is_null, value);
     return;
-  } else if (is_ast_null(r)) {
+  }
+  else if (is_ast_null(r)) {
     cg_expr_is_null(l, is_null, value);
     return;
   }
@@ -1401,7 +1404,8 @@ static void cg_expr_is_not(ast_node *ast, CSTR op, charbuf *is_null, charbuf *va
   if (is_ast_null(r)) {
     cg_expr_is_not_null(l, is_null, value);
     return;
-  } else if (is_ast_null(l)) {
+  }
+  else if (is_ast_null(l)) {
     cg_expr_is_not_null(r, is_null, value);
     return;
   }
@@ -1884,10 +1888,10 @@ static void cg_in_or_not_in_expr_list(ast_node *head, CSTR expr, CSTR result, se
     sem_t sem_type_in_expr = in_expr->sem->sem_type;
 
     if (is_text(sem_type_in_expr)) {
-      bprintf(cg_main_output, "if (%s(%s, %s) == 0)", rt->cql_string_compare, expr, in_expr_value.ptr);
+      bprintf(cg_main_output, "if (cql_string_compare(%s, %s) == 0)", expr, in_expr_value.ptr);
     }
     else if (is_blob(sem_type_in_expr)) {
-      bprintf(cg_main_output, "if (%s(%s, %s))", rt->cql_blob_equal, expr, in_expr_value.ptr);
+      bprintf(cg_main_output, "if (cql_blob_equal(%s, %s))", expr, in_expr_value.ptr);
     }
     else if (is_nullable(sem_type_in_expr)) {
       bprintf(cg_main_output,
@@ -2032,8 +2036,7 @@ static void cg_case_list(ast_node *head, CSTR expr, CSTR result, sem_t sem_type_
     if (expr) {
       // Generate a comparison for the appropriate data type (expr known to be not null)
       if (is_text(sem_type_case_expr)) {
-        bprintf(cg_main_output, "if (%s(%s, %s) == 0) {\n",
-                rt->cql_string_compare,
+        bprintf(cg_main_output, "if (cql_string_compare(%s, %s) == 0) {\n",
                 expr,
                 case_expr_value.ptr);
       }
@@ -2226,21 +2229,21 @@ static void cg_expr_cast(ast_node *cast_expr, CSTR str, charbuf *is_null, charbu
 
   switch (core_type_result) {
     case SEM_TYPE_INTEGER:
-      type_text = rt->cql_int32;
+      type_text = "cql_int32";
       break;
 
     case SEM_TYPE_LONG_INTEGER:
-      type_text = rt->cql_int64;
+      type_text = "cql_int64";
       break;
 
     case SEM_TYPE_REAL:
-      type_text = rt->cql_double;
+      type_text = "cql_double";
       break;
 
     case SEM_TYPE_BOOL:
       // convert to 0/1 as part of conversion
       bool_norm = "!!";
-      type_text = rt->cql_bool;
+      type_text = "cql_bool";
       break;
 
     default:
@@ -2256,7 +2259,8 @@ static void cg_expr_cast(ast_node *cast_expr, CSTR str, charbuf *is_null, charbu
   if (core_type_expr == SEM_TYPE_NULL) {
     bprintf(value, "0");
     bprintf(is_null, "1");
-  } else if (core_type_expr == core_type_result) {
+  }
+  else if (core_type_expr == core_type_result) {
     // no-op cast, just pass through
     bprintf(is_null, "%s", expr_is_null.ptr);
     bprintf(value, "%s", expr_value.ptr);
@@ -2713,8 +2717,8 @@ static void cg_func_printf(ast_node *call_ast, charbuf *is_null, charbuf *value)
   CG_SETUP_RESULT_VAR(call_ast, SEM_TYPE_TEXT | SEM_TYPE_NOTNULL);
   bprintf(cg_main_output, "{\n");
   cg_call_named_external("  char *_printf_result = sqlite3_mprintf", arg_list);
-  bprintf(cg_main_output, "  %s(%s);\n", rt->cql_string_release, result_var.ptr);
-  bprintf(cg_main_output, "  %s = %s(_printf_result);\n", result_var.ptr, rt->cql_string_ref_new);
+  bprintf(cg_main_output, "  cql_string_release(%s);\n", result_var.ptr);
+  bprintf(cg_main_output, "  %s = cql_string_ref_new(_printf_result);\n", result_var.ptr);
   bprintf(cg_main_output, "  sqlite3_free(_printf_result);\n");
   bprintf(cg_main_output, "}\n");
   CG_CLEANUP_RESULT_VAR();
@@ -3662,7 +3666,8 @@ static void cg_emit_contracts(ast_node *ast, charbuf *b) {
       // and the latter because we'll read it and expect it to not be NULL.
       bprintf(b, "  cql_contract_argument_notnull_when_dereferenced((void *)%s, %d);\n", name, position);
       did_emit_contract = true;
-    } else if (is_out_parameter(sem_type) || is_nonnull_ref_type) {
+    }
+    else if (is_out_parameter(sem_type) || is_nonnull_ref_type) {
       // Here, only the argument itself must not be null. This is either because
       // we have an OUT argument and thus only need to be able to write to the
       // address given, or because we have an `IN arg R NOT NULL` (where `R` is
@@ -5070,7 +5075,8 @@ static bool_t cg_call_in_cte(ast_node *cte_body, void *context, charbuf *buffer)
 
     bprintf(&wrapper, "(");
     cg_emit_one_frag(&wrapper);
-  } else {
+  }
+  else {
     // Use the original global setting
     // (subcalls inside a CTE of a fragment in a nested select can use original setting)
     info->callbacks->minify_aliases = info->minify_aliases;
@@ -5768,8 +5774,8 @@ static void cg_declare_cursor(ast_node *ast) {
     CG_CHARBUF_OPEN_SYM(result_ref, out_union_result_name, "_result_set_ref");
 
     bprintf(cg_declarations_output, "%s %s_result_set_ = NULL;\n", result_ref.ptr, cursor_name);
-    bprintf(cg_declarations_output, "%s %s_row_num_ = 0;\n", rt->cql_int32, cursor_name);
-    bprintf(cg_declarations_output, "%s %s_row_count_ = 0;\n", rt->cql_int32, cursor_name);
+    bprintf(cg_declarations_output, "cql_int32 %s_row_num_ = 0;\n", cursor_name);
+    bprintf(cg_declarations_output, "cql_int32 %s_row_count_ = 0;\n", cursor_name);
     bprintf(cg_cleanup_output, "  cql_object_release(%s_result_set_);\n", cursor_name);
 
     if (cg_in_loop && is_for_call) {
@@ -6510,7 +6516,8 @@ static void cg_echo_stmt(ast_node *ast) {
   if (!StrCaseCmp(rt_name, options.rt)) {
     if (current_proc) {
       cg_decode_string_literal(str, cg_main_output);
-    } else {
+    }
+    else {
       cg_decode_string_literal(str, cg_declarations_output);
     }
   }
@@ -7457,7 +7464,8 @@ static void cg_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
     if (!skip_comment) {
       if (options.test) {
         bprintf(out, "\n// The statement ending at line %d\n", stmt->lineno);
-      } else {
+      }
+      else {
         bprintf(cg_header_output, "\n// Generated from %s:%d\n", stmt->filename, stmt->lineno);
         bprintf(cg_declarations_output, "\n// Generated from %s:%d\n", stmt->filename, stmt->lineno);
       }
@@ -7650,7 +7658,7 @@ static void cg_proc_result_set_type_based_getter(function_info *_Nonnull info)
 
   // a procedure that uses OUT gives exactly one row, so no index in the API
   if (!info->uses_out) {
-    bprintf(&func_decl, ", %s row", rt->cql_int32);
+    bprintf(&func_decl, ", cql_int32 row");
   }
   bprintf(&func_decl, ")");
 
@@ -7780,12 +7788,13 @@ static void cg_proc_result_set_setter(function_info *_Nonnull info, bool_t is_se
 
   // a procedure that uses OUT gives exactly one row, so no index in the API
   if (!info->uses_out) {
-    bprintf(&func_decl, ", %s row", rt->cql_int32);
+    bprintf(&func_decl, ", cql_int32 row");
   }
 
   if (is_set_null) {
     bprintf(out, "\n%s) {\n", func_decl.ptr);
-  } else {
+  }
+  else {
     bprintf(out, "\n%s, %s) {\n", func_decl.ptr, var_decl.ptr);
   }
 
@@ -8020,11 +8029,8 @@ static void cg_proc_result_set(ast_node *ast) {
 
   bprintf(d, "static int32_t %s;\n", perf_index.ptr);
 
-  bprintf(h,
-          "\n%s%s _Nonnull %s;\n",
-          rt->symbol_visibility,
-          rt->cql_string_ref,
-          stored_proc_name_sym.ptr);
+  bprintf(h, "\n%s", rt->symbol_visibility);
+  bprintf(h, "cql_string_ref _Nonnull %s;\n", stored_proc_name_sym.ptr);
   bprintf(d, "\n%s(%s, \"%s\");\n", rt->cql_string_proc_name, stored_proc_name_sym.ptr, name);
 
   if (result_set_proc) {
@@ -8193,7 +8199,7 @@ static void cg_proc_result_set(ast_node *ast) {
   // proc-scoped function for it with the typedef for the result set.
 
   bclear(&temp);
-  bprintf(&temp, "%s %s(%s _Nonnull result_set)", rt->cql_int32, result_count_sym.ptr, result_set_ref.ptr);
+  bprintf(&temp, "cql_int32 %s(%s _Nonnull result_set)", result_count_sym.ptr, result_set_ref.ptr);
   bprintf(h, "%s%s;\n", rt->symbol_visibility, temp.ptr);
 
   // emit the row count symbol
@@ -8401,8 +8407,8 @@ static void cg_proc_result_set(ast_node *ast) {
   // resultset. It's a debugging function that allow you to turn ON/OFF
   // encoding/decoding when your app is running.
   if (use_encode) {
-    bprintf(h, "\nextern void %s(%s col, %s encode);\n", set_encoding_sym.ptr, rt->cql_int32, rt->cql_bool);
-    bprintf(d, "void %s(%s col, %s encode) {\n", set_encoding_sym.ptr, rt->cql_int32, rt->cql_bool);
+    bprintf(h, "\nextern void %s(cql_int32 col, cql_bool encode);\n", set_encoding_sym.ptr);
+    bprintf(d, "void %s(cql_int32 col, cql_bool encode) {\n", set_encoding_sym.ptr);
     bprintf(d, "  return cql_set_encoding(%s, %s, col, encode);\n", data_types_sym.ptr, data_types_count_sym.ptr);
     bprintf(d, "}\n\n");
   }
@@ -8532,7 +8538,8 @@ cql_noexport void cg_c_main(ast_node *head) {
     // You can use c_include_namespace for this option.
 
     bprintf(&body_file, "#include \"%s/%s\"\n\n", options.c_include_namespace, options.file_names[0]);
-  } else {
+  }
+  else {
     // If neither option specified then we use whatever was provided as the output path.
     // This is the most common case.
     bprintf(&body_file, "#include \"%s\"\n\n", options.file_names[0]);

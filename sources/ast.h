@@ -467,7 +467,8 @@ cql_noexport CSTR _Nonnull get_compound_operator_name(int32_t compound_operator)
   if (is_id(node)) { \
     name = ((str_ast_node *)(node))->value; \
     scope = NULL; \
-  } else { \
+  } \
+   else { \
     name = ((str_ast_node *)(node->right))->value; \
     scope = ((str_ast_node *)(node->left))->value; \
   }

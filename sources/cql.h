@@ -203,58 +203,14 @@ typedef struct rtdata {
   // Logging database error;
   const char *cql_log_database_error;
 
-  // The type for a boolean value.
-  const char *cql_bool;
-
-  // The type for a 32-bit integer value.
-  const char *cql_int32;
-
-  // The type for a 64-bit integer value.
-  const char *cql_int64;
-
-  // The type for a double value.
-  const char *cql_double;
-
   // The type for a sqlite3 result code.
   const char *cql_code;
-
-  // The type for an object ref.
-  const char *cql_object_ref;
-
-  // Adds a reference count to the object.
-  // @param obj The  object to be retained.
-  // void cql_object_retain(cql_object_ref _Nullable obj);
-  const char *cql_object_retain;
-
-  // Subtracts a reference count from the object.  When it reaches 0, the object SHOULD be freed.
-  // @param str The object to be released.
-  // void cql_object_release(cql_object_ref _Nullable obj);
-  const char *cql_object_release;
 
   // The type for a blob ref.
   const char *cql_blob_ref;
 
   // Get size of a blob ref.
   const char *cql_get_blob_size;
-
-  // Adds a reference count to the blob.
-  // @param blob The blob to be retained.
-  // void cql_blob_retain(cql_blob_ref _Nullable blob);
-  const char *cql_blob_retain;
-
-  // Subtracts a reference count from the blob.  When it reaches 0, the blob SHOULD be freed.
-  // @param str The blob to be released.
-  // void cql_blob_release(cql_blob_ref _Nullable blob);
-  const char *cql_blob_release;
-
-  // The type for a string object.
-  const char *cql_string_ref;
-
-  // Construct a new string object.
-  // @param cstr The C string to be stored.
-  // @return A string object of the type defined by cql_string_ref.
-  // cql_string_ref cql_string_ref_new(const char *cstr);
-  const char *cql_string_ref_new;
 
   // The encode type for a string object.
   const char *cql_string_ref_encode;
@@ -280,16 +236,6 @@ typedef struct rtdata {
   // cql_string_literal(cql_string_ref name, const char *proc_name);
   const char *cql_string_proc_name;
 
-  // Adds a reference count to the string object.
-  // @param str The string object to be retained.
-  // void cql_string_retain(cql_string_ref _Nullable str);
-  const char *cql_string_retain;
-
-  // Subtracts a reference count from the string object.  When it reaches 0, the string SHOULD be freed.
-  // @param str The string object to be released.
-  // void cql_string_release(cql_string_ref _Nullable str);
-  const char *cql_string_release;
-
   // Creates a hash code for the string object.
   // @param str The string object to be hashed.
   // cql_hash_code cql_string_hash(cql_string_ref _Nullable str);
@@ -308,11 +254,7 @@ typedef struct rtdata {
   // cql_bool cql_blob_equal(cql_blob_ref _Nullable bl1, cql_blob_ref _Nullable bl2);
   const char *cql_blob_equal;
 
-  // Compares two string objects.
-  // @param str1 The first string to compare.
-  // @param str2 The second string to compare.
-  // @return < 0 if str1 is less than str2, > 0 if str2 is less than str1, = 0 if str1 is equal to str2.
-  // int cql_string_compare(cql_string_ref str1, cql_string_ref str2);
+
   const char *cql_string_compare;
 
   // Checks if two string objects are equal.
@@ -390,18 +332,6 @@ typedef struct rtdata {
 
   // The name of the method that will give the metadata struct back as provided to the construction above
   const char *cql_result_set_get_meta;
-
-  // Adds a reference count to the result_set object.
-  // NOTE: This MUST be implemented as a macro, as it takes a result set as a param, which has an undefined type.
-  // @param result_set The result set object to be retained.
-  // void cql_result_set_retain(** _Nullable result_set);
-  const char *cql_result_set_retain;
-
-  // Subtracts a reference count from the result_set object.  When it reaches 0, the result_set SHOULD be freed.
-  // NOTE: This MUST be implemented as a macro, as it takes a result set as a param, which has an undefined type.
-  // @param result_set The result set object to be released.
-  // void cql_result_set_release(** _Nullable result_set);
-  const char *cql_result_set_release;
 
   // Accounts for a transfer of ownership of the result_set object by decrementing its reference count.
   // @param result_set The result set object whose reference count should be decremented.

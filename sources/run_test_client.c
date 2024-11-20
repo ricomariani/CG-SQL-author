@@ -647,7 +647,8 @@ cql_code test_sparse_blob_rowsets(sqlite3 *db) {
     cql_string_ref b1_ref = string_from_blob(b1);
     if (i % 2 == 0) {
       E(strcmp(buf1, b1_ref->ptr) == 0, "nullable blob %d did not match %s\n", i, buf1);
-    } else {
+    }
+    else {
       E(!b1, "nullable blob %d should have been null\n", i);
     }
 

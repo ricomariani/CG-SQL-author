@@ -169,7 +169,8 @@ char *_Nullable cql_copy_string_to_stack_or_heap(
       if (size <= CF_C_STRING_STACK_MAX_LENGTH &&
           CFStringGetCString(cf_string_ref, stack_string, CF_C_STRING_STACK_MAX_LENGTH, kCFStringEncodingUTF8)) {
           cstr = stack_string;
-      } else {
+      }
+      else {
         heap_string = malloc(size);
         if (CFStringGetCString(cf_string_ref, heap_string, size, kCFStringEncodingUTF8)) {
           cstr = heap_string;

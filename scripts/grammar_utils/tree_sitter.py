@@ -441,6 +441,12 @@ print("""/**
  * LICENSE file in the root directory of this source tree.
  */
 
+/* This file is automatically created by tree_sitter.py in the CG/SQL
+ * project. Manual editing here is not advised.  The generator is
+ * located at https://github.com/ricomariani/CG-SQL-author in the
+ * scripts/grammar_utils/tree_sitter.py file
+ */
+
 module.exports = grammar({
   name: 'cql',
   extras: $ => [

@@ -97,8 +97,8 @@ static void cg_objc_proc_result_set_getter(
       case SEM_TYPE_TEXT:
         if (encode && custom_type_for_encoded_column) {
           is_string_column_encoded = 1;
-          bprintf(&return_type, "%s *_Nullable", rt->cql_string_ref_encode);
-          bprintf(&value_convert_begin, "(__bridge %s *)", rt->cql_string_ref_encode);
+          bprintf(&return_type, "cql_string_ref_encode *_Nullable");
+          bprintf(&value_convert_begin, "(__bridge cql_string_ref_encode *)");
         }
         else {
           bprintf(&return_type, "NSString *_Nullable");
@@ -135,8 +135,8 @@ static void cg_objc_proc_result_set_getter(
       case SEM_TYPE_TEXT:
         if (encode && custom_type_for_encoded_column) {
           is_string_column_encoded = 1;
-          bprintf(&return_type, "%s", rt->cql_string_ref_encode);
-          bprintf(&value_convert_begin, "(__bridge %s *)", rt->cql_string_ref_encode);
+          bprintf(&return_type, "cql_string_ref_encode");
+          bprintf(&value_convert_begin, "(__bridge cql_string_ref_encode *)");
         }
         else {
           bprintf(&return_type, "NSString *");
@@ -371,7 +371,7 @@ static void cg_objc_proc_result_set(ast_node *ast) {
             copy_func_name.ptr,
             c_convert.ptr,
             out_stmt_proc ? "" : ", from, count");
-    bprintf(h, "  %s(copy);\n", rt->cql_result_set_note_ownership_transferred);
+    bprintf(h, "  cql_result_set_note_ownership_transferred(copy);\n");
     bprintf(h, "  return (__bridge_transfer %s *)copy;\n", objc_name.ptr);
     bprintf(h, "}\n");
   }
@@ -504,7 +504,7 @@ cql_noexport void cg_objc_main(ast_node *head) {
   bprintf(&header_file, "%s", rt->header_wrapper_begin);
 
   if (is_string_column_encoded) {
-    bprintf(&header_file, "\n@class %s;\n", rt->cql_string_ref_encode);
+    bprintf(&header_file, "\n@class cql_string_ref_encode;\n");
   }
 
   bprintf(&header_file, "%s", cg_header_output->ptr);

@@ -21,15 +21,23 @@
 #endif
 #endif
 
+// Assertion macro for API contract violations, these should stay in the release build.
 #define cql_contract assert
+
+// Assertion for internal invariant broken, these should stay in the release build.
 #define cql_invariant assert
+
+// Assertion for a failure that we might like to promote to an invariant
+// but there may be exceptions yet.  This should fire in debug builds.
 #define cql_tripwire assert
+
+// Logging database error;
 #define cql_log_database_error(...)
 
 // value types
 typedef unsigned char cql_bool;
-#define cql_true (cql_bool)1
-#define cql_false (cql_bool)0
+#define cql_true ((cql_bool)1)
+#define cql_false ((cql_bool)0)
 
 // metatypes for the straight C implementation
 #define CQL_C_TYPE_STRING 0
@@ -85,17 +93,12 @@ typedef struct cql_boxed_stmt {
 
 // builtin blob
 typedef struct cql_blob *cql_blob_ref;
+
 typedef struct cql_blob {
   cql_type base;
   const void *_Nonnull ptr;
   cql_uint32 size;
 } cql_blob;
-
-typedef struct cql_partitioning *cql_partitioning_ref;
-typedef struct cql_partitioning {
-  cql_type base;
-  const void *_Nonnull ptr;
-} cql_partitioning;
 
 // Adds a reference count to the blob.
 // @param blob The blob to be retained.
@@ -107,9 +110,23 @@ typedef struct cql_partitioning {
 // void cql_blob_release(cql_blob_ref _Nullable blob);
 #define cql_blob_release(object) cql_release((cql_type_ref)object);
 
-
+// Construct a new blob object.
+// @param data the bytes to be stored.
+// @param size the number of bytes of the data.
+// @return A blob object of the type defined by cql_blob_ref.
+// cql_blob_ref cql_blob_ref_new(const void *data, cql_uint32 size);
 cql_blob_ref _Nonnull cql_blob_ref_new(const void *_Nonnull data, cql_uint32 size);
+
+// Get the bytes of the blob object.  This is not null, even if the blob is zero
+// size and in general the memory allocated might be larger than the size of the blob.
+// Get cql_get_blob_size must be used to know how much you can read.
+// @param blob The blob object to get the bytes from.
+// @return The bytes of the blob.
 #define cql_get_blob_bytes(data) (data->ptr)
+
+// Get size of a blob ref in bytes.
+// @param blob The blob object to get the size from.
+// @return The size of the blob in bytes.
 #define cql_get_blob_size(data) (data->size)
 
 // Creates a hash code for the blob object.
@@ -148,6 +165,13 @@ cql_string_ref _Nonnull cql_string_ref_new(const char *_Nonnull cstr);
 // void cql_string_release(cql_string_ref _Nullable str);
 #define cql_string_release(string) cql_release((cql_type_ref)string);
 
+// Declare a static const string literal object. This must be a global object
+// and will be executed in the global context.
+// NOTE: This MUST be implemented as a macro as it both declares and assigns
+// the value.
+// @param name The name of the object.
+// @param text The text to be stored in the object.
+// cql_string_literal(cql_string_ref name, const char *text);
 #define cql_string_literal(name, text) \
   static cql_string name##_ = { \
     .base = { \
@@ -159,6 +183,13 @@ cql_string_ref _Nonnull cql_string_ref_new(const char *_Nonnull cstr);
   }; \
   static cql_string_ref name = &name##_
 
+// Declare a const string that holds the name of a stored procedure. This must
+// be a global object and will be executed in the global context.
+// NOTE: This MUST be implemented as a macro as it both declares and assigns
+// the value.
+// @param name The name of the object.
+// @param proc_name The procedure name to be stored in the object.
+// cql_string_literal(cql_string_ref name, const char *proc_name);
 #define cql_string_proc_name(name, proc_name) \
   cql_string name##_ = { \
     .base = { \
@@ -211,7 +242,8 @@ int cql_string_like(cql_string_ref _Nonnull s1, cql_string_ref _Nonnull s2);
 // cql_free_cstr(const char *cstr, cql_string_ref str);
 #define cql_free_cstr(cstr, str) 0
 
-// builtin result set
+// The type for a generic cql result set.
+// NOTE: Result sets are cast to this type before being passed to the cql_result_set_get_count/_data functions.
 typedef struct cql_result_set *cql_result_set_ref;
 
 // The struct must have the following fields, by name.  A different
@@ -319,9 +351,25 @@ cql_result_set_ref _Nonnull cql_result_set_create(
 // void cql_result_set_release(** _Nullable result_set);
 #define cql_result_set_release(result_set) cql_release((cql_type_ref)result_set);
 
-#define cql_result_set_note_ownership_transferred(result_set)
+// Gives the metadata struct back as provided to the construction above
+// NOTE: This MUST be implemented as a macro, as it takes a result set as a param, which has an undefined type.
+// @param result_set The cql result_set object.
+// @return The data that was previous stored on the result set.
+// void *cql_result_set_get_data(** result_set)
 #define cql_result_set_get_meta(result_set) (&((cql_result_set_ref)result_set)->meta)
+
+// Retrieve the storage of the query data.
+// NOTE: This MUST be implemented as a macro, as it takes a result set as a param, which has an undefined type.
+// @param result_set The cql result_set object.
+// @return The data that was previous stored on the result set.
+// void *cql_result_set_get_data(** result_set)
 #define cql_result_set_get_data(result_set) ((cql_result_set_ref)result_set)->data
+
+// Get the count of the query data.
+// NOTE: This MUST be implemented as a macro, as it takes a result set as a param, which has an undefined type.
+// @param result_set The cql result set object.
+// @return The count that was previous stored on the result set.
+// cql_int32 cql_result_set_get_count(** result_set);
 #define cql_result_set_get_count(result_set) ((cql_result_set_ref)result_set)->count
 
 #ifdef CQL_RUN_TEST

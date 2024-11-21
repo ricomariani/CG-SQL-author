@@ -2369,7 +2369,7 @@ static void cg_string_literal(CSTR str, charbuf *output) {
 
   if (is_new) {
     // The shared string itself must live forever so it goes in global constants.
-    bprintf(cg_constants_output, "%s(%s, ", rt->cql_string_literal, name.ptr);
+    bprintf(cg_constants_output, "cql_string_literal(%s, ", name.ptr);
     cg_requote_literal(str, cg_constants_output);
     bprintf(cg_constants_output, ");\n");
   }
@@ -2738,7 +2738,7 @@ static void cg_func_cql_get_blob_size(ast_node *ast, charbuf*is_null, charbuf *v
 
   // The result is known to be not nullable therefore we can store directly the value to the result buff
   bprintf(is_null, "0");
-  bprintf(value, "%s(%s)", rt->cql_get_blob_size, expr_value.ptr);
+  bprintf(value, "cql_get_blob_size(%s)", expr_value.ptr);
 
   CG_POP_EVAL(expr);
 }
@@ -7691,36 +7691,35 @@ static void cg_proc_result_set_type_based_getter(function_info *_Nonnull info)
 
   if (is_ref_type(info->name_type) && is_nullable(info->ret_type)) {
     bprintf(out,
-      "%s((cql_result_set_ref)result_set, %s, %d) ? NULL : ",
-      rt->cql_result_set_get_is_null,
+      "cql_result_set_get_is_null_col((cql_result_set_ref)result_set, %s, %d) ? NULL : ",
       row,
       info->col_index);
   }
 
   switch (info->name_type) {
     case SEM_TYPE_NULL:
-      bprintf(out, "%s", rt->cql_result_set_get_is_null);
+      bprintf(out, "cql_result_set_get_is_null_col");
       break;
     case SEM_TYPE_BOOL:
-      bprintf(out, "%s", rt->cql_result_set_get_bool);
+      bprintf(out, "cql_result_set_get_bool_col");
       break;
     case SEM_TYPE_REAL:
-      bprintf(out, "%s", rt->cql_result_set_get_double);
+      bprintf(out, "cql_result_set_get_double_col");
       break;
     case SEM_TYPE_INTEGER:
-      bprintf(out, "%s", rt->cql_result_set_get_int32);
+      bprintf(out, "cql_result_set_get_int32_col");
       break;
     case SEM_TYPE_LONG_INTEGER:
-      bprintf(out, "%s", rt->cql_result_set_get_int64);
+      bprintf(out, "cql_result_set_get_int64_col");
       break;
     case SEM_TYPE_TEXT:
-      bprintf(out, "%s", rt->cql_result_set_get_string);
+      bprintf(out, "cql_result_set_get_string_col");
       break;
     case SEM_TYPE_BLOB:
-      bprintf(out, "%s", rt->cql_result_set_get_blob);
+      bprintf(out, "cql_result_set_get_blob_col");
       break;
     case SEM_TYPE_OBJECT:
-      bprintf(out, "%s", rt->cql_result_set_get_object);
+      bprintf(out, "cql_result_set_get_object_col");
       break;
   }
   bprintf(out, "((cql_result_set_ref)result_set, %s, %d)%s;\n", row, info->col_index, trailing_string);
@@ -8031,7 +8030,7 @@ static void cg_proc_result_set(ast_node *ast) {
 
   bprintf(h, "\n%s", rt->symbol_visibility);
   bprintf(h, "cql_string_ref _Nonnull %s;\n", stored_proc_name_sym.ptr);
-  bprintf(d, "\n%s(%s, \"%s\");\n", rt->cql_string_proc_name, stored_proc_name_sym.ptr, name);
+  bprintf(d, "\ncql_string_proc_name(%s, \"%s\");\n", stored_proc_name_sym.ptr, name);
 
   if (result_set_proc) {
     // First build the struct we need
@@ -8149,10 +8148,8 @@ static void cg_proc_result_set(ast_node *ast) {
       bprintf(
           info.headers,
           "\n#define %s(rs) \\\n"
-          "  %s((%s)rs, %d)\n",
+          "  cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, %d)\n",
           col_getter_sym.ptr,
-          rt->cql_result_set_get_is_encoded,
-          rt->cql_result_set_ref,
           i);
       CHARBUF_CLOSE(col_getter_sym);
     }
@@ -8203,7 +8200,7 @@ static void cg_proc_result_set(ast_node *ast) {
 
   // emit the row count symbol
   bprintf(d, "\n%s {\n", temp.ptr);
-  bprintf(d, "  return %s((cql_result_set_ref)result_set);\n", rt->cql_result_set_get_count);
+  bprintf(d, "  return cql_result_set_get_count((cql_result_set_ref)result_set);\n");
   bprintf(d, "}\n");
 
   // Generate fetch result function
@@ -8341,63 +8338,64 @@ static void cg_proc_result_set(ast_node *ast) {
   }
 
   if (generate_copy) {
-    bprintf(h,
-            "#define %s(result_set, result_set_to%s) \\\n"
-            "%s((cql_result_set_ref)(result_set))->copy( \\\n"
-            "  (cql_result_set_ref)(result_set), \\\n"
-            "  (cql_result_set_ref *)(result_set_to), \\\n"
-            "  %s, \\\n"
-            "  %s)\n",
-            copy_sym.ptr,
-            uses_out ? "": ", from, count",
-            rt->cql_result_set_get_meta,
-            uses_out ? "0" : "from",
-            uses_out ? "1" : "count");
+    bprintf(
+      h,
+      "#define %s(result_set, result_set_to%s) \\\n"
+      "cql_result_set_get_meta((cql_result_set_ref)(result_set))->copy( \\\n"
+      "  (cql_result_set_ref)(result_set), \\\n"
+      "  (cql_result_set_ref *)(result_set_to), \\\n"
+      "  %s, \\\n"
+      "  %s)\n",
+      copy_sym.ptr,
+      uses_out ? "": ", from, count",
+      uses_out ? "0" : "from",
+      uses_out ? "1" : "count");
   }
 
   if (rt->generate_equality_macros) {
     bclear(&temp);
 
     CG_CHARBUF_OPEN_SYM(hash_sym, name, uses_out ? "_hash" : "_row_hash");
-    bprintf(h,
-            "#define %s(result_set%s) "
-            "%s((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), %s)\n",
-            hash_sym.ptr,
-            uses_out ? "" : ", row",
-            rt->cql_result_set_get_meta,
-            uses_out ? "0" : "row");
+    bprintf(
+      h,
+      "#define %s(result_set%s) "
+      "cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), %s)\n",
+      hash_sym.ptr,
+      uses_out ? "" : ", row",
+      uses_out ? "0" : "row");
+
     CHARBUF_CLOSE(hash_sym);
 
     CG_CHARBUF_OPEN_SYM(equal_sym, name, uses_out ? "_equal" : "_row_equal");
-    bprintf(h,
-            "#define %s(rs1%s, rs2%s) \\\n"
-            "%s((cql_result_set_ref)(rs1))->rowsEqual( \\\n"
-            "  (cql_result_set_ref)(rs1), \\\n"
-            "  %s, \\\n"
-            "  (cql_result_set_ref)(rs2), \\\n"
-            "  %s)\n",
-            equal_sym.ptr,
-            uses_out ? "" : ", row1",
-            uses_out ? "" : ", row2",
-            rt->cql_result_set_get_meta,
-            uses_out ? "0" : "row1",
-            uses_out ? "0" : "row2");
+    bprintf(
+      h,
+      "#define %s(rs1%s, rs2%s) \\\n"
+      "cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \\\n"
+      "  (cql_result_set_ref)(rs1), \\\n"
+      "  %s, \\\n"
+      "  (cql_result_set_ref)(rs2), \\\n"
+      "  %s)\n",
+      equal_sym.ptr,
+      uses_out ? "" : ", row1",
+      uses_out ? "" : ", row2",
+      uses_out ? "0" : "row1",
+      uses_out ? "0" : "row2");
     CHARBUF_CLOSE(equal_sym);
 
     if (has_identity_columns) {
       CG_CHARBUF_OPEN_SYM(same_sym, name, uses_out ? "_same" : "_row_same");
-      bprintf(h, "#define %s(rs1%s, rs2%s) \\\n"
-              "%s((cql_result_set_ref)(rs1))->rowsSame( \\\n"
-              "  (cql_result_set_ref)(rs1), \\\n"
-              "  %s, \\\n"
-              "  (cql_result_set_ref)(rs2), \\\n"
-              "  %s)\n",
-              same_sym.ptr,
-              uses_out ? "" : ", row1",
-              uses_out ? "" : ", row2",
-              rt->cql_result_set_get_meta,
-              uses_out ? "0" : "row1",
-              uses_out ? "0" : "row2");
+      bprintf(
+        h, "#define %s(rs1%s, rs2%s) \\\n"
+        "cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsSame( \\\n"
+        "  (cql_result_set_ref)(rs1), \\\n"
+        "  %s, \\\n"
+        "  (cql_result_set_ref)(rs2), \\\n"
+        "  %s)\n",
+        same_sym.ptr,
+        uses_out ? "" : ", row1",
+        uses_out ? "" : ", row2",
+        uses_out ? "0" : "row1",
+        uses_out ? "0" : "row2");
       CHARBUF_CLOSE(same_sym);
     }
   }

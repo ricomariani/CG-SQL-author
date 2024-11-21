@@ -111,7 +111,18 @@ typedef struct cql_partitioning {
 cql_blob_ref _Nonnull cql_blob_ref_new(const void *_Nonnull data, cql_uint32 size);
 #define cql_get_blob_bytes(data) (data->ptr)
 #define cql_get_blob_size(data) (data->size)
+
+// Creates a hash code for the blob object.
+// @param blob The blob object to be hashed.
+// cql_hash_code cql_blob_hash(cql_string_ref _Nullable str);
 cql_hash_code cql_blob_hash(cql_blob_ref _Nullable str);
+
+// Checks if two blob objects are equal.
+// NOTE: If both objects are NULL, they are equal; if only 1 is NULL, they are not equal.
+// @param str1 The first blob to compare.
+// @param str2 The second blob to compare.
+// @return cql_true if they are equal, otherwise cql_false.
+// cql_bool cql_blob_equal(cql_blob_ref _Nullable bl1, cql_blob_ref _Nullable bl2);
 cql_bool cql_blob_equal(cql_blob_ref _Nullable blob1, cql_blob_ref _Nullable blob2);
 
 // builtin string
@@ -166,15 +177,50 @@ cql_string_ref _Nonnull cql_string_ref_new(const char *_Nonnull cstr);
 // int cql_string_compare(cql_string_ref str1, cql_string_ref str2);
 int cql_string_compare(cql_string_ref _Nonnull s1, cql_string_ref _Nonnull s2);
 
+// Creates a hash code for the string object.
+// @param str The string object to be hashed.
+// cql_hash_code cql_string_hash(cql_string_ref _Nullable str);
 cql_hash_code cql_string_hash(cql_string_ref _Nullable str);
+
+// Checks if two string objects are equal.
+// NOTE: If both objects are NULL, they are equal; if only 1 is NULL, they are not equal.
+// @param str1 The first string to compare.
+// @param str2 The second string to compare.
+// @return cql_true if they are equal, otherwise cql_false.
+// cql_bool cql_string_equal(cql_string_ref _Nullable str1, cql_string_ref _Nullable str2);
 cql_bool cql_string_equal(cql_string_ref _Nullable s1, cql_string_ref _Nullable s2);
+
+// Compares two string objects with SQL LIKE semantics.
+// NOTE: If either object is NULL, the result should be 1.
+// @param str1 The first string to compare.
+// @param str2 The second string to compare.
+// @return 0 if the str1 is LIKE str2, else != 0.
+// int cql_string_like(cql_string_ref str1, cql_string_ref str2);
 int cql_string_like(cql_string_ref _Nonnull s1, cql_string_ref _Nonnull s2);
+
+// Declare and allocate a C string from a string object.
+// NOTE: This MUST be implemented as a macro, as it both declares and assigns the value.
+// @param cstr The C string var to be declared and assigned.
+// @param str The string object that contains the string value.
+// cql_alloc_cstr(const char *cstr, cql_string_ref str);
 #define cql_alloc_cstr(cstr, str) const char *_Nonnull cstr = (str)->ptr
+
+// Free a C string that was allocated by cql_alloc_cstr
+// @param cstr The C string to be freed.
+// @param str The string object that the C string was allocated from.
+// cql_free_cstr(const char *cstr, cql_string_ref str);
 #define cql_free_cstr(cstr, str) 0
 
 // builtin result set
 typedef struct cql_result_set *cql_result_set_ref;
 
+// The struct must have the following fields, by name.  A different
+// runtime implementation can add additional fields for its own use.
+// Extra fields just go along for the right but, since you can
+// recover the "meta" from the result set, you can always get to
+// to your extra fields.  Note that the meta is one copy per result
+// set *type* these are not instance fields.  Hence, helper functions,
+// offsets common to all instances, stuff like that can go in the meta.
 typedef struct cql_result_set_meta {
   // release the internal memory for the rowset
   void (*_Nonnull teardown)(cql_result_set_ref _Nonnull result_set);
@@ -247,6 +293,15 @@ typedef struct cql_result_set {
 #define cql_result_set_type_decl(result_set_type, result_set_ref) \
   typedef struct _##result_set_type *result_set_ref;
 
+// Construct a new result set object.
+// @param data The data to be stored in the result set.
+// @param count The count of records represented by the data in the result_set.
+// @param callbacks The callbacks that are used for the data access.
+// @return A result_set object of the type.
+// cql_result_set_ref _Nonnull cql_result_set_create(
+//     void *_Nonnull data,
+//     cql_int32 count,
+//     cql_result_set_meta meta);
 cql_result_set_ref _Nonnull cql_result_set_create(
   void *_Nonnull data,
   cql_int32 count,

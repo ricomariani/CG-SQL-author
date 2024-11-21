@@ -1064,12 +1064,12 @@ static void cg_binary_compare(ast_node *ast, CSTR op, charbuf *is_null, charbuf 
   if (is_ast_like(ast)) {
     // like not allowed semantically for blob type
     Invariant(!is_blob_op);
-    bprintf(&comparison, "%s(%s, %s) == 0", rt->cql_string_like, l_value.ptr, r_value.ptr);
+    bprintf(&comparison, "cql_string_like(%s, %s) == 0", l_value.ptr, r_value.ptr);
   }
   else if (is_ast_not_like(ast)) {
     // like not allowed semantically for blob type
     Invariant(!is_blob_op);
-    bprintf(&comparison, "%s(%s, %s) != 0", rt->cql_string_like, l_value.ptr, r_value.ptr);
+    bprintf(&comparison, "cql_string_like(%s, %s) != 0", l_value.ptr, r_value.ptr);
   }
   else if (is_blob_op) {
     bool_t logical_not = is_ast_ne(ast) || is_ast_is_not(ast);
@@ -1356,7 +1356,7 @@ static void cg_expr_is(ast_node *ast, CSTR op, charbuf *is_null, charbuf *value,
     CG_PUSH_EVAL(l, pri_new);
     CG_PUSH_EVAL(r, pri_new);
 
-    CSTR equal_func = is_text_op ? rt->cql_string_equal : rt->cql_blob_equal;
+    CSTR equal_func = is_text_op ? "cql_string_equal" : "cql_blob_equal";
     bprintf(value, "%s(%s, %s)", equal_func, l_value.ptr, r_value.ptr);
 
     CG_POP_EVAL(r);
@@ -1424,7 +1424,7 @@ static void cg_expr_is_not(ast_node *ast, CSTR op, charbuf *is_null, charbuf *va
     CG_PUSH_EVAL(l, pri_new);
     CG_PUSH_EVAL(r, pri_new);
 
-    CSTR equal_func = is_text_exp ? rt->cql_string_equal : rt->cql_blob_equal;
+    CSTR equal_func = is_text_exp ? "cql_string_equal" : "cql_blob_equal";
     bprintf(value, "!%s(%s, %s)", equal_func, l_value.ptr, r_value.ptr);
 
     CG_POP_EVAL(r);
@@ -8184,9 +8184,8 @@ static void cg_proc_result_set(ast_node *ast) {
   bool_t has_identity_columns = cg_identity_columns(h, d, name, misc_attrs, identity_columns_sym.ptr);
 
   bprintf(&result_set_create,
-          "(%s)%s(%s, count, %d, %s, meta)",
+          "(%s)cql_result_set_create(%s, count, %d, %s, meta)",
           result_set_ref.ptr,
-          rt->cql_result_set_ref_new,
           uses_out ? "row" : "b.ptr",
           count,
           data_types_sym.ptr);

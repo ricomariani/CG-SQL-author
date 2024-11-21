@@ -236,99 +236,9 @@ typedef struct rtdata {
   // cql_string_literal(cql_string_ref name, const char *proc_name);
   const char *cql_string_proc_name;
 
-  // Creates a hash code for the string object.
-  // @param str The string object to be hashed.
-  // cql_hash_code cql_string_hash(cql_string_ref _Nullable str);
-  const char *cql_string_hash;
-
-  // Creates a hash code for the blob object.
-  // @param blob The blob object to be hashed.
-  // cql_hash_code cql_blob_hash(cql_string_ref _Nullable str);
-  const char *cql_blob_hash;
-
-  // Checks if two blob objects are equal.
-  // NOTE: If both objects are NULL, they are equal; if only 1 is NULL, they are not equal.
-  // @param str1 The first blob to compare.
-  // @param str2 The second blob to compare.
-  // @return cql_true if they are equal, otherwise cql_false.
-  // cql_bool cql_blob_equal(cql_blob_ref _Nullable bl1, cql_blob_ref _Nullable bl2);
-  const char *cql_blob_equal;
-
-
-  const char *cql_string_compare;
-
-  // Checks if two string objects are equal.
-  // NOTE: If both objects are NULL, they are equal; if only 1 is NULL, they are not equal.
-  // @param str1 The first string to compare.
-  // @param str2 The second string to compare.
-  // @return cql_true if they are equal, otherwise cql_false.
-  // cql_bool cql_string_equal(cql_string_ref _Nullable str1, cql_string_ref _Nullable str2);
-  const char *cql_string_equal;
-
-  // Compares two string objects with SQL LIKE semantics.
-  // NOTE: If either object is NULL, the result should be 1.
-  // @param str1 The first string to compare.
-  // @param str2 The second string to compare.
-  // @return 0 if the str1 is LIKE str2, else != 0.
-  // int cql_string_like(cql_string_ref str1, cql_string_ref str2);
-  const char *cql_string_like;
-
-  // Declare and allocate a C string from a string object.
-  // NOTE: This MUST be implemented as a macro, as it both declares and assigns the value.
-  // @param cstr The C string var to be declared and assigned.
-  // @param str The string object that contains the string value.
-  // cql_alloc_cstr(const char *cstr, cql_string_ref str);
-  const char *cql_alloc_cstr;
-
-  // Free a C string that was allocated by cql_alloc_cstr
-  // @param cstr The C string to be freed.
-  // @param str The string object that the C string was allocated from.
-  // cql_free_cstr(const char *cstr, cql_string_ref str);
-  const char *cql_free_cstr;
-
   // The type for a generic cql result set.
   // NOTE: Result sets are cast to this type before being passed to the cql_result_set_get_count/_data functions.
   const char *cql_result_set_ref;
-
-  // Construct a new result set object.
-  // @param data The data to be stored in the result set.
-  // @param count The count of records represented by the data in the result_set.
-  // @param columns The number of columns for this result type.
-  // @param dataTypes The data types for the columns.
-  // @param callbacks The callbacks that are used for the data access.
-  // @return A result_set object of the type.
-  // cql_result_set_ref _Nonnull cql_result_set_ref_new(
-  //     void *_Nonnull data,
-  //     cql_int32 count,
-  //     void (*_Nonnull teardown)(cql_result_set_ref _Nonnull result_set),
-  //     uint8_t *_Nonnull dataTypes,
-  //     cql_result_set_meta_struct meta);
-  const char *cql_result_set_ref_new;
-
-  // The name of the struct for all of the metadata passed to cql_result_set_ref_new.  The struct must have the
-  // following fields, by name.  Any additional fields may be added for internal support of the runtime.
-  //
-  //   teardown:    void (*_Nullable)(cql_result_set_ref _Nonnull result_set)
-  //   copy:        void (*_Nullable)(
-  //                    cql_result_set_ref _Nonnull result_set,
-  //                    cql_result_set_ref _Nullable *_Nonnull to_result_set,
-  //                    cql_int32 from,
-  //                    cql_int32 count)
-  //   refOffsets:  unsigned short *refOffsets (offsets to all of the references in a row)
-  //   rowsize:     size_t rowsize  (the size of each row in bytes)
-  //
-  // The following getter callbacks are used to fetch values in the typed getters
-  //   getBoolean:  Boolean (*_Nullable)(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col)
-  //   getDouble:   double (*_Nullable)(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col)
-  //   getInt32:    int32_t (*_Nullable)(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col)
-  //   getInt64:    int64_t (*_Nullable)(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col)
-  //   getString:   cql_string_ref _Nonnull (*_Nullable)(
-  //                    cql_result_set_ref _Nonnull result_set,
-  //                    cql_int32 row,
-  //                    cql_int32 col)
-  //   getIsNull:   Boolean (*_Nullable)(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col)
-  //   getIsEncoded: Boolean (*_Nullable)(cql_result_set_ref _Nonnull result_set, cql_int32 col)
-  const char *cql_result_set_meta_struct;
 
   // The name of the method that will give the metadata struct back as provided to the construction above
   const char *cql_result_set_get_meta;

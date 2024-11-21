@@ -3618,7 +3618,7 @@ static void cg_struct_teardown_info(charbuf *output, sem_struct *sptr, CSTR name
 // Emit the return code variables for the procedure
 // if the procedure uses throw then it needs the saved RC as well so we can re-throw it
 static void cg_emit_rc_vars(charbuf *output) {
-  bprintf(output, "  %s _rc_ = SQLITE_OK;\n", rt->cql_code);
+  bprintf(output, "  cql_code _rc_ = SQLITE_OK;\n");
 }
 
 // For each parameter, emit a contract that enforces nullability as follows:
@@ -3701,7 +3701,7 @@ static void cg_emit_fetch_results_prototype(
 
   // either return code or void
   if (dml_proc) {
-    bprintf(decl, "CQL_WARN_UNUSED %s ", rt->cql_code);
+    bprintf(decl, "CQL_WARN_UNUSED cql_code ");
   }
   else {
     bprintf(decl, "void ");
@@ -3774,7 +3774,7 @@ static void cg_emit_proc_prototype(ast_node *ast, charbuf *proc_decl, bool_t for
 
   bool_t need_comma = false;
   if (dml_proc) {
-    bprintf(proc_decl, "CQL_WARN_UNUSED %s %s(sqlite3 *_Nonnull _db_", rt->cql_code, proc_sym.ptr);
+    bprintf(proc_decl, "CQL_WARN_UNUSED cql_code %s(sqlite3 *_Nonnull _db_", proc_sym.ptr);
     if (result_set_proc && !force_fetch_results) {
       bprintf(proc_decl, ", sqlite3_stmt *_Nullable *_Nonnull _result_stmt");
     }
@@ -7809,25 +7809,25 @@ static void cg_proc_result_set_setter(function_info *_Nonnull info, bool_t is_se
   else {
     switch (info->name_type) {
       case SEM_TYPE_BOOL:
-        bprintf(out, "  %s", rt->cql_result_set_set_bool);
+        bprintf(out, "  cql_result_set_set_bool_col");
         break;
       case SEM_TYPE_REAL:
-        bprintf(out, "  %s", rt->cql_result_set_set_double);
+        bprintf(out, "  cql_result_set_set_double_col");
         break;
       case SEM_TYPE_INTEGER:
-        bprintf(out, "  %s", rt->cql_result_set_set_int32);
+        bprintf(out, "  cql_result_set_set_int32_col");
         break;
       case SEM_TYPE_LONG_INTEGER:
-        bprintf(out, "  %s", rt->cql_result_set_set_int64);
+        bprintf(out, "  cql_result_set_set_int64_col");
         break;
       case SEM_TYPE_TEXT:
-        bprintf(out, "  %s", rt->cql_result_set_set_string);
+        bprintf(out, "  cql_result_set_set_string_col");
         break;
       case SEM_TYPE_BLOB:
-        bprintf(out, "  %s", rt->cql_result_set_set_blob);
+        bprintf(out, "  cql_result_set_set_blob_col");
         break;
       case SEM_TYPE_OBJECT:
-        bprintf(out, "  %s", rt->cql_result_set_set_object);
+        bprintf(out, "  cql_result_set_set_object_col");
         break;
     }
 

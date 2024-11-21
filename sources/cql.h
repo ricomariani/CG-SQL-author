@@ -197,79 +197,8 @@ typedef struct rtdata {
   // Visibility attribute for generated functions.
   const char *symbol_visibility;
 
-  // The type for a sqlite3 result code.
-  const char *cql_code;
-
   // The include library for the encode type for a string object.
   const char *cql_string_ref_encode_include;
-
-  // Generic is_encoded value getter on base result set object.
-  // NOTE: This function should call through to the
-  // inline type getters that are passed into the ctor for the result set.
-  // @param result_set The cql result_set object.
-  // @param col The column to fetch the value for.
-  // @return cql_true if the value is sensitive, otherwise cql_false.
-  // cql_bool cql_result_set_get_is_encoded(cql_result_set_ref result_set, int32_t col)
-  const char *cql_result_set_get_is_encoded;
-
-  // Generic bool value setter on base result set object.
-  // @param result_set The cql result_set object.
-  // @param row The row number to set the value for.
-  // @param col The column to set the value for.
-  // @param new_value the new boolean value to be set.
-  // void cql_result_set_set_bool(cql_result_set_ref result_set, int32_t row, int32_t col, cql_bool new_value)
-  const char *cql_result_set_set_bool;
-
-  // Generic double value setter on base result set object.
-  // @param result_set The cql result_set object.
-  // @param row The row number to set the value for.
-  // @param col The column to set the value for.
-  // @param new_value the new boolean value to be set.
-  // void cql_result_set_set_double(cql_result_set_ref result_set, int32_t row, int32_t col, double new_value)
-  const char *cql_result_set_set_double;
-
-  // Generic cql_int32 value setter on base result set object.
-  // @param result_set The cql result_set object.
-  // @param row The row number to set the value for.
-  // @param col The column to set the value for.
-  // @param new_value the new cql_int32 value to be set.
-  // void cql_result_set_set_int32(cql_result_set_ref result_set, int32_t row, int32_t col, cql_int32 new_value)
-  const char *cql_result_set_set_int32;
-
-  // Generic int64 value setter on base result set object.
-  // @param result_set The cql result_set object.
-  // @param row The row number to set the value for.
-  // @param col The column to set the value for.
-  // @param new_value the new int64 value to be set.
-  // void cql_result_set_set_int64(cql_result_set_ref result_set, int32_t row, int32_t col, cql_int64 new_value)
-  const char *cql_result_set_set_int64;
-
-  // Generic string value setter on base result set object.
-  // @param result_set The cql result_set object.
-  // @param row The row number to set the value for.
-  // @param col The column to set the value for.
-  // @param new_value the new string value to be set.
-  // void cql_result_set_set_string(cql_result_set_ref result_set, int32_t row, int32_t col, cql_string new_value)
-  const char *cql_result_set_set_string;
-
-  // Generic object value setter on base result set object.
-  // @param result_set The cql result_set object.
-  // @param row The row number to set the value for.
-  // @param col The column to set the value for.
-  // @param new_value the new object value to be set.
-  // void cql_result_set_set_object(cql_result_set_ref result_set, int32_t row, int32_t col, cql_object new_value)
-  const char *cql_result_set_set_object;
-
-  // Generic blob value setter on base result set object.
-  // @param result_set The cql result_set object.
-  // @param row The row number to set the value for.
-  // @param col The column to set the value for.
-  // @param new_value the new blob value to be set.
-  // void cql_result_set_set_blob(cql_result_set_ref result_set, int32_t row, int32_t col, cql_blob new_value)
-  const char *cql_result_set_set_blob;
-
-  // The target type for NULL object value.
-  const char *cql_target_null;
 
   void (*cql_post_common_init)(void);
 } rtdata;

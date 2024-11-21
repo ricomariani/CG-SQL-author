@@ -316,8 +316,6 @@ CQL_EXPORT void cql_rowset_copy(cql_result_set_ref _Nonnull result_set, cql_resu
 // getters
 
 // Generic is_null value getter on base result set object.
-// NOTE: This function should call through to the
-// inline type getters that are passed into the ctor for the result set.
 // @param result_set The cql result_set object.
 // @param row The row number to fetch the value for.
 // @param col The column to fetch the value for.
@@ -325,8 +323,6 @@ CQL_EXPORT void cql_rowset_copy(cql_result_set_ref _Nonnull result_set, cql_resu
 CQL_EXPORT cql_bool cql_result_set_get_is_null_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col);
 
 // Generic bool value getter on base result set object.
-// NOTE: This function should call through to the
-// inline type getters that are passed into the ctor for the result set.
 // @param result_set The cql result_set object.
 // @param row The row number to fetch the value for.
 // @param col The column to fetch the value for.
@@ -334,8 +330,6 @@ CQL_EXPORT cql_bool cql_result_set_get_is_null_col(cql_result_set_ref _Nonnull r
 CQL_EXPORT cql_bool cql_result_set_get_bool_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col);
 
 // Generic int32 value getter on base result set object.
-// NOTE: This function should call through to the
-// inline type getters that are passed into the ctor for the result set.
 // @param result_set The cql result_set object.
 // @param row The row number to fetch the value for.
 // @param col The column to fetch the value for.
@@ -343,8 +337,6 @@ CQL_EXPORT cql_bool cql_result_set_get_bool_col(cql_result_set_ref _Nonnull resu
 CQL_EXPORT cql_int32 cql_result_set_get_int32_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col);
 
 // Generic int64 value getter on base result set object.
-// NOTE: This function should call through to the
-// inline type getters that are passed into the ctor for the result set.
 // @param result_set The cql result_set object.
 // @param row The row number to fetch the value for.
 // @param col The column to fetch the value for.
@@ -352,8 +344,6 @@ CQL_EXPORT cql_int32 cql_result_set_get_int32_col(cql_result_set_ref _Nonnull re
 CQL_EXPORT cql_int64 cql_result_set_get_int64_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col);
 
 // Generic double value getter on base result set object.
-// NOTE: This function should call through to the
-// inline type getters that are passed into the ctor for the result set.
 // @param result_set The cql result_set object.
 // @param row The row number to fetch the value for.
 // @param col The column to fetch the value for.
@@ -361,8 +351,6 @@ CQL_EXPORT cql_int64 cql_result_set_get_int64_col(cql_result_set_ref _Nonnull re
 CQL_EXPORT cql_double cql_result_set_get_double_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col);
 
 // Generic string value getter on base result set object.
-// NOTE: This function should call through to the
-// inline type getters that are passed into the ctor for the result set.
 // @param result_set The cql result_set object.
 // @param row The row number to fetch the value for.
 // @param col The column to fetch the value for.
@@ -370,8 +358,6 @@ CQL_EXPORT cql_double cql_result_set_get_double_col(cql_result_set_ref _Nonnull 
 CQL_EXPORT cql_string_ref _Nullable cql_result_set_get_string_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col);
 
 // Generic blob value getter on base result set object.
-// NOTE: This function should call through to the
-// inline type getters that are passed into the ctor for the result set.
 // @param result_set The cql result_set object.
 // @param row The row number to fetch the value for.
 // @param col The column to fetch the value for.
@@ -379,8 +365,6 @@ CQL_EXPORT cql_string_ref _Nullable cql_result_set_get_string_col(cql_result_set
 CQL_EXPORT cql_blob_ref _Nullable cql_result_set_get_blob_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col);
 
 // Generic object value getter on base result set object.
-// NOTE: This function should call through to the
-// inline type getters that are passed into the ctor for the result set.
 // @param result_set The cql result_set object.
 // @param row The row number to fetch the value for.
 // @param col The column to fetch the value for.
@@ -388,16 +372,69 @@ CQL_EXPORT cql_blob_ref _Nullable cql_result_set_get_blob_col(cql_result_set_ref
 CQL_EXPORT cql_object_ref _Nullable cql_result_set_get_object_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col);
 
 // setters
+
+// Generic is_null value setter on base result set object.
+// @param result_set The cql result_set object.
+// @param row The row number to set the value for.
+// @param col The column to set the value for.
 CQL_EXPORT void cql_result_set_set_to_null_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col);
+
+// Generic bool value setter on base result set object.
+// @param result_set The cql result_set object.
+// @param row The row number to set the value for.
+// @param col The column to set the value for.
+// @param new_value the new boolean value to be set.
+// void cql_result_set_set_bool(cql_result_set_ref result_set, int32_t row, int32_t col, cql_bool new_value)
 CQL_EXPORT void cql_result_set_set_bool_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_bool new_value);
+
+// Generic cql_int32 value setter on base result set object.
+// @param result_set The cql result_set object.
+// @param row The row number to set the value for.
+// @param col The column to set the value for.
+// @param new_value the new cql_int32 value to be set.
 CQL_EXPORT void cql_result_set_set_int32_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_int32 new_value);
+
+// Generic int64 value setter on base result set object.
+// @param result_set The cql result_set object.
+// @param row The row number to set the value for.
+// @param col The column to set the value for.
+// @param new_value the new int64 value to be set.
 CQL_EXPORT void cql_result_set_set_int64_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_int64 new_value);
+
+// Generic double value setter on base result set object.
+// @param result_set The cql result_set object.
+// @param row The row number to set the value for.
+// @param col The column to set the value for.
+// @param new_value the new boolean value to be set.
 CQL_EXPORT void cql_result_set_set_double_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_double new_value);
+
+// Generic string value setter on base result set object.
+// @param result_set The cql result_set object.
+// @param row The row number to set the value for.
+// @param col The column to set the value for.
+// @param new_value the new string value to be set.
 CQL_EXPORT void cql_result_set_set_string_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_string_ref _Nullable new_value);
+
+// Generic blob value setter on base result set object.
+// @param result_set The cql result_set object.
+// @param row The row number to set the value for.
+// @param col The column to set the value for.
+// @param new_value the new blob value to be set.
 CQL_EXPORT void cql_result_set_set_blob_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_blob_ref _Nullable new_value);
+
+// Generic object value setter on base result set object.
+// @param result_set The cql result_set object.
+// @param row The row number to set the value for.
+// @param col The column to set the value for.
+// @param new_value the new object value to be set.
 CQL_EXPORT void cql_result_set_set_object_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_object_ref _Nullable new_value);
 
-//  encoded column tests
+// Generic is_encoded value getter on base result set object.
+// NOTE: This function should call through to the
+// inline type getters that are passed into the ctor for the result set.
+// @param result_set The cql result_set object.
+// @param col The column to fetch the value for.
+// @return cql_true if the value is sensitive, otherwise cql_false.
 CQL_EXPORT cql_bool cql_result_set_get_is_encoded_col(cql_result_set_ref _Nonnull result_set, cql_int32 col);
 
 // result set metadata management

@@ -228,7 +228,8 @@ static bool_t if_stmt_callback(
   if (branch_to_keep_index <= 1) {
     EXTRACT_NOTNULL(cond_action, ast->left);
     stmt_list = cond_action->right;
-  } else {
+  }
+  else {
     int64_t curr_index = 2;
     while (elseif && curr_index < branch_to_keep_index) {
       Contract(is_ast_elseif(elseif));
@@ -239,7 +240,8 @@ static bool_t if_stmt_callback(
     if (elseif) {
       EXTRACT(cond_action, elseif->left);
       stmt_list = cond_action->right;
-    } else {
+    }
+    else {
       stmt_list = elsenode->left;
     }
   }
@@ -506,7 +508,8 @@ static void cg_qp_one_stmt(ast_node *stmt) {
   symtab_entry *entry = symtab_find(cg_stmts, stmt->type);
   if (entry) {
     ((void (*)(ast_node*))entry->val)(stmt);
-  } else {
+  }
+  else {
     cg_qp_one_stmt(stmt->left);
     cg_qp_one_stmt(stmt->right);
   }

@@ -362,13 +362,17 @@ void gen_data_type(ast_node *ast) {
     else {
       gen_printf("INT");
     }
-  } else if (is_ast_type_text(ast)) {
+  }
+  else if (is_ast_type_text(ast)) {
     gen_printf("TEXT");
-  } else if (is_ast_type_blob(ast)) {
+  }
+  else if (is_ast_type_blob(ast)) {
     gen_printf("BLOB");
-  } else if (is_ast_type_object(ast)) {
+  }
+  else if (is_ast_type_object(ast)) {
     gen_printf("OBJECT");
-  } else if (is_ast_type_long(ast)) {
+  }
+  else if (is_ast_type_long(ast)) {
     if (for_sqlite()) {
       // we could use INT here but there is schema out
       // there that won't match if we do, seems risky
@@ -378,13 +382,17 @@ void gen_data_type(ast_node *ast) {
     else {
       gen_printf("LONG");
     }
-  } else if (is_ast_type_real(ast)) {
+  }
+  else if (is_ast_type_real(ast)) {
     gen_printf("REAL");
-  } else if (is_ast_type_bool(ast)) {
+  }
+  else if (is_ast_type_bool(ast)) {
     gen_printf("BOOL");
-  } else if (is_ast_type_cursor(ast)) {
+  }
+  else if (is_ast_type_cursor(ast)) {
     gen_printf("CURSOR");
-  } else {
+  }
+  else {
     bool_t suppress = false;
     if (gen_callbacks) {
       gen_sql_callback callback = gen_callbacks->named_type_callback;
@@ -703,17 +711,21 @@ static void gen_col_attrs(ast_node *_Nullable attrs) {
   for (ast_node *attr = attrs; attr; attr = attr->right) {
     if (is_ast_create_attr(attr)) {
       gen_create_attr(attr);
-    } else if (is_ast_sensitive_attr(attr)) {
+    }
+    else if (is_ast_sensitive_attr(attr)) {
       gen_sensitive_attr(attr);
-    } else if (is_ast_delete_attr(attr)) {
+    }
+    else if (is_ast_delete_attr(attr)) {
       gen_delete_attr(attr);
-    } else if (is_ast_col_attrs_not_null(attr)) {
+    }
+    else if (is_ast_col_attrs_not_null(attr)) {
       gen_not_null();
       EXTRACT_ANY(conflict_clause, attr->left);
       if (conflict_clause) {
         gen_conflict_clause(conflict_clause);
       }
-    } else if (is_ast_col_attrs_pk(attr)) {
+    }
+    else if (is_ast_col_attrs_pk(attr)) {
       EXTRACT_NOTNULL(autoinc_and_conflict_clause, attr->left);
       EXTRACT(col_attrs_autoinc, autoinc_and_conflict_clause->left);
       EXTRACT_ANY(conflict_clause, autoinc_and_conflict_clause->right);
@@ -725,24 +737,30 @@ static void gen_col_attrs(ast_node *_Nullable attrs) {
       if (col_attrs_autoinc) {
         gen_printf(" AUTOINCREMENT");
       }
-    } else if (is_ast_col_attrs_unique(attr)) {
+    }
+    else if (is_ast_col_attrs_unique(attr)) {
       gen_printf(" UNIQUE");
       if (attr->left) {
         gen_conflict_clause(attr->left);
       }
-    } else if (is_ast_col_attrs_hidden(attr)) {
+    }
+    else if (is_ast_col_attrs_hidden(attr)) {
       gen_printf(" HIDDEN");
-    } else if (is_ast_col_attrs_fk(attr)) {
+    }
+    else if (is_ast_col_attrs_fk(attr)) {
       gen_printf(" ");
       gen_fk_target_options(attr->left);
-    } else if (is_ast_col_attrs_check(attr)) {
+    }
+    else if (is_ast_col_attrs_check(attr)) {
       gen_printf(" CHECK(");
       gen_root_expr(attr->left);
       gen_printf(") ");
-    } else if (is_ast_col_attrs_collate(attr)) {
+    }
+    else if (is_ast_col_attrs_collate(attr)) {
       gen_printf(" COLLATE ");
       gen_root_expr(attr->left);
-    } else {
+    }
+    else {
       Contract(is_ast_col_attrs_default(attr));
       gen_printf(" DEFAULT ");
       gen_root_expr(attr->left);
@@ -835,15 +853,20 @@ bool_t eval_variables_callback(ast_node *ast) {
 cql_noexport void gen_col_or_key(ast_node *def) {
   if (is_ast_col_def(def)) {
     gen_col_def(def);
-  } else if (is_ast_pk_def(def)) {
+  }
+  else if (is_ast_pk_def(def)) {
     gen_pk_def(def);
-  } else if (is_ast_fk_def(def)) {
+  }
+  else if (is_ast_fk_def(def)) {
     gen_fk_def(def);
-  } else if (is_ast_shape_def(def)) {
+  }
+  else if (is_ast_shape_def(def)) {
     gen_shape_def(def);
-  } else if (is_ast_check_def(def)) {
+  }
+  else if (is_ast_check_def(def)) {
     gen_check_def(def);
-  } else {
+  }
+  else {
     Contract(is_ast_unq_def(def));
     gen_unq_def(def);
   }
@@ -2307,7 +2330,8 @@ static void gen_col_calc(ast_node *ast) {
     EXTRACT_NAME_AND_SCOPE(ast->left);
     if (scope) {
       gen_printf("%s.%s", scope, name);
-    } else {
+    }
+    else {
       gen_printf("%s", name);
     }
     if (ast->right) {
@@ -2469,7 +2493,8 @@ static void gen_table_or_subquery(ast_node *ast) {
   if (opt_as_alias) {
     if (get_inserted_table_alias_string_override(opt_as_alias)) {
       gen_as_alias_with_override(opt_as_alias);
-    } else {
+    }
+    else {
       gen_as_alias(opt_as_alias);
     }
   }
@@ -2779,7 +2804,8 @@ static void gen_select_statement_type(ast_node *ast) {
 
   if (select_opts && is_ast_select_values(select_opts)) {
     gen_printf("VALUES");
-  } else {
+  }
+  else {
     gen_printf("SELECT");
     if (select_opts) {
       Contract(is_ast_select_opts(select_opts));
@@ -2820,7 +2846,8 @@ cql_noexport void gen_select_core(ast_node *ast) {
       // VALUES [values]
       EXTRACT(values, ast->right);
       gen_values(values);
-    } else {
+    }
+    else {
       // SELECT [select_expr_list_con]
       // We're making sure that we're in the SELECT clause of the select stmt
       Contract(select_core_left == NULL || is_ast_select_opts(select_core_left));
@@ -3051,7 +3078,8 @@ static void gen_select_nothing_stmt(ast_node *ast) {
 
     if (gen_callbacks && gen_callbacks->minify_aliases) {
       gen_printf("0");
-    } else {
+    }
+    else {
       gen_printf("0 ");
       gen_sptr_name(sptr, i);
     }
@@ -3076,7 +3104,8 @@ static void gen_version_attrs(ast_node *_Nullable ast) {
     }
     else if (is_ast_create_attr(attr)) {
       gen_create_attr(attr);
-    } else {
+    }
+    else {
       Contract(is_ast_delete_attr(attr)); // the only other kind
       gen_delete_attr(attr);
     }
@@ -3305,7 +3334,8 @@ static void gen_create_virtual_table_stmt(ast_node *ast) {
       gen_printf(" (\n");
       gen_col_key_list(col_key_list);
       gen_printf(")");
-    } else if (module_args) {
+    }
+    else if (module_args) {
       gen_printf(" ");
       gen_misc_attr_value(module_args);
     }
@@ -3613,7 +3643,8 @@ static void gen_update_stmt(ast_node *ast) {
     gen_printf("(");
     gen_insert_list(from_shape_or_insert_list);
     gen_printf(")");
-  } else {
+  }
+  else {
     // UPDATE table_name SET [update_list] FROM [query_parts]
     gen_update_list(update_list);
   }
@@ -3867,7 +3898,8 @@ static void gen_fetch_values_stmt(ast_node *ast) {
   if (is_ast_expr_names(columns_values)) {
     gen_printf(" USING ");
     gen_expr_names(columns_values);
-  } else {
+  }
+  else {
     EXTRACT(column_spec, columns_values->left);
     gen_column_spec(column_spec);
     gen_printf(" ");
@@ -5107,7 +5139,8 @@ static void gen_upsert_update(ast_node *ast) {
   gen_printf("DO ");
   if (update_stmt) {
     gen_update_stmt(update_stmt);
-  } else {
+  }
+  else {
     gen_printf("NOTHING");
   }
 }

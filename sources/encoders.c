@@ -320,7 +320,8 @@ cql_noexport void cg_remove_slash_star_and_star_slash(charbuf *_Nonnull b) {
   for (uint32_t i = 0; i < b->used - 2; i++) {
     if (p[i] == '*' && p[i+1] == '/') {
       p[i] = '+';
-    } else if (p[i] == '/' && p[i+1] == '*') {
+    }
+    else if (p[i] == '/' && p[i+1] == '*') {
       p[i+1] = '+';
     }
   }

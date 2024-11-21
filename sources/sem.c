@@ -1591,7 +1591,8 @@ bool_t should_encode_col(CSTR col, sem_t sem_type, bool_t use_encode_arg, symtab
   bool_t is_col_eligible = false;
   if (encode_columns_arg && encode_columns_arg->count > 0 ) {
     is_col_eligible = symtab_find(encode_columns_arg, col) != NULL;
-  } else {
+  }
+  else {
     // otherwise all column are always eligible if use_encode is TRUE.
     is_col_eligible = use_encode_arg;
   }
@@ -1604,7 +1605,8 @@ static void enforce_non_sensitive_context_column(CSTR name, ast_node *misc_attrs
   if (is_sensitive_column_in_result_set(name)) {
     report_error(misc_attrs, "CQL0400: encode context column can't be sensitive", name);
     record_error(misc_attrs);
-  } else {
+  }
+  else {
     record_ok(misc_attrs);
   }
 }
@@ -1647,7 +1649,8 @@ static void vault_sensitive_encode_columns(ast_node *ast_misc_attrs, symtab *vau
       if (vault_column_list) {
         symtab_add(vault_column_list, name, NULL);
       }
-    } else {
+    }
+    else {
       report_error(list->left, "CQL0363: all arguments must be names", "vault_sensitive");
       record_error(list->left);
       if (misc_attrs) {
@@ -3256,19 +3259,26 @@ static void sem_data_type_column(ast_node *ast) {
 
   if (is_ast_type_int(ast)) {
     ast->sem = new_sem(SEM_TYPE_INTEGER);
-  } else if (is_ast_type_text(ast)) {
+  }
+  else if (is_ast_type_text(ast)) {
     ast->sem = new_sem(SEM_TYPE_TEXT);
-  } else if (is_ast_type_blob(ast)) {
+  }
+  else if (is_ast_type_blob(ast)) {
     ast->sem = new_sem(SEM_TYPE_BLOB);
-  } else if (is_ast_type_object(ast)) {
+  }
+  else if (is_ast_type_object(ast)) {
     ast->sem = new_sem(SEM_TYPE_OBJECT);
-  } else if (is_ast_type_long(ast)) {
+  }
+  else if (is_ast_type_long(ast)) {
     ast->sem = new_sem(SEM_TYPE_LONG_INTEGER);
-  } else if (is_ast_type_real(ast)) {
+  }
+  else if (is_ast_type_real(ast)) {
     ast->sem = new_sem(SEM_TYPE_REAL);
-  } else if (is_ast_type_cursor(ast)) {
+  }
+  else if (is_ast_type_cursor(ast)) {
     ast->sem = new_sem(SEM_TYPE_CURSOR_FORMAL);
-  } else {
+  }
+  else {
     Contract(is_ast_type_bool(ast));
     ast->sem = new_sem(SEM_TYPE_BOOL);
   }
@@ -4893,14 +4903,18 @@ static void sem_constraints(ast_node *table_ast, ast_node *col_key_list, col_def
 
     if (is_ast_col_def(def)) {
       // column defs already processed
-    } else if (is_ast_pk_def(def)) {
+    }
+    else if (is_ast_pk_def(def)) {
       sem_pk_def(table_ast, def);
       info->primary_keys++;
-    } else if (is_ast_fk_def(def)) {
+    }
+    else if (is_ast_fk_def(def)) {
       sem_fk_def(table_ast, def, info->table_info);
-    } else if (is_ast_check_def(def)) {
+    }
+    else if (is_ast_check_def(def)) {
       sem_check_def(table_ast, def);
-    } else {
+    }
+    else {
       Contract(is_ast_unq_def(def));
       sem_unq_def(table_ast, def);
     }
@@ -4936,7 +4950,8 @@ static bool_t sem_binary_prep_with_flow_analysis(ast_node *ast, sem_t *core_type
   sem_expr(left);
   if (!strcmp(op, "AND")) {
     sem_set_improvements_for_true_condition(left);
-  } else if (!strcmp(op, "OR")) {
+  }
+  else if (!strcmp(op, "OR")) {
     sem_set_improvements_for_false_condition(left);
   }
   sem_expr(right);
@@ -5227,7 +5242,8 @@ static void sem_binary_logical(ast_node *ast, CSTR op) {
     FLOW_PUSH_CONTEXT_BRANCH_GROUP();
     has_error = !sem_binary_prep_with_flow_analysis(ast, &core_type_left, &core_type_right, &combined_flags, op);
     FLOW_POP_CONTEXT_BRANCH_GROUP();
-  } else {
+  }
+  else {
     has_error = !sem_binary_prep(ast, &core_type_left, &core_type_right, &combined_flags);
   }
   if (has_error) {
@@ -6329,7 +6345,8 @@ static sem_resolve sem_try_resolve_column(ast_node *ast, CSTR name, CSTR scope, 
                   ast,
                   "CQL0435: must use qualified form to avoid ambiguity with alias",
                   name);
-              } else {
+              }
+              else {
                 // An alias is being referred to directly. Since we can only
                 // have `SEM_TYPE_ALIAS` when analyzing one of the
                 // below-mentioned clauses (for which referencing an alias is
@@ -6872,7 +6889,8 @@ static void sem_cursor_as_expression(ast_node *ast) {
   CSTR vname = NULL;
   if (is_auto_cursor(ast->sem->sem_type)) {
     vname = dup_printf("%s._has_row_", ast->sem->name);
-  } else {
+  }
+  else {
     if (!(ast->sem->sem_type & SEM_TYPE_FETCH_INTO)) {
       report_error(ast, "CQL0067: cursor was not used with 'fetch [cursor]'", ast->sem->name);
       record_error(ast);
@@ -10380,7 +10398,8 @@ static void sem_user_func(ast_node *ast, ast_node *user_func) {
   // Skip argument type checking for select_func_no_check
   if (no_check) {
     record_ok(ast);
-  } else {
+  }
+  else {
     if (sql_udf_context) {
       PUSH_EXPR_CONTEXT(SEM_EXPR_CONTEXT_UDF);
         sem_validate_args_vs_formals(ast, name, arg_list, params, NORMAL_CALL);
@@ -11748,7 +11767,8 @@ static void sem_table_function(ast_node *ast) {
       return;
     }
     record_ok(ast);
-  } else {
+  }
+  else {
     // SQL Func context is basically the same the ON context but allows for Object types
     PUSH_EXPR_CONTEXT(SEM_EXPR_CONTEXT_UDF);
     sem_validate_args_vs_formals(ast, name, arg_list, params, NORMAL_CALL);
@@ -12148,7 +12168,8 @@ static void sem_select_expr_list_con(ast_node *ast) {
           sem_set_improvements_for_true_condition(where_expr);
         }
         POP_JOIN();
-      } else {
+      }
+      else {
         sem_sensitive = sem_select_where_etc(select_from_etc);
         error = is_error(select_from_etc);
         if (!error && opt_where) {
@@ -12167,7 +12188,8 @@ static void sem_select_expr_list_con(ast_node *ast) {
       PUSH_JOIN(from_scope, from_jptr);
       sem_select_expr_list(select_expr_list);
       POP_JOIN();
-    } else {
+    }
+    else {
       sem_select_expr_list(select_expr_list);
     }
     error = is_error(select_expr_list);
@@ -12333,7 +12355,8 @@ static void sem_select_core(ast_node *ast) {
     // VALUES [values]
     Contract(is_ast_values(select_core_right));
     sem_values(select_core_right);
-  } else {
+  }
+  else {
     // SELECT [select_opts] [select_expr_list_con]
     // select options not needed for semantic analysis
     Contract(is_ast_select_expr_list_con(select_core_right));
@@ -13931,7 +13954,8 @@ static bool_t sem_validate_version_attrs(version_attrs_info *vers_info) {
       }
       EXTRACT(version_annotation, ast->left);
       vers_info->create_version_ast = version_annotation;
-    } else {
+    }
+    else {
       Contract (is_ast_delete_attr(ast));
       if (!sem_validate_version(vers_info->delete_code, ast, &vers_info->delete_version, &vers_info->delete_proc)) {
         record_error(vers_info->target_ast);
@@ -14406,7 +14430,8 @@ static bool_t sem_validate_identical_text(ast_node *prev, ast_node *cur, gen_fun
      // The input `callbacks` is copied to avoid mutating anything in the
      // caller.
      callbacks_with_named_type_callback = *callbacks;
-  } else {
+  }
+  else {
     init_gen_sql_callbacks(&callbacks_with_named_type_callback);
     // We set `gen_mode_echo` as it's equivalent to passing NULL to
     // `gen_with_callbacks`.
@@ -16373,7 +16398,8 @@ static void sem_cond_action(ast_node *ast) {
       record_error(ast);
       return;
     }
-  } else {
+  }
+  else {
     flow_context_branch_group_add_empty_branch();
   }
 
@@ -16739,7 +16765,8 @@ static void sem_if_stmt(ast_node *ast) {
         record_error(if_alt);
         goto error;
       }
-    } else {
+    }
+    else {
       flow_context_branch_group_add_empty_branch();
     }
     record_ok(elsenode);
@@ -17071,7 +17098,8 @@ static void sem_update_stmt(ast_node *ast) {
       report_error(name_ast, "CQL0281: upsert statement does not include table name in the update statement", name);
       goto cleanup;
     }
-  } else {
+  }
+  else {
     // This means we're in an upsert statement therefore the table name should not
     // be provided in the update statement of upsert otherwise it's a symantical error
     if (!in_upsert) {
@@ -17764,7 +17792,8 @@ static bool_t is_root_select_stmt_has_opt_where_node (ast_node *ast, int32_t *se
     }
     if (*select_count == 0) {
       return false;
-    } else {
+    }
+    else {
       (*select_count) -= 1;
     }
   }
@@ -18674,7 +18703,8 @@ static void sem_assign(ast_node *ast) {
   // valid.
   if (is_not_nullable(expr->sem->sem_type)) {
     sem_set_notnull_improved(name, NULL);
-  } else {
+  }
+  else {
     sem_unset_notnull_improved(name, NULL);
   }
 
@@ -19510,7 +19540,8 @@ static void sem_find_ast_misc_attr_callback(
           if (*error) {
             record_error(misc_attr_value->left);
           }
-        } else {
+        }
+        else {
           report_dummy_test_error(
             misc_attr_value->left,
             "CQL0277: autotest has incorrect format",
@@ -19530,7 +19561,8 @@ static void sem_find_ast_misc_attr_callback(
             "CQL0278: autotest attribute name is not valid",
             autotest_attr_name,
             error);
-        } else {
+        }
+        else {
           record_ok(misc_attr_value);
         }
       }
@@ -19946,7 +19978,8 @@ static void sem_inside_create_proc_stmt(ast_node *ast) {
       report_error(ast, "CQL0440: fragments may not have an empty body", proc_name);
       goto error;
     }
-  } else {
+  }
+  else {
     // BEGIN [stmt_list] END
     //
     // We avoid pushing a new context so that any initialization improvements
@@ -19977,7 +20010,8 @@ static void sem_inside_create_proc_stmt(ast_node *ast) {
     // fact, not enforcing initialization here is half of the utility of the
     // "cql:try_is_proc_body" attribute at present. (The other half, of course,
     // is that `sem_trycatch_stmt` *does* enforce it.)
-  } else {
+  }
+  else {
     // Verify that all parameters have been appropriately initialized using the
     // end of the procedure for error reporting. This is the common case.
     if (!sem_validate_current_proc_params_are_initialized(ast)) {
@@ -20041,7 +20075,8 @@ static void sem_misc_attrs_ok_table_scan(
         report_error(misc_attrs, "CQL0329: ok_table_scan attribute can only be used in a create procedure statement", NULL);
         record_error(misc_attrs);
         return;
-    } else if (is_ast_misc_attr_value_list(ast_misc_attr_values)) {
+    }
+    else if (is_ast_misc_attr_value_list(ast_misc_attr_values)) {
       // the value in ok_table_scan attributions is a list of value. we have to go
       // through the list and validate each of them.
       for (ast_node *list = ast_misc_attr_values; list; list = list->right) {
@@ -20552,7 +20587,8 @@ static void sem_declare_func_stmt(ast_node *ast) {
       bool_t added = add_unchecked_func(ast, name);
       Invariant(added);
     }
-  } else {
+  }
+  else {
     if (!existing_func) {
       bool_t added = add_func(ast, name);
       Invariant(added);
@@ -22186,7 +22222,8 @@ static void sem_switch_cases(ast_node *ast, ast_node *expr, bool_t all_values) {
       goto cleanup;
     }
     flow_set_context_branch_group_covers_all_cases(true);
-  } else {
+  }
+  else {
     flow_set_context_branch_group_covers_all_cases(has_else);
   }
 
@@ -22496,12 +22533,14 @@ static bool_t sem_validate_arg_vs_formal(ast_node *arg, ast_node *param) {
     Invariant(var); // we know the cursor exists and is unique already
     var->sem->sem_type |= SEM_TYPE_SERIALIZE;
     return true;
-  } else if (is_out_parameter(sem_type_param)) {
+  }
+  else if (is_out_parameter(sem_type_param)) {
     sem_arg_for_out_param(arg, param);
     if (is_error(arg)) {
       return false;
     }
-  } else {
+  }
+  else {
     // In the case of an IN-only parameter, we allow an expression.
     sem_arg_expr(arg, false);
     if (is_error(arg)) {
@@ -22886,7 +22925,8 @@ static void sem_call_stmt_opt_cursor(ast_node *ast, CSTR cursor_name) {
     if (is_error(ast)) {
       return;
     }
-  } else {
+  }
+  else {
     // compute semantic type of each arg, reporting errors
     sem_validate_args(ast, arg_list);
     if (is_error(ast)) {
@@ -24476,14 +24516,16 @@ static bool_t sem_check_aggregate_select_expr_must_return_a_row(ast_node *ast, a
   if (!opt_limit) {
     // Short circuit and allow error handling to kick in elsewhere
     return true;
-  } else {
+  }
+  else {
     eval_node result = EVAL_NIL;
     eval(opt_limit->left, &result);
 
     if (result.sem_type != SEM_TYPE_ERROR && result.sem_type != SEM_TYPE_NULL) {
       eval_cast_to(&result, SEM_TYPE_LONG_INTEGER);
       return result.int64_value >= 1;
-    } else {
+    }
+    else {
       return false;
     }
   }
@@ -24733,7 +24775,8 @@ static void sem_expr_select_if_nothing(ast_node *ast, CSTR op) {
         record_error(ast);
         return;
       }
-    } else {
+    }
+    else {
       // if the right arg is not null then the expression is not null because it's like a builtin ifnull
       combined_flags |= SEM_TYPE_NOTNULL;
     }

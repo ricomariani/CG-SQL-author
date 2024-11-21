@@ -2671,7 +2671,8 @@ static bool_t cg_lua_table_rename(ast_node *ast, void *context, charbuf *buffer)
 static void cg_lua_get_column(sem_t sem_type, CSTR cursor, int32_t index, CSTR var, charbuf *output) {
   if (core_type_of(sem_type) == SEM_TYPE_BOOL) {
     bprintf(output, "  %s = cql_to_bool(cql_get_value(%s, %d))\n", var, cursor, index);
-  } else {
+  }
+  else {
     bprintf(output, "  %s = cql_get_value(%s, %d)\n", var, cursor, index);
   }
 }
@@ -3109,7 +3110,8 @@ static bool_t cg_lua_call_in_cte(ast_node *cte_body, void *context, charbuf *buf
 
     bprintf(&wrapper, "(");
     cg_lua_emit_one_frag(&wrapper);
-  } else {
+  }
+  else {
     // Use the original global setting
     // (subcalls inside a CTE of a fragment in a nested select can use original setting)
     info->callbacks->minify_aliases = info->minify_aliases;
@@ -4198,7 +4200,8 @@ static void cg_lua_echo_stmt(ast_node *ast) {
   if (!StrCaseCmp(rt_name, options.rt)) {
     if (current_proc) {
       cg_decode_string_literal(str, cg_main_output);
-    } else {
+    }
+    else {
       cg_decode_string_literal(str, cg_declarations_output);
     }
   }
@@ -5088,7 +5091,8 @@ static void cg_lua_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
         if (!options.compress) {
           bprintf(out, "\n-- The statement ending at line %d\n", stmt->lineno);
         }
-      } else {
+      }
+      else {
         if (!options.compress) {
           bprintf(cg_declarations_output, "\n-- Generated from %s:%d\n", stmt->filename, stmt->lineno);
         }

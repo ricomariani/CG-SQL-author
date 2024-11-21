@@ -254,7 +254,8 @@ static void printf_iterator_set_type_char(printf_iterator *iterator, char c) {
       valid_flags |= PRINTF_FLAGS_COMMA;
       if (iterator->length == PRINTF_LENGTH_LONG_LONG) {
         iterator->sem_type = SEM_TYPE_LONG_INTEGER;
-      } else {
+      }
+      else {
         iterator->sem_type = SEM_TYPE_INTEGER;
       }
       break;
@@ -264,7 +265,8 @@ static void printf_iterator_set_type_char(printf_iterator *iterator, char c) {
       valid_flags |= PRINTF_FLAGS_ZERO;
       if (iterator->length == PRINTF_LENGTH_LONG_LONG) {
         iterator->sem_type = SEM_TYPE_LONG_INTEGER;
-      } else {
+      }
+      else {
         iterator->sem_type = SEM_TYPE_INTEGER;
       }
       break;
@@ -281,7 +283,8 @@ static void printf_iterator_set_type_char(printf_iterator *iterator, char c) {
       valid_flags |= PRINTF_FLAGS_HASH;
       if (iterator->length == PRINTF_LENGTH_LONG_LONG) {
         iterator->sem_type = SEM_TYPE_LONG_INTEGER;
-      } else {
+      }
+      else {
         iterator->sem_type = SEM_TYPE_INTEGER;
       }
       break;
@@ -384,7 +387,8 @@ cql_noexport sem_t printf_iterator_next(printf_iterator *iterator) {
       if (iterator->state == PRINTF_STATE_START) {
         // We hit the end while not within a substitution, so we're simply done.
         iterator->sem_type = SEM_TYPE_OK;
-      } else {
+      }
+      else {
         // We hit the end in the middle of a substitution, so the substitution
         // is incomplete and the format string is invalid.
         printf_iterator_error(iterator, "CQL0420: incomplete substitution in format string", NULL);

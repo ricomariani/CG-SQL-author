@@ -1406,7 +1406,8 @@ static void cg_schema_manage_recreate_tables(
       bprintf(&make_table, "; ");
       init_gen_sql_callbacks(&callbacks);
       callbacks.mode = gen_mode_no_annotations;
-    } else {
+    }
+    else {
       // explicitly drop only tables that are unsubscribed or deleted
       // others dropped inside cql_rebuild_recreate_group
       if (strlen(delete_tables.ptr) != 0) bprintf(&delete_tables, "\n");
@@ -1524,7 +1525,8 @@ static void cg_schema_manage_recreate_tables(
     CHARBUF_CLOSE(migrate_table);
     if (is_virtual_ast(ast)) {
       cg_schema_add_recreate_table(&recreate_only_virtual_tables, table_crc, facet, update_proc, migrate_key);
-    } else {
+    }
+    else {
       cg_schema_add_recreate_table(&recreate_without_virtual_tables, table_crc, facet, update_proc, migrate_key);
     }
     CHARBUF_CLOSE(update_proc);

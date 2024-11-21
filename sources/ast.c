@@ -618,7 +618,8 @@ cql_noexport void find_misc_attrs(
       EXTRACT_STRING(name, misc_attr_key->right);
       misc_attr_prefix = prefix;
       misc_attr_name = name;
-    } else {
+    }
+    else {
       EXTRACT_STRING(name, misc_attr_key);
       misc_attr_name = name;
     }
@@ -675,7 +676,8 @@ static void ast_find_ast_misc_attr_callback(
           misc->count++;
         }
       }
-    } else if (is_ast_num(ast_misc_attr_values)) {
+    }
+    else if (is_ast_num(ast_misc_attr_values)) {
       if (misc->num_node_callback) {
         EXTRACT_NUM_VALUE(value, ast_misc_attr_values);
         misc->num_node_callback(value, ast_misc_attr_values, misc->context);
@@ -1141,7 +1143,8 @@ cql_noexport void continue_find_table_node(
         if (alt_callback && symtab_add(alt_visited, canonical_name, table_or_view)) {
           alt_callback(canonical_name, table_or_view, callbacks->callback_context);
         }
-      } else {
+      }
+      else {
         Contract(is_ast_create_view_stmt(table_or_view));
         EXTRACT_NOTNULL(view_and_attrs, table_or_view->right);
         EXTRACT_NOTNULL(view_details_select, view_and_attrs->left);

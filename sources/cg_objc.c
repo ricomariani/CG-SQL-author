@@ -90,64 +90,67 @@ static void cg_objc_proc_result_set_getter(
         bprintf(&value, " ? nil : ");
         break;
       case SEM_TYPE_BLOB:
-        bprintf(&return_type, "%s_Nullable", rt->cql_blob_ref);
+        bprintf(&return_type, "NSData *_Nullable");
         return_type_separator = " ";
-        bprintf(&value_convert_begin, "(__bridge %s)", rt->cql_blob_ref);
+        bprintf(&value_convert_begin, "(__bridge NSData *)");
         break;
       case SEM_TYPE_TEXT:
         if (encode && custom_type_for_encoded_column) {
           is_string_column_encoded = 1;
-          bprintf(&return_type, "%s *_Nullable", rt->cql_string_ref_encode);
-          bprintf(&value_convert_begin, "(__bridge %s *)", rt->cql_string_ref_encode);
-        } else {
-          bprintf(&return_type, "%s_Nullable", rt->cql_string_ref);
-          bprintf(&value_convert_begin, "(__bridge %s)", rt->cql_string_ref);
+          bprintf(&return_type, "cql_string_ref_encode *_Nullable");
+          bprintf(&value_convert_begin, "(__bridge cql_string_ref_encode *)");
+        }
+        else {
+          bprintf(&return_type, "NSString *_Nullable");
+          bprintf(&value_convert_begin, "(__bridge NSString *)");
         }
         return_type_separator = " ";
         break;
       case SEM_TYPE_OBJECT:
-        bprintf(&return_type, "%s_Nullable", rt->cql_object_ref);
+        bprintf(&return_type, "NSObject *_Nullable");
         return_type_separator = " ";
-        bprintf(&value_convert_begin, "(__bridge %s)", rt->cql_object_ref);
+        bprintf(&value_convert_begin, "(__bridge NSObject *)");
         break;
     }
-  } else {
+  }
+  else {
     switch (core_type) {
       case SEM_TYPE_INTEGER:
         return_type_separator = " ";
-        bprintf(&return_type, "%s", rt->cql_int32);
+        bprintf(&return_type, "cql_int32");
         break;
       case SEM_TYPE_LONG_INTEGER:
         return_type_separator = " ";
-        bprintf(&return_type, "%s", rt->cql_int64);
+        bprintf(&return_type, "cql_int64");
         break;
       case SEM_TYPE_REAL:
         return_type_separator = " ";
-        bprintf(&return_type, "%s", rt->cql_double);
+        bprintf(&return_type, "cql_double");
         break;
       case SEM_TYPE_BOOL:
         return_type_separator = " ";
-        bprintf(&return_type, "%s", rt->cql_bool);
+        bprintf(&return_type, "cql_bool");
         value_convert_end = " ? YES : NO";
         break;
       case SEM_TYPE_TEXT:
         if (encode && custom_type_for_encoded_column) {
           is_string_column_encoded = 1;
-          bprintf(&return_type, "%s", rt->cql_string_ref_encode);
-          bprintf(&value_convert_begin, "(__bridge %s *)", rt->cql_string_ref_encode);
-        } else {
-          bprintf(&return_type, "%s", rt->cql_string_ref);
-          bprintf(&value_convert_begin, "(__bridge %s)", rt->cql_string_ref);
+          bprintf(&return_type, "cql_string_ref_encode");
+          bprintf(&value_convert_begin, "(__bridge cql_string_ref_encode *)");
+        }
+        else {
+          bprintf(&return_type, "NSString *");
+          bprintf(&value_convert_begin, "(__bridge NSString *)");
         }
         break;
       case SEM_TYPE_BLOB:
-        bprintf(&return_type, "%s", rt->cql_blob_ref);
-        bprintf(&value_convert_begin, "(__bridge %s)", rt->cql_blob_ref);
+        bprintf(&return_type, "NSData *");
+        bprintf(&value_convert_begin, "(__bridge NSData *)");
         break;
       case SEM_TYPE_OBJECT:
-        bprintf(&return_type, "%s", rt->cql_object_ref);
+        bprintf(&return_type, "NSObject *");
         return_type_separator = " ";
-        bprintf(&value_convert_begin, "(__bridge %s)", rt->cql_object_ref);
+        bprintf(&value_convert_begin, "(__bridge NSObject *)");
         break;
     }
   }
@@ -159,12 +162,13 @@ static void cg_objc_proc_result_set_getter(
     "_get_",
     col_name);
 
-  CG_CHARBUF_OPEN_SYM_WITH_PREFIX(c_getter,
-                                  rt->impl_symbol_prefix,
-                                  name,
-                                  "_get_",
-                                  col_name,
-                                  c_getter_suffix);
+  CG_CHARBUF_OPEN_SYM_WITH_PREFIX(
+    c_getter,
+    rt->impl_symbol_prefix,
+    name,
+    "_get_",
+    col_name,
+    c_getter_suffix);
 
   if (fetch_proc) {
     bprintf(&value, "%s%s(cResultSet)%s",
@@ -189,12 +193,11 @@ static void cg_objc_proc_result_set_getter(
   }
   else {
     bprintf(output,
-            "\nstatic inline %s%s%s(%s *resultSet, %s row)\n",
+            "\nstatic inline %s%s%s(%s *resultSet, cql_int32 row)\n",
             return_type.ptr,
             return_type_separator,
             objc_getter.ptr,
-            objc_name,
-            rt->cql_int32);
+            objc_name);
   }
 
   bprintf(output, "{\n");
@@ -308,8 +311,7 @@ static void cg_objc_proc_result_set(ast_node *ast) {
             c_getter, c_name.ptr, "_get_", col, "_is_encoded");
 
         bprintf(h,
-            "\nstatic inline %s %s(%s *resultSet)\n",
-            rt->cql_bool,
+            "\nstatic inline cql_bool %s(%s *resultSet)\n",
             objc_getter.ptr,
             objc_result_set_name.ptr);
         bprintf(h, "{\n");
@@ -325,10 +327,8 @@ static void cg_objc_proc_result_set(ast_node *ast) {
     // It's a debugging function that allow you to turn ON/OFF encoding/decoding when
     // your app is running.
     bprintf(h,
-            "\nstatic inline void %sSetEncoding(%s col, %s encode)\n",
-            objc_name.ptr,
-            rt->cql_int32,
-            rt->cql_bool);
+            "\nstatic inline void %sSetEncoding(cql_int32 col, cql_bool encode)\n",
+            objc_name.ptr);
     bprintf(h, "{\n");
     bprintf(h, "  return %sSetEncoding(col, encode);\n", c_name.ptr);
     bprintf(h, "}\n");
@@ -338,8 +338,7 @@ static void cg_objc_proc_result_set(ast_node *ast) {
   CG_CHARBUF_OPEN_SYM_WITH_PREFIX(result_count, rt->impl_symbol_prefix, name, "_result_count");
 
   bprintf(h,
-          "\nstatic inline %s %s(%s *resultSet)\n",
-          rt->cql_int32,
+          "\nstatic inline cql_int32 %s(%s *resultSet)\n",
           cgs_result_count.ptr,
           objc_result_set_name.ptr);
 
@@ -362,10 +361,7 @@ static void cg_objc_proc_result_set(ast_node *ast) {
             cgs_copy_func_name.ptr,
             objc_result_set_name.ptr);
     if (!out_stmt_proc) {
-      bprintf(h,
-              ", %s from, %s count",
-              rt->cql_int32,
-              rt->cql_int32);
+      bprintf(h, ", cql_int32 from, cql_int32 count");
     }
     bprintf(h, ")\n");
     bprintf(h, "{\n");
@@ -375,7 +371,7 @@ static void cg_objc_proc_result_set(ast_node *ast) {
             copy_func_name.ptr,
             c_convert.ptr,
             out_stmt_proc ? "" : ", from, count");
-    bprintf(h, "  %s(copy);\n", rt->cql_result_set_note_ownership_transferred);
+    bprintf(h, "  cql_result_set_note_ownership_transferred(copy);\n");
     bprintf(h, "  return (__bridge_transfer %s *)copy;\n", objc_name.ptr);
     bprintf(h, "}\n");
   }
@@ -394,7 +390,7 @@ static void cg_objc_proc_result_set(ast_node *ast) {
           cgs_hash_func_name.ptr,
           objc_name.ptr);
   if (!out_stmt_proc) {
-    bprintf(h, ", %s row", rt->cql_int32);
+    bprintf(h, ", cql_int32 row");
   }
   bprintf(h, ")\n");
   bprintf(h, "{\n");
@@ -410,11 +406,11 @@ static void cg_objc_proc_result_set(ast_node *ast) {
           cgs_eq_func_name.ptr,
           objc_name.ptr);
   if (!out_stmt_proc) {
-    bprintf(h, ", %s row1", rt->cql_int32);
+    bprintf(h, ", cql_int32 row1");
   }
   bprintf(h, ", %s *resultSet2", objc_name.ptr);
   if (!out_stmt_proc) {
-    bprintf(h, ", %s row2", rt->cql_int32);
+    bprintf(h, ", cql_int32 row2");
   }
   bprintf(h, ")\n");
   bprintf(h, "{\n");
@@ -508,7 +504,7 @@ cql_noexport void cg_objc_main(ast_node *head) {
   bprintf(&header_file, "%s", rt->header_wrapper_begin);
 
   if (is_string_column_encoded) {
-    bprintf(&header_file, "\n@class %s;\n", rt->cql_string_ref_encode);
+    bprintf(&header_file, "\n@class cql_string_ref_encode;\n");
   }
 
   bprintf(&header_file, "%s", cg_header_output->ptr);

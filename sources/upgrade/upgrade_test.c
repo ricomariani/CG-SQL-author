@@ -94,7 +94,8 @@ cql_code upgrade(sqlite3* db, bool should_use_virtual) {
       return rv;
     }
     cql_result_set_release(result_set);
-  } else {
+  }
+  else {
     test_no_virtual_tables_result_set_ref result_set;
     rv = test_no_virtual_tables_fetch_results(db, &result_set);
     if (rv != SQLITE_OK) {

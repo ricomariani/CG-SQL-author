@@ -72,10 +72,12 @@ cql_noexport void cg_sym_name(cg_symbol_case symbol_case, charbuf *_Nonnull outp
         for (size_t i = 0; i != len; ++i) {
           if (name_component[i] == '_') {
             should_upper = true;
-          } else if (should_upper) {
+          }
+          else if (should_upper) {
             bputc(output, ToUpper(name_component[i]));
             should_upper = false;
-          } else {
+          }
+          else {
             bputc(output, name_component[i]);
           }
         }
@@ -255,7 +257,8 @@ bool_t cg_expand_star(ast_node *_Nonnull ast, void *_Nullable context, charbuf *
           // so we decode the QID stuff when we make the alias
           CSTR table_alias_name = get_inserted_table_alias_string_override(ast);
           bprintf(buffer, "%s", table_alias_name);
-        } else {
+        }
+        else {
           if (is_qid(ast->left)) {
             bprintf(buffer, "[");
             cg_unquote_encoded_qstr(buffer, ast->sem->name);

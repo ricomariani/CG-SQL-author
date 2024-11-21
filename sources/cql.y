@@ -415,7 +415,8 @@ program: top_level_stmts[stmts] {
       else if (options.print_ast) {
         print_root_ast($stmts);
         cql_output("\n");
-      } else if (options.print_dot) {
+      }
+      else if (options.print_dot) {
         cql_output("\ndigraph parse {");
         print_dot($stmts);
         cql_output("\n}\n");
@@ -2817,12 +2818,14 @@ static void print_dot(struct ast_node *node) {
 
   if (is_ast_num(node)) {
     cql_output("\n    %s%u [label = \"%s\" shape=plaintext]", node->type, id, ((struct num_ast_node*)node)->value);
-  } else if (is_ast_str(node)) {
+  }
+  else if (is_ast_str(node)) {
     EXTRACT_STRING(str, node);
     if (is_id(node)) {
       // unescaped name, clean to emit
       cql_output("\n    %s%u [label = \"%s\" shape=plaintext]", node->type, id, str);
-    } else {
+    }
+    else {
       // we have to do this dance to from the encoded in SQL format string literal
       // to an escaped in C-style literal.  The dot output for \n should be the characters
       // \ and n not a newline so we need "\n" to become \"\\n\", hence double encode.
@@ -2840,7 +2843,8 @@ static void print_dot(struct ast_node *node) {
       CHARBUF_CLOSE(encoding);
       CHARBUF_CLOSE(plaintext);
     }
-  } else {
+  }
+  else {
     cql_output("\n    %s%u [label = \"%s\" shape=plaintext]", node->type, id, node->type);
     primitive = false;
   }
@@ -2856,7 +2860,8 @@ static void print_dot(struct ast_node *node) {
   if (ast_has_left(node)) {
     cql_output("\n    %s%u -> %s%u;", node->type, id, node->left->type, next_id);
     print_dot(node->left);
-  } else {
+  }
+  else {
     cql_output("\n    _%u [label = \"%s\" shape=plaintext]", id, ground_symbol);
     cql_output("\n    %s%u -> _%u;", node->type, id, id);
   }
@@ -2864,7 +2869,8 @@ static void print_dot(struct ast_node *node) {
   if (ast_has_right(node)) {
     cql_output("\n %s%u -> %s%u;", node->type, id, node->right->type, next_id);
     print_dot(node->right);
-  } else {
+  }
+  else {
     cql_output("\n    _%u [label = \"%s\" shape=plaintext]", id, ground_symbol);
     cql_output("\n    %s%u -> _%u;", node->type, id, id);
   }
@@ -2919,57 +2925,78 @@ static void parse_cmd(int argc, char **argv) {
     char *arg = argv[a];
     if (strcmp(arg, "--echo") == 0) {
       options.echo_input = 1;
-    } else if (strcmp(arg, "--ast") == 0) {
+    }
+    else if (strcmp(arg, "--ast") == 0) {
       options.print_ast = 1;
-    } else if (strcmp(arg, "--ast_no_echo") == 0) {
+    }
+    else if (strcmp(arg, "--ast_no_echo") == 0) {
       options.print_ast = 1;
       options.ast_no_echo = 1;
-    } else if (strcmp(arg, "--nolines") == 0) {
+    }
+    else if (strcmp(arg, "--nolines") == 0) {
       options.nolines = 1;
-    } else if (strcmp(arg, "--hide_builtins") == 0) {
+    }
+    else if (strcmp(arg, "--hide_builtins") == 0) {
       options.hide_builtins = 1;
-    } else if (strcmp(arg, "--schema_exclusive") == 0) {
+    }
+    else if (strcmp(arg, "--schema_exclusive") == 0) {
       options.schema_exclusive = 1;
-    } else if (strcmp(arg, "--dot") == 0) {
+    }
+    else if (strcmp(arg, "--dot") == 0) {
       options.print_dot = 1;
-    } else if (strcmp(arg, "--exp") == 0) {
+    }
+    else if (strcmp(arg, "--exp") == 0) {
       options.expand = 1;
-    } else if (strcmp(arg, "--sem") == 0) {
+    }
+    else if (strcmp(arg, "--sem") == 0) {
       options.expand = 1;
       options.semantic = 1;
-    } else if (strcmp(arg, "--compress") == 0) {
+    }
+    else if (strcmp(arg, "--compress") == 0) {
       options.compress = 1;
-    } else if (strcmp(arg, "--run_unit_tests") == 0) {
+    }
+    else if (strcmp(arg, "--run_unit_tests") == 0) {
       options.run_unit_tests = 1;
-    } else if (strcmp(arg, "--generate_exports") == 0) {
+    }
+    else if (strcmp(arg, "--generate_exports") == 0) {
       options.generate_exports = 1;
-    } else if (strcmp(arg, "--cg") == 0) {
+    }
+    else if (strcmp(arg, "--cg") == 0) {
       a = gather_arg_params(a, argc, argv, &options.file_names_count, &options.file_names);
       options.codegen = 1;
       options.semantic = 1;
       options.expand = 1;
-    } else if (strcmp(arg, "--include_paths") == 0) {
+    }
+    else if (strcmp(arg, "--include_paths") == 0) {
       a = gather_arg_params(a, argc, argv, &options.include_paths_count, &options.include_paths);
-    } else if (strcmp(arg, "--defines") == 0) {
+    }
+    else if (strcmp(arg, "--defines") == 0) {
       a = gather_arg_params(a, argc, argv, &options.defines_count, &options.defines);
-    } else if (strcmp(arg, "--include_regions") == 0) {
+    }
+    else if (strcmp(arg, "--include_regions") == 0) {
       a = gather_arg_params(a, argc, argv, &options.include_regions_count, &options.include_regions);
-    } else if (strcmp(arg, "--exclude_regions") == 0) {
+    }
+    else if (strcmp(arg, "--exclude_regions") == 0) {
       a = gather_arg_params(a, argc, argv, &options.exclude_regions_count, &options.exclude_regions);
-    } else if (strcmp(arg, "--cqlrt") == 0) {
+    }
+    else if (strcmp(arg, "--cqlrt") == 0) {
       a = gather_arg_param(a, argc, argv, &options.cqlrt, "for the name of the runtime header");
-    } else if (strcmp(arg, "--rt") == 0) {
+    }
+    else if (strcmp(arg, "--rt") == 0) {
       a = gather_arg_param(a, argc, argv, &options.rt, "(e.g., c, objc, json_schema)");
       rt = find_rtdata(options.rt);
       if (!rt) {
         cql_error("unknown cg runtime '%s'\n", options.rt);
         cql_cleanup_and_exit(1);
       }
-    } else if (strcmp(arg, "--test") == 0) {
+    }
+    else if (strcmp(arg, "--test") == 0) {
       options.test = 1;
-    } else if (strcmp(arg, "--dev") == 0) {
+    }
+    else if (strcmp(arg, "--dev") == 0) {
       options.dev = 1;
-    } else if (strcmp(arg, "--in") == 0) {
+    }
+    else if (strcmp(arg, "--in") == 0) {
       a = gather_arg_param(a, argc, argv, NULL, "for the file name");
       FILE *f = fopen(argv[a], "r");
       if (!f) {
@@ -2988,19 +3015,25 @@ static void parse_cmd(int argc, char **argv) {
       yyrestart(f);
 
       current_file = argv[a];
-    } else if (strcmp(arg, "--min_schema_version") == 0) {
+    }
+    else if (strcmp(arg, "--min_schema_version") == 0) {
       a = gather_arg_param(a, argc, argv, NULL, "for the minimum schema version");
       options.min_schema_version = atoi(argv[a]);
-    } else if (strcmp(arg, "--global_proc") == 0) {
+    }
+    else if (strcmp(arg, "--global_proc") == 0) {
       a = gather_arg_param(a, argc, argv, NULL,  "for the global proc name");
       global_proc_name = argv[a];
-    } else if (strcmp(arg, "--c_include_path") == 0) {
+    }
+    else if (strcmp(arg, "--c_include_path") == 0) {
       a = gather_arg_param(a, argc, argv, &options.c_include_path, "for the include path of a C header");
-    } else if (strcmp(arg, "--objc_c_include_path") == 0) {
+    }
+    else if (strcmp(arg, "--objc_c_include_path") == 0) {
       a = gather_arg_param(a, argc, argv, &options.objc_c_include_path, "for the include path of a C header");
-    } else if (strcmp(arg, "--c_include_namespace") == 0) {
+    }
+    else if (strcmp(arg, "--c_include_namespace") == 0) {
       a = gather_arg_param(a, argc, argv, &options.c_include_namespace, "for the C include namespace");
-    } else {
+    }
+    else {
       cql_error("unknown arg '%s'\n", argv[a]);
       cql_cleanup_and_exit(1);
     }
@@ -3379,7 +3412,8 @@ int cql_main(int argc, char **argv) {
 
     if (options.run_unit_tests) {
       run_unit_tests();
-    } else {
+    }
+    else {
       if (yyparse() || parse_error_occurred) {
         cql_exit_on_parse_errors();
       }
@@ -3430,7 +3464,8 @@ static int32_t gather_arg_params(int32_t a, int32_t argc, char **argv, uint32_t 
       a++;
       (*out_count)++;
     }
-  } else {
+  }
+  else {
     cql_error("%s requires additional arguments.\n", argv[a]);
     cql_cleanup_and_exit(1);
   }
@@ -3444,7 +3479,8 @@ static int32_t gather_arg_param(int32_t a, int32_t argc, char **argv, char **out
     if (out_arg) {
       *out_arg = argv[a];
     }
-  } else {
+  }
+  else {
     cql_error("%s requires an additional param%s%s.\n", argv[a], errmsg ? " " : "", errmsg);
     cql_cleanup_and_exit(1);
   }

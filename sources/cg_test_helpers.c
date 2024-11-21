@@ -414,7 +414,8 @@ static void find_parent_column(
 static int32_t cg_validate_value_range(int32_t value) {
   if (1 <= value && value <= DUMMY_TEST_INSERT_ROWS) {
     return value;
-  } else {
+  }
+  else {
     return (value % DUMMY_TEST_INSERT_ROWS) + 1;
   }
 }
@@ -457,9 +458,11 @@ static void cg_parent_column_value(charbuf *output, CSTR table_name, CSTR column
 static void cg_dummy_test_emit_integer_value(charbuf *output, sem_t col_type, int32_t value) {
   if (is_numeric(col_type)) {
     bprintf(output, "%d", value);
-  } else if (is_blob(col_type)) {
+  }
+  else if (is_blob(col_type)) {
     bprintf(output, "CAST(\'%d\' as blob)", value);
-  } else {
+  }
+  else {
     bprintf(output, "\'%d\'", value);
   }
 }
@@ -557,7 +560,8 @@ static void cg_dummy_test_populate(charbuf *gen_insert_tables, ast_node *table_a
 
             if (str_val.used > 1) {
               bprintf(&values, "%s", str_val.ptr);
-            } else {
+            }
+            else {
               cg_dummy_test_emit_integer_value(&values, col_type, index_value);
             }
             CHARBUF_CLOSE(str_val);

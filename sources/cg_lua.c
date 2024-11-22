@@ -5099,13 +5099,14 @@ static void cg_lua_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
       }
       if (!options.compress) {
         // emit source comment
+        gen_sql_callbacks lua_escape = { .escape_attributes_for_lua = true };
         bprintf(out, "\n--[[\n");
         gen_stmt_level = 1;
         gen_set_output_buffer(out);
         if (misc_attrs) {
-          gen_misc_attrs(misc_attrs);
+          gen_with_callbacks(misc_attrs, gen_misc_attrs, &lua_escape);
         }
-        gen_one_stmt(stmt);
+        gen_with_callbacks(stmt, gen_one_stmt, &lua_escape);
         bprintf(out, ";\n--]]\n");
       }
     }

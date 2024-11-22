@@ -5,21 +5,21 @@ require("cqlrt")
 -- The statement ending at line XXXX
 
 --[[
-[[builtin]]
+[ [ builtin ] ]
 DECLARE PROC cql_throw (code INT!) USING TRANSACTION;
 --]]
 
 -- The statement ending at line XXXX
 
 --[[
-[[builtin]]
+[ [ builtin ] ]
 DECLARE PROC cql_cursor_to_blob (C CURSOR, OUT result BLOB!) USING TRANSACTION;
 --]]
 
 -- The statement ending at line XXXX
 
 --[[
-[[builtin]]
+[ [ builtin ] ]
 DECLARE PROC cql_cursor_from_blob (C CURSOR, b BLOB) USING TRANSACTION;
 --]]
 local lua_runtime_generation = 0
@@ -467,7 +467,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-[[vault_sensitive]]
+[ [ vault_sensitive ] ]
 PROC easy_fetch ()
 BEGIN
   CURSOR C FOR
@@ -2431,7 +2431,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-[[suppress_result_set]]
+[ [ suppress_result_set ] ]
 PROC simple_select ()
 BEGIN
   SELECT 1 AS x;
@@ -2938,7 +2938,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-[[identity=(id)]]
+[ [ identity=(id) ] ]
 PROC simple_identity ()
 BEGIN
   SELECT 1 AS id, 2 AS data;
@@ -2975,7 +2975,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-[[identity=(col1, col2)]]
+[ [ identity=(col1, col2) ] ]
 PROC complex_identity ()
 BEGIN
   SELECT 1 AS col1, 2 AS col2, 3 AS data;
@@ -3012,7 +3012,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-[[identity=(id)]]
+[ [ identity=(id) ] ]
 PROC out_cursor_identity ()
 BEGIN
   CURSOR C FOR
@@ -3060,7 +3060,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-[[vault_sensitive]]
+[ [ vault_sensitive ] ]
 PROC radioactive_proc ()
 BEGIN
   SELECT *
@@ -3150,7 +3150,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-[[autodrop=(table1, table2)]]
+[ [ autodrop=(table1, table2) ] ]
 PROC autodropper ()
 BEGIN
   SELECT 1 AS a, 2 AS b;
@@ -3860,7 +3860,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-[[vault_sensitive]]
+[ [ vault_sensitive ] ]
 PROC out_union_dml ()
 BEGIN
   CURSOR x FOR
@@ -3899,7 +3899,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-[[vault_sensitive]]
+[ [ vault_sensitive ] ]
 PROC out_union_dml_for_call ()
 BEGIN
   CURSOR C FOR
@@ -4287,7 +4287,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-[[suppress_getters]]
+[ [ suppress_getters ] ]
 PROC lotsa_columns_no_getters ()
 BEGIN
   SELECT *
@@ -4325,7 +4325,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-[[generate_copy]]
+[ [ generate_copy ] ]
 PROC sproc_with_copy ()
 BEGIN
   SELECT *
@@ -4363,7 +4363,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-[[emit_setters]]
+[ [ emit_setters ] ]
 PROC emit_object_with_setters (o OBJECT!, x OBJECT!, i INT!, l LONG!, b BOOL!, d REAL!, t TEXT!, bl BLOB!)
 BEGIN
   CURSOR C LIKE emit_object_with_setters ARGUMENTS;
@@ -4414,7 +4414,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-[[emit_setters]]
+[ [ emit_setters ] ]
 PROC emit_setters_with_nullables (o OBJECT, x OBJECT, i INT, l LONG, b BOOL, d REAL, t TEXT, bl BLOB)
 BEGIN
   CURSOR C LIKE emit_setters_with_nullables ARGUMENTS;
@@ -4456,7 +4456,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-[[emit_setters]]
+[ [ emit_setters ] ]
 PROC no_out_with_setters ()
 BEGIN
   SELECT *
@@ -4494,7 +4494,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-[[suppress_result_set]]
+[ [ suppress_result_set ] ]
 PROC lotsa_columns_no_result_set ()
 BEGIN
   SELECT *
@@ -4558,8 +4558,8 @@ end
 -- The statement ending at line XXXX
 
 --[[
-[[vault_sensitive=(id, name)]]
-[[custom_type_for_encoded_column]]
+[ [ vault_sensitive=(id, name) ] ]
+[ [ custom_type_for_encoded_column ] ]
 PROC vault_sensitive_with_values_proc ()
 BEGIN
   SELECT *
@@ -4597,8 +4597,8 @@ end
 -- The statement ending at line XXXX
 
 --[[
-[[vault_sensitive=(id, name)]]
-[[custom_type_for_encoded_column]]
+[ [ vault_sensitive=(id, name) ] ]
+[ [ custom_type_for_encoded_column ] ]
 PROC vault_not_nullable_sensitive_with_values_proc ()
 BEGIN
   SELECT *
@@ -4636,7 +4636,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-[[vault_sensitive]]
+[ [ vault_sensitive ] ]
 PROC vault_sensitive_mixed_proc ()
 BEGIN
   SELECT *
@@ -4674,7 +4674,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-[[vault_sensitive]]
+[ [ vault_sensitive ] ]
 PROC vault_union_all_table_proc ()
 BEGIN
   SELECT *
@@ -4715,7 +4715,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-[[vault_sensitive=alias_name]]
+[ [ vault_sensitive=alias_name ] ]
 PROC vault_alias_column_proc ()
 BEGIN
   SELECT name AS alias_name
@@ -4753,7 +4753,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-[[vault_sensitive=alias_name]]
+[ [ vault_sensitive=alias_name ] ]
 PROC vault_alias_column_name_proc ()
 BEGIN
   SELECT name AS alias_name
@@ -4791,7 +4791,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-[[vault_sensitive]]
+[ [ vault_sensitive ] ]
 PROC vault_cursor_proc ()
 BEGIN
   CURSOR C FOR
@@ -4825,7 +4825,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-[[vault_sensitive=(title, (id, name))]]
+[ [ vault_sensitive=(title, (id, name)) ] ]
 PROC vault_sensitive_with_context_and_sensitive_columns_proc ()
 BEGIN
   SELECT *
@@ -4863,7 +4863,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-[[vault_sensitive=((id, name))]]
+[ [ vault_sensitive=((id, name)) ] ]
 PROC vault_sensitive_with_no_context_and_sensitive_columns_proc ()
 BEGIN
   SELECT *
@@ -4901,7 +4901,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-[[vault_sensitive=(title, (id, name))]]
+[ [ vault_sensitive=(title, (id, name)) ] ]
 PROC vault_sensitive_with_context_and_no_sensitive_columns_proc ()
 BEGIN
   SELECT *
@@ -6398,7 +6398,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-[[private]]
+[ [ private ] ]
 PROC private_proc (OUT x INT)
 BEGIN
   SET x := 1;
@@ -6416,7 +6416,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-[[private]]
+[ [ private ] ]
 PROC private_out_union ()
 BEGIN
   CURSOR C LIKE SELECT 1 AS a_field;
@@ -6485,7 +6485,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-[[suppress_getters]]
+[ [ suppress_getters ] ]
 PROC no_getters_out_union ()
 BEGIN
   CURSOR C LIKE SELECT 1 AS a_field;
@@ -6554,7 +6554,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-[[suppress_result_set]]
+[ [ suppress_result_set ] ]
 PROC suppress_results_out_union ()
 BEGIN
   CURSOR C LIKE SELECT 1 AS a_field;
@@ -6623,7 +6623,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-[[private]]
+[ [ private ] ]
 PROC private_result (OUT x INT)
 BEGIN
   SELECT 1 AS x;
@@ -6648,7 +6648,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-[[private]]
+[ [ private ] ]
 DECLARE PROC private_fwd_ref (x INT!);
 --]]
 
@@ -7094,7 +7094,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-[[private]]
+[ [ private ] ]
 PROC private_proc_without_a_contract (t TEXT!)
 BEGIN
 END;
@@ -7891,7 +7891,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-[[private]]
+[ [ private ] ]
 PROC simple_shared_frag ()
 BEGIN
   SELECT *
@@ -8359,7 +8359,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-[[emit_setters]]
+[ [ emit_setters ] ]
 PROC simple_container_proc ()
 BEGIN
   CURSOR C LIKE (a INT, b INT!, c OBJECT<simple_child_proc SET>);
@@ -8450,7 +8450,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-[[private]]
+[ [ private ] ]
 PROC explain_equery_plan_backed (OUT x BOOL!)
 BEGIN
   EXPLAIN QUERY PLAN

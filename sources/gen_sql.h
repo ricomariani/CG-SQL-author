@@ -171,6 +171,9 @@ typedef struct gen_sql_callbacks {
   // boolean storage.
   bool_t long_to_int_conv;
 
+  // bool_t escape attributes for Lua [[builtin]] looks like it ends a lua comment
+  bool_t escape_attributes_for_lua;
+
   // Each time a table value function is encountered in the AST, this callback is invoked
   // this is to allow the table value function reference to be noted and replaced with table name in the generated SQL
   gen_sql_callback _Nullable table_function_callback;

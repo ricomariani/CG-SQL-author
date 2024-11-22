@@ -1861,7 +1861,6 @@ begin
   end;
 end;
 
-
 [[suppress_result_set]]
 proc simple_select()
 begin
@@ -3847,7 +3846,9 @@ end;
 
 -- TEST: private proc forward ref results in static prototype
 -- this doesn't mean anything in Lua, no result set
--- + [[private]]
+-- note Lua friends comment echoed
+-- + [ [ private ] ]
+-- + DECLARE PROC private_fwd_ref (x INT!);
 [[private]]
 declare proc private_fwd_ref(x integer not null);
 

@@ -259,8 +259,19 @@ static void gen_misc_attr(ast_node *ast) {
     is_ast_str(ast->left->left) &&
     !StrCaseCmp("cql", ((str_ast_node *)(ast->left->left))->value);
 
+  CSTR attr_open = "[[";
+  CSTR attr_close = "]]";
+
+  if (gen_callbacks && gen_callbacks->escape_attributes_for_lua) {
+    // in Lua comments ]] ends a comment, so we need the attribute to not match that
+    // fortunately "[ [ builtin ] ]" is also valid syntax but in any case it's
+    // just a comment
+    attr_open = "[ [ ";
+    attr_close = " ] ]";
+  }
+
   if (is_cql) {
-    gen_printf("[[");
+    gen_printf("%s", attr_open);
     gen_name(ast->left->right);
   }
   else {
@@ -279,7 +290,7 @@ static void gen_misc_attr(ast_node *ast) {
     gen_misc_attr_value(ast->right);
   }
   if (is_cql) {
-    gen_printf("]]\n");
+    gen_printf("%s\n", attr_close);
   }
   else {
     gen_printf(")\n");

@@ -1295,9 +1295,7 @@ This error is saying that there is some other field in the table 'd' and it was 
 
 -----
 
-### CQL0168: CQL has no good way to generate dummy blobs; not supported for now
-
-In a value cursor with dummy data specified, one of the columns in the cursor is of type blob.  There's no good way to create dummy data for blobs so that isn't supported.
+### CQL0168 available for re-use
 
 -----
 

@@ -3258,6 +3258,35 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
+[[builtin]]
+DECLARE FUNC cql_blob_from_int (prefix TEXT, val INT!) CREATE BLOB!;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: blob notnull create_func
+    | {name cql_blob_from_int}: blob notnull create_func
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: prefix: text variable in
+      | | | {param_detail}: prefix: text variable in
+      | |   | {name prefix}: prefix: text variable in
+      | |   | {type_text}: text
+      | | {params}
+      |   | {param}: val: integer notnull variable in
+      |     | {param_detail}: val: integer notnull variable in
+      |       | {name val}: val: integer notnull variable in
+      |       | {notnull}: integer notnull
+      |         | {type_int}: integer
+      | {create_data_type}: blob notnull create_func
+        | {notnull}: blob notnull
+          | {type_blob}: blob
+
+The statement ending at line XXXX
+
 @DECLARE_DEPLOYABLE_REGION base;
 
   {declare_deployable_region_stmt}: base: region deployable

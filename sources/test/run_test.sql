@@ -1753,6 +1753,16 @@ begin
   end;
 end;
 
+TEST!(blob_dummy_defaults,
+BEGIN
+  cursor C like blob_table;
+  fetch C() from values() @dummy_seed(5) @dummy_nullables;
+  let s1 := string_from_blob(C.b1);
+  let s2 := string_from_blob(C.b2);
+  EXPECT!(s1 == "b1_5");
+  EXPECT!(s2 == "b2_5");
+END);
+
 TEST!(blob_data_manip,
 BEGIN
   call load_blobs();

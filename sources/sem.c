@@ -370,6 +370,7 @@ typedef struct dummy_info {
   ast_node *insert_list_tail;
   sem_join *jptr;               // the scope of the name
   bool_t use_null;              // use null for the dummy value rather than the seed
+  bool_t sql_context;           // true if the dummy value is evaluated by SQLite (e.g. an insert value)
 } dummy_info;
 
 static void sem_synthesize_dummy_value(dummy_info *info);
@@ -17593,7 +17594,8 @@ static void sem_column_spec_and_values(ast_node *ast, ast_node *table_ast) {
       info.name_list_head = column_spec->left;
       info.insert_list_tail = insert_list_tail;
       info.insert_list_head = columns_values->right;
-      info.use_null = 0;
+      info.use_null = false;
+      info.sql_context = true;
 
       AST_REWRITE_INFO_SET(column_spec->lineno, column_spec->filename);
 
@@ -18129,9 +18131,6 @@ cql_noexport void sem_validate_cursor_blob_compat(
 //     then we give an error unless dummy data is specified.  If dummy data is specified
 //     then we rewrite the value list and the column list to add the needed columns and
 //     use a dummy value.
-// Note: fetch values doesn't go through SQlite and so we can't use the (CAST printf() as blob) trick
-//     to make dummy blob data.  Well, we could but it would have to be even more complex.
-//     (select CAST(printf(...) as blob))  which seems excessive so we just punt.
 static void sem_fetch_values_stmt(ast_node *ast) {
   Contract(is_ast_fetch_values_stmt(ast));
   Contract(!current_joinscope);  // I don't belong inside a select(!)
@@ -18261,12 +18260,7 @@ static void sem_fetch_values_stmt(ast_node *ast) {
       info.insert_list_tail = insert_list_tail;
       info.insert_list_head = columns_values->right;
       info.use_null = will_use_null;
-
-      if (is_blob(sem_type_col) && !info.use_null) {
-        report_error(ast, "CQL0168: CQL has no good way to generate dummy blobs; not supported for now", NULL);
-        valid = 0;
-        break;
-      }
+      info.sql_context = false;
 
       AST_REWRITE_INFO_SET(columns_values->lineno, columns_values->filename);
 
@@ -18398,6 +18392,24 @@ static ast_node *printf_col_for_dummy(CSTR col, CSTR seed_name) {
   return new_ast_call(ast_printf, call_arg_list);
 }
 
+// This helper produces a "cql_blob_from_int" text "col_%d" with null terminator
+// which is the format of string and blob columns given a dummy seed value for the %d.
+// The local variable "seed" is used for the column.  These AST nodes will be used
+// in the rewrite of the dummy columns for blobs when printf cannot be used, i.e.
+// in a non SQLite context.
+static ast_node *blob_from_int_for_dummy(CSTR col, CSTR seed_name) {
+  ast_node *ast_blob_from_int = new_ast_str("cql_blob_from_int");
+  ast_node *ast_seed = new_ast_str(seed_name);
+
+  CSTR prefix = dup_printf("'%s_'", col);  // this turns into 'col_'
+  ast_node *ast_string = new_ast_str(prefix);
+
+  ast_node *args = new_ast_arg_list(ast_string, new_ast_arg_list(ast_seed, NULL));
+  ast_node *call_filter_clause = new_ast_call_filter_clause(NULL, NULL);
+  ast_node *call_arg_list = new_ast_call_arg_list(call_filter_clause, args);
+  return new_ast_call(ast_blob_from_int, call_arg_list);
+}
+
 // If we're doing either a FETCH from values or an INSERT from values
 // we might need a dummy value.  To accomplish this we add the missing
 // value to the column list and to the values list, changing the AST.
@@ -18453,8 +18465,13 @@ static void sem_synthesize_dummy_value(dummy_info *info) {
     expr = new_ast_str(seed_name);
   }
   else if (is_blob(info->sem_type_col)) {
-    ast_node *inner = printf_col_for_dummy(info->name, seed_name);
-    expr = new_ast_cast_expr(inner, new_ast_type_blob(NULL));
+    if (info->sql_context) {
+      ast_node *inner = printf_col_for_dummy(info->name, seed_name);
+      expr = new_ast_cast_expr(inner, new_ast_type_blob(NULL));
+    }
+    else {
+      expr = blob_from_int_for_dummy(info->name, seed_name);
+    }
   }
   else {
     // strings are column_name_{seed} -- using printf

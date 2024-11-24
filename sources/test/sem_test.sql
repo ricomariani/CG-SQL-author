@@ -7644,10 +7644,11 @@ begin
   out C;
 end;
 
--- TEST: fetch cursor from values with dummy values but one is a blob
--- + {fetch_values_stmt}: err
--- * error: % CQL has no good way to generate dummy blobs; not supported for now
--- +1 error:
+-- TEST: fetch cursor from values with dummy values but one is a blob, supported with helper
+-- + {fetch_values_stmt}: ok
+-- + {call}: blob notnull create_func
+-- + {name cql_blob_from_int}
+-- - error:
 proc fetch_values_blob_dummy()
 begin
   cursor C fetch from call blob_out();

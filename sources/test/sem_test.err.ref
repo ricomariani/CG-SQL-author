@@ -715,7 +715,6 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_cursor'
 test/sem_test.sql:XXXX:1: error: in str : CQL0165: fetch values is only for value cursors, not for sqlite cursors 'my_cursor'
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 test/sem_test.sql:XXXX:1: error: in fetch_values_stmt : CQL0166: count of columns differs from count of values
-test/sem_test.sql:XXXX:1: error: in fetch_values_stmt : CQL0168: CQL has no good way to generate dummy blobs; not supported for now
 test/sem_test.sql:XXXX:1: error: in fetch_values_stmt : CQL0167: required column missing in FETCH statement 'B'
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'B'

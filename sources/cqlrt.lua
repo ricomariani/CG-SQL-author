@@ -1710,3 +1710,10 @@ function cql_cursor_from_blob(db, C, C_types, C_fields, buffer)
 ::cql_error::
   return rc
 end
+
+function cql_blob_from_int(prefix, seed)
+  if prefix == nil then
+    prefix = ''
+  end
+  return prefix..seed
+end

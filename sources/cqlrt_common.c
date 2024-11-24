@@ -4731,6 +4731,25 @@ cql_string_ref _Nonnull cql_cursor_format(
   return result;
 }
 
+// Create a blob from an integer value, this is used
+// for dummy data generation and pretty much not interesting
+// for anything else.  The blob is just the ascii representation
+// of the integer value.
+cql_blob_ref _Nonnull cql_blob_from_int(cql_string_ref _Nullable prefix, cql_int32 value) {
+  cql_bytebuf b;
+  cql_bytebuf_open(&b);
+  if (prefix) {
+    cql_alloc_cstr(temp, prefix);
+    cql_bprintf(&b, "%s", temp);
+    cql_free_cstr(temp, prefix);
+  }
+  cql_bprintf(&b, "%d", value);
+  cql_bytebuf_append_null(&b);
+  cql_blob_ref result = cql_blob_ref_new(b.ptr, b.used);
+  cql_bytebuf_close(&b);
+  return result;
+}
+
 // type of the indicated field
 // this is also available as <some_cursor>:type(i)
 int32_t cql_cursor_column_type(
@@ -7004,3 +7023,4 @@ cql_object_ref _Nullable cql_unbox_object(cql_object_ref _Nullable box) {
        return NULL;
     }
 }
+

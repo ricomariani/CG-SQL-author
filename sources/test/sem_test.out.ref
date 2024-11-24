@@ -28468,20 +28468,18 @@ The statement ending at line XXXX
 PROC fetch_values_blob_dummy ()
 BEGIN
   CURSOR C FETCH FROM CALL blob_out();
-  FETCH C() FROM VALUES() @DUMMY_SEED(123) @DUMMY_NULLABLES;
+  FETCH C(B) FROM VALUES(cql_blob_from_int('B_', _seed_)) @DUMMY_SEED(123) @DUMMY_NULLABLES;
 END;
 
-test/sem_test.sql:XXXX:1: error: in fetch_values_stmt : CQL0168: CQL has no good way to generate dummy blobs; not supported for now
-
-  {create_proc_stmt}: err
-  | {name fetch_values_blob_dummy}: err
+  {create_proc_stmt}: ok dml_proc
+  | {name fetch_values_blob_dummy}: ok dml_proc
   | {proc_params_stmts}
-    | {stmt_list}: err
+    | {stmt_list}: ok
       | {declare_value_cursor}: C: blob_out: { B: blob } variable dml_proc shape_storage value_cursor
       | | {name C}: C: blob_out: { B: blob } variable dml_proc shape_storage value_cursor
       | | {call_stmt}: C: blob_out: { B: blob } variable dml_proc shape_storage uses_out
       |   | {name blob_out}: C: blob_out: { B: blob } variable dml_proc shape_storage uses_out
-      | {fetch_values_stmt}: err
+      | {fetch_values_stmt}: ok
         | {insert_dummy_spec}: integer notnull
         | | {int 123}: integer notnull
         | | {int 2}
@@ -28489,6 +28487,17 @@ test/sem_test.sql:XXXX:1: error: in fetch_values_stmt : CQL0168: CQL has no good
           | {name C}: C: blob_out: { B: blob } variable dml_proc shape_storage value_cursor
           | {columns_values}: ok
             | {column_spec}
+            | | {name_list}
+            |   | {name B}: B: blob
+            | {insert_list}
+              | {call}: blob notnull create_func
+                | {name cql_blob_from_int}
+                | {call_arg_list}
+                  | {call_filter_clause}
+                  | {arg_list}: ok
+                    | {strlit 'B_'}: text notnull
+                    | {arg_list}
+                      | {name _seed_}: _seed_: integer notnull variable
 
 The statement ending at line XXXX
 

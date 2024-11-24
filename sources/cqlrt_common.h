@@ -598,21 +598,21 @@ CQL_EXPORT sqlite3_stmt *_Nullable cql_unbox_stmt(cql_object_ref _Nonnull ref);
 
 
 // boxing helpers for primitive types
-cql_object_ref _Nonnull cql_box_int(cql_nullable_int32 data);
-cql_nullable_int32 cql_unbox_int(cql_object_ref _Nullable box);
-cql_object_ref _Nonnull cql_box_real(cql_nullable_double data);
-cql_nullable_double cql_unbox_real(cql_object_ref _Nullable box);
-cql_object_ref _Nonnull cql_box_bool(cql_nullable_bool data);
-cql_nullable_bool cql_unbox_bool(cql_object_ref _Nullable box);
-cql_object_ref _Nonnull cql_box_long(cql_nullable_int64 data);
-cql_nullable_int64 cql_unbox_long(cql_object_ref _Nullable box);
-cql_object_ref _Nonnull cql_box_text(cql_string_ref _Nullable data);
-cql_string_ref _Nullable cql_unbox_text(cql_object_ref _Nullable box);
-cql_object_ref _Nonnull cql_box_blob(cql_blob_ref _Nullable data);
-cql_blob_ref _Nullable cql_unbox_blob(cql_object_ref _Nullable box);
-cql_object_ref _Nonnull cql_box_object(cql_object_ref _Nullable data);
-cql_object_ref _Nullable cql_unbox_object(cql_object_ref _Nullable box);
-int32_t cql_box_get_type(cql_object_ref _Nullable box);
+CQL_EXPORT cql_object_ref _Nonnull cql_box_int(cql_nullable_int32 data);
+CQL_EXPORT cql_nullable_int32 cql_unbox_int(cql_object_ref _Nullable box);
+CQL_EXPORT cql_object_ref _Nonnull cql_box_real(cql_nullable_double data);
+CQL_EXPORT cql_nullable_double cql_unbox_real(cql_object_ref _Nullable box);
+CQL_EXPORT cql_object_ref _Nonnull cql_box_bool(cql_nullable_bool data);
+CQL_EXPORT cql_nullable_bool cql_unbox_bool(cql_object_ref _Nullable box);
+CQL_EXPORT cql_object_ref _Nonnull cql_box_long(cql_nullable_int64 data);
+CQL_EXPORT cql_nullable_int64 cql_unbox_long(cql_object_ref _Nullable box);
+CQL_EXPORT cql_object_ref _Nonnull cql_box_text(cql_string_ref _Nullable data);
+CQL_EXPORT cql_string_ref _Nullable cql_unbox_text(cql_object_ref _Nullable box);
+CQL_EXPORT cql_object_ref _Nonnull cql_box_blob(cql_blob_ref _Nullable data);
+CQL_EXPORT cql_blob_ref _Nullable cql_unbox_blob(cql_object_ref _Nullable box);
+CQL_EXPORT cql_object_ref _Nonnull cql_box_object(cql_object_ref _Nullable data);
+CQL_EXPORT cql_object_ref _Nullable cql_unbox_object(cql_object_ref _Nullable box);
+CQL_EXPORT int32_t cql_box_get_type(cql_object_ref _Nullable box);
 
 // String literals can be stored in a compressed format using the --compress option
 // and the cql_compressed primitive.  This helper function gives us a normal string
@@ -623,7 +623,7 @@ CQL_EXPORT cql_string_ref _Nonnull cql_uncompress(const char *_Nonnull base, con
 // A recreate group can possibly be updated if all we did is add a new table to it.  If we have to do
 // something more complicated then we have to drop the whole thing and and rebuild it from scratch.
 // This code handles the fallback case.
-cql_code cql_rebuild_recreate_group(
+CQL_EXPORT cql_code cql_rebuild_recreate_group(
   sqlite3 *_Nonnull db,
   cql_string_ref _Nonnull tables,
   cql_string_ref _Nonnull indices,
@@ -635,7 +635,7 @@ cql_code cql_rebuild_recreate_group(
 // turns out to be ok because UDFS won't affect the plan anyway.  This code creates
 // a stub UDF that does nothing so that the code compiles as written allowing a
 // plan to be created.  The query plan code calls this function once for each required UDF.
-cql_code cql_create_udf_stub(sqlite3 *_Nonnull db, cql_string_ref _Nonnull name);
+CQL_EXPORT cql_code cql_create_udf_stub(sqlite3 *_Nonnull db, cql_string_ref _Nonnull name);
 
 void bcreatekey(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *_Nonnull *_Nonnull argv);
 void bgetkey(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *_Nonnull *_Nonnull argv);
@@ -647,6 +647,7 @@ void bgetval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *_No
 void bgetval_type(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *_Nonnull *_Nonnull argv);
 void bupdateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *_Nonnull *_Nonnull argv);
 
-cql_code cql_throw(sqlite3 *_Nonnull db, int code);
+CQL_EXPORT cql_code cql_throw(sqlite3 *_Nonnull db, int code);
+CQL_EXPORT cql_blob_ref _Nonnull cql_blob_from_int(cql_string_ref _Nullable prefix, cql_int32 value);
 
 CQL_EXTERN_C_END

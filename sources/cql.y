@@ -3391,6 +3391,9 @@ cql_noexport CSTR cql_builtin_text() {
     "[[builtin]]"
     "@op cursor: call from_blob as cql_cursor_from_blob;"
 
+    "[[builtin]]"
+    "declare function cql_blob_from_int(prefix text, val int!) create blob!;"
+
     "@@end_include@@"
     ;
 }

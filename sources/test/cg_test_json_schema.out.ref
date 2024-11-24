@@ -7322,6 +7322,38 @@
 
     The statement ending at line XXXX
 
+    [[builtin]]
+    DECLARE FUNC cql_blob_from_int (prefix TEXT, val INT!) CREATE BLOB!
+
+    {
+      "name" : "cql_blob_from_int",
+      "args" : [
+        {
+          "name" : "prefix",
+          "type" : "text",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "val",
+          "type" : "integer",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "blob",
+        "isNotNull" : 1
+      },
+      "createsObject" : 1
+    },
+
+    The statement ending at line XXXX
+
     @ATTRIBUTE(foo=bar)
     DECLARE FUNC decl_func_take_all_types_func (t BOOL, i INT, l LONG, r REAL, bl BLOB, str TEXT, obj OBJECT, t_nn BOOL!, i_nn INT!, l_nn LONG!, r_nn REAL!, bl_nn BLOB!, str_nn TEXT!, obj_nn OBJECT!) BOOL
 

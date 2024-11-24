@@ -2934,6 +2934,33 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
+[[builtin]]
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}
+    | {name cql_blob_from_int}
+    | {func_params_return}
+      | {params}
+      | | {param}
+      | | | {param_detail}
+      | |   | {name prefix}
+      | |   | {type_text}
+      | | {params}
+      |   | {param}
+      |     | {param_detail}
+      |       | {name val}
+      |       | {notnull}
+      |         | {type_int}
+      | {create_data_type}
+        | {notnull}
+          | {type_blob}
+
+The statement ending at line XXXX
+
   {expr_macro_def}
   | {macro_name_formals}
   | | {name foo}

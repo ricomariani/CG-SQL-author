@@ -2719,9 +2719,7 @@ This is almost certainly a cut/paste from a different location that needs to be 
 
 -----
 
-### CQL0341: argument must be a variable in function 'function_name'
-
-The argument for the CQL builtin function 'function_name' should always be a variable. It can not be an expression for example
+### CQL0341 available for re-use
 
 -----
 

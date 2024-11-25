@@ -51613,7 +51613,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0061: in cql_cursor_diff_col, all c
           | {call_arg_list}
             | {call_filter_clause}
             | {arg_list}: ok
-              | {name c1}: c1: select: { x: integer notnull } variable dml_proc shape_storage serialize
+              | {name c1}: c1: select: { x: integer notnull } variable dml_proc shape_storage
               | {arg_list}
                 | {name c2}: err
 
@@ -51688,9 +51688,9 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0342: cursor arguments must have i
           | {call_arg_list}
             | {call_filter_clause}
             | {arg_list}: ok
-              | {name c1}: c1: select: { x: integer notnull, z: text notnull } variable dml_proc shape_storage serialize
+              | {name c1}: c1: select: { x: integer notnull, z: text notnull } variable dml_proc shape_storage
               | {arg_list}
-                | {name c2}: c2: select: { x: integer notnull } variable dml_proc shape_storage serialize
+                | {name c2}: c2: select: { x: integer notnull } variable dml_proc shape_storage
 
 The statement ending at line XXXX
 
@@ -51780,7 +51780,7 @@ only in 2nd: v text notnull
           | {call_arg_list}
             | {call_filter_clause}
             | {arg_list}: ok
-              | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage serialize
+              | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
               | {arg_list}
                 | {name c2}: err
 
@@ -51858,9 +51858,9 @@ END;
           | {call_arg_list}
             | {call_filter_clause}
             | {arg_list}: ok
-              | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage serialize
+              | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
               | {arg_list}
-                | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage serialize
+                | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
 
 The statement ending at line XXXX
 
@@ -51937,9 +51937,9 @@ END;
             | {call_arg_list}
               | {call_filter_clause}
               | {arg_list}: ok
-                | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage serialize
+                | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
                 | {arg_list}
-                  | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage serialize
+                  | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
 
 The statement ending at line XXXX
 
@@ -52026,9 +52026,9 @@ END;
             | {call_arg_list}
               | {call_filter_clause}
               | {arg_list}: ok
-                | {name c1}: c1: select: { x: integer, y: text notnull } variable dml_proc shape_storage serialize
+                | {name c1}: c1: select: { x: integer, y: text notnull } variable dml_proc shape_storage
                 | {arg_list}
-                  | {name c2}: c2: select: { x: integer, y: text notnull } variable dml_proc shape_storage serialize
+                  | {name c2}: c2: select: { x: integer, y: text notnull } variable dml_proc shape_storage
 
 The statement ending at line XXXX
 

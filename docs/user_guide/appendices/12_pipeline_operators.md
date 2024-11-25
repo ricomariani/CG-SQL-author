@@ -1,6 +1,6 @@
 ---
 title: "Appendix 12: Pipeline Overloads"
-weight: 2
+weight: 12
 ---
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
@@ -10,7 +10,7 @@ weight: 2
 -->
 
 These can be extracted from `cql.y` to get an always current list and are largely self explanatory.
-Each `@op` directive defines some pipeline shortcuts. These are discussed in Chapter 12.
+Each `@op` directive defines some pipeline shortcuts. These are discussed in [Chapter 8](../08_functions.md)
 
 ### Boxing and Unboxing
 

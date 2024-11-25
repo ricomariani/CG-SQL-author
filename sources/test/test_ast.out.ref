@@ -2344,6 +2344,32 @@ The statement ending at line XXXX
   |     | {name cql}
   |     | {name builtin}
   | {declare_func_stmt}
+    | {name cql_cursor_column_name}
+    | {func_params_return}
+      | {params}
+      | | {param}
+      | | | {param_detail}
+      | |   | {name C}
+      | |   | {type_cursor}
+      | | {params}
+      |   | {param}
+      |     | {param_detail}
+      |       | {name icol}
+      |       | {notnull}
+      |         | {type_int}
+      | {create_data_type}
+        | {type_text}
+
+The statement ending at line XXXX
+
+[[builtin]]
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}
     | {name cql_cursor_get_bool}
     | {func_params_return}
       | {params}
@@ -2627,6 +2653,23 @@ The statement ending at line XXXX
       | {op_vals}
         | {name type}
         | {name cql_cursor_column_type}
+
+The statement ending at line XXXX
+
+[[builtin]]
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}
+    | {name CURSOR}
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name name}
+        | {name cql_cursor_column_name}
 
 The statement ending at line XXXX
 

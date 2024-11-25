@@ -4770,6 +4770,24 @@ int32_t cql_cursor_column_type(
   return type;
 }
 
+// name of the indicated field
+// this is also available as <some_cursor>:name(i)
+cql_string_ref _Nullable cql_cursor_column_name(
+  cql_dynamic_cursor *_Nonnull dyn_cursor,
+  int32_t i)
+{
+  uint16_t *offsets = dyn_cursor->cursor_col_offsets; // field offsets for values
+  const char **fields = dyn_cursor->cursor_fields; // field names for printing
+
+  uint16_t count = offsets[0];  // the first index is the count of fields
+
+  if (i < 0 || i >= count) {
+    return NULL;
+  }
+
+  return cql_string_ref_new(fields[i]);
+}
+
 // extract a boolean from the indicated field number of the cursor if there is one
 // this is also available as <some_cursor>:to_bool(i)
 cql_nullable_bool cql_cursor_get_bool(

@@ -908,6 +908,13 @@ function cql_cursor_column_type(C, types, fields, i)
   return type
 end
 
+function cql_cursor_column_name(C, types, fields, i)
+  if i < 0 or i >= #fields then
+    return nil
+  end
+  return fields[i+1]
+end
+
 function cql_cursor_get_any(C, types, fields, i, reqd)
   if i >= 0 and i < #fields then
     i = i + 1

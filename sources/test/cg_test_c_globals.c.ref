@@ -70,6 +70,7 @@ extern cql_int32 cql_real_list_count(cql_object_ref _Nonnull list);
 extern cql_object_ref _Nonnull cql_real_list_add(cql_object_ref _Nonnull list, cql_double value_);
 extern cql_int32 cql_cursor_column_count(cql_dynamic_cursor *_Nonnull C);
 extern cql_int32 cql_cursor_column_type(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
+extern cql_string_ref _Nullable cql_cursor_column_name(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
 extern cql_nullable_bool cql_cursor_get_bool(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
 extern cql_nullable_int32 cql_cursor_get_int(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
 extern cql_nullable_int64 cql_cursor_get_long(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);

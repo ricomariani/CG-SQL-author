@@ -304,6 +304,12 @@ cql_int64 cql_cursor_hash(cql_dynamic_cursor *_Nonnull dyn_cursor);
 // compare cursors using metadata
 cql_bool cql_cursors_equal(cql_dynamic_cursor *_Nonnull c1, cql_dynamic_cursor *_Nonnull c2);
 
+// generic access to type of nth column
+CQL_EXPORT int32_t cql_cursor_column_type(cql_dynamic_cursor *_Nonnull dyn_cursor, int32_t i);
+
+// generic access to name of nth column
+CQL_EXPORT cql_string_ref _Nullable cql_cursor_column_name(cql_dynamic_cursor *_Nonnull dyn_cursor, int32_t i);
+
 // compare two rows for equality
 CQL_EXPORT cql_bool cql_rows_equal(cql_result_set_ref _Nonnull rs1, cql_int32 row1, cql_result_set_ref _Nonnull rs2, cql_int32 row2);
 

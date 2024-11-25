@@ -6964,6 +6964,15 @@ BEGIN
   EXPECT!(CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_NOT_NULL == C:type(4));
   EXPECT!(CQL_DATA_TYPE_BLOB | CQL_DATA_TYPE_NOT_NULL == C:type(5));
 
+  EXPECT!(C:name(-1) IS NULL);
+  EXPECT!(C:name(0) == "a");
+  EXPECT!(C:name(1) == "b");
+  EXPECT!(C:name(2) == "c");
+  EXPECT!(C:name(3) == "d");
+  EXPECT!(C:name(4) == "e");
+  EXPECT!(C:name(5) == "f");
+  EXPECT!(C:name(6) IS NULL);
+
   EXPECT!(-1 == C:type(-1));
   EXPECT!(-1 == C:type(C:count));
   EXPECT!(true == C:get_bool(0));

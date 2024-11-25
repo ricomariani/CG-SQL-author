@@ -7158,6 +7158,38 @@
     The statement ending at line XXXX
 
     [[builtin]]
+    DECLARE FUNC cql_cursor_column_name (C CURSOR, icol INT!) CREATE TEXT
+
+    {
+      "name" : "cql_cursor_column_name",
+      "args" : [
+        {
+          "name" : "C",
+          "type" : "",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "icol",
+          "type" : "integer",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "text",
+        "isNotNull" : 0
+      },
+      "createsObject" : 1
+    },
+
+    The statement ending at line XXXX
+
+    [[builtin]]
     DECLARE FUNC cql_cursor_get_bool (C CURSOR, icol INT!) BOOL
 
     {

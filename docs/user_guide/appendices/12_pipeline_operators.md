@@ -10,14 +10,15 @@ weight: 12
 -->
 
 These can be extracted from `cql.y` to get an always current list and are largely self explanatory.
-Each `@op` directive defines some pipeline shortcuts. These are discussed in [Chapter 8](../08_functions.md)
+Each `@op` directive defines a pipeline shortcut. They are discussed generally in
+[Chapter 8](../08_functions.md). Below are the particulars of the builtin `@op` directives.
 
 ### Boxing and Unboxing
 
 Boxing operator for each primitive type, example:
   * `expr:box`
 
-Details:
+**Details:**
 ```
 @op bool : call box as cql_box_bool;
 @op int  : call box as cql_box_int;
@@ -32,7 +33,7 @@ Unboxing operator for each primitive type, example:
 * `my_box:to_bool`
 
 
-Details:
+**Details:**
 ```
 @op object<cql_box> : call to_bool as cql_unbox_bool;
 @op object<cql_box> : call to_int as cql_unbox_int;
@@ -55,7 +56,7 @@ Examples:
 * `C:get_int(n)` -- returns the int at column n or null if not an int (or null)
 
 
-Details:
+**Details:**
 ```
 @op cursor : call count as cql_cursor_column_count;
 @op cursor : call type as cql_cursor_column_type;
@@ -79,7 +80,7 @@ Converts to or from a blob, examples:
 * `C:from_blob(my_blob)`
 
 
-Details:
+**Details:**
 ```
 @op cursor : call to_blob as cql_cursor_to_blob;
 @op cursor : call from_blob as cql_cursor_from_blob;
@@ -101,7 +102,7 @@ provides the column name and the second provides the differing column and values
 all in text form.  Blob values are not emitted, only the length.
 
 
-Details:
+**Details:**
 ```
 @op cursor : call diff_col as cql_cursor_diff_col;
 @op cursor : call diff_val as cql_cursor_diff_val;
@@ -113,7 +114,7 @@ Hashes all fields of the cursor regardless of what they may be, example:
 * `let hash := C:hash;`
 
 
-Details:
+**Details:**
 ```
 @op cursor : call hash as cql_cursor_hash;
 ```
@@ -123,7 +124,7 @@ Details:
 Compares two cursors for equality, example:
 * `if not C:equals(D) throw;`
 
-Details:
+**Details:**
 ```
 @op cursor : call equals as cql_cursors_equal;
 ```
@@ -136,7 +137,7 @@ List operations for each primitive type, examples:
 * `list:add(value)`
 * `list:count`
 
-Details:
+**Details:**
 ```
 @op cql_string_list : array set as cql_string_list_set_at;
 @op cql_string_list : array get as cql_string_list_get_at;
@@ -168,7 +169,7 @@ Dicitonary operations for each primitive type, examples:
 * `val := dict[x]`
 
 
-Details:
+**Details:**
 ```
 -- string dictionary 'add', 'find' and [] get and set
 --

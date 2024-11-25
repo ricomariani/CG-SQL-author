@@ -94,7 +94,7 @@ all in text form.  Blob values are not emitted, only the length.
 @op cursor : call diff_val as cql_cursor_diff_val;
 ```
 
-## Cursor Comparison and Hashing
+#### Cursor Comparison and Hashing
 
 Hashes all fields of the cursor regardless of what they may be, example:
 * `let hash := C:hash;`

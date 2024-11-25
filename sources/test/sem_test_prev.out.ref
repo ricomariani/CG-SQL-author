@@ -973,6 +973,60 @@ DECLARE FUNC cql_cursors_equal (l CURSOR, r CURSOR) BOOL!;
 The statement ending at line XXXX
 
 [[builtin]]
+DECLARE FUNC cql_cursor_diff_col (l CURSOR, r CURSOR) CREATE TEXT;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: text create_func
+    | {name cql_cursor_diff_col}: text create_func
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: l: cursor variable in
+      | | | {param_detail}: l: cursor variable in
+      | |   | {name l}: l: cursor variable in
+      | |   | {type_cursor}: cursor
+      | | {params}
+      |   | {param}: r: cursor variable in
+      |     | {param_detail}: r: cursor variable in
+      |       | {name r}: r: cursor variable in
+      |       | {type_cursor}: cursor
+      | {create_data_type}: text create_func
+        | {type_text}: text
+
+The statement ending at line XXXX
+
+[[builtin]]
+DECLARE FUNC cql_cursor_diff_val (l CURSOR, r CURSOR) CREATE TEXT;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: text create_func
+    | {name cql_cursor_diff_val}: text create_func
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: l: cursor variable in
+      | | | {param_detail}: l: cursor variable in
+      | |   | {name l}: l: cursor variable in
+      | |   | {type_cursor}: cursor
+      | | {params}
+      |   | {param}: r: cursor variable in
+      |     | {param_detail}: r: cursor variable in
+      |       | {name r}: r: cursor variable in
+      |       | {type_cursor}: cursor
+      | {create_data_type}: text create_func
+        | {type_text}: text
+
+The statement ending at line XXXX
+
+[[builtin]]
 DECLARE FUNC cql_box_int (x INT) CREATE OBJECT<cql_box>!;
 
   {stmt_and_attr}: ok

@@ -51382,7 +51382,7 @@ The statement ending at line XXXX
 
 SET a_string := cql_cursor_diff_col(1, "bogus");
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0341: argument must be a variable in function 'cql_cursor_diff_col'
+test/sem_test.sql:XXXX:1: error: in num : CQL0205: not a cursor '1'
 
   {assign}: err
   | {name a_string}: a_string: text variable was_set
@@ -51393,7 +51393,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0341: argument must be a variable i
       | {arg_list}: ok
         | {int 1}: err
         | {arg_list}
-          | {strlit 'bogus'}: text notnull
+          | {strlit 'bogus'}
 
 The statement ending at line XXXX
 
@@ -51410,45 +51410,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0205: not a cursor 'an_int'
       | {arg_list}: ok
         | {name an_int}: err
         | {arg_list}
-          | {name an_int2}: an_int2: integer variable was_set
-
-The statement ending at line XXXX
-
-SET a_string := cql_cursor_diff_col(an_int, an_int2, 1);
-
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'cql_cursor_diff_col'
-
-  {assign}: err
-  | {name a_string}: a_string: text variable was_set
-  | {call}: err
-    | {name cql_cursor_diff_col}: err
-    | {call_arg_list}
-      | {call_filter_clause}
-      | {arg_list}: ok
-        | {name an_int}: an_int: integer variable was_set
-        | {arg_list}
-          | {name an_int2}: an_int2: integer variable was_set
-          | {arg_list}
-            | {int 1}: integer notnull
-
-The statement ending at line XXXX
-
-SET a_string := cql_cursor_diff_val(an_int, an_int2, 1);
-
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'cql_cursor_diff_val'
-
-  {assign}: err
-  | {name a_string}: a_string: text variable was_set
-  | {call}: err
-    | {name cql_cursor_diff_val}: err
-    | {call_arg_list}
-      | {call_filter_clause}
-      | {arg_list}: ok
-        | {name an_int}: an_int: integer variable was_set
-        | {arg_list}
-          | {name an_int2}: an_int2: integer variable was_set
-          | {arg_list}
-            | {int 1}: integer notnull
+          | {name an_int2}
 
 The statement ending at line XXXX
 
@@ -51544,7 +51506,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0067: cursor was not used with 'fet
             | {arg_list}: ok
               | {name c1}: err
               | {arg_list}
-                | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
+                | {name c2}
 
 The statement ending at line XXXX
 
@@ -51605,7 +51567,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0061: in cql_cursor_diff_col, all c
   | {proc_params_stmts}
     | {stmt_list}: err
       | {declare_cursor}: c1: select: { x: integer notnull } variable dml_proc
-      | | {name c1}: c1: select: { x: integer notnull } variable dml_proc shape_storage
+      | | {name c1}: c1: select: { x: integer notnull } variable dml_proc shape_storage serialize
       | | {select_stmt}: select: { x: integer notnull }
       |   | {select_core_list}: select: { x: integer notnull }
       |   | | {select_core}: select: { x: integer notnull }
@@ -51623,7 +51585,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0061: in cql_cursor_diff_col, all c
       |     | {select_limit}
       |       | {select_offset}
       | {declare_cursor}: c2: select: { x: text notnull } variable dml_proc
-      | | {name c2}: c2: select: { x: text notnull } variable dml_proc shape_storage
+      | | {name c2}: c2: select: { x: text notnull } variable dml_proc shape_storage serialize
       | | {select_stmt}: select: { x: text notnull }
       |   | {select_core_list}: select: { x: text notnull }
       |   | | {select_core}: select: { x: text notnull }
@@ -51675,7 +51637,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0342: cursor arguments must have i
   | {proc_params_stmts}
     | {stmt_list}: err
       | {declare_cursor}: c1: select: { x: integer notnull, z: text notnull } variable dml_proc
-      | | {name c1}: c1: select: { x: integer notnull, z: text notnull } variable dml_proc shape_storage
+      | | {name c1}: c1: select: { x: integer notnull, z: text notnull } variable dml_proc shape_storage serialize
       | | {select_stmt}: select: { x: integer notnull, z: text notnull }
       |   | {select_core_list}: select: { x: integer notnull, z: text notnull }
       |   | | {select_core}: select: { x: integer notnull, z: text notnull }
@@ -51698,7 +51660,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0342: cursor arguments must have i
       |     | {select_limit}
       |       | {select_offset}
       | {declare_cursor}: c2: select: { x: integer notnull } variable dml_proc
-      | | {name c2}: c2: select: { x: integer notnull } variable dml_proc shape_storage
+      | | {name c2}: c2: select: { x: integer notnull } variable dml_proc shape_storage serialize
       | | {select_stmt}: select: { x: integer notnull }
       |   | {select_core_list}: select: { x: integer notnull }
       |   | | {select_core}: select: { x: integer notnull }
@@ -51762,7 +51724,7 @@ only in 2nd: v text notnull
   | {proc_params_stmts}
     | {stmt_list}: err
       | {declare_cursor}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc
-      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
+      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage serialize
       | | {select_stmt}: select: { x: integer notnull, y: text notnull }
       |   | {select_core_list}: select: { x: integer notnull, y: text notnull }
       |   | | {select_core}: select: { x: integer notnull, y: text notnull }
@@ -51785,7 +51747,7 @@ only in 2nd: v text notnull
       |     | {select_limit}
       |       | {select_offset}
       | {declare_cursor}: c2: select: { z: integer notnull, v: text notnull } variable dml_proc
-      | | {name c2}: c2: select: { z: integer notnull, v: text notnull } variable dml_proc shape_storage
+      | | {name c2}: c2: select: { z: integer notnull, v: text notnull } variable dml_proc shape_storage serialize
       | | {select_stmt}: select: { z: integer notnull, v: text notnull }
       |   | {select_core_list}: select: { z: integer notnull, v: text notnull }
       |   | | {select_core}: select: { z: integer notnull, v: text notnull }
@@ -51832,10 +51794,7 @@ BEGIN
     SELECT 1 AS x, 'y' AS y;
   FETCH c1;
   FETCH c2;
-  SET a_string := CASE
-    WHEN c1.x IS NOT c2.x THEN 'x'
-    WHEN c1.y IS NOT c2.y THEN 'y'
-  END;
+  SET a_string := cql_cursor_diff_col(c1, c2);
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -51843,7 +51802,7 @@ END;
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {declare_cursor}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc
-      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
+      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage serialize
       | | {select_stmt}: select: { x: integer notnull, y: text notnull }
       |   | {select_core_list}: select: { x: integer notnull, y: text notnull }
       |   | | {select_core}: select: { x: integer notnull, y: text notnull }
@@ -51866,7 +51825,7 @@ END;
       |     | {select_limit}
       |       | {select_offset}
       | {declare_cursor}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc
-      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
+      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage serialize
       | | {select_stmt}: select: { x: integer notnull, y: text notnull }
       |   | {select_core_list}: select: { x: integer notnull, y: text notnull }
       |   | | {select_core}: select: { x: integer notnull, y: text notnull }
@@ -51894,28 +51853,14 @@ END;
       | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
       | {assign}: a_string: text variable was_set
         | {name a_string}: a_string: text variable was_set
-        | {case_expr}: text
-          | {connector}: text
-            | {case_list}: text notnull
-              | {when}: text notnull
-              | | {is_not}: bool notnull
-              | | | {dot}: c1.x: integer notnull variable
-              | | | | {name c1}
-              | | | | {name x}
-              | | | {dot}: c2.x: integer notnull variable
-              | |   | {name c2}
-              | |   | {name x}
-              | | {strlit 'x'}: text notnull
-              | {case_list}: text notnull
-                | {when}: text notnull
-                  | {is_not}: bool notnull
-                  | | {dot}: c1.y: text notnull variable
-                  | | | {name c1}
-                  | | | {name y}
-                  | | {dot}: c2.y: text notnull variable
-                  |   | {name c2}
-                  |   | {name y}
-                  | {strlit 'y'}: text notnull
+        | {call}: text
+          | {name cql_cursor_diff_col}: text
+          | {call_arg_list}
+            | {call_filter_clause}
+            | {arg_list}: ok
+              | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
+              | {arg_list}
+                | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
 
 The statement ending at line XXXX
 
@@ -51927,10 +51872,7 @@ BEGIN
     SELECT 1 AS x, 'v' AS y;
   FETCH c1;
   FETCH c2;
-  CALL printf(CASE
-    WHEN c1.x IS NOT c2.x THEN 'x'
-    WHEN c1.y IS NOT c2.y THEN 'y'
-  END);
+  CALL printf(cql_cursor_diff_col(c1, c2));
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -51938,7 +51880,7 @@ END;
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {declare_cursor}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc
-      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
+      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage serialize
       | | {select_stmt}: select: { x: integer notnull, y: text notnull }
       |   | {select_core_list}: select: { x: integer notnull, y: text notnull }
       |   | | {select_core}: select: { x: integer notnull, y: text notnull }
@@ -51961,7 +51903,7 @@ END;
       |     | {select_limit}
       |       | {select_offset}
       | {declare_cursor}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc
-      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
+      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage serialize
       | | {select_stmt}: select: { x: integer notnull, y: text notnull }
       |   | {select_core_list}: select: { x: integer notnull, y: text notnull }
       |   | | {select_core}: select: { x: integer notnull, y: text notnull }
@@ -51990,28 +51932,14 @@ END;
       | {call_stmt}: ok
         | {name printf}: ok
         | {arg_list}: ok
-          | {case_expr}: text
-            | {connector}: text
-              | {case_list}: text notnull
-                | {when}: text notnull
-                | | {is_not}: bool notnull
-                | | | {dot}: c1.x: integer notnull variable
-                | | | | {name c1}
-                | | | | {name x}
-                | | | {dot}: c2.x: integer notnull variable
-                | |   | {name c2}
-                | |   | {name x}
-                | | {strlit 'x'}: text notnull
-                | {case_list}: text notnull
-                  | {when}: text notnull
-                    | {is_not}: bool notnull
-                    | | {dot}: c1.y: text notnull variable
-                    | | | {name c1}
-                    | | | {name y}
-                    | | {dot}: c2.y: text notnull variable
-                    |   | {name c2}
-                    |   | {name y}
-                    | {strlit 'y'}: text notnull
+          | {call}: text
+            | {name cql_cursor_diff_col}: text
+            | {call_arg_list}
+              | {call_filter_clause}
+              | {arg_list}: ok
+                | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
+                | {arg_list}
+                  | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
 
 The statement ending at line XXXX
 
@@ -52023,22 +51951,7 @@ BEGIN
     SELECT nullable(1) AS x, 'v' AS y;
   FETCH c1;
   FETCH c2;
-  CALL printf(CASE
-    WHEN c1.x IS NOT c2.x THEN printf('column:%s c1:%s c2:%s', 'x', CASE
-      WHEN c1.x IS NULL THEN 'null'
-      ELSE printf('%d', c1.x)
-    END, CASE
-      WHEN c2.x IS NULL THEN 'null'
-      ELSE printf('%d', c2.x)
-    END)
-    WHEN c1.y IS NOT c2.y THEN printf('column:%s c1:%s c2:%s', 'y', CASE
-      WHEN nullable(c1.y) IS NULL THEN 'null'
-      ELSE printf('%s', c1.y)
-    END, CASE
-      WHEN nullable(c2.y) IS NULL THEN 'null'
-      ELSE printf('%s', c2.y)
-    END)
-  END);
+  CALL printf(cql_cursor_diff_val(c1, c2));
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -52046,7 +51959,7 @@ END;
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {declare_cursor}: c1: select: { x: integer, y: text notnull } variable dml_proc
-      | | {name c1}: c1: select: { x: integer, y: text notnull } variable dml_proc shape_storage
+      | | {name c1}: c1: select: { x: integer, y: text notnull } variable dml_proc shape_storage serialize
       | | {select_stmt}: select: { x: integer, y: text notnull }
       |   | {select_core_list}: select: { x: integer, y: text notnull }
       |   | | {select_core}: select: { x: integer, y: text notnull }
@@ -52074,7 +51987,7 @@ END;
       |     | {select_limit}
       |       | {select_offset}
       | {declare_cursor}: c2: select: { x: integer, y: text notnull } variable dml_proc
-      | | {name c2}: c2: select: { x: integer, y: text notnull } variable dml_proc shape_storage
+      | | {name c2}: c2: select: { x: integer, y: text notnull } variable dml_proc shape_storage serialize
       | | {select_stmt}: select: { x: integer, y: text notnull }
       |   | {select_core_list}: select: { x: integer, y: text notnull }
       |   | | {select_core}: select: { x: integer, y: text notnull }
@@ -52108,146 +52021,14 @@ END;
       | {call_stmt}: ok
         | {name printf}: ok
         | {arg_list}: ok
-          | {case_expr}: text
-            | {connector}: text
-              | {case_list}: text notnull
-                | {when}: text notnull
-                | | {is_not}: bool notnull
-                | | | {dot}: c1.x: integer variable
-                | | | | {name c1}
-                | | | | {name x}
-                | | | {dot}: c2.x: integer variable
-                | |   | {name c2}
-                | |   | {name x}
-                | | {call}: text notnull
-                |   | {name printf}: text notnull
-                |   | {call_arg_list}
-                |     | {call_filter_clause}
-                |     | {arg_list}: ok
-                |       | {strlit 'column:%s c1:%s c2:%s'}: text notnull
-                |       | {arg_list}
-                |         | {strlit 'x'}: text notnull
-                |         | {arg_list}
-                |           | {case_expr}: text notnull
-                |           | | {connector}: text notnull
-                |           |   | {case_list}: text notnull
-                |           |   | | {when}: text notnull
-                |           |   |   | {is}: bool notnull
-                |           |   |   | | {dot}: c1.x: integer variable
-                |           |   |   | | | {name c1}
-                |           |   |   | | | {name x}
-                |           |   |   | | {null}: null
-                |           |   |   | {strlit 'null'}: text notnull
-                |           |   | {call}: text notnull
-                |           |     | {name printf}: text notnull
-                |           |     | {call_arg_list}
-                |           |       | {call_filter_clause}
-                |           |       | {arg_list}: ok
-                |           |         | {strlit '%d'}: text notnull
-                |           |         | {arg_list}
-                |           |           | {call}: c1.x: integer notnull variable
-                |           |             | {name cql_inferred_notnull}: c1.x: integer notnull variable
-                |           |             | {call_arg_list}
-                |           |               | {call_filter_clause}
-                |           |               | {arg_list}: ok
-                |           |                 | {dot}: c1.x: integer inferred_notnull variable
-                |           |                   | {name c1}
-                |           |                   | {name x}
-                |           | {arg_list}
-                |             | {case_expr}: text notnull
-                |               | {connector}: text notnull
-                |                 | {case_list}: text notnull
-                |                 | | {when}: text notnull
-                |                 |   | {is}: bool notnull
-                |                 |   | | {dot}: c2.x: integer variable
-                |                 |   | | | {name c2}
-                |                 |   | | | {name x}
-                |                 |   | | {null}: null
-                |                 |   | {strlit 'null'}: text notnull
-                |                 | {call}: text notnull
-                |                   | {name printf}: text notnull
-                |                   | {call_arg_list}
-                |                     | {call_filter_clause}
-                |                     | {arg_list}: ok
-                |                       | {strlit '%d'}: text notnull
-                |                       | {arg_list}
-                |                         | {call}: c2.x: integer notnull variable
-                |                           | {name cql_inferred_notnull}: c2.x: integer notnull variable
-                |                           | {call_arg_list}
-                |                             | {call_filter_clause}
-                |                             | {arg_list}: ok
-                |                               | {dot}: c2.x: integer inferred_notnull variable
-                |                                 | {name c2}
-                |                                 | {name x}
-                | {case_list}: text notnull
-                  | {when}: text notnull
-                    | {is_not}: bool notnull
-                    | | {dot}: c1.y: text notnull variable
-                    | | | {name c1}
-                    | | | {name y}
-                    | | {dot}: c2.y: text notnull variable
-                    |   | {name c2}
-                    |   | {name y}
-                    | {call}: text notnull
-                      | {name printf}: text notnull
-                      | {call_arg_list}
-                        | {call_filter_clause}
-                        | {arg_list}: ok
-                          | {strlit 'column:%s c1:%s c2:%s'}: text notnull
-                          | {arg_list}
-                            | {strlit 'y'}: text notnull
-                            | {arg_list}
-                              | {case_expr}: text notnull
-                              | | {connector}: text notnull
-                              |   | {case_list}: text notnull
-                              |   | | {when}: text notnull
-                              |   |   | {is}: bool notnull
-                              |   |   | | {call}: c1.y: text variable
-                              |   |   | | | {name nullable}: c1.y: text variable
-                              |   |   | | | {call_arg_list}
-                              |   |   | |   | {call_filter_clause}
-                              |   |   | |   | {arg_list}: ok
-                              |   |   | |     | {dot}: c1.y: text notnull variable
-                              |   |   | |       | {name c1}
-                              |   |   | |       | {name y}
-                              |   |   | | {null}: null
-                              |   |   | {strlit 'null'}: text notnull
-                              |   | {call}: text notnull
-                              |     | {name printf}: text notnull
-                              |     | {call_arg_list}
-                              |       | {call_filter_clause}
-                              |       | {arg_list}: ok
-                              |         | {strlit '%s'}: text notnull
-                              |         | {arg_list}
-                              |           | {dot}: c1.y: text notnull variable
-                              |             | {name c1}
-                              |             | {name y}
-                              | {arg_list}
-                                | {case_expr}: text notnull
-                                  | {connector}: text notnull
-                                    | {case_list}: text notnull
-                                    | | {when}: text notnull
-                                    |   | {is}: bool notnull
-                                    |   | | {call}: c2.y: text variable
-                                    |   | | | {name nullable}: c2.y: text variable
-                                    |   | | | {call_arg_list}
-                                    |   | |   | {call_filter_clause}
-                                    |   | |   | {arg_list}: ok
-                                    |   | |     | {dot}: c2.y: text notnull variable
-                                    |   | |       | {name c2}
-                                    |   | |       | {name y}
-                                    |   | | {null}: null
-                                    |   | {strlit 'null'}: text notnull
-                                    | {call}: text notnull
-                                      | {name printf}: text notnull
-                                      | {call_arg_list}
-                                        | {call_filter_clause}
-                                        | {arg_list}: ok
-                                          | {strlit '%s'}: text notnull
-                                          | {arg_list}
-                                            | {dot}: c2.y: text notnull variable
-                                              | {name c2}
-                                              | {name y}
+          | {call}: text
+            | {name cql_cursor_diff_val}: text
+            | {call_arg_list}
+              | {call_filter_clause}
+              | {arg_list}: ok
+                | {name c1}: c1: select: { x: integer, y: text notnull } variable dml_proc shape_storage
+                | {arg_list}
+                  | {name c2}: c2: select: { x: integer, y: text notnull } variable dml_proc shape_storage
 
 The statement ending at line XXXX
 

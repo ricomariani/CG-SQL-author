@@ -4616,6 +4616,11 @@ static void cql_format_one_cursor_column(
         cql_bprintf(b, "length %d blob", size);
         break;
       }
+      case CQL_DATA_TYPE_OBJECT: {
+        cql_object_ref obj_ref = *(cql_object_ref *)(cursor + offset);
+        cql_bprintf(b, "generic object");
+        break;
+      }
     }
   }
   else {
@@ -4683,6 +4688,16 @@ static void cql_format_one_cursor_column(
         }
         break;
       }
+      case CQL_DATA_TYPE_OBJECT: {
+        cql_object_ref obj_ref = *(cql_object_ref *)(cursor + offset);
+        if (!obj_ref) {
+          cql_bprintf(b, "null");
+        }
+        else {
+          cql_bprintf(b, "generic object");
+        }
+        break;
+      }      
     }
   }
 }
@@ -4729,6 +4744,198 @@ cql_string_ref _Nonnull cql_cursor_format(
   cql_string_ref result = cql_string_ref_new(b.ptr);
   cql_bytebuf_close(&b);
   return result;
+}
+
+static cql_bool cql_compare_one_cursor_column(
+  cql_dynamic_cursor *_Nonnull dyn_cursor1,
+  cql_dynamic_cursor *_Nonnull dyn_cursor2,
+  int32_t i)
+{
+  uint16_t *offsets1 = dyn_cursor1->cursor_col_offsets;
+  uint8_t *types1 = dyn_cursor1->cursor_data_types;
+  uint8_t *cursor1 = dyn_cursor1->cursor_data;  // we will be using char offsets
+  uint16_t *offsets2 = dyn_cursor2->cursor_col_offsets;
+  uint8_t *types2 = dyn_cursor2->cursor_data_types;
+  uint8_t *cursor2 = dyn_cursor2->cursor_data;  // we will be using char offsets
+
+  // the type must be an exact match for cursor equality
+  // down to nullability.  If we relax this then the combinatorics
+  // go through the roof and we just don't need to support all of that.
+  // This is pre-verified in semantic analysis for this function
+  // so if it reaches this point it's a contract violation.
+  uint8_t type1 = types1[i];
+  uint8_t type2 = types2[i];
+  cql_contract(type1 == type2);
+
+  uint16_t offset1 = offsets1[i+1];
+  uint16_t offset2 = offsets2[i+1];
+
+  // count is stored in first offset
+  uint16_t count1 = offsets1[0];  
+  uint16_t count2 = offsets2[0];
+
+  // also pre-verified
+  cql_contract(count1 == count2);
+  cql_contract(i >= 0 && i < count1);
+
+  int8_t core_data_type = CQL_CORE_DATA_TYPE_OF(type1);
+
+  // handle the reference types first
+  switch (core_data_type) {
+      case CQL_DATA_TYPE_STRING: {
+        cql_string_ref str_ref1 = *(cql_string_ref *)(cursor1 + offset1);
+        cql_string_ref str_ref2 = *(cql_string_ref *)(cursor2 + offset2);
+        return str_ref1 == str_ref2 || cql_string_equal(str_ref1, str_ref2);
+      }
+      case CQL_DATA_TYPE_BLOB: {
+        cql_blob_ref blob_ref1 = *(cql_blob_ref *)(cursor1 + offset1);
+        cql_blob_ref blob_ref2 = *(cql_blob_ref *)(cursor2 + offset2);
+        return blob_ref1 == blob_ref2 || cql_blob_equal(blob_ref1, blob_ref2);
+      }
+      case CQL_DATA_TYPE_OBJECT: {
+        cql_object_ref object_ref1 = *(cql_object_ref *)(cursor1 + offset1);
+        cql_object_ref object_ref2 = *(cql_object_ref *)(cursor2 + offset2);
+        return object_ref1 == object_ref2;
+      }
+  }
+
+  // value types have to be treated differently depending on nullability
+
+  if (type1 & CQL_DATA_TYPE_NOT_NULL) {
+    switch (core_data_type) {
+      case CQL_DATA_TYPE_BOOL: {
+        cql_bool bool_data1 = *(cql_bool *)(cursor1 + offset1);
+        cql_bool bool_data2 = *(cql_bool *)(cursor2 + offset2);
+        return bool_data1 == bool_data2;
+      }      
+      case CQL_DATA_TYPE_INT32: {
+        cql_int32 int32_data1 = *(cql_int32 *)(cursor1 + offset1);
+        cql_int32 int32_data2 = *(cql_int32 *)(cursor2 + offset2);
+        return int32_data1 == int32_data2;
+      }
+      case CQL_DATA_TYPE_INT64: {
+        cql_int64 int64_data1 = *(cql_int64 *)(cursor1 + offset1);
+        cql_int64 int64_data2 = *(cql_int64 *)(cursor2 + offset2);
+        return int64_data1 == int64_data2;
+      }
+      default: {
+        // this is all that's left
+        cql_contract(core_data_type == CQL_DATA_TYPE_DOUBLE);
+
+        cql_double double_data1 = *(cql_double *)(cursor1 + offset1);
+        cql_double double_data2 = *(cql_double *)(cursor2 + offset2);
+        return double_data1 == double_data2;
+      }
+    }
+  }
+  else {
+    switch (core_data_type) {
+      case CQL_DATA_TYPE_BOOL: {
+        cql_nullable_bool bool_data1 = *(cql_nullable_bool *)(cursor1 + offset1);
+        cql_nullable_bool bool_data2 = *(cql_nullable_bool *)(cursor2 + offset2);
+        if (bool_data1.is_null != bool_data2.is_null) {
+          return false;
+        }
+        if (bool_data1.is_null) {
+          return true;
+        }
+        return bool_data1.value == bool_data2.value;
+      }
+      case CQL_DATA_TYPE_INT32: {
+        cql_nullable_int32 int32_data1 = *(cql_nullable_int32 *)(cursor1 + offset1);
+        cql_nullable_int32 int32_data2 = *(cql_nullable_int32 *)(cursor2 + offset2);
+        if (int32_data1.is_null != int32_data2.is_null) {
+          return false;
+        }
+        if (int32_data1.is_null) {
+          return true;
+        }
+        return int32_data1.value == int32_data2.value;
+        break;
+      }
+      case CQL_DATA_TYPE_INT64: {
+        cql_nullable_int64 int64_data1 = *(cql_nullable_int64 *)(cursor1 + offset1);
+        cql_nullable_int64 int64_data2 = *(cql_nullable_int64 *)(cursor2 + offset2);
+        if (int64_data1.is_null != int64_data2.is_null) {
+          return false;
+        }
+        if (int64_data1.is_null) {
+          return true;
+        }
+        return int64_data1.value == int64_data2.value;
+      }
+      default: {
+        // this is all that's left
+        cql_contract(core_data_type == CQL_DATA_TYPE_DOUBLE);
+
+        cql_nullable_double double_data1 = *(cql_nullable_double *)(cursor1 + offset1);
+        cql_nullable_double double_data2 = *(cql_nullable_double *)(cursor2 + offset2);
+        if (double_data1.is_null != double_data2.is_null) {
+          return false;
+        }
+        if (double_data1.is_null) {
+          return true;
+        }
+        return double_data1.value == double_data2.value;
+      }
+    }
+  }
+}
+
+cql_string_ref _Nullable cql_cursor_diff_col(
+  cql_dynamic_cursor *_Nonnull dyn_cursor1,
+  cql_dynamic_cursor *_Nonnull dyn_cursor2)
+{
+  // count is stored in first offset
+  uint16_t count1 = dyn_cursor1->cursor_col_offsets[0];
+  uint16_t count2 = dyn_cursor2->cursor_col_offsets[0];
+
+  // pre-verified by semantic analysis
+  cql_contract(count1 == count2);
+
+  for (uint16_t i = 0; i < count1; i++) {
+    if (!cql_compare_one_cursor_column(dyn_cursor1, dyn_cursor2, i)) {
+      return cql_cursor_column_name(dyn_cursor1, i);
+    }
+  }
+
+  return NULL;
+}
+
+cql_string_ref _Nullable cql_cursor_diff_val(
+  cql_dynamic_cursor *_Nonnull dyn_cursor1,
+  cql_dynamic_cursor *_Nonnull dyn_cursor2)
+{
+  // count is stored in first offset
+  uint16_t count1 = dyn_cursor1->cursor_col_offsets[0];
+  uint16_t count2 = dyn_cursor2->cursor_col_offsets[0];
+
+  // pre-verified by semantic analysis
+  cql_contract(count1 == count2);
+
+  for (uint16_t i = 0; i < count1; i++) {
+    if (!cql_compare_one_cursor_column(dyn_cursor1, dyn_cursor2, i)) {
+      cql_bytebuf b;
+      cql_bytebuf_open(&b);
+
+      // field names for printing
+      const char **fields = dyn_cursor1->cursor_fields;
+      cql_bprintf(&b, "column:%s", fields[i]);
+
+      cql_bprintf(&b, " c1:");
+      cql_format_one_cursor_column(&b, dyn_cursor1, i);
+      cql_bprintf(&b, " c2:");
+      cql_format_one_cursor_column(&b, dyn_cursor2, i);
+
+      cql_bytebuf_append_null(&b);
+
+      cql_string_ref result = cql_string_ref_new(b.ptr);
+      cql_bytebuf_close(&b);
+      return result;
+    }
+  }
+
+  return NULL;
 }
 
 // Create a blob from an integer value, this is used
@@ -5096,8 +5303,10 @@ cleanup:
   return list;
 }
 
-// This function assumes the input follows CQL railroad syntax and contains
-// characters uptil atleast the first "(" if it exists
+// This function assumes the input follows CQL normalized syntax and contains
+// characters until at least the first "(" if it exists.  Which is to say we
+// expect to be reading back our own schema, not arbitrary SQL.  We can't
+// upgrade arbitrary SQL because we don't know what weird things it might have.
 static char* _Nonnull _cql_create_table_name_from_table_creation_statement(
   cql_string_ref _Nonnull create)
 {
@@ -5111,11 +5320,13 @@ static char* _Nonnull _cql_create_table_name_from_table_creation_statement(
   cql_contract(p);
   cql_contract(p > c_create);
 
-  // backspace spaces (if they exist) between table name preceeding pattern. We
-  // don't want extra spaces in our table names.
+  // We found the '(' so we know there is a table name before it Now we back up
+  // past spaces (if they exist). We don't want extra spaces in our table names.
   while (p[-1] == ' ') p--;
   const char *lineStart = p;
 
+  // if the table name is of the form [foo bar] then we need to back up to the
+  // the introducing '[' to get the whole table name
   if (lineStart[-1] == ']') {
     while (lineStart[-1] != '[') {
       lineStart--;
@@ -5123,7 +5334,8 @@ static char* _Nonnull _cql_create_table_name_from_table_creation_statement(
     lineStart--;
   }
   else {
-    // find space preceeding table name
+    // otherwise we just find the space preceding the table name to get the
+    // whole name
     while (lineStart[-1] != ' ') {
       lineStart--;
     }
@@ -5163,9 +5375,9 @@ static char *_Nonnull _cql_create_table_name_from_index_creation_statement(
 // This function provides the naive implementation of cql_rebuild_recreate_group
 // called in the cg_schema CQL upgrader. We take input three recreate-group
 // specific strings.
-//  * tables: series of semi-colon seperated CREATE (VIRTUAL) TABLE statements
-//  * indices: series of semi-colon seperated CREATE INDEX statements
-//  * deletes: series of semi-colon seperated DROP TABLE statements (ex:
+//  * tables: series of semi-colon separated CREATE (VIRTUAL) TABLE statements
+//  * indices: series of semi-colon separated CREATE INDEX statements
+//  * deletes: series of semi-colon separated DROP TABLE statements (ex:
 //    unsubscribed or deleted tables)
 //
 // We currently always do recreate here (no rebuild). We just drop our tables,

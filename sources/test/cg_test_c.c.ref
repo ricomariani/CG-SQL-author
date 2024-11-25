@@ -33,6 +33,8 @@ extern cql_blob_ref _Nullable cql_blob_dictionary_find(cql_object_ref _Nonnull d
 extern cql_string_ref _Nonnull cql_cursor_format(cql_dynamic_cursor *_Nonnull C);
 extern cql_int64 cql_cursor_hash(cql_dynamic_cursor *_Nonnull C);
 extern cql_bool cql_cursors_equal(cql_dynamic_cursor *_Nonnull l, cql_dynamic_cursor *_Nonnull r);
+extern cql_string_ref _Nullable cql_cursor_diff_col(cql_dynamic_cursor *_Nonnull l, cql_dynamic_cursor *_Nonnull r);
+extern cql_string_ref _Nullable cql_cursor_diff_val(cql_dynamic_cursor *_Nonnull l, cql_dynamic_cursor *_Nonnull r);
 extern cql_object_ref _Nonnull cql_box_int(cql_nullable_int32 x);
 extern cql_nullable_int32 cql_unbox_int(cql_object_ref _Nullable box);
 extern cql_object_ref _Nonnull cql_box_real(cql_nullable_double x);

@@ -9198,19 +9198,6 @@ static void sem_func_char(ast_node *ast, uint32_t arg_count) {
   // the result has no 'kind'
 }
 
-// Validate the variable argument is a auto cursor. This is called to validate
-// cql_cursor_diff_xxx(X,Y) arguments.
-static bool_t sem_validate_cursor_from_variable(ast_node *ast, CSTR target) {
-  if (is_variable(ast->sem->sem_type)) {
-    sem_cursor(ast);
-    return !is_error(ast);
-  }
-
-  report_error(ast, "CQL0341: argument must be a variable in function", target);
-  record_error(ast);
-  return false;
-}
-
 // The attest notnull family are CQL builtin functions that return a value of a
 // nonnull type when given a nullable value, either after some runtime check is
 // performed (in the case of ifnull_throw and ifnull_crash, which are used
@@ -9295,18 +9282,11 @@ static bool_t validate_cql_cursor_diff(ast_node *ast, uint32_t arg_count) {
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
-  if (!sem_validate_arg_count(ast, arg_count, 2)) {
-    return false;
-  }
+  // already verified
+  Contract(arg_count == 2);
 
   ast_node *arg1 = first_arg(arg_list);
   ast_node *arg2 = second_arg(arg_list);
-
-  if (!sem_validate_cursor_from_variable(arg1, name) ||
-      !sem_validate_cursor_from_variable(arg2, name)) {
-    record_error(ast);
-    return false;
-  }
 
   // We've already validated that the two argument are variables for auto cursor. We just
   // need to validate their shapes are identical
@@ -9319,15 +9299,9 @@ static bool_t validate_cql_cursor_diff(ast_node *ast, uint32_t arg_count) {
     return false;
   }
 
-  if (!is_auto_cursor(arg1->sem->sem_type) || !is_auto_cursor(arg2->sem->sem_type)) {
-    EXTRACT_STRING(arg1_name, arg1);
-    EXTRACT_STRING(arg2_name, arg2);
-    CSTR cursor_name = !is_auto_cursor(arg1->sem->sem_type) ? arg1_name : arg2_name;
-    report_error(arg1, "CQL0067: cursor was not used with 'fetch [cursor]'", cursor_name);
-    record_error(arg1);
-    record_error(ast);
-    return false;
-  }
+  // already verified by function prototype
+  Contract(is_auto_cursor(arg1->sem->sem_type));
+  Contract(is_auto_cursor(arg2->sem->sem_type));
 
   // we're making sure the two argument cursors have the same shape, because we can
   // only do diffing with cursors with the same shape.
@@ -9343,26 +9317,6 @@ static bool_t validate_cql_cursor_diff(ast_node *ast, uint32_t arg_count) {
   name_ast->sem = ast->sem = new_sem(SEM_TYPE_TEXT);
 
   return true;
-}
-
-static void sem_func_cql_cursor_diff_col(ast_node *ast, uint32_t arg_count) {
-  if (!validate_cql_cursor_diff(ast, arg_count)) {
-    return;
-  }
-
-  // We have a cql_cursor_diff_col function call, we rewrite the node to
-  // a case_expr node.
-  rewrite_cql_cursor_diff(ast, true);
-}
-
-static void sem_func_cql_cursor_diff_val(ast_node *ast, uint32_t arg_count) {
-  if (!validate_cql_cursor_diff(ast, arg_count)) {
-    return;
-  }
-
-  // We have a cql_cursor_diff_val function call, we rewrite the node to
-  // a case_expr node.
-  rewrite_cql_cursor_diff(ast, false);
 }
 
 // This is a special function because we do not want to analyze the arguments
@@ -10794,6 +10748,12 @@ additional_checks:
   if (!StrCaseCmp(name, "cql_cursor_to_blob")) {
      Contract(arg_count == 1); // already failed if wrong
      sem_infer_result_blob_type(ast, arg_list);
+  }
+  else if (!StrCaseCmp(name, "cql_cursor_diff_col") || !StrCaseCmp(name, "cql_cursor_diff_val")) {
+    if (!is_error(ast) && !validate_cql_cursor_diff(ast, arg_count)) {
+      record_error(ast);
+      return;
+    }
   }
   if (!call_aggr_or_user_def_func) {
     if (distinct) {
@@ -26170,8 +26130,6 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(changes);
   FUNC_INIT(coalesce);
   FUNC_INIT(cql_compressed);
-  FUNC_INIT(cql_cursor_diff_col);
-  FUNC_INIT(cql_cursor_diff_val);
   FUNC_INIT(cql_get_blob_size);
   FUNC_INIT(cume_dist);
   FUNC_INIT(dense_rank);

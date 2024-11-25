@@ -898,6 +898,56 @@ The statement ending at line XXXX
   |     | {name cql}
   |     | {name builtin}
   | {declare_func_stmt}
+    | {name cql_cursor_diff_col}
+    | {func_params_return}
+      | {params}
+      | | {param}
+      | | | {param_detail}
+      | |   | {name l}
+      | |   | {type_cursor}
+      | | {params}
+      |   | {param}
+      |     | {param_detail}
+      |       | {name r}
+      |       | {type_cursor}
+      | {create_data_type}
+        | {type_text}
+
+The statement ending at line XXXX
+
+[[builtin]]
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}
+    | {name cql_cursor_diff_val}
+    | {func_params_return}
+      | {params}
+      | | {param}
+      | | | {param_detail}
+      | |   | {name l}
+      | |   | {type_cursor}
+      | | {params}
+      |   | {param}
+      |     | {param_detail}
+      |       | {name r}
+      |       | {type_cursor}
+      | {create_data_type}
+        | {type_text}
+
+The statement ending at line XXXX
+
+[[builtin]]
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}
     | {name cql_box_int}
     | {func_params_return}
       | {params}

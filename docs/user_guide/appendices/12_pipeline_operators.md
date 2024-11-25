@@ -17,6 +17,7 @@ Each `@op` directive defines some pipeline shortcuts. These are discussed in [Ch
 Boxing operator for each primitive type, example:
   * `expr:box`
 
+```
 @op bool : call box as cql_box_bool;
 @op int  : call box as cql_box_int;
 @op long : call box as cql_box_long;
@@ -24,6 +25,7 @@ Boxing operator for each primitive type, example:
 @op text : call box as cql_box_text;
 @op blob : call box as cql_box_blob;
 @op object : call box as cql_box_object;
+```
 
 Unboxing operator for each primitive type, example:
 * `my_box:to_bool`
@@ -79,7 +81,7 @@ Converts to or from a blob, examples:
 #### Cursor Debugging and Test Helpers
 
 Creates a string representation of the cursor with field names and values, useful for debugging, example:
-* `printf("C is: %s\n", C:format);
+* `printf("C is: %s\n", C:format);`
 
 ```
 @op cursor : call format as cql_cursor_format;
@@ -116,7 +118,7 @@ List operations for each primitive type, examples:
 * `list[index] := value` (will not grow the list)
 * `value := list[index]`
 * `list:add(value)`
-* `list:count
+* `list:count`
 
 ```
 @op cql_string_list : array set as cql_string_list_set_at;

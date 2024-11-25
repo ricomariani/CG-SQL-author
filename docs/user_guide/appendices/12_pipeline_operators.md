@@ -78,7 +78,7 @@ Converts to or from a blob, examples:
 @op cursor : call from_blob as cql_cursor_from_blob;
 ```
 
-#### Cursor Debugging and Test Helpers
+#### Cursor Formatting
 
 Creates a string representation of the cursor with field names and values, useful for debugging, example:
 * `printf("C is: %s\n", C:format);`
@@ -86,6 +86,8 @@ Creates a string representation of the cursor with field names and values, usefu
 ```
 @op cursor : call format as cql_cursor_format;
 ```
+
+#### Cursor Difference
 
 Reports the first difference between two cursors, or null if none.  The first
 provides the column name and the second provides the differing column and values

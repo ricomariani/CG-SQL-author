@@ -1092,9 +1092,8 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0252: @PROC literal can only appear
 test/sem_test.sql:XXXX:1: error: in str : CQL0252: @PROC literal can only appear inside of procedures
 test/sem_test.sql:XXXX:1: error: in str : CQL0252: @PROC literal can only appear inside of procedures
 test/sem_test.sql:XXXX:1: error: in str : CQL0252: @PROC literal can only appear inside of procedures
-test/sem_test.sql:XXXX:1: error: in num : CQL0341: argument must be a variable in function 'cql_cursor_diff_col'
+test/sem_test.sql:XXXX:1: error: in num : CQL0205: not a cursor '1'
 test/sem_test.sql:XXXX:1: error: in str : CQL0205: not a cursor 'an_int'
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'cql_cursor_diff_col'
 test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'cql_cursor_diff_val'
 test/sem_test.sql:XXXX:1: error: in str : CQL0067: cursor was not used with 'fetch [cursor]' 'c1'
 test/sem_test.sql:XXXX:1: error: in str : CQL0067: cursor was not used with 'fetch [cursor]' 'C'

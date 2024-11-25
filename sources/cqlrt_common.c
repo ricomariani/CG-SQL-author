@@ -4732,7 +4732,6 @@ cql_string_ref _Nonnull cql_cursor_format(
 }
 
 static cql_bool cql_compare_one_cursor_column(
-  cql_bytebuf *_Nonnull b,
   cql_dynamic_cursor *_Nonnull dyn_cursor1,
   cql_dynamic_cursor *_Nonnull dyn_cursor2,
   int32_t i)
@@ -4744,17 +4743,25 @@ static cql_bool cql_compare_one_cursor_column(
   uint8_t *types2 = dyn_cursor2->cursor_data_types;
   uint8_t *cursor2 = dyn_cursor2->cursor_data;  // we will be using char offsets
 
-  uint16_t offset1 = offsets1[i+1];
-  uint8_t type1 = types1[i];
-  uint16_t offset2 = offsets2[i+1];
-  uint8_t type2 = types2[i];
-
   // the type must be an exact match for cursor equality
   // down to nullability.  If we relax this then the combinatorics
   // go through the roof and we just don't need to support all of that.
-  if (type1 != type2) {
-    return false;
-  }
+  // This is pre-verified in semantic analysis for this function
+  // so if it reaches this point it's a contract violation.
+  uint8_t type1 = types1[i];
+  uint8_t type2 = types2[i];
+  cql_contract(type1 == type2);
+
+  uint16_t offset1 = offsets1[i+1];
+  uint16_t offset2 = offsets2[i+1];
+
+  // count is stored in first offset
+  uint16_t count1 = offsets1[0];  
+  uint16_t count2 = offsets2[0];
+
+  // also pre-verified
+  cql_contract(count1 == count2);
+  cql_contract(i >= 0 && i < count1);
 
   int8_t core_data_type = CQL_CORE_DATA_TYPE_OF(type1);
 
@@ -4858,6 +4865,26 @@ static cql_bool cql_compare_one_cursor_column(
       }
     }
   }
+}
+
+cql_string_ref _Nullable cql_cursor_diff_col(
+  cql_dynamic_cursor *_Nonnull dyn_cursor1,
+  cql_dynamic_cursor *_Nonnull dyn_cursor2)
+{
+  // count is stored in first offset
+  uint16_t count1 = dyn_cursor1->cursor_col_offsets[0];
+  uint16_t count2 = dyn_cursor2->cursor_col_offsets[0];
+
+  // pre-verified by semantic analysis
+  cql_contract(count1 == count2);
+
+  for (uint16_t i = 0; i < count1; i++) {
+    if (!cql_compare_one_cursor_column(dyn_cursor1, dyn_cursor2, i)) {
+      return cql_cursor_column_name(dyn_cursor1, i);
+    }
+  }
+
+  return NULL;
 }
 
 // Create a blob from an integer value, this is used

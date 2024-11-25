@@ -23414,6 +23414,10 @@ The statement ending at line XXXX
 
 DECLARE FUNC simple_func (arg1 INT) REAL!;
 
+Incompatible declarations found
+test/sem_test.sql:XXXX:1: error: in declare_func_stmt : DECLARE FUNC simple_func (arg1 INT) REAL!
+test/sem_test.sql:XXXX:1: error: in declare_func_stmt : DECLARE FUNC simple_func (arg1 INT!) REAL!
+The above must be identical.
 test/sem_test.sql:XXXX:1: error: in str : CQL0193: duplicate function name 'simple_func'
 
   {declare_func_stmt}: err

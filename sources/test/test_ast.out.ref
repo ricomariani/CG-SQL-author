@@ -853,6 +853,51 @@ The statement ending at line XXXX
   |     | {name cql}
   |     | {name builtin}
   | {declare_func_stmt}
+    | {name cql_cursor_hash}
+    | {func_params_return}
+      | {params}
+      | | {param}
+      |   | {param_detail}
+      |     | {name C}
+      |     | {type_cursor}
+      | {notnull}
+        | {type_long}
+
+The statement ending at line XXXX
+
+[[builtin]]
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}
+    | {name cql_cursors_equal}
+    | {func_params_return}
+      | {params}
+      | | {param}
+      | | | {param_detail}
+      | |   | {name l}
+      | |   | {type_cursor}
+      | | {params}
+      |   | {param}
+      |     | {param_detail}
+      |       | {name r}
+      |       | {type_cursor}
+      | {notnull}
+        | {type_bool}
+
+The statement ending at line XXXX
+
+[[builtin]]
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}
     | {name cql_box_int}
     | {func_params_return}
       | {params}
@@ -2480,6 +2525,74 @@ The statement ending at line XXXX
       | {op_vals}
         | {name format}
         | {name cql_cursor_format}
+
+The statement ending at line XXXX
+
+[[builtin]]
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}
+    | {name CURSOR}
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name hash}
+        | {name cql_cursor_hash}
+
+The statement ending at line XXXX
+
+[[builtin]]
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}
+    | {name CURSOR}
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name diff_col}
+        | {name cql_cursor_diff_col}
+
+The statement ending at line XXXX
+
+[[builtin]]
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}
+    | {name CURSOR}
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name diff_val}
+        | {name cql_cursor_diff_val}
+
+The statement ending at line XXXX
+
+[[builtin]]
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}
+    | {name CURSOR}
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name equals}
+        | {name cql_cursors_equal}
 
 The statement ending at line XXXX
 

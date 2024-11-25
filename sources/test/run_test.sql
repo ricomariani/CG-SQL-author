@@ -5397,8 +5397,6 @@ BEGIN
   end;
 END);
 
-declare function cql_cursors_equal(C1 cursor, C2 cursor) bool!;
-
 TEST!(cursor_equal,
 BEGIN
   cursor C like lotsa_types;

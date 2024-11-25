@@ -5988,8 +5988,10 @@ select T.* from (select 1) as U;
 declare function simple_func(arg1 int!) real!;
 
 -- TEST: error duplicate function
+-- + error: % DECLARE FUNC simple_func (arg1 INT) REAL!
+-- + error: % DECLARE FUNC simple_func (arg1 INT!) REAL!
 -- * error: % duplicate function name 'simple_func'
--- +1 error:
+-- +3 error:
 declare function simple_func(arg1 integer) real!;
 
 -- TEST: error declare proc conflicts with func

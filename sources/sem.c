@@ -14468,21 +14468,7 @@ static bool_t sem_validate_identical_text(ast_node *prev, ast_node *cur, gen_fun
 // That is a maintenance problem but also doing it this way is economical
 // and it ensures that the string decoding is bug-free.
 static bool_t sem_validate_identical_funcs(ast_node *prev_func, ast_node *cur_func) {
-  CHARBUF_OPEN(prev_sql);
-  CHARBUF_OPEN(cur_sql);
-
-  gen_set_output_buffer(&prev_sql);
-  gen_statement_with_callbacks(prev_func, NULL);
-
-  gen_set_output_buffer(&cur_sql);
-  gen_statement_with_callbacks(cur_func, NULL);
-
-  bool_t identical = !strcmp(prev_sql.ptr, cur_sql.ptr);
-
-  CHARBUF_CLOSE(cur_sql);
-  CHARBUF_CLOSE(prev_sql);
-
-  return identical;
+  return sem_validate_identical_text(cur_func, prev_func, gen_one_stmt, NULL);
 }
 
 // Here we're going to validate that two proc declarations are identical.

@@ -5992,6 +5992,65 @@
     The statement ending at line XXXX
 
     [[builtin]]
+    DECLARE FUNC cql_cursor_hash (C CURSOR) LONG!
+
+    {
+      "name" : "cql_cursor_hash",
+      "args" : [
+        {
+          "name" : "C",
+          "type" : "",
+          "isNotNull" : 0
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "long",
+        "isNotNull" : 1
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    [[builtin]]
+    DECLARE FUNC cql_cursors_equal (l CURSOR, r CURSOR) BOOL!
+
+    {
+      "name" : "cql_cursors_equal",
+      "args" : [
+        {
+          "name" : "l",
+          "type" : "",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "r",
+          "type" : "",
+          "isNotNull" : 0
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "bool",
+        "isNotNull" : 1
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    [[builtin]]
     DECLARE FUNC cql_box_int (x INT) CREATE OBJECT<cql_box>!
 
     {

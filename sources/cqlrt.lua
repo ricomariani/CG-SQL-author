@@ -736,6 +736,21 @@ function cql_cursors_equal(k1, k1_types, k1_fields, k2, k2_types, k2_fields)
   return true
 end
 
+function cql_cursor_diff_col(k1, k1_types, k1_fields, k2, k2_types, k2_fields)
+  if (not k1._has_row_) and not k2._has_row_ then return nil end
+  if k1._has_row_ ~= k2._has_row_ then return "_has_row_" end
+  if #k1 ~= #k2 then return "$error_field_counts_do_not_match" end
+
+  for i = 1, #k1_fields
+  do
+     k = k1_fields[i]
+     if k2_fields[i] ~= k then return "$error_field_names_differ" end
+     if k1[k] ~= k2[k] then return k end
+  end
+
+  return nil
+end
+
 function cql_partition_cursor(partition, key, key_types, key_fields, cursor, cursor_types, cursor_fields)
   if not cursor._has_row_ then return false end
   key = cql_make_str_key(key, key_fields)
@@ -956,6 +971,18 @@ function cql_cursor_get_object(C, types, fields, i)
   return cql_cursor_get_any(C, types, fields, i, CQL_DATA_TYPE_OBJECT)
 end
 
+function cql_format_one_field(code, value)
+  if value == nil then
+    return "null"
+  end
+
+  if code == CQL_ENCODED_TYPE_BLOB_NOTNULL or code == CQL_ENCODED_TYPE_BLOB then
+    return "length "..tostring(#value).." blob"
+  end
+
+  return tostring(value)
+end
+
 function cql_cursor_format(C, types, fields)
   local result = ""
   for i = 1, #fields
@@ -964,15 +991,7 @@ function cql_cursor_format(C, types, fields)
     result = result..fields[i]..":"
     local code = string.byte(types, i, i)
     local value = C[fields[i]]
-    if value == nil then
-      result = result.."null"
-    else
-      if code == CQL_ENCODED_TYPE_BLOB_NOTNULL or code == CQL_ENCODED_TYPE_BLOB then
-        result = result.."length "..tostring(#value).." blob"
-      else
-        result = result..tostring(value)
-      end
-    end
+    result = result .. cql_format_one_field(code, value)
   end
   return result
 end

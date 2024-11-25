@@ -118,6 +118,7 @@ List operations for each primitive type, examples:
 * `list:add(value)`
 * `list:count
 
+```
 @op cql_string_list : array set as cql_string_list_set_at;
 @op cql_string_list : array get as cql_string_list_get_at;
 @op cql_string_list : call add as cql_string_list_add;

@@ -751,6 +751,32 @@ function cql_cursor_diff_col(k1, k1_types, k1_fields, k2, k2_types, k2_fields)
   return nil
 end
 
+function cql_cursor_diff_val(k1, k1_types, k1_fields, k2, k2_types, k2_fields)
+  if (not k1._has_row_) and not k2._has_row_ then return nil end
+  if k1._has_row_ ~= k2._has_row_ then return "_has_row_" end
+  if #k1 ~= #k2 then return "$error_field_counts_do_not_match" end
+  if k1_types ~= k2_types then return "$error_field_types_differ" end
+
+  for i = 1, #k1_fields
+  do
+    k = k1_fields[i]
+    if k2_fields[i] ~= k then
+      return "$error_field_names_differ"
+    end
+
+    if k1[k] ~= k2[k] then
+      local code = string.byte(k1_types, i, i)
+      local value1 = k1[k]
+      local value2 = k2[k]
+      return "column:"..k..
+        " c1:"..cql_format_one_field(code, value1)..
+        " c2:"..cql_format_one_field(code, value2)
+    end
+  end
+
+  return nil
+end
+
 function cql_partition_cursor(partition, key, key_types, key_fields, cursor, cursor_types, cursor_fields)
   if not cursor._has_row_ then return false end
   key = cql_make_str_key(key, key_fields)
@@ -978,6 +1004,10 @@ function cql_format_one_field(code, value)
 
   if code == CQL_ENCODED_TYPE_BLOB_NOTNULL or code == CQL_ENCODED_TYPE_BLOB then
     return "length "..tostring(#value).." blob"
+  end
+
+  if code == CQL_ENCODED_TYPE_OBJECT_NOTNULL or code == CQL_ENCODED_TYPE_OBJECT then
+    return "generic object"
   end
 
   return tostring(value)

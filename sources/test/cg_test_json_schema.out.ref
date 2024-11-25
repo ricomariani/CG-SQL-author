@@ -6051,7 +6051,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_cursor_diff_col (l CURSOR, r CURSOR) CREATE TEXT!
+    DECLARE FUNC cql_cursor_diff_col (l CURSOR, r CURSOR) CREATE TEXT
 
     {
       "name" : "cql_cursor_diff_col",
@@ -6075,7 +6075,39 @@
       ],
       "returnType" : {
         "type" : "text",
-        "isNotNull" : 1
+        "isNotNull" : 0
+      },
+      "createsObject" : 1
+    },
+
+    The statement ending at line XXXX
+
+    [[builtin]]
+    DECLARE FUNC cql_cursor_diff_val (l CURSOR, r CURSOR) CREATE TEXT
+
+    {
+      "name" : "cql_cursor_diff_val",
+      "args" : [
+        {
+          "name" : "l",
+          "type" : "",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "r",
+          "type" : "",
+          "isNotNull" : 0
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "text",
+        "isNotNull" : 0
       },
       "createsObject" : 1
     },

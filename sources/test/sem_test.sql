@@ -13723,14 +13723,6 @@ set a_string := cql_cursor_diff_col(1, "bogus");
 -- +1 error:
 set a_string := cql_cursor_diff_col(an_int, an_int2);
 
--- TEST: call cql_cursor_diff_val with incorrect number of arguments
--- + {assign}: err
--- + {call}: err
--- + {name cql_cursor_diff_val}: err
--- * error: % function got incorrect number of arguments 'cql_cursor_diff_val'
--- +1 error:
-set a_string := cql_cursor_diff_val(an_int, an_int2, 1);
-
 -- TEST: call cql_cursor_diff_col with cursor with fetch value and same shape
 -- + {create_proc_stmt}: err
 -- + {assign}: err
@@ -13843,22 +13835,7 @@ begin
 end;
 
 -- TEST: call cql_cursor_diff_val from another func
--- + CALL printf(CASE
--- + WHEN c1.x IS NOT c2.x THEN printf('column:%s c1:%s c2:%s', 'x', CASE
--- + WHEN c1.x IS NULL THEN 'null'
--- + ELSE printf('%d', c1.x)
--- + END, CASE
--- + WHEN c2.x IS NULL THEN 'null'
--- + ELSE printf('%d', c2.x)
--- + END)
--- + WHEN c1.y IS NOT c2.y THEN printf('column:%s c1:%s c2:%s', 'y', CASE
--- + WHEN nullable(c1.y) IS NULL THEN 'null'
--- + ELSE printf('%s', c1.y)
--- + END, CASE
--- + WHEN nullable(c2.y) IS NULL THEN 'null'
--- + ELSE printf('%s', c2.y)
--- + END)
--- + END);
+-- + CALL printf(cql_cursor_diff_val(c1, c2));
 -- + {create_proc_stmt}: ok dml_proc
 -- + {call_stmt}: ok
 -- - error:

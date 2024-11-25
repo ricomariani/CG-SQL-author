@@ -3158,7 +3158,9 @@ cql_noexport CSTR cql_builtin_text() {
     "[[builtin]]"
     "declare func cql_cursors_equal(l cursor, r cursor) bool!;"
     "[[builtin]]"
-    "declare func cql_cursor_diff_col(l cursor, r cursor) create text!;"
+    "declare func cql_cursor_diff_col(l cursor, r cursor) create text;"
+    "[[builtin]]"
+    "declare func cql_cursor_diff_val(l cursor, r cursor) create text;"
 
     "[[builtin]]"
     "declare func cql_box_int(x int) create object<cql_box>!;"

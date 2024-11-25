@@ -5563,84 +5563,168 @@ BEGIN
   EXPECT!(NOT cql_cursors_equal(G, H));
 END);
 
-TEST!(cursor_diff,
+TEST!(cursor_diff_col,
 BEGIN
-   let o1 := 1:box;
-   let o2 := 2:box;
-   cursor C like (a bool!, b int!, c long!, d real!, e text!, f blob!, g object!,
-                          i bool,  j int,  k long, l real, m text, n blob, o object);
-   cursor D like C;
-   cursor X like C;
+  let o1 := 1:box;
+  let o2 := 2:box;
+  cursor C like (
+    a bool!, b int!, c long!, d real!, e text!, f blob!, g object!,
+    i bool,  j int,  k long,  l real,  m text,  n blob,  o object);
+  cursor D like C;
+  cursor X like C;
 
-   fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
+  fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
 
-   -- all different values
-   fetch X(g,o) from values(o2, o1) @dummy_seed(1) @dummy_nullables;
+  -- all different values
+  fetch X(g,o) from values(o2, o1) @dummy_seed(1) @dummy_nullables;
 
-   fetch D from C;
-   EXPECT!(cql_cursor_diff_col(C,D) is null);
+  fetch D from C;
+  EXPECT!(cql_cursor_diff_col(C,D) is null);
 
-   fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
-   update cursor C using X.a a;
-   EXPECT!(cql_cursor_diff_col(C,D) == "a");
+  fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
+  update cursor C using X.a a;
+  EXPECT!(cql_cursor_diff_col(C,D) == "a");
 
-   fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
-   update cursor C using X.b b;
-   EXPECT!(cql_cursor_diff_col(C,D) == "b");
+  fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
+  update cursor C using X.b b;
+  EXPECT!(cql_cursor_diff_col(C,D) == "b");
 
-   fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
-   update cursor C using X.c c;
-   EXPECT!(cql_cursor_diff_col(C,D) == "c");
+  fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
+  update cursor C using X.c c;
+  EXPECT!(cql_cursor_diff_col(C,D) == "c");
 
-   fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
-   update cursor C using X.d d;
-   EXPECT!(cql_cursor_diff_col(C,D) == "d");
+  fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
+  update cursor C using X.d d;
+  EXPECT!(cql_cursor_diff_col(C,D) == "d");
 
-   fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
-   update cursor C using X.e e;
-   EXPECT!(cql_cursor_diff_col(C,D) == "e");
+  fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
+  update cursor C using X.e e;
+  EXPECT!(cql_cursor_diff_col(C,D) == "e");
 
-   fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
-   update cursor C using X.f f;
-   EXPECT!(cql_cursor_diff_col(C,D) == "f");
+  fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
+  update cursor C using X.f f;
+  EXPECT!(cql_cursor_diff_col(C,D) == "f");
 
-   fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
-   update cursor C using X.g g;
-   EXPECT!(cql_cursor_diff_col(C,D) == "g");
+  fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
+  update cursor C using X.g g;
+  EXPECT!(cql_cursor_diff_col(C,D) == "g");
 
-   fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
-   update cursor C using null i;
-   EXPECT!(cql_cursor_diff_col(C,D) == "i");
+  fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
+  update cursor C using null i;
+  EXPECT!(cql_cursor_diff_col(C,D) == "i");
 
-   fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
-   update cursor C using null j;
-   EXPECT!(cql_cursor_diff_col(C,D) == "j");
+  fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
+  update cursor C using null j;
+  EXPECT!(cql_cursor_diff_col(C,D) == "j");
 
-   fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
-   update cursor C using null k;
-   EXPECT!(cql_cursor_diff_col(C,D) == "k");
+  fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
+  update cursor C using null k;
+  EXPECT!(cql_cursor_diff_col(C,D) == "k");
 
-   fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
-   update cursor C using null l;
-   EXPECT!(cql_cursor_diff_col(C,D) == "l");
+  fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
+  update cursor C using null l;
+  EXPECT!(cql_cursor_diff_col(C,D) == "l");
 
-   fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
-   update cursor C using null m;
-   EXPECT!(cql_cursor_diff_col(C,D) == "m");
+  fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
+  update cursor C using null m;
+  EXPECT!(cql_cursor_diff_col(C,D) == "m");
 
-   fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
-   update cursor C using null n;
-   EXPECT!(cql_cursor_diff_col(C,D) == "n");
+  fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
+  update cursor C using null n;
+  EXPECT!(cql_cursor_diff_col(C,D) == "n");
 
-   fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
-   update cursor C using null o;
-   EXPECT!(cql_cursor_diff_col(C,D) == "o");
+  fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
+  update cursor C using null o;
+  EXPECT!(cql_cursor_diff_col(C,D) == "o");
 
-   fetch C(g) from values(o1) @dummy_seed(0);
-   fetch D(g) from values(o1) @dummy_seed(0);
-   EXPECT!(C.i IS NULL);
-   EXPECT!(D.i IS NULL);
-   EXPECT!(cql_cursor_diff_col(C,D) is null);
+  fetch C(g) from values(o1) @dummy_seed(0);
+  fetch D(g) from values(o1) @dummy_seed(0);
+  EXPECT!(C.i IS NULL);
+  EXPECT!(D.i IS NULL);
+  EXPECT!(cql_cursor_diff_col(C,D) is null);
+END);
+
+TEST!(cursor_diff_val,
+BEGIN
+  let o1 := 1:box;
+  let o2 := 2:box;
+  cursor C like (
+    a bool!, b int!, c long!, d real!, e text!, f blob!, g object!,
+    i bool,  j int,  k long,  l real,  m text,  n blob,  o object);
+  cursor D like C;
+  cursor X like C;
+
+  fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
+
+  -- all different values
+  fetch X(g,o) from values(o2, o1) @dummy_seed(1) @dummy_nullables;
+
+  fetch D from C;
+  EXPECT!(cql_cursor_diff_val(C,D) is null);
+
+  fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
+  update cursor C using X.a a;
+  EXPECT!(cql_cursor_diff_val(C,D) == "column:a c1:true c2:false");
+
+  fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
+  update cursor C using X.b b;
+  EXPECT!(cql_cursor_diff_val(C,D) == "column:b c1:1 c2:0");
+
+  fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
+  update cursor C using X.c c;
+  EXPECT!(cql_cursor_diff_val(C,D) == "column:c c1:1 c2:0");
+
+  fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
+  update cursor C using X.d d;
+  let diff := cql_cursor_diff_val(C,D);
+  EXPECT!(diff == "column:d c1:1 c2:0" or diff == "column:d c1:1.0 c2:0.0");
+
+  fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
+  update cursor C using X.e e;
+  EXPECT!(cql_cursor_diff_val(C,D) == "column:e c1:e_1 c2:e_0");
+
+  fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
+  update cursor C using X.f f;
+  EXPECT!(cql_cursor_diff_val(C,D) == "column:f c1:length 3 blob c2:length 3 blob");
+
+  fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
+  update cursor C using X.g g;
+  EXPECT!(cql_cursor_diff_val(C,D) == "column:g c1:generic object c2:generic object");
+
+  fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
+  update cursor C using null i;
+  EXPECT!(cql_cursor_diff_val(C,D) == "column:i c1:null c2:false");
+
+  fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
+  update cursor C using null j;
+  EXPECT!(cql_cursor_diff_val(C,D) == "column:j c1:null c2:0");
+
+  fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
+  update cursor C using null k;
+  EXPECT!(cql_cursor_diff_val(C,D) == "column:k c1:null c2:0");
+
+  fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
+  update cursor C using null l;
+  set diff := cql_cursor_diff_val(C,D);
+  EXPECT!(diff == "column:l c1:null c2:0" or diff == "column:l c1:null c2:0.0");
+
+  fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
+  update cursor C using null m;
+  EXPECT!(cql_cursor_diff_val(C,D) == "column:m c1:null c2:m_0");
+
+  fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
+  update cursor C using null n;
+  EXPECT!(cql_cursor_diff_val(C,D) == "column:n c1:null c2:length 3 blob");
+
+  fetch C(g,o) from values(o1, o2) @dummy_seed(0) @dummy_nullables;
+  update cursor C using null o;
+  EXPECT!(cql_cursor_diff_val(C,D) == "column:o c1:null c2:generic object");
+
+  fetch C(g) from values(o1) @dummy_seed(0);
+  fetch D(g) from values(o1) @dummy_seed(0);
+  EXPECT!(C.i IS NULL);
+  EXPECT!(D.i IS NULL);
+  EXPECT!(cql_cursor_diff_val(C,D) is null);
 END);
 
 DECLARE PROC get_rows(result object!) OUT UNION (x INT!, y TEXT!, z BOOL);

@@ -9345,16 +9345,6 @@ static bool_t validate_cql_cursor_diff(ast_node *ast, uint32_t arg_count) {
   return true;
 }
 
-static void sem_func_cql_cursor_diff_val(ast_node *ast, uint32_t arg_count) {
-  if (!validate_cql_cursor_diff(ast, arg_count)) {
-    return;
-  }
-
-  // We have a cql_cursor_diff_val function call, we rewrite the node to
-  // a case_expr node.
-  rewrite_cql_cursor_diff(ast, false);
-}
-
 // This is a special function because we do not want to analyze the arguments
 // until after the rewrite to a CASE expression.
 static void sem_special_func_iif(ast_node *ast, uint32_t arg_count, bool_t *is_aggregate) {
@@ -10785,7 +10775,7 @@ additional_checks:
      Contract(arg_count == 1); // already failed if wrong
      sem_infer_result_blob_type(ast, arg_list);
   }
-  else if (!StrCaseCmp(name, "cql_cursor_diff_col")) {
+  else if (!StrCaseCmp(name, "cql_cursor_diff_col") || !StrCaseCmp(name, "cql_cursor_diff_val")) {
     if (!is_error(ast) && !validate_cql_cursor_diff(ast, arg_count)) {
       record_error(ast);
       return;
@@ -26166,7 +26156,6 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(changes);
   FUNC_INIT(coalesce);
   FUNC_INIT(cql_compressed);
-  FUNC_INIT(cql_cursor_diff_val);
   FUNC_INIT(cql_get_blob_size);
   FUNC_INIT(cume_dist);
   FUNC_INIT(dense_rank);

@@ -31,7 +31,6 @@ cql_noexport ast_node *_Nonnull rewrite_gen_full_column_list(sem_struct *_Nonnul
 cql_noexport void rewrite_expr_names_to_columns_values(ast_node *_Nonnull columns_values);
 cql_noexport void rewrite_select_stmt_to_columns_values(ast_node *_Nonnull columns_values);
 cql_noexport void rewrite_empty_column_list(ast_node *_Nonnull columns_values, sem_struct *_Nonnull sptr);
-cql_noexport void rewrite_cql_cursor_diff(ast_node *_Nonnull ast, bool_t report_column_name);
 cql_noexport void rewrite_iif(ast_node *_Nonnull ast);
 cql_noexport bool_t rewrite_ast_star_if_needed(ast_node *_Nullable arg_list, ast_node *_Nonnull proc_name_ast);
 cql_noexport bool_t rewrite_shape_forms_in_list_if_needed(ast_node *_Nullable arg_list);

@@ -4616,6 +4616,11 @@ static void cql_format_one_cursor_column(
         cql_bprintf(b, "length %d blob", size);
         break;
       }
+      case CQL_DATA_TYPE_OBJECT: {
+        cql_object_ref obj_ref = *(cql_object_ref *)(cursor + offset);
+        cql_bprintf(b, "generic object");
+        break;
+      }
     }
   }
   else {
@@ -4683,6 +4688,16 @@ static void cql_format_one_cursor_column(
         }
         break;
       }
+      case CQL_DATA_TYPE_OBJECT: {
+        cql_object_ref obj_ref = *(cql_object_ref *)(cursor + offset);
+        if (!obj_ref) {
+          cql_bprintf(b, "null");
+        }
+        else {
+          cql_bprintf(b, "generic object");
+        }
+        break;
+      }      
     }
   }
 }
@@ -4881,6 +4896,42 @@ cql_string_ref _Nullable cql_cursor_diff_col(
   for (uint16_t i = 0; i < count1; i++) {
     if (!cql_compare_one_cursor_column(dyn_cursor1, dyn_cursor2, i)) {
       return cql_cursor_column_name(dyn_cursor1, i);
+    }
+  }
+
+  return NULL;
+}
+
+cql_string_ref _Nullable cql_cursor_diff_val(
+  cql_dynamic_cursor *_Nonnull dyn_cursor1,
+  cql_dynamic_cursor *_Nonnull dyn_cursor2)
+{
+  // count is stored in first offset
+  uint16_t count1 = dyn_cursor1->cursor_col_offsets[0];
+  uint16_t count2 = dyn_cursor2->cursor_col_offsets[0];
+
+  // pre-verified by semantic analysis
+  cql_contract(count1 == count2);
+
+  for (uint16_t i = 0; i < count1; i++) {
+    if (!cql_compare_one_cursor_column(dyn_cursor1, dyn_cursor2, i)) {
+      cql_bytebuf b;
+      cql_bytebuf_open(&b);
+
+      // field names for printing
+      const char **fields = dyn_cursor1->cursor_fields;
+      cql_bprintf(&b, "column:%s", fields[i]);
+
+      cql_bprintf(&b, " c1:");
+      cql_format_one_cursor_column(&b, dyn_cursor1, i);
+      cql_bprintf(&b, " c2:");
+      cql_format_one_cursor_column(&b, dyn_cursor2, i);
+
+      cql_bytebuf_append_null(&b);
+
+      cql_string_ref result = cql_string_ref_new(b.ptr);
+      cql_bytebuf_close(&b);
+      return result;
     }
   }
 

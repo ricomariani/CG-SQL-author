@@ -195,8 +195,13 @@ and array get/set.
 @op cql_blob_list : call add as cql_blob_list_add;
 @op cql_blob_list : get count as cql_blob_list_count;
 ```
-
->Note: cql_object_list is missing for no good reason.  This will be fixed.
+*Object*
+```
+@op cql_object_list : array set as cql_object_list_set_at;
+@op cql_object_list : array get as cql_object_list_get_at;
+@op cql_object_list : call add as cql_object_list_add;
+@op cql_object_list : get count as cql_object_list_count;
+```
 
 ### Dictionary Operations
 

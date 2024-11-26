@@ -4389,6 +4389,41 @@ cql_object_ref _Nonnull cql_string_list_set_at(
   return list;
 }
 
+cql_object_ref _Nonnull cql_object_list_create(void) {
+  // the details are the same for strings as objects
+  return cql_string_list_create();
+}
+
+cql_object_ref _Nonnull cql_object_list_add(
+  cql_object_ref _Nonnull list,
+  cql_object_ref _Nonnull value)
+{
+  // the details are the same for strings as objects
+  return cql_string_list_add(list, (cql_string_ref)value);
+}
+
+cql_int32 cql_object_list_count(cql_object_ref _Nonnull list) {
+  // the details are the same for strings as objects
+  return cql_string_list_count(list);
+}
+
+cql_object_ref _Nonnull cql_object_list_get_at(
+  cql_object_ref _Nonnull list,
+  cql_int32 index)
+{
+  // the details are the same for strings as objects
+  return (cql_object_ref)cql_string_list_get_at(list, index);
+}
+
+cql_object_ref _Nonnull cql_object_list_set_at(
+  cql_object_ref _Nonnull list,
+  int32_t index,
+  cql_object_ref _Nonnull value)
+{
+  // the details are the same for strings as objects
+  return cql_string_list_set_at(list, index, (cql_string_ref)value);
+}
+
 cql_object_ref _Nonnull cql_blob_list_create(void) {
   // the details are the same for strings as blobs
   return cql_string_list_create();

@@ -6217,6 +6217,24 @@ BEGIN
   EXPECT!("goodbye" == string_from_blob(list[1]));
 END);
 
+TEST!(cql_object_list,
+BEGIN
+  -- this version uses the better notation which should
+  -- compile into the same code as the above
+  let list := cql_object_list_create();
+  EXPECT!(0 == list.count);
+  list:add("hello":box):add("goodbye":box);
+  EXPECT!(2 == list.count);
+  EXPECT!("hello" == list[0] ~object<cql_box>~ :to_text);
+  EXPECT!("goodbye" == list[1] ~object<cql_box>~ :to_text);
+
+  -- use the setter, too
+  list[0] := "salut":box;
+  EXPECT!(2 == list.count);
+  EXPECT!("salut" == list[0] ~object<cql_box>~ :to_text);
+  EXPECT!("goodbye" == list[1] ~object<cql_box>~: to_text);
+END);
+
 TEST!(cql_long_list,
 BEGIN
   let list := cql_long_list_create();

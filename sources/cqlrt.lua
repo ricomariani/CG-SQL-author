@@ -905,6 +905,12 @@ cql_blob_list_add = cql_string_list_add;
 cql_blob_list_get_at = cql_string_list_get_at;
 cql_blob_list_set_at = cql_string_list_set_at;
 
+cql_object_list_create = cql_string_list_create;
+cql_object_list_count = cql_string_list_count;
+cql_object_list_add = cql_string_list_add;
+cql_object_list_get_at = cql_string_list_get_at;
+cql_object_list_set_at = cql_string_list_set_at;
+
 function cql_exec_internal(db, str)
   return db:exec(str)
 end

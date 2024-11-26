@@ -3269,6 +3269,28 @@ cql_noexport CSTR cql_builtin_text() {
     "@op cql_blob_list : get count as cql_blob_list_count;"
 
     "[[builtin]]"
+    "TYPE cql_object_list object<cql_object_list>;"
+    "[[builtin]]"
+    "declare func cql_object_list_create() create cql_object_list!;"
+    "[[builtin]]"
+    "declare func cql_object_list_set_at(list cql_object_list!, index_ int!, value_ object!) cql_object_list!;"
+    "[[builtin]]"
+    "declare func cql_object_list_get_at(list cql_object_list!, index_ int!) object;"
+    "[[builtin]]"
+    "declare func cql_object_list_count(list cql_object_list!) int!;"
+    "[[builtin]]"
+    "declare func cql_object_list_add(list cql_object_list!, value object!) cql_object_list!;"
+
+    "[[builtin]]"
+    "@op cql_object_list : array set as cql_object_list_set_at;"
+    "[[builtin]]"
+    "@op cql_object_list : array get as cql_object_list_get_at;"
+    "[[builtin]]"
+    "@op cql_object_list : call add as cql_object_list_add;"
+    "[[builtin]]"
+    "@op cql_object_list : get count as cql_object_list_count;"
+
+    "[[builtin]]"
     "TYPE cql_long_list object<cql_long_list>;"
     "[[builtin]]"
     "declare func cql_long_list_create() create cql_long_list!;"
@@ -4038,3 +4060,4 @@ cql_noexport int32_t macro_type_from_str(CSTR type) {
   Contract(macro_type != EOF);
   return macro_type;
 }
+

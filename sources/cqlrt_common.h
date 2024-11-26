@@ -580,6 +580,13 @@ CQL_EXPORT int32_t cql_blob_list_count(cql_object_ref _Nonnull list);
 CQL_EXPORT cql_blob_ref _Nonnull cql_blob_list_get_at(cql_object_ref _Nonnull list, int32_t index);
 CQL_EXPORT cql_object_ref _Nonnull cql_blob_list_set_at(cql_object_ref _Nonnull list, int32_t index, cql_blob_ref _Nonnull value);
 
+// Object list helpers
+CQL_EXPORT cql_object_ref _Nonnull cql_object_list_create(void);
+CQL_EXPORT cql_object_ref _Nonnull cql_object_list_add(cql_object_ref _Nonnull list, cql_object_ref _Nonnull value);
+CQL_EXPORT int32_t cql_object_list_count(cql_object_ref _Nonnull list);
+CQL_EXPORT cql_object_ref _Nonnull cql_object_list_get_at(cql_object_ref _Nonnull list, int32_t index);
+CQL_EXPORT cql_object_ref _Nonnull cql_object_list_set_at(cql_object_ref _Nonnull list, int32_t index, cql_object_ref _Nonnull value);
+
 // Long list helpers
 CQL_EXPORT cql_object_ref _Nonnull cql_long_list_create(void);
 CQL_EXPORT cql_object_ref _Nonnull cql_long_list_add(cql_object_ref _Nonnull list, cql_int64 value);

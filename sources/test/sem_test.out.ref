@@ -51853,8 +51853,8 @@ END;
       | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
       | {assign}: a_string: text variable was_set
         | {name a_string}: a_string: text variable was_set
-        | {call}: text
-          | {name cql_cursor_diff_col}: text
+        | {call}: text create_func
+          | {name cql_cursor_diff_col}
           | {call_arg_list}
             | {call_filter_clause}
             | {arg_list}: ok
@@ -51932,8 +51932,8 @@ END;
       | {call_stmt}: ok
         | {name printf}: ok
         | {arg_list}: ok
-          | {call}: text
-            | {name cql_cursor_diff_col}: text
+          | {call}: text create_func
+            | {name cql_cursor_diff_col}
             | {call_arg_list}
               | {call_filter_clause}
               | {arg_list}: ok
@@ -52021,8 +52021,8 @@ END;
       | {call_stmt}: ok
         | {name printf}: ok
         | {arg_list}: ok
-          | {call}: text
-            | {name cql_cursor_diff_val}: text
+          | {call}: text create_func
+            | {name cql_cursor_diff_val}
             | {call_arg_list}
               | {call_filter_clause}
               | {arg_list}: ok

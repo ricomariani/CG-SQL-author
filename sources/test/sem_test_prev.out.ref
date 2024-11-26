@@ -973,6 +973,33 @@ DECLARE FUNC cql_cursors_equal (l CURSOR, r CURSOR) BOOL!;
 The statement ending at line XXXX
 
 [[builtin]]
+DECLARE FUNC cql_cursor_diff_index (l CURSOR, r CURSOR) INT!;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: integer notnull
+    | {name cql_cursor_diff_index}: integer notnull
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: l: cursor variable in
+      | | | {param_detail}: l: cursor variable in
+      | |   | {name l}: l: cursor variable in
+      | |   | {type_cursor}: cursor
+      | | {params}
+      |   | {param}: r: cursor variable in
+      |     | {param_detail}: r: cursor variable in
+      |       | {name r}: r: cursor variable in
+      |       | {type_cursor}: cursor
+      | {notnull}: integer notnull
+        | {type_int}: integer
+
+The statement ending at line XXXX
+
+[[builtin]]
 DECLARE FUNC cql_cursor_diff_col (l CURSOR, r CURSOR) CREATE TEXT;
 
   {stmt_and_attr}: ok
@@ -3148,6 +3175,25 @@ The statement ending at line XXXX
       | {op_vals}
         | {name hash}
         | {name cql_cursor_hash}
+
+The statement ending at line XXXX
+
+[[builtin]]
+@OP CURSOR : call diff_index AS cql_cursor_diff_index;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {name CURSOR}
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name diff_index}
+        | {name cql_cursor_diff_index}
 
 The statement ending at line XXXX
 

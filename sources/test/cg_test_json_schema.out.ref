@@ -6051,6 +6051,38 @@
     The statement ending at line XXXX
 
     [[builtin]]
+    DECLARE FUNC cql_cursor_diff_index (l CURSOR, r CURSOR) INT!
+
+    {
+      "name" : "cql_cursor_diff_index",
+      "args" : [
+        {
+          "name" : "l",
+          "type" : "",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "r",
+          "type" : "",
+          "isNotNull" : 0
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "integer",
+        "isNotNull" : 1
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    [[builtin]]
     DECLARE FUNC cql_cursor_diff_col (l CURSOR, r CURSOR) CREATE TEXT
 
     {

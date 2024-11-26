@@ -9282,6 +9282,9 @@ static bool_t validate_cql_cursor_diff(ast_node *ast, uint32_t arg_count) {
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
+  // basic call already verified
+  Contract(!is_error(ast));
+
   // already verified
   Contract(arg_count == 2);
 
@@ -9311,10 +9314,6 @@ static bool_t validate_cql_cursor_diff(ast_node *ast, uint32_t arg_count) {
     record_error(ast);
     return false;
   }
-
-  // the function always return a string which is the name of the first column in the
-  // cursors that are different otherwise null.
-  name_ast->sem = ast->sem = new_sem(SEM_TYPE_TEXT);
 
   return true;
 }
@@ -10749,8 +10748,12 @@ additional_checks:
      Contract(arg_count == 1); // already failed if wrong
      sem_infer_result_blob_type(ast, arg_list);
   }
-  else if (!StrCaseCmp(name, "cql_cursor_diff_col") || !StrCaseCmp(name, "cql_cursor_diff_val")) {
-    if (!is_error(ast) && !validate_cql_cursor_diff(ast, arg_count)) {
+  else if (!is_error(ast) && (
+     !StrCaseCmp(name, "cql_cursor_diff_col") ||
+     !StrCaseCmp(name, "cql_cursor_diff_val") ||
+     !StrCaseCmp(name, "cql_cursor_diff_index"))) {
+    // the cursor diff functions need the same compatible cursor validation
+    if (!validate_cql_cursor_diff(ast, arg_count)) {
       record_error(ast);
       return;
     }

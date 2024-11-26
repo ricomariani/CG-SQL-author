@@ -4917,7 +4917,7 @@ static cql_bool cql_compare_one_cursor_column(
   }
 }
 
-cql_string_ref _Nullable cql_cursor_diff_col(
+cql_int32 cql_cursor_diff_index(
   cql_dynamic_cursor *_Nonnull dyn_cursor1,
   cql_dynamic_cursor *_Nonnull dyn_cursor2)
 {
@@ -4925,13 +4925,39 @@ cql_string_ref _Nullable cql_cursor_diff_col(
   uint16_t count1 = dyn_cursor1->cursor_col_offsets[0];
   uint16_t count2 = dyn_cursor2->cursor_col_offsets[0];
 
+  // -2 indicates one has a row and the other doesn't
+  if (*dyn_cursor1->cursor_has_row != *dyn_cursor2->cursor_has_row) {
+    return -2;
+  }
+
+  // both empty is a match
+  if (!*dyn_cursor1->cursor_has_row) {
+    return -1;
+  }
+
   // pre-verified by semantic analysis
   cql_contract(count1 == count2);
 
   for (uint16_t i = 0; i < count1; i++) {
     if (!cql_compare_one_cursor_column(dyn_cursor1, dyn_cursor2, i)) {
-      return cql_cursor_column_name(dyn_cursor1, i);
+      return i;
     }
+  }
+
+  return -1;
+}
+
+cql_string_ref _Nullable cql_cursor_diff_col(
+  cql_dynamic_cursor *_Nonnull dyn_cursor1,
+  cql_dynamic_cursor *_Nonnull dyn_cursor2)
+{
+  cql_int32 i = cql_cursor_diff_index(dyn_cursor1, dyn_cursor2);
+  if (i >= 0) {
+    return cql_cursor_column_name(dyn_cursor1, i);
+  }
+
+  if (i == -2) {
+    return cql_string_ref_new("_has_row_");
   }
 
   return NULL;
@@ -4941,33 +4967,43 @@ cql_string_ref _Nullable cql_cursor_diff_val(
   cql_dynamic_cursor *_Nonnull dyn_cursor1,
   cql_dynamic_cursor *_Nonnull dyn_cursor2)
 {
-  // count is stored in first offset
-  uint16_t count1 = dyn_cursor1->cursor_col_offsets[0];
-  uint16_t count2 = dyn_cursor2->cursor_col_offsets[0];
+  cql_int32 i = cql_cursor_diff_index(dyn_cursor1, dyn_cursor2);
 
-  // pre-verified by semantic analysis
-  cql_contract(count1 == count2);
+  if (i >= 0) {
+    cql_bytebuf b;
+    cql_bytebuf_open(&b);
 
-  for (uint16_t i = 0; i < count1; i++) {
-    if (!cql_compare_one_cursor_column(dyn_cursor1, dyn_cursor2, i)) {
-      cql_bytebuf b;
-      cql_bytebuf_open(&b);
+    // field names for printing
+    const char **fields = dyn_cursor1->cursor_fields;
+    cql_bprintf(&b, "column:%s", fields[i]);
 
-      // field names for printing
-      const char **fields = dyn_cursor1->cursor_fields;
-      cql_bprintf(&b, "column:%s", fields[i]);
+    cql_bprintf(&b, " c1:");
+    cql_format_one_cursor_column(&b, dyn_cursor1, i);
+    cql_bprintf(&b, " c2:");
+    cql_format_one_cursor_column(&b, dyn_cursor2, i);
 
-      cql_bprintf(&b, " c1:");
-      cql_format_one_cursor_column(&b, dyn_cursor1, i);
-      cql_bprintf(&b, " c2:");
-      cql_format_one_cursor_column(&b, dyn_cursor2, i);
+    cql_bytebuf_append_null(&b);
 
-      cql_bytebuf_append_null(&b);
+    cql_string_ref result = cql_string_ref_new(b.ptr);
+    cql_bytebuf_close(&b);
+    return result;
+  }
 
-      cql_string_ref result = cql_string_ref_new(b.ptr);
-      cql_bytebuf_close(&b);
-      return result;
-    }
+  if (i == -2) {
+    cql_bytebuf b;
+    cql_bytebuf_open(&b);
+
+    // field names for printing
+    const char **fields = dyn_cursor1->cursor_fields;
+    cql_bprintf(&b, "column:_has_row_ c1:%s c2:%s",
+      *dyn_cursor1->cursor_has_row ? "true" : "false",
+      *dyn_cursor2->cursor_has_row ? "true" : "false");
+
+    cql_bytebuf_append_null(&b);
+
+    cql_string_ref result = cql_string_ref_new(b.ptr);
+    cql_bytebuf_close(&b);
+    return result;
   }
 
   return NULL;

@@ -736,26 +736,48 @@ function cql_cursors_equal(k1, k1_types, k1_fields, k2, k2_types, k2_fields)
   return true
 end
 
-function cql_cursor_diff_col(k1, k1_types, k1_fields, k2, k2_types, k2_fields)
-  if (not k1._has_row_) and not k2._has_row_ then return nil end
-  if k1._has_row_ ~= k2._has_row_ then return "_has_row_" end
-  if #k1 ~= #k2 then return "$error_field_counts_do_not_match" end
+function cql_cursor_diff_index(k1, k1_types, k1_fields, k2, k2_types, k2_fields)
+  -- one has a row and the other doesn't
+  if k1._has_row_ ~= k2._has_row_ then
+    return -2
+  end;
+
+  -- both empty is a match
+  if not k1._has_row_ then
+    return -1
+  end
+
+  if #k1 ~= #k2 then
+    print("cursor column count doesn't match first:"..#k1.." second:"..#k2)
+    exit_on_error();
+  end
 
   for i = 1, #k1_fields
   do
-     k = k1_fields[i]
-     if k2_fields[i] ~= k then return "$error_field_names_differ" end
-     if k1[k] ~= k2[k] then return k end
+    k = k1_fields[i]
+    if k2_fields[i] ~= k then
+      print("cursor field names don't match first:"..k.." second:"..k2_fields[i])
+      exit_on_error();
+    end
+
+    if k1[k] ~= k2[k] then
+      return i-1
+    end
   end
 
-  return nil
+  return -1
 end
 
-function cql_cursor_diff_val(k1, k1_types, k1_fields, k2, k2_types, k2_fields)
-  if (not k1._has_row_) and not k2._has_row_ then return nil end
-  if k1._has_row_ ~= k2._has_row_ then return "_has_row_" end
-  if #k1 ~= #k2 then return "$error_field_counts_do_not_match" end
-  if k1_types ~= k2_types then return "$error_field_types_differ" end
+function cql_cursor_diff_col(k1, k1_types, k1_fields, k2, k2_types, k2_fields)
+  if (not k1._has_row_) and not k2._has_row_ then
+    return nil
+  end
+  if k1._has_row_ ~= k2._has_row_ then
+    return "_has_row_"
+  end
+  if #k1 ~= #k2 then
+    return "$error_field_counts_do_not_match"
+  end
 
   for i = 1, #k1_fields
   do
@@ -765,16 +787,34 @@ function cql_cursor_diff_val(k1, k1_types, k1_fields, k2, k2_types, k2_fields)
     end
 
     if k1[k] ~= k2[k] then
-      local code = string.byte(k1_types, i, i)
-      local value1 = k1[k]
-      local value2 = k2[k]
-      return "column:"..k..
-        " c1:"..cql_format_one_field(code, value1)..
-        " c2:"..cql_format_one_field(code, value2)
+      return k
     end
   end
 
   return nil
+end
+
+function cql_cursor_diff_val(k1, k1_types, k1_fields, k2, k2_types, k2_fields)
+  local i = cql_cursor_diff_index(k1, k1_types, k1_fields, k2, k2_types, k2_fields)
+
+  if i == -1 then
+     return nil
+  end
+
+  if i == -2 then
+    return "column:_has_row_ c1:"..tostring(k1._has_row_).." c2:"..tostring(k2._has_row_)
+  end 
+
+  -- field offsets are all 1 based in lua, fix that
+  i = i + 1
+
+  local code = string.byte(k1_types, i, i)
+  local value1 = k1[k]
+  local value2 = k2[k]
+
+  return "column:"..k..
+      " c1:"..cql_format_one_field(code, value1)..
+      " c2:"..cql_format_one_field(code, value2)
 end
 
 function cql_partition_cursor(partition, key, key_types, key_fields, cursor, cursor_types, cursor_fields)

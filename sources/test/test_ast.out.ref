@@ -898,6 +898,31 @@ The statement ending at line XXXX
   |     | {name cql}
   |     | {name builtin}
   | {declare_func_stmt}
+    | {name cql_cursor_diff_index}
+    | {func_params_return}
+      | {params}
+      | | {param}
+      | | | {param_detail}
+      | |   | {name l}
+      | |   | {type_cursor}
+      | | {params}
+      |   | {param}
+      |     | {param_detail}
+      |       | {name r}
+      |       | {type_cursor}
+      | {notnull}
+        | {type_int}
+
+The statement ending at line XXXX
+
+[[builtin]]
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}
     | {name cql_cursor_diff_col}
     | {func_params_return}
       | {params}
@@ -2823,6 +2848,23 @@ The statement ending at line XXXX
       | {op_vals}
         | {name hash}
         | {name cql_cursor_hash}
+
+The statement ending at line XXXX
+
+[[builtin]]
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}
+    | {name CURSOR}
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name diff_index}
+        | {name cql_cursor_diff_index}
 
 The statement ending at line XXXX
 

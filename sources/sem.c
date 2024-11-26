@@ -7904,7 +7904,7 @@ static void sem_special_func_cql_blob_get_type(ast_node *ast, uint32_t arg_count
   if (!sem_validate_appear_inside_sql_stmt(ast)) {
     return;
   }
-  
+
   if (!sem_validate_arg_count(ast, arg_count, 1)) {
     return;
   }
@@ -12723,6 +12723,11 @@ static void sem_cte_decl(ast_node *ast, ast_node *select_core)  {
     EXTRACT_STRING(col_name, item->left);
     sptr->names[i] = col_name;
 
+    // This is something like WITH A(`foo bar`, baz) as (select 1 x, 2 y)
+    if (is_qid(item->left)) {
+      sptr->semtypes[i] |= SEM_TYPE_QID;
+    }
+
     item = item->right;
   }
 
@@ -13472,7 +13477,18 @@ static void sem_cte_table(ast_node *ast)  {
     // we will expose to the world.
 
     // replace the types but not the names!
-    cte_decl->sem->sptr->semtypes = select_stmt->sem->sptr->semtypes;
+    sem_struct *sptr1 = cte_decl->sem->sptr;
+    sem_struct *sptr2 = select_stmt->sem->sptr;
+    sem_t *semtypes = sptr1->semtypes;
+
+    sptr1->semtypes = sptr2->semtypes;
+
+    // if any of the names are QID, we have to save that
+    for (int i = 0; i < sptr1->count; i++) {
+       if (semtypes[i] & SEM_TYPE_QID) {
+         sptr1->semtypes[i] |= SEM_TYPE_QID;
+       }
+    }
   }
   else if (is_ast_shared_cte(cte_body)) {
     sem_shared_cte(cte_body);
@@ -26407,10 +26423,10 @@ static bool_t sem_validate_arg_pattern(CSTR type_string, ast_node *ast_call, uin
   EXTRACT(arg_list, call_arg_list->right);
 
   arg_pattern pat;
-  sem_parse_arg_pattern(type_string, &pat);  
+  sem_parse_arg_pattern(type_string, &pat);
   uint16_t *types = pat.data;
 
-  if (pat.repeat_period && arg_count >= pat.repeat_start) { 
+  if (pat.repeat_period && arg_count >= pat.repeat_start) {
     if ((((int16_t)arg_count - pat.repeat_start) % pat.repeat_period) != 0) {
       CHARBUF_OPEN(msg);
       bprintf(&msg, "CQL0079: starting at argument %d, arguments must come in groups of %d in",
@@ -26421,7 +26437,7 @@ static bool_t sem_validate_arg_pattern(CSTR type_string, ast_node *ast_call, uin
       return false;
     }
   }
-  
+
   uint16_t iarg = 0;
   uint16_t inum = 1;
   for (ast_node *ast = arg_list; ast; ast = ast->right, iarg++, inum++) {
@@ -26505,7 +26521,7 @@ static void sem_parse_arg_pattern(CSTR input, arg_pattern *out) {
       case 's': data[item] |= SEM_TYPE_MASK_TEXT; handled = true; break;
       case 'b': data[item] |= SEM_TYPE_MASK_BLOB; handled = true; break;
       case 'o': data[item] |= SEM_TYPE_MASK_OBJ;  handled = true; break;
-      case '[': 
+      case '[':
         for (int i = item; i < ARG_COUNT; i++) {
           Contract(data[i] == 0);
           data[i] = SEM_TYPE_MASK_OPT;
@@ -26532,7 +26548,7 @@ static void sem_parse_arg_pattern(CSTR input, arg_pattern *out) {
         out->repeat_period = item - last_optional;
         handled = true;
         break;
-      
+
       case ',':
         item++;
         Contract(item <= 7);

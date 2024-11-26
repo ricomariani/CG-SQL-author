@@ -2478,3 +2478,10 @@ ELSE
   SELECT 2
     FROM bar;
 END;
+
+WITH
+  X (`foo bar`) AS (
+    SELECT 1 AS x
+  )
+SELECT *
+  FROM X;

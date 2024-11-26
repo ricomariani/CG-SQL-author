@@ -2455,3 +2455,10 @@ SELECT 2
 BEGIN
   LET qq := 201;
 END);
+
+WITH
+  X (`foo bar`) AS (
+    SELECT 1 AS x
+  )
+SELECT *
+  FROM X;

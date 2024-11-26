@@ -1899,3 +1899,5 @@ test_big_all!(
   with(f(*) as (select 99 from yy)),
   begin let qq := 201; end
   );
+
+with X(`foo bar`) as (select 1 x) select * from X;

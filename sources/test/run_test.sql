@@ -1554,11 +1554,11 @@ END);
 TEST!(with_test,
 BEGIN
   cursor C for
-    with X(A,B) as ( select 1,2)
+    with X(`A A`,B) as ( select 1,2)
     select * from X;
 
   fetch C;
-  EXPECT!(C.A = 1);
+  EXPECT!(C.`A A` = 1);
   EXPECT!(C.B = 2);
   fetch C;
   EXPECT!(NOT C);

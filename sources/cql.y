@@ -1412,7 +1412,7 @@ cte_tables[result]:
   ;
 
 cte_decl:
-  name '(' name_list ')'  { $cte_decl = new_ast_cte_decl($name, $name_list); }
+  name '(' sql_name_list ')'  { $cte_decl = new_ast_cte_decl($name, $sql_name_list); }
   | name '(' '*' ')'  { $cte_decl = new_ast_cte_decl($name, new_ast_star()); }
   | name { $cte_decl = new_ast_cte_decl($name, new_ast_star()); }
   ;

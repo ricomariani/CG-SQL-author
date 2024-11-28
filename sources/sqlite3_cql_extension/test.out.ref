@@ -1,0 +1,293 @@
+
+.nullvalue 'NULL'
+.read test.sql
+CREATE TABLE t(cql TEXT, dummy, sqlite TEXT GENERATED ALWAYS AS (typeof(dummy)) VIRTUAL);
+INSERT INTO t(cql, dummy) VALUES
+  ("bool", 1),
+  ("real", 3.14),
+  ("integer", 1234),
+  ("long", 1234567890123456789),
+  ("text", 'HW'),
+  ("blob", (select CAST("blob" as blob))),
+  ("object", 123),
+  ("null", NULL)
+;
+
+-- Example from ./README.md
+SELECT hello_world(); -- Expect Result got RESULT:  [{"hello_world()":"Hello World !"}]
+
+-- Nullables as null
+SELECT comprehensive_test(
+  (SELECT t.dummy FROM t WHERE t.cql = "bool"),
+  (SELECT t.dummy FROM t WHERE t.cql = "null"),
+  (SELECT t.dummy FROM t WHERE t.cql = "real"),
+  (SELECT t.dummy FROM t WHERE t.cql = "null"),
+  (SELECT t.dummy FROM t WHERE t.cql = "integer"),
+  (SELECT t.dummy FROM t WHERE t.cql = "null"),
+  (SELECT t.dummy FROM t WHERE t.cql = "long"),
+  (SELECT t.dummy FROM t WHERE t.cql = "null"),
+  (SELECT t.dummy FROM t WHERE t.cql = "text"),
+  (SELECT t.dummy FROM t WHERE t.cql = "null"),
+  (SELECT t.dummy FROM t WHERE t.cql = "blob"),
+  (SELECT t.dummy FROM t WHERE t.cql = "null"),
+  (SELECT t.dummy FROM t WHERE t.cql = "bool"),
+  (SELECT t.dummy FROM t WHERE t.cql = "null"),
+  (SELECT t.dummy FROM t WHERE t.cql = "real"),
+  (SELECT t.dummy FROM t WHERE t.cql = "null"),
+  (SELECT t.dummy FROM t WHERE t.cql = "integer"),
+  (SELECT t.dummy FROM t WHERE t.cql = "null"),
+  (SELECT t.dummy FROM t WHERE t.cql = "long"),
+  (SELECT t.dummy FROM t WHERE t.cql = "null"),
+  (SELECT t.dummy FROM t WHERE t.cql = "text"),
+  (SELECT t.dummy FROM t WHERE t.cql = "null"),
+  (SELECT t.dummy FROM t WHERE t.cql = "blob"),
+  (SELECT t.dummy FROM t WHERE t.cql = "null")
+) as out; -- Expect RESULT got RESULT:  [{"out":"hello"}]
+
+-- Nullables as non null
+SELECT comprehensive_test(
+  (SELECT t.dummy FROM t WHERE t.cql = "bool"),
+  (SELECT t.dummy FROM t WHERE t.cql = "bool"),
+  (SELECT t.dummy FROM t WHERE t.cql = "real"),
+  (SELECT t.dummy FROM t WHERE t.cql = "real"),
+  (SELECT t.dummy FROM t WHERE t.cql = "integer"),
+  (SELECT t.dummy FROM t WHERE t.cql = "integer"),
+  (SELECT t.dummy FROM t WHERE t.cql = "long"),
+  (SELECT t.dummy FROM t WHERE t.cql = "long"),
+  (SELECT t.dummy FROM t WHERE t.cql = "text"),
+  (SELECT t.dummy FROM t WHERE t.cql = "text"),
+  (SELECT t.dummy FROM t WHERE t.cql = "blob"),
+  (SELECT t.dummy FROM t WHERE t.cql = "blob"),
+  (SELECT t.dummy FROM t WHERE t.cql = "bool"),
+  (SELECT t.dummy FROM t WHERE t.cql = "bool"),
+  (SELECT t.dummy FROM t WHERE t.cql = "real"),
+  (SELECT t.dummy FROM t WHERE t.cql = "real"),
+  (SELECT t.dummy FROM t WHERE t.cql = "integer"),
+  (SELECT t.dummy FROM t WHERE t.cql = "integer"),
+  (SELECT t.dummy FROM t WHERE t.cql = "long"),
+  (SELECT t.dummy FROM t WHERE t.cql = "long"),
+  (SELECT t.dummy FROM t WHERE t.cql = "text"),
+  (SELECT t.dummy FROM t WHERE t.cql = "text"),
+  (SELECT t.dummy FROM t WHERE t.cql = "blob"),
+  (SELECT t.dummy FROM t WHERE t.cql = "blob")
+) as out; -- Expect RESULT got RESULT:  [{"out":"hello"}]
+
+-- Nullables as null
+SELECT
+  in__bool__not_null((SELECT t.dummy FROM t WHERE t.cql = "bool")) bool__not_null,
+  in__bool__nullable((SELECT t.dummy FROM t WHERE t.cql = "null")) bool__nullable,
+  in__real__not_null((SELECT t.dummy FROM t WHERE t.cql = "real")) real__not_null,
+  in__real__nullable((SELECT t.dummy FROM t WHERE t.cql = "null")) real__nullable,
+  in__integer__not_null((SELECT t.dummy FROM t WHERE t.cql = "integer")) integer__not_null,
+  in__integer__nullable((SELECT t.dummy FROM t WHERE t.cql = "null")) integer__nullable,
+  in__long__not_null((SELECT t.dummy FROM t WHERE t.cql = "long")) long__not_null,
+  in__long__nullable((SELECT t.dummy FROM t WHERE t.cql = "null")) long__nullable,
+  in__text__not_null((SELECT t.dummy FROM t WHERE t.cql = "text")) text__not_null,
+  in__text__nullable((SELECT t.dummy FROM t WHERE t.cql = "null")) text__nullable,
+  in__blob__not_null((SELECT t.dummy FROM t WHERE t.cql = "blob")) blob__not_null,
+  in__blob__nullable((SELECT t.dummy FROM t WHERE t.cql = "null")) blob__nullable
+; -- Expect RESULT got RESULT:  [{"bool__not_null":1,"bool__nullable":null,"real__not_null":3.140000000000000124,"real__nullable":null,"integer__not_null":1234,"integer__nullable":null,"long__not_null":1234567890123456789,"long__nullable":null,"text__not_null":"HW","text__nullable":null,"blob__not_null":"blob","blob__nullable":null}]
+
+-- Nullables as non null
+SELECT
+  in__bool__not_null((SELECT t.dummy FROM t WHERE t.cql = "bool")) bool__not_null,
+  in__bool__nullable((SELECT t.dummy FROM t WHERE t.cql = "bool")) bool__nullable,
+  in__real__not_null((SELECT t.dummy FROM t WHERE t.cql = "real")) real__not_null,
+  in__real__nullable((SELECT t.dummy FROM t WHERE t.cql = "real")) real__nullable,
+  in__integer__not_null((SELECT t.dummy FROM t WHERE t.cql = "integer")) integer__not_null,
+  in__integer__nullable((SELECT t.dummy FROM t WHERE t.cql = "integer")) integer__nullable,
+  in__long__not_null((SELECT t.dummy FROM t WHERE t.cql = "long")) long__not_null,
+  in__long__nullable((SELECT t.dummy FROM t WHERE t.cql = "long")) long__nullable,
+  in__text__not_null((SELECT t.dummy FROM t WHERE t.cql = "text")) text__not_null,
+  in__text__nullable((SELECT t.dummy FROM t WHERE t.cql = "text")) text__nullable,
+  in__blob__not_null((SELECT t.dummy FROM t WHERE t.cql = "blob")) blob__not_null,
+  in__blob__nullable((SELECT t.dummy FROM t WHERE t.cql = "blob")) blob__nullable
+; -- Expect RESULT got RESULT:  [{"bool__not_null":1,"bool__nullable":1,"real__not_null":3.140000000000000124,"real__nullable":3.140000000000000124,"integer__not_null":1234,"integer__nullable":1234,"long__not_null":1234567890123456789,"long__nullable":1234567890123456789,"text__not_null":"HW","text__nullable":"HW","blob__not_null":"blob","blob__nullable":"blob"}]
+
+-- Nullables as null
+SELECT
+  inout__bool__not_null((SELECT t.dummy FROM t WHERE t.cql = "bool")) bool__not_null,
+  inout__bool__nullable((SELECT t.dummy FROM t WHERE t.cql = "null")) bool__nullable,
+  inout__real__not_null((SELECT t.dummy FROM t WHERE t.cql = "real")) real__not_null,
+  inout__real__nullable((SELECT t.dummy FROM t WHERE t.cql = "null")) real__nullable,
+  inout__integer__not_null((SELECT t.dummy FROM t WHERE t.cql = "integer")) integer__not_null,
+  inout__integer__nullable((SELECT t.dummy FROM t WHERE t.cql = "null")) integer__nullable,
+  inout__long__not_null((SELECT t.dummy FROM t WHERE t.cql = "long")) long__not_null,
+  inout__long__nullable((SELECT t.dummy FROM t WHERE t.cql = "null")) long__nullable,
+  inout__text__not_null((SELECT t.dummy FROM t WHERE t.cql = "text")) text__not_null,
+  inout__text__nullable((SELECT t.dummy FROM t WHERE t.cql = "null")) text__nullable,
+  inout__blob__not_null((SELECT t.dummy FROM t WHERE t.cql = "blob")) blob__not_null,
+  inout__blob__nullable((SELECT t.dummy FROM t WHERE t.cql = "null")) blob__nullable
+; -- Expect RESULT got RESULT:  [{"bool__not_null":1,"bool__nullable":null,"real__not_null":3.140000000000000124,"real__nullable":null,"integer__not_null":1234,"integer__nullable":null,"long__not_null":1234567890123456789,"long__nullable":null,"text__not_null":"HW","text__nullable":null,"blob__not_null":"blob","blob__nullable":null}]
+
+-- Nullables as null
+SELECT
+  inout__bool__not_null((SELECT t.dummy FROM t WHERE t.cql = "bool")) bool__not_null,
+  inout__bool__nullable((SELECT t.dummy FROM t WHERE t.cql = "bool")) bool__nullable,
+  inout__real__not_null((SELECT t.dummy FROM t WHERE t.cql = "real")) real__not_null,
+  inout__real__nullable((SELECT t.dummy FROM t WHERE t.cql = "real")) real__nullable,
+  inout__integer__not_null((SELECT t.dummy FROM t WHERE t.cql = "integer")) integer__not_null,
+  inout__integer__nullable((SELECT t.dummy FROM t WHERE t.cql = "integer")) integer__nullable,
+  inout__long__not_null((SELECT t.dummy FROM t WHERE t.cql = "long")) long__not_null,
+  inout__long__nullable((SELECT t.dummy FROM t WHERE t.cql = "long")) long__nullable,
+  inout__text__not_null((SELECT t.dummy FROM t WHERE t.cql = "text")) text__not_null,
+  inout__text__nullable((SELECT t.dummy FROM t WHERE t.cql = "text")) text__nullable,
+  inout__blob__not_null((SELECT t.dummy FROM t WHERE t.cql = "blob")) blob__not_null,
+  inout__blob__nullable((SELECT t.dummy FROM t WHERE t.cql = "blob")) blob__nullable
+; -- Expect RESULT got RESULT:  [{"bool__not_null":1,"bool__nullable":1,"real__not_null":3.140000000000000124,"real__nullable":3.140000000000000124,"integer__not_null":1234,"integer__nullable":1234,"long__not_null":1234567890123456789,"long__nullable":1234567890123456789,"text__not_null":"HW","text__nullable":"HW","blob__not_null":"blob","blob__nullable":"blob"}]
+
+SELECT
+  out__bool__not_null() bool__not_null,
+  out__bool__nullable() bool__nullable,
+  out__real__not_null() real__not_null,
+  out__real__nullable() real__nullable,
+  out__integer__not_null() integer__not_null,
+  out__integer__nullable() integer__nullable,
+  out__long__not_null() long__not_null,
+  out__long__nullable() long__nullable,
+  out__text__not_null() text__not_null,
+  out__text__nullable() text__nullable,
+  out__blob__not_null() blob__not_null,
+  out__blob__nullable() blob__nullable
+; -- Expect RESULT got RESULT:  [{"bool__not_null":1,"bool__nullable":null,"real__not_null":3.140000000000000124,"real__nullable":null,"integer__not_null":1234,"integer__nullable":null,"long__not_null":1234567890123456789,"long__nullable":null,"text__not_null":"HW","text__nullable":null,"blob__not_null":"blob","blob__nullable":null}]
+
+SELECT result_from_inout(t.dummy) output, t.* FROM t WHERE t.cql = "bool"; -- Expect ERROR got ERROR:  Runtime error near line 151: CQL extension: Invalid procedure arguments
+SELECT result_from_inout(t.dummy) output, t.* FROM t WHERE t.cql = "integer"; -- Expect ERROR got ERROR:  Runtime error near line 152: CQL extension: Invalid procedure arguments
+SELECT result_from_inout(t.dummy) output, t.* FROM t WHERE t.cql = "long"; -- Expect ERROR got ERROR:  Runtime error near line 153: CQL extension: Invalid procedure arguments
+SELECT result_from_inout(t.dummy) output, t.* FROM t WHERE t.cql = "real"; -- Expect ERROR got ERROR:  Runtime error near line 154: CQL extension: Invalid procedure arguments
+SELECT result_from_inout(t.dummy) output, t.* FROM t WHERE t.cql = "text"; -- Expect RESULT got RESULT:  [{"output":"inout_argument","cql":"text","dummy":"HW","sqlite":"text"}]
+SELECT result_from_inout(t.dummy) output, t.* FROM t WHERE t.cql = "blob"; -- Expect ERROR got ERROR:  Runtime error near line 156: CQL extension: Invalid procedure arguments
+SELECT result_from_inout(t.dummy) output, t.* FROM t WHERE t.cql = "object"; -- Expect ERROR got ERROR:  Runtime error near line 157: CQL extension: Invalid procedure arguments
+SELECT result_from_inout(t.dummy) output, t.* FROM t WHERE t.cql = "null"; -- Expect ERROR got ERROR:  Runtime error near line 158: CQL extension: Invalid procedure arguments
+
+
+SELECT inout__bool__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "bool"; -- Expect RESULT got RESULT:  [{"output":1,"cql":"bool","dummy":1,"sqlite":"integer"}]
+SELECT inout__bool__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "integer"; -- Expect RESULT got RESULT:  [{"output":210,"cql":"integer","dummy":1234,"sqlite":"integer"}]
+SELECT inout__bool__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "long"; -- Expect RESULT got RESULT:  [{"output":21,"cql":"long","dummy":1234567890123456789,"sqlite":"integer"}]
+SELECT inout__bool__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "real"; -- Expect ERROR got ERROR:  Runtime error near line 164: CQL extension: Invalid procedure arguments
+SELECT inout__bool__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "text"; -- Expect ERROR got ERROR:  Runtime error near line 165: CQL extension: Invalid procedure arguments
+SELECT inout__bool__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "blob"; -- Expect ERROR got ERROR:  Runtime error near line 166: CQL extension: Invalid procedure arguments
+SELECT inout__bool__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "object"; -- Expect RESULT got RESULT:  [{"output":123,"cql":"object","dummy":123,"sqlite":"integer"}]
+SELECT inout__bool__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "null"; -- Expect ERROR got ERROR:  Runtime error near line 168: CQL extension: Invalid procedure arguments
+
+SELECT inout__bool__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "bool"; -- Expect RESULT got RESULT:  [{"output":1,"cql":"bool","dummy":1,"sqlite":"integer"}]
+SELECT inout__bool__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "integer"; -- Expect RESULT got RESULT:  [{"output":210,"cql":"integer","dummy":1234,"sqlite":"integer"}]
+SELECT inout__bool__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "long"; -- Expect RESULT got RESULT:  [{"output":21,"cql":"long","dummy":1234567890123456789,"sqlite":"integer"}]
+SELECT inout__bool__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "real"; -- Expect ERROR got ERROR:  Runtime error near line 173: CQL extension: Invalid procedure arguments
+SELECT inout__bool__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "text"; -- Expect ERROR got ERROR:  Runtime error near line 174: CQL extension: Invalid procedure arguments
+SELECT inout__bool__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "blob"; -- Expect ERROR got ERROR:  Runtime error near line 175: CQL extension: Invalid procedure arguments
+SELECT inout__bool__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "object"; -- Expect RESULT got RESULT:  [{"output":123,"cql":"object","dummy":123,"sqlite":"integer"}]
+SELECT inout__bool__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "null"; -- Expect RESULT got RESULT:  [{"output":null,"cql":"null","dummy":null,"sqlite":"null"}]
+
+
+SELECT inout__real__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "bool"; -- Expect RESULT got RESULT:  [{"output":1.0,"cql":"bool","dummy":1,"sqlite":"integer"}]
+SELECT inout__real__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "integer"; -- Expect RESULT got RESULT:  [{"output":1234.0,"cql":"integer","dummy":1234,"sqlite":"integer"}]
+SELECT inout__real__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "long"; -- Expect RESULT got RESULT:  [{"output":1234567890123456768.0,"cql":"long","dummy":1234567890123456789,"sqlite":"integer"}]
+SELECT inout__real__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "real"; -- Expect RESULT got RESULT:  [{"output":3.140000000000000124,"cql":"real","dummy":3.140000000000000124,"sqlite":"real"}]
+SELECT inout__real__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "text"; -- Expect ERROR got ERROR:  Runtime error near line 184: CQL extension: Invalid procedure arguments
+SELECT inout__real__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "blob"; -- Expect ERROR got ERROR:  Runtime error near line 185: CQL extension: Invalid procedure arguments
+SELECT inout__real__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "object"; -- Expect RESULT got RESULT:  [{"output":123.0,"cql":"object","dummy":123,"sqlite":"integer"}]
+SELECT inout__real__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "null"; -- Expect ERROR got ERROR:  Runtime error near line 187: CQL extension: Invalid procedure arguments
+
+SELECT inout__real__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "bool"; -- Expect RESULT got RESULT:  [{"output":1.0,"cql":"bool","dummy":1,"sqlite":"integer"}]
+SELECT inout__real__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "integer"; -- Expect RESULT got RESULT:  [{"output":1234.0,"cql":"integer","dummy":1234,"sqlite":"integer"}]
+SELECT inout__real__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "long"; -- Expect RESULT got RESULT:  [{"output":1234567890123456768.0,"cql":"long","dummy":1234567890123456789,"sqlite":"integer"}]
+SELECT inout__real__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "real"; -- Expect RESULT got RESULT:  [{"output":3.140000000000000124,"cql":"real","dummy":3.140000000000000124,"sqlite":"real"}]
+SELECT inout__real__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "text"; -- Expect ERROR got ERROR:  Runtime error near line 193: CQL extension: Invalid procedure arguments
+SELECT inout__real__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "blob"; -- Expect ERROR got ERROR:  Runtime error near line 194: CQL extension: Invalid procedure arguments
+SELECT inout__real__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "object"; -- Expect RESULT got RESULT:  [{"output":123.0,"cql":"object","dummy":123,"sqlite":"integer"}]
+SELECT inout__real__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "null"; -- Expect RESULT got RESULT:  [{"output":null,"cql":"null","dummy":null,"sqlite":"null"}]
+
+
+SELECT inout__integer__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "bool"; -- Expect RESULT got RESULT:  [{"output":1,"cql":"bool","dummy":1,"sqlite":"integer"}]
+SELECT inout__integer__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "integer"; -- Expect RESULT got RESULT:  [{"output":1234,"cql":"integer","dummy":1234,"sqlite":"integer"}]
+SELECT inout__integer__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "long"; -- Expect RESULT got RESULT:  [{"output":2112454933,"cql":"long","dummy":1234567890123456789,"sqlite":"integer"}]
+SELECT inout__integer__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "real"; -- Expect ERROR got ERROR:  Runtime error near line 202: CQL extension: Invalid procedure arguments
+SELECT inout__integer__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "text"; -- Expect ERROR got ERROR:  Runtime error near line 203: CQL extension: Invalid procedure arguments
+SELECT inout__integer__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "blob"; -- Expect ERROR got ERROR:  Runtime error near line 204: CQL extension: Invalid procedure arguments
+SELECT inout__integer__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "object"; -- Expect RESULT got RESULT:  [{"output":123,"cql":"object","dummy":123,"sqlite":"integer"}]
+SELECT inout__integer__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "null"; -- Expect ERROR got ERROR:  Runtime error near line 206: CQL extension: Invalid procedure arguments
+
+SELECT inout__integer__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "bool"; -- Expect RESULT got RESULT:  [{"output":1,"cql":"bool","dummy":1,"sqlite":"integer"}]
+SELECT inout__integer__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "integer"; -- Expect RESULT got RESULT:  [{"output":1234,"cql":"integer","dummy":1234,"sqlite":"integer"}]
+SELECT inout__integer__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "long"; -- Expect RESULT got RESULT:  [{"output":2112454933,"cql":"long","dummy":1234567890123456789,"sqlite":"integer"}]
+SELECT inout__integer__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "real"; -- Expect ERROR got ERROR:  Runtime error near line 211: CQL extension: Invalid procedure arguments
+SELECT inout__integer__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "text"; -- Expect ERROR got ERROR:  Runtime error near line 212: CQL extension: Invalid procedure arguments
+SELECT inout__integer__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "blob"; -- Expect ERROR got ERROR:  Runtime error near line 213: CQL extension: Invalid procedure arguments
+SELECT inout__integer__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "object"; -- Expect RESULT got RESULT:  [{"output":123,"cql":"object","dummy":123,"sqlite":"integer"}]
+SELECT inout__integer__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "null"; -- Expect RESULT got RESULT:  [{"output":null,"cql":"null","dummy":null,"sqlite":"null"}]
+
+
+SELECT inout__long__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "bool"; -- Expect RESULT got RESULT:  [{"output":1,"cql":"bool","dummy":1,"sqlite":"integer"}]
+SELECT inout__long__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "integer"; -- Expect RESULT got RESULT:  [{"output":1234,"cql":"integer","dummy":1234,"sqlite":"integer"}]
+SELECT inout__long__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "long"; -- Expect RESULT got RESULT:  [{"output":1234567890123456789,"cql":"long","dummy":1234567890123456789,"sqlite":"integer"}]
+SELECT inout__long__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "real"; -- Expect ERROR got ERROR:  Runtime error near line 221: CQL extension: Invalid procedure arguments
+SELECT inout__long__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "text"; -- Expect ERROR got ERROR:  Runtime error near line 222: CQL extension: Invalid procedure arguments
+SELECT inout__long__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "blob"; -- Expect ERROR got ERROR:  Runtime error near line 223: CQL extension: Invalid procedure arguments
+SELECT inout__long__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "object"; -- Expect RESULT got RESULT:  [{"output":123,"cql":"object","dummy":123,"sqlite":"integer"}]
+SELECT inout__long__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "null"; -- Expect ERROR got ERROR:  Runtime error near line 225: CQL extension: Invalid procedure arguments
+
+SELECT inout__long__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "bool"; -- Expect RESULT got RESULT:  [{"output":1,"cql":"bool","dummy":1,"sqlite":"integer"}]
+SELECT inout__long__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "integer"; -- Expect RESULT got RESULT:  [{"output":1234,"cql":"integer","dummy":1234,"sqlite":"integer"}]
+SELECT inout__long__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "long"; -- Expect RESULT got RESULT:  [{"output":1234567890123456789,"cql":"long","dummy":1234567890123456789,"sqlite":"integer"}]
+SELECT inout__long__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "real"; -- Expect ERROR got ERROR:  Runtime error near line 230: CQL extension: Invalid procedure arguments
+SELECT inout__long__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "text"; -- Expect ERROR got ERROR:  Runtime error near line 231: CQL extension: Invalid procedure arguments
+SELECT inout__long__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "blob"; -- Expect ERROR got ERROR:  Runtime error near line 232: CQL extension: Invalid procedure arguments
+SELECT inout__long__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "object"; -- Expect RESULT got RESULT:  [{"output":123,"cql":"object","dummy":123,"sqlite":"integer"}]
+SELECT inout__long__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "null"; -- Expect RESULT got RESULT:  [{"output":null,"cql":"null","dummy":null,"sqlite":"null"}]
+
+
+SELECT inout__text__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "bool"; -- Expect ERROR got ERROR:  Runtime error near line 237: CQL extension: Invalid procedure arguments
+SELECT inout__text__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "integer"; -- Expect ERROR got ERROR:  Runtime error near line 238: CQL extension: Invalid procedure arguments
+SELECT inout__text__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "long"; -- Expect ERROR got ERROR:  Runtime error near line 239: CQL extension: Invalid procedure arguments
+SELECT inout__text__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "real"; -- Expect ERROR got ERROR:  Runtime error near line 240: CQL extension: Invalid procedure arguments
+SELECT inout__text__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "text"; -- Expect RESULT got RESULT:  [{"output":"HW","cql":"text","dummy":"HW","sqlite":"text"}]
+SELECT inout__text__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "blob"; -- Expect ERROR got ERROR:  Runtime error near line 242: CQL extension: Invalid procedure arguments
+SELECT inout__text__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "object"; -- Expect ERROR got ERROR:  Runtime error near line 243: CQL extension: Invalid procedure arguments
+SELECT inout__text__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "null"; -- Expect ERROR got ERROR:  Runtime error near line 244: CQL extension: Invalid procedure arguments
+
+SELECT inout__text__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "bool"; -- Expect ERROR got ERROR:  Runtime error near line 246: CQL extension: Invalid procedure arguments
+SELECT inout__text__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "integer"; -- Expect ERROR got ERROR:  Runtime error near line 247: CQL extension: Invalid procedure arguments
+SELECT inout__text__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "long"; -- Expect ERROR got ERROR:  Runtime error near line 248: CQL extension: Invalid procedure arguments
+SELECT inout__text__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "real"; -- Expect ERROR got ERROR:  Runtime error near line 249: CQL extension: Invalid procedure arguments
+SELECT inout__text__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "text"; -- Expect RESULT got RESULT:  [{"output":"HW","cql":"text","dummy":"HW","sqlite":"text"}]
+SELECT inout__text__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "blob"; -- Expect ERROR got ERROR:  Runtime error near line 251: CQL extension: Invalid procedure arguments
+SELECT inout__text__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "object"; -- Expect ERROR got ERROR:  Runtime error near line 252: CQL extension: Invalid procedure arguments
+SELECT inout__text__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "null"; -- Expect RESULT got RESULT:  [{"output":null,"cql":"null","dummy":null,"sqlite":"null"}]
+
+
+SELECT inout__blob__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "bool"; -- Expect ERROR got ERROR:  Runtime error near line 256: CQL extension: Invalid procedure arguments
+SELECT inout__blob__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "integer"; -- Expect ERROR got ERROR:  Runtime error near line 257: CQL extension: Invalid procedure arguments
+SELECT inout__blob__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "long"; -- Expect ERROR got ERROR:  Runtime error near line 258: CQL extension: Invalid procedure arguments
+SELECT inout__blob__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "real"; -- Expect ERROR got ERROR:  Runtime error near line 259: CQL extension: Invalid procedure arguments
+SELECT inout__blob__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "text"; -- Expect ERROR got ERROR:  Runtime error near line 260: CQL extension: Invalid procedure arguments
+SELECT inout__blob__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "blob"; -- Expect RESULT got RESULT:  [{"output":"blob","cql":"blob","dummy":"blob","sqlite":"blob"}]
+SELECT inout__blob__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "object"; -- Expect ERROR got ERROR:  Runtime error near line 262: CQL extension: Invalid procedure arguments
+SELECT inout__blob__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "null"; -- Expect ERROR got ERROR:  Runtime error near line 263: CQL extension: Invalid procedure arguments
+
+SELECT inout__blob__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "bool"; -- Expect ERROR got ERROR:  Runtime error near line 265: CQL extension: Invalid procedure arguments
+SELECT inout__blob__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "integer"; -- Expect ERROR got ERROR:  Runtime error near line 266: CQL extension: Invalid procedure arguments
+SELECT inout__blob__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "long"; -- Expect ERROR got ERROR:  Runtime error near line 267: CQL extension: Invalid procedure arguments
+SELECT inout__blob__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "real"; -- Expect ERROR got ERROR:  Runtime error near line 268: CQL extension: Invalid procedure arguments
+SELECT inout__blob__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "text"; -- Expect ERROR got ERROR:  Runtime error near line 269: CQL extension: Invalid procedure arguments
+SELECT inout__blob__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "blob"; -- Expect RESULT got RESULT:  [{"output":"blob","cql":"blob","dummy":"blob","sqlite":"blob"}]
+SELECT inout__blob__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "object"; -- Expect ERROR got ERROR:  Runtime error near line 271: CQL extension: Invalid procedure arguments
+SELECT inout__blob__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "null"; -- Expect RESULT got RESULT:  [{"output":null,"cql":"null","dummy":null,"sqlite":"null"}]
+
+-- SELECT inout__object__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "bool"; -- Expect ERROR
+-- SELECT inout__object__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "integer"; -- Expect ERROR
+-- SELECT inout__object__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "long"; -- Expect ERROR
+-- SELECT inout__object__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "real"; -- Expect ERROR
+-- SELECT inout__object__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "text"; -- Expect ERROR
+-- SELECT inout__object__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "blob"; -- Expect ERROR
+-- SELECT inout__object__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "object"; -- Expect ERROR
+-- SELECT inout__object__not_null(t.dummy) output, t.* FROM t WHERE t.cql = "null"; -- Expect ERROR
+--
+-- SELECT inout__object__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "bool"; -- Expect ERROR
+-- SELECT inout__object__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "integer"; -- Expect ERROR
+-- SELECT inout__object__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "long"; -- Expect ERROR
+-- SELECT inout__object__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "real"; -- Expect ERROR
+-- SELECT inout__object__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "text"; -- Expect ERROR
+-- SELECT inout__object__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "blob"; -- Expect ERROR
+-- SELECT inout__object__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "object"; -- Expect ERROR
+-- SELECT inout__object__nullable(t.dummy) output, t.* FROM t WHERE t.cql = "null"; -- Expect ERROR

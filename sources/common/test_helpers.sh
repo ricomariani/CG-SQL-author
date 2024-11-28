@@ -46,7 +46,7 @@ __on_diff_exit() {
 		# --non-interactive forces interactive mode off. If the environment is
 		# not actually interactive (connected to a terminal for both output and
 		# input), interactive mode is also disabled.
-		if [ "$NON_INTERACTIVE" == 1 ] || [ ! -t 0 ] || [ ! -t 1 ]; then
+		if [ "${NON_INTERACTIVE:-0}" == 1 ] || [ ! -t 0 ] || [ ! -t 1 ]; then
 			echo "When running: diff $*"
 			echo "The above differences were detected. If these are expected copy the test output to the reference."
 			echo "You can also re-run the tests without specifying --non_interactive to affirm the updates."
@@ -69,5 +69,5 @@ Don't just accept to make the error go away; you have to really understand the d
 }
 
 on_diff_exit() {
-	__on_diff_exit "$T/$1.ref" "$O/$1"
+	__on_diff_exit "${T:-}/$1.ref" "${O:-}/$1"
 }

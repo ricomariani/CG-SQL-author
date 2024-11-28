@@ -1,5 +1,6 @@
 # SQLite3 CQL Extension
 
+<!-- build_requirements_start -->
 ## Requirements
 
 ### Local SQLite3
@@ -13,6 +14,8 @@ git clone https://github.com/sqlite/sqlite.git && cd sqlite
 ./configure && make sqlite3-all.c
 gcc -g -O0 -DSQLITE_ENABLE_LOAD_EXTENSION -o sqlite3 sqlite3-all.c shell.c
 ```
+<!-- build_requirements_end -->
+
 ## How to use it
 
 ```bash

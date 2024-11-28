@@ -1,5 +1,7 @@
-#include "cql_sqlite_extension.h"
 #include <sqlite3ext.h>
+extern const sqlite3_api_routines *sqlite3_api;
+
+#include "cql_sqlite_extension.h"
 #include "cqlrt.h"
 
 cql_bool is_sqlite3_type_compatible_with_cql_core_type(

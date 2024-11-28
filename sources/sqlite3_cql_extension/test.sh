@@ -1,28 +1,31 @@
 #!/bin/bash
 
-set -o errexit
-
-source ../common/test_helpers.sh || exit 1
+set -o errexit -o nounset
 
 S=$(cd $(dirname "$0"); pwd)
+
+source $S/../common/test_helpers.sh || exit 1
 
 if [ -z "$SQLITE_PATH" ]; then
   echo "Error: SQLITE_PATH environment variable is not set"
   exit 1
-fi
-
-OS=$(uname)
-
-if [ "$OS" = "Darwin" ]; then
-  LIB_EXT="dylib"
-elif [ "$OS" = "Linux" ]; then
-  LIB_EXT="so"
-elif [ "$OS" = "MINGW64_NT" ] || [ "$OS" = "MSYS_NT" ]; then
-  LIB_EXT="dll"
 else
-  echo "Unsupported platform: $OS"
-  exit 1
+  SQLITE_PATH=$(realpath $SQLITE_PATH)
 fi
+
+while [ "${1:-}" != "" ]; do
+  if [ "$1" == "--non_interactive" ]; then
+    # shellcheck disable=SC2034
+    NON_INTERACTIVE=1
+    shift 1
+  else
+    echo "Usage: test.sh"
+    echo "  --non_interactive"
+    exit 1
+  fi
+done
+
+pushd $S >/dev/null
 
 $SQLITE_PATH/sqlite3 ":memory:" <<EOF 2>&1 \
   | LC_ALL=C awk '
@@ -33,12 +36,14 @@ $SQLITE_PATH/sqlite3 ":memory:" <<EOF 2>&1 \
     /got/ { printf " %s", $0; next }
     { printf "\n%s", $0 }
     END {print ""}' \
-  | tee $S/test.out
-.load $S/out/cqlextension.$LIB_EXT
+  | tee test.out
+.load out/cqlextension
 .mode json
 .echo on
 .nullvalue 'NULL'
 .read test.sql
 EOF
+
+popd >/dev/null
 
 on_diff_exit $S/test.out

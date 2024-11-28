@@ -11,26 +11,48 @@ O=$S/out
 R=$S/..
 
 if [ -z "$SQLITE_PATH" ]; then
-  echo "Error: SQLITE_PATH environment variable is not set"
-  echo "$ git clone https://github.com/sqlite/sqlite.git && cd sqlite"
-  echo "$ ./configure && make sqlite3-all.c"
-  echo "$ gcc -g -O0 -DSQLITE_ENABLE_LOAD_EXTENSION -o sqlite3 sqlite3-all.c shell.c"
+  cat $S/README.md | awk '/<!-- build_requirements_start/{flag=1; next} /<!-- build_requirements_end/{flag=0;} flag'
+
   exit 1
+else
+  SQLITE_PATH=$(realpath $SQLITE_PATH)
 fi
 
+while [ "${1:-}" != "" ]; do
+  if [ "$1" == "--use_gcc" ]; then
+    CC=gcc
+    export CC
+    shift 1
+  elif [ "$1" == "--use_clang" ]; then
+    CC=clang
+    export CC
+    shift 1
+  else
+    echo "Usage: make.sh"
+    echo "  --use_gcc"
+    echo "  --use_clang"
+    exit 1
+  fi
+done
+
+echo "# Clean up output directory"
 rm -rf $O
 mkdir -p $O
+ls -d $O
 
-echo "building cql"
+echo "# Build CQL compiler"
 (cd $O/../.. ; make)
 CQL=$R/out/cql
 
 pushd $O >/dev/null
-echo "Generate stored procs C and JSON"
+echo "# Generate stored procedures C and JSON output"
 ${CQL} --nolines --in ../Sample.sql --cg Sample.h Sample.c
 ${CQL} --nolines --in ../Sample.sql --rt json_schema --cg Sample.json
-echo "Generate SQLite3 extension"
+ls Sample.c Sample.json
+
+echo "# Generate SQLite3 extension"
 ../cqlsqlite3extension.py ./Sample.json --cql_header Sample.h > SampleInterop.c
+ls SampleInterop.c
 popd >/dev/null
 
 
@@ -44,25 +66,27 @@ if [ "$OS" = "Darwin" ]; then
   LIB_EXT="dylib"
 elif [ "$OS" = "Linux" ]; then
   LIB_EXT="so"
-    CC="${CC} -fPIC"
+  CC="${CC} -fPIC"
 elif [ "$OS" = "MINGW64_NT" ] || [ "$OS" = "MSYS_NT" ]; then
   LIB_EXT="dll"
-  CC="${CC} -Wl,--enable-auto-import"
+  CC="${CC} -Wl,--enable-auto-import -Wl,--export-all-symbols"
 else
   echo "Unsupported platform: $OS"
   exit 1
 fi
 
-echo "Build extension for SQLite ($SQLITE_PATH) on $OS"
+echo "Build ./out/cqlextension.$LIB_EXT extension for SQLite ($SQLITE_PATH/sqlite3ext.h) on $OS"
 ${CC} -shared \
-  -I ./. \
-  -I ./out \
-  -I ./.. \
-  -I $SQLITE_PATH/sqlite3ext.h \
+  -I $SQLITE_PATH \
+  -I./out \
+  -I./. \
+  -I./.. \
   -o ./out/cqlextension.${LIB_EXT} \
   ./out/SampleInterop.c \
   ./cql_sqlite_extension.c \
   ./out/Sample.c \
   ./../cqlrt.c
+
+ls ./out/cqlextension.${LIB_EXT}
 
 popd >/dev/null

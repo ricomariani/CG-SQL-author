@@ -125,6 +125,7 @@ all in text form.  Blob values are not emitted, only the length.
 ```
 @op cursor : call diff_col as cql_cursor_diff_col;
 @op cursor : call diff_val as cql_cursor_diff_val;
+@op cursor : call diff_index as cql_cursor_diff_index;
 ```
 
 #### Cursor Hash

@@ -21,7 +21,7 @@
 // refer to the Internals Guide "Part 5: CQL Runtime" and
 // Appendix 11 of the main guide "Production Considerations"
 // for more thoughts on the runtime.
-int32_t cql_outstanding_refs = 0;
+cql_int32 cql_outstanding_refs = 0;
 
 // Upcount an object pointer (any type)
 void cql_retain(cql_type_ref _Nullable ref) {

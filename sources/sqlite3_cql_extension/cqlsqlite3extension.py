@@ -26,7 +26,9 @@ Usage: input.json [options] >result.c
     )
     sys.exit(0)
 
-# Reference type check
+IS_NOT_NULL = 1
+IS_NULLABLE = 0
+
 is_ref_type = {}
 is_ref_type["bool"] = False
 is_ref_type["integer"] = False
@@ -36,104 +38,126 @@ is_ref_type["object"] = True
 is_ref_type["blob"] = True
 is_ref_type["text"] = True
 
-# Sqlite3 null value getter for the given types
-sqlite3_value_getter_nullable = {}
-sqlite3_value_getter_nullable["bool"] = "resolve_nullable_bool_from_sqlite3_value"
-sqlite3_value_getter_nullable["integer"] = "resolve_nullable_integer_from_sqlite3_value"
-sqlite3_value_getter_nullable["long"] = "resolve_nullable_long_from_sqlite3_value"
-sqlite3_value_getter_nullable["real"] = "resolve_nullable_real_from_sqlite3_value"
-sqlite3_value_getter_nullable["object"] = "resolve_object_from_sqlite3_value"
-sqlite3_value_getter_nullable["blob"] = "resolve_blob_from_sqlite3_value"
-sqlite3_value_getter_nullable["text"] = "resolve_text_from_sqlite3_value"
+cql_row_types = {}
+cql_row_types["bool"] = "CQL_DATA_TYPE_BOOL"
+cql_row_types["integer"] = "CQL_DATA_TYPE_INT32"
+cql_row_types["long"] = "CQL_DATA_TYPE_INT64"
+cql_row_types["real"] = "CQL_DATA_TYPE_DOUBLE"
+cql_row_types["object"] = "CQL_DATA_TYPE_OBJECT"
+cql_row_types["blob"] = "CQL_DATA_TYPE_BLOB"
+cql_row_types["text"] = "CQL_DATA_TYPE_STRING"
 
-# Sqlite3 null value getter for the given types
-sqlite3_value_getter_notnull = {}
-sqlite3_value_getter_notnull["bool"] = "RESOLVE_NOTNULL_BOOL_FROM_SQLITE3_VALUE"
-sqlite3_value_getter_notnull["integer"] = "RESOLVE_NOTNULL_INTEGER_FROM_SQLITE3_VALUE"
-sqlite3_value_getter_notnull["long"] = "RESOLVE_NOTNULL_LONG_FROM_SQLITE3_VALUE"
-sqlite3_value_getter_notnull["real"] = "RESOLVE_NOTNULL_REAL_FROM_SQLITE3_VALUE"
-sqlite3_value_getter_notnull["object"] = "resolve_object_from_sqlite3_value"
-sqlite3_value_getter_notnull["blob"] = "resolve_blob_from_sqlite3_value"
-sqlite3_value_getter_notnull["text"] = "resolve_text_from_sqlite3_value"
+cql_ref_release = {}
+cql_ref_release["text"] = "cql_string_release"
+cql_ref_release["blob"] = "cql_blob_release"
+cql_ref_release["object"] = "cql_object_release"
 
-# Sqlite3 result setter for the given types
-sqlite3_result_setter_notnull = {}
-sqlite3_result_setter_notnull["bool"] = "sqlite3_result_int"
-sqlite3_result_setter_notnull["integer"] = "sqlite3_result_int"
-sqlite3_result_setter_notnull["long"] = "sqlite3_result_int64"
-sqlite3_result_setter_notnull["real"] = "sqlite3_result_double"
-sqlite3_result_setter_notnull["object"] = "sqlite3_result_pointer"
-sqlite3_result_setter_notnull["blob"] = "sqlite3_result_blob"
-sqlite3_result_setter_notnull["text"] = "sqlite3_result_text"
+cql_types = {IS_NULLABLE: {}, IS_NOT_NULL: {}}
+cql_types[IS_NOT_NULL]["bool"] = "cql_bool"
+cql_types[IS_NOT_NULL]["integer"] = "cql_int32"
+cql_types[IS_NOT_NULL]["long"] = "cql_int64"
+cql_types[IS_NOT_NULL]["real"] = "cql_double"
+cql_types[IS_NOT_NULL]["object"] = "cql_object_ref"
+cql_types[IS_NOT_NULL]["blob"] = "cql_blob_ref"
+cql_types[IS_NOT_NULL]["text"] = "cql_string_ref"
+cql_types[IS_NULLABLE]["bool"] = "cql_nullable_bool"
+cql_types[IS_NULLABLE]["integer"] = "cql_nullable_int32"
+cql_types[IS_NULLABLE]["long"] = "cql_nullable_int64"
+cql_types[IS_NULLABLE]["real"] = "cql_nullable_double"
+cql_types[IS_NULLABLE]["object"] = "cql_object_ref"
+cql_types[IS_NULLABLE]["blob"] = "cql_blob_ref"
+cql_types[IS_NULLABLE]["text"] = "cql_string_ref"
 
-# Sqlite3 result setter for nullable CQL types implemented with macros
-sqlite3_result_setter_nullable = {}
-sqlite3_result_setter_nullable["bool"] = "SQLITE3_RESULT_CQL_NULLABLE_INT"
-sqlite3_result_setter_nullable["integer"] = "SQLITE3_RESULT_CQL_NULLABLE_INT"
-sqlite3_result_setter_nullable["long"] = "SQLITE3_RESULT_CQL_NULLABLE_INT64"
-sqlite3_result_setter_nullable["real"] = "SQLITE3_RESULT_CQL_NULLABLE_DOUBLE"
-sqlite3_result_setter_nullable["object"] = "SQLITE3_RESULT_CQL_POINTER"
-sqlite3_result_setter_nullable["blob"] = "SQLITE3_RESULT_CQL_BLOB"
-sqlite3_result_setter_nullable["text"] = "SQLITE3_RESULT_CQL_TEXT"
+sqlite3_value_getter = {IS_NULLABLE: {}, IS_NOT_NULL: {}}
+sqlite3_value_getter[IS_NOT_NULL]["bool"] = "resolve_not_null_bool_from_sqlite3_value"
+sqlite3_value_getter[IS_NOT_NULL]["integer"] = "resolve_not_null_integer_from_sqlite3_value"
+sqlite3_value_getter[IS_NOT_NULL]["long"] = "resolve_not_null_long_from_sqlite3_value"
+sqlite3_value_getter[IS_NOT_NULL]["real"] = "resolve_not_null_real_from_sqlite3_value"
+sqlite3_value_getter[IS_NOT_NULL]["object"] = "resolve_object_from_sqlite3_value"
+sqlite3_value_getter[IS_NOT_NULL]["blob"] = "resolve_blob_from_sqlite3_value"
+sqlite3_value_getter[IS_NOT_NULL]["text"] = "resolve_text_from_sqlite3_value"
+sqlite3_value_getter[IS_NULLABLE]["bool"] = "resolve_nullable_bool_from_sqlite3_value"
+sqlite3_value_getter[IS_NULLABLE]["integer"] = "resolve_nullable_integer_from_sqlite3_value"
+sqlite3_value_getter[IS_NULLABLE]["long"] = "resolve_nullable_long_from_sqlite3_value"
+sqlite3_value_getter[IS_NULLABLE]["real"] = "resolve_nullable_real_from_sqlite3_value"
+sqlite3_value_getter[IS_NULLABLE]["object"] = "resolve_object_from_sqlite3_value"
+sqlite3_value_getter[IS_NULLABLE]["blob"] = "resolve_blob_from_sqlite3_value"
+sqlite3_value_getter[IS_NULLABLE]["text"] = "resolve_text_from_sqlite3_value"
 
-# CQL row type codes for the given kinds of fields
-row_types = {}
-row_types["bool"] = "CQL_DATA_TYPE_BOOL"
-row_types["integer"] = "CQL_DATA_TYPE_INT32"
-row_types["long"] = "CQL_DATA_TYPE_INT64"
-row_types["real"] = "CQL_DATA_TYPE_DOUBLE"
-row_types["object"] = "CQL_DATA_TYPE_OBJECT"
-row_types["blob"] = "CQL_DATA_TYPE_BLOB"
-row_types["text"] = "CQL_DATA_TYPE_STRING"
+sqlite3_result_setter = {IS_NULLABLE: {}, IS_NOT_NULL: {}}
+sqlite3_result_setter[IS_NOT_NULL]["bool"] = "sqlite3_result_int"
+sqlite3_result_setter[IS_NOT_NULL]["integer"] = "sqlite3_result_int"
+sqlite3_result_setter[IS_NOT_NULL]["long"] = "sqlite3_result_int64"
+sqlite3_result_setter[IS_NOT_NULL]["real"] = "sqlite3_result_double"
+sqlite3_result_setter[IS_NOT_NULL]["object"] = "sqlite3_result_pointer"
+sqlite3_result_setter[IS_NOT_NULL]["blob"] = "sqlite3_result_blob"
+sqlite3_result_setter[IS_NOT_NULL]["text"] = "sqlite3_result_text"
+sqlite3_result_setter[IS_NULLABLE]["bool"] = "sqlite3_result_cql_nullable_bool"
+sqlite3_result_setter[IS_NULLABLE]["integer"] = "sqlite3_result_cql_nullable_int"
+sqlite3_result_setter[IS_NULLABLE]["long"] = "sqlite3_result_cql_nullable_int64"
+sqlite3_result_setter[IS_NULLABLE]["real"] = "sqlite3_result_cql_nullable_double"
+sqlite3_result_setter[IS_NULLABLE]["object"] = "sqlite3_result_cql_pointer"
+sqlite3_result_setter[IS_NULLABLE]["blob"] = "sqlite3_result_cql_blob"
+sqlite3_result_setter[IS_NULLABLE]["text"] = "sqlite3_result_cql_text"
 
-# Notnull CQL C types for the given type of fields
-cql_notnull_types = {}
-cql_notnull_types["bool"] = "cql_bool"
-cql_notnull_types["integer"] = "cql_int32"
-cql_notnull_types["long"] = "cql_int64"
-cql_notnull_types["real"] = "cql_double"
-cql_notnull_types["object"] = "cql_object_ref"
-cql_notnull_types["blob"] = "cql_blob_ref"
-cql_notnull_types["text"] = "cql_string_ref"
+# Indentation-aware utils to emit code
+indentation_state = {'value': 0, 'pending_line': False}
 
-# Nullable CQL C types for the given type of fields
-cql_nullable_types = {}
-cql_nullable_types["bool"] = "cql_nullable_bool"
-cql_nullable_types["integer"] = "cql_nullable_int32"
-cql_nullable_types["long"] = "cql_nullable_int64"
-cql_nullable_types["real"] = "cql_nullable_double"
-cql_nullable_types["object"] = "cql_object_ref"
-cql_nullable_types["blob"] = "cql_blob_ref"
-cql_nullable_types["text"] = "cql_string_ref"
+def codegen_utils(cmd_args):
+    verbosity = {
+        'quiet': 0,
+        'normal': 1,
+        'verbose': 2,
+        'very_verbose': 3,
+        'debug': 4
+    }.get(cmd_args.get('verbosity', 'normal'), 3)
 
-# Storage for the various command line arguments
-cmd_args = {}
-cmd_args["cql_header"] = "something.h"
-cmd_args["namespace"] = ""
+    def indent(indentation=1):
+        if not indentation_state['pending_line']:
+            indentation_state["value"] += indentation
 
+    def dedent(indentation=1):
+        if not indentation_state['pending_line']:
+            indentation_state["value"] = max(0, indentation_state["value"] - indentation)
 
-def emit_licence():
-    # Include original license — Not actually written by Meta
-    print("""
-/*
-* Copyright (c) Meta Platforms, Inc. and affiliates.
-*
-* This source code is licensed under the MIT license found in the
-* LICENSE file in the root directory of this source tree.
-*/
+    def indetented_print(*args, **kwargs):
+        text = kwargs.get("sep", " ").join(map(str, args))
+        lines = text.split("\n")
 
-""")
+        for i, line in enumerate(lines):
+            if i > 0 or not indentation_state['pending_line']:
+                print("  " * indentation_state['value'], end="")
+            print(line, end="" if i < len(lines) - 1 else kwargs.get("end", "\n"))
 
-def emit_headers():
-    print("#include <sqlite3ext.h>")
-    print("SQLITE_EXTENSION_INIT1")
-    print("#include \"cqlrt.h\"")
-    print("#include \"cql_sqlite_extension.h\"")
-    print(f"#include \"{cmd_args['cql_header']}\"")
+        indentation_state['pending_line'] = kwargs.get("end", "\n") != "\n" and not text.endswith("\n")
+
+    noop = lambda *args, **kwargs: None
+    code = lambda *args, **kwargs: indetented_print(*args, **kwargs)
+    v = lambda *args, **kwargs: indetented_print(*args, **kwargs) if verbosity >= 1 else noop(*args, **kwargs)
+    vv = lambda *args, **kwargs: indetented_print(*args, **kwargs) if verbosity >= 2 else noop(*args, **kwargs)
+    vvv = lambda *args, **kwargs: indetented_print(*args, **kwargs) if verbosity >= 3 else noop(*args, **kwargs)
+
+    return code, v, vv, vvv, indent, dedent
+
+# Not actually written by Meta
+def emit_original_licence():
+    print("/*")
+    print("* Copyright (c) Meta Platforms, Inc. and affiliates.")
+    print("*")
+    print("* This source code is licensed under the MIT license found in the")
+    print("* LICENSE file in the root directory of this source tree.")
+    print("*/")
     print("")
 
+def emit_headers(cmd_args):
+    print(f"#include <sqlite3ext.h>")
+    print(f"SQLITE_EXTENSION_INIT1")
+    print(f"#include \"cqlrt.h\"")
+    print(f"#include \"cql_sqlite_extension.h\"")
+    print(f"#include \"{cmd_args['cql_header']}\"")
+    print(f"")
 
-def emit_extension_initializer(data):
+def emit_extension_initializer(data, cmd_args):
 
     print("""
 int sqlite3_cqlextension_init(sqlite3 *_Nonnull db, char *_Nonnull *_Nonnull pzErrMsg, const sqlite3_api_routines *_Nonnull pApi) {
@@ -143,7 +167,7 @@ int sqlite3_cqlextension_init(sqlite3 *_Nonnull db, char *_Nonnull *_Nonnull pzE
 """)
     for proc in data['queries'] + data['deletes'] + data['inserts'] + data['generalInserts'] + data['updates'] + data['general']:
         print(f"""
-  rc = sqlite3_create_function(db, "{cmd_args['namespace']}{proc['name']}", {len([arg for arg in proc['args'] if arg.get('binding', 'in') in ['in', 'inout']])}, SQLITE_UTF8, NULL, call_{cmd_args['namespace']}{proc['name']}, NULL, NULL);
+  rc = sqlite3_create_function(db, "{proc['canonicalName']}", {len([arg for arg in proc['args'] if arg['binding'] in ['in', 'inout']])}, SQLITE_UTF8, NULL, call_{proc['canonicalName']}, NULL, NULL);
   if (rc != SQLITE_OK) return rc;
 """)
 
@@ -153,7 +177,165 @@ int sqlite3_cqlextension_init(sqlite3 *_Nonnull db, char *_Nonnull *_Nonnull pzE
 
 """)
 
-def emit_all_procs(data):
+def emit_all_procs(data, cmd_args):
+    for proc in sorted(
+        data["queries"] +
+        data["deletes"] +
+        data["inserts"] +
+        data["generalInserts"] +
+        data["updates"] +
+        data["general"],
+        key=lambda proc: proc['canonicalName']
+    ):
+        if "cql:private" in proc['attributes']: return
+
+        emit_proc_c_func_body(proc, cmd_args)
+
+# This emits the main body of the C Interop function, this includes
+# * the Interop entry point for the procedure
+# * the call to the procedure
+# * the marshalling of the results
+# * the return of the results
+# * the cleanup of the results
+def emit_proc_c_func_body(proc, cmd_args):
+    ___, __v, _vv, vvv, indent, dedent = codegen_utils(cmd_args)
+
+    in_arguments = [arg for arg in proc['args'] if arg['binding'] == 'in']
+    inout_arguments = [arg for arg in proc['args'] if arg['binding'] == 'inout']
+    out_arguments = [arg for arg in proc['args'] if arg['binding'] == 'out']
+
+    innie_arguments = in_arguments + inout_arguments
+    outtie_arguments = inout_arguments + out_arguments
+
+
+    ___(f"void call_{proc['canonicalName']}(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *_Nonnull *_Nonnull argv)")
+    ___("{")
+    indent()
+
+    _vv(f"// 1. Ensure Sqlite function argument count matches count of the procedure in and inout arguments")
+    ___(f"if (argc != {len(innie_arguments)}) goto invalid_arguments;")
+    ___(f"")
+
+
+    _vv("// 2. Ensure sqlite3 value type is compatible with cql type")
+    for index, arg in enumerate(innie_arguments):
+        ___(
+            f"if (!is_sqlite3_type_compatible_with_cql_core_type("
+                f"sqlite3_value_type(argv[{index}]), "
+                f"{cql_row_types[arg['type']]}, "
+                f"{'cql_false' if arg['isNotNull'] else 'cql_true'}"
+            f")) goto invalid_arguments; // {arg['name']}"
+        )
+    ___()
+
+
+    _vv("// 3. Marshalled argument initialization")
+    for index, arg in enumerate(innie_arguments):
+        ___(f"{cql_types[arg['isNotNull']][arg['type']].ljust(20)} {arg['name'].ljust(25)} = {sqlite3_value_getter[arg['isNotNull']][arg['type']]}(argv[{index}]);")
+    for arg in out_arguments:
+        ___(f"{cql_types[arg['isNotNull']][arg['type']].ljust(20)} {arg['name'].ljust(25)}", end="")
+
+        if arg['type'] in ("text", "blob", "object"):
+            ___(f" = NULL;")
+        elif arg['isNotNull']:
+            ___(f" = 0;")
+        else:
+            ___(f" ; cql_set_null({arg['name']});")
+    ___()
+
+
+    _vv(f"// 4. Initialize procedure dependencies")
+    if proc['usesDatabase']:
+        ___(f"cql_code rc = SQLITE_OK;")
+        ___(f"sqlite3* db = sqlite3_context_db_handle(context);")
+        ___(f"")
+    if proc['projection']:
+        ___(f"{proc['name']}_result_set_ref _data_result_set_ = NULL;")
+        ___(f"")
+
+
+    _vv("// 5. Call the procedure")
+    ___(f"{'rc = ' if proc['usesDatabase'] else ''}{proc['name']}{'_fetch_results' if proc['projection'] else ''}(", end="")
+    for index, computed_arg in enumerate(
+        (["db"] if proc['usesDatabase'] else []) +
+        (["&_data_result_set_"] if proc['projection'] else []) +
+        [
+            f"&{arg['name']}" if arg['binding'] != "in"
+                else "/* unsupported arg type object*/" if arg['type'] == "object"
+                else arg['name']
+            for arg in proc['args']
+        ]
+    ):
+        print(f"{',' if index > 0 else ''}\n    {computed_arg}", end="")
+    ___()
+    ___(");")
+    ___()
+
+
+    _vv("// 6. Cleanup In arguments since they are no longer needed")
+    for arg in [arg for arg in in_arguments if is_ref_type[arg['type']]]:
+        ___(f"{cql_ref_release[arg['type']]}({arg['name']});")
+    ___()
+
+
+    _vv("// 7. Ensure the procedure executed successfully")
+    if proc['usesDatabase']:
+        ___("if (rc != SQLITE_OK) {")
+        ___("  sqlite3_result_null(context);")
+        ___("  goto cleanup;")
+        ___("}")
+    ___()
+
+
+    _vv("// 8. Resolve the result base on:")
+    vvv("//   (A) The first column of first row of the result_set, if any")
+    vvv("//   (B) The first outtie argument (in or inout) value, if any")
+    vvv("//   (C) Fallback to: null")
+    vvv("//")
+    if proc['projection']:
+        vvv("// Current strategy: (A) Using the result set")
+
+        ___("set_sqlite3_result_from_result_set(context, (cql_result_set_ref)_data_result_set_);")
+        ___("goto cleanup;")
+        ___()
+    else:
+        vvv("// Current strategy: (B) Using Outtie arguments")
+        vvv("// Set Sqlite result")
+        vvv("// NB: If the procedure generates a cql result set, the first column of the first row would be used as the result")
+        for arg in [arg for arg in proc['args'] if arg['binding'] in ("inout", "out")]:
+            skip = False
+
+            if is_ref_type[arg['type']]:
+                if arg['type'] == "object":
+                    __v(f"/* {arg['type']} not implemented yet */")
+                    skip = True
+                else:
+                    ___(f"{sqlite3_result_setter[IS_NULLABLE][arg['type']]}(context, {arg['name']}); goto cleanup;")
+            else:
+                ___(f"{sqlite3_result_setter[arg['isNotNull']][arg['type']]}(context, {arg['name']}); goto cleanup;")
+
+            if not skip: break
+        ___()
+        ___("goto cleanup;")
+        ___()
+
+
+    ___("invalid_arguments:")
+    ___("sqlite3_result_error(context, \"CQL extension: Invalid procedure arguments\", -1);")
+    ___("return;")
+    ___()
+
+    ___("cleanup:")
+    _vv("// 10. Cleanup Outtie arguments")
+    for arg in [arg for arg in outtie_arguments if is_ref_type[arg['type']]]:
+        ___(f"if({arg['name']}) {cql_ref_release[arg['type']]}({arg['name']});")
+    __v("/* Avoid empty block warning */ ;")
+
+    dedent()
+    ___("}")
+    ___()
+
+def normalize_json_output(data, cmd_args):
     for proc in (
         data["queries"] +
         data["deletes"] +
@@ -162,190 +344,43 @@ def emit_all_procs(data):
         data["updates"] +
         data["general"]
     ):
-        proc['usesDatabase'] = proc["usesDatabase"] if "usesDatabase" in proc else True
+        proc['usesDatabase'] = proc.get("usesDatabase", True)
         proc['projection'] = "projection" in proc
-        proc['canonicalName'] = f"call_{cmd_args['namespace']}{proc['name']}"
+        proc['canonicalName'] = cmd_args['namespace'] + proc['name']
+        proc['attributes'] = {attr['name']: attr['value'] for attr in proc.get("attributes", [])}
+        for arg in proc['args']:
+            arg['binding'] = arg.get('binding', 'in')
 
-        attributes = {}
-        for attr in proc.get("attributes", []):
-            attributes[attr['name']] = attr['value']
-
-        # no codegen for private methods
-        if "cql:private" in attributes: return
-
-        emit_proc_c_func_body(proc, attributes)
-
-# This emits the main body of the C Interop function, this includes
-# * the Interop entry point for the procedure
-# * the call to the procedure
-# * the marshalling of the results
-# * the return of the results
-# * the cleanup of the results
-def emit_proc_c_func_body(proc, attributes):
-    in_arguments = [arg for arg in proc['args'] if arg.get('binding', 'in') == ('in')]
-    inout_arguments = [arg for arg in proc['args'] if arg.get('binding', 'in') == ('inout')]
-    out_arguments = [arg for arg in proc['args'] if arg.get('binding', 'in') == ('out')]
-
-    innie_arguments = in_arguments + inout_arguments
-    outtie_arguments = inout_arguments + out_arguments
-
-
-    print(f"void {proc['canonicalName']}(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *_Nonnull *_Nonnull argv)", end="")
-    print("{")
-
-    print(f"  // 1. Ensure Sqlite function argument count matches count of the procedure in and inout arguments")
-    print(f"  if (argc != {len(innie_arguments)}) goto invalid_arguments;")
-    print(f"")
-
-
-    print("  // 2. Ensure sqlite3 value type is compatible with cql type")
-    for index, arg in enumerate(innie_arguments):
-        print(
-            f"  if (!is_sqlite3_type_compatible_with_cql_core_type("
-                f"sqlite3_value_type(argv[{index}]), "
-                f"{row_types[arg['type']]}, "
-                f"{'cql_false' if arg['isNotNull'] else 'cql_true'}"
-            f")) goto invalid_arguments; // {arg['name']}"
-        )
-    print("")
-
-
-    print("  // 3. Marshalled argument initialization")
-    for index, arg in enumerate(innie_arguments):
-        if arg['type'] in ("text", "blob", "object"):
-            print(f"  {cql_nullable_types[arg['type']].ljust(20)} {arg['name'].ljust(25)} = {sqlite3_value_getter_nullable[arg['type']]}(argv[{index}]);")
-        elif arg['isNotNull']:
-            print(f"  {cql_notnull_types[arg['type']].ljust(20)} {arg['name'].ljust(25)} = {sqlite3_value_getter_notnull[arg['type']]}(argv[{index}]);")
-        else:
-            print(f"  {cql_nullable_types[arg['type']].ljust(20)} {arg['name'].ljust(25)} = {sqlite3_value_getter_nullable[arg['type']]}(argv[{index}]);")
-    for arg in out_arguments:
-        if arg['type'] in ("text", "blob", "object"):
-            print(f"  {cql_nullable_types[arg['type']].ljust(20)} {arg['name'].ljust(25)} = NULL;")
-        elif arg['isNotNull']:
-            print(f"  {cql_notnull_types[arg['type']].ljust(20)} {arg['name'].ljust(25)} = 0;")
-        else:
-            print(f"  {cql_nullable_types[arg['type']].ljust(20)} {(arg['name'] + ';').ljust(25)}   cql_set_null({arg['name']});")
-    print("")
-
-
-    print("  // 4. Initialize procedure dependencies")
-    if proc['projection']:   print(f"  {proc['name']}_result_set_ref _data_result_set_ = NULL;")
-    if proc['usesDatabase']: print(f"  sqlite3* db = sqlite3_context_db_handle(context);")
-    if proc['usesDatabase']: print(f"  cql_code rc = SQLITE_OK;")
-    print("") if proc['usesDatabase'] or proc['projection'] else None
-
-
-    print("  // 5. Call the procedure")
-    print(f"  {'rc = ' if proc['usesDatabase'] else ''}{proc['name']}{'_fetch_results' if proc['projection'] else ''}(", end="")
-    for index, computed_arg in enumerate(
-        (["db"] if proc['usesDatabase'] else []) +
-        (["&_data_result_set_"] if proc['projection'] else []) +
-        [
-            f"&{arg['name']}" if arg.get('binding', 'in') != "in"
-                else arg['name'] if arg['type'] != "object"
-                else "/* unsupported arg type object*/"
-            for arg in proc['args']
-        ]
-    ):
-        print(f"{',' if index > 0 else ''}\n    {computed_arg}", end="")
-    print("")
-    print("  );")
-    print("")
-
-
-    print("  // 6. Cleanup In arguments since they are no longer needed")
-    for arg in [arg for arg in in_arguments if is_ref_type[arg['type']]]:
-        if   arg['type'] == "text":   print(f"  cql_string_release({arg['name']});")
-        elif arg['type'] == "blob":   print(f"  cql_blob_release({  arg['name']});")
-        elif arg['type'] == "object": print(f"  cql_object_release({arg['name']});")
-    print("")
-
-
-    print("  // 7. Ensure the procedure executed successfully")
-    if proc['usesDatabase']:
-        print("  if (rc != SQLITE_OK) {")
-        print("    sqlite3_result_null(context);")
-        print("    goto cleanup;")
-        print("  }")
-    print("")
-
-
-    print("  // 8. Resolve the result base on:")
-    print("  //   (A) The first column of first row of the result_set, if any")
-    print("  //   (B) The first outtie argument (in or inout) value, if any")
-    print("  //   (C) Fallback to: null")
-    print("  //")
-    if proc['projection']:
-        print("  // Current strategy: (A) Using the result set")
-
-        print("  set_sqlite3_result_from_result_set(context, (cql_result_set_ref)_data_result_set_);")
-        print("  goto cleanup;")
-        print("")
-    else:
-        print("  // Current strategy: (B) Using Outtie arguments")
-        print("  // Set Sqlite result")
-        print("  // NB: If the procedure generates a cql result set, the first column of the first row would be used as the result")
-        for arg in [arg for arg in proc['args'] if arg.get('binding', 'in') in ("inout", "out")]:
-            skip = False
-
-            if arg['type'] == "text":
-                print(f"  SQLITE3_RESULT_CQL_TEXT(context, {arg['name']}); goto cleanup;")
-            elif arg['type'] == "blob":
-                print(f"  SQLITE3_RESULT_CQL_BLOB(context, {arg['name']}); goto cleanup;")
-            elif is_ref_type[arg['type']]:
-                # Object
-                print(f"  /* {arg['type']} not implemented yet */")
-                skip = True
-            elif arg['isNotNull']:
-                print(f"  {sqlite3_result_setter_notnull[arg['type']]}(context, {arg['name']}); goto cleanup;")
-            elif not arg['isNotNull']:
-                print(f"  {sqlite3_result_setter_nullable[arg['type']]}(context, {arg['name']}); goto cleanup;")
-            else:
-                print(f"  /* Unsupported type {arg['type']} */")
-                skip = True
-
-            if not skip:
-                break
-        print("")
-        print("  goto cleanup;")
-
-
-    print("invalid_arguments:")
-    print("  sqlite3_result_error(context, \"CQL extension: Invalid procedure arguments\", -1);")
-    print("  return;")
-
-
-    print("")
-    print("cleanup:")
-    print("  // 10. Cleanup Outtie arguments")
-    for arg in [arg for arg in outtie_arguments if is_ref_type[arg['type']]]:
-        if   arg['type'] == "text":   print(f"  if({arg['name']}) cql_string_release({arg['name']});")
-        elif arg['type'] == "blob":   print(f"  if({arg['name']}) cql_blob_release({  arg['name']});")
-        elif arg['type'] == "object": print(f"  if({arg['name']}) cql_object_release({arg['name']});")
-    print("  /* Avoid empty block warning */ ;")
-
-    print("}")
-    print("")
+    return data
 
 def main():
+    cmd_args = {
+        "cql_header": "cqlrt.h",
+        "namespace": "",
+        "verbosity": "very_verbose"
+    }
+
     jfile = sys.argv[1]
+
+    i = 2
+    while i + 2 <= len(sys.argv):
+        if sys.argv[i] == "--cql_header":
+            cmd_args["cql_header"] = sys.argv[i + 1]
+        elif sys.argv[i] == "--namespace":
+            cmd_args["namespace"] = sys.argv[i + 1] + '_'
+        elif sys.argv[i] == "--verbosity":
+            cmd_args["verbosity"] = sys.argv[i + 1]
+        else:
+            usage()
+        i += 2
+
     with open(jfile) as json_file:
-        data = json.load(json_file)
-        i = 2
+        data = normalize_json_output(json.load(json_file), cmd_args)
 
-        while i + 2 <= len(sys.argv):
-            if sys.argv[i] == "--cql_header":
-                cmd_args["cql_header"] = sys.argv[i + 1]
-            elif sys.argv[i] == "--namespace":
-                cmd_args["namespace"] = sys.argv[i + 1] + '_'
-            else:
-                usage()
-            i += 2
-
-        emit_licence()
-        emit_headers()
-        emit_all_procs(data)
-        emit_extension_initializer(data)
+        emit_original_licence()
+        emit_headers(cmd_args)
+        emit_all_procs(data, cmd_args)
+        emit_extension_initializer(data, cmd_args)
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:

@@ -3141,6 +3141,35 @@ DECLARE FUNC cql_cursor_get_object (C CURSOR, icol INT!) OBJECT;
 The statement ending at line XXXX
 
 [[builtin]]
+DECLARE FUNC cql_cursor_format_column (C CURSOR, icol INT!) CREATE TEXT!;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: text notnull create_func
+    | {name cql_cursor_format_column}: text notnull create_func
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: C: cursor variable in
+      | | | {param_detail}: C: cursor variable in
+      | |   | {name C}: C: cursor variable in
+      | |   | {type_cursor}: cursor
+      | | {params}
+      |   | {param}: icol: integer notnull variable in
+      |     | {param_detail}: icol: integer notnull variable in
+      |       | {name icol}: icol: integer notnull variable in
+      |       | {notnull}: integer notnull
+      |         | {type_int}: integer
+      | {create_data_type}: text notnull create_func
+        | {notnull}: text notnull
+          | {type_text}: text
+
+The statement ending at line XXXX
+
+[[builtin]]
 @OP CURSOR : call format AS cql_cursor_format;
 
   {stmt_and_attr}: ok
@@ -3441,6 +3470,25 @@ The statement ending at line XXXX
       | {op_vals}
         | {name get_object}
         | {name cql_cursor_get_object}
+
+The statement ending at line XXXX
+
+[[builtin]]
+@OP CURSOR : call format_col AS cql_cursor_format_column;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {name CURSOR}
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name format_col}
+        | {name cql_cursor_format_column}
 
 The statement ending at line XXXX
 

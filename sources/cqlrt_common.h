@@ -310,6 +310,9 @@ CQL_EXPORT cql_int32 cql_cursor_column_type(cql_dynamic_cursor *_Nonnull dyn_cur
 // generic access to name of nth column
 CQL_EXPORT cql_string_ref _Nullable cql_cursor_column_name(cql_dynamic_cursor *_Nonnull dyn_cursor, cql_int32 i);
 
+// generic string conversion for column, useful for diagnostics
+CQL_EXPORT cql_string_ref _Nonnull cql_cursor_format_column(cql_dynamic_cursor *_Nonnull dyn_cursor, cql_int32 i);
+
 // compare two rows for equality
 CQL_EXPORT cql_bool cql_rows_equal(cql_result_set_ref _Nonnull rs1, cql_int32 row1, cql_result_set_ref _Nonnull rs2, cql_int32 row2);
 

@@ -5272,6 +5272,27 @@ cql_object_ref _Nullable cql_cursor_get_object(
   return result;
 }
 
+cql_string_ref _Nonnull cql_cursor_format_column(
+  cql_dynamic_cursor *_Nonnull dyn_cursor,
+  cql_int32 i)
+{
+  uint16_t *offsets = dyn_cursor->cursor_col_offsets;
+  uint16_t count = offsets[0];  // the first index is the count of fields
+
+  cql_contract(i >= 0);
+  cql_contract(i < count);
+
+  cql_bytebuf b;
+  cql_bytebuf_open(&b);
+
+  cql_format_one_cursor_column(&b, dyn_cursor, i);
+  cql_bytebuf_append_null(&b);
+  cql_string_ref result = cql_string_ref_new(b.ptr);
+  cql_bytebuf_close(&b);
+
+  return result;
+}
+
 // total number of fields in the cursor
 cql_int32 cql_cursor_column_count(cql_dynamic_cursor *_Nonnull dyn_cursor) {
   uint16_t *offsets = dyn_cursor->cursor_col_offsets;

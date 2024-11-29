@@ -3358,6 +3358,8 @@ cql_noexport CSTR cql_builtin_text() {
     "[[builtin]]"
     "declare func cql_cursor_get_object(C cursor, icol int!) object;"
     "[[builtin]]"
+    "declare func cql_cursor_format_column(C cursor, icol int!) create text!;"
+    "[[builtin]]"
     "@op cursor : call format as cql_cursor_format;"
     "[[builtin]]"
     "@op cursor : call hash as cql_cursor_hash;"
@@ -3389,6 +3391,8 @@ cql_noexport CSTR cql_builtin_text() {
     "@op cursor : call get_blob as cql_cursor_get_blob;"
     "[[builtin]]"
     "@op cursor : call get_object as cql_cursor_get_object;"
+    "[[builtin]]"
+    "@op cursor : call format_col as cql_cursor_format_column;"
 
     "[[builtin]]"
     "declare proc cql_throw(code int!) using transaction;"

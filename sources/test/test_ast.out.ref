@@ -2824,6 +2824,33 @@ The statement ending at line XXXX
   |   | {dot}
   |     | {name cql}
   |     | {name builtin}
+  | {declare_func_stmt}
+    | {name cql_cursor_format_column}
+    | {func_params_return}
+      | {params}
+      | | {param}
+      | | | {param_detail}
+      | |   | {name C}
+      | |   | {type_cursor}
+      | | {params}
+      |   | {param}
+      |     | {param_detail}
+      |       | {name icol}
+      |       | {notnull}
+      |         | {type_int}
+      | {create_data_type}
+        | {notnull}
+          | {type_text}
+
+The statement ending at line XXXX
+
+[[builtin]]
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
   | {op_stmt}
     | {name CURSOR}
     | {op_vals}
@@ -3086,6 +3113,23 @@ The statement ending at line XXXX
       | {op_vals}
         | {name get_object}
         | {name cql_cursor_get_object}
+
+The statement ending at line XXXX
+
+[[builtin]]
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}
+    | {name CURSOR}
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name format_col}
+        | {name cql_cursor_format_column}
 
 The statement ending at line XXXX
 

@@ -6412,6 +6412,12 @@ BEGIN
   fetch D(a_blob, a_real) from values ((select cast('xyzzy' as blob)), 3.5) @dummy_seed(1);
   LET s3 := cql_cursor_format(D);
   EXPECT!(s3 = "a_bool:true|an_int:1|a_long:1|a_real:3.5|a_string:a_string_1|a_blob:length 5 blob");
+
+  -- test single column formatting
+  -- we don't exercise all the types because it uses the same code as the above
+  -- so we only have to exercise the entry point
+  LET s4 := D:format_col(3);
+  EXPECT!(s4 = "3.5");
 END);
 
 TEST!(compressed_strings,

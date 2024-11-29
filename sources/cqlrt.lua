@@ -686,6 +686,13 @@ function cql_contract_argument_notnull(arg, index)
   end
 end
 
+function cql_contract(b)
+  if cql_is_false(b) then
+    print("contract violation");
+    exit_on_error();
+  end
+end
+
 function cql_partition_create()
   return {};
 end;
@@ -1070,6 +1077,16 @@ function cql_cursor_format(C, types, fields)
     result = result .. cql_format_one_field(code, value)
   end
   return result
+end
+
+function cql_cursor_format_column(C, types, fields, i)
+  cql_contract(i >= 0);
+  cql_contract(i < #fields);
+  i = i + 1
+
+  local code = string.byte(types, i, i)
+  local value = C[fields[i]]
+  return cql_format_one_field(code, value)
 end
 
 function _cql_create_upgrader_input_statement_list(str, parse_word)

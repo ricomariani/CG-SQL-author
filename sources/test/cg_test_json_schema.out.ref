@@ -7730,6 +7730,222 @@
 
     The statement ending at line XXXX
 
+    [[builtin]]
+    DECLARE FUNC cql_format_bool (val BOOL) CREATE TEXT!
+
+    {
+      "name" : "cql_format_bool",
+      "args" : [
+        {
+          "name" : "val",
+          "type" : "bool",
+          "isNotNull" : 0
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "text",
+        "isNotNull" : 1
+      },
+      "createsObject" : 1
+    },
+
+    The statement ending at line XXXX
+
+    [[builtin]]
+    DECLARE FUNC cql_format_int (val INT) CREATE TEXT!
+
+    {
+      "name" : "cql_format_int",
+      "args" : [
+        {
+          "name" : "val",
+          "type" : "integer",
+          "isNotNull" : 0
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "text",
+        "isNotNull" : 1
+      },
+      "createsObject" : 1
+    },
+
+    The statement ending at line XXXX
+
+    [[builtin]]
+    DECLARE FUNC cql_format_long (val LONG) CREATE TEXT!
+
+    {
+      "name" : "cql_format_long",
+      "args" : [
+        {
+          "name" : "val",
+          "type" : "long",
+          "isNotNull" : 0
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "text",
+        "isNotNull" : 1
+      },
+      "createsObject" : 1
+    },
+
+    The statement ending at line XXXX
+
+    [[builtin]]
+    DECLARE FUNC cql_format_double (val REAL) CREATE TEXT!
+
+    {
+      "name" : "cql_format_double",
+      "args" : [
+        {
+          "name" : "val",
+          "type" : "real",
+          "isNotNull" : 0
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "text",
+        "isNotNull" : 1
+      },
+      "createsObject" : 1
+    },
+
+    The statement ending at line XXXX
+
+    [[builtin]]
+    DECLARE FUNC cql_format_string (val TEXT) CREATE TEXT!
+
+    {
+      "name" : "cql_format_string",
+      "args" : [
+        {
+          "name" : "val",
+          "type" : "text",
+          "isNotNull" : 0
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "text",
+        "isNotNull" : 1
+      },
+      "createsObject" : 1
+    },
+
+    The statement ending at line XXXX
+
+    [[builtin]]
+    DECLARE FUNC cql_format_blob (val BLOB) CREATE TEXT!
+
+    {
+      "name" : "cql_format_blob",
+      "args" : [
+        {
+          "name" : "val",
+          "type" : "blob",
+          "isNotNull" : 0
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "text",
+        "isNotNull" : 1
+      },
+      "createsObject" : 1
+    },
+
+    The statement ending at line XXXX
+
+    [[builtin]]
+    DECLARE FUNC cql_format_object (val OBJECT) CREATE TEXT!
+
+    {
+      "name" : "cql_format_object",
+      "args" : [
+        {
+          "name" : "val",
+          "type" : "object",
+          "isNotNull" : 0
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "text",
+        "isNotNull" : 1
+      },
+      "createsObject" : 1
+    },
+
+    The statement ending at line XXXX
+
+    [[builtin]]
+    DECLARE FUNC cql_format_null (ignored BOOL) CREATE TEXT!
+
+    {
+      "name" : "cql_format_null",
+      "args" : [
+        {
+          "name" : "ignored",
+          "type" : "bool",
+          "isNotNull" : 0
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "text",
+        "isNotNull" : 1
+      },
+      "createsObject" : 1
+    },
+
+    The statement ending at line XXXX
+
     @ATTRIBUTE(foo=bar)
     DECLARE FUNC decl_func_take_all_types_func (t BOOL, i INT, l LONG, r REAL, bl BLOB, str TEXT, obj OBJECT, t_nn BOOL!, i_nn INT!, l_nn LONG!, r_nn REAL!, bl_nn BLOB!, str_nn TEXT!, obj_nn OBJECT!) BOOL
 

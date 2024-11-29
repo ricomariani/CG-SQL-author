@@ -94,6 +94,14 @@ extern CQL_WARN_UNUSED cql_code cql_cursor_to_blob(sqlite3 *_Nonnull _db_, cql_d
 extern CQL_WARN_UNUSED cql_code cql_cursor_from_blob(sqlite3 *_Nonnull _db_, cql_dynamic_cursor *_Nonnull C, cql_blob_ref _Nullable b);
 
 extern cql_blob_ref _Nonnull cql_blob_from_int(cql_string_ref _Nullable prefix, cql_int32 val);
+extern cql_string_ref _Nonnull cql_format_bool(cql_nullable_bool val);
+extern cql_string_ref _Nonnull cql_format_int(cql_nullable_int32 val);
+extern cql_string_ref _Nonnull cql_format_long(cql_nullable_int64 val);
+extern cql_string_ref _Nonnull cql_format_double(cql_nullable_double val);
+extern cql_string_ref _Nonnull cql_format_string(cql_string_ref _Nullable val);
+extern cql_string_ref _Nonnull cql_format_blob(cql_blob_ref _Nullable val);
+extern cql_string_ref _Nonnull cql_format_object(cql_object_ref _Nullable val);
+extern cql_string_ref _Nonnull cql_format_null(cql_nullable_bool ignored);
 extern CQL_WARN_UNUSED cql_code selector(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 
 #ifndef row_type_decl_emit_object_result_set_row

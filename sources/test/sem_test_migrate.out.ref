@@ -3843,6 +3843,342 @@ DECLARE FUNC cql_blob_from_int (prefix TEXT, val INT!) CREATE BLOB!;
 
 The statement ending at line XXXX
 
+[[builtin]]
+DECLARE FUNC cql_format_bool (val BOOL) CREATE TEXT!;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: text notnull create_func
+    | {name cql_format_bool}: text notnull create_func
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: val: bool variable in
+      |   | {param_detail}: val: bool variable in
+      |     | {name val}: val: bool variable in
+      |     | {type_bool}: bool
+      | {create_data_type}: text notnull create_func
+        | {notnull}: text notnull
+          | {type_text}: text
+
+The statement ending at line XXXX
+
+[[builtin]]
+DECLARE FUNC cql_format_int (val INT) CREATE TEXT!;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: text notnull create_func
+    | {name cql_format_int}: text notnull create_func
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: val: integer variable in
+      |   | {param_detail}: val: integer variable in
+      |     | {name val}: val: integer variable in
+      |     | {type_int}: integer
+      | {create_data_type}: text notnull create_func
+        | {notnull}: text notnull
+          | {type_text}: text
+
+The statement ending at line XXXX
+
+[[builtin]]
+DECLARE FUNC cql_format_long (val LONG) CREATE TEXT!;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: text notnull create_func
+    | {name cql_format_long}: text notnull create_func
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: val: longint variable in
+      |   | {param_detail}: val: longint variable in
+      |     | {name val}: val: longint variable in
+      |     | {type_long}: longint
+      | {create_data_type}: text notnull create_func
+        | {notnull}: text notnull
+          | {type_text}: text
+
+The statement ending at line XXXX
+
+[[builtin]]
+DECLARE FUNC cql_format_double (val REAL) CREATE TEXT!;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: text notnull create_func
+    | {name cql_format_double}: text notnull create_func
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: val: real variable in
+      |   | {param_detail}: val: real variable in
+      |     | {name val}: val: real variable in
+      |     | {type_real}: real
+      | {create_data_type}: text notnull create_func
+        | {notnull}: text notnull
+          | {type_text}: text
+
+The statement ending at line XXXX
+
+[[builtin]]
+DECLARE FUNC cql_format_string (val TEXT) CREATE TEXT!;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: text notnull create_func
+    | {name cql_format_string}: text notnull create_func
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: val: text variable in
+      |   | {param_detail}: val: text variable in
+      |     | {name val}: val: text variable in
+      |     | {type_text}: text
+      | {create_data_type}: text notnull create_func
+        | {notnull}: text notnull
+          | {type_text}: text
+
+The statement ending at line XXXX
+
+[[builtin]]
+DECLARE FUNC cql_format_blob (val BLOB) CREATE TEXT!;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: text notnull create_func
+    | {name cql_format_blob}: text notnull create_func
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: val: blob variable in
+      |   | {param_detail}: val: blob variable in
+      |     | {name val}: val: blob variable in
+      |     | {type_blob}: blob
+      | {create_data_type}: text notnull create_func
+        | {notnull}: text notnull
+          | {type_text}: text
+
+The statement ending at line XXXX
+
+[[builtin]]
+DECLARE FUNC cql_format_object (val OBJECT) CREATE TEXT!;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: text notnull create_func
+    | {name cql_format_object}: text notnull create_func
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: val: object variable in
+      |   | {param_detail}: val: object variable in
+      |     | {name val}: val: object variable in
+      |     | {type_object}: object
+      | {create_data_type}: text notnull create_func
+        | {notnull}: text notnull
+          | {type_text}: text
+
+The statement ending at line XXXX
+
+[[builtin]]
+DECLARE FUNC cql_format_null (ignored BOOL) CREATE TEXT!;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: text notnull create_func
+    | {name cql_format_null}: text notnull create_func
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: ignored: bool variable in
+      |   | {param_detail}: ignored: bool variable in
+      |     | {name ignored}: ignored: bool variable in
+      |     | {type_bool}: bool
+      | {create_data_type}: text notnull create_func
+        | {notnull}: text notnull
+          | {type_text}: text
+
+The statement ending at line XXXX
+
+[[builtin]]
+@OP BOOL : call fmt AS cql_format_bool;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_bool}: bool
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name fmt}
+        | {name cql_format_bool}
+
+The statement ending at line XXXX
+
+[[builtin]]
+@OP INT : call fmt AS cql_format_int;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_int}: integer
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name fmt}
+        | {name cql_format_int}
+
+The statement ending at line XXXX
+
+[[builtin]]
+@OP LONG : call fmt AS cql_format_long;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_long}: longint
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name fmt}
+        | {name cql_format_long}
+
+The statement ending at line XXXX
+
+[[builtin]]
+@OP REAL : call fmt AS cql_format_double;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_real}: real
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name fmt}
+        | {name cql_format_double}
+
+The statement ending at line XXXX
+
+[[builtin]]
+@OP TEXT : call fmt AS cql_format_string;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_text}: text
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name fmt}
+        | {name cql_format_string}
+
+The statement ending at line XXXX
+
+[[builtin]]
+@OP BLOB : call fmt AS cql_format_blob;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_blob}: blob
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name fmt}
+        | {name cql_format_blob}
+
+The statement ending at line XXXX
+
+[[builtin]]
+@OP OBJECT : call fmt AS cql_format_object;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_object}: object
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name fmt}
+        | {name cql_format_object}
+
+The statement ending at line XXXX
+
+[[builtin]]
+@OP NULL : call fmt AS cql_format_null;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {name NULL}
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name fmt}
+        | {name cql_format_null}
+
+The statement ending at line XXXX
+
 @SCHEMA_UPGRADE_VERSION (5);
 
   {schema_upgrade_version_stmt}: ok

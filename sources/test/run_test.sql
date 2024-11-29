@@ -6420,6 +6420,18 @@ BEGIN
   EXPECT!(s4 = "3.5");
 END);
 
+TEST!(primitive_formatting,
+BEGIN
+  EXPECT!(NULL:fmt == "null");
+  EXPECT!(1:fmt == "1");
+  EXPECT!(true:fmt == "true");
+  EXPECT!(2L:fmt == "2");
+  EXPECT!(2.5:fmt == "2.5");
+  EXPECT!("foo":fmt == "foo");
+  EXPECT!(1:box:fmt == "generic object");
+  EXPECT!(cql_blob_from_int("foo", 52):fmt == "length 5 blob");
+END);
+
 TEST!(compressed_strings,
 BEGIN
   let x := "hello hello hello hello";

@@ -7348,3 +7348,29 @@ cql_object_ref _Nullable cql_unbox_object(cql_object_ref _Nullable box) {
     }
 }
 
+#define CQL_FORMAT_VAL(name, type, code) \
+cql_string_ref _Nonnull cql_format_##name(type val) { \
+  cql_bool yes = true; \
+  uint16_t offsets[] = { 1, 0 }; \
+  uint8_t types[] = { code }; \
+  /* make a skeletal cursor */ \
+  cql_dynamic_cursor c = { \
+   .cursor_col_offsets = offsets, \
+   .cursor_data_types = types, \
+   .cursor_data = &val, \
+   .cursor_has_row = &yes \
+  }; \
+  return cql_cursor_format_column(&c, 0); \
+}
+
+CQL_FORMAT_VAL(bool, cql_nullable_bool, CQL_DATA_TYPE_BOOL)
+CQL_FORMAT_VAL(int, cql_nullable_int32, CQL_DATA_TYPE_INT32)
+CQL_FORMAT_VAL(long, cql_nullable_int64, CQL_DATA_TYPE_INT64)
+CQL_FORMAT_VAL(double, cql_nullable_double, CQL_DATA_TYPE_DOUBLE)
+CQL_FORMAT_VAL(string, cql_string_ref _Nullable, CQL_DATA_TYPE_STRING)
+CQL_FORMAT_VAL(blob, cql_blob_ref _Nullable, CQL_DATA_TYPE_BLOB)
+CQL_FORMAT_VAL(object, cql_object_ref _Nullable, CQL_DATA_TYPE_OBJECT)
+
+cql_string_ref _Nonnull cql_format_null(cql_nullable_bool b) {
+  return cql_string_ref_new("null");
+}

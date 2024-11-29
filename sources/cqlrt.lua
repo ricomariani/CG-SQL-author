@@ -1836,3 +1836,35 @@ function cql_blob_from_int(prefix, seed)
   end
   return prefix..seed
 end
+
+function cql_format_bool(value)
+  return cql_format_one_field(CQL_ENCODED_TYPE_BOOL, value)
+end
+
+function cql_format_int(value)
+  return cql_format_one_field(CQL_ENCODED_TYPE_INT32, value)
+end
+
+function cql_format_long(value)
+  return cql_format_one_field(CQL_ENCODED_TYPE_INT64, value)
+end
+
+function cql_format_double(value)
+  return cql_format_one_field(CQL_ENCODED_TYPE_DOUBLE, value)
+end
+
+function cql_format_string(value)
+  return cql_format_one_field(CQL_ENCODED_TYPE_STRING, value)
+end
+
+function cql_format_blob(value)
+  return cql_format_one_field(CQL_ENCODED_TYPE_BLOB, value)
+end
+
+function cql_format_object(value)
+  return cql_format_one_field(CQL_ENCODED_TYPE_OBJECT, value)
+end
+
+function cql_format_null()
+  return "null"
+end

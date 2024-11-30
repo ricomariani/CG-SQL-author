@@ -17,7 +17,7 @@ declare proc exit no check;
 
 @MACRO(stmt_list) EXPECT!(pred! expr)
 begin
-  call errcheck(pred!, @text(pred!), @MACRO_LINE);
+  errcheck(pred!, @text(pred!), @MACRO_LINE);
 end;
 
 -- storage for the expecation check
@@ -28,7 +28,7 @@ begin
   -- it's important to evaluate the expressions exactly once
   -- because there may be side-effects
   expected := a! is b!;
-  call errcheck(expected, @text(a!, " == ", b!), @MACRO_LINE);
+  errcheck(expected, @text(a!, " == ", b!), @MACRO_LINE);
   if not expected then
     -- we are re-evaluating now but the expectation already failed so it's ok
     printf("left: %s\n", a!:fmt);
@@ -41,7 +41,7 @@ begin
   -- it's important to evaluate the expressions exactly once
   -- because there may be side-effects
   expected := a! is not b!;
-  call errcheck(expected, @text(a!, " == ", b!), @MACRO_LINE);
+  errcheck(expected, @text(a!, " == ", b!), @MACRO_LINE);
   if not expected then
     -- we are re-evaluating now but the expectation already failed so it's ok
     printf("left: %s\n", a!:fmt);
@@ -83,7 +83,7 @@ begin
 
   -- this loose goes into the global proc and invokes the test
   start_refs := get_outstanding_refs();
-  call @ID("test_", name!)();
+  @ID("test_", name!)();
   end_refs := get_outstanding_refs();
   if start_refs != end_refs then
     printf("Test %s unbalanced refs.", @text(name!));
@@ -112,26 +112,26 @@ end;
 
 @MACRO(stmt_list) BEGIN_SUITE!()
 begin
-  declare zero int!;
-  declare one int!;
-  declare two int!;
+  -- we need these constants in the tests
+  -- these let us use constants without
+  -- actually using constants
 
-  zero := 0;
-  one := 1;
-  two := 2;
+  let zero := 0;
+  let one := 1;
+  let two := 2;
 end;
 
 @MACRO(stmt_list) END_SUITE!()
 begin
-  call end_suite();
+  end_suite();
 end;
 
 proc errcheck(passed bool @sensitive, message text, line int!)
 begin
-  expectations := expectations + 1;
-  if not coalesce(passed, 0) then
+  expectations += 1;
+  if passed is not true then
     printf("test: %s: FAIL on line %d\n", message, line);
-    fails := fails + 1;
+    fails += 1;
   end if;
 end;
 
@@ -139,7 +139,7 @@ proc end_suite()
 begin
   printf("%d tests executed. %d passed, %d failed.  %d expectations failed of %d.\n",
     tests, tests_passed, tests - tests_passed, fails, expectations);
-  call exit(fails);
+  exit(fails);
 end;
 
 /* Enable this code if you want to get verbose errors from the run tests
@@ -446,32 +446,32 @@ begin
   EXPECT_EQ!((-1 between side_effect_0() and side_effect_1()), 0);
   EXPECT_EQ!(side_effect_0_count, 1);
   EXPECT_EQ!(side_effect_1_count, 0);
-  call reset_counts();
+  reset_counts();
 
   EXPECT_EQ!((0 between side_effect_0() and side_effect_1()), 1);
   EXPECT_EQ!(side_effect_0_count, 1);
   EXPECT_EQ!(side_effect_1_count, 1);
-  call reset_counts();
+  reset_counts();
 
   EXPECT_EQ!((2 between side_effect_0() and side_effect_1()), 0);
   EXPECT_EQ!(side_effect_0_count, 1);
   EXPECT_EQ!(side_effect_1_count, 1);
-  call reset_counts();
+  reset_counts();
 
   EXPECT_EQ!((-1 not between side_effect_0() and side_effect_1()), 1);
   EXPECT_EQ!(side_effect_0_count, 1);
   EXPECT_EQ!(side_effect_1_count, 0);
-  call reset_counts();
+  reset_counts();
 
   EXPECT_EQ!((0 not between side_effect_0() and side_effect_1()), 0);
   EXPECT_EQ!(side_effect_0_count, 1);
   EXPECT_EQ!(side_effect_1_count, 1);
-  call reset_counts();
+  reset_counts();
 
   EXPECT_EQ!((2 not between side_effect_0() and side_effect_1()), 1);
   EXPECT_EQ!(side_effect_0_count, 1);
   EXPECT_EQ!(side_effect_1_count, 1);
-  call reset_counts();
+  reset_counts();
 end);
 
 -- assorted not between combinations
@@ -544,7 +544,7 @@ end;
 TEST!(out_arguments,
 begin
   declare scratch int!;
-  call echo(12, scratch);
+  echo(12, scratch);
   EXPECT_SQL_TOO!(scratch == 12);
 end);
 
@@ -646,7 +646,7 @@ end;
 
 proc load_mixed_with_nulls()
 begin
-  call load_mixed();
+  load_mixed();
   insert into mixed values (3, null, null, null, null, null);
   insert into mixed values (4, "last name", 16, 0, 9.0, cast("blob3" as blob));
 end;
@@ -666,7 +666,7 @@ begin
   declare rate_ real;
   declare bl_ blob;
 
-  call load_mixed();
+  load_mixed();
 
   declare read_cursor cursor for select * from mixed;
 
@@ -702,7 +702,7 @@ begin
   declare id_ int;
   id_ := 2;  -- either works
 
-  call load_mixed();
+  load_mixed();
 
   update mixed set code = new_code where id = id_;
   declare updated_cursor cursor for select code from mixed where id = id_;
@@ -717,7 +717,7 @@ begin
   let temp_1 := (select zero * 5 + one * 11);
   EXPECT_EQ!(temp_1, 11);
 
-  call load_mixed();
+  load_mixed();
 
   temp_1 := (select id from mixed where id > 1 order by id limit 1);
   EXPECT_EQ!(temp_1, 2);
@@ -780,16 +780,16 @@ end;
 
 TEST!(delete_several,
 begin
-  call load_mixed();
+  load_mixed();
   EXPECT_EQ!(2, (select count(*) from mixed));
 
   declare id_ int!;
-  call delete_one_from_mixed(id_);
+  delete_one_from_mixed(id_);
   EXPECT_EQ!(1, id_);
   EXPECT_EQ!(0, (select count(*) from mixed where id = id_));
   EXPECT_EQ!(1, (select count(*) from mixed where id != id_));
 
-  call delete_one_from_mixed(id_);
+  delete_one_from_mixed(id_);
   EXPECT_EQ!(2, id_);
   EXPECT_EQ!(0, (select count(*) from mixed));
 end);
@@ -813,9 +813,9 @@ end;
 TEST!(string_ref_test,
 begin
   declare a_string text!;
-  call string_copy("Hello", a_string);
+  string_copy("Hello", a_string);
   declare result bool!;
-  call string_equal(a_string, "Hello", result);
+  string_equal(a_string, "Hello", result);
   EXPECT!(result);
 end);
 
@@ -919,12 +919,6 @@ begin
   declare r real;
   declare t text;
 
-  b := null;
-  i := null;
-  l := null;
-  r := null;
-  t := null;
-
   EXPECT_EQ!((select b), null); -- binding null bool
   EXPECT_EQ!((select i), null); -- binding null int
   EXPECT_EQ!((select l), null); -- binding null long
@@ -942,7 +936,7 @@ begin
   declare bl_ blob;
   declare count, sum int!;
 
-  call load_mixed();
+  load_mixed();
 
   declare read_cursor cursor for select * from mixed;
 
@@ -961,16 +955,17 @@ end);
 proc load_more_mixed()
 begin
   delete from mixed;
-  insert into mixed values (1, "a name", 12, 1, 5.0, null);
-  insert into mixed values (2, "some name", 14, 3, 7.0, null);
-  insert into mixed values (3, "yet another name", 15, 3, 17.4, null);
-  insert into mixed values (4, "some name", 19, 4, 9.1, null);
-  insert into mixed values (5, "what name", 21, 8, 12.3, null);
+  insert into mixed values
+    (1, "a name", 12, 1, 5.0, null),
+    (2, "some name", 14, 3, 7.0, null),
+    (3, "yet another name", 15, 3, 17.4, null),
+    (4, "some name", 19, 4, 9.1, null),
+    (5, "what name", 21, 8, 12.3, null);
 end;
 
 TEST!(loop_control_flow,
 begin
-  call load_more_mixed();
+  load_more_mixed();
 
   cursor C for select * from mixed;
 
@@ -1121,22 +1116,22 @@ TEST!(simple_case_test,
 begin
   declare result int;
 
-  call case_tester1(1, result);
+  case_tester1(1, result);
   EXPECT_EQ!(result, 100);
-  call case_tester1(2, result);
+  case_tester1(2, result);
   EXPECT_EQ!(result, 200);
-  call case_tester1(3, result);
+  case_tester1(3, result);
   EXPECT_EQ!(result, 300);
-  call case_tester1(5, result);
+  case_tester1(5, result);
   EXPECT_EQ!(result, 400);
 
-  call case_tester2(1, result);
+  case_tester2(1, result);
   EXPECT_EQ!(result, 100);
-  call case_tester2(2, result);
+  case_tester2(2, result);
   EXPECT_EQ!(result, 200);
-  call case_tester2(3, result);
+  case_tester2(3, result);
   EXPECT_EQ!(result, 300);
-  call case_tester2(5, result);
+  case_tester2(5, result);
   EXPECT_EQ!(result, null);
 end);
 
@@ -1172,13 +1167,13 @@ end;
 TEST!(in_test_not_null,
 begin
   declare result bool!;
-  call in_tester1(1, result);
+  in_tester1(1, result);
   EXPECT!(result);
-  call in_tester1(2, result);
+  in_tester1(2, result);
   EXPECT!(result);
-  call in_tester1(3, result);
+  in_tester1(3, result);
   EXPECT!(result);
-  call in_tester1(4, result);
+  in_tester1(4, result);
   EXPECT!(not result);
 end);
 
@@ -1192,15 +1187,15 @@ end;
 TEST!(in_test_nullables,
 begin
   declare result bool;
-  call in_tester2(1, result);
+  in_tester2(1, result);
   EXPECT!(result);
-  call in_tester2(2, result);
+  in_tester2(2, result);
   EXPECT!(result);
-  call in_tester2(3, result);
+  in_tester2(3, result);
   EXPECT!(result);
-  call in_tester2(4, result);
+  in_tester2(4, result);
   EXPECT!(not result);
-  call in_tester2(null, result);
+  in_tester2(null, result);
   EXPECT_EQ!(result, null);
 end);
 
@@ -1213,9 +1208,9 @@ end;
 TEST!(nullable_when_test,
 begin
   declare result int!;
-  call nullables_case_tester(1, result);
+  nullables_case_tester(1, result);
   EXPECT_EQ!(result, 1);
-  call nullables_case_tester(0, result);
+  nullables_case_tester(0, result);
   EXPECT_EQ!(result, 0);
 end);
 
@@ -1228,11 +1223,11 @@ end;
 TEST!(nullable_when_pred_test,
 begin
   declare result int!;
-  call nullables_case_tester(1, result);
+  nullables_case_tester(1, result);
   EXPECT_EQ!(result, 1);
-  call nullables_case_tester(0, result);
+  nullables_case_tester(0, result);
   EXPECT_EQ!(result, 0);
-  call nullables_case_tester(null, result);
+  nullables_case_tester(null, result);
   EXPECT_EQ!(result, 0);
 end);
 
@@ -1244,13 +1239,13 @@ end;
 TEST!(string_in_test,
 begin
   declare result bool;
-  call in_string_tester("this", result);
+  in_string_tester("this", result);
   EXPECT!(result);
-  call in_string_tester("that", result);
+  in_string_tester("that", result);
   EXPECT!(result);
-  call in_string_tester("at", result);
+  in_string_tester("at", result);
   EXPECT!(not result);
-  call in_string_tester(null, result);
+  in_string_tester(null, result);
   EXPECT_EQ!(result, null);
 end);
 
@@ -1320,7 +1315,7 @@ end);
 
 proc maybe_commit(do_commit bool!)
 begin
-  call load_mixed();
+  load_mixed();
   begin transaction;
   delete from mixed where id = 1;
   EXPECT_EQ!(1, (select count(*) from mixed)); -- delete successful
@@ -1333,9 +1328,9 @@ end;
 
 TEST!(transaction_mechanics,
 begin
-  call maybe_commit(1);
+  maybe_commit(1);
   EXPECT_EQ!(1, (select count(*) from mixed)); -- commit successful
-  call maybe_commit(0);
+  maybe_commit(0);
   EXPECT_EQ!(2, (select count(*) from mixed)); -- rollback successful
 end);
 
@@ -1356,7 +1351,7 @@ end;
 
 TEST!(proc_loop_fetch,
 begin
-  call load_mixed();
+  load_mixed();
 
   declare read_cursor cursor for call get_mixed(200);
 
@@ -1371,7 +1366,7 @@ end);
 
 proc savepoint_maybe_commit(do_commit bool!)
 begin
-  call load_mixed();
+  load_mixed();
   savepoint foo;
   delete from mixed where id = 1;
   EXPECT_EQ!(1, (select count(*) from mixed));  -- delete successful
@@ -1384,15 +1379,15 @@ end;
 
 TEST!(savepoint_mechanics,
 begin
-  call savepoint_maybe_commit(1);
+  savepoint_maybe_commit(1);
   EXPECT_EQ!(1, (select count(*) from mixed));  -- savepoint commit successful
-  call savepoint_maybe_commit(0);
+  savepoint_maybe_commit(0);
   EXPECT_EQ!(2, (select count(*) from mixed));  -- savepoint rollback successful
 end);
 
 TEST!(exists_test,
 begin
-  call load_mixed();
+  load_mixed();
   EXPECT!((select EXISTS(select * from mixed)));  -- exists found rows
   delete from mixed;
   EXPECT!((select not EXISTS(select * from mixed)));  -- not exists found no rows
@@ -1449,7 +1444,7 @@ TEST!(proc_loop_auto_fetch,
 begin
   declare count, sum int!;
 
-  call load_mixed();
+  load_mixed();
 
   declare read_cursor cursor for call get_mixed(200);
 
@@ -1763,7 +1758,7 @@ end;
 
 proc load_blobs()
 begin
-  call blob_table_maker();
+  blob_table_maker();
 
   let i := 0;
   let count := 20;
@@ -1794,7 +1789,7 @@ end);
 
 TEST!(blob_data_manip,
 begin
-  call load_blobs();
+  load_blobs();
 
   cursor C for select * from blob_table order by id;
   let i := 0;
@@ -1824,7 +1819,7 @@ end;
 
 proc load_sparse_blobs()
 begin
-  call blob_table_maker();
+  blob_table_maker();
 
   declare s text!;
   declare b1 blob;
@@ -1850,7 +1845,7 @@ begin
   let i := 0;
   let count := 20;
 
-  call load_sparse_blobs();
+  load_sparse_blobs();
 
   loop fetch C
   begin
@@ -1929,7 +1924,7 @@ end);
 
 TEST!(row_id_test,
 begin
-  call load_mixed();
+  load_mixed();
   cursor C for select rowid from mixed;
   declare r int!;
   r := 1;
@@ -3145,7 +3140,7 @@ end;
 [[autodrop=(temp_table_one, temp_table_two, temp_table_three)]]
 proc read_three_tables_and_autodrop()
 begin
-  call init_temp_tables();
+  init_temp_tables();
 
   select * from temp_table_one
   union all
@@ -3213,7 +3208,7 @@ begin
   start := 10;
   stop := 20;
   declare rs object!;
-  call some_integers_fetch(rs, start, stop);
+  some_integers_fetch(rs, start, stop);
 
   -- use a nullable version too to exercise both kinds of binding
   declare rs1 object;
@@ -3496,7 +3491,7 @@ TEST!(cursor_args,
 begin
   declare args cursor like dummy arguments;
   fetch args() from values() @dummy_seed(12);
-  call dummy(from args);
+  dummy(from args);
 end);
 
 declare proc cql_exec_internal(sql text!) using TRANSACTION;
@@ -3504,7 +3499,7 @@ create table xyzzy(id int, name text, data blob);
 
 TEST!(exec_internal,
 begin
-  call cql_exec_internal("create table xyzzy(id integer, name text, data blob);");
+  cql_exec_internal("create table xyzzy(id integer, name text, data blob);");
   declare bl1 blob;
   bl1 := blob_from_string('z');
   declare bl2 blob;
@@ -3956,13 +3951,13 @@ TEST!(rc_simple_insert_and_select,
 begin
   create table simple_rc_table(id int, foo text);
 
-  call simple_insert();
+  simple_insert();
   EXPECT!(@rc == 0);
 
-  call select_if_nothing(1);
+  select_if_nothing(1);
   EXPECT!(@rc == 0);
 
-  call select_if_nothing(2);
+  select_if_nothing(2);
   EXPECT!(@rc == 0);
 
   try
@@ -4508,7 +4503,7 @@ end;
 
 TEST!(rename_tables_in_dot,
 begin
-  call make_xy();
+  make_xy();
   insert into xy values (1,2), (2,3);
 
   cursor C for
@@ -5130,36 +5125,36 @@ end);
 
 TEST!(serialization_tricky_values,
 begin
-  call round_trip_int(0);
-  call round_trip_int(1);
-  call round_trip_int(-1);
-  call round_trip_int(129);
-  call round_trip_int(32769);
-  call round_trip_int(-129);
-  call round_trip_int(-32769);
-  call round_trip_int(0x7fffffff);
-  call round_trip_int(-214783648);
+  round_trip_int(0);
+  round_trip_int(1);
+  round_trip_int(-1);
+  round_trip_int(129);
+  round_trip_int(32769);
+  round_trip_int(-129);
+  round_trip_int(-32769);
+  round_trip_int(0x7fffffff);
+  round_trip_int(-214783648);
 
-  call round_trip_long(0);
-  call round_trip_long(1);
-  call round_trip_long(-1);
-  call round_trip_long(129);
-  call round_trip_long(32769);
-  call round_trip_long(-129);
-  call round_trip_long(-32769);
-  call round_trip_long(0x7fffffffL);
-  call round_trip_long(-214783648L);
-  call round_trip_long(0x7fffffffffffffffL);  -- max int64
-  call round_trip_long(0x8000000000000000L);  -- min int64
+  round_trip_long(0);
+  round_trip_long(1);
+  round_trip_long(-1);
+  round_trip_long(129);
+  round_trip_long(32769);
+  round_trip_long(-129);
+  round_trip_long(-32769);
+  round_trip_long(0x7fffffffL);
+  round_trip_long(-214783648L);
+  round_trip_long(0x7fffffffffffffffL);  -- max int64
+  round_trip_long(0x8000000000000000L);  -- min int64
 
   -- these are actually testing constant handling rather than
   -- the blob but this is a convenient way to ensure that it was
   -- all on the up and up.  Especially since we already confirmed
   -- above that it works in hex.
-  call round_trip_long(-9223372036854775808L); -- min int64 in decimal
-  call round_trip_long(-9223372036854775808);  -- min int64 in decimal
-  call round_trip_long(9223372036854775807L);  -- max int64 in decimal
-  call round_trip_long(9223372036854775807);   -- max int64 in decimal
+  round_trip_long(-9223372036854775808L); -- min int64 in decimal
+  round_trip_long(-9223372036854775808);  -- min int64 in decimal
+  round_trip_long(9223372036854775807L);  -- max int64 in decimal
+  round_trip_long(9223372036854775807);   -- max int64 in decimal
 end);
 
 declare proc rand_reset();
@@ -5189,7 +5184,7 @@ begin
   declare test_cursor_both cursor like storage_both;
   test_cursor_both:from_blob(my_blob);
 
-  call rand_reset();
+  rand_reset();
 
   let good := 0;
   let bad := 0;
@@ -5243,7 +5238,7 @@ end;
 
 TEST!(arg_mutation,
 begin
-  call change_arg(null);
+  change_arg(null);
 end);
 
 declare proc lotsa_types() (
@@ -6031,7 +6026,7 @@ end;
 TEST!(parent_child_results,
 begin
   let results := parent_child();
-  call verify_parent_child_results(results);
+  verify_parent_child_results(results);
 
   let alt_results := parent_child_simple_pattern();
   declare r object;
@@ -6039,7 +6034,7 @@ begin
 
   -- shape compatible, cast away ch1/ch2 vs. ch1_filter/ch2_filter
   -- this verifies that the manually created parent/child result is the same
-  call verify_parent_child_results(r);
+  verify_parent_child_results(r);
 end);
 
 TEST!(string_dictionary,
@@ -6431,11 +6426,11 @@ declare proc take_bool(x bool, y bool);
 
 TEST!(normalize_bool_on_call,
 begin
-  call take_bool(10, true);
-  call take_bool(0, false);
+  take_bool(10, true);
+  take_bool(0, false);
 
-  call take_bool_not_null(10, true);
-  call take_bool_not_null(0, false);
+  take_bool_not_null(10, true);
+  take_bool_not_null(0, false);
 end);
 
 @op blob : call key as bgetkey;
@@ -7007,7 +7002,7 @@ end;
 -- test readback of two rows
 TEST!(read_mixed_backed,
 begin
-  call load_mixed_backed();
+  load_mixed_backed();
 
   cursor C for select * from mixed_backed;
   fetch C;
@@ -7041,7 +7036,7 @@ begin
   declare id_ int;
   id_ := 2;  -- either works
 
-  call load_mixed_backed();
+  load_mixed_backed();
 
   update mixed_backed set code = new_code where id = id_;
   declare updated_cursor cursor for select code from mixed_backed where id = id_;

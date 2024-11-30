@@ -194,6 +194,15 @@ typedef struct schema_annotation {
 #define SEM_TYPE_CONSTANT     _64(0x2000000000000) // set for variables marked immutable and cannot be reassigned
 #define SEM_TYPE_FLAGS        _64(0x3FFFFFFFFFF00) // all the flag bits we have so far
 
+// All `sem_try_resolve_*` functions return either `SEM_RESOLVE_CONTINUE` to
+// indicate that another resolver should be tried, or `SEM_RESOLVE_STOP` to
+// indicate that the correct resolver was found. Continuing implies that no
+// failure has (yet) occurred, but stopping implies neither success nor failure.
+typedef enum {
+  SEM_RESOLVE_CONTINUE = 0,
+  SEM_RESOLVE_STOP = 1
+} sem_resolve;
+
 cql_noexport sem_t core_type_of(sem_t sem_type);
 cql_noexport sem_t sensitive_flag(sem_t sem_type);
 cql_noexport CSTR coretype_string(sem_t sem_type);

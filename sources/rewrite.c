@@ -38,17 +38,6 @@ static bool_t rewrite_one_def(ast_node *head);
 static void rewrite_one_typed_name(ast_node *typed_name, symtab *used_names);
 static void rewrite_from_shape_args(ast_node *head);
 
-// @PROC can be used in place of an ID in various places
-// replace that name if appropriate
-cql_noexport void rewrite_proclit(ast_node *ast) {
-  Contract(is_ast_str(ast));
-  EXTRACT_STRING(name, ast);
-  CSTR newname = process_proclit(ast, name);
-  if (newname) {
-    ((str_ast_node *)ast)->value = newname;
-  }
-}
-
 // To do this rewrite we only need to check a few things:
 //  * is the given name really a shape
 //  * does the shape have storage (i.e. SEM_TYPE_HAS_SHAPE_STORAGE is set)
@@ -537,25 +526,6 @@ static ast_node *rewrite_one_param(ast_node *param, symtab *param_names, bytebuf
 
   // this is the last param that we modified
   return param;
-}
-
-// The name @proc refers to the current procedure name, this can appear in various
-// contexts either as a literal string or a valid id.  If it matches replace it here
-cql_noexport CSTR process_proclit(ast_node *ast, CSTR name) {
-  if (!StrCaseCmp(name, "@proc")) {
-    if (!current_proc) {
-       report_error(ast, "CQL0252: @PROC literal can only appear inside of procedures", NULL);
-       record_error(ast);
-       return NULL;
-    }
-
-    ast_node *name_ast = get_proc_name(current_proc);
-    EXTRACT_STRING(proc_name, name_ast);
-    name = proc_name;
-  }
-
-  record_ok(ast);
-  return name;
 }
 
 // generates an AST node for a data_type_any based on the semantic type

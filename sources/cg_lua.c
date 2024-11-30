@@ -1412,15 +1412,6 @@ static void cg_lua_id(ast_node *expr, charbuf *value) {
     return;
   }
 
-  if (!strcmp(name, "@proc")) {
-    CHARBUF_OPEN(tmp);
-    cg_encode_string_literal(lua_current_proc_name(), &tmp);
-    CSTR p = Strdup(tmp.ptr);
-    cg_lua_string_literal(p, value);
-    CHARBUF_CLOSE(tmp);
-    return;
-  }
-
   // The semantic pass changed something like 'if C' into if '_C_has_row_' which
   // is a bit lame but I can't fix it just now. The cg pass should be doing this
   // transform with a dot operator but in any case we can undo it with a kludge.

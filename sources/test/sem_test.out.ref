@@ -12277,7 +12277,7 @@ RELEASE garbonzo;
 test/sem_test.sql:XXXX:1: error: in release_savepoint_stmt : CQL0221: savepoint has not been mentioned yet, probably wrong 'garbonzo'
 
   {release_savepoint_stmt}: err
-  | {name garbonzo}: ok
+  | {name garbonzo}
 
 The statement ending at line XXXX
 
@@ -12286,7 +12286,7 @@ ROLLBACK TO another_garbonzo;
 test/sem_test.sql:XXXX:1: error: in rollback_trans_stmt : CQL0220: savepoint has not been mentioned yet, probably wrong 'another_garbonzo'
 
   {rollback_trans_stmt}: err
-  | {name another_garbonzo}: ok
+  | {name another_garbonzo}
 
 The statement ending at line XXXX
 
@@ -51354,7 +51354,7 @@ The statement ending at line XXXX
 PROC savepoint_proc_stuff ()
 BEGIN
   DECLARE p TEXT;
-  SET p := @PROC;
+  SET p := 'savepoint_proc_stuff';
   SAVEPOINT savepoint_proc_stuff;
   ROLLBACK TO savepoint_proc_stuff;
   RELEASE savepoint_proc_stuff;
@@ -51370,7 +51370,7 @@ END;
       | | {type_text}: text
       | {assign}: p: text variable was_set
       | | {name p}: p: text variable was_set
-      | | {name @PROC}: @proc: text notnull variable
+      | | {strlit 'savepoint_proc_stuff'}: text notnull
       | {savepoint_stmt}: ok
       | | {name savepoint_proc_stuff}: ok
       | {rollback_trans_stmt}: ok

@@ -6071,15 +6071,6 @@ static void record_resolve_error(ast_node *ast) {
   }
 }
 
-// All `sem_try_resolve_*` functions return either `SEM_RESOLVE_CONTINUE` to
-// indicate that another resolver should be tried, or `SEM_RESOLVE_STOP` to
-// indicate that the correct resolver was found. Continuing implies that no
-// failure has (yet) occurred, but stopping implies neither success nor failure.
-typedef enum {
-  SEM_RESOLVE_CONTINUE = 0,
-  SEM_RESOLVE_STOP = 1
-} sem_resolve;
-
 static sem_resolve sem_try_resolve_locals_bundle(ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
   Contract(name);
   Contract(type_ptr);
@@ -6117,6 +6108,29 @@ static sem_resolve sem_try_resolve_locals_bundle(ast_node *ast, CSTR name, CSTR 
   return SEM_RESOLVE_STOP;
 }
 
+// @PROC can be used in place of an ID in various places
+// replace that name if appropriate
+static sem_resolve try_rewrite_proclit(ast_node *ast) {
+  Contract(is_ast_str(ast));
+  EXTRACT_STRING(name, ast);
+
+  if (!StrCaseCmp(name, "@proc")) {
+    if (!current_proc) {
+       report_error(ast, "CQL0252: @PROC literal can only appear inside of procedures", NULL);
+       record_error(ast);
+    }  
+    else {
+
+      ast_node *name_ast = get_proc_name(current_proc);
+      EXTRACT_STRING(proc_name, name_ast);
+      ((str_ast_node *)ast)->value = proc_name;
+      record_ok(ast);
+    }
+    return SEM_RESOLVE_STOP;
+  }
+  return SEM_RESOLVE_CONTINUE;
+}
+
 // Here we look for @PROC and @ID, there are various places where @RC or @PROC
 // could appear and an id is expected, not an expression. So they have to be
 // detected as identifiers. Previously there was special case code in sem_expr_str
@@ -6124,6 +6138,10 @@ static sem_resolve sem_try_resolve_locals_bundle(ast_node *ast, CSTR name, CSTR 
 static sem_resolve sem_try_resolve_at_ids(ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
   Contract(name);
   Contract(type_ptr);
+
+  if (scope) {
+    return SEM_RESOLVE_CONTINUE;  // we only care about the global scope
+  }
 
   // @rc is like a builtin variable, it refers to the _rc_ state
   // note, use of @rc forces you to become a dml proc which isn't
@@ -6133,7 +6151,7 @@ static sem_resolve sem_try_resolve_at_ids(ast_node *ast, CSTR name, CSTR scope, 
   // yet know that you are a DML proc.  Generating an error would be annoying.
   // This also has the useful property that you can force a proc to be dml
   // with "if @rc then endif;" which is useful when you are trying to create mocks.
-  if (!scope && !StrCaseCmp("@rc", name)) {
+  if (!StrCaseCmp("@rc", name)) {
     ast->sem = new_sem(SEM_TYPE_INTEGER | SEM_TYPE_NOTNULL| SEM_TYPE_VARIABLE);
     ast->sem->name = "@rc";
     *type_ptr = &ast->sem->sem_type;
@@ -6141,20 +6159,25 @@ static sem_resolve sem_try_resolve_at_ids(ast_node *ast, CSTR name, CSTR scope, 
     return SEM_RESOLVE_STOP;
   }
 
-  if (!scope && !StrCaseCmp("@proc", name)) {
-    if (!current_proc) {
-      report_error(ast, "CQL0252: @PROC literal can only appear inside of procedures", NULL);
-      record_error(ast);
-      return SEM_RESOLVE_STOP;
-    }
+  // @proc becomes a string literal if it is found
+  if (!ast || try_rewrite_proclit(ast) == SEM_RESOLVE_CONTINUE) {
+    return SEM_RESOLVE_CONTINUE;
+  }
 
-    ast->sem = new_sem(SEM_TYPE_TEXT | SEM_TYPE_NOTNULL| SEM_TYPE_VARIABLE);
-    ast->sem->name = "@proc";
-    *type_ptr = &ast->sem->sem_type;
+  if (is_error(ast)) {
     return SEM_RESOLVE_STOP;
   }
 
-  return SEM_RESOLVE_CONTINUE;
+  ast->sem = new_sem(SEM_TYPE_TEXT | SEM_TYPE_NOTNULL);
+  *type_ptr = &ast->sem->sem_type;
+
+  CHARBUF_OPEN(tmp);
+  EXTRACT_STRING(proc_name, ast);  // rewritten proc name
+  cg_encode_string_literal(proc_name, &tmp);
+  ((str_ast_node *)ast)->value = Strdup(tmp.ptr);
+  CHARBUF_CLOSE(tmp);
+
+  return SEM_RESOLVE_STOP;
 }
 
 static sem_resolve sem_try_resolve_arguments_bundle(ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
@@ -23559,10 +23582,11 @@ static void sem_rollback_trans_stmt(ast_node *ast) {
     return;
   }
 
-  rewrite_proclit(ast->left);
-  if (is_error(ast->left)) {
-    record_error(ast);
-    return;
+  if (try_rewrite_proclit(ast->left) == SEM_RESOLVE_STOP) {
+    if (is_error(ast->left)) {
+      record_error(ast);
+      return;
+    }
   }
 
   EXTRACT_STRING(name, ast->left);
@@ -23579,11 +23603,13 @@ static void sem_rollback_trans_stmt(ast_node *ast) {
 // as having been seen so we can verify it in rollback.
 static void sem_savepoint_stmt(ast_node *ast) {
   Contract(is_ast_savepoint_stmt(ast));
-  rewrite_proclit(ast->left);
-  if (is_error(ast->left)) {
-    record_error(ast);
-    return;
+  if (try_rewrite_proclit(ast->left) == SEM_RESOLVE_STOP) {
+    if (is_error(ast->left)) {
+      record_error(ast);
+      return;
+    }
   }
+
   EXTRACT_STRING(name, ast->left);
 
   // these don't have lexical semantics but at least we can verify that
@@ -23597,11 +23623,14 @@ static void sem_savepoint_stmt(ast_node *ast) {
 // seen that name in a savepoint statement or it's an error.
 static void sem_release_savepoint_stmt(ast_node *ast) {
   Contract(is_ast_release_savepoint_stmt(ast));
-  rewrite_proclit(ast->left);
-  if (is_error(ast->left)) {
-    record_error(ast);
-    return;
+
+  if (try_rewrite_proclit(ast->left) == SEM_RESOLVE_STOP) {
+    if (is_error(ast->left)) {
+      record_error(ast);
+      return;
+    }
   }
+
   EXTRACT_STRING(name, ast->left);
 
   if (!symtab_find(savepoints, name)) {

@@ -6117,6 +6117,43 @@ static sem_resolve sem_try_resolve_locals_bundle(ast_node *ast, CSTR name, CSTR 
   return SEM_RESOLVE_STOP;
 }
 
+// rico
+static sem_resolve sem_try_resolve_at_ids(ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
+  Contract(name);
+  Contract(type_ptr);
+
+  // @rc is like a builtin variable, it refers to the _rc_ state
+  // note, use of @rc forces you to become a dml proc which isn't
+  // very onerous because rc makes no sense if it isn't a dml proc.
+  // We do it this way because it's possible that you're using @rc
+  // in a loop or some such and you haven't run any DML yet so we don't
+  // yet know that you are a DML proc.  Generating an error would be annoying.
+  // This also has the useful property that you can force a proc to be dml
+  // with "if @rc then endif;" which is useful when you are trying to create mocks.
+  if (!scope && !StrCaseCmp("@rc", name)) {
+    ast->sem = new_sem(SEM_TYPE_INTEGER | SEM_TYPE_NOTNULL| SEM_TYPE_VARIABLE);
+    ast->sem->name = "@rc";
+    *type_ptr = &ast->sem->sem_type;
+    has_dml = 1; // use of result code implies DML proc
+    return SEM_RESOLVE_STOP;
+  }
+
+  if (!scope && !StrCaseCmp("@proc", name)) {
+    if (!current_proc) {
+      report_error(ast, "CQL0252: @PROC literal can only appear inside of procedures", NULL);
+      record_error(ast);
+      return SEM_RESOLVE_STOP;
+    }
+
+    ast->sem = new_sem(SEM_TYPE_TEXT | SEM_TYPE_NOTNULL| SEM_TYPE_VARIABLE);
+    ast->sem->name = "@proc";
+    *type_ptr = &ast->sem->sem_type;
+    return SEM_RESOLVE_STOP;
+  }
+
+  return SEM_RESOLVE_CONTINUE;
+}
+
 static sem_resolve sem_try_resolve_arguments_bundle(ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
   Contract(name);
   Contract(type_ptr);
@@ -6737,6 +6774,7 @@ static void sem_resolve_id_with_type(ast_node *ast, CSTR name, CSTR scope, sem_t
   *type_ptr = NULL;
 
   sem_resolve (*resolver[])(ast_node *ast, CSTR, CSTR, sem_t **) = {
+    sem_try_resolve_at_ids,
     sem_try_resolve_arguments_bundle,
     sem_try_resolve_locals_bundle,
     sem_try_resolve_column,
@@ -24228,38 +24266,6 @@ cleanup:
   current_loop_analysis_state = saved_loop_analysis_state;
 }
 
-// Expression type for current proc literal
-static void sem_expr_proclit(ast_node *ast) {
-  Contract(is_ast_str(ast));
-
-  // name already known to match or we wouldn't be here
-  CSTR name = process_proclit(ast, "@proc");
-  if (!name) {
-    return;
-  }
-
-  // replace with a standard string literal
-  CSTR strlit = dup_printf("'%s'", name);
-  ((str_ast_node*)ast)->value = strlit;
-
-  ast->sem = new_sem(SEM_TYPE_TEXT | SEM_TYPE_NOTNULL);
-}
-
-// @rc is like a builtin variable, it refers to the _rc_ state
-// note, use of @rc forces you to become a dml proc which isn't
-// very onerous because rc makes no sense if it isn't a dml proc.
-// We do it this way because it's possible that you're using @rc
-// in a loop or some such and you haven't run any DML yet so we don't
-// yet know that you are a DML proc.  Generating an error would be annoying.
-// This also has the useful property that you can force a proc to be dml
-// with "if @rc then endif;" which is useful when you are trying to create mocks.
-static void sem_expr_at_rc(ast_node *ast) {
-  Contract(is_ast_str(ast));
-  ast->sem = new_sem(SEM_TYPE_INTEGER | SEM_TYPE_NOTNULL| SEM_TYPE_VARIABLE);
-  ast->sem->name = "@rc";
-  has_dml = 1; // use of result code implies DML proc
-}
-
 // Expression type for numeric primitives
 static void sem_expr_num(ast_node *ast, CSTR cstr) {
   Contract(is_ast_num(ast));
@@ -24313,12 +24319,6 @@ static void sem_expr_str(ast_node *ast, CSTR cstr) {
   if (is_strlit(ast)) {
     // note str is the lexeme, so it is still quoted and escaped
     ast->sem = new_sem(SEM_TYPE_TEXT | SEM_TYPE_NOTNULL);
-  }
-  else if (is_proclit(ast)) {
-    sem_expr_proclit(ast);
-  }
-  else if (is_at_rc(ast)) {
-    sem_expr_at_rc(ast);
   }
   else {
     sem_resolve_id_expr(ast, str, NULL);

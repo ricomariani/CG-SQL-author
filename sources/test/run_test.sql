@@ -3944,7 +3944,7 @@ end;
 TEST!(rc_simple_select,
 begin
   cursor C for call simple_select();
-  EXPECT!(@rc == 0);
+  EXPECT_EQ!(@rc, 0);
 end);
 
 TEST!(rc_simple_insert_and_select,
@@ -3952,13 +3952,13 @@ begin
   create table simple_rc_table(id int, foo text);
 
   simple_insert();
-  EXPECT!(@rc == 0);
+  EXPECT_EQ!(@rc, 0);
 
   select_if_nothing(1);
-  EXPECT!(@rc == 0);
+  EXPECT_EQ!(@rc, 0);
 
   select_if_nothing(2);
-  EXPECT!(@rc == 0);
+  EXPECT_EQ!(@rc, 0);
 
   try
     call select_if_nothing_throw(2);
@@ -4030,6 +4030,11 @@ begin
   let e7 := @rc;
   EXPECT_EQ!(e7, 0); -- back to SQLITE_OK
 end);
+
+TEST!(at_proc,
+BEGIN
+  EXPECT_EQ!(@proc, "test_at_proc");
+END);
 
 -- facet helper functions, used by the schema upgrader
 declare facet_data TYPE OBJECT<facet_data>;

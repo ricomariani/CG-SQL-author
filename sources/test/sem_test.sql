@@ -13695,7 +13695,7 @@ release savepoint @proc;
 rollback transaction to savepoint @proc;
 
 -- TEST: @proc rewrites
--- + SET p := 'savepoint_proc_stuff';
+-- + SET p := @PROC;
 -- + SAVEPOINT savepoint_proc_stuff;
 -- + ROLLBACK TO savepoint_proc_stuff;
 -- + RELEASE savepoint_proc_stuff;

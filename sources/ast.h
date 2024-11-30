@@ -286,8 +286,6 @@ cql_noexport bool_t is_strlit(ast_node *_Nullable node);
 cql_noexport bool_t is_id(ast_node *_Nullable node);
 cql_noexport bool_t is_qid(ast_node *_Nullable node);
 cql_noexport bool_t is_id_or_dot(ast_node *_Nullable node);
-cql_noexport bool_t is_proclit(ast_node *_Nullable node);
-cql_noexport bool_t is_at_rc(ast_node *_Nullable node);
 cql_noexport bool_t is_primitive(ast_node *_Nullable  node);
 cql_noexport bool_t is_proc(ast_node *_Nullable node);
 cql_noexport bool_t is_region(ast_node *_Nonnull ast);

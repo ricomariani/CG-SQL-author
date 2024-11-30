@@ -51354,7 +51354,7 @@ The statement ending at line XXXX
 PROC savepoint_proc_stuff ()
 BEGIN
   DECLARE p TEXT;
-  SET p := 'savepoint_proc_stuff';
+  SET p := @PROC;
   SAVEPOINT savepoint_proc_stuff;
   ROLLBACK TO savepoint_proc_stuff;
   RELEASE savepoint_proc_stuff;
@@ -51370,7 +51370,7 @@ END;
       | | {type_text}: text
       | {assign}: p: text variable was_set
       | | {name p}: p: text variable was_set
-      | | {strlit 'savepoint_proc_stuff'}: text notnull
+      | | {name @PROC}: @proc: text notnull variable
       | {savepoint_stmt}: ok
       | | {name savepoint_proc_stuff}: ok
       | {rollback_trans_stmt}: ok

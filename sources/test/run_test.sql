@@ -5286,7 +5286,7 @@ begin
     fetch C() from values () @dummy_seed(i) @dummy_nullables;
     fetch D() from values () @dummy_seed(i) @dummy_nullables;
     cursor X like C;
-    fetch X from C;
+    fetch X from D;
 
     hash0 := cql_cursor_hash(C);
     hash1 := cql_cursor_hash(C); -- hashing the same thing should always be the same
@@ -5394,7 +5394,7 @@ begin
     hash2 := cql_cursor_hash(D);
     EXPECT_NE!(hash1, hash2);  -- now different
 
-    
+
     -- hash different with null text
     fetch D from X;
     update cursor D using null as t0;
@@ -5419,12 +5419,15 @@ begin
   EXPECT!(not cql_cursors_equal(C, D));
   EXPECT!(not cql_cursors_equal(D, C));
 
+
   let i := 0;
   while i < 5
   begin
     -- no explicit values, all dummy
     fetch C() from values () @dummy_seed(i);
     fetch D() from values () @dummy_seed(i);
+    cursor X like C;
+    fetch X from D;
 
     EXPECT!(cql_cursors_equal(C, C)); -- control for sanity
     EXPECT!(cql_cursors_equal(C, D)); -- control for sanity
@@ -5435,123 +5438,93 @@ begin
     EXPECT!(cql_cursors_equal(C, C)); -- control for sanity
     EXPECT!(cql_cursors_equal(C, D)); -- control for sanity
 
-    ---------
-    fetch D() from values () @dummy_seed(i) @dummy_nullables;
-
-    update cursor D using
-      not C.b as b;
+    -- values different with different bool (not null version)
+    fetch D from X;
+    update cursor D using not C.b as b;
 
     EXPECT!(not cql_cursors_equal(C, D));
 
-    ---------
-    fetch D() from values () @dummy_seed(i) @dummy_nullables;
-
-    update cursor D using
-      C.i + 1 as i;
+    -- values different with different int (not null version)
+    fetch D from X;
+    update cursor D using C.i + 1 as i;
 
     EXPECT!(not cql_cursors_equal(C, D));
 
-    ---------
-    fetch D() from values () @dummy_seed(i) @dummy_nullables;
-
-    update cursor D using
-      C.l + 1 as l;
+    -- values different with different long (not null version)
+    fetch D from X;
+    update cursor D using C.l + 1 as l;
 
     EXPECT!(not cql_cursors_equal(C, D));
 
-    ---------
-    fetch D() from values () @dummy_seed(i) @dummy_nullables;
-
-    update cursor D using
-      C.r + 1 as r;
+    -- values different with different real (not null version)
+    fetch D from X;
+    update cursor D using C.r + 1 as r;
 
     EXPECT!(not cql_cursors_equal(C, D));
 
-    ---------
-    fetch D() from values () @dummy_seed(i) @dummy_nullables;
-
-    update cursor D using
-      "different" as t;
+    -- values different with different text (not null version)
+    fetch D from X;
+    update cursor D using "different" as t;
 
     EXPECT!(not cql_cursors_equal(C, D));
 
-    ---------
-    fetch D() from values () @dummy_seed(i) @dummy_nullables;
-
-    update cursor D using
-      not C.b as b0;
+    -- values different with different bool
+    fetch D from X;
+    update cursor D using not C.b as b0;
 
     EXPECT!(not cql_cursors_equal(C, D));
 
-    ---------
-    fetch D() from values () @dummy_seed(i) @dummy_nullables;
-
-    update cursor D using
-      C.i + 1 as i0;
+    -- values different with different int
+    fetch D from X;
+    update cursor D using C.i + 1 as i0;
 
     EXPECT!(not cql_cursors_equal(C, D));
 
-    ---------
-    fetch D() from values () @dummy_seed(i) @dummy_nullables;
-
-    update cursor D using
-      C.l + 1 as l0;
+    -- values different with different long
+    fetch D from X;
+    update cursor D using C.l + 1 as l0;
 
     EXPECT!(not cql_cursors_equal(C, D));
 
-    ---------
-    fetch D() from values () @dummy_seed(i) @dummy_nullables;
-
-    update cursor D using
-      C.r + 1 as r0;
+    -- values different with different real
+    fetch D from X;
+    update cursor D using C.r + 1 as r0;
 
     EXPECT!(not cql_cursors_equal(C, D));
 
-    ---------
-    fetch D() from values () @dummy_seed(i) @dummy_nullables;
-
-    update cursor D using
-      "different" as t0;
+    -- values different with different string
+    fetch D from X;
+    update cursor D using "different" as t0;
 
     EXPECT!(not cql_cursors_equal(C, D));
 
-    ---------
-    fetch D() from values () @dummy_seed(i) @dummy_nullables;
-
-    update cursor D using
-      null as b0;
+    -- values different with null bool
+    fetch D from X;
+    update cursor D using null as b0;
 
     EXPECT!(not cql_cursors_equal(C, D));
 
-    ---------
-    fetch D() from values () @dummy_seed(i) @dummy_nullables;
-
-    update cursor D using
-      null as i0;
+    -- values different with null int
+    fetch D from X;
+    update cursor D using null as i0;
 
     EXPECT!(not cql_cursors_equal(C, D));
 
-    ---------
-    fetch D() from values () @dummy_seed(i) @dummy_nullables;
-
-    update cursor D using
-      null as l0;
+    -- values different with null long
+    fetch D from X;
+    update cursor D using null as l0;
 
     EXPECT!(not cql_cursors_equal(C, D));
 
-    ---------
-    fetch D() from values () @dummy_seed(i) @dummy_nullables;
-
-    update cursor D using
-      null as r0;
+    -- values different with null real
+    fetch D from X;
+    update cursor D using null as r0;
 
     EXPECT!(not cql_cursors_equal(C, D));
 
-    ---------
-    fetch D() from values () @dummy_seed(i) @dummy_nullables;
-
-    update cursor D using
-      null as t0;
+    -- values different with null text
+    fetch D from X;
+    update cursor D using null as t0;
 
     EXPECT!(not cql_cursors_equal(C, D));
 
@@ -6194,7 +6167,7 @@ TEST!(blob_dictionary,
 begin
   let zero := blob_for_real(0);
   cursor C like storage_one_real;
-  
+
   let i := 1;
   while i <= 512
   begin

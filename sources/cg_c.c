@@ -2445,7 +2445,8 @@ static void cg_id(ast_node *expr, charbuf *is_null, charbuf *value) {
   if (!strcmp(name, "@proc")) {
     CHARBUF_OPEN(tmp);
     cg_encode_string_literal(current_proc_name(), &tmp);
-    cg_string_literal(tmp.ptr, value);
+    CSTR p = Strdup(tmp.ptr);
+    cg_string_literal(p, value);
     CHARBUF_CLOSE(tmp);
     bprintf(is_null, "0");
     return;

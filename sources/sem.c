@@ -6117,7 +6117,10 @@ static sem_resolve sem_try_resolve_locals_bundle(ast_node *ast, CSTR name, CSTR 
   return SEM_RESOLVE_STOP;
 }
 
-// rico
+// Here we look for @PROC and @ID, there are various places where @RC or @PROC
+// could appear and an id is expected, not an expression. So they have to be
+// detected as identifiers. Previously there was special case code in sem_expr_str
+// but that isn't good enough.
 static sem_resolve sem_try_resolve_at_ids(ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
   Contract(name);
   Contract(type_ptr);

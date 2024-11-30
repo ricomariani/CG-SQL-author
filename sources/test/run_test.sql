@@ -17,7 +17,7 @@ declare proc exit no check;
 
 @MACRO(stmt_list) EXPECT!(pred! expr)
 begin
-  call errcheck(pred!, @TEXT(pred!), @MACRO_LINE);
+  call errcheck(pred!, @text(pred!), @MACRO_LINE);
 end;
 
 -- storage for the expecation check
@@ -28,7 +28,7 @@ begin
   -- it's important to evaluate the expressions exactly once
   -- because there may be side-effects
   expected := a! is b!;
-  call errcheck(expected, @TEXT(a!, " == ", b!), @MACRO_LINE);
+  call errcheck(expected, @text(a!, " == ", b!), @MACRO_LINE);
   if not expected then
     -- we are re-evaluating now but the expectation already failed so it's ok
     printf("left: %s\n", a!:fmt);
@@ -41,7 +41,7 @@ begin
   -- it's important to evaluate the expressions exactly once
   -- because there may be side-effects
   expected := a! is not b!;
-  call errcheck(expected, @TEXT(a!, " == ", b!), @MACRO_LINE);
+  call errcheck(expected, @text(a!, " == ", b!), @MACRO_LINE);
   if not expected then
     -- we are re-evaluating now but the expectation already failed so it's ok
     printf("left: %s\n", a!:fmt);
@@ -70,12 +70,12 @@ begin
       starting_fails := fails;
       body!;
     catch
-      printf("%s had an unexpected CQL exception (usually a db error)\n", @TEXT(name!));
+      printf("%s had an unexpected CQL exception (usually a db error)\n", @text(name!));
       fails := fails + 1;
       throw;
     end;
     if starting_fails != fails then
-      printf("%s failed.\n", @TEXT(name!));
+      printf("%s failed.\n", @text(name!));
     else
       tests_passed := tests_passed + 1;
     end if;
@@ -86,7 +86,7 @@ begin
   call @ID("test_", name!)();
   end_refs := get_outstanding_refs();
   if start_refs != end_refs then
-    printf("Test %s unbalanced refs.", @TEXT(name!));
+    printf("Test %s unbalanced refs.", @text(name!));
     printf("  Starting refs %d, ending refs %d.\n", start_refs, end_refs);
     fails := fails + 1;
   end if;
@@ -98,7 +98,7 @@ end;
   -- because the Lua runtime is missing some blob features
   @macro(stmt_list) TEST_C!(name! expr, body! stmt_list)
   begin
-    printf("Skipping test %s in Lua\n", @TEXT(name!));
+    printf("Skipping test %s in Lua\n", @text(name!));
   end;
 
 @else
@@ -2360,7 +2360,7 @@ begin
   EXPECT_SQL_TOO!((x in ("foo", "goo")) is null);
   EXPECT_SQL_TOO!((x not in ("foo", "goo")) is null);
 
-  -- Test is TRUE and is FALSE
+  -- Test is true and is false
   EXPECT_SQL_TOO!(1 is true);
   EXPECT_SQL_TOO!(0 is false);
   EXPECT_SQL_TOO!(not 0 is true);
@@ -2368,7 +2368,7 @@ begin
   EXPECT_SQL_TOO!(not null is false);
   EXPECT_SQL_TOO!(not null is true);
 
-  -- Test is not TRUE and is not FALSE
+  -- Test is not true and is not false
   EXPECT_SQL_TOO!(not 1 is not true);
   EXPECT_SQL_TOO!(not 0 is not false);
   EXPECT_SQL_TOO!(0 is not true);
@@ -2847,8 +2847,8 @@ begin
   );
 
   insert into all_types_encoded_table values (
-    FALSE, 0, 0, 0.0, "0", "0" ~blob~,
-    TRUE, 1, 1, 1.1, "1", "1" ~blob~
+    false, 0, 0, 0.0, "0", "0" ~blob~,
+    true, 1, 1, 1.1, "1", "1" ~blob~
   );
 
   select * from all_types_encoded_table;
@@ -2876,8 +2876,8 @@ begin
   );
 
   insert into all_types_encoded_with_context_table values (
-    FALSE, 0, 0, 0.0, "0", cast("0" as blob),
-    TRUE, 1, 1, 1.1, "1", cast("1" as blob), "cxt"
+    false, 0, 0, 0.0, "0", cast("0" as blob),
+    true, 1, 1, 1.1, "1", cast("1" as blob), "cxt"
   );
 
   select * from all_types_encoded_with_context_table;
@@ -3499,7 +3499,7 @@ begin
   call dummy(from args);
 end);
 
-declare proc cql_exec_internal(sql TEXT!) USING TRANSACTION;
+declare proc cql_exec_internal(sql text!) using TRANSACTION;
 create table xyzzy(id int, name text, data blob);
 
 TEST!(exec_internal,
@@ -4034,8 +4034,8 @@ end);
 -- facet helper functions, used by the schema upgrader
 declare facet_data TYPE OBJECT<facet_data>;
 declare func cql_facets_create() create facet_data!;
-declare func cql_facet_add(facets facet_data, facet TEXT!, crc LONG not null) BOOL not null;
-declare func cql_facet_find(facets facet_data, facet TEXT!) LONG not null;
+declare func cql_facet_add(facets facet_data, facet text!, crc LONG not null) BOOL not null;
+declare func cql_facet_find(facets facet_data, facet text!) LONG not null;
 
 TEST!(facet_helpers,
 begin
@@ -5850,7 +5850,7 @@ begin
   EXPECT_EQ!(cql_cursor_diff_val(C,D), null);
 end);
 
-declare PROC get_rows(result object!) OUT UNION (x INT!, y TEXT!, z BOOL);
+declare PROC get_rows(result object!) out union (x INT!, y text!, z BOOL);
 
 TEST!(child_results,
 begin
@@ -6012,9 +6012,9 @@ end;
 
 proc parent_child()
 begin
-  OUT UNION call parent() JOIN
-    call ch1() USING (k1, k2) AS ch1 and
-    call ch2() USING (k3, k4) AS ch2;
+  out union call parent() join
+    call ch1() using (k1, k2) AS ch1 and
+    call ch2() using (k3, k4) AS ch2;
 end;
 
 proc parent_child_simple_pattern()
@@ -6262,7 +6262,7 @@ begin
 end);
 
 
-declare func _cql_contains_column_def(haystack TEXT, needle TEXT) BOOL not null;
+declare func _cql_contains_column_def(haystack text, needle text) BOOL not null;
 
 -- _cql_contains_column_def is used by the upgrader to find string matches the indicate a column is present
 -- it's the same as this expression: haystack glob printf('*[) ]%s*', needle)

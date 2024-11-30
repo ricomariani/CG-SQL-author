@@ -237,9 +237,9 @@ BEGIN
   EXPECT_SQL_TOO!(7 - 5 == 2);
   EXPECT_SQL_TOO!(6 % 5 == 1);
   EXPECT_SQL_TOO!(5 / 2.5 == 2);
-  EXPECT_SQL_TOO!(-(1+3) == -4);
-  EXPECT_SQL_TOO!(-1+3 == 2);
-  EXPECT_SQL_TOO!(1+-3 == -2);
+  EXPECT_SQL_TOO!(-(1 + 3) == -4);
+  EXPECT_SQL_TOO!(-1 + 3 == 2);
+  EXPECT_SQL_TOO!(1 + -3 == -2);
   EXPECT_SQL_TOO!(longs.neg == -1);
   EXPECT_SQL_TOO!(-longs.neg == 1);
   EXPECT_SQL_TOO!(- -longs.neg == -1);
@@ -430,7 +430,7 @@ END);
 TEST!(local_operations_early_out,
 BEGIN
   EXPECT_SQL_TOO!(not (0 and 1/zero));
-  EXPECT_SQL_TOO!(1 or 1/zero);
+  EXPECT_SQL_TOO!(1 or 1 / zero);
 END);
 
 -- assorted between combinations
@@ -1001,7 +1001,7 @@ BEGIN
   end;
 
   EXPECT_EQ!(i, 5);  -- loop ended on time
-  EXPECT_EQ!(sum, 15); -- correct sum computed: 1+2+3+4+5
+  EXPECT_EQ!(sum, 15); -- correct sum computed: 1 + 2 + 3 + 4 + 5
 
   i := 0;
   sum := 0;
@@ -1015,7 +1015,7 @@ BEGIN
   end;
 
   EXPECT_EQ!(i, 4);  -- loop ended on time
-  EXPECT_EQ!(sum, 4);  -- correct sum computed: 1+3
+  EXPECT_EQ!(sum, 4);  -- correct sum computed: 1 + 3
 END);
 
 -- same test but the control variable is nullable making the expression nullable
@@ -1030,7 +1030,7 @@ BEGIN
   end;
 
   EXPECT_EQ!(i, 5); -- loop ended on time
-  EXPECT_EQ!(sum, 15);  -- correct sum computed: 1+2+3+4+5
+  EXPECT_EQ!(sum, 15);  -- correct sum computed: 1 + 2 + 3 + 4 + 5
 END);
 
 -- like predicate test
@@ -1600,13 +1600,13 @@ cursor C for
     c1(current) as (
       select 1
       union all
-      select current+1 from c1
+      select current + 1 from c1
       limit 5
     ),
     c2(current) as (
       select 6
       union all
-      select current+1 from c2
+      select current + 1 from c2
       limit 5
     )
   select current as X from c1
@@ -1892,7 +1892,7 @@ begin
   if (arg <= 2) then
     result := 1;
   else
-    result := fib2(arg-1) + fib2(arg-2);
+    result := fib2(arg - 1) + fib2(arg - 2);
   end if;
 end;
 
@@ -1912,7 +1912,7 @@ begin
   if (arg <= 2) then
     result := (select 1); -- for this to be a dml proc
   else
-    result := fib3(arg-1) + fib3(arg-2);
+    result := fib3(arg - 1) + fib3(arg - 2);
   end if;
 end;
 
@@ -1950,9 +1950,9 @@ BEGIN
   let s := "string";
   let bl := blob_from_string("blob text");
 
-  EXPECT_EQ!(13*i, (select 13*i));
-  EXPECT_EQ!(13*l, (select 13*l));
-  EXPECT_EQ!(13*r, (select 13*r));
+  EXPECT_EQ!(13 * i, (select 13 * i));
+  EXPECT_EQ!(13 * l, (select 13 * l));
+  EXPECT_EQ!(13 * r, (select 13 * r));
   EXPECT_EQ!(not b, (select not b));
   EXPECT_EQ!(printf("foo %s", s), (select printf("foo %s", s)));
   EXPECT_EQ!("blob text", string_from_blob((select bl)));
@@ -1974,9 +1974,9 @@ BEGIN
   s := nullable("string");
   bl := nullable(blob_from_string("blob text"));
 
-  EXPECT_EQ!(13*i, (select 13*i));
-  EXPECT_EQ!(13*l, (select 13*l));
-  EXPECT_EQ!(13*r, (select 13*r));
+  EXPECT_EQ!(13 * i, (select 13 * i));
+  EXPECT_EQ!(13 * l, (select 13 * l));
+  EXPECT_EQ!(13 * r, (select 13 * r));
   EXPECT_EQ!(not b, (select not b));
   EXPECT_EQ!(printf("foo %s", s), (select printf("foo %s", s)));
   EXPECT_EQ!("blob text", string_from_blob((select bl)));
@@ -1998,11 +1998,11 @@ BEGIN
   s := "string";
   bl := blob_from_string("blob text");
 
-  cursor C for select i*13 i, l*13 l, r*13 r, not b b, printf("foo %s",s) s, bl bl;
+  cursor C for select i * 13 i, l * 13 l, r * 13 r, not b b, printf("foo %s",s) s, bl bl;
   fetch C;
-  EXPECT_EQ!(13*i, C.i);
-  EXPECT_EQ!(13*l, C.l);
-  EXPECT_EQ!(13*r, C.r);
+  EXPECT_EQ!(13 * i, C.i);
+  EXPECT_EQ!(13 * l, C.l);
+  EXPECT_EQ!(13 * r, C.r);
   EXPECT_EQ!(not b, C.b);
   EXPECT_EQ!(printf("foo %s", s), C.s);
   EXPECT_EQ!("blob text", string_from_blob(C.bl));
@@ -2033,12 +2033,12 @@ BEGIN
   s := nullable("string");
   bl := nullable(blob_from_string("blob text"));
 
-  cursor C for select i*13 i, l*13 l, r*13 r, not b b, printf("foo %s",s) s, bl bl;
+  cursor C for select i * 13 i, l * 13 l, r * 13 r, not b b, printf("foo %s",s) s, bl bl;
   fetch C;
   EXPECT!(C);
-  EXPECT_EQ!(13*i, C.i);
-  EXPECT_EQ!(13*l, C.l);
-  EXPECT_EQ!(13*r, C.r);
+  EXPECT_EQ!(13 * i, C.i);
+  EXPECT_EQ!(13 * l, C.l);
+  EXPECT_EQ!(13 * r, C.r);
   EXPECT_EQ!(not b, C.b);
   EXPECT_EQ!(printf("foo %s", s), C.s);
   EXPECT_EQ!("blob text", string_from_blob(C.bl));
@@ -2075,69 +2075,69 @@ END);
 -- Test precedence of multiply with (* / %) with add (+ -)
 TEST!(multiply_pri,
 BEGIN
-  EXPECT_SQL_TOO!(1+2*3 == 7);
-  EXPECT_SQL_TOO!(1+2*3+4*5 == 27);
-  EXPECT_SQL_TOO!(1+2/2 == 2);
-  EXPECT_SQL_TOO!(1+2/2*4 == 5);
-  EXPECT_SQL_TOO!(1+2/2*4 == 5);
-  EXPECT_SQL_TOO!(1*2+3 == 5);
-  EXPECT_SQL_TOO!(1*2+6/3 == 4);
-  EXPECT_SQL_TOO!(1*2+6/3 == 4);
-  EXPECT_SQL_TOO!(2*3*4+3/3 == 25);
-  EXPECT_SQL_TOO!(-5*5 == -25);
-  EXPECT_SQL_TOO!(5-5*5 == -20);
-  EXPECT_SQL_TOO!(4+5*5 == 29);
-  EXPECT_SQL_TOO!(4*5+5 == 25);
-  EXPECT_SQL_TOO!(4*4-1 == 15);
-  EXPECT_SQL_TOO!(10-4*2 == 2);
-  EXPECT_SQL_TOO!(25%3/2 == 0);
-  EXPECT_SQL_TOO!(25/5%2 == 1);
-  EXPECT_SQL_TOO!(25*5%2 == 1);
-  EXPECT_SQL_TOO!(25*5%4%2 == 1);
-  EXPECT_SQL_TOO!(25-5%2 == 24);
-  EXPECT_SQL_TOO!(15%3-2 == -2);
-  EXPECT_SQL_TOO!(15-30%4 == 13);
-  EXPECT_SQL_TOO!(15-30/2 == 0);
-  EXPECT_SQL_TOO!(15/5-3 == 0);
-  EXPECT_SQL_TOO!(15*5-3 == 72);
-  EXPECT_SQL_TOO!(5*5-3 == 22);
-  EXPECT_SQL_TOO!(25+5%2 == 26);
-  EXPECT_SQL_TOO!(15%3+2 == 2);
-  EXPECT_SQL_TOO!(15+30%4 == 17);
-  EXPECT_SQL_TOO!(15+30/2 == 30);
-  EXPECT_SQL_TOO!(15/5+3 == 6);
-  EXPECT_SQL_TOO!(15*5+3 == 78);
-  EXPECT_SQL_TOO!(5*5+3 == 28);
-  EXPECT_SQL_TOO!(5*12/3 == 20);
-  EXPECT_SQL_TOO!(5*12/3%7 == 6);
-  EXPECT_SQL_TOO!(9%12/3*7 == 21);
+  EXPECT_SQL_TOO!(1 + 2 * 3 == 7);
+  EXPECT_SQL_TOO!(1 + 2 * 3 + 4 * 5 == 27);
+  EXPECT_SQL_TOO!(1 + 2 / 2 == 2);
+  EXPECT_SQL_TOO!(1 + 2 / 2 * 4 == 5);
+  EXPECT_SQL_TOO!(1 + 2 / 2 * 4 == 5);
+  EXPECT_SQL_TOO!(1 * 2 + 3 == 5);
+  EXPECT_SQL_TOO!(1 * 2 + 6 / 3 == 4);
+  EXPECT_SQL_TOO!(1 * 2 + 6 / 3 == 4);
+  EXPECT_SQL_TOO!(2 * 3 * 4 + 3 / 3 == 25);
+  EXPECT_SQL_TOO!(-5 * 5 == -25);
+  EXPECT_SQL_TOO!(5 - 5 * 5 == -20);
+  EXPECT_SQL_TOO!(4 + 5 * 5 == 29);
+  EXPECT_SQL_TOO!(4 * 5 + 5 == 25);
+  EXPECT_SQL_TOO!(4 * 4 - 1 == 15);
+  EXPECT_SQL_TOO!(10 - 4 * 2 == 2);
+  EXPECT_SQL_TOO!(25 % 3 / 2 == 0);
+  EXPECT_SQL_TOO!(25 / 5 % 2 == 1);
+  EXPECT_SQL_TOO!(25 * 5 % 2 == 1);
+  EXPECT_SQL_TOO!(25 * 5 % 4 % 2 == 1);
+  EXPECT_SQL_TOO!(25 - 5 % 2 == 24);
+  EXPECT_SQL_TOO!(15 % 3 - 2 == -2);
+  EXPECT_SQL_TOO!(15 - 30 % 4 == 13);
+  EXPECT_SQL_TOO!(15 - 30 / 2 == 0);
+  EXPECT_SQL_TOO!(15 / 5 - 3 == 0);
+  EXPECT_SQL_TOO!(15 * 5 - 3 == 72);
+  EXPECT_SQL_TOO!(5 * 5 - 3 == 22);
+  EXPECT_SQL_TOO!(25 + 5 % 2 == 26);
+  EXPECT_SQL_TOO!(15 % 3 + 2 == 2);
+  EXPECT_SQL_TOO!(15 + 30 % 4 == 17);
+  EXPECT_SQL_TOO!(15 + 30 / 2 == 30);
+  EXPECT_SQL_TOO!(15 / 5 + 3 == 6);
+  EXPECT_SQL_TOO!(15 * 5 + 3 == 78);
+  EXPECT_SQL_TOO!(5 * 5 + 3 == 28);
+  EXPECT_SQL_TOO!(5 * 12 / 3 == 20);
+  EXPECT_SQL_TOO!(5 * 12 / 3 % 7 == 6);
+  EXPECT_SQL_TOO!(9 % 12 / 3 * 7 == 21);
 END);
 
--- Test precedence of binary (<< >> & |) with add (+ -)
+-- Test precedence of binary (<< >> & |) with add ( +  -)
 TEST!(shift_pri,
 BEGIN
-  EXPECT_SQL_TOO!(10<<1+1 == 40);
-  EXPECT_SQL_TOO!(1+10<<1 == 22);
-  EXPECT_SQL_TOO!(10<<1-1 == 10);
-  EXPECT_SQL_TOO!(10<<4-1 == 80);
-  EXPECT_SQL_TOO!(10-1<<1 == 18);
+  EXPECT_SQL_TOO!(10<<1 + 1 == 40);
+  EXPECT_SQL_TOO!(1 + 10<<1 == 22);
+  EXPECT_SQL_TOO!(10<<1 - 1 == 10);
+  EXPECT_SQL_TOO!(10<<4 - 1 == 80);
+  EXPECT_SQL_TOO!(10 - 1<<1 == 18);
 
-  EXPECT_SQL_TOO!(10>>3-1 == 2);
-  EXPECT_SQL_TOO!(11-1>>1 == 5);
-  EXPECT_SQL_TOO!(10>>1+1 == 2);
-  EXPECT_SQL_TOO!(1+10>>1 == 5);
+  EXPECT_SQL_TOO!(10>>3 - 1 == 2);
+  EXPECT_SQL_TOO!(11 - 1>>1 == 5);
+  EXPECT_SQL_TOO!(10>>1 + 1 == 2);
+  EXPECT_SQL_TOO!(1 + 10>>1 == 5);
 
-  EXPECT_SQL_TOO!(10&1+1 == 2);
-  EXPECT_SQL_TOO!(1+10&1 == 1);
-  EXPECT_SQL_TOO!(1+10&7 == 3);
-  EXPECT_SQL_TOO!(10-1&7 == 1);
-  EXPECT_SQL_TOO!(10-4&7 == 6);
+  EXPECT_SQL_TOO!(10&1 + 1 == 2);
+  EXPECT_SQL_TOO!(1 + 10&1 == 1);
+  EXPECT_SQL_TOO!(1 + 10&7 == 3);
+  EXPECT_SQL_TOO!(10 - 1&7 == 1);
+  EXPECT_SQL_TOO!(10 - 4&7 == 6);
 
-  EXPECT_SQL_TOO!(10|1+1 == 10);
+  EXPECT_SQL_TOO!(10|1 + 1 == 10);
   EXPECT_SQL_TOO!(10|4 == 14);
-  EXPECT_SQL_TOO!(1+10|4 == 15);
-  EXPECT_SQL_TOO!(10-1|7 == 15);
-  EXPECT_SQL_TOO!(10-3|7 == 7);
+  EXPECT_SQL_TOO!(1 + 10|4 == 15);
+  EXPECT_SQL_TOO!(10 - 1|7 == 15);
+  EXPECT_SQL_TOO!(10 - 3|7 == 7);
 
   EXPECT_SQL_TOO!(6&4 == 4);
   EXPECT_SQL_TOO!(6&4|12 == 12);
@@ -2287,28 +2287,28 @@ BEGIN
   -- Basic IS tests, all non null
   EXPECT_SQL_TOO!(2 * 3 IS 4 + 2);
   EXPECT_SQL_TOO!(2 * 3 IS 4 + 2);
-  EXPECT_SQL_TOO!(10-4*2 IS 2);
-  EXPECT_SQL_TOO!(25%3/2 IS 0);
-  EXPECT_SQL_TOO!(25/5%2 IS 1);
-  EXPECT_SQL_TOO!(25*5%2 IS 1);
-  EXPECT_SQL_TOO!(25*5%4%2 IS 1);
-  EXPECT_SQL_TOO!(25-5%2 IS 24);
-  EXPECT_SQL_TOO!(15%3-2 IS -2);
-  EXPECT_SQL_TOO!(15-30%4 IS 13);
-  EXPECT_SQL_TOO!(15-30/2 IS 0);
-  EXPECT_SQL_TOO!(15/5-3 IS 0);
-  EXPECT_SQL_TOO!(15*5-3 IS 72);
-  EXPECT_SQL_TOO!(5*5-3 IS 22);
-  EXPECT_SQL_TOO!(25+5%2 IS 26);
-  EXPECT_SQL_TOO!(15%3+2 IS 2);
-  EXPECT_SQL_TOO!(15+30%4 IS 17);
-  EXPECT_SQL_TOO!(15+30/2 IS 30);
-  EXPECT_SQL_TOO!(15/5+3 IS 6);
-  EXPECT_SQL_TOO!(15*5+3 IS 78);
-  EXPECT_SQL_TOO!(5*5+3 IS 28);
-  EXPECT_SQL_TOO!(5*12/3 IS 20);
-  EXPECT_SQL_TOO!(5*12/3%7 IS 6);
-  EXPECT_SQL_TOO!(9%12/3*7 IS 21);
+  EXPECT_SQL_TOO!(10 - 4 * 2 IS 2);
+  EXPECT_SQL_TOO!(25 % 3 / 2 IS 0);
+  EXPECT_SQL_TOO!(25 / 5 % 2 IS 1);
+  EXPECT_SQL_TOO!(25 * 5 % 2 IS 1);
+  EXPECT_SQL_TOO!(25 * 5 % 4 % 2 IS 1);
+  EXPECT_SQL_TOO!(25 - 5 % 2 IS 24);
+  EXPECT_SQL_TOO!(15 % 3 - 2 IS -2);
+  EXPECT_SQL_TOO!(15 - 30 % 4 IS 13);
+  EXPECT_SQL_TOO!(15 - 30 / 2 IS 0);
+  EXPECT_SQL_TOO!(15 / 5 - 3 IS 0);
+  EXPECT_SQL_TOO!(15 * 5 - 3 IS 72);
+  EXPECT_SQL_TOO!(5 * 5 - 3 IS 22);
+  EXPECT_SQL_TOO!(25 + 5 % 2 IS 26);
+  EXPECT_SQL_TOO!(15 % 3 + 2 IS 2);
+  EXPECT_SQL_TOO!(15 + 30 % 4 IS 17);
+  EXPECT_SQL_TOO!(15 + 30 / 2 IS 30);
+  EXPECT_SQL_TOO!(15 / 5 + 3 IS 6);
+  EXPECT_SQL_TOO!(15 * 5 + 3 IS 78);
+  EXPECT_SQL_TOO!(5 * 5 + 3 IS 28);
+  EXPECT_SQL_TOO!(5 * 12 / 3 IS 20);
+  EXPECT_SQL_TOO!(5 * 12 / 3 % 7 IS 6);
+  EXPECT_SQL_TOO!(9 % 12 / 3 * 7 IS 21);
 
   -- IS tests with null
   EXPECT_SQL_TOO!(1 IS 1 == 1 IS 1 == 1);
@@ -2518,59 +2518,59 @@ BEGIN
   let x9 := nullable(9);
 
   let temp0 := nullable(27);
-  EXPECT_SQL_TOO!(x1+x2*x3+x4*x5 == temp0);
-  EXPECT_SQL_TOO!(x1+x2/x2 == x2);
-  EXPECT_SQL_TOO!(x1+x2/x2*x4 == x5);
-  EXPECT_SQL_TOO!(x1+x2/x2*x4 == x5);
-  EXPECT_SQL_TOO!(x1*x2+x3 == x5);
-  EXPECT_SQL_TOO!(x1*x2+x6/x3 == x4);
-  EXPECT_SQL_TOO!(x1*x2+x6/x3 == x4);
+  EXPECT_SQL_TOO!(x1 + x2 * x3 + x4 * x5 == temp0);
+  EXPECT_SQL_TOO!(x1 + x2 / x2 == x2);
+  EXPECT_SQL_TOO!(x1 + x2 / x2 * x4 == x5);
+  EXPECT_SQL_TOO!(x1 + x2 / x2 * x4 == x5);
+  EXPECT_SQL_TOO!(x1 * x2 + x3 == x5);
+  EXPECT_SQL_TOO!(x1 * x2 + x6 / x3 == x4);
+  EXPECT_SQL_TOO!(x1 * x2 + x6 / x3 == x4);
   temp0 := nullable(25);
-  EXPECT_SQL_TOO!(x2*x3*x4+x3/x3 == temp0);
+  EXPECT_SQL_TOO!(x2 * x3 * x4 + x3 / x3 == temp0);
   temp0 := nullable(-25);
-  EXPECT_SQL_TOO!(-x5*x5 == temp0);
+  EXPECT_SQL_TOO!(-x5 * x5 == temp0);
   temp0 := nullable(-20);
-  EXPECT_SQL_TOO!(x5-x5*x5 == temp0);
+  EXPECT_SQL_TOO!(x5 - x5 * x5 == temp0);
   temp0 := nullable(29);
-  EXPECT_SQL_TOO!(x4+x5*x5 == temp0);
+  EXPECT_SQL_TOO!(x4 + x5 * x5 == temp0);
   temp0 := nullable(25);
-  EXPECT_SQL_TOO!(x4*x5+x5 == temp0);
+  EXPECT_SQL_TOO!(x4 * x5 + x5 == temp0);
   temp0 := nullable(15);
-  EXPECT_SQL_TOO!(x4*x4-x1 == temp0);
+  EXPECT_SQL_TOO!(x4 * x4 - x1 == temp0);
   temp0 := nullable(10);
-  EXPECT_SQL_TOO!(10-x4*x2 == x2);
+  EXPECT_SQL_TOO!(10 - x4 * x2 == x2);
 
   temp0 := nullable(10);
 
   let temp1 := nullable(40);
-  EXPECT_SQL_TOO!(temp0<<x1+x1 == temp1);
+  EXPECT_SQL_TOO!(temp0<<x1 + x1 == temp1);
   temp1 := nullable(22);
-  EXPECT_SQL_TOO!(x1+temp0<<x1 == temp1);
-  EXPECT_SQL_TOO!(temp0<<x1-x1 == temp0);
+  EXPECT_SQL_TOO!(x1 + temp0<<x1 == temp1);
+  EXPECT_SQL_TOO!(temp0<<x1 - x1 == temp0);
   temp1 := nullable(80);
-  EXPECT_SQL_TOO!(temp0<<x4-x1 == temp1);
+  EXPECT_SQL_TOO!(temp0<<x4 - x1 == temp1);
   temp1 := nullable(18);
-  EXPECT_SQL_TOO!(temp0-x1<<x1 == temp1);
+  EXPECT_SQL_TOO!(temp0 - x1<<x1 == temp1);
 
-  EXPECT_SQL_TOO!(temp0>>x3-x1 == x2);
+  EXPECT_SQL_TOO!(temp0>>x3 - x1 == x2);
   temp1 := nullable(11);
-  EXPECT_SQL_TOO!(temp1-x1>>x1 == x5);
-  EXPECT_SQL_TOO!(temp0>>x1+x1 == x2);
-  EXPECT_SQL_TOO!(x1+temp0>>x1 == x5);
+  EXPECT_SQL_TOO!(temp1 - x1>>x1 == x5);
+  EXPECT_SQL_TOO!(temp0>>x1 + x1 == x2);
+  EXPECT_SQL_TOO!(x1 + temp0>>x1 == x5);
 
-  EXPECT_SQL_TOO!(temp0&x1+x1 == x2);
-  EXPECT_SQL_TOO!(x1+temp0&x1 == x1);
-  EXPECT_SQL_TOO!(x1+temp0&x7 == x3);
-  EXPECT_SQL_TOO!(temp0-x1&x7 == x1);
-  EXPECT_SQL_TOO!(temp0-x4&x7 == x6);
+  EXPECT_SQL_TOO!(temp0&x1 + x1 == x2);
+  EXPECT_SQL_TOO!(x1 + temp0&x1 == x1);
+  EXPECT_SQL_TOO!(x1 + temp0&x7 == x3);
+  EXPECT_SQL_TOO!(temp0 - x1&x7 == x1);
+  EXPECT_SQL_TOO!(temp0 - x4&x7 == x6);
 
-  EXPECT_SQL_TOO!(temp0|x1+x1 == temp0);
+  EXPECT_SQL_TOO!(temp0|x1 + x1 == temp0);
   temp1 := nullable(14);
   EXPECT_SQL_TOO!(temp0|x4 == temp1);
   temp1 := nullable(15);
-  EXPECT_SQL_TOO!(x1+temp0|x4 == temp1);
-  EXPECT_SQL_TOO!(temp0-x1|x7 == temp1);
-  EXPECT_SQL_TOO!(temp0-x3|x7 == x7);
+  EXPECT_SQL_TOO!(x1 + temp0|x4 == temp1);
+  EXPECT_SQL_TOO!(temp0 - x1|x7 == temp1);
+  EXPECT_SQL_TOO!(temp0 - x3|x7 == x7);
 
   temp1 := nullable(12);
 
@@ -2697,45 +2697,45 @@ BEGIN
   EXPECT_SQL_TOO!(x2 * x3 IS x4 + x2);
   EXPECT_SQL_TOO!(x2 * x3 IS x4 + x2);
   temp1 := nullable(10);
-  EXPECT_SQL_TOO!(temp1-x4*x2 IS x2);
-  EXPECT_SQL_TOO!(temp0%x3/x2 IS x0);
-  EXPECT_SQL_TOO!(temp0/x5%x2 IS x1);
-  EXPECT_SQL_TOO!(temp0*x5%x2 IS x1);
-  EXPECT_SQL_TOO!(temp0*x5%x4%x2 IS x1);
+  EXPECT_SQL_TOO!(temp1 - x4 * x2 IS x2);
+  EXPECT_SQL_TOO!(temp0 % x3 / x2 IS x0);
+  EXPECT_SQL_TOO!(temp0 / x5 % x2 IS x1);
+  EXPECT_SQL_TOO!(temp0 * x5 % x2 IS x1);
+  EXPECT_SQL_TOO!(temp0 * x5 % x4 % x2 IS x1);
   temp1 := nullable(24);
-  EXPECT_SQL_TOO!(temp0-x5%x2 IS temp1);
+  EXPECT_SQL_TOO!(temp0 - x5 % x2 IS temp1);
   temp1 := nullable(15);
-  EXPECT_SQL_TOO!(temp1%x3-x2 IS -x2);
+  EXPECT_SQL_TOO!(temp1 % x3 - x2 IS -x2);
   temp2 := nullable(30);
   let temp3 := nullable(13);
-  EXPECT_SQL_TOO!(temp1-temp2%x4 IS temp3);
-  EXPECT_SQL_TOO!(temp1-temp2/x2 IS x0);
-  EXPECT_SQL_TOO!(temp1/x5-x3 IS x0);
+  EXPECT_SQL_TOO!(temp1 - temp2 % x4 IS temp3);
+  EXPECT_SQL_TOO!(temp1 - temp2 / x2 IS x0);
+  EXPECT_SQL_TOO!(temp1 / x5 - x3 IS x0);
   temp3 := nullable(72);
-  EXPECT_SQL_TOO!(temp1*x5-x3 IS temp3);
+  EXPECT_SQL_TOO!(temp1 * x5 - x3 IS temp3);
   temp3 := nullable(22);
-  EXPECT_SQL_TOO!(x5*x5-x3 IS temp3);
+  EXPECT_SQL_TOO!(x5 * x5 - x3 IS temp3);
   temp3 := 26;
-  EXPECT_SQL_TOO!(temp0+x5%x2 IS temp3);
-  EXPECT_SQL_TOO!(temp1%x3+x2 IS x2);
+  EXPECT_SQL_TOO!(temp0 + x5 % x2 IS temp3);
+  EXPECT_SQL_TOO!(temp1 % x3 + x2 IS x2);
   temp1 := nullable(17);
   temp2 := nullable(30);
   temp3 := nullable(15);
-  EXPECT_SQL_TOO!(temp3+temp2%x4 IS temp1);
+  EXPECT_SQL_TOO!(temp3 + temp2 % x4 IS temp1);
   temp1 := nullable(30);
-  EXPECT_SQL_TOO!(temp3+temp1/x2 IS temp1);
-  EXPECT_SQL_TOO!(temp3/x5+x3 IS x6);
+  EXPECT_SQL_TOO!(temp3 + temp1 / x2 IS temp1);
+  EXPECT_SQL_TOO!(temp3 / x5 + x3 IS x6);
   temp1 := nullable(78);
-  EXPECT_SQL_TOO!(temp3*x5+x3 IS temp1);
+  EXPECT_SQL_TOO!(temp3 * x5 + x3 IS temp1);
   temp1 := nullable(28);
-  EXPECT_SQL_TOO!(x5*x5+x3 IS temp1);
+  EXPECT_SQL_TOO!(x5 * x5 + x3 IS temp1);
   temp1 := nullable(20);
   temp2 := nullable(12);
-  EXPECT_SQL_TOO!(x5*temp2/x3 IS temp1);
-  EXPECT_SQL_TOO!(x5*temp2/x3%x7 IS x6);
+  EXPECT_SQL_TOO!(x5 * temp2 / x3 IS temp1);
+  EXPECT_SQL_TOO!(x5 * temp2 / x3 % x7 IS x6);
   temp1 := nullable(21);
   temp2 := nullable(12);
-  EXPECT_SQL_TOO!(x9%temp2/x3*x7 IS temp1);
+  EXPECT_SQL_TOO!(x9 % temp2 / x3 * x7 IS temp1);
 
   EXPECT_SQL_TOO!(x1 IS x1 == x1 IS x1 == x1);
   EXPECT_SQL_TOO!(x5 > x6 IS x2 < x1);
@@ -3177,7 +3177,7 @@ begin
   i := start;
   while (i < stop)
   begin
-    fetch C(v, vsq, junk) from values (i, i*i, printf("%d", i));
+    fetch C(v, vsq, junk) from values (i, i * i, printf("%d", i));
     out union C;
     i += 1;
   end;
@@ -3221,7 +3221,7 @@ BEGIN
 
   cursor C for
     with recursive
-    C(i) as (select 0 i union all select i+1 i from C limit rscount(ptr(rs))),
+    C(i) as (select 0 i union all select i + 1 i from C limit rscount(ptr(rs))),
     V(v,vsq) as (select rscol(ptr(rs), C.i, 0), rscol(ptr(rs1), C.i, 1) from C)
     select * from V;
 
@@ -3573,7 +3573,7 @@ BEGIN
 
   EXPECT_EQ!(const(NULL), null);
 
-  EXPECT_EQ!(const( 1 or 1/0), 1);
+  EXPECT_EQ!(const( 1 or 1 / 0), 1);
   EXPECT_EQ!(const( 0 or null), null);
   EXPECT_EQ!(const( 0 or 0), 0);
   EXPECT_EQ!(const( 0 or 1), 1);
@@ -3581,7 +3581,7 @@ BEGIN
   EXPECT_EQ!(const( null or 0), null);
   EXPECT_EQ!(const( null or 1), 1);
 
-  EXPECT_EQ!(const( 0 and 1/0), 0);
+  EXPECT_EQ!(const( 0 and 1 / 0), 0);
   EXPECT_EQ!(const( 1 and null), null);
   EXPECT_EQ!(const( 1 and 0), 0);
   EXPECT_EQ!(const( 1 and 1), 1);
@@ -4045,7 +4045,7 @@ BEGIN
   let i := 0;
   while i < 1000
   begin
-    EXPECT!(cql_facet_add(facets, printf('fake facet %d', i), i*i));
+    EXPECT!(cql_facet_add(facets, printf('fake facet %d', i), i * i));
     i += 1;
   end;
 
@@ -4053,7 +4053,7 @@ BEGIN
   i := 0;
   while i < 1000
   begin
-    EXPECT!(NOT cql_facet_add(facets, printf('fake facet %d', i), i*i));
+    EXPECT!(NOT cql_facet_add(facets, printf('fake facet %d', i), i * i));
     i += 1;
   end;
 
@@ -4061,7 +4061,7 @@ BEGIN
   i := 0;
   while i < 1000
   begin
-    EXPECT_EQ!(i*i, cql_facet_find(facets, printf('fake facet %d', i)));
+    EXPECT_EQ!(i * i, cql_facet_find(facets, printf('fake facet %d', i)));
     i += 1;
   end;
 
@@ -4097,18 +4097,19 @@ end;
 
 -- the point of this is to force the temporaries from previous calls to
 -- survive into the next expression, the final expression should be
--- something like t1+t2+t3+t4+t5+t6 with no sharing
+-- something like t1 + t2 + t3 + t4 + t5 + t6 with no sharing
+-- naturally, the reason this is here is because this was once wrong.
 TEST!(verify_temp_non_reuse,
 BEGIN
-  EXPECT!(f(1)+f(2)+f(4)+f(8)+f(16)+f(32)==63);
-  EXPECT!(fn(1)+fn(2)+fn(4)+fn(8)+fn(16)+fn(32)==63);
-  EXPECT!(f(1)+fn(2)+f(4)+fn(8)+f(16)+fn(32)==63);
-  EXPECT!(fn(1)+f(2)+fn(4)+f(8)+fn(16)+f(32)==63);
+  EXPECT_EQ!(f(1) + f(2) + f(4) + f(8) + f(16) + f(32), 63);
+  EXPECT_EQ!(fn(1) + fn(2) + fn(4) + fn(8) + fn(16) + fn(32), 63);
+  EXPECT_EQ!(f(1) + fn(2) + f(4) + fn(8) + f(16) + fn(32), 63);
+  EXPECT_EQ!(fn(1) + f(2) + fn(4) + f(8) + fn(16) + f(32), 63);
 
-  EXPECT!(fnn(1)+fnn(2)+fnn(4)+fnn(8)+fnn(16)+fnn(32)==63);
-  EXPECT!(fn(1)+fnn(2)+fn(4)+fnn(8)+fn(16)+fnn(32)==63);
-  EXPECT!(f(1)+fn(2)+fnn(4)+fn(8)+fnn(16)+fn(32)==63);
-  EXPECT!(fn(1)+fnn(2)+fn(4)+f(8)+fnn(16)+f(32)==63);
+  EXPECT_EQ!(fnn(1) + fnn(2) + fnn(4) + fnn(8) + fnn(16) + fnn(32), 63);
+  EXPECT_EQ!(fn(1) + fnn(2) + fn(4) + fnn(8) + fn(16) + fnn(32), 63);
+  EXPECT_EQ!(f(1) + fn(2) + fnn(4) + fn(8) + fnn(16) + fn(32), 63);
+  EXPECT_EQ!(fn(1) + fnn(2) + fn(4) + f(8) + fnn(16) + f(32), 63);
 END);
 
 TEST!(compressible_batch,
@@ -4265,7 +4266,7 @@ begin
   else
     select x_ id, 'u' t
     union all
-    select x_+1 id, 'v' t;
+    select x_ + 1 id, 'v' t;
   end if;
 end;
 
@@ -4461,7 +4462,7 @@ begin
   with N(x) as (
     select 1 x
     union all
-    select x+1 x from N
+    select x + 1 x from N
     limit lim)
   select x from N;
 end;
@@ -4471,7 +4472,7 @@ BEGIN
   cursor C for
     select
       abs_func(x - ten()) s1,
-      abs(x-10) s2,
+      abs(x - 10) s2,
       max_func(x - ten(), abs_func(x - ten())) m1,
       max(x - 10, abs(x - 10)) m2
     from
@@ -5935,10 +5936,10 @@ begin
   begin
     -- note that 1/3 of parents do not have this child
     if i % 3 != 2 then
-      fetch K() from values() @dummy_seed(base+i) @dummy_nullables;
-      fetch C(like K) from values(from K) @dummy_seed(base+i*2) @dummy_nullables;
+      fetch K() from values() @dummy_seed(base + i) @dummy_nullables;
+      fetch C(like K) from values(from K) @dummy_seed(base + i * 2) @dummy_nullables;
       out union C;
-      fetch C(like K) from values(from K) @dummy_seed(base+i*2+1) @dummy_nullables;
+      fetch C(like K) from values(from K) @dummy_seed(base + i * 2 + 1) @dummy_nullables;
       out union C;
     end if;
     i += 1;
@@ -5955,10 +5956,10 @@ begin
   begin
     -- note that 1/3 of parents do not have this child
     if i % 3 != 1 then
-      fetch K() from values() @dummy_seed(base+i) @dummy_nullables;
-      fetch C(like K) from values(from K) @dummy_seed(base+i*2) @dummy_nullables;
+      fetch K() from values() @dummy_seed(base + i) @dummy_nullables;
+      fetch C(like K) from values(from K) @dummy_seed(base + i * 2) @dummy_nullables;
       out union C;
-      fetch C(like K) from values(from K) @dummy_seed(base+i*2+1) @dummy_nullables;
+      fetch C(like K) from values(from K) @dummy_seed(base + i * 2 + 1) @dummy_nullables;
       out union C;
     end if;
     i += 1;
@@ -5997,11 +5998,11 @@ begin
     fetch C() from values() @dummy_seed(i) @dummy_nullables;
 
     -- ch1 keys are +500
-    fetch D() from values() @dummy_seed(i+500) @dummy_nullables;
+    fetch D() from values() @dummy_seed(i + 500) @dummy_nullables;
     update cursor C using D.k1 k1, D.k2 k2;
 
     -- ch2 keys are +1000
-    fetch D() from values() @dummy_seed(i+1000) @dummy_nullables;
+    fetch D() from values() @dummy_seed(i + 1000) @dummy_nullables;
     update cursor C using D.k3 k3, D.k4 k4;
 
     out union C;
@@ -6034,11 +6035,11 @@ begin
 
   loop fetch P
   begin
-    EXPECT_EQ!(P.k1, i+500);
-    EXPECT_EQ!(P.k2, printf("k2_%d", i+500));
-    EXPECT_EQ!(P.k3, i+1000);
-    EXPECT_EQ!(P.k4, printf("k4_%d", i+1000));
-    EXPECT_EQ!(P.k4, printf("k4_%d", i+1000));
+    EXPECT_EQ!(P.k1, i + 500);
+    EXPECT_EQ!(P.k2, printf("k2_%d", i + 500));
+    EXPECT_EQ!(P.k3, i + 1000);
+    EXPECT_EQ!(P.k4, printf("k4_%d", i + 1000));
+    EXPECT_EQ!(P.k4, printf("k4_%d", i + 1000));
     EXPECT_EQ!(P.v1, not not i);
     EXPECT_EQ!(P.v2, printf("v2_%d", i));
     EXPECT_EQ!(P.v3, i);
@@ -6049,9 +6050,9 @@ begin
     begin
       EXPECT_EQ!(P.k1, C1.k1);
       EXPECT_EQ!(P.k2, C1.k2);
-      EXPECT_EQ!(C1.v1, not not 500 + i*2 + count_rows);
-      EXPECT_EQ!(C1.v2, printf("v2_%d", 500 + i*2 + count_rows));
-      EXPECT_EQ!(C1.v3, 500 + i*2 + count_rows);
+      EXPECT_EQ!(C1.v1, not not 500 + i * 2 + count_rows);
+      EXPECT_EQ!(C1.v2, printf("v2_%d", 500 + i * 2 + count_rows));
+      EXPECT_EQ!(C1.v3, 500 + i * 2 + count_rows);
       count_rows := count_rows + 1;
     end;
 
@@ -6063,9 +6064,9 @@ begin
     begin
       EXPECT_EQ!(P.k3, C2.k3);
       EXPECT_EQ!(P.k4, C2.k4);
-      EXPECT_EQ!(C2.v1, not not 1000 + i*2 + count_rows);
-      EXPECT_EQ!(C2.v2, printf("v2_%d", 1000 + i*2 + count_rows));
-      EXPECT_EQ!(C2.v3, 1000 + i*2 + count_rows);
+      EXPECT_EQ!(C2.v1, not not 1000 + i * 2 + count_rows);
+      EXPECT_EQ!(C2.v2, printf("v2_%d", 1000 + i * 2 + count_rows));
+      EXPECT_EQ!(C2.v3, 1000 + i * 2 + count_rows);
       count_rows := count_rows + 1;
     end;
 
@@ -6107,7 +6108,7 @@ BEGIN
       EXPECT_EQ!(zero_val, "0");
 
       -- replace
-      added := dict:add(printf("%d", j), printf("%d", j*100));
+      added := dict:add(printf("%d", j), printf("%d", j * 100));
       EXPECT!(NOT added);
       j := j + 2;
     end;
@@ -6116,7 +6117,7 @@ BEGIN
     while j < i
     begin
       let result := dict:find(printf("%d", j));
-      EXPECT_EQ!(result, case when j % 2 then NULL else printf("%d", j*100) end);
+      EXPECT_EQ!(result, case when j % 2 then NULL else printf("%d", j * 100) end);
       j += 1;
     end;
 
@@ -6145,7 +6146,7 @@ BEGIN
       EXPECT_EQ!(zero_val, 0);
 
       -- replace
-      added := dict:add(printf("%d", j), j*100);
+      added := dict:add(printf("%d", j), j * 100);
       EXPECT!(NOT added);
       j := j + 2;
     end;
@@ -6154,7 +6155,7 @@ BEGIN
     while j < i
     begin
       let result := dict[printf("%d", j)];
-      EXPECT_EQ!(result, case when j % 2 then NULL else j*100 end);
+      EXPECT_EQ!(result, case when j % 2 then NULL else j * 100 end);
       j += 1;
     end;
 
@@ -6183,7 +6184,7 @@ BEGIN
       EXPECT_EQ!(zero_val, 0);
 
       -- replace
-      added := dict:add(printf("%d", j), j*100.5);
+      added := dict:add(printf("%d", j), j * 100.5);
       EXPECT!(NOT added);
       j := j + 2;
     end;
@@ -6192,7 +6193,7 @@ BEGIN
     while j < i
     begin
       let result := dict[printf("%d", j)];
-      EXPECT_EQ!(result, case when j % 2 then NULL else j*100.5 end);
+      EXPECT_EQ!(result, case when j % 2 then NULL else j * 100.5 end);
       j += 1;
     end;
 
@@ -6233,7 +6234,7 @@ BEGIN
       EXPECT_EQ!(C.data, 0);
 
       -- replace
-      let b := blob_for_real(j*100.5);
+      let b := blob_for_real(j * 100.5);
       added := dict:add(printf("%d", j), b);
       EXPECT!(NOT added);
       j := j + 2;
@@ -6248,7 +6249,7 @@ BEGIN
         EXPECT_EQ!(result, NULL);
       else
         C:from_blob(result);
-        EXPECT_EQ!(C.data, j*100.5);
+        EXPECT_EQ!(C.data, j * 100.5);
       end if;
       j += 1;
     end;
@@ -6377,14 +6378,14 @@ BEGIN
   let i := 0;
   while i < 1024
   begin
-    list:add(i*3);
+    list:add(i * 3);
     i += 1;
   end;
 
   i := 0;
   while i < 1024
   begin
-    EXPECT_EQ!(list[i], i*3);
+    EXPECT_EQ!(list[i], i * 3);
     i += 1;
   end;
 END);
@@ -6409,14 +6410,14 @@ BEGIN
   let i := 0;
   while i < 1024
   begin
-    list:add(i*3.5);
+    list:add(i * 3.5);
     i += 1;
   end;
 
   i := 0;
   while i < 1024
   begin
-    EXPECT_EQ!(list[i], i*3.5);
+    EXPECT_EQ!(list[i], i * 3.5);
     i += 1;
   end;
 END);
@@ -6951,8 +6952,8 @@ BEGIN
   cursor C for select * from backed;
   loop fetch C
   begin
-    EXPECT_EQ!(C.`value one`, 100*C.id);
-    EXPECT_EQ!(C.`value two`, 100*C.id+1);
+    EXPECT_EQ!(C.`value one`, 100 * C.id);
+    EXPECT_EQ!(C.`value two`, 100 * C.id + 1);
     r := r + 1;
   end;
   EXPECT_EQ!(r, 2);
@@ -6966,8 +6967,8 @@ BEGIN
   declare D cursor for select * from backed;
   loop fetch D
   begin
-    EXPECT_EQ!(D.`value one`, 100*D.id);
-    EXPECT_EQ!(D.`value two`, 100*D.id+1);
+    EXPECT_EQ!(D.`value one`, 100 * D.id);
+    EXPECT_EQ!(D.`value two`, 100 * D.id + 1);
     r := r + 1;
   end;
   EXPECT_EQ!(r, 2);
@@ -6985,7 +6986,7 @@ BEGIN
   EXPECT_EQ!(400, (select `value one` from backed where id = 4));
 
   -- another swizzle using values to update keys and keys to update values
-  update backed set id = (`value one` + 100)/100, `value one` = (id+1)*100, `value two` = `value two` + 100;
+  update backed set id = (`value one` + 100) / 100, `value one` = (id + 1) * 100, `value two` = `value two` + 100;
 
   EXPECT_EQ!(500, (select `value one` from backed where id = 5));
 

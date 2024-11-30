@@ -32,6 +32,17 @@ begin
   end if;
 end;
 
+@MACRO(stmt_list) EXPECT_NE!(a! expr, b! expr)
+begin
+  expected := a! IS NOT b!;
+  call errcheck(expected, @TEXT(a!, " == ", b!), @MACRO_LINE);
+  if not expected then
+    printf("left: %s\n", a!:fmt);
+    printf("right: %s\n", b!:fmt);
+  end if;
+end;
+
+
 -- use this for both normal eval and SQLite eval
 @MACRO(stmt_list) EXPECT_SQL_TOO!(pred! expr)
 begin
@@ -866,10 +877,10 @@ BEGIN
   EXPECT_EQ!(r, (select r)); -- binding not null real
   EXPECT_EQ!(t, (select t)); -- binding not null text
 
-  EXPECT!(b != (select not b)); -- binding not null bool
-  EXPECT!(i != (select 1 + i)); -- binding not null int
-  EXPECT!(l != (select 1 + l)); -- binding not null long
-  EXPECT!(r != (select 1 + r)); -- binding not null real
+  EXPECT_NE!(b, (select not b)); -- binding not null bool
+  EXPECT_NE!(i, (select 1 + i)); -- binding not null int
+  EXPECT_NE!(l, (select 1 + l)); -- binding not null long
+  EXPECT_NE!(r, (select 1 + r)); -- binding not null real
 END);
 
 -- binding tests for nullable types
@@ -887,10 +898,10 @@ BEGIN
   EXPECT_EQ!(r, (select r)); -- binding nullable not null real
   EXPECT_EQ!(t, (select t)); -- binding nullable not null text
 
-  EXPECT!(b != (select not b)); -- binding nullable not null bool
-  EXPECT!(i != (select 1 + i)); -- binding nullable not null int
-  EXPECT!(l != (select 1 + l)); -- binding nullable not null long
-  EXPECT!(r != (select 1 + r)); -- binding nullable not null real
+  EXPECT_NE!(b, (select not b)); -- binding nullable not null bool
+  EXPECT_NE!(i, (select 1 + i)); -- binding nullable not null int
+  EXPECT_NE!(l, (select 1 + l)); -- binding nullable not null long
+  EXPECT_NE!(r, (select 1 + r)); -- binding nullable not null real
 END);
 
 -- binding tests for nullable types values null
@@ -3745,32 +3756,32 @@ BEGIN
 
   x := 10000000000;
   EXPECT!(x = 10000000000);
-  EXPECT!(x != const(cast(10000000000L as int)));
+  EXPECT_NE!(x, const(cast(10000000000L as int)));
   EXPECT!(x > 0x7fffffff);
 
   x := 10000000000L;
   EXPECT!(x = 10000000000L);
-  EXPECT!(x != const(cast(10000000000L as int)));
+  EXPECT_NE!(x, const(cast(10000000000L as int)));
   EXPECT!(x > 0x7fffffff);
 
   x := 0x1000000000L;
   EXPECT!(x = 0x1000000000L);
-  EXPECT!(x != const(cast(0x10000000000L as int)));
+  EXPECT_NE!(x, const(cast(0x10000000000L as int)));
   EXPECT!(x > 0x7fffffff);
 
   x := 0x1000000000;
   EXPECT!(x = 0x1000000000L);
-  EXPECT!(x != const(cast(0x10000000000L as int)));
+  EXPECT_NE!(x, const(cast(0x10000000000L as int)));
   EXPECT!(x > 0x7fffffff);
 
   x := const(0x1000000000);
   EXPECT!(x = 0x1000000000L);
-  EXPECT!(x != const(cast(0x1000000000L as int)));
+  EXPECT_NE!(x, const(cast(0x1000000000L as int)));
   EXPECT!(x > 0x7fffffff);
 
   x := 1000L * 1000 * 1000 * 1000;
   EXPECT!(x = 1000000000000);
-  EXPECT!(x != const(cast(1000000000000 as int)));
+  EXPECT_NE!(x, const(cast(1000000000000 as int)));
   x := const(1000L * 1000 * 1000 * 1000);
 
   z := 1L;
@@ -3778,32 +3789,32 @@ BEGIN
 
   z := 10000000000;
   EXPECT!(z = 10000000000);
-  EXPECT!(z != const(cast(10000000000L as int)));
+  EXPECT_NE!(z, const(cast(10000000000L as int)));
   EXPECT!(z > 0x7fffffff);
 
   z := 10000000000L;
   EXPECT!(z = 10000000000L);
-  EXPECT!(z != const(cast(10000000000L as int)));
+  EXPECT_NE!(z, const(cast(10000000000L as int)));
   EXPECT!(z > 0x7fffffff);
 
   z := 0x1000000000L;
   EXPECT!(z = 0x1000000000L);
-  EXPECT!(z != const(cast(0x1000000000L as int)));
+  EXPECT_NE!(z, const(cast(0x1000000000L as int)));
   EXPECT!(z > 0x7fffffff);
 
   z := 0x1000000000;
   EXPECT!(z = 0x1000000000L);
-  EXPECT!(z != const(cast(0x1000000000L as int)));
+  EXPECT_NE!(z, const(cast(0x1000000000L as int)));
   EXPECT!(z > 0x7fffffff);
 
   z := const(0x1000000000);
   EXPECT!(z = 0x1000000000L);
-  EXPECT!(z != const(cast(0x1000000000L as int)));
+  EXPECT_NE!(z, const(cast(0x1000000000L as int)));
   EXPECT!(z > 0x7fffffff);
 
   z := 1000L * 1000 * 1000 * 1000;
   EXPECT!(z = 1000000000000);
-  EXPECT!(z != const(cast(1000000000000 as int)));
+  EXPECT_NE!(z, const(cast(1000000000000 as int)));
   z := const(1000L * 1000 * 1000 * 1000);
 END);
 
@@ -5277,7 +5288,7 @@ BEGIN
       not C.b as b;
 
     hash2 := cql_cursor_hash(D);
-    EXPECT!(hash1 != hash2);  -- now different
+    EXPECT_NE!(hash1, hash2);  -- now different
 
     ---------
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
@@ -5286,7 +5297,7 @@ BEGIN
       C.i + 1 as i;
 
     hash2 := cql_cursor_hash(D);
-    EXPECT!(hash1 != hash2);  -- now different
+    EXPECT_NE!(hash1, hash2);  -- now different
 
     ---------
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
@@ -5295,7 +5306,7 @@ BEGIN
       C.l + 1 as l;
 
     hash2 := cql_cursor_hash(D);
-    EXPECT!(hash1 != hash2);  -- now different
+    EXPECT_NE!(hash1, hash2);  -- now different
 
     ---------
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
@@ -5304,7 +5315,7 @@ BEGIN
       C.r + 1 as r;
 
     hash2 := cql_cursor_hash(D);
-    EXPECT!(hash1 != hash2);  -- now different
+    EXPECT_NE!(hash1, hash2);  -- now different
 
     ---------
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
@@ -5313,7 +5324,7 @@ BEGIN
       "different" as t;
 
     hash2 := cql_cursor_hash(D);
-    EXPECT!(hash1 != hash2);  -- now different
+    EXPECT_NE!(hash1, hash2);  -- now different
 
     ---------
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
@@ -5322,7 +5333,7 @@ BEGIN
       not C.b as b0;
 
     hash2 := cql_cursor_hash(D);
-    EXPECT!(hash1 != hash2);  -- now different
+    EXPECT_NE!(hash1, hash2);  -- now different
 
     ---------
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
@@ -5331,7 +5342,7 @@ BEGIN
       C.i + 1 as i0;
 
     hash2 := cql_cursor_hash(D);
-    EXPECT!(hash1 != hash2);  -- now different
+    EXPECT_NE!(hash1, hash2);  -- now different
 
     ---------
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
@@ -5340,7 +5351,7 @@ BEGIN
       C.l + 1 as l0;
 
     hash2 := cql_cursor_hash(D);
-    EXPECT!(hash1 != hash2);  -- now different
+    EXPECT_NE!(hash1, hash2);  -- now different
 
     ---------
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
@@ -5349,7 +5360,7 @@ BEGIN
       C.r + 1 as r0;
 
     hash2 := cql_cursor_hash(D);
-    EXPECT!(hash1 != hash2);  -- now different
+    EXPECT_NE!(hash1, hash2);  -- now different
 
     ---------
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
@@ -5358,7 +5369,7 @@ BEGIN
       "different" as t0;
 
     hash2 := cql_cursor_hash(D);
-    EXPECT!(hash1 != hash2);  -- now different
+    EXPECT_NE!(hash1, hash2);  -- now different
 
     ---------
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
@@ -5367,7 +5378,7 @@ BEGIN
       NULL as b0;
 
     hash2 := cql_cursor_hash(D);
-    EXPECT!(hash1 != hash2);  -- now different
+    EXPECT_NE!(hash1, hash2);  -- now different
 
     ---------
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
@@ -5376,7 +5387,7 @@ BEGIN
       NULL as i0;
 
     hash2 := cql_cursor_hash(D);
-    EXPECT!(hash1 != hash2);  -- now different
+    EXPECT_NE!(hash1, hash2);  -- now different
 
     ---------
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
@@ -5385,7 +5396,7 @@ BEGIN
       NULL as l0;
 
     hash2 := cql_cursor_hash(D);
-    EXPECT!(hash1 != hash2);  -- now different
+    EXPECT_NE!(hash1, hash2);  -- now different
 
     ---------
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
@@ -5394,7 +5405,7 @@ BEGIN
       NULL as r0;
 
     hash2 := cql_cursor_hash(D);
-    EXPECT!(hash1 != hash2);  -- now different
+    EXPECT_NE!(hash1, hash2);  -- now different
 
     ---------
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
@@ -5403,7 +5414,7 @@ BEGIN
       NULL as t0;
 
     hash2 := cql_cursor_hash(D);
-    EXPECT!(hash1 != hash2);  -- now different
+    EXPECT_NE!(hash1, hash2);  -- now different
 
     i += 1;
   end;

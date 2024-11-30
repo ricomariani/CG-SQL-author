@@ -3534,42 +3534,42 @@ begin
   EXPECT_EQ!(2, const(1 + 1));
   EXPECT_EQ!(2.0, const(1.0 + 1));
   EXPECT_EQ!(2L, const(1 + 1L));
-  EXPECT_EQ!(2, const(1 + (1==1) ));
+  EXPECT_EQ!(2, const(1 + (1==1)));
 
   EXPECT_EQ!(const(1 - 1), 0);
   EXPECT_EQ!(const(1.0 - 1), 0.0);
   EXPECT_EQ!(const(1 - 1L), 0L);
-  EXPECT_EQ!(const(1 - (1==1) ), 0);
+  EXPECT_EQ!(const(1 - (1==1)), 0);
 
   EXPECT_EQ!(const(3 * 2), 6);
   EXPECT_EQ!(const(3.0 * 2), 6.0);
   EXPECT_EQ!(const(3 * 2L), 6L);
-  EXPECT_EQ!(const(3 * (1==1) ), 3);
+  EXPECT_EQ!(const(3 * (1==1)), 3);
 
   EXPECT_EQ!(const(3 / 1), 3);
   EXPECT_EQ!(const(3.0 / 1), 3.0);
   EXPECT_EQ!(const(3 / 1L), 3L);
-  EXPECT_EQ!(const(3 / (1==1) ), 3);
+  EXPECT_EQ!(const(3 / (1==1)), 3);
 
   EXPECT_EQ!(const(3 % 1), 0);
   EXPECT_EQ!(const(3 % 1L), 0L);
-  EXPECT_EQ!(const(3 % (1==1) ), 0);
+  EXPECT_EQ!(const(3 % (1==1)), 0);
 
   EXPECT_EQ!(const(8 | 1), 9);
   EXPECT_EQ!(const(8 | 1L), 9L);
-  EXPECT_EQ!(const(8 | (1==1) ), 9);
+  EXPECT_EQ!(const(8 | (1==1)), 9);
 
   EXPECT_EQ!(const(7 & 4), 4);
   EXPECT_EQ!(const(7 & 4L), 4L);
-  EXPECT_EQ!(const(7 & (1==1) ), 1);
+  EXPECT_EQ!(const(7 & (1==1)), 1);
 
   EXPECT_EQ!(const(16 << 1), 32);
   EXPECT_EQ!(const(16 << 1L), 32L);
-  EXPECT_EQ!(const(16 << (1==1) ), 32);
+  EXPECT_EQ!(const(16 << (1==1)), 32);
 
   EXPECT_EQ!(const(16 >> 1), 8);
   EXPECT_EQ!(const(16 >> 1L), 8L);
-  EXPECT_EQ!(const(16 >> (1==1) ), 8);
+  EXPECT_EQ!(const(16 >> (1==1)), 8);
 
   EXPECT_EQ!(const(null), null);
 
@@ -3588,6 +3588,11 @@ begin
   EXPECT_EQ!(const( null and null), null);
   EXPECT_EQ!(const( null and 0), 0);
   EXPECT_EQ!(const( null and 1), null);
+
+/* note that in the below we often do not use EXPECT_EQ because the point of the
+ * relevant tests is to test the const equiality or inequality.  So the comparisons
+ * need to be part of the const expression itself.
+ */
 
   EXPECT!(const(3 == 3));
   EXPECT!(const(3 == 3.0));
@@ -3639,15 +3644,15 @@ begin
   EXPECT_EQ!((null << null), null);
   EXPECT_EQ!((null >> null), null);
 
-  EXPECT!(const(null + null) is null);
-  EXPECT!(const(null - null) is null);
-  EXPECT!(const(null * null) is null);
-  EXPECT!(const(null / null) is null);
-  EXPECT!(const(null % null) is null);
-  EXPECT!(const(null | null) is null);
-  EXPECT!(const(null & null) is null);
-  EXPECT!(const(null << null) is null);
-  EXPECT!(const(null >> null) is null);
+  EXPECT_EQ!(const(null + null), null);
+  EXPECT_EQ!(const(null - null), null);
+  EXPECT_EQ!(const(null * null), null);
+  EXPECT_EQ!(const(null / null), null);
+  EXPECT_EQ!(const(null % null), null);
+  EXPECT_EQ!(const(null | null), null);
+  EXPECT_EQ!(const(null & null), null);
+  EXPECT_EQ!(const(null << null), null);
+  EXPECT_EQ!(const(null >> null), null);
 
   EXPECT!(const((null + null) is null));
   EXPECT!(const((null - null) is null));
@@ -3659,7 +3664,7 @@ begin
   EXPECT!(const((null << null) is null));
   EXPECT!(const((null >> null) is null));
 
-  EXPECT!(const(null is not null) == 0);
+  EXPECT_EQ!(const(null is not null), 0);
   EXPECT!(const(null is not 1));
   EXPECT!(const((1 or null) is not null));
 
@@ -5280,145 +5285,119 @@ begin
 
     fetch C() from values () @dummy_seed(i) @dummy_nullables;
     fetch D() from values () @dummy_seed(i) @dummy_nullables;
+    cursor X like C;
+    fetch X from C;
 
     hash0 := cql_cursor_hash(C);
-    hash1 := cql_cursor_hash(C);
+    hash1 := cql_cursor_hash(C); -- hashing the same thing should always be the same
     hash2 := cql_cursor_hash(D);
 
     EXPECT_EQ!(hash0, hash1);  -- control for sanity
     EXPECT_EQ!(hash1, hash2);  -- equivalent data -> same hash (note different string same text)
 
-    ---------
-    fetch D() from values () @dummy_seed(i) @dummy_nullables;
-
-    update cursor D using
-      not C.b as b;
+    -- hash different with different bool (not null version)
+    fetch D from X;
+    update cursor D using not C.b as b;
 
     hash2 := cql_cursor_hash(D);
     EXPECT_NE!(hash1, hash2);  -- now different
 
-    ---------
-    fetch D() from values () @dummy_seed(i) @dummy_nullables;
+    -- hash different with different int (not null version)
+    fetch D from X;
 
-    update cursor D using
-      C.i + 1 as i;
-
-    hash2 := cql_cursor_hash(D);
-    EXPECT_NE!(hash1, hash2);  -- now different
-
-    ---------
-    fetch D() from values () @dummy_seed(i) @dummy_nullables;
-
-    update cursor D using
-      C.l + 1 as l;
+    update cursor D using C.i + 1 as i;
 
     hash2 := cql_cursor_hash(D);
     EXPECT_NE!(hash1, hash2);  -- now different
 
-    ---------
-    fetch D() from values () @dummy_seed(i) @dummy_nullables;
-
-    update cursor D using
-      C.r + 1 as r;
+    -- hash different with different long (not null version)
+    fetch D from X;
+    update cursor D using C.l + 1 as l;
 
     hash2 := cql_cursor_hash(D);
     EXPECT_NE!(hash1, hash2);  -- now different
 
-    ---------
-    fetch D() from values () @dummy_seed(i) @dummy_nullables;
-
-    update cursor D using
-      "different" as t;
+    -- hash different with different real (not null version)
+    fetch D from X;
+    update cursor D using C.r + 1 as r;
 
     hash2 := cql_cursor_hash(D);
     EXPECT_NE!(hash1, hash2);  -- now different
 
-    ---------
-    fetch D() from values () @dummy_seed(i) @dummy_nullables;
-
-    update cursor D using
-      not C.b as b0;
+    -- hash different with different text (not null version)
+    fetch D from X;
+    update cursor D using "different" as t;
 
     hash2 := cql_cursor_hash(D);
     EXPECT_NE!(hash1, hash2);  -- now different
 
-    ---------
-    fetch D() from values () @dummy_seed(i) @dummy_nullables;
-
-    update cursor D using
-      C.i + 1 as i0;
+    -- hash different with different bool
+    fetch D from X;
+    update cursor D using not C.b as b0;
 
     hash2 := cql_cursor_hash(D);
     EXPECT_NE!(hash1, hash2);  -- now different
 
-    ---------
-    fetch D() from values () @dummy_seed(i) @dummy_nullables;
-
-    update cursor D using
-      C.l + 1 as l0;
+    -- hash different with different int
+    fetch D from X;
+    update cursor D using C.i + 1 as i0;
 
     hash2 := cql_cursor_hash(D);
     EXPECT_NE!(hash1, hash2);  -- now different
 
-    ---------
-    fetch D() from values () @dummy_seed(i) @dummy_nullables;
-
-    update cursor D using
-      C.r + 1 as r0;
+    -- hash different with different long
+    fetch D from X;
+    update cursor D using C.l + 1 as l0;
 
     hash2 := cql_cursor_hash(D);
     EXPECT_NE!(hash1, hash2);  -- now different
 
-    ---------
-    fetch D() from values () @dummy_seed(i) @dummy_nullables;
-
-    update cursor D using
-      "different" as t0;
+    -- hash different with different real
+    fetch D from X;
+    update cursor D using C.r + 1 as r0;
 
     hash2 := cql_cursor_hash(D);
     EXPECT_NE!(hash1, hash2);  -- now different
 
-    ---------
-    fetch D() from values () @dummy_seed(i) @dummy_nullables;
-
-    update cursor D using
-      null as b0;
+    -- hash different with different string
+    fetch D from X;
+    update cursor D using"different" as t0;
 
     hash2 := cql_cursor_hash(D);
     EXPECT_NE!(hash1, hash2);  -- now different
 
-    ---------
-    fetch D() from values () @dummy_seed(i) @dummy_nullables;
-
-    update cursor D using
-      null as i0;
+    -- hash different with null bool
+    fetch D from X;
+    update cursor D using null as b0;
 
     hash2 := cql_cursor_hash(D);
     EXPECT_NE!(hash1, hash2);  -- now different
 
-    ---------
-    fetch D() from values () @dummy_seed(i) @dummy_nullables;
-
-    update cursor D using
-      null as l0;
+    -- has different with null int
+    fetch D from X;
+    update cursor D using null as i0;
 
     hash2 := cql_cursor_hash(D);
     EXPECT_NE!(hash1, hash2);  -- now different
 
-    ---------
-    fetch D() from values () @dummy_seed(i) @dummy_nullables;
-
-    update cursor D using
-      null as r0;
+    -- hash different with null long
+    fetch D from X;
+    update cursor D using null as l0;
 
     hash2 := cql_cursor_hash(D);
     EXPECT_NE!(hash1, hash2);  -- now different
 
-    ---------
-    fetch D() from values () @dummy_seed(i) @dummy_nullables;
+    -- has different with null real
+    fetch D from X;
+    update cursor D using null as r0;
 
-    update cursor D using
-      null as t0;
+    hash2 := cql_cursor_hash(D);
+    EXPECT_NE!(hash1, hash2);  -- now different
+
+    
+    -- hash different with null text
+    fetch D from X;
+    update cursor D using null as t0;
 
     hash2 := cql_cursor_hash(D);
     EXPECT_NE!(hash1, hash2);  -- now different

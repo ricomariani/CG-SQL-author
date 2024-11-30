@@ -27,7 +27,7 @@ var expected bool @sensitive;
 begin
   -- it's important to evaluate the expressions exactly once
   -- because there may be side-effects
-  expected := a! IS b!;
+  expected := a! is b!;
   call errcheck(expected, @TEXT(a!, " == ", b!), @MACRO_LINE);
   if not expected then
     -- we are re-evaluating now but the expectation already failed so it's ok
@@ -516,7 +516,7 @@ begin
   EXPECT_SQL_TOO!(abs(-2.0) = 2);
   EXPECT_SQL_TOO!(abs(2.0) = 2);
 
-  LET t := 3L;
+  let t := 3L;
   EXPECT_SQL_TOO!(abs(t) = t);
   EXPECT_SQL_TOO!(abs(-t) = t);
 
@@ -1104,7 +1104,7 @@ begin
     when 1 then 100
     when 2 then 200
     when 3 then 300
-    ELSE 400
+    else 400
   end;
 end;
 
@@ -2194,7 +2194,7 @@ begin
   EXPECT_SQL_TOO!(5 > 3 > -1 > 0);
 end);
 
--- Test precedence of equality (= == != <> LIKE GLOB MATCH IN not IN IS_NOT_NULL IS_NULL) with binary (< <= > >=)
+-- Test precedence of equality (= == != <> like glob match in not in IS_NOT_NULL IS_NULL) with binary (< <= > >=)
 TEST!(equality_pri,
 begin
   declare null_ int;
@@ -2243,10 +2243,10 @@ begin
   -- order of operations with <, <=, etc. When concat (||) is implemented, it is
   -- possible to write a test case.
 
-  -- GLOB must be inside a select statement so it also cannot be tested
-  -- MATCH can only be in a select statement, no test necessary
+  -- glob must be inside a select statement so it also cannot be tested
+  -- match can only be in a select statement, no test necessary
 
-  -- Test IS_NOT and is
+  -- Test is_not and is
   EXPECT_SQL_TOO!(nullable(1) + nullable(1) is null == 0);
   EXPECT_SQL_TOO!(nullable(1) + nullable(1) is not null == 1);
   EXPECT_SQL_TOO!(nullable(1) + nullable(1) is null + 1 == 0); -- Evaluated as: (1 + 1) is (null + 1) == 0;
@@ -2333,32 +2333,32 @@ begin
   EXPECT_SQL_TOO!(null is 1 + null);
   EXPECT_SQL_TOO!(null is 1 << null);
 
-  -- Test IN
-  EXPECT_SQL_TOO!(3 IN (1, 2) == 0);
-  EXPECT_SQL_TOO!(3 + 2 IN (1, 5));
-  EXPECT_SQL_TOO!(3 / 3 IN (1, 2));
-  EXPECT_SQL_TOO!(3 / 3 IN (1, 2) IN (1));
-  EXPECT_SQL_TOO!(1 IN (null, 1));
-  EXPECT!(not (1 IN (null, 5)));
-  EXPECT!((select null is (not (1 IN (null, 5))))); -- known sqlite and CQL IN difference for null
-  EXPECT_SQL_TOO!(null is (null IN (1)));
+  -- Test in
+  EXPECT_SQL_TOO!(3 in (1, 2) == 0);
+  EXPECT_SQL_TOO!(3 + 2 in (1, 5));
+  EXPECT_SQL_TOO!(3 / 3 in (1, 2));
+  EXPECT_SQL_TOO!(3 / 3 in (1, 2) in (1));
+  EXPECT_SQL_TOO!(1 in (null, 1));
+  EXPECT!(not (1 in (null, 5)));
+  EXPECT!((select null is (not (1 in (null, 5))))); -- known sqlite and CQL in difference for null
+  EXPECT_SQL_TOO!(null is (null in (1)));
 
-  -- Test not IN
-  EXPECT_SQL_TOO!(3 not IN (1, 2) == 1);
-  EXPECT_SQL_TOO!(1 not IN (1, 2) == 0);
-  EXPECT_SQL_TOO!(3 + 1 not IN (1, 5));
-  EXPECT_SQL_TOO!(3 / 1 not IN (1, 2));
-  EXPECT_SQL_TOO!(3 / 1 not IN (1, 2) not IN (0));
-  EXPECT_SQL_TOO!(not (1 not IN (null, 1)));
-  EXPECT!(1 not IN (null, 5));
-  EXPECT!((select null is (1 not IN (null, 5))));  -- known sqlite and CQL IN difference for null
-  EXPECT_SQL_TOO!(null is (null not IN (1)));
+  -- Test not in
+  EXPECT_SQL_TOO!(3 not in (1, 2) == 1);
+  EXPECT_SQL_TOO!(1 not in (1, 2) == 0);
+  EXPECT_SQL_TOO!(3 + 1 not in (1, 5));
+  EXPECT_SQL_TOO!(3 / 1 not in (1, 2));
+  EXPECT_SQL_TOO!(3 / 1 not in (1, 2) not in (0));
+  EXPECT_SQL_TOO!(not (1 not in (null, 1)));
+  EXPECT!(1 not in (null, 5));
+  EXPECT!((select null is (1 not in (null, 5))));  -- known sqlite and CQL in difference for null
+  EXPECT_SQL_TOO!(null is (null not in (1)));
 
   declare x text;
   x := null;
 
-  EXPECT_SQL_TOO!((x IN ("foo", "goo")) is null);
-  EXPECT_SQL_TOO!((x not IN ("foo", "goo")) is null);
+  EXPECT_SQL_TOO!((x in ("foo", "goo")) is null);
+  EXPECT_SQL_TOO!((x not in ("foo", "goo")) is null);
 
   -- Test is TRUE and is FALSE
   EXPECT_SQL_TOO!(1 is true);
@@ -2426,7 +2426,7 @@ begin
   EXPECT_SQL_TOO!(1 == (1=(2 between 2 and 2)));
   EXPECT_SQL_TOO!(0 == ((1=2) between 2 and 2));
 
-  LET four := 4;
+  let four := 4;
 
   -- verifying binding when = is on the right, still left to right
   EXPECT_SQL_TOO!(0 == (0 between -2 and -1 = four));
@@ -2450,34 +2450,34 @@ begin
   EXPECT_SQL_TOO!(1 == (0 between (1 between 3 and 4) and (3 between 2 and 3)));
 end);
 
--- and tests with = == != <> IS IS_NOT IN not IN
+-- and tests with = == != <> is is_not in not in
 TEST!(and_pri,
 begin
   declare null_ int;
 
   EXPECT_SQL_TOO!(3 + 3 and 5);
   EXPECT_SQL_TOO!((3 + 3 and 0) == 0);
-  EXPECT_SQL_TOO!((null and true) IS null);
-  EXPECT_SQL_TOO!((null and true = null_) IS null);
-  EXPECT_SQL_TOO!(not (null and nullable(true) IS null));
+  EXPECT_SQL_TOO!((null and true) is null);
+  EXPECT_SQL_TOO!((null and true = null_) is null);
+  EXPECT_SQL_TOO!(not (null and nullable(true) is null));
   EXPECT_SQL_TOO!((null and false) == 0);
   EXPECT_SQL_TOO!(not (null and false));
   EXPECT_SQL_TOO!(1 and false == false);
   EXPECT_SQL_TOO!(1 and false = false);
   EXPECT_SQL_TOO!(1 and true != false);
   EXPECT_SQL_TOO!(1 and true <> false);
-  EXPECT_SQL_TOO!(5 IS 5 and 2 IS 2);
-  EXPECT_SQL_TOO!(nullable(5) IS not null and 2 IS 2);
-  EXPECT_SQL_TOO!(nullable(5) IS not null and 2 IS 2);
+  EXPECT_SQL_TOO!(5 is 5 and 2 is 2);
+  EXPECT_SQL_TOO!(nullable(5) is not null and 2 is 2);
+  EXPECT_SQL_TOO!(nullable(5) is not null and 2 is 2);
   EXPECT_SQL_TOO!(5 and false + 1);
   EXPECT_SQL_TOO!(5 and false * 1 + 1);
   EXPECT_SQL_TOO!(5 and false >> 4 >= -1);
   EXPECT_SQL_TOO!(5 and false | 4 & 12);
   EXPECT_SQL_TOO!(5 and 6 / 3);
   EXPECT_SQL_TOO!((5 and 25 % 5) == false);
-  EXPECT_SQL_TOO!(5 and false IN (0));
-  EXPECT_SQL_TOO!(5 and true not IN (false));
-  EXPECT_SQL_TOO!(not(5 and false not IN (false)));
+  EXPECT_SQL_TOO!(5 and false in (0));
+  EXPECT_SQL_TOO!(5 and true not in (false));
+  EXPECT_SQL_TOO!(not(5 and false not in (false)));
 end);
 
 -- Test and with or
@@ -2655,150 +2655,150 @@ begin
   declare temp_null int;
   temp_null := null;
 
-  EXPECT_SQL_TOO!(x1 + x1 IS null == x0);
-  EXPECT_SQL_TOO!(x1 + x1 IS not null == x1);
-  EXPECT_SQL_TOO!(x1 + x1 IS null + x1 == x0);
-  EXPECT_SQL_TOO!(x1 + x1 IS not null);
-  EXPECT_SQL_TOO!((x1 + x1 IS not null) + x1 == x2);
-  EXPECT_SQL_TOO!(x1 + x1 IS not null + x1 == x1);
-  EXPECT_SQL_TOO!(x1 + null IS null);
-  EXPECT_SQL_TOO!(null + x1 IS null);
-  EXPECT_SQL_TOO!(null * x1 IS null);
-  EXPECT_SQL_TOO!(null * x0 IS null);
-  EXPECT_SQL_TOO!(x0 * null * x0 IS null);
-  EXPECT_SQL_TOO!(null > x0 IS null);
-  EXPECT_SQL_TOO!(null >= x1 IS null);
-  EXPECT_SQL_TOO!(null < x2 IS null);
-  EXPECT_SQL_TOO!(null <= x3 IS null);
-  EXPECT_SQL_TOO!(x1 + null == x3 IS null);
-  EXPECT_SQL_TOO!(x1 + null != x3 IS null);
-  EXPECT_SQL_TOO!(x1 + null <> x3 IS null);
-  EXPECT_SQL_TOO!(x1 = temp_null * x1 + x1 IS temp_null);
-  EXPECT_SQL_TOO!(x1 = temp_null * -x1 + x1 IS temp_null);
-  EXPECT_SQL_TOO!(x1 + temp_null = x3 - x1 = x1 IS temp_null);
-  EXPECT_SQL_TOO!(x1 + temp_null = x3 - x1 <> x0 IS temp_null);
-  EXPECT_SQL_TOO!(x1 + temp_null == x3 - x1 <> x0 IS temp_null);
-  EXPECT_SQL_TOO!(x1 + temp_null = x3 - x1 <> temp1 IS temp_null);
-  EXPECT_SQL_TOO!(x1 + temp_null == x3 - x1 <> temp1 IS temp_null);
-  EXPECT_SQL_TOO!((temp_null IS not temp_null) == x0);
-  EXPECT_SQL_TOO!(x1 + x1 IS not temp_null);
-  EXPECT_SQL_TOO!(temp_null == x3 IS temp_null);
-  EXPECT_SQL_TOO!(((temp_null == x3) IS temp_null) == x1);
-  EXPECT_SQL_TOO!((temp_null == x3 IS temp_null) == x1);
-  EXPECT_SQL_TOO!((temp_null == x3 IS temp_null) == x1);
-  EXPECT_SQL_TOO!((temp_null == x3 IS temp_null) IS not temp_null);
-  EXPECT_SQL_TOO!((x1 + temp_null == x3 IS not temp_null) == x0);
-  EXPECT_SQL_TOO!((x1 + temp_null = x3 - x1 <> x0 IS not temp_null) == x0);
-  EXPECT_SQL_TOO!((x1 + temp_null == x3 - x1 <> x0 IS not temp_null) == x0);
-  EXPECT_SQL_TOO!((x1 + temp_null = x3 - x1 <> temp1 IS not temp_null) == x0);
+  EXPECT_SQL_TOO!(x1 + x1 is null == x0);
+  EXPECT_SQL_TOO!(x1 + x1 is not null == x1);
+  EXPECT_SQL_TOO!(x1 + x1 is null + x1 == x0);
+  EXPECT_SQL_TOO!(x1 + x1 is not null);
+  EXPECT_SQL_TOO!((x1 + x1 is not null) + x1 == x2);
+  EXPECT_SQL_TOO!(x1 + x1 is not null + x1 == x1);
+  EXPECT_SQL_TOO!(x1 + null is null);
+  EXPECT_SQL_TOO!(null + x1 is null);
+  EXPECT_SQL_TOO!(null * x1 is null);
+  EXPECT_SQL_TOO!(null * x0 is null);
+  EXPECT_SQL_TOO!(x0 * null * x0 is null);
+  EXPECT_SQL_TOO!(null > x0 is null);
+  EXPECT_SQL_TOO!(null >= x1 is null);
+  EXPECT_SQL_TOO!(null < x2 is null);
+  EXPECT_SQL_TOO!(null <= x3 is null);
+  EXPECT_SQL_TOO!(x1 + null == x3 is null);
+  EXPECT_SQL_TOO!(x1 + null != x3 is null);
+  EXPECT_SQL_TOO!(x1 + null <> x3 is null);
+  EXPECT_SQL_TOO!(x1 = temp_null * x1 + x1 is temp_null);
+  EXPECT_SQL_TOO!(x1 = temp_null * -x1 + x1 is temp_null);
+  EXPECT_SQL_TOO!(x1 + temp_null = x3 - x1 = x1 is temp_null);
+  EXPECT_SQL_TOO!(x1 + temp_null = x3 - x1 <> x0 is temp_null);
+  EXPECT_SQL_TOO!(x1 + temp_null == x3 - x1 <> x0 is temp_null);
+  EXPECT_SQL_TOO!(x1 + temp_null = x3 - x1 <> temp1 is temp_null);
+  EXPECT_SQL_TOO!(x1 + temp_null == x3 - x1 <> temp1 is temp_null);
+  EXPECT_SQL_TOO!((temp_null is not temp_null) == x0);
+  EXPECT_SQL_TOO!(x1 + x1 is not temp_null);
+  EXPECT_SQL_TOO!(temp_null == x3 is temp_null);
+  EXPECT_SQL_TOO!(((temp_null == x3) is temp_null) == x1);
+  EXPECT_SQL_TOO!((temp_null == x3 is temp_null) == x1);
+  EXPECT_SQL_TOO!((temp_null == x3 is temp_null) == x1);
+  EXPECT_SQL_TOO!((temp_null == x3 is temp_null) is not temp_null);
+  EXPECT_SQL_TOO!((x1 + temp_null == x3 is not temp_null) == x0);
+  EXPECT_SQL_TOO!((x1 + temp_null = x3 - x1 <> x0 is not temp_null) == x0);
+  EXPECT_SQL_TOO!((x1 + temp_null == x3 - x1 <> x0 is not temp_null) == x0);
+  EXPECT_SQL_TOO!((x1 + temp_null = x3 - x1 <> temp1 is not temp_null) == x0);
 
   temp0 := nullable(25);
 
-  EXPECT_SQL_TOO!(x2 * x3 IS x4 + x2);
-  EXPECT_SQL_TOO!(x2 * x3 IS x4 + x2);
+  EXPECT_SQL_TOO!(x2 * x3 is x4 + x2);
+  EXPECT_SQL_TOO!(x2 * x3 is x4 + x2);
   temp1 := nullable(10);
-  EXPECT_SQL_TOO!(temp1 - x4 * x2 IS x2);
-  EXPECT_SQL_TOO!(temp0 % x3 / x2 IS x0);
-  EXPECT_SQL_TOO!(temp0 / x5 % x2 IS x1);
-  EXPECT_SQL_TOO!(temp0 * x5 % x2 IS x1);
-  EXPECT_SQL_TOO!(temp0 * x5 % x4 % x2 IS x1);
+  EXPECT_SQL_TOO!(temp1 - x4 * x2 is x2);
+  EXPECT_SQL_TOO!(temp0 % x3 / x2 is x0);
+  EXPECT_SQL_TOO!(temp0 / x5 % x2 is x1);
+  EXPECT_SQL_TOO!(temp0 * x5 % x2 is x1);
+  EXPECT_SQL_TOO!(temp0 * x5 % x4 % x2 is x1);
   temp1 := nullable(24);
-  EXPECT_SQL_TOO!(temp0 - x5 % x2 IS temp1);
+  EXPECT_SQL_TOO!(temp0 - x5 % x2 is temp1);
   temp1 := nullable(15);
-  EXPECT_SQL_TOO!(temp1 % x3 - x2 IS -x2);
+  EXPECT_SQL_TOO!(temp1 % x3 - x2 is -x2);
   temp2 := nullable(30);
   let temp3 := nullable(13);
-  EXPECT_SQL_TOO!(temp1 - temp2 % x4 IS temp3);
-  EXPECT_SQL_TOO!(temp1 - temp2 / x2 IS x0);
-  EXPECT_SQL_TOO!(temp1 / x5 - x3 IS x0);
+  EXPECT_SQL_TOO!(temp1 - temp2 % x4 is temp3);
+  EXPECT_SQL_TOO!(temp1 - temp2 / x2 is x0);
+  EXPECT_SQL_TOO!(temp1 / x5 - x3 is x0);
   temp3 := nullable(72);
-  EXPECT_SQL_TOO!(temp1 * x5 - x3 IS temp3);
+  EXPECT_SQL_TOO!(temp1 * x5 - x3 is temp3);
   temp3 := nullable(22);
-  EXPECT_SQL_TOO!(x5 * x5 - x3 IS temp3);
+  EXPECT_SQL_TOO!(x5 * x5 - x3 is temp3);
   temp3 := 26;
-  EXPECT_SQL_TOO!(temp0 + x5 % x2 IS temp3);
-  EXPECT_SQL_TOO!(temp1 % x3 + x2 IS x2);
+  EXPECT_SQL_TOO!(temp0 + x5 % x2 is temp3);
+  EXPECT_SQL_TOO!(temp1 % x3 + x2 is x2);
   temp1 := nullable(17);
   temp2 := nullable(30);
   temp3 := nullable(15);
-  EXPECT_SQL_TOO!(temp3 + temp2 % x4 IS temp1);
+  EXPECT_SQL_TOO!(temp3 + temp2 % x4 is temp1);
   temp1 := nullable(30);
-  EXPECT_SQL_TOO!(temp3 + temp1 / x2 IS temp1);
-  EXPECT_SQL_TOO!(temp3 / x5 + x3 IS x6);
+  EXPECT_SQL_TOO!(temp3 + temp1 / x2 is temp1);
+  EXPECT_SQL_TOO!(temp3 / x5 + x3 is x6);
   temp1 := nullable(78);
-  EXPECT_SQL_TOO!(temp3 * x5 + x3 IS temp1);
+  EXPECT_SQL_TOO!(temp3 * x5 + x3 is temp1);
   temp1 := nullable(28);
-  EXPECT_SQL_TOO!(x5 * x5 + x3 IS temp1);
+  EXPECT_SQL_TOO!(x5 * x5 + x3 is temp1);
   temp1 := nullable(20);
   temp2 := nullable(12);
-  EXPECT_SQL_TOO!(x5 * temp2 / x3 IS temp1);
-  EXPECT_SQL_TOO!(x5 * temp2 / x3 % x7 IS x6);
+  EXPECT_SQL_TOO!(x5 * temp2 / x3 is temp1);
+  EXPECT_SQL_TOO!(x5 * temp2 / x3 % x7 is x6);
   temp1 := nullable(21);
   temp2 := nullable(12);
-  EXPECT_SQL_TOO!(x9 % temp2 / x3 * x7 IS temp1);
+  EXPECT_SQL_TOO!(x9 % temp2 / x3 * x7 is temp1);
 
-  EXPECT_SQL_TOO!(x1 IS x1 == x1 IS x1 == x1);
-  EXPECT_SQL_TOO!(x5 > x6 IS x2 < x1);
-  EXPECT_SQL_TOO!(x5 <= x6 IS x2 > x1);
-  EXPECT_SQL_TOO!(x5 == x5 IS x2 > x1);
-  EXPECT_SQL_TOO!(null IS null);
-  EXPECT_SQL_TOO!(temp_null == x0 IS null);
-  EXPECT_SQL_TOO!(null IS null == x1 != x0);
-  EXPECT_SQL_TOO!(null IS null = x1 <> x0);
-  EXPECT_SQL_TOO!(temp_null == temp_null IS null);
-  EXPECT_SQL_TOO!(null IS (temp_null == x0));
-  EXPECT_SQL_TOO!(null IS not null == x0);
-  EXPECT_SQL_TOO!((null IS not null) == x0);
-  EXPECT_SQL_TOO!(x5 > x2 IS not null);
-  EXPECT_SQL_TOO!(null IS not x2 < x3);
-  EXPECT_SQL_TOO!(null IS null + x1);
-  EXPECT_SQL_TOO!(null IS x1 + null);
-  EXPECT_SQL_TOO!(null IS x1 << null);
+  EXPECT_SQL_TOO!(x1 is x1 == x1 is x1 == x1);
+  EXPECT_SQL_TOO!(x5 > x6 is x2 < x1);
+  EXPECT_SQL_TOO!(x5 <= x6 is x2 > x1);
+  EXPECT_SQL_TOO!(x5 == x5 is x2 > x1);
+  EXPECT_SQL_TOO!(null is null);
+  EXPECT_SQL_TOO!(temp_null == x0 is null);
+  EXPECT_SQL_TOO!(null is null == x1 != x0);
+  EXPECT_SQL_TOO!(null is null = x1 <> x0);
+  EXPECT_SQL_TOO!(temp_null == temp_null is null);
+  EXPECT_SQL_TOO!(null is (temp_null == x0));
+  EXPECT_SQL_TOO!(null is not null == x0);
+  EXPECT_SQL_TOO!((null is not null) == x0);
+  EXPECT_SQL_TOO!(x5 > x2 is not null);
+  EXPECT_SQL_TOO!(null is not x2 < x3);
+  EXPECT_SQL_TOO!(null is null + x1);
+  EXPECT_SQL_TOO!(null is x1 + null);
+  EXPECT_SQL_TOO!(null is x1 << null);
 
   let one := nullable("1");
   let two := nullable("2");
-  EXPECT_SQL_TOO!(one IS two == x0);
-  EXPECT_SQL_TOO!(one IS null == x0);
-  EXPECT_SQL_TOO!(null IS one == x0);
+  EXPECT_SQL_TOO!(one is two == x0);
+  EXPECT_SQL_TOO!(one is null == x0);
+  EXPECT_SQL_TOO!(null is one == x0);
 
-  -- Test IN
-  EXPECT_SQL_TOO!(x3 IN (x1, x2) == x0);
-  EXPECT_SQL_TOO!(x3 + x2 IN (x1, x5));
-  EXPECT_SQL_TOO!(x3 / x3 IN (x1, x2));
-  EXPECT_SQL_TOO!(x3 / x3 IN (x1, x2) IN (x1));
-  EXPECT_SQL_TOO!(x1 IN (null, x1));
-  EXPECT!(not (x1 IN (null, x5))); -- known difference between CQL and SQLite in IN
-  EXPECT_SQL_TOO!(null IS (null IN (x1)));
+  -- Test in
+  EXPECT_SQL_TOO!(x3 in (x1, x2) == x0);
+  EXPECT_SQL_TOO!(x3 + x2 in (x1, x5));
+  EXPECT_SQL_TOO!(x3 / x3 in (x1, x2));
+  EXPECT_SQL_TOO!(x3 / x3 in (x1, x2) in (x1));
+  EXPECT_SQL_TOO!(x1 in (null, x1));
+  EXPECT!(not (x1 in (null, x5))); -- known difference between CQL and SQLite in
+  EXPECT_SQL_TOO!(null is (null in (x1)));
 
-  -- Test not IN
-  EXPECT_SQL_TOO!(x1 not IN (x1, x2) == x0);
-  EXPECT_SQL_TOO!(x3 not IN (x1, x2) == x1);
-  EXPECT_SQL_TOO!(x3 + x2 not IN (x1, x2));
-  EXPECT_SQL_TOO!(x3 / x1 not IN (x1, x2));
-  EXPECT_SQL_TOO!(x3 / x1 not IN (x1, x2) IN (x1));
-  EXPECT_SQL_TOO!(not (x1 not IN (null, x1)));
-  EXPECT!(x1 not IN (null, x5)); -- known difference between CQL and SQLite in IN
-  EXPECT_SQL_TOO!(null IS (null not IN (x1)));
+  -- Test not in
+  EXPECT_SQL_TOO!(x1 not in (x1, x2) == x0);
+  EXPECT_SQL_TOO!(x3 not in (x1, x2) == x1);
+  EXPECT_SQL_TOO!(x3 + x2 not in (x1, x2));
+  EXPECT_SQL_TOO!(x3 / x1 not in (x1, x2));
+  EXPECT_SQL_TOO!(x3 / x1 not in (x1, x2) in (x1));
+  EXPECT_SQL_TOO!(not (x1 not in (null, x1)));
+  EXPECT!(x1 not in (null, x5)); -- known difference between CQL and SQLite in
+  EXPECT_SQL_TOO!(null is (null not in (x1)));
 
   declare x text;
   x := null;
-  EXPECT_SQL_TOO!((x IN ("foo", "goo")) IS null);
-  EXPECT_SQL_TOO!((x not IN ("foo", "goo")) IS null);
+  EXPECT_SQL_TOO!((x in ("foo", "goo")) is null);
+  EXPECT_SQL_TOO!((x not in ("foo", "goo")) is null);
 
   EXPECT_SQL_TOO!(x3 + x3 and x5);
   EXPECT_SQL_TOO!((x3 + x3 and x0) == x0);
-  EXPECT_SQL_TOO!((null and x1) IS null);
-  EXPECT_SQL_TOO!((null and x1 = temp_null) IS null);
-  EXPECT_SQL_TOO!(not (null and x1 IS null));
+  EXPECT_SQL_TOO!((null and x1) is null);
+  EXPECT_SQL_TOO!((null and x1 = temp_null) is null);
+  EXPECT_SQL_TOO!(not (null and x1 is null));
   EXPECT_SQL_TOO!((null and x0) == x0);
   EXPECT_SQL_TOO!(not (null and x0));
   EXPECT_SQL_TOO!(x1 and x0 == x0);
   EXPECT_SQL_TOO!(x1 and x0 = x0);
   EXPECT_SQL_TOO!(x1 and x1 != x0);
   EXPECT_SQL_TOO!(x1 and x1 <> x0);
-  EXPECT_SQL_TOO!(x5 IS x5 and x2 IS x2);
-  EXPECT_SQL_TOO!(x5 IS not null and x2 IS x2);
-  EXPECT_SQL_TOO!(x5 IS not null and x2 IS x2);
+  EXPECT_SQL_TOO!(x5 is x5 and x2 is x2);
+  EXPECT_SQL_TOO!(x5 is not null and x2 is x2);
+  EXPECT_SQL_TOO!(x5 is not null and x2 is x2);
   EXPECT_SQL_TOO!(x5 and x0 + x1);
   EXPECT_SQL_TOO!(x5 and x0 * x1 + x1);
   EXPECT_SQL_TOO!(x5 and x0 >> x4 >= -x1);
@@ -2807,7 +2807,7 @@ begin
   EXPECT_SQL_TOO!(x5 and x6 / x3);
   temp1 := nullable(25);
   EXPECT_SQL_TOO!((x5 and temp1 % x5) == x0);
-  EXPECT_SQL_TOO!(x5 and x0 IN (x0));
+  EXPECT_SQL_TOO!(x5 and x0 in (x0));
 
   EXPECT_SQL_TOO!((x0 or x1 or x1 and x0 or x0) != ((((x0 or x1) or x1) and x0) or x0));
   EXPECT_SQL_TOO!((x1 or x1 and x0 and x1 and x0) != ((((x1 or x1) and x0) and x1) and x0));
@@ -3499,7 +3499,7 @@ begin
   call dummy(from args);
 end);
 
-DECLARE PROCEDURE cql_exec_internal(sql TEXT!) USING TRANSACTION;
+declare proc cql_exec_internal(sql TEXT!) USING TRANSACTION;
 create table xyzzy(id int, name text, data blob);
 
 TEST!(exec_internal,
@@ -3659,13 +3659,13 @@ begin
   EXPECT!(const((null << null) is null));
   EXPECT!(const((null >> null) is null));
 
-  EXPECT!(const(null IS not null) == 0);
-  EXPECT!(const(null IS not 1));
-  EXPECT!(const((1 or null) IS not null));
+  EXPECT!(const(null is not null) == 0);
+  EXPECT!(const(null is not 1));
+  EXPECT!(const((1 or null) is not null));
 
-  EXPECT!(const(1 IS 1));
-  EXPECT!(const(1L IS 1L));
-  EXPECT!(const(1.0 IS 1.0));
+  EXPECT!(const(1 is 1));
+  EXPECT!(const(1L is 1L));
+  EXPECT!(const(1.0 is 1.0));
   EXPECT!(const((1==1) is (2==2)));
 
   EXPECT_EQ!(const(cast(3.2 as int)), 3);
@@ -4032,10 +4032,10 @@ begin
 end);
 
 -- facet helper functions, used by the schema upgrader
-DECLARE facet_data TYPE OBJECT<facet_data>;
-DECLARE FUNCTION cql_facets_create() create facet_data!;
-DECLARE FUNCTION cql_facet_add(facets facet_data, facet TEXT!, crc LONG not null) BOOL not null;
-DECLARE FUNCTION cql_facet_find(facets facet_data, facet TEXT!) LONG not null;
+declare facet_data TYPE OBJECT<facet_data>;
+declare func cql_facets_create() create facet_data!;
+declare func cql_facet_add(facets facet_data, facet TEXT!, crc LONG not null) BOOL not null;
+declare func cql_facet_find(facets facet_data, facet TEXT!) LONG not null;
 
 TEST!(facet_helpers,
 begin
@@ -4146,25 +4146,25 @@ end;
 
 TEST!(out_union_refcounts,
 begin
-  cursor C FOR CALL get_row();
-  FETCH C;
+  cursor C for call get_row();
+  fetch C;
   EXPECT!(C);
   EXPECT_EQ!(C.facet, 'x');
-  FETCH C;
+  fetch C;
   EXPECT!(not C);
 
-  DECLARE D CURSOR FOR CALL get_row_thrice();
-  FETCH D;
+  declare D cursor for call get_row_thrice();
+  fetch D;
   EXPECT!(D);
   EXPECT_EQ!(D.facet, 'x');
-  FETCH D;
+  fetch D;
   EXPECT!(not D);
 end);
 
 [[shared_fragment]]
 proc f1(pattern text)
 begin
-  with source(*) LIKE (select 1 id, "x" t)
+  with source(*) like (select 1 id, "x" t)
   select * from source where t like pattern;
 end;
 
@@ -4172,7 +4172,7 @@ end;
 proc f2(pattern text, idstart int!, idend int!, lim int!)
 begin
   with
-  source(*) LIKE f1,
+  source(*) like f1,
   data(*) as (call f1(pattern) using source as source)
   select * from data where data.id between idstart and idend
   limit lim;
@@ -5079,7 +5079,7 @@ begin
   EXPECT_SQL_TOO!(reference = long_const_2);
   EXPECT_SQL_TOO!(reference = long_const_3);
 
-  LET x := -9223372036854775808L;
+  let x := -9223372036854775808L;
   EXPECT_SQL_TOO!(reference == x);
 
   x := -9223372036854775808;
@@ -5097,7 +5097,7 @@ begin
   x := long_const_3;
   EXPECT_SQL_TOO!(reference == x);
 
-  DECLARE z real!;
+  declare z real!;
   z := 9223372036854775807;
 
   -- this verifies that z was stored as a double
@@ -5117,9 +5117,9 @@ begin
 
   -- this verifies that if we mean to fetch a float we get a float
   -- even if the value in the select is a long
-  FETCH C;
+  fetch C;
   EXPECT_EQ!(z, C.v);
-  FETCH C;
+  fetch C;
   EXPECT_EQ!(z, C.v);
 end);
 
@@ -5268,8 +5268,8 @@ begin
   while i < 5
   begin
     -- no explicit values, all dummy
-    fetch C() from values () @DUMMY_SEED(i);
-    fetch D() from values () @DUMMY_SEED(i);
+    fetch C() from values () @dummy_seed(i);
+    fetch D() from values () @dummy_seed(i);
 
     let hash0 := cql_cursor_hash(C);
     let hash1 := cql_cursor_hash(C);
@@ -5278,8 +5278,8 @@ begin
     EXPECT_EQ!(hash0, hash1);  -- control for sanity
     EXPECT_EQ!(hash1, hash2);  -- equivalent data -> same hash (note different string, same text)
 
-    fetch C() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
-    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+    fetch C() from values () @dummy_seed(i) @dummy_nullables;
+    fetch D() from values () @dummy_seed(i) @dummy_nullables;
 
     hash0 := cql_cursor_hash(C);
     hash1 := cql_cursor_hash(C);
@@ -5289,7 +5289,7 @@ begin
     EXPECT_EQ!(hash1, hash2);  -- equivalent data -> same hash (note different string same text)
 
     ---------
-    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+    fetch D() from values () @dummy_seed(i) @dummy_nullables;
 
     update cursor D using
       not C.b as b;
@@ -5298,7 +5298,7 @@ begin
     EXPECT_NE!(hash1, hash2);  -- now different
 
     ---------
-    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+    fetch D() from values () @dummy_seed(i) @dummy_nullables;
 
     update cursor D using
       C.i + 1 as i;
@@ -5307,7 +5307,7 @@ begin
     EXPECT_NE!(hash1, hash2);  -- now different
 
     ---------
-    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+    fetch D() from values () @dummy_seed(i) @dummy_nullables;
 
     update cursor D using
       C.l + 1 as l;
@@ -5316,7 +5316,7 @@ begin
     EXPECT_NE!(hash1, hash2);  -- now different
 
     ---------
-    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+    fetch D() from values () @dummy_seed(i) @dummy_nullables;
 
     update cursor D using
       C.r + 1 as r;
@@ -5325,7 +5325,7 @@ begin
     EXPECT_NE!(hash1, hash2);  -- now different
 
     ---------
-    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+    fetch D() from values () @dummy_seed(i) @dummy_nullables;
 
     update cursor D using
       "different" as t;
@@ -5334,7 +5334,7 @@ begin
     EXPECT_NE!(hash1, hash2);  -- now different
 
     ---------
-    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+    fetch D() from values () @dummy_seed(i) @dummy_nullables;
 
     update cursor D using
       not C.b as b0;
@@ -5343,7 +5343,7 @@ begin
     EXPECT_NE!(hash1, hash2);  -- now different
 
     ---------
-    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+    fetch D() from values () @dummy_seed(i) @dummy_nullables;
 
     update cursor D using
       C.i + 1 as i0;
@@ -5352,7 +5352,7 @@ begin
     EXPECT_NE!(hash1, hash2);  -- now different
 
     ---------
-    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+    fetch D() from values () @dummy_seed(i) @dummy_nullables;
 
     update cursor D using
       C.l + 1 as l0;
@@ -5361,7 +5361,7 @@ begin
     EXPECT_NE!(hash1, hash2);  -- now different
 
     ---------
-    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+    fetch D() from values () @dummy_seed(i) @dummy_nullables;
 
     update cursor D using
       C.r + 1 as r0;
@@ -5370,7 +5370,7 @@ begin
     EXPECT_NE!(hash1, hash2);  -- now different
 
     ---------
-    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+    fetch D() from values () @dummy_seed(i) @dummy_nullables;
 
     update cursor D using
       "different" as t0;
@@ -5379,7 +5379,7 @@ begin
     EXPECT_NE!(hash1, hash2);  -- now different
 
     ---------
-    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+    fetch D() from values () @dummy_seed(i) @dummy_nullables;
 
     update cursor D using
       null as b0;
@@ -5388,7 +5388,7 @@ begin
     EXPECT_NE!(hash1, hash2);  -- now different
 
     ---------
-    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+    fetch D() from values () @dummy_seed(i) @dummy_nullables;
 
     update cursor D using
       null as i0;
@@ -5397,7 +5397,7 @@ begin
     EXPECT_NE!(hash1, hash2);  -- now different
 
     ---------
-    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+    fetch D() from values () @dummy_seed(i) @dummy_nullables;
 
     update cursor D using
       null as l0;
@@ -5406,7 +5406,7 @@ begin
     EXPECT_NE!(hash1, hash2);  -- now different
 
     ---------
-    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+    fetch D() from values () @dummy_seed(i) @dummy_nullables;
 
     update cursor D using
       null as r0;
@@ -5415,7 +5415,7 @@ begin
     EXPECT_NE!(hash1, hash2);  -- now different
 
     ---------
-    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+    fetch D() from values () @dummy_seed(i) @dummy_nullables;
 
     update cursor D using
       null as t0;
@@ -5436,7 +5436,7 @@ begin
   EXPECT!(cql_cursors_equal(C, D));
 
   -- one cursor empty
-  fetch C() from values () @DUMMY_SEED(0);
+  fetch C() from values () @dummy_seed(0);
   EXPECT!(not cql_cursors_equal(C, D));
   EXPECT!(not cql_cursors_equal(D, C));
 
@@ -5444,20 +5444,20 @@ begin
   while i < 5
   begin
     -- no explicit values, all dummy
-    fetch C() from values () @DUMMY_SEED(i);
-    fetch D() from values () @DUMMY_SEED(i);
+    fetch C() from values () @dummy_seed(i);
+    fetch D() from values () @dummy_seed(i);
 
     EXPECT!(cql_cursors_equal(C, C)); -- control for sanity
     EXPECT!(cql_cursors_equal(C, D)); -- control for sanity
 
-    fetch C() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
-    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+    fetch C() from values () @dummy_seed(i) @dummy_nullables;
+    fetch D() from values () @dummy_seed(i) @dummy_nullables;
 
     EXPECT!(cql_cursors_equal(C, C)); -- control for sanity
     EXPECT!(cql_cursors_equal(C, D)); -- control for sanity
 
     ---------
-    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+    fetch D() from values () @dummy_seed(i) @dummy_nullables;
 
     update cursor D using
       not C.b as b;
@@ -5465,7 +5465,7 @@ begin
     EXPECT!(not cql_cursors_equal(C, D));
 
     ---------
-    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+    fetch D() from values () @dummy_seed(i) @dummy_nullables;
 
     update cursor D using
       C.i + 1 as i;
@@ -5473,7 +5473,7 @@ begin
     EXPECT!(not cql_cursors_equal(C, D));
 
     ---------
-    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+    fetch D() from values () @dummy_seed(i) @dummy_nullables;
 
     update cursor D using
       C.l + 1 as l;
@@ -5481,7 +5481,7 @@ begin
     EXPECT!(not cql_cursors_equal(C, D));
 
     ---------
-    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+    fetch D() from values () @dummy_seed(i) @dummy_nullables;
 
     update cursor D using
       C.r + 1 as r;
@@ -5489,7 +5489,7 @@ begin
     EXPECT!(not cql_cursors_equal(C, D));
 
     ---------
-    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+    fetch D() from values () @dummy_seed(i) @dummy_nullables;
 
     update cursor D using
       "different" as t;
@@ -5497,7 +5497,7 @@ begin
     EXPECT!(not cql_cursors_equal(C, D));
 
     ---------
-    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+    fetch D() from values () @dummy_seed(i) @dummy_nullables;
 
     update cursor D using
       not C.b as b0;
@@ -5505,7 +5505,7 @@ begin
     EXPECT!(not cql_cursors_equal(C, D));
 
     ---------
-    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+    fetch D() from values () @dummy_seed(i) @dummy_nullables;
 
     update cursor D using
       C.i + 1 as i0;
@@ -5513,7 +5513,7 @@ begin
     EXPECT!(not cql_cursors_equal(C, D));
 
     ---------
-    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+    fetch D() from values () @dummy_seed(i) @dummy_nullables;
 
     update cursor D using
       C.l + 1 as l0;
@@ -5521,7 +5521,7 @@ begin
     EXPECT!(not cql_cursors_equal(C, D));
 
     ---------
-    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+    fetch D() from values () @dummy_seed(i) @dummy_nullables;
 
     update cursor D using
       C.r + 1 as r0;
@@ -5529,7 +5529,7 @@ begin
     EXPECT!(not cql_cursors_equal(C, D));
 
     ---------
-    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+    fetch D() from values () @dummy_seed(i) @dummy_nullables;
 
     update cursor D using
       "different" as t0;
@@ -5537,7 +5537,7 @@ begin
     EXPECT!(not cql_cursors_equal(C, D));
 
     ---------
-    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+    fetch D() from values () @dummy_seed(i) @dummy_nullables;
 
     update cursor D using
       null as b0;
@@ -5545,7 +5545,7 @@ begin
     EXPECT!(not cql_cursors_equal(C, D));
 
     ---------
-    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+    fetch D() from values () @dummy_seed(i) @dummy_nullables;
 
     update cursor D using
       null as i0;
@@ -5553,7 +5553,7 @@ begin
     EXPECT!(not cql_cursors_equal(C, D));
 
     ---------
-    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+    fetch D() from values () @dummy_seed(i) @dummy_nullables;
 
     update cursor D using
       null as l0;
@@ -5561,7 +5561,7 @@ begin
     EXPECT!(not cql_cursors_equal(C, D));
 
     ---------
-    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+    fetch D() from values () @dummy_seed(i) @dummy_nullables;
 
     update cursor D using
       null as r0;
@@ -5569,7 +5569,7 @@ begin
     EXPECT!(not cql_cursors_equal(C, D));
 
     ---------
-    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+    fetch D() from values () @dummy_seed(i) @dummy_nullables;
 
     update cursor D using
       null as t0;
@@ -5850,7 +5850,7 @@ begin
   EXPECT_EQ!(cql_cursor_diff_val(C,D), null);
 end);
 
-DECLARE PROC get_rows(result object!) OUT UNION (x INT!, y TEXT!, z BOOL);
+declare PROC get_rows(result object!) OUT UNION (x INT!, y TEXT!, z BOOL);
 
 TEST!(child_results,
 begin
@@ -5867,7 +5867,7 @@ begin
 
   while i < 10
   begin
-    fetch v() from values() @DUMMY_SEED(i) @DUMMY_NULLABLES;
+    fetch v() from values() @dummy_seed(i) @dummy_nullables;
     fetch k from v(like k);
     added := cql_partition_cursor(p, k, v);
     EXPECT!(added);
@@ -5890,7 +5890,7 @@ begin
   begin
     /* don't join #6 to force cleanup */
     if i != 6 then
-      fetch k() from values() @DUMMY_SEED(i) @DUMMY_NULLABLES;
+      fetch k() from values() @dummy_seed(i) @dummy_nullables;
       declare rs1 object<get_rows set>;
       rs1 := cql_extract_partition(p, k);
       let rs2 := cql_extract_partition(p, k);
@@ -6012,7 +6012,7 @@ end;
 
 proc parent_child()
 begin
-  OUT UNION CALL parent() JOIN
+  OUT UNION call parent() JOIN
     call ch1() USING (k1, k2) AS ch1 and
     call ch2() USING (k3, k4) AS ch2;
 end;
@@ -6262,10 +6262,10 @@ begin
 end);
 
 
-DECLARE FUNCTION _cql_contains_column_def(haystack TEXT, needle TEXT) BOOL not null;
+declare func _cql_contains_column_def(haystack TEXT, needle TEXT) BOOL not null;
 
 -- _cql_contains_column_def is used by the upgrader to find string matches the indicate a column is present
--- it's the same as this expression: haystack GLOB printf('*[) ]%s*', needle)
+-- it's the same as this expression: haystack glob printf('*[) ]%s*', needle)
 -- any null arguments yield a false result
 TEST!(cql_contains_column_def,
 begin
@@ -6428,25 +6428,25 @@ begin
   -- load all nulls
   fetch C() from values ();
 
-  LET s1 := C:format;
+  let s1 := C:format;
   EXPECT_EQ!(s1, "a_bool:null|an_int:null|a_long:null|a_real:null|a_string:null|a_blob:null");
 
   -- nullable values not null
   fetch C(a_blob, a_real) from values ((select cast('xyzzy' as blob)), 3.5) @dummy_seed(1) @dummy_nullables;
-  LET s2 := C:format;
+  let s2 := C:format;
   EXPECT_EQ!(s2, "a_bool:true|an_int:1|a_long:1|a_real:3.5|a_string:a_string_1|a_blob:length 5 blob");
 
   declare D cursor like (a_bool bool!, an_int int!, a_long long!, a_real real!, a_string text!, a_blob blob!);
 
   -- not null values
   fetch D(a_blob, a_real) from values ((select cast('xyzzy' as blob)), 3.5) @dummy_seed(1);
-  LET s3 := cql_cursor_format(D);
+  let s3 := cql_cursor_format(D);
   EXPECT_EQ!(s3, "a_bool:true|an_int:1|a_long:1|a_real:3.5|a_string:a_string_1|a_blob:length 5 blob");
 
   -- test single column formatting
   -- we don't exercise all the types because it uses the same code as the above
   -- so we only have to exercise the entry point
-  LET s4 := D:format_col(3);
+  let s4 := D:format_col(3);
   EXPECT_EQ!(s4, "3.5");
 end);
 

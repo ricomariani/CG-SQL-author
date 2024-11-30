@@ -3472,7 +3472,8 @@ The statement ending at line XXXX
       | | {param}
       |   | {param_detail}
       |     | {name val}
-      |     | {type_bool}
+      |     | {sensitive_attr}
+      |       | {type_bool}
       | {create_data_type}
         | {notnull}
           | {type_text}
@@ -3493,7 +3494,8 @@ The statement ending at line XXXX
       | | {param}
       |   | {param_detail}
       |     | {name val}
-      |     | {type_int}
+      |     | {sensitive_attr}
+      |       | {type_int}
       | {create_data_type}
         | {notnull}
           | {type_text}
@@ -3514,7 +3516,8 @@ The statement ending at line XXXX
       | | {param}
       |   | {param_detail}
       |     | {name val}
-      |     | {type_long}
+      |     | {sensitive_attr}
+      |       | {type_long}
       | {create_data_type}
         | {notnull}
           | {type_text}
@@ -3535,7 +3538,8 @@ The statement ending at line XXXX
       | | {param}
       |   | {param_detail}
       |     | {name val}
-      |     | {type_real}
+      |     | {sensitive_attr}
+      |       | {type_real}
       | {create_data_type}
         | {notnull}
           | {type_text}
@@ -3556,7 +3560,8 @@ The statement ending at line XXXX
       | | {param}
       |   | {param_detail}
       |     | {name val}
-      |     | {type_text}
+      |     | {sensitive_attr}
+      |       | {type_text}
       | {create_data_type}
         | {notnull}
           | {type_text}
@@ -3577,7 +3582,8 @@ The statement ending at line XXXX
       | | {param}
       |   | {param_detail}
       |     | {name val}
-      |     | {type_blob}
+      |     | {sensitive_attr}
+      |       | {type_blob}
       | {create_data_type}
         | {notnull}
           | {type_text}
@@ -3598,7 +3604,8 @@ The statement ending at line XXXX
       | | {param}
       |   | {param_detail}
       |     | {name val}
-      |     | {type_object}
+      |     | {sensitive_attr}
+      |       | {type_object}
       | {create_data_type}
         | {notnull}
           | {type_text}
@@ -3619,7 +3626,8 @@ The statement ending at line XXXX
       | | {param}
       |   | {param_detail}
       |     | {name ignored}
-      |     | {type_bool}
+      |     | {sensitive_attr}
+      |       | {type_bool}
       | {create_data_type}
         | {notnull}
           | {type_text}

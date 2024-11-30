@@ -3844,7 +3844,7 @@ DECLARE FUNC cql_blob_from_int (prefix TEXT, val INT!) CREATE BLOB!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_format_bool (val BOOL) CREATE TEXT!;
+DECLARE FUNC cql_format_bool (val BOOL @SENSITIVE) CREATE TEXT!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -3856,10 +3856,11 @@ DECLARE FUNC cql_format_bool (val BOOL) CREATE TEXT!;
     | {name cql_format_bool}: text notnull create_func
     | {func_params_return}
       | {params}: ok
-      | | {param}: val: bool variable in
-      |   | {param_detail}: val: bool variable in
-      |     | {name val}: val: bool variable in
-      |     | {type_bool}: bool
+      | | {param}: val: bool variable in sensitive
+      |   | {param_detail}: val: bool variable in sensitive
+      |     | {name val}: val: bool variable in sensitive
+      |     | {sensitive_attr}: bool sensitive
+      |       | {type_bool}: bool
       | {create_data_type}: text notnull create_func
         | {notnull}: text notnull
           | {type_text}: text
@@ -3867,7 +3868,7 @@ DECLARE FUNC cql_format_bool (val BOOL) CREATE TEXT!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_format_int (val INT) CREATE TEXT!;
+DECLARE FUNC cql_format_int (val INT @SENSITIVE) CREATE TEXT!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -3879,10 +3880,11 @@ DECLARE FUNC cql_format_int (val INT) CREATE TEXT!;
     | {name cql_format_int}: text notnull create_func
     | {func_params_return}
       | {params}: ok
-      | | {param}: val: integer variable in
-      |   | {param_detail}: val: integer variable in
-      |     | {name val}: val: integer variable in
-      |     | {type_int}: integer
+      | | {param}: val: integer variable in sensitive
+      |   | {param_detail}: val: integer variable in sensitive
+      |     | {name val}: val: integer variable in sensitive
+      |     | {sensitive_attr}: integer sensitive
+      |       | {type_int}: integer
       | {create_data_type}: text notnull create_func
         | {notnull}: text notnull
           | {type_text}: text
@@ -3890,7 +3892,7 @@ DECLARE FUNC cql_format_int (val INT) CREATE TEXT!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_format_long (val LONG) CREATE TEXT!;
+DECLARE FUNC cql_format_long (val LONG @SENSITIVE) CREATE TEXT!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -3902,10 +3904,11 @@ DECLARE FUNC cql_format_long (val LONG) CREATE TEXT!;
     | {name cql_format_long}: text notnull create_func
     | {func_params_return}
       | {params}: ok
-      | | {param}: val: longint variable in
-      |   | {param_detail}: val: longint variable in
-      |     | {name val}: val: longint variable in
-      |     | {type_long}: longint
+      | | {param}: val: longint variable in sensitive
+      |   | {param_detail}: val: longint variable in sensitive
+      |     | {name val}: val: longint variable in sensitive
+      |     | {sensitive_attr}: longint sensitive
+      |       | {type_long}: longint
       | {create_data_type}: text notnull create_func
         | {notnull}: text notnull
           | {type_text}: text
@@ -3913,7 +3916,7 @@ DECLARE FUNC cql_format_long (val LONG) CREATE TEXT!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_format_double (val REAL) CREATE TEXT!;
+DECLARE FUNC cql_format_double (val REAL @SENSITIVE) CREATE TEXT!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -3925,10 +3928,11 @@ DECLARE FUNC cql_format_double (val REAL) CREATE TEXT!;
     | {name cql_format_double}: text notnull create_func
     | {func_params_return}
       | {params}: ok
-      | | {param}: val: real variable in
-      |   | {param_detail}: val: real variable in
-      |     | {name val}: val: real variable in
-      |     | {type_real}: real
+      | | {param}: val: real variable in sensitive
+      |   | {param_detail}: val: real variable in sensitive
+      |     | {name val}: val: real variable in sensitive
+      |     | {sensitive_attr}: real sensitive
+      |       | {type_real}: real
       | {create_data_type}: text notnull create_func
         | {notnull}: text notnull
           | {type_text}: text
@@ -3936,7 +3940,7 @@ DECLARE FUNC cql_format_double (val REAL) CREATE TEXT!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_format_string (val TEXT) CREATE TEXT!;
+DECLARE FUNC cql_format_string (val TEXT @SENSITIVE) CREATE TEXT!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -3948,10 +3952,11 @@ DECLARE FUNC cql_format_string (val TEXT) CREATE TEXT!;
     | {name cql_format_string}: text notnull create_func
     | {func_params_return}
       | {params}: ok
-      | | {param}: val: text variable in
-      |   | {param_detail}: val: text variable in
-      |     | {name val}: val: text variable in
-      |     | {type_text}: text
+      | | {param}: val: text variable in sensitive
+      |   | {param_detail}: val: text variable in sensitive
+      |     | {name val}: val: text variable in sensitive
+      |     | {sensitive_attr}: text sensitive
+      |       | {type_text}: text
       | {create_data_type}: text notnull create_func
         | {notnull}: text notnull
           | {type_text}: text
@@ -3959,7 +3964,7 @@ DECLARE FUNC cql_format_string (val TEXT) CREATE TEXT!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_format_blob (val BLOB) CREATE TEXT!;
+DECLARE FUNC cql_format_blob (val BLOB @SENSITIVE) CREATE TEXT!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -3971,10 +3976,11 @@ DECLARE FUNC cql_format_blob (val BLOB) CREATE TEXT!;
     | {name cql_format_blob}: text notnull create_func
     | {func_params_return}
       | {params}: ok
-      | | {param}: val: blob variable in
-      |   | {param_detail}: val: blob variable in
-      |     | {name val}: val: blob variable in
-      |     | {type_blob}: blob
+      | | {param}: val: blob variable in sensitive
+      |   | {param_detail}: val: blob variable in sensitive
+      |     | {name val}: val: blob variable in sensitive
+      |     | {sensitive_attr}: blob sensitive
+      |       | {type_blob}: blob
       | {create_data_type}: text notnull create_func
         | {notnull}: text notnull
           | {type_text}: text
@@ -3982,7 +3988,7 @@ DECLARE FUNC cql_format_blob (val BLOB) CREATE TEXT!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_format_object (val OBJECT) CREATE TEXT!;
+DECLARE FUNC cql_format_object (val OBJECT @SENSITIVE) CREATE TEXT!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -3994,10 +4000,11 @@ DECLARE FUNC cql_format_object (val OBJECT) CREATE TEXT!;
     | {name cql_format_object}: text notnull create_func
     | {func_params_return}
       | {params}: ok
-      | | {param}: val: object variable in
-      |   | {param_detail}: val: object variable in
-      |     | {name val}: val: object variable in
-      |     | {type_object}: object
+      | | {param}: val: object variable in sensitive
+      |   | {param_detail}: val: object variable in sensitive
+      |     | {name val}: val: object variable in sensitive
+      |     | {sensitive_attr}: object sensitive
+      |       | {type_object}: object
       | {create_data_type}: text notnull create_func
         | {notnull}: text notnull
           | {type_text}: text
@@ -4005,7 +4012,7 @@ DECLARE FUNC cql_format_object (val OBJECT) CREATE TEXT!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_format_null (ignored BOOL) CREATE TEXT!;
+DECLARE FUNC cql_format_null (ignored BOOL @SENSITIVE) CREATE TEXT!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -4017,10 +4024,11 @@ DECLARE FUNC cql_format_null (ignored BOOL) CREATE TEXT!;
     | {name cql_format_null}: text notnull create_func
     | {func_params_return}
       | {params}: ok
-      | | {param}: ignored: bool variable in
-      |   | {param_detail}: ignored: bool variable in
-      |     | {name ignored}: ignored: bool variable in
-      |     | {type_bool}: bool
+      | | {param}: ignored: bool variable in sensitive
+      |   | {param_detail}: ignored: bool variable in sensitive
+      |     | {name ignored}: ignored: bool variable in sensitive
+      |     | {sensitive_attr}: bool sensitive
+      |       | {type_bool}: bool
       | {create_data_type}: text notnull create_func
         | {notnull}: text notnull
           | {type_text}: text

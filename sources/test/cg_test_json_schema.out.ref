@@ -7731,7 +7731,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_format_bool (val BOOL) CREATE TEXT!
+    DECLARE FUNC cql_format_bool (val BOOL @SENSITIVE) CREATE TEXT!
 
     {
       "name" : "cql_format_bool",
@@ -7739,6 +7739,7 @@
         {
           "name" : "val",
           "type" : "bool",
+          "isSensitive" : 1,
           "isNotNull" : 0
         }
       ],
@@ -7758,7 +7759,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_format_int (val INT) CREATE TEXT!
+    DECLARE FUNC cql_format_int (val INT @SENSITIVE) CREATE TEXT!
 
     {
       "name" : "cql_format_int",
@@ -7766,6 +7767,7 @@
         {
           "name" : "val",
           "type" : "integer",
+          "isSensitive" : 1,
           "isNotNull" : 0
         }
       ],
@@ -7785,7 +7787,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_format_long (val LONG) CREATE TEXT!
+    DECLARE FUNC cql_format_long (val LONG @SENSITIVE) CREATE TEXT!
 
     {
       "name" : "cql_format_long",
@@ -7793,6 +7795,7 @@
         {
           "name" : "val",
           "type" : "long",
+          "isSensitive" : 1,
           "isNotNull" : 0
         }
       ],
@@ -7812,7 +7815,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_format_double (val REAL) CREATE TEXT!
+    DECLARE FUNC cql_format_double (val REAL @SENSITIVE) CREATE TEXT!
 
     {
       "name" : "cql_format_double",
@@ -7820,6 +7823,7 @@
         {
           "name" : "val",
           "type" : "real",
+          "isSensitive" : 1,
           "isNotNull" : 0
         }
       ],
@@ -7839,7 +7843,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_format_string (val TEXT) CREATE TEXT!
+    DECLARE FUNC cql_format_string (val TEXT @SENSITIVE) CREATE TEXT!
 
     {
       "name" : "cql_format_string",
@@ -7847,6 +7851,7 @@
         {
           "name" : "val",
           "type" : "text",
+          "isSensitive" : 1,
           "isNotNull" : 0
         }
       ],
@@ -7866,7 +7871,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_format_blob (val BLOB) CREATE TEXT!
+    DECLARE FUNC cql_format_blob (val BLOB @SENSITIVE) CREATE TEXT!
 
     {
       "name" : "cql_format_blob",
@@ -7874,6 +7879,7 @@
         {
           "name" : "val",
           "type" : "blob",
+          "isSensitive" : 1,
           "isNotNull" : 0
         }
       ],
@@ -7893,7 +7899,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_format_object (val OBJECT) CREATE TEXT!
+    DECLARE FUNC cql_format_object (val OBJECT @SENSITIVE) CREATE TEXT!
 
     {
       "name" : "cql_format_object",
@@ -7901,6 +7907,7 @@
         {
           "name" : "val",
           "type" : "object",
+          "isSensitive" : 1,
           "isNotNull" : 0
         }
       ],
@@ -7920,7 +7927,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_format_null (ignored BOOL) CREATE TEXT!
+    DECLARE FUNC cql_format_null (ignored BOOL @SENSITIVE) CREATE TEXT!
 
     {
       "name" : "cql_format_null",
@@ -7928,6 +7935,7 @@
         {
           "name" : "ignored",
           "type" : "bool",
+          "isSensitive" : 1,
           "isNotNull" : 0
         }
       ],

@@ -36,7 +36,7 @@
 @else
   let foo_else := 1;
 @endif
-  
+
 @ifndef foo
   let foo_endif := "@ENDIF";
 @endif

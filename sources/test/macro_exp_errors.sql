@@ -173,3 +173,11 @@ all_slots7!(
   with(f(*) as (select 99 from yy)),
   begin let qq := 201; end
   );
+
+-- no proc
+let z := @proc;
+
+create proc error_proc()
+begin
+  not_a_real_macro!;
+end; 

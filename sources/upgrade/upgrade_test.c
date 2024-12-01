@@ -201,7 +201,7 @@ int main(int argc, char *argv[]) {
      return SQLITE_ERROR;
   }
 
-  if (sqlite3_close_v2(db)) {   
+  if (sqlite3_close_v2(db)) {
     fprintf(stderr, "Unable to close DB.\n");
     return SQLITE_ERROR;
   }

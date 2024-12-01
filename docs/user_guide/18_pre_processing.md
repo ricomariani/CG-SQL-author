@@ -42,7 +42,7 @@ on the command line.  Additionally, if `--rt foo` is specified then
 
 >NOTE: that if `-cg` is specified but no `--rt` is specified then
 >the default is `--rt c` and so `__rt__c` will be
->defined.  
+>defined.
 
 The syntax for conditional compilation is the familiar:
 
@@ -129,7 +129,7 @@ assert!(foo < bar);
 This example is a macro that produces a statement list (`stmt_list`), so it can
 be used in the places where a statement list can appear.  Every macro definition
 specifies the nature of the thing it produces, which limits the places that it
-can appear. 
+can appear.
 
 The nature of macros means that while you may get an error for using the wrong
 macro type in the wrong location, you cannot get syntax errors due to the

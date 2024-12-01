@@ -1708,7 +1708,7 @@ end;
 -- +  DELETE FROM bar WHERE name = ' '' \n '' \';
 -- +  DELETE FROM bar WHERE name <> "'";
 -- +  DELETE FROM bar WHERE name >= '\';
--- 
+--
 -- escaped for sql
 -- + "DELETE FROM bar WHERE name LIKE '\n\n'"
 -- + "DELETE FROM bar WHERE name = ' '' \\n '' \\'"

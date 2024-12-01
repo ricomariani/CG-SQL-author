@@ -416,7 +416,7 @@ end;
 -- + CREATE TABLE IF NOT EXISTS primary_as_column
 -- + CREATE INDEX IF NOT EXISTS p_id ON primary_as_column (id_);
 -- + CREATE VIEW IF NOT EXISTS Complex_view
--- + 
+-- +
 -- + PROC test_sample_proc21_populate_tables()
 -- + INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(111, 1)
 -- + INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(333, 2)

@@ -666,11 +666,24 @@ Doesn't make any sense.
 
 -----
 
-### CQL0082 available for re-use
+### CQL0082: macro or argument used where it is not allowed 'name'
+
+The indicated macro appeared in a context in which that type of macro is not allowed.
+For instance attempting to use a statement list macro where an expression belongs
+results in this error.
+
+Macro errors include a detailed trace of the path to the macro with the problem.
+The problem could be nested quite deeply.
 
 -----
 
-### CQL0083 available for re-use
+### CQL0083: macro reference is not a valid macro, 'name'
+
+The indicated macro reference does not refer to an actual macro or macro argument.
+There is probably a typo in the name of the macro.
+
+Macro errors include a detailed trace of the path to the macro with the problem.
+The problem could be nested quite deeply.
 
 -----
 
@@ -678,17 +691,47 @@ Doesn't make any sense.
 
 The argument at the named position is requried to be one of the named types in the named function.
 
------
-
-### CQL0085 available for re-use
+This message is used for a variety of argument type mismatches in function invocation.
 
 -----
 
-### CQL0086 available for re-use
+### CQL0085: @ID expansion is not a valid identifier, 'invalid string'
+
+The result of the concatenation of an `@ID` construct is not a valid identifier.  To be
+a valid identifier:
+
+* the identifier is a least one character
+* the first character must be an alphabetic upper or lower case or underscore
+* all other characters must be alphanumeric or underscore
+
+The result of the invalid concatenation is included in the message.
+
+Macro errors include a detailed trace of the path to the macro with the problem.
+The problem could be nested quite deeply.
 
 -----
 
-### CQL0087 available for re-use
+### CQL0086: macro type mismatch in argument, 'formal_name'
+
+A macro invocation tried to satisfy the indicated formal name with an argument
+that was the wrong type.  For instance attempting to provide a statement list as
+an argument to a macro that expected an expression.
+
+Macro errors include a detailed trace of the path to the macro with the problem.
+The problem could be nested quite deeply.
+
+-----
+
+### CQL0087: (not enough/too many) arguments to macro, 'macro_name'
+
+The indicated macro was used with not enough or too many arguments as indicated
+by the message (it will be one or the other).
+
+Sometimes this message looks surprising because there are actually mismatched
+making more arguments look like fewer.  Check the parens and the total count.
+
+Macro errors include a detailed trace of the path to the macro with the problem.
+The problem could be nested quite deeply.
 
 -----
 

@@ -41,7 +41,7 @@ Verifications:
 * compound selects (e.g. with UNION) are type-consistent in all the fragments
 * the projection of a select has unique column labels if they are used
 
-####  Details of `SELECT *` 
+####  Details of `SELECT *`
 
 `SELECT *` is special in that it creates its own result type by assembling
 all the columns of the result of the `FROM` clause.  CQL rewrites these
@@ -129,9 +129,9 @@ Like most other top level select statements, in a view the select must
 have these two additional properties:
 
   * every column must have a name (implied or otherwise)
-  * no column may be of type `NULL` 
+  * no column may be of type `NULL`
      * any NULL literal converted to some type exact type with a CAST.
-     * i.e. `create view foo as select NULL n` is not valid     
+     * i.e. `create view foo as select NULL n` is not valid
 
 #### The `CREATE TRIGGER` Statement
 

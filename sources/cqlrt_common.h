@@ -377,7 +377,7 @@ CQL_EXPORT cql_blob_ref _Nullable cql_result_set_get_blob_col(cql_result_set_ref
 // @param result_set The cql result_set object.
 // @param row The row number to fetch the value for.
 // @param col The column to fetch the value for.
-// @return The object value. 
+// @return The object value.
 CQL_EXPORT cql_object_ref _Nullable cql_result_set_get_object_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col);
 
 // setters

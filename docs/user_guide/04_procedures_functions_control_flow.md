@@ -65,8 +65,8 @@ is passed by reference as with `out` parameters.
 proc times_two(inout arg integer not null)
 begin
   -- note that a variable in the caller is both read from and written to
-   
-  arg += arg; -- this is the same as set arg := arg + arg; 
+
+  arg += arg; -- this is the same as set arg := arg + arg;
 end;
 
 let x := 2;
@@ -281,7 +281,7 @@ begin
     insert into foo(id, t) values(id_, t_);
   catch
     try
-      update foo set t = t_ where id = id_;   
+      update foo set t = t_ where id = id_;
     catch
       call printf("Error code %d!\n", @rc);
       throw;

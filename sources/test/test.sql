@@ -6,14 +6,14 @@
  */
 
 -- note to readers
--- 
+--
 -- This file contains test cases for the parser only
 -- as such there are many things here that can be parsed legally
 -- but are semantically invalid or meaningless.
--- 
+--
 -- The purpose of these test cases is to exercise all the legal
 -- parse paths only so don't worry about that business.
--- 
+--
 -- You cannot expect correct output if you also add the --sem flag to cql
 -- it will start to whine about all the mistakes.
 
@@ -627,10 +627,14 @@ rollback transaction to savepoint foo;
 rollback to savepoint foo;
 rollback transaction to foo;
 rollback to foo;
-rollback transaction to savepoint @proc;
-rollback to savepoint @proc;
-rollback transaction to @proc;
-rollback to @proc;
+
+proc rb_test()
+begin
+  rollback transaction to savepoint @proc;
+  rollback to savepoint @proc;
+  rollback transaction to @proc;
+  rollback to @proc;
+end;
 
 -- new cursor construct
 declare test cursor for call foo(1,2);
@@ -1803,13 +1807,13 @@ where some_table.id = locals.id and some_table.id = baz.id
 order by some_table.id
 limit 1;
 
-try 
+try
   let x := 5;
 catch
   x := 7;
 end;
 
-if x then 
+if x then
   let u := 5;
 end;
 

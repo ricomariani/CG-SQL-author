@@ -46,6 +46,8 @@ typedef struct macro_state_t {
 } macro_state_t;
 
 static macro_state_t macro_state;
+static CSTR expanding_proc;
+static bool in_macro_args;
 
 // Helper object to just hold info in find_attribute_str(...) and
 // find_attribute_num(...)
@@ -86,6 +88,8 @@ cql_noexport void ast_init() {
   macro_state.file = "<Unknown>";
   macro_state.name = "None";
   macro_state.parent = NULL;
+  expanding_proc = NULL;
+  in_macro_args = false;
 }
 
 cql_noexport void ast_cleanup() {
@@ -95,6 +99,7 @@ cql_noexport void ast_cleanup() {
   minipool_close(&ast_pool);
   minipool_close(&str_pool);
   run_lazy_frees();
+  expanding_proc = NULL;
 }
 
 // When a rewrite begins outside the context of normal parsing we do not know
@@ -287,7 +292,7 @@ cql_noexport ast_node *new_ast_option(int32_t value) {
 // round trip the string literals through the AST without losing any
 // information.  The str_type might be changed after the node is created.
 // Identifiers are stored as is, but quoted identifiers are escaped.
-// Identifiers are not quoted. 
+// Identifiers are not quoted.
 cql_noexport ast_node *new_ast_str(CSTR value) {
   Contract(current_file && yylineno > 0);
   Contract(value);
@@ -1504,6 +1509,18 @@ static void expand_text_args(
     Contract(is_ast_text_args(text_args));
     EXTRACT_ANY_NOTNULL(txt, text_args->left);
 
+    // the text args could be macros that need to be expanded
+    expand_macros(txt);
+    txt = text_args->left;
+
+    if (in_macro_args) {
+      // Do not do any further expansion while we are in a macro arg context
+      // things like @proc and so forth must wait.  All we do here is evaluate
+      // the macro references and the macro arg references. @proc has to wait
+      // because the macro args might not be in a procedure yet.
+      continue;
+    }
+
     // string literals are handled specially because we need to
     // strip the quotes from them!
     if (is_strlit(txt)) {
@@ -1511,11 +1528,7 @@ static void expand_text_args(
       cg_decode_string_literal(str, output);
     }
     else {
-      // everything else we just expand as usual
-
-      expand_macros(txt);
-      txt = text_args->left;
-
+      // everything else we just expand with the expressiohn formatter
       gen_sql_callbacks callbacks;
       init_gen_sql_callbacks(&callbacks);
       callbacks.mode = gen_mode_echo;
@@ -1549,6 +1562,10 @@ static void report_macro_error(
   while (p->parent) {
     cql_error(" -> '%s!' in %s:%d\n", p->name, p->file, p->line);
     p = p->parent;
+  }
+
+  if (expanding_proc) {
+    cql_error(" -> in procedure %s\n", expanding_proc);
   }
   macro_expansion_errors = 1;
 }
@@ -1593,6 +1610,14 @@ static void expand_at_id(ast_node *ast) {
 
   CHARBUF_OPEN(str);
   expand_macros(ast->left);
+  if (in_macro_args) {
+    // Do not do any further expansion while we are in a macro arg context
+    // things like @proc and so forth must wait.  All we do here is evaluate
+    // the macro references and the macro arg references. @proc has to wait
+    // because the macro args might not be in a procedure yet.
+    return;
+  }
+
   expand_text_args(&str, ast->left);
 
   CSTR p = str.ptr;
@@ -1617,7 +1642,7 @@ static void expand_at_id(ast_node *ast) {
   }
 
   if (!ok) {
-    report_macro_error(ast, "@ID expansion is not a valid identifier", str.ptr);
+    report_macro_error(ast, "CQL0085: @ID expansion is not a valid identifier", str.ptr);
   }
 
   replace_node(ast, new_ast_str(Strdup(str.ptr)));
@@ -1633,6 +1658,14 @@ static void expand_at_text(ast_node *ast) {
   CHARBUF_OPEN(tmp);
   CHARBUF_OPEN(quote);
   expand_text_args(&tmp, ast->left);
+  if (in_macro_args) {
+    // Do not do any further expansion while we are in a macro arg context
+    // things like @proc and so forth must wait.  All we do here is evaluate
+    // the macro references and the macro arg references. @proc has to wait
+    // because the macro args might not be in a procedure yet.
+    return;
+  }
+
   cg_encode_string_literal(tmp.ptr, &quote);
   ast_node *new = new_ast_str(Strdup(quote.ptr));
   str_ast_node *sast = (str_ast_node *)new;
@@ -1660,6 +1693,31 @@ static void expand_special_ids(ast_node *ast) {
     replace_node(ast, new);
     CHARBUF_CLOSE(tmp);
   }
+  else if (!in_macro_args && !strcmp(name, "@PROC")) {
+    // Do not do any further expansion while we are in a macro arg context
+    // things like @proc and so forth must wait.  All we do here is evaluate
+    // the macro references and the macro arg references. @proc has to wait
+    // because the macro args might not be in a procedure yet.
+    if (!expanding_proc) {
+      report_macro_error(ast,
+        "CQL0252: @PROC literal can only appear inside of procedures", "no proc");
+      return;
+    }
+
+    ast_node *context = ast->parent;
+    if (is_ast_savepoint_stmt(context) ||
+        is_ast_release_savepoint_stmt(context) ||
+        is_ast_rollback_trans_stmt(context)) {
+      ((str_ast_node *)ast)->value = expanding_proc;  // a durable name already
+      return;
+    }
+
+    // otherwise make a string literal
+    CHARBUF_OPEN(tmp);
+    cg_encode_string_literal(expanding_proc, &tmp);
+    ((str_ast_node *)ast)->value = Strdup(tmp.ptr);
+    CHARBUF_CLOSE(tmp);
+  }
 }
 
 // Here we handle a discovered macro reference
@@ -1679,7 +1737,6 @@ static void expand_macro_refs(ast_node *ast) {
   // invoke the macros, so those are good universally, otherwise we check for context
   // for the macro types that can only appear in certain places
   if (!is_ast_text_args(parent) && !is_macro_arg_type(parent)) {
-
     bool wrong = false;
 
     // this tells us that the current macro is select_core
@@ -1720,7 +1777,7 @@ static void expand_macro_refs(ast_node *ast) {
     // the locations every time.
 
     if (wrong) {
-      report_macro_error(ast, "macro or argument used where it is not allowed", name);
+      report_macro_error(ast, "CQL0082: macro or argument used where it is not allowed", name);
       return;
     }
   }
@@ -1747,7 +1804,7 @@ static void expand_macro_refs(ast_node *ast) {
 
   // the macro was never defined, it's unknown...
   if (!minfo) {
-    report_macro_error(ast, "macro reference is not a valid macro", name);
+    report_macro_error(ast, "CQL0083: macro reference is not a valid macro", name);
     return;
   }
 
@@ -1793,7 +1850,7 @@ static void expand_macro_refs(ast_node *ast) {
       set_macro_arg_info(formal_name, macro_type, macro_arg);
 
       if (macro_arg_type(macro_arg) != macro_type) {
-        report_macro_error(macro_arg, "macro type mismatch in argument", formal_name);
+        report_macro_error(macro_arg, "CQL0086: macro type mismatch in argument", formal_name);
         goto cleanup;
       }
 
@@ -1803,13 +1860,13 @@ static void expand_macro_refs(ast_node *ast) {
 
     // formals left -> not enough args
     if (macro_formals) {
-      report_macro_error(macro_formals->left, "not enough arguments to macro", macro_name);
+      report_macro_error(macro_formals->left, "CQL0087: not enough arguments to macro", macro_name);
       goto cleanup;
     }
 
     // args left -> too many args
     if (macro_args) {
-      report_macro_error(macro_args->left, "too many arguments to macro", macro_name);
+      report_macro_error(macro_args->left, "CQL0087: too many arguments to macro", macro_name);
       goto cleanup;
     }
   }
@@ -1874,16 +1931,16 @@ cleanup:
 cql_noexport ast_node *new_macro_arg_node(ast_node *arg) {
   Contract(!is_macro_arg_type(arg));
 
-  CSTR type = arg->type;   
+  CSTR type = arg->type;
   CSTR node_type = k_ast_expr_macro_arg;
   symtab_entry *entry = symtab_find(macro_arg_type_from_ast_type, type);
-  
+
   if (entry) {
     // expr_macro arguments are not wrapped so anything that
     // is unwrapped is an expr_macro_arg
     node_type = (CSTR)entry->val;
   }
-  
+
   return new_ast(node_type, arg, NULL);
 }
 
@@ -1945,11 +2002,38 @@ tail_recurse:
     return;
   }
 
+  if (!in_macro_args && is_ast_macro_args(node)) {
+    in_macro_args = true;
+    if (ast_has_right(node)) {
+      expand_macros(node->right);
+    }
+    if (ast_has_left(node)) {
+      expand_macros(node->left);
+    }
+    in_macro_args = false;
+    return;
+  }
+
+  // Do not tail recurse on create proc so that we can do the cleanup
+  // after the proc is expanded.  This is here to reset the expanding_proc
+  // variable.  That's it.
+  if (is_ast_create_proc_stmt(node)) {
+    // the name might be a macro, expand it first...
+    expand_macros(node->left);
+
+    // the @proc special id is valid inside the body
+    EXTRACT_STRING(name, node->left);
+    expanding_proc = name;
+    expand_macros(node->right);
+    expanding_proc = NULL;
+    return;
+  }
+
   // Check the left and right nodes.
   if (ast_has_left(node)) {
     // If there is no right child we can do tail recursion on the left
     // this helps a little but it isn't that important, the
-    // next one is the one that really matters.  There are lots of
+    // next one is the one that really matters.  But there are lots of
     // AST1 nodes in the AST schema, this hits all of those.
     if (!ast_has_right(node)) {
       node = node->left;

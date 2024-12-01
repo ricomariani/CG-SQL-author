@@ -255,7 +255,7 @@ static void gen_misc_attr(ast_node *ast) {
   Contract(is_ast_misc_attr(ast));
 
   bool_t is_cql =
-    is_ast_dot(ast->left) && 
+    is_ast_dot(ast->left) &&
     is_ast_str(ast->left->left) &&
     !StrCaseCmp("cql", ((str_ast_node *)(ast->left->left))->value);
 
@@ -2852,7 +2852,7 @@ cql_noexport void gen_select_core(ast_node *ast) {
     EXTRACT_ANY(select_core_left, ast->left);
 
     gen_select_statement_type(ast);
-  
+
     if (is_ast_select_values(select_core_left)) {
       // VALUES [values]
       EXTRACT(values, ast->right);

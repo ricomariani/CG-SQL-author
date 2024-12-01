@@ -52,7 +52,7 @@ typedef uint16_t cql_uint16;
 typedef sqlite3_int64 cql_int64;
 typedef double cql_double;
 
-// The data type for a cql return code 
+// The data type for a cql return code
 // Note: normally we prefer int32_t or int64_t but we have to match the sqlite3 API
 typedef int cql_code;
 

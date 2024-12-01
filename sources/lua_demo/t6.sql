@@ -62,7 +62,7 @@ begin
   -- if we do it gets converted to a float
 
   @echo lua, '
-  
+
   -- this code gen would be wrong, note the expect says ~=
   -- we should expect == here but min_long will be rounded
   -- we must generate (-9223372036854775807-1) as above

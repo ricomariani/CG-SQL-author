@@ -215,7 +215,7 @@ There are dictionaries for each primitive type with simple dictionary shortcuts.
 * `val := dict[x]`
 
 
-**Details:** 
+**Details:**
 
 The details are totally symmetric for each dictionary type offering
 `add`, `find` and array get/set.

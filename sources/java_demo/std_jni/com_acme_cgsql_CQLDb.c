@@ -31,4 +31,3 @@ JNIEXPORT jlong JNICALL Java_com_acme_cgsql_CQLDb_openDb(JNIEnv *env, jclass thi
 JNIEXPORT void JNICALL Java_com_acme_cgsql_CQLDb_closeDb(JNIEnv *env, jclass thiz, jlong db) {
   sqlite3_close((sqlite3 *)db);
 }
-  

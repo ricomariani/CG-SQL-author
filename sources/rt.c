@@ -79,7 +79,7 @@ static rtdata rt_objc = {
   .symbol_case = cg_symbol_case_snake,
   .generate_equality_macros = 1,
   .symbol_prefix = "CGS_",
-  .impl_symbol_prefix = "",  
+  .impl_symbol_prefix = "",
   .cql_string_ref_encode_include = "",
 };
 

@@ -22,7 +22,7 @@ public class CQLDb {
   }
 
   public static void close() {
-    closeDb(cqlDb);   
+    closeDb(cqlDb);
   }
 
   public static long get() {

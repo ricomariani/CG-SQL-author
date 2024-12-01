@@ -80,7 +80,7 @@ begin
          :replace(",", ",$")
          :replace( "(", "($")
     );
- 
+
     -- split the string at the $ marks
     declare lines cursor for
       with split(line, str) as (

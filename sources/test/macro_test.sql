@@ -6,11 +6,11 @@
  */
 
 -- note to readers
--- 
+--
 -- This file contains test cases for the macro expansion only
 -- as such there are many things here that can be parsed legally
 -- but are semantically invalid or meaningless.
--- 
+--
 -- The purpose of these test cases is to exercise all the legal
 -- macro paths only so don't worry about that business.
 
@@ -458,9 +458,9 @@ end;
 mondo2!(
   1+2,
   from(x join y),
-  rows(select 1 from foo union select 2 from bar), 
-  select(20 first_table), 
-  with(f(*) as (select 99 from second_table)), 
+  rows(select 1 from foo union select 2 from bar),
+  select(20 first_table),
+  with(f(*) as (select 99 from second_table)),
   begin let qq := 201; end
 );
 
@@ -492,3 +492,49 @@ let z := 6:macro1!();
 -- TEST: pipeline macro with args
 -- + LET w := 7 * (11 + 5 + (11 + 5) + 1);
 let w := 7:macro2!(11);
+
+-- TEST: use proc in various forms, ensuring it resolves very late
+-- These tests verify that we can use @proc inside of other constructs
+-- to build identifiers and strings that are more complicated.  The
+-- trick here is that unlike literally everything else @proc must be
+-- evaluated very late, the invoking context may not even be a proc
+-- but it may ultimately generate one. run_test.sql is full of this
+-- kind of thing.
+--
+-- + LET zz := 'various_proc_forms':fmt();
+-- + LET uu := "various_proc_forms_x";
+-- + LET uu := "foo_x";
+-- + LET various_proc_forms_foo := 1;
+proc various_proc_forms()
+begin
+ let zz := @proc:fmt;
+ let uu := @text(@proc, "_x");
+ let uu := @text('foo', "_x");
+ let @ID(@proc, "_foo") := 1;
+end;
+
+@macro(stmt_list) proc_macro!(x! stmt_list)
+begin
+ create proc macro_test_proc()
+ begin
+   x!;
+ end;
+end;
+
+-- TEST: make sure that proc is not evaluated inside of macro args
+-- indeed @text and @id must not do their job until after they are
+-- out of any macro arg. They can only evaluate their arguments
+-- and never @proc.  The code below doen't appear in the context 
+-- of the proc.  The macros have to unwind first, hence the test.
+--
+-- + LET x := 'macro_test_proc';
+-- + LET y := "macro_test_proc";
+-- + LET macro_test_proc_bar_baz := 1;
+proc_macro!(
+begin
+  let x := @proc;
+  let y := @text(@proc);
+  let @id(@proc,"_bar_baz") := 1;
+end
+);
+

@@ -10203,23 +10203,18 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-  {rollback_trans_stmt}
-  | {name @PROC}
-
-The statement ending at line XXXX
-
-  {rollback_trans_stmt}
-  | {name @PROC}
-
-The statement ending at line XXXX
-
-  {rollback_trans_stmt}
-  | {name @PROC}
-
-The statement ending at line XXXX
-
-  {rollback_trans_stmt}
-  | {name @PROC}
+  {create_proc_stmt}
+  | {name rb_test}
+  | {proc_params_stmts}
+    | {stmt_list}
+      | {rollback_trans_stmt}
+      | | {name @PROC}
+      | {rollback_trans_stmt}
+      | | {name @PROC}
+      | {rollback_trans_stmt}
+      | | {name @PROC}
+      | {rollback_trans_stmt}
+        | {name @PROC}
 
 The statement ending at line XXXX
 

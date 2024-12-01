@@ -541,7 +541,7 @@ end
 rand_state = 0
 
 -- to ensure we can get the same series again (this is public)
-function rand_reset() 
+function rand_reset()
   rand_state = 0
 end
 
@@ -551,7 +551,7 @@ end
 -- integers in linear congruence math. So for this lame thing I picked my
 -- own constants out of thin air and I have no idea if they are any good
 -- but they are my own and really we just don't care that much.
-function seriously_lousy_rand() 
+function seriously_lousy_rand()
   rand_state = (rand_state * 1302475243 + 21493) & 0x7fffffff
   return rand_state;
 end

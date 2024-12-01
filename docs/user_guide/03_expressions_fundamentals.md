@@ -1916,7 +1916,7 @@ The appended type names look like this:
 | OBJECT       | object     |
 | CURSOR ++    | cursor     |
 
-+ _the null type applies only to the null literal, other instances are typed such as a nullable int that is null_ 
++ _the null type applies only to the null literal, other instances are typed such as a nullable int that is null_
 
 ++ _the CURSOR type applies to functions with a CURSOR argument, these are the so called dynamic-cursor arguments_
 

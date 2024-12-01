@@ -236,7 +236,7 @@ upgrade_test: $(UPGRADE_OBJS) $O/upgrade_test.o $O/upgrade_validate.o $O/downgra
 query_plan_test: $O/query_plan_test.o $O/cqlrt.o $O/query_plan.o
 	$(CC) $(CFLAGS) -o $O/query_plan_test $O/query_plan_test.o $O/cqlrt.o $O/query_plan.o $(SQLITE_LINK)
 
-test_helpers_test: $O/test_helpers_test.o $O/cqlrt.o $O/test_helpers.o 
+test_helpers_test: $O/test_helpers_test.o $O/cqlrt.o $O/test_helpers.o
 	$(CC) $(CFLAGS) -o $O/test_helpers_test $O/test_helpers_test.o $O/cqlrt.o $O/test_helpers.o $(SQLITE_LINK)
 
 $O/cql-verify.o: cql-verify/cql-verify.c cql-verify/cql-verify.h

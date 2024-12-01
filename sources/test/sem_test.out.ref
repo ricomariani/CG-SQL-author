@@ -51314,43 +51314,6 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
 
 The statement ending at line XXXX
 
-SET a_string := @PROC;
-
-test/sem_test.sql:XXXX:1: error: in str : CQL0252: @PROC literal can only appear inside of procedures
-
-  {assign}: err
-  | {name a_string}: a_string: text variable was_set
-  | {name @PROC}: err
-
-The statement ending at line XXXX
-
-SAVEPOINT @PROC;
-
-test/sem_test.sql:XXXX:1: error: in str : CQL0252: @PROC literal can only appear inside of procedures
-
-  {savepoint_stmt}: err
-  | {name @PROC}: err
-
-The statement ending at line XXXX
-
-RELEASE @PROC;
-
-test/sem_test.sql:XXXX:1: error: in str : CQL0252: @PROC literal can only appear inside of procedures
-
-  {release_savepoint_stmt}: err
-  | {name @PROC}: err
-
-The statement ending at line XXXX
-
-ROLLBACK TO @PROC;
-
-test/sem_test.sql:XXXX:1: error: in str : CQL0252: @PROC literal can only appear inside of procedures
-
-  {rollback_trans_stmt}: err
-  | {name @PROC}: err
-
-The statement ending at line XXXX
-
 PROC savepoint_proc_stuff ()
 BEGIN
   DECLARE p TEXT;
@@ -51372,11 +51335,11 @@ END;
       | | {name p}: p: text variable was_set
       | | {strlit 'savepoint_proc_stuff'}: text notnull
       | {savepoint_stmt}: ok
-      | | {name savepoint_proc_stuff}: ok
+      | | {name savepoint_proc_stuff}
       | {rollback_trans_stmt}: ok
-      | | {name savepoint_proc_stuff}: ok
+      | | {name savepoint_proc_stuff}
       | {release_savepoint_stmt}: ok
-        | {name savepoint_proc_stuff}: ok
+        | {name savepoint_proc_stuff}
 
 The statement ending at line XXXX
 

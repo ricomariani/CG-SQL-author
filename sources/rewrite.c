@@ -1002,7 +1002,7 @@ cql_noexport void rewrite_reverse_apply_polymorphic(ast_node *_Nonnull head) {
   else {
     bprintf(&key, "%s<%s>:functor:all", rewrite_type_suffix(sem_type), kind);
   }
-  
+
   CSTR base_name = find_op(key.ptr);
 
   if (!base_name) {
@@ -1017,7 +1017,7 @@ cql_noexport void rewrite_reverse_apply_polymorphic(ast_node *_Nonnull head) {
   CHARBUF_CLOSE(key);
 
   AST_REWRITE_INFO_SET(head->lineno, head->filename);
- 
+
   ast_node *item = arg_list;
   while (item) {
     EXTRACT_ANY_NOTNULL(arg, item->left);
@@ -1656,8 +1656,8 @@ static ast_node *shape_exprs_from_name_list(ast_node *ast) {
 
 // This creates the statements for each child partition creation
 static ast_node *rewrite_child_partition_creation(
-  ast_node *child_results, 
-  int32_t cursor_num, 
+  ast_node *child_results,
+  int32_t cursor_num,
   ast_node *tail)
 {
   if (!child_results) {
@@ -3612,7 +3612,7 @@ cql_noexport bool_t try_rewrite_op_as_call(ast_node *_Nonnull ast, CSTR op) {
 
   bprintf(&key, "%s<%s>:%s:", rewrite_type_suffix(sem_type_left), kind_left, op);
   uint32_t used = key.used;  // so we can truncate back to here later
-  
+
   CSTR new_name = NULL;
 
   CSTR kind_right = right->sem->kind;

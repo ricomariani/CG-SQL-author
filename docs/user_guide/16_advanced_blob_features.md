@@ -578,7 +578,7 @@ Now with this in mind we can see that it would be very beneficial to
 also add this:
 
 ```sql
-[[deterministic]] 
+[[deterministic]]
 declare select function bgetkey_type(b blob) long;
 
 CREATE INDEX backing_index ON backing(bgetkey_type(k));

@@ -89,7 +89,7 @@ static symtab *processed_files;
 cql_noexport void cql_reset_open_includes() {
   cql_include_index = 0;
   memset(cql_includes, 0, sizeof(cql_includes));
-  if (processed_files) { 
+  if (processed_files) {
     symtab_delete(processed_files);
     processed_files = NULL;
   }
@@ -172,7 +172,7 @@ done:
 
   yylineno = 1;
   current_file = Strdup(opened_name);
-  
+
   CHARBUF_CLOSE(path);
   CHARBUF_CLOSE(name);
 }

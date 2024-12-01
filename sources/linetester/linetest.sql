@@ -212,7 +212,7 @@ begin
     if p4 >= 0 then
       line_start := p4 + prefix4_len;
     end if;
-    
+
     if line_start >= 0 then
       line := data:atoi_at(line_start);
       if base_at_next_line then

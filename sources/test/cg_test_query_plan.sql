@@ -242,13 +242,13 @@
 -- + BEGIN
 -- + SELECT 40 AS b;
 -- + END;
--- 
+--
 -- + [[shared_fragment]]
 -- + PROC frag3 (z INT)
 -- + BEGIN
 -- + SELECT 100 AS c;
 -- + END;
--- 
+--
 -- + [[shared_fragment]]
 -- + PROC frag_with_select ()
 -- + BEGIN
@@ -259,27 +259,27 @@
 -- + SELECT *
 -- +   FROM cte;
 -- + END;
--- 
+--
 -- + [[shared_fragment]]
 -- + [[query_plan_branch=2]]
 -- + PROC frag_with_select_nothing ()
 -- + BEGIN
 -- + SELECT 1 AS a;
 -- + END;
--- 
+--
 -- + [[shared_fragment]]
 -- + PROC frag (v INT!)
 -- + BEGIN
 -- + SELECT v AS val;
 -- + END;
--- 
+--
 -- + PROC populate_query_plan_40()
 --
 -- + PROC populate_table_scan_alert_table(table_ text!)
 -- + BEGIN
 -- +   INSERT OR IGNORE INTO table_scan_alert
 -- +     SELECT upper(table_) || '(' || count(*) || ')' as info FROM plan_temp
--- +     WHERE ( zdetail GLOB ('*[Ss][Cc][Aa][Nn]* ' || table_) OR 
+-- +     WHERE ( zdetail GLOB ('*[Ss][Cc][Aa][Nn]* ' || table_) OR
 -- +             zdetail GLOB ('*[Ss][Cc][Aa][Nn]* ' || table_ || ' *')
 -- +           )
 -- +     AND sql_id NOT IN (
@@ -287,10 +287,10 @@
 -- +         WHERE table_names GLOB ('*#' || table_ || '#*')
 -- +     ) GROUP BY table_;
 -- + END;
--- 
+--
 -- + PROC populate_b_tree_alert_table()
 -- + END;
--- 
+--
 -- + PROC print_query_plan_graph(id_ int!)
 -- + BEGIN
 -- +   DECLARE C CURSOR FOR
@@ -315,7 +315,7 @@
 -- +   END;
 -- +   CALL printf("\"\n");
 -- + END;
--- 
+--
 -- + PROC print_query_plan(sql_id int!)
 -- + BEGIN
 -- +   CALL printf("  {\n");
@@ -325,7 +325,7 @@
 -- +   CALL print_query_plan_graph(sql_id);
 -- +   CALL printf("  }");
 -- + END;
---  
+--
 -- + PROC query_plan()
 -- + BEGIN
 -- +   CALL create_schema();

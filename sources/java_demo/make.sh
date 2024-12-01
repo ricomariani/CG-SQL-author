@@ -118,7 +118,7 @@ javac -d $O \
 
 echo "executing the java program"
 (
-  cd $O 
+  cd $O
   java -Djava.library.path=. \
     MyJava \
     sample/SampleJNI \

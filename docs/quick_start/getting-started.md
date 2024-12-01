@@ -84,7 +84,7 @@ And if you want to do the AST visualizations in PDF form you need:
 sudo apt install graphviz
 ```
 
-For Lua: 
+For Lua:
 
 ```bash
 sudo apt install lua5.4

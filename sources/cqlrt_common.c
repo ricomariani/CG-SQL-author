@@ -3388,7 +3388,7 @@ static void cql_clear_references_before_deserialization(
      goto error; \
    }
 
-cql_code cql_cursor_from_blob(  
+cql_code cql_cursor_from_blob(
   sqlite3 *_Nonnull db,
   cql_dynamic_cursor *_Nonnull dyn_cursor,
   cql_blob_ref _Nullable b)
@@ -4238,7 +4238,7 @@ cql_nullable_double cql_real_dictionary_find(
   cql_string_ref _Nullable key)
 {
   cql_contract(dict);
- 
+
   cql_nullable_double result = {
      .is_null = true,
      .value = 0,
@@ -4473,7 +4473,7 @@ cql_object_ref _Nonnull cql_long_list_create(void) {
   return _cql_generic_object_create(self, cql_long_list_finalize);
 }
 
-// Adds a long to the given list 
+// Adds a long to the given list
 cql_object_ref _Nonnull cql_long_list_add(cql_object_ref _Nonnull list, cql_int64 value) {
   cql_contract(list);
   cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
@@ -4494,7 +4494,7 @@ cql_int64 cql_long_list_get_at(
   cql_object_ref _Nonnull list,
   cql_int32 index)
 {
-  cql_contract(list); 
+  cql_contract(list);
 
   cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
   cql_int32 count = self->used / sizeof(cql_int64);
@@ -4531,7 +4531,7 @@ cql_object_ref _Nonnull cql_real_list_create(void) {
   return _cql_generic_object_create(self, cql_long_list_finalize);
 }
 
-// Adds a real to the given list 
+// Adds a real to the given list
 cql_object_ref _Nonnull cql_real_list_add(cql_object_ref _Nonnull list, cql_double value) {
   cql_contract(list);
   cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
@@ -4552,7 +4552,7 @@ cql_double cql_real_list_get_at(
   cql_object_ref _Nonnull list,
   cql_int32 index)
 {
-  cql_contract(list); 
+  cql_contract(list);
 
   cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
   cql_int32 count = self->used / sizeof(cql_double);
@@ -4732,7 +4732,7 @@ static void cql_format_one_cursor_column(
           cql_bprintf(b, "generic object");
         }
         break;
-      }      
+      }
     }
   }
 }
@@ -4806,7 +4806,7 @@ static cql_bool cql_compare_one_cursor_column(
   uint16_t offset2 = offsets2[i+1];
 
   // count is stored in first offset
-  uint16_t count1 = offsets1[0];  
+  uint16_t count1 = offsets1[0];
   uint16_t count2 = offsets2[0];
 
   // also pre-verified
@@ -4842,7 +4842,7 @@ static cql_bool cql_compare_one_cursor_column(
         cql_bool bool_data1 = *(cql_bool *)(cursor1 + offset1);
         cql_bool bool_data2 = *(cql_bool *)(cursor2 + offset2);
         return bool_data1 == bool_data2;
-      }      
+      }
       case CQL_DATA_TYPE_INT32: {
         cql_int32 int32_data1 = *(cql_int32 *)(cursor1 + offset1);
         cql_int32 int32_data2 = *(cql_int32 *)(cursor2 + offset2);
@@ -7254,7 +7254,7 @@ cql_nullable_double cql_unbox_real(cql_object_ref _Nullable box) {
 
 
 // Box a string, note that even null can be boxed and return a not null box
-// that contains null. 
+// that contains null.
 // This is also available as <expr>:box
 cql_object_ref _Nonnull cql_box_text(cql_string_ref _Nullable data) {
     cql_object_ref _Nonnull box = cql_boxed_value_create();

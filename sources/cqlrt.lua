@@ -810,7 +810,7 @@ function cql_cursor_diff_val(k1, k1_types, k1_fields, k2, k2_types, k2_fields)
 
   if i == -2 then
     return "column:_has_row_ c1:"..tostring(k1._has_row_).." c2:"..tostring(k2._has_row_)
-  end 
+  end
 
   -- field offsets are all 1 based in lua, fix that
   i = i + 1

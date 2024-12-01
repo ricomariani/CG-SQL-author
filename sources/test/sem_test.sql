@@ -13671,29 +13671,6 @@ begin
    set z := funclike(from arguments like not_a_shape);
 end;
 
--- TEST: @proc in bad context (assign)
--- + {assign}: err
--- * error: % @PROC literal can only appear inside of procedures
--- +1 error:
-set a_string := @PROC;
-
--- TEST: @proc in bad context (savepoint)
--- + {savepoint_stmt}: err
--- +1 error:
-savepoint @proc;
-
--- TEST: @proc in bad context (release)
--- + {release_savepoint_stmt}: err
--- * error: % @PROC literal can only appear inside of procedures
--- +1 error:
-release savepoint @proc;
-
--- TEST: @proc in bad context (rollback)
--- + {rollback_trans_stmt}: err
--- * error: % @PROC literal can only appear inside of procedures
--- +1 error:
-rollback transaction to savepoint @proc;
-
 -- TEST: @proc rewrites
 -- + SET p := 'savepoint_proc_stuff';
 -- + SAVEPOINT savepoint_proc_stuff;

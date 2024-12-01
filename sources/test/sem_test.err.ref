@@ -1088,10 +1088,6 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0163: FROM ARGUMENTS construct is o
 test/sem_test.sql:XXXX:1: error: in dot : CQL0201: expanding FROM ARGUMENTS, there is no argument matching 'id'
 test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, table, or view 'no_such_type_dude'
 test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, table, or view 'not_a_shape'
-test/sem_test.sql:XXXX:1: error: in str : CQL0252: @PROC literal can only appear inside of procedures
-test/sem_test.sql:XXXX:1: error: in str : CQL0252: @PROC literal can only appear inside of procedures
-test/sem_test.sql:XXXX:1: error: in str : CQL0252: @PROC literal can only appear inside of procedures
-test/sem_test.sql:XXXX:1: error: in str : CQL0252: @PROC literal can only appear inside of procedures
 test/sem_test.sql:XXXX:1: error: in num : CQL0205: not a cursor '1'
 test/sem_test.sql:XXXX:1: error: in str : CQL0205: not a cursor 'an_int'
 test/sem_test.sql:XXXX:1: error: in str : CQL0067: cursor was not used with 'fetch [cursor]' 'c1'

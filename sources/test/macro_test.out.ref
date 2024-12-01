@@ -1821,3 +1821,83 @@ LET w := 7 * (11 + 5 + (11 + 5) + 1);
       |   | {int 5}
       | {int 1}
 
+The statement ending at line XXXX
+
+PROC various_proc_forms ()
+BEGIN
+  LET zz := 'various_proc_forms':fmt();
+  LET uu := "various_proc_forms_x";
+  LET uu := "foo_x";
+  LET various_proc_forms_foo := 1;
+END;
+
+  {create_proc_stmt}
+  | {name various_proc_forms}
+  | {proc_params_stmts}
+    | {stmt_list}
+      | {let_stmt}
+      | | {name zz}
+      | | {reverse_apply}
+      |   | {strlit 'various_proc_forms'}
+      |   | {call}
+      |     | {name fmt}
+      |     | {call_arg_list}
+      |       | {call_filter_clause}
+      | {let_stmt}
+      | | {name uu}
+      | | {strlit 'various_proc_forms_x'}
+      | {let_stmt}
+      | | {name uu}
+      | | {strlit 'foo_x'}
+      | {let_stmt}
+        | {name various_proc_forms_foo}
+        | {int 1}
+
+The statement ending at line XXXX
+
+@MACRO(STMT_LIST) proc_macro!(x! STMT_LIST)
+BEGIN
+  PROC macro_test_proc ()
+  BEGIN
+    x!;
+  END;
+END;
+
+  {stmt_list_macro_def}
+  | {macro_name_formals}
+  | | {name proc_macro}
+  | | {macro_formals}
+  |   | {macro_formal}
+  |     | {name x}
+  |     | {name STMT_LIST}
+  | {stmt_list}
+    | {create_proc_stmt}
+      | {name macro_test_proc}
+      | {proc_params_stmts}
+        | {stmt_list}
+          | {stmt_list_macro_arg_ref}
+            | {name x}
+
+The statement ending at line XXXX
+
+PROC macro_test_proc ()
+BEGIN
+  LET x := 'macro_test_proc';
+  LET y := "macro_test_proc";
+  LET macro_test_proc_bar_baz := 1;
+END;
+
+  {create_proc_stmt}
+  | {name macro_test_proc}
+  | {proc_params_stmts}
+    | {stmt_list}
+      | {let_stmt}
+      | | {name x}
+      | | {strlit 'macro_test_proc'}
+      | {let_stmt}
+      | | {name y}
+      | | {strlit 'macro_test_proc'}
+      | {let_stmt}
+        | {name macro_test_proc_bar_baz}
+        | {int 1}
+

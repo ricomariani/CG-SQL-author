@@ -423,9 +423,9 @@ The list functions are limited to `add` `get_at` `set_at` and `count`
 
 These functions append the indicated value to the end of the list.
 
-* `cql_string_list_add` -- append a string (`text`) 
-* `cql_blob_list_add` -- append a `blob` 
-* `cql_long_list_add` -- append a `long` 
+* `cql_string_list_add` -- append a string (`text`)
+* `cql_blob_list_add` -- append a `blob`
+* `cql_long_list_add` -- append a `long`
 * `cql_real_list_add` -- append a `real`
 
 Getters accept the list and an index, the index must be within bounds.

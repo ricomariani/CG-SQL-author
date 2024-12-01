@@ -38,7 +38,7 @@ cql_noexport int32_t StrCaseCmp(
 // Portable case-insensitive string comparison with length
 cql_noexport int32_t StrNCaseCmp(
   CSTR _Nonnull s1,
-  CSTR _Nonnull s2, 
+  CSTR _Nonnull s2,
   size_t n)
 {
   CSTR p1 = s1;

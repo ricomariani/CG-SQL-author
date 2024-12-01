@@ -10844,7 +10844,7 @@ static bool_t sem_reverse_apply_if_needed(ast_node *ast, bool_t analyze) {
 
   bool_t hard_fail = false;
 
-  if (op[0] == ':' && op[1] != '=') {
+  if (!strcmp(op, ":")) {
     // we need the type of the left argument to do the reverse apply
     // because the polymorphic forms want the type info.  So we try
     // to get it.  If we get any errors, we're done here, no need to rewrite

@@ -3963,7 +3963,7 @@ begin
   try
     call select_if_nothing_throw(2);
   catch
-    EXPECT!(@rc != 0);
+    EXPECT_NE!(@rc, 0);
   end;
 end);
 

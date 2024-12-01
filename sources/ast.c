@@ -1503,8 +1503,8 @@ static bool_t spliced_macro_into_list(
 
 // The arguments to @TEXT are either string literals, which we expand using the
 // decode function or else they are macro pieces which we expand using
-// gen_any_macro_expansion.  Either way they land unencoded into the output
-// buffer.   The @TEXT handler will then quote them.
+// gen_any_text_arg.  Either way they land unencoded into the output
+// buffer.  The @TEXT handler will then quote them, the @ID handler will not.
 static void expand_text_args(
   charbuf *output,
   ast_node *text_args)
@@ -1512,18 +1512,6 @@ static void expand_text_args(
   for (; text_args; text_args = text_args->right) {
     Contract(is_ast_text_args(text_args));
     EXTRACT_ANY_NOTNULL(txt, text_args->left);
-
-    // the text args could be macros that need to be expanded
-    expand_macros(txt);
-    txt = text_args->left;
-
-    if (in_macro_args) {
-      // Do not do any further expansion while we are in a macro arg context
-      // things like @proc and so forth must wait.  All we do here is evaluate
-      // the macro references and the macro arg references. @proc has to wait
-      // because the macro args might not be in a procedure yet.
-      continue;
-    }
 
     // string literals are handled specially because we need to
     // strip the quotes from them!

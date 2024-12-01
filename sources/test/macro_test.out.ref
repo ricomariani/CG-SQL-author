@@ -1885,6 +1885,8 @@ BEGIN
   LET x := 'macro_test_proc';
   LET y := "macro_test_proc";
   LET macro_test_proc_bar_baz := 1;
+  LET tmp_83 := 'foo';
+  LET tmp_83_extension := 7;
 END;
 
   {create_proc_stmt}
@@ -1898,6 +1900,12 @@ END;
       | | {name y}
       | | {strlit 'macro_test_proc'}
       | {let_stmt}
-        | {name macro_test_proc_bar_baz}
-        | {int 1}
+      | | {name macro_test_proc_bar_baz}
+      | | {int 1}
+      | {let_stmt}
+      | | {name tmp_83}
+      | | {strlit 'foo'}
+      | {let_stmt}
+        | {name tmp_83_extension}
+        | {int 7}
 

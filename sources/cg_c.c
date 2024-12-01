@@ -525,12 +525,8 @@ static void cg_emit_isnull_init(charbuf *output, bool_t is_full_decl) {
 //    or NULL as appropriate
 static void cg_var_decl(charbuf *output, sem_t sem_type, CSTR base_name, bool_t is_full_decl) {
   Contract(is_unitary(sem_type) || is_cursor_formal(sem_type));
+  Contract(!is_null_type(sem_type)); // null alias never gets here
   Contract(cg_main_output);
-
-  if (is_null_type(sem_type)) {
-    // this is a null alias, it has no codegen
-    return;
-  }
 
   sem_t core_type = core_type_of(sem_type);
   bool_t notnull = is_not_nullable(sem_type);
@@ -3209,12 +3205,13 @@ static void cg_let_stmt(ast_node *ast) {
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
 
-  cg_declare_simple_var(name_ast->sem->sem_type, name);
-
   // null type variables are null aliases, they are rewritten away
-  if (!is_null_type(name_ast->sem->sem_type)) {
-    cg_assign(ast);
+  if (is_null_type(name_ast->sem->sem_type)) {
+    return;
   }
+
+  cg_declare_simple_var(name_ast->sem->sem_type, name);
+  cg_assign(ast);
 }
 
 // In the CONST statement, emit the same codegen as LET statement.

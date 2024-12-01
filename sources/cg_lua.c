@@ -401,12 +401,8 @@ static void cg_lua_emit_local_init(charbuf *output, sem_t sem_type)
 //    then we also gotta clean it up.
 static void cg_lua_var_decl(charbuf *output, sem_t sem_type, CSTR name) {
   Contract(is_unitary(sem_type));
+  Contract(!is_null_type(sem_type)); // null alias never gets here
   Contract(cg_main_output);
-
-  if (is_null_type(sem_type)) {
-    // this is a null alias, it has no codegen
-    return;
-  }
 
   if (lua_in_var_group_emit) {
     // we only need initializers for not-null types that are not reference types
@@ -2132,12 +2128,13 @@ static void cg_lua_let_stmt(ast_node *ast) {
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
 
-  cg_lua_declare_simple_var(name_ast->sem->sem_type, name);
-
   // null type variables are null aliases, they are rewritten away
-  if (!is_null_type(name_ast->sem->sem_type)) {
-     cg_lua_assign(ast);
+  if (is_null_type(name_ast->sem->sem_type)) {
+    return;
   }
+
+  cg_lua_declare_simple_var(name_ast->sem->sem_type, name);
+  cg_lua_assign(ast);
 }
 
 // In the CONST statement, emit the same codegen as LET statement.

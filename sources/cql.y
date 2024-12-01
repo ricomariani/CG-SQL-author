@@ -1024,7 +1024,7 @@ name:
   | SELECT_CORE { $name = new_ast_str("select_core"); }
   | SELECT_EXPR { $name = new_ast_str("select_expr"); }
   | AT_ID '(' text_args ')' { $name = new_ast_at_id($text_args); }
-  | AT_TMP { $name = new_ast_str("@TMP"); }
+  | AT_TMP '(' text_args ')' { $name = new_ast_at_id(new_ast_text_args(new_ast_str("@TMP"), $text_args)); }
   ;
 
 loose_name:

@@ -530,11 +530,15 @@ end;
 -- + LET x := 'macro_test_proc';
 -- + LET y := "macro_test_proc";
 -- + LET macro_test_proc_bar_baz := 1;
+-- + LET tmp_% := 'foo';
+-- + LET tmp_%_extension := 7;
 proc_macro!(
 begin
   let x := @proc;
   let y := @text(@proc);
   let @id(@proc,"_bar_baz") := 1;
+  let @tmp := 'foo';
+  let @id(@tmp, "_extension") := 7;
 end
 );
 

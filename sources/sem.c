@@ -25938,6 +25938,7 @@ cql_noexport void exit_on_validating_schema() {
 // with the appropriate tokens ready to go.  Using our own symbol tables for
 // dispatch saves us a lot of if/else string comparison verbosity.
 cql_noexport void sem_main(ast_node *ast) {
+  Contract(!__charbufs_in_flight);
   // restore all globals and statics we own
   sem_cleanup();
   eval_init();

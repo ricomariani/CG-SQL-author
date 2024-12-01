@@ -48,6 +48,8 @@ typedef struct macro_state_t {
 static macro_state_t macro_state;
 static CSTR expanding_proc;
 static bool in_macro_args;
+static int32_t current_macro_count;
+static int32_t next_macro_count;
 
 // Helper object to just hold info in find_attribute_str(...) and
 // find_attribute_num(...)
@@ -90,6 +92,8 @@ cql_noexport void ast_init() {
   macro_state.parent = NULL;
   expanding_proc = NULL;
   in_macro_args = false;
+  current_macro_count = 0;
+  next_macro_count = 1;
 }
 
 cql_noexport void ast_cleanup() {
@@ -1608,7 +1612,6 @@ static int32_t get_macro_line() {
 static void expand_at_id(ast_node *ast) {
   Contract(is_ast_at_id(ast));
 
-  CHARBUF_OPEN(str);
   expand_macros(ast->left);
   if (in_macro_args) {
     // Do not do any further expansion while we are in a macro arg context
@@ -1618,6 +1621,7 @@ static void expand_at_id(ast_node *ast) {
     return;
   }
 
+  CHARBUF_OPEN(str);
   expand_text_args(&str, ast->left);
 
   CSTR p = str.ptr;
@@ -1655,9 +1659,7 @@ static void expand_at_id(ast_node *ast) {
 static void expand_at_text(ast_node *ast) {
   Contract(is_ast_macro_text(ast));
 
-  CHARBUF_OPEN(tmp);
-  CHARBUF_OPEN(quote);
-  expand_text_args(&tmp, ast->left);
+  expand_macros(ast->left);
   if (in_macro_args) {
     // Do not do any further expansion while we are in a macro arg context
     // things like @proc and so forth must wait.  All we do here is evaluate
@@ -1666,11 +1668,16 @@ static void expand_at_text(ast_node *ast) {
     return;
   }
 
+  CHARBUF_OPEN(tmp);
+  CHARBUF_OPEN(quote);
+
+  expand_text_args(&tmp, ast->left);
   cg_encode_string_literal(tmp.ptr, &quote);
   ast_node *new = new_ast_str(Strdup(quote.ptr));
   str_ast_node *sast = (str_ast_node *)new;
   sast->str_type = STRING_TYPE_C;
   replace_node(ast, new);
+
   CHARBUF_CLOSE(quote);
   CHARBUF_CLOSE(tmp);
 }
@@ -1682,6 +1689,8 @@ static void expand_special_ids(ast_node *ast) {
   Contract(is_ast_str(ast));
   EXTRACT_STRING(name, ast);
 
+  // note that these were all normalized to uppercase in the parsing phase
+
   if (!strcmp(name, "@MACRO_LINE")) {
     ast_node *num = new_ast_num(NUM_INT, dup_printf("%d", get_macro_line()));
     replace_node(ast, num);
@@ -1689,9 +1698,14 @@ static void expand_special_ids(ast_node *ast) {
   else if (!strcmp(name, "@MACRO_FILE")) {
     CHARBUF_OPEN(tmp);
     cg_encode_string_literal(get_macro_file(), &tmp);
-    ast_node *new = new_ast_str(Strdup(tmp.ptr));
-    replace_node(ast, new);
+    ((str_ast_node *)ast)->value = Strdup(tmp.ptr);
     CHARBUF_CLOSE(tmp);
+  }
+  else if (!strcmp(name, "@TMP")) {
+    CHARBUF_OPEN(tmp2);
+    bprintf(&tmp2, "tmp_%d", current_macro_count);
+    ((str_ast_node *)ast)->value = Strdup(tmp2.ptr);
+    CHARBUF_CLOSE(tmp2);
   }
   else if (!in_macro_args && !strcmp(name, "@PROC")) {
     // Do not do any further expansion while we are in a macro arg context
@@ -1713,10 +1727,10 @@ static void expand_special_ids(ast_node *ast) {
     }
 
     // otherwise make a string literal
-    CHARBUF_OPEN(tmp);
-    cg_encode_string_literal(expanding_proc, &tmp);
-    ((str_ast_node *)ast)->value = Strdup(tmp.ptr);
-    CHARBUF_CLOSE(tmp);
+    CHARBUF_OPEN(tmp3);
+    cg_encode_string_literal(expanding_proc, &tmp3);
+    ((str_ast_node *)ast)->value = Strdup(tmp3.ptr);
+    CHARBUF_CLOSE(tmp3);
   }
 }
 
@@ -1998,7 +2012,10 @@ tail_recurse:
 
   // expand macros and macro arguments in place
   if (is_any_macro_ref(node)) {
+    int32_t saved_macro_count = current_macro_count;
+    current_macro_count = next_macro_count++;
     expand_macro_refs(node);
+    current_macro_count = saved_macro_count;
     return;
   }
 

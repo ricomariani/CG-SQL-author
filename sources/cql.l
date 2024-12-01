@@ -275,6 +275,7 @@ reallit ({d}+"."{d}*|"."{d}+)(E("+"|"-")?{d}+)?
 @SCHEMA_UPGRADE_VERSION          { return AT_SCHEMA_UPGRADE_VERSION; }
 @SENSITIVE                       { return AT_SENSITIVE; }
 @TEXT                            { return AT_TEXT; }
+@TMP                             { return AT_TMP; }
 @UNSUB                           { return AT_UNSUB; }
 ABORT                            { return ABORT; }
 ACTION                           { return ACTION; }

@@ -144,3 +144,29 @@ jobs:
           ../playground/play.sh build-everything
           ../playground/play.sh run-data-access-demo
           ../playground/play.sh run c ../playground/examples/*.sql
+      - name: Cache SQLite Build Folder
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/.cache/sqlite
+          key: ${{ runner.os }}-sqlite-build
+          restore-keys: ${{ runner.os }}-sqlite-build
+      - name: Build local SQLite
+        run: |
+          if [ ! -f ${{ github.workspace }}/.cache/sqlite/sqlite3 ]; then
+            echo "Cache miss: Building SQLite"
+
+            git clone --branch version-3.47.1 https://github.com/sqlite/sqlite.git ${{ github.workspace }}/.cache/sqlite
+            (cd ${{ github.workspace }}/.cache/sqlite \
+              && ./configure CFLAGS="-g -O0 -DSQLITE_ENABLE_LOAD_EXTENSION -rdynamic" LDFLAGS="-rdynamic" \
+              && make sqlite3)
+          else
+            echo "Cache hit: Using cached SQLite binary"
+          fi
+      - name: Verify SQLite Build
+        run: ${{ github.workspace }}/.cache/sqlite/sqlite3 --version
+      - name: Build SQLite CQL Extension using Clang
+        run: SQLITE_PATH=${{ github.workspace }}/.cache/sqlite ./sqlite3_cql_extension/make.sh --use_clang
+      - name: Build SQLite CQL Extension using GCC
+        run: SQLITE_PATH=${{ github.workspace }}/.cache/sqlite ./sqlite3_cql_extension/make.sh --use_gcc
+      - name: Test SQLite CQL Extension
+        run: SQLITE_PATH=${{ github.workspace }}/.cache/sqlite ./sqlite3_cql_extension/test.sh --non_interactive

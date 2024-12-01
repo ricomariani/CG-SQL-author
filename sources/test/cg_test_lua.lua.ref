@@ -8788,6 +8788,26 @@ function declare_constant_variable()
   const_variable = 1
 
 end
+
+-- The statement ending at line XXXX
+
+--[[
+PROC real_caller ()
+BEGIN
+  LET z := real_func(1) + real_func(2);
+END;
+--]]
+
+function real_caller()
+  local _tmp_n_double_0
+  local _tmp_n_double_1
+  local z
+
+  _tmp_n_double_0 = real_func(1)
+  _tmp_n_double_1 = real_func(2)
+  z = cql_add(_tmp_n_double_0, _tmp_n_double_1)
+
+end
 local this_is_the_end = 0
 
 -- The statement ending at line XXXX

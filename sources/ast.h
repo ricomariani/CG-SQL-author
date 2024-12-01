@@ -572,6 +572,8 @@ cql_noexport void find_misc_attrs(
 cql_noexport size_t ends_in_cursor(CSTR _Nonnull str);
 cql_noexport size_t ends_in_set(CSTR _Nonnull str);
 
+cql_noexport void replace_node(ast_node *_Nonnull old, ast_node *_Nonnull new);
+
 #ifdef CQL_AMALGAM
 
   // In the amalgam build we see this file only once, we emit the definitions as statics

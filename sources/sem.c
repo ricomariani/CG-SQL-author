@@ -2941,7 +2941,11 @@ static bool_t sem_verify_safe_assign(ast_node *ast, sem_t sem_type_needed, sem_t
   Invariant(is_unitary(core_type_found));
 
   // the target of an assignment cannot be of type null
-  Invariant(core_type_needed != SEM_TYPE_NULL);
+  if (is_null_type(core_type_needed)) {
+    report_error(ast, "CQL0056: variable of type NULL cannot be assigned", subject);
+    record_error(ast);
+    return false;
+  }
 
   switch (core_type_needed) {
     case SEM_TYPE_TEXT:
@@ -6275,6 +6279,23 @@ static sem_resolve sem_try_resolve_variable(ast_node *ast, CSTR name, CSTR scope
 
   sem_t sem_type = variable->sem->sem_type;
 
+  if (core_type_of(sem_type) == SEM_TYPE_NULL) {
+    if (ast) {
+      AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
+
+      // this is a null alias, rewrite it
+      ast_node *null = new_ast_null();
+      null->sem = new_sem(SEM_TYPE_NULL);
+      ast->sem = null->sem;
+      replace_node(ast, null);
+
+      AST_REWRITE_INFO_RESET();
+    }
+    *type_ptr = &variable->sem->sem_type;
+
+    return SEM_RESOLVE_STOP;
+  }
+
   if (is_object(sem_type) &&
       CURRENT_EXPR_CONTEXT_IS_NOT(SEM_EXPR_CONTEXT_NONE | SEM_EXPR_CONTEXT_UDF)) {
     report_resolve_error(ast, "CQL0064: object variables may not appear in the context"
@@ -7457,12 +7478,12 @@ static void sem_expr_between_or_not_between(ast_node *ast, CSTR cstr) {
     ast_set_right(range, combine);
     ast_set_left(range, new_ast_str(name));
 
+    AST_REWRITE_INFO_RESET();
+
     sem_expr(range->left);
     sem_expr(range->right);
 
     ast->type = k_ast_between_rewrite;
-
-    AST_REWRITE_INFO_RESET();
   }
 
   sem_t combined_flags = not_nullable_flag(sem_type_item) & both_notnull_flag(sem_type_min, sem_type_max);
@@ -18735,12 +18756,6 @@ static void sem_let_stmt(ast_node *ast) {
   sem_root_expr(expr, SEM_EXPR_CONTEXT_NONE);
 
   if (is_error(expr)) {
-    record_error(ast);
-    return;
-  }
-
-  if (is_null_type(expr->sem->sem_type)) {
-    report_error(ast, "CQL0056: NULL expression has no type to imply the declaration of variable", name);
     record_error(ast);
     return;
   }

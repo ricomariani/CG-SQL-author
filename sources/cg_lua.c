@@ -401,8 +401,12 @@ static void cg_lua_emit_local_init(charbuf *output, sem_t sem_type)
 //    then we also gotta clean it up.
 static void cg_lua_var_decl(charbuf *output, sem_t sem_type, CSTR name) {
   Contract(is_unitary(sem_type));
-  Contract(!is_null_type(sem_type));
   Contract(cg_main_output);
+
+  if (is_null_type(sem_type)) {
+    // this is a null alias, it has no codegen
+    return;
+  }
 
   if (lua_in_var_group_emit) {
     // we only need initializers for not-null types that are not reference types
@@ -1362,7 +1366,6 @@ static void cg_lua_expr_between_rewrite(
   Contract(is_ast_between_rewrite(ast));
   EXTRACT_NOTNULL(range, ast->right);
   EXTRACT_ANY_NOTNULL(expr, ast->left);
-  EXTRACT_STRING(var, range->left);
   EXTRACT_ANY_NOTNULL(test, range->right);
 
   // BETWEEN REWRITE [var := expr] CHECK [test]
@@ -1373,6 +1376,12 @@ static void cg_lua_expr_between_rewrite(
     bprintf(value, "nil");
     return;
   }
+
+  // we have to do this after we have checked the expression for the null case
+  // if it is the null case the variable we generated for temporary storage
+  // would be rewritten to the null constant and this next extract fails
+  // the early out handles that case so we're now in the normal invariant.
+  EXTRACT_STRING(var, range->left);
 
   cg_lua_var_decl(cg_declarations_output, sem_type_var, var);
 
@@ -2124,7 +2133,11 @@ static void cg_lua_let_stmt(ast_node *ast) {
   EXTRACT_STRING(name, name_ast);
 
   cg_lua_declare_simple_var(name_ast->sem->sem_type, name);
-  cg_lua_assign(ast);
+
+  // null type variables are null aliases, they are rewritten away
+  if (!is_null_type(name_ast->sem->sem_type)) {
+     cg_lua_assign(ast);
+  }
 }
 
 // In the CONST statement, emit the same codegen as LET statement.

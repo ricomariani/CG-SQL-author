@@ -5252,6 +5252,18 @@ begin
   const const_variable := 1;
 end;
 
+declare function real_func(x integer) real;
+
+-- TEST: force real scratch variables
+-- + local _tmp_n_double_0
+-- + local _tmp_n_double_1
+-- + _tmp_n_double_0 = real_func(1)
+-- + _tmp_n_double_1 = real_func(2)
+proc real_caller()
+begin
+  let z := real_func(1) + real_func(2);
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

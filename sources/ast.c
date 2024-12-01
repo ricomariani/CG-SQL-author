@@ -1387,7 +1387,7 @@ cql_noexport CSTR install_macro_args(ast_node *macro_formals) {
 // to change to one of the leaf types and they are different sizes so we have to
 // use the more general mechanism. This means we might have to refetch
 // parent->left or right to get the new value of the node.
-static void replace_node(ast_node *old, ast_node *new) {
+cql_noexport void replace_node(ast_node *_Nonnull old, ast_node *_Nonnull new) {
   if (old->parent->left == old) {
    ast_set_left(old->parent, new);
   }

@@ -16680,11 +16680,23 @@ LET pen_var := real_things.pen;
 -- - error:
 LET created_obj := creater_func();
 
--- TEST: LET stmt, NULL (null has no type)
--- + {let_stmt}: err
--- * error: % NULL expression has no type to imply the declaration of variable 'null_is_no_good'
+-- TEST: LET stmt, NULL (null has no type), this makes a null alias
+-- + {let_stmt}: null_alias: null variable
+-- - error:
+LET null_alias := NULL;
+
+-- TEST: the null alias is rewritten away
+-- verify rewrite
+-- + LET rewritten_null := price_d IS NULL;
+-- - error:
+let rewritten_null := price_d is null_alias;
+
+-- TEST: no reassignment of a null alias, it's moot
+-- + {assign}: err
+-- + {name null_alias}: err
+-- * error: % variable of type NULL cannot be assigned 'null_alias'
 -- +1 error:
-LET null_is_no_good := NULL;
+null_alias := null;
 
 -- TEST: LET error cases: bad expression
 -- + {let_stmt}: err

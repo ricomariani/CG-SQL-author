@@ -27,12 +27,13 @@ var expected bool @sensitive;
 begin
   -- it's important to evaluate the expressions exactly once
   -- because there may be side-effects
-  expected := a! is b!;
+  let @tmp(a) := a!;
+  let @tmp(b) := b!;
+  expected := @tmp(a) IS @tmp(b);
   errcheck(expected, @text(a!, " == ", b!), @MACRO_LINE);
   if not expected then
-    -- we are re-evaluating now but the expectation already failed so it's ok
-    printf("left: %s\n", a!:fmt);
-    printf("right: %s\n", b!:fmt);
+    printf("left: %s\n", @tmp(a):fmt);
+    printf("right: %s\n", @tmp(b):fmt);
   end if;
 end;
 
@@ -40,12 +41,13 @@ end;
 begin
   -- it's important to evaluate the expressions exactly once
   -- because there may be side-effects
-  expected := a! is not b!;
-  errcheck(expected, @text(a!, " == ", b!), @MACRO_LINE);
+  let @tmp(a) := a!;
+  let @tmp(b) := b!;
+  expected := @tmp(a) IS NOT @tmp(b);
+  errcheck(expected, @text(a!, " != ", b!), @MACRO_LINE);
   if not expected then
-    -- we are re-evaluating now but the expectation already failed so it's ok
-    printf("left: %s\n", a!:fmt);
-    printf("right: %s\n", b!:fmt);
+    printf("left: %s\n", @tmp(a):fmt);
+    printf("right: %s\n", @tmp(b):fmt);
   end if;
 end;
 
@@ -297,6 +299,8 @@ begin
   EXPECT_SQL_TOO!((0 or 1) and (1 or 0));
   EXPECT_SQL_TOO!(not 1 + 2 = 0);
   EXPECT_SQL_TOO!((not 1) + 2 = 2);
+  EXPECT_SQL_TOO!(null + null is null);
+  EXPECT_SQL_TOO!((null between null and null) is null);
 
   -- the purpose of all this business is to ensure that the
   -- expressions that are evaluated are the ones that are
@@ -3516,7 +3520,7 @@ begin
   EXPECT_EQ!(cql_cursor_diff_val(C,D), null);
 end);
 
-TEST!(const_folding,
+TEST!(const_folding1,
 begin
   EXPECT_EQ!(const(1 + 1), 2);
   EXPECT_EQ!(const(1.0 + 1), 2.0);
@@ -3583,7 +3587,10 @@ begin
   EXPECT_EQ!(const( null and null), null);
   EXPECT_EQ!(const( null and 0), 0);
   EXPECT_EQ!(const( null and 1), null);
+end);
 
+TEST!(const_folding2,
+begin
 /* note that in the below we often do not use EXPECT_EQ because the point of the
  * relevant tests is to test the const equiality or inequality.  So the comparisons
  * need to be part of the const expression itself.
@@ -3628,7 +3635,10 @@ begin
   EXPECT!(const(2 < 3.0));
   EXPECT!(const(2 < 3L));
   EXPECT!(const((1 == 0) < (1 == 1)));
+end);
 
+TEST!(const_folding3,
+begin
   EXPECT_EQ!((null + null), null);
   EXPECT_EQ!((null - null), null);
   EXPECT_EQ!((null * null), null);
@@ -3708,6 +3718,10 @@ begin
   EXPECT_EQ!(const(-(0==0)), -1);
   EXPECT_EQ!(const(-(0==1)), 0);
 
+end);
+
+TEST!(const_folding4,
+begin
   -- IIF gets rewritten to case/when so we use that here for convenience
   EXPECT_EQ!(const(iif(1, 3, 5)), 3);
   EXPECT_EQ!(const(iif(0, 3, 5)), 5);

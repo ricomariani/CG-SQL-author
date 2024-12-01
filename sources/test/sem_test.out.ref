@@ -62013,13 +62013,31 @@ LET created_obj := creater_func();
 
 The statement ending at line XXXX
 
-LET null_is_no_good := NULL;
+LET null_alias := NULL;
 
-test/sem_test.sql:XXXX:1: error: in let_stmt : CQL0056: NULL expression has no type to imply the declaration of variable 'null_is_no_good'
-
-  {let_stmt}: err
-  | {name null_is_no_good}
+  {let_stmt}: null_alias: null variable was_set
+  | {name null_alias}: null_alias: null variable was_set
   | {null}: null
+
+The statement ending at line XXXX
+
+LET rewritten_null := price_d IS NULL;
+
+  {let_stmt}: rewritten_null: bool notnull variable
+  | {name rewritten_null}: rewritten_null: bool notnull variable
+  | {is}: bool notnull
+    | {name price_d}: price_d: real<dollars> variable was_set
+    | {null}: null
+
+The statement ending at line XXXX
+
+SET null_alias := NULL;
+
+test/sem_test.sql:XXXX:1: error: in null : CQL0056: variable of type NULL cannot be assigned 'null_alias'
+
+  {assign}: err
+  | {name null_alias}: err
+  | {null}: err
 
 The statement ending at line XXXX
 

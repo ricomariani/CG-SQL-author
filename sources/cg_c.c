@@ -525,8 +525,12 @@ static void cg_emit_isnull_init(charbuf *output, bool_t is_full_decl) {
 //    or NULL as appropriate
 static void cg_var_decl(charbuf *output, sem_t sem_type, CSTR base_name, bool_t is_full_decl) {
   Contract(is_unitary(sem_type) || is_cursor_formal(sem_type));
-  Contract(!is_null_type(sem_type));
   Contract(cg_main_output);
+
+  if (is_null_type(sem_type)) {
+    // this is a null alias, it has no codegen
+    return;
+  }
 
   sem_t core_type = core_type_of(sem_type);
   bool_t notnull = is_not_nullable(sem_type);
@@ -2389,7 +2393,6 @@ static void cg_expr_between_rewrite(
   Contract(is_ast_between_rewrite(ast));
   EXTRACT_NOTNULL(range, ast->right);
   EXTRACT_ANY_NOTNULL(expr, ast->left);
-  EXTRACT_STRING(var, range->left);
   EXTRACT_ANY_NOTNULL(test, range->right);
 
   // BETWEEN REWRITE [var := expr] CHECK [test]
@@ -2401,6 +2404,12 @@ static void cg_expr_between_rewrite(
     bprintf(value, "0");
     return;
   }
+
+  // we have to do this after we have checked the expression for the null case
+  // if it is the null case the variable we generated for temporary storage
+  // would be rewritten to the null constant and this next extract fails
+  // the early out handles that case so we're now in the normal invariant.
+  EXTRACT_STRING(var, range->left);
 
   cg_var_decl(cg_declarations_output, sem_type_var, var, CG_VAR_DECL_FULL);
 
@@ -3201,7 +3210,11 @@ static void cg_let_stmt(ast_node *ast) {
   EXTRACT_STRING(name, name_ast);
 
   cg_declare_simple_var(name_ast->sem->sem_type, name);
-  cg_assign(ast);
+
+  // null type variables are null aliases, they are rewritten away
+  if (!is_null_type(name_ast->sem->sem_type)) {
+    cg_assign(ast);
+  }
 }
 
 // In the CONST statement, emit the same codegen as LET statement.

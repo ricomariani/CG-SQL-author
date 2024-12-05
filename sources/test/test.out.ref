@@ -2462,3 +2462,20 @@ WITH
   )
 SELECT *
   FROM X;
+
+CURSOR @ID(x) LIKE @ID(y);
+
+CURSOR @ID(x) LIKE (x @ID(y));
+
+CURSOR @ID(x) LIKE SELECT @ID(x);
+
+CURSOR @ID(x) FOR
+  SELECT 1 AS x;
+
+FETCH @ID(x);
+
+CURSOR @ID(x) FETCH FROM CALL @ID(y)();
+
+SELECT @ID(x)
+  FROM @ID(x)
+    INNER JOIN @ID(y);

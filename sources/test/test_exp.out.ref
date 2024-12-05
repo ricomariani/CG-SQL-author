@@ -2485,3 +2485,20 @@ WITH
   )
 SELECT *
   FROM X;
+
+CURSOR x LIKE y;
+
+CURSOR x LIKE (x y);
+
+CURSOR x LIKE SELECT x AS y;
+
+CURSOR x FOR
+  SELECT 1 AS x;
+
+FETCH x;
+
+CURSOR x FETCH FROM CALL y();
+
+SELECT x
+  FROM x
+    INNER JOIN y;

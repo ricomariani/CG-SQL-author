@@ -19023,3 +19023,128 @@ The statement ending at line XXXX
       | {select_limit}
         | {select_offset}
 
+The statement ending at line XXXX
+
+  {declare_cursor_like_name}
+  | {at_id}
+  | | {text_args}
+  |   | {name x}
+  | {shape_def}
+    | {like}
+      | {at_id}
+        | {text_args}
+          | {name y}
+
+The statement ending at line XXXX
+
+  {declare_cursor_like_typed_names}
+  | {at_id}
+  | | {text_args}
+  |   | {name x}
+  | {typed_names}
+    | {typed_name}
+      | {name x}
+      | {at_id}
+        | {text_args}
+          | {name y}
+
+The statement ending at line XXXX
+
+  {declare_cursor_like_select}
+  | {at_id}
+  | | {text_args}
+  |   | {name x}
+  | {select_stmt}
+    | {select_core_list}
+    | | {select_core}
+    |   | {select_expr_list_con}
+    |     | {select_expr_list}
+    |     | | {select_expr}
+    |     |   | {at_id}
+    |     |   | | {text_args}
+    |     |   |   | {name x}
+    |     |   | {opt_as_alias}
+    |     |     | {at_id}
+    |     |       | {text_args}
+    |     |         | {name y}
+    |     | {select_from_etc}
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+  {declare_cursor}
+  | {at_id}
+  | | {text_args}
+  |   | {name x}
+  | {select_stmt}
+    | {select_core_list}
+    | | {select_core}
+    |   | {select_expr_list_con}
+    |     | {select_expr_list}
+    |     | | {select_expr}
+    |     |   | {int 1}
+    |     |   | {opt_as_alias}
+    |     |     | {name x}
+    |     | {select_from_etc}
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+  {fetch_stmt}
+  | {at_id}
+    | {text_args}
+      | {name x}
+
+The statement ending at line XXXX
+
+  {declare_value_cursor}
+  | {at_id}
+  | | {text_args}
+  |   | {name x}
+  | {call_stmt}
+    | {at_id}
+      | {text_args}
+        | {name y}
+
+The statement ending at line XXXX
+
+  {select_stmt}
+  | {select_core_list}
+  | | {select_core}
+  |   | {select_expr_list_con}
+  |     | {select_expr_list}
+  |     | | {select_expr}
+  |     |   | {at_id}
+  |     |     | {text_args}
+  |     |       | {name x}
+  |     | {select_from_etc}
+  |       | {join_clause}
+  |       | | {table_or_subquery}
+  |       | | | {at_id}
+  |       | |   | {text_args}
+  |       | |     | {name x}
+  |       | | {join_target_list}
+  |       |   | {join_target}
+  |       |     | {int 1} {join_inner}
+  |       |     | {table_join}
+  |       |       | {table_or_subquery}
+  |       |         | {at_id}
+  |       |           | {text_args}
+  |       |             | {name y}
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+

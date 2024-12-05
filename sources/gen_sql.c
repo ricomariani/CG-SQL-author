@@ -2324,7 +2324,7 @@ static void gen_select_expr(ast_node *ast) {
 
   gen_root_expr(expr);
 
-  if (opt_as_alias) {
+  if (opt_as_alias && is_id(opt_as_alias->left)) {
     EXTRACT_STRING(name, opt_as_alias->left);
 
     if (used_alias_syms && !symtab_find(used_alias_syms, name)) {
@@ -2449,9 +2449,7 @@ static void gen_table_or_subquery(ast_node *ast) {
   if (is_any_macro_ref(factor)) {
     gen_any_macro_ref(factor);
   }
-  else if (is_ast_str(factor)) {
-    EXTRACT_STRING(name, factor);
-
+  else if (is_ast_str(factor) || is_ast_at_id(factor)) {
     bool_t has_table_rename_callback = gen_callbacks && gen_callbacks->table_rename_callback;
     bool_t handled = false;
 
@@ -4392,10 +4390,12 @@ static void gen_declare_vars_type(ast_node *ast) {
 
 static void gen_declare_cursor(ast_node *ast) {
   Contract(is_ast_declare_cursor(ast));
-  EXTRACT_STRING(name, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_ANY_NOTNULL(source, ast->right);
 
-  gen_printf("CURSOR %s FOR", name);
+  gen_printf("CURSOR ");
+  gen_name(name_ast);
+  gen_printf(" FOR");
 
   if (is_select_stmt(source) || is_ast_call_stmt(source)) {
     // The two statement cases are unified
@@ -4412,28 +4412,34 @@ static void gen_declare_cursor(ast_node *ast) {
 
 static void gen_declare_cursor_like_name(ast_node *ast) {
   Contract(is_ast_declare_cursor_like_name(ast));
-  EXTRACT_STRING(new_cursor_name, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_NOTNULL(shape_def, ast->right);
 
-  gen_printf("CURSOR %s ", new_cursor_name);
+  gen_printf("CURSOR ");
+  gen_name(name_ast);
+  gen_printf(" ");
   gen_shape_def(shape_def);
 }
 
 static void gen_declare_cursor_like_select(ast_node *ast) {
   Contract(is_ast_declare_cursor_like_select(ast));
-  EXTRACT_STRING(name, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_ANY_NOTNULL(stmt, ast->right);
 
-  gen_printf("CURSOR %s LIKE ", name);
+  gen_printf("CURSOR ");
+  gen_name(name_ast);
+  gen_printf(" LIKE ");
   gen_one_stmt(stmt);
 }
 
 static void gen_declare_cursor_like_typed_names(ast_node *ast) {
   Contract(is_ast_declare_cursor_like_typed_names(ast));
-  EXTRACT_STRING(name, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_ANY_NOTNULL(typed_names, ast->right);
 
-  gen_printf("CURSOR %s LIKE (", name);
+  gen_printf("CURSOR ");
+  gen_name(name_ast);
+  gen_printf(" LIKE (");
   gen_typed_names(typed_names);
   gen_printf(")");
 }
@@ -4451,10 +4457,12 @@ static void gen_declare_named_type(ast_node *ast) {
 
 static void gen_declare_value_cursor(ast_node *ast) {
   Contract(is_ast_declare_value_cursor(ast));
-  EXTRACT_STRING(name, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_ANY_NOTNULL(stmt, ast->right);
 
-  gen_printf("CURSOR %s FETCH FROM ", name);
+  gen_printf("CURSOR ");
+  gen_name(name_ast);
+  gen_printf(" FETCH FROM ");
   gen_one_stmt(stmt);
 }
 
@@ -4531,19 +4539,21 @@ static void gen_declare_const_stmt(ast_node *ast) {
 static void gen_set_from_cursor(ast_node *ast) {
   Contract(is_ast_set_from_cursor(ast));
   EXTRACT_NAME_AST(var_name_ast, ast->left);
-  EXTRACT_STRING(cursor_name, ast->right);
+  EXTRACT_NAME_AST(cursor_name_ast, ast->right);
 
   gen_printf("SET ");
   gen_name(var_name_ast);
-  gen_printf(" FROM CURSOR %s", cursor_name);
+  gen_printf(" FROM CURSOR ");
+  gen_name(cursor_name_ast);
 }
 
 static void gen_fetch_stmt(ast_node *ast) {
   Contract(is_ast_fetch_stmt(ast));
-  EXTRACT_STRING(name, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT(name_list, ast->right);
 
-  gen_printf("FETCH %s", name);
+  gen_printf("FETCH ");
+  gen_name(name_ast);
   if (name_list) {
     gen_printf(" INTO ");
     gen_name_list(name_list);

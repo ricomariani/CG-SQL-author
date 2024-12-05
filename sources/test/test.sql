@@ -1905,3 +1905,11 @@ test_big_all!(
   );
 
 with X(`foo bar`) as (select 1 x) select * from X;
+
+cursor @ID(x) like @ID(y);
+cursor @ID(x) like (x @ID(y));
+cursor @ID(x) like select @ID(x) @ID(y);
+cursor @ID(x) for select 1 x;
+fetch @ID(x);
+cursor @ID(x) fetch from call @ID(y)();
+select @ID(x) from @ID(x) join @ID(y);

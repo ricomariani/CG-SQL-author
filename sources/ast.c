@@ -1034,7 +1034,7 @@ cql_noexport void continue_find_table_node(
   }
   else if (is_ast_table_or_subquery(node)) {
     EXTRACT_ANY_NOTNULL(factor, node->left);
-    if (is_ast_str(factor)) {
+    if (is_ast_str(factor) || is_ast_at_id(factor)) {
       // the other table factor cases (there are several) do not have a string payload
       table_or_view_name_ast = factor;
       alt_callback = callbacks->callback_from;

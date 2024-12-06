@@ -189,6 +189,7 @@ typedef struct num_ast_node {
 typedef struct {
   ast_node *_Nonnull def;
   int32_t type;
+  int32_t count_context;
 } macro_info;
 
 cql_noexport CSTR _Nullable install_macro_args(ast_node *_Nonnull ast);

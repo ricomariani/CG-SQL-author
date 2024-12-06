@@ -1295,6 +1295,7 @@ cql_noexport bool_t set_macro_info(CSTR name, int32_t macro_type, ast_node *ast)
   macro_info *minfo = _ast_pool_new(macro_info);
   minfo->def = ast;
   minfo->type = macro_type;
+  minfo->count_context = -1;  // this will never be used
 
   return symtab_add(macro_table, name, minfo);
 }
@@ -1315,6 +1316,7 @@ cql_noexport bool_t set_macro_arg_info(
   macro_info *minfo = _ast_pool_new(macro_info);
   minfo->def = ast;
   minfo->type = macro_type;
+  minfo->count_context = current_macro_count;
   return symtab_add(macro_arg_table, name, minfo);
 }
 
@@ -1873,9 +1875,65 @@ static void expand_macro_refs(ast_node *ast) {
     }
   }
 
+  // This is subtle.  We have to remember the current macro count
+  // because we're going to change it, fair enough, now recall that we
+  // use this count to make unique names for the macro args.  There is
+  // the internal variable @tmp that generates such a name.  Each
+  // time we enter a new macro expansion, we upcount that variable
+  // so that the next @tmp gets a new name.  So far so good.  Now considerr
+  // this code:
+  //
+  //
+  // macro(expr) two!(z! expr)
+  // begin
+  //   z! + z!
+  // end;
+  //
+  // @macro(stmt_list) one!(x! expr, y! expr)
+  // begin
+  //   let @tmp(x) := x!;
+  //   let @id(y!) := inner!(@tmp(x));
+  // end;
+  // 
+  // one(expensive(100), zz)
+  //
+  // This must expand into:
+  //
+  // LET tmp_1x := expensive(100);
+  // LET zz := tmp_1x + tmp_1x;
+  //
+  // Now the thing is the @TMP is going to be expanded inside of
+  // `inner` and that will be a new macro context.  The body
+  // of the macro argument x! which flows to z! must remember
+  // that it was created in the context of `one` and not `two`.
+  // This is why we have the count_context field in the macro_info.
+  //
+  // When we created the macro we saved the current count in the
+  // count_context field.  Now we're going to change the count
+  // to the saved value to evaluate that macro body now.
+  //
+  // Now if this isn't a macro argument, but another macro body
+  // then we're in a new context and we upcount the macro count
+  // as usual.  Note that we never restore next_macro_count,
+  // it counts up inexorably and is never reset until the next
+  // run.
+    
+  int32_t saved_macro_count = current_macro_count;
+
+  if (is_ref) {
+    // Macro reference, new macro count
+    current_macro_count = next_macro_count++;
+  }
+  else {
+    // macro argument, reuse saved count from arg's context
+    current_macro_count = minfo->count_context;
+  }
+
   // it's hugely important to expand what you're going to replace FIRST
   // and then slot it in. Otherwise the recursion is n^2 depth!!!
   expand_macros(body);
+
+  current_macro_count = saved_macro_count;
 
   // its normal for body to have been replaced in the tree, we re-compute it
   // so that we get the expanded version.  Same rules as before
@@ -2000,10 +2058,7 @@ tail_recurse:
 
   // expand macros and macro arguments in place
   if (is_any_macro_ref(node)) {
-    int32_t saved_macro_count = current_macro_count;
-    current_macro_count = next_macro_count++;
     expand_macro_refs(node);
-    current_macro_count = saved_macro_count;
     return;
   }
 

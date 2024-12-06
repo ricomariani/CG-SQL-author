@@ -1885,8 +1885,8 @@ BEGIN
   LET x := 'macro_test_proc';
   LET y := "macro_test_proc";
   LET macro_test_proc_bar_baz := 1;
-  LET tmp_83_extension := 7;
-  tmp_83_extension := 7;
+  LET tmp_0_extension := 7;
+  tmp_0_extension := 7;
 END;
 
   {create_proc_stmt}
@@ -1903,10 +1903,10 @@ END;
       | | {name macro_test_proc_bar_baz}
       | | {int 1}
       | {let_stmt}
-      | | {name tmp_83_extension}
+      | | {name tmp_0_extension}
       | | {int 7}
       | {expr_stmt}
         | {expr_assign}
-          | {name tmp_83_extension}
+          | {name tmp_0_extension}
           | {int 7}
 

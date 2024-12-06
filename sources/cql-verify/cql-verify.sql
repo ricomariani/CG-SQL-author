@@ -92,9 +92,13 @@ begin
   try
     set test_output_line := (select line from test_results where line >= expectation_line limit 1);
   catch
+    let max_line := (select max(line) from test_results);
     printf("no lines come after %d\n", expectation_line);
     printf("available test output lines: %d\n", (select count(*) from test_results));
-    printf("max line number: %d\n", (select max(line) from test_results));
+    printf("max line number: %d\n", max_line);
+    printf("\nThis type of failure usually indicates that:\n");
+    printf(" * The semantic validation crashed before the output was complete, or,\n");
+    printf(" * An earlier phase of the compiler had errors, such as macro expansion\n\n");
     throw;
   end;
 end;

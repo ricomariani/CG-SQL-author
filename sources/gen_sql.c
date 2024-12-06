@@ -1221,6 +1221,8 @@ static void gen_text_args(ast_node *ast) {
 }
 
 static void gen_expr_macro_text(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+  Contract(ast->left);
+
   gen_printf("@TEXT(");
   gen_text_args(ast->left);
   gen_printf(")");
@@ -1250,6 +1252,18 @@ cql_noexport void gen_any_text_arg(ast_node *ast) {
 // this is used to token paste an identifier
 static void gen_expr_at_id(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_at_id(ast));
+  EXTRACT_NOTNULL(text_args, ast->left);
+
+  if (is_ast_str(text_args->left)) {
+    EXTRACT_STRING(arg1, text_args->left);
+    if (!strcmp("@TMP", arg1)) {
+       gen_printf("@TMP(");
+       gen_text_args(text_args->right);
+       gen_printf(")");
+       return;
+    }
+  }
+
   gen_printf("@ID(");
   gen_text_args(ast->left);
   gen_printf(")");

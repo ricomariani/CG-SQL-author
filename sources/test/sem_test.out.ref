@@ -96665,3 +96665,107 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
         | {not}: err
           | {strlit 'x'}: text notnull
 
+The statement ending at line XXXX
+
+@MACRO(EXPR) macro_one!(x! EXPR)
+BEGIN
+  x! + x!
+END;
+
+  {expr_macro_def}: ok
+  | {macro_name_formals}
+  | | {name macro_one}
+  | | {macro_formals}
+  |   | {macro_formal}
+  |     | {name x}
+  |     | {name EXPR}
+  | {add}
+    | {expr_macro_arg_ref}
+    | | {name x}
+    | {expr_macro_arg_ref}
+      | {name x}
+
+The statement ending at line XXXX
+
+@MACRO(STMT_LIST) macro_two!(x! EXPR, y! EXPR)
+BEGIN
+  LET @TMP(x) := x!;
+  LET @ID(y!) := macro_one!(@TMP(x));
+END;
+
+  {stmt_list_macro_def}: ok
+  | {macro_name_formals}
+  | | {name macro_two}
+  | | {macro_formals}
+  |   | {macro_formal}
+  |   | | {name x}
+  |   | | {name EXPR}
+  |   | {macro_formals}
+  |     | {macro_formal}
+  |       | {name y}
+  |       | {name EXPR}
+  | {stmt_list}
+    | {let_stmt}
+    | | {at_id}
+    | | | {text_args}
+    | |   | {name @TMP}
+    | |   | {text_args}
+    | |     | {name x}
+    | | {expr_macro_arg_ref}
+    |   | {name x}
+    | {let_stmt}
+      | {at_id}
+      | | {text_args}
+      |   | {expr_macro_arg_ref}
+      |     | {name y}
+      | {expr_macro_ref}
+        | {name macro_one}
+        | {macro_args}
+          | {expr_macro_arg}
+            | {at_id}
+              | {text_args}
+                | {name @TMP}
+                | {text_args}
+                  | {name x}
+
+The statement ending at line XXXX
+
+DECLARE FUNC expensive (x INT) INT!;
+
+  {declare_func_stmt}: integer notnull
+  | {name expensive}: integer notnull
+  | {func_params_return}
+    | {params}: ok
+    | | {param}: x: integer variable in
+    |   | {param_detail}: x: integer variable in
+    |     | {name x}: x: integer variable in
+    |     | {type_int}: integer
+    | {notnull}: integer notnull
+      | {type_int}: integer
+
+The statement ending at line XXXX
+
+PROC use_nested_macros_with_at_tmp ()
+BEGIN
+  LET tmp_1x := expensive(100);
+  LET zz := tmp_1x + tmp_1x;
+END;
+
+  {create_proc_stmt}: ok
+  | {name use_nested_macros_with_at_tmp}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {let_stmt}: tmp_1x: integer notnull variable
+      | | {name tmp_1x}: tmp_1x: integer notnull variable
+      | | {call}: integer notnull
+      |   | {name expensive}
+      |   | {call_arg_list}
+      |     | {call_filter_clause}
+      |     | {arg_list}: ok
+      |       | {int 100}: integer notnull
+      | {let_stmt}: zz: integer notnull variable
+        | {name zz}: zz: integer notnull variable
+        | {add}: integer notnull
+          | {name tmp_1x}: tmp_1x: integer notnull variable
+          | {name tmp_1x}: tmp_1x: integer notnull variable
+

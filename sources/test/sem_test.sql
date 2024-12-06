@@ -25572,3 +25572,33 @@ set loaded := load_extension('foo');
 @ifndef foo
   let bogus_assignment_ifndef := not 'x';
 @endif
+
+
+@macro(expr) macro_one!(x! expr)
+begin
+   x! + x!
+end;
+
+@macro(stmt_list) macro_two!(x! expr, y! expr)
+begin
+   let @tmp(x) := x!;
+   let @id(y!) := macro_one!(@tmp(x));
+end;
+
+declare function expensive(x int) int!;
+
+-- TEST: we are testing the expansion of macro_two
+-- we can't readily validate that the @tmp(x) has
+-- the same number when we expand `macro_one` but if
+-- it doesn't there will be a compile error, we
+-- can catch that.
+-- The number might change if other @tmp is added above here.
+-- But no errors.
+-- + LET tmp_%x := expensive(100);
+-- + LET zz := tmp_%x + tmp_%x;
+-- + {create_proc_stmt}: ok
+-- - error:
+proc use_nested_macros_with_at_tmp()
+begin
+   macro_two!(expensive(100), zz);
+end;

@@ -24,10 +24,24 @@ extern cql_object_ref _Nonnull cql_extract_partition(cql_object_ref _Nonnull p, 
 extern cql_object_ref _Nonnull cql_string_dictionary_create(void);
 extern cql_bool cql_string_dictionary_add(cql_object_ref _Nonnull dict, cql_string_ref _Nonnull key, cql_string_ref _Nonnull value);
 extern cql_string_ref _Nullable cql_string_dictionary_find(cql_object_ref _Nonnull dict, cql_string_ref _Nullable key);
+extern cql_object_ref _Nonnull cql_long_dictionary_create(void);
+extern cql_bool cql_long_dictionary_add(cql_object_ref _Nonnull dict, cql_string_ref _Nonnull key, cql_int64 value);
+extern cql_nullable_int64 cql_long_dictionary_find(cql_object_ref _Nonnull dict, cql_string_ref _Nullable key);
+extern cql_object_ref _Nonnull cql_real_dictionary_create(void);
+extern cql_bool cql_real_dictionary_add(cql_object_ref _Nonnull dict, cql_string_ref _Nonnull key, cql_double value);
+extern cql_nullable_double cql_real_dictionary_find(cql_object_ref _Nonnull dict, cql_string_ref _Nullable key);
 extern cql_object_ref _Nonnull cql_object_dictionary_create(void);
 extern cql_bool cql_object_dictionary_add(cql_object_ref _Nonnull dict, cql_string_ref _Nonnull key, cql_object_ref _Nonnull value);
 extern cql_object_ref _Nullable cql_object_dictionary_find(cql_object_ref _Nonnull dict, cql_string_ref _Nullable key);
+extern cql_object_ref _Nonnull cql_blob_dictionary_create(void);
+extern cql_bool cql_blob_dictionary_add(cql_object_ref _Nonnull dict, cql_string_ref _Nonnull key, cql_blob_ref _Nonnull value);
+extern cql_blob_ref _Nullable cql_blob_dictionary_find(cql_object_ref _Nonnull dict, cql_string_ref _Nullable key);
 extern cql_string_ref _Nonnull cql_cursor_format(cql_dynamic_cursor *_Nonnull C);
+extern cql_int64 cql_cursor_hash(cql_dynamic_cursor *_Nonnull C);
+extern cql_bool cql_cursors_equal(cql_dynamic_cursor *_Nonnull l, cql_dynamic_cursor *_Nonnull r);
+extern cql_int32 cql_cursor_diff_index(cql_dynamic_cursor *_Nonnull l, cql_dynamic_cursor *_Nonnull r);
+extern cql_string_ref _Nullable cql_cursor_diff_col(cql_dynamic_cursor *_Nonnull l, cql_dynamic_cursor *_Nonnull r);
+extern cql_string_ref _Nullable cql_cursor_diff_val(cql_dynamic_cursor *_Nonnull l, cql_dynamic_cursor *_Nonnull r);
 extern cql_object_ref _Nonnull cql_box_int(cql_nullable_int32 x);
 extern cql_nullable_int32 cql_unbox_int(cql_object_ref _Nullable box);
 extern cql_object_ref _Nonnull cql_box_real(cql_nullable_double x);
@@ -48,8 +62,29 @@ extern cql_object_ref _Nonnull cql_string_list_set_at(cql_object_ref _Nonnull li
 extern cql_string_ref _Nullable cql_string_list_get_at(cql_object_ref _Nonnull list, cql_int32 index_);
 extern cql_int32 cql_string_list_count(cql_object_ref _Nonnull list);
 extern cql_object_ref _Nonnull cql_string_list_add(cql_object_ref _Nonnull list, cql_string_ref _Nonnull string);
+extern cql_object_ref _Nonnull cql_blob_list_create(void);
+extern cql_object_ref _Nonnull cql_blob_list_set_at(cql_object_ref _Nonnull list, cql_int32 index_, cql_blob_ref _Nonnull value_);
+extern cql_blob_ref _Nullable cql_blob_list_get_at(cql_object_ref _Nonnull list, cql_int32 index_);
+extern cql_int32 cql_blob_list_count(cql_object_ref _Nonnull list);
+extern cql_object_ref _Nonnull cql_blob_list_add(cql_object_ref _Nonnull list, cql_blob_ref _Nonnull value);
+extern cql_object_ref _Nonnull cql_object_list_create(void);
+extern cql_object_ref _Nonnull cql_object_list_set_at(cql_object_ref _Nonnull list, cql_int32 index_, cql_object_ref _Nonnull value_);
+extern cql_object_ref _Nullable cql_object_list_get_at(cql_object_ref _Nonnull list, cql_int32 index_);
+extern cql_int32 cql_object_list_count(cql_object_ref _Nonnull list);
+extern cql_object_ref _Nonnull cql_object_list_add(cql_object_ref _Nonnull list, cql_object_ref _Nonnull value);
+extern cql_object_ref _Nonnull cql_long_list_create(void);
+extern cql_object_ref _Nonnull cql_long_list_set_at(cql_object_ref _Nonnull list, cql_int32 index_, cql_int64 value_);
+extern cql_int64 cql_long_list_get_at(cql_object_ref _Nonnull list, cql_int32 index_);
+extern cql_int32 cql_long_list_count(cql_object_ref _Nonnull list);
+extern cql_object_ref _Nonnull cql_long_list_add(cql_object_ref _Nonnull list, cql_int64 value_);
+extern cql_object_ref _Nonnull cql_real_list_create(void);
+extern cql_object_ref _Nonnull cql_real_list_set_at(cql_object_ref _Nonnull list, cql_int32 index_, cql_double value_);
+extern cql_double cql_real_list_get_at(cql_object_ref _Nonnull list, cql_int32 index_);
+extern cql_int32 cql_real_list_count(cql_object_ref _Nonnull list);
+extern cql_object_ref _Nonnull cql_real_list_add(cql_object_ref _Nonnull list, cql_double value_);
 extern cql_int32 cql_cursor_column_count(cql_dynamic_cursor *_Nonnull C);
 extern cql_int32 cql_cursor_column_type(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
+extern cql_string_ref _Nullable cql_cursor_column_name(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
 extern cql_nullable_bool cql_cursor_get_bool(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
 extern cql_nullable_int32 cql_cursor_get_int(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
 extern cql_nullable_int64 cql_cursor_get_long(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
@@ -57,8 +92,22 @@ extern cql_nullable_double cql_cursor_get_real(cql_dynamic_cursor *_Nonnull C, c
 extern cql_string_ref _Nullable cql_cursor_get_text(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
 extern cql_blob_ref _Nullable cql_cursor_get_blob(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
 extern cql_object_ref _Nullable cql_cursor_get_object(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
+extern cql_string_ref _Nonnull cql_cursor_format_column(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
 extern CQL_WARN_UNUSED cql_code cql_throw(sqlite3 *_Nonnull _db_, cql_int32 code);
 
+extern CQL_WARN_UNUSED cql_code cql_cursor_to_blob(sqlite3 *_Nonnull _db_, cql_dynamic_cursor *_Nonnull C, cql_blob_ref _Nullable *_Nonnull result);
+
+extern CQL_WARN_UNUSED cql_code cql_cursor_from_blob(sqlite3 *_Nonnull _db_, cql_dynamic_cursor *_Nonnull C, cql_blob_ref _Nullable b);
+
+extern cql_blob_ref _Nonnull cql_blob_from_int(cql_string_ref _Nullable prefix, cql_int32 val);
+extern cql_string_ref _Nonnull cql_format_bool(cql_nullable_bool val);
+extern cql_string_ref _Nonnull cql_format_int(cql_nullable_int32 val);
+extern cql_string_ref _Nonnull cql_format_long(cql_nullable_int64 val);
+extern cql_string_ref _Nonnull cql_format_double(cql_nullable_double val);
+extern cql_string_ref _Nonnull cql_format_string(cql_string_ref _Nullable val);
+extern cql_string_ref _Nonnull cql_format_blob(cql_blob_ref _Nullable val);
+extern cql_string_ref _Nonnull cql_format_object(cql_object_ref _Nullable val);
+extern cql_string_ref _Nonnull cql_format_null(cql_nullable_bool ignored);
 extern cql_object_ref _Nullable cql_fopen(cql_string_ref _Nonnull name, cql_string_ref _Nonnull mode);
 extern cql_string_ref _Nullable readline_object_file(cql_object_ref _Nonnull f);
 extern cql_int32 atoi_at_text(cql_string_ref _Nullable str, cql_int32 offset);
@@ -93,6 +142,20 @@ cql_string_literal(_literal_16_The_statement_ending_at_line_read_test_results, "
 /*
 [[builtin]]
 DECLARE PROC cql_throw (code INT!) USING TRANSACTION;
+*/
+
+// Generated from cql-verify.sql:1
+
+/*
+[[builtin]]
+DECLARE PROC cql_cursor_to_blob (C CURSOR, OUT result BLOB!) USING TRANSACTION;
+*/
+
+// Generated from cql-verify.sql:1
+
+/*
+[[builtin]]
+DECLARE PROC cql_cursor_from_blob (C CURSOR, b BLOB) USING TRANSACTION;
 */
 
 //
@@ -198,7 +261,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:100
+// Generated from cql-verify.sql:104
 
 /*
 [[private]]
@@ -210,11 +273,15 @@ BEGIN
       WHERE line >= expectation_line
       LIMIT 1 );
   CATCH
+    LET max_line := ( SELECT max(line)
+      FROM test_results );
     CALL printf("no lines come after %d\n", expectation_line);
     CALL printf("available test output lines: %d\n", ( SELECT count(*)
       FROM test_results ));
-    CALL printf("max line number: %d\n", ( SELECT max(line)
-      FROM test_results ));
+    CALL printf("max line number: %d\n", max_line);
+    CALL printf("\nThis type of failure usually indicates that:\n");
+    CALL printf(" * The semantic validation crashed before the output was complete, or,\n");
+    CALL printf(" * An earlier phase of the compiler had errors, such as macro expansion\n\n");
     THROW;
   END;
 END;
@@ -225,8 +292,8 @@ static CQL_WARN_UNUSED cql_code find_test_output_line(sqlite3 *_Nonnull _db_, cq
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
   cql_int32 _tmp_int_0 = 0;
-  cql_nullable_int32 _tmp_n_int_0 = { .is_null = 1 };
   sqlite3_stmt *_temp_stmt = NULL;
+  cql_nullable_int32 max_line = { .is_null = 1 };
 
   *test_output_line = 0; // set out arg to non-garbage
   // try
@@ -247,6 +314,14 @@ static CQL_WARN_UNUSED cql_code find_test_output_line(sqlite3 *_Nonnull _db_, cq
   }
   catch_start_1: {
     int32_t _rc_thrown_1 = _rc_;
+    _rc_ = cql_prepare(_db_, &_temp_stmt,
+      "SELECT max(line) "
+        "FROM test_results");
+    if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+    _rc_ = sqlite3_step(_temp_stmt);
+    if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
+      cql_column_nullable_int32(_temp_stmt, 0, &max_line);
+    cql_finalize_stmt(&_temp_stmt);
     printf("no lines come after %d\n", expectation_line);
     _rc_ = cql_prepare(_db_, &_temp_stmt,
       "SELECT count(*) "
@@ -257,15 +332,10 @@ static CQL_WARN_UNUSED cql_code find_test_output_line(sqlite3 *_Nonnull _db_, cq
       _tmp_int_0 = sqlite3_column_int(_temp_stmt, 0);
     cql_finalize_stmt(&_temp_stmt);
     printf("available test output lines: %d\n", _tmp_int_0);
-    _rc_ = cql_prepare(_db_, &_temp_stmt,
-      "SELECT max(line) "
-        "FROM test_results");
-    if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-    _rc_ = sqlite3_step(_temp_stmt);
-    if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
-      cql_column_nullable_int32(_temp_stmt, 0, &_tmp_n_int_0);
-    cql_finalize_stmt(&_temp_stmt);
-    printf("max line number: %d\n", _tmp_n_int_0.value);
+    printf("max line number: %d\n", max_line.value);
+    printf("\nThis type of failure usually indicates that:\n");
+    printf(" * The semantic validation crashed before the output was complete, or,\n");
+    printf(" * An earlier phase of the compiler had errors, such as macro expansion\n\n");
     _rc_ = cql_best_error(_rc_thrown_1);
     cql_error_trace();
     goto cql_cleanup;
@@ -280,7 +350,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:119
+// Generated from cql-verify.sql:123
 
 /*
 [[private]]
@@ -345,7 +415,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:130
+// Generated from cql-verify.sql:134
 
 /*
 [[private]]
@@ -394,7 +464,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:140
+// Generated from cql-verify.sql:144
 
 /*
 [[private]]
@@ -434,7 +504,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:157
+// Generated from cql-verify.sql:161
 
 /*
 [[private]]
@@ -484,7 +554,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:175
+// Generated from cql-verify.sql:179
 
 /*
 [[private]]
@@ -562,7 +632,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:198
+// Generated from cql-verify.sql:202
 
 /*
 [[private]]
@@ -660,7 +730,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:227
+// Generated from cql-verify.sql:231
 
 /*
 [[private]]
@@ -736,7 +806,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:256
+// Generated from cql-verify.sql:260
 
 /*
 [[private]]
@@ -781,7 +851,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:272
+// Generated from cql-verify.sql:276
 
 /*
 [[private]]
@@ -838,7 +908,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:355
+// Generated from cql-verify.sql:359
 
 /*
 PROC match_actual (buffer TEXT!, expectation_line INT!)
@@ -925,36 +995,31 @@ CQL_WARN_UNUSED cql_code match_actual(sqlite3 *_Nonnull _db_, cql_string_ref _No
   }
   _tmp_bool_0 = starts_with_text(buffer, _literal_11_match_actual);
   if (_tmp_bool_0) {
-    cql_string_release(pattern);
-    pattern = after_text(buffer, 5);
+    cql_set_created_string_ref(&pattern, after_text(buffer, 5));
     expected = 0;
   }
   else {
     _tmp_bool_0 = starts_with_text(buffer, _literal_12_match_actual);
     if (_tmp_bool_0) {
-      cql_string_release(pattern);
-      pattern = after_text(buffer, 5);
+      cql_set_created_string_ref(&pattern, after_text(buffer, 5));
       expected = 1;
     }
     else {
       _tmp_bool_0 = starts_with_text(buffer, _literal_13_match_actual);
       if (_tmp_bool_0) {
-        cql_string_release(pattern);
-        pattern = after_text(buffer, 5);
+        cql_set_created_string_ref(&pattern, after_text(buffer, 5));
         expected = - 1;
       }
       else {
         _tmp_bool_1 = starts_with_text(buffer, _literal_14_match_actual);
         if (_tmp_bool_1) {
-          cql_string_release(pattern);
-          pattern = after_text(buffer, 5);
+          cql_set_created_string_ref(&pattern, after_text(buffer, 5));
           expected = - 2;
         }
         else {
           match_multiline(buffer, &_tmp_bool_1);
           if (_tmp_bool_1) {
-            cql_string_release(pattern);
-            pattern = after_text(buffer, 6);
+            cql_set_created_string_ref(&pattern, after_text(buffer, 6));
             _tmp_int_1 = octet_text(buffer, 4);
             expected = _tmp_int_1 - 48;
           }
@@ -1021,7 +1086,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:366
+// Generated from cql-verify.sql:370
 
 /*
 [[private]]
@@ -1063,7 +1128,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:381
+// Generated from cql-verify.sql:385
 
 /*
 [[private]]
@@ -1123,7 +1188,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:417
+// Generated from cql-verify.sql:421
 
 /*
 [[private]]
@@ -1165,8 +1230,7 @@ static CQL_WARN_UNUSED cql_code read_test_results(sqlite3 *_Nonnull _db_, cql_st
   cql_int32 loc = 0;
   sqlite3_stmt *_temp1_stmt = NULL;
 
-  cql_object_release(result_file);
-  result_file = cql_fopen(result_name, _literal_15_r_read_test_results);
+  cql_set_created_object_ref(&result_file, cql_fopen(result_name, _literal_15_r_read_test_results));
   if (!result_file) {
     cql_alloc_cstr(_cstr_8, result_name);
     printf("unable to open file '%s'\n", _cstr_8);
@@ -1180,8 +1244,7 @@ static CQL_WARN_UNUSED cql_code read_test_results(sqlite3 *_Nonnull _db_, cql_st
   len = len_text(key_string);
   for (;;) {
     if (!(1)) break;
-    cql_string_release(data);
-    data = readline_object_file(result_file);
+    cql_set_created_string_ref(&data, readline_object_file(result_file));
     if (!data) {
       break;
     }
@@ -1217,7 +1280,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:442
+// Generated from cql-verify.sql:446
 
 /*
 [[private]]
@@ -1251,8 +1314,7 @@ static CQL_WARN_UNUSED cql_code read_test_file(sqlite3 *_Nonnull _db_, cql_strin
   cql_string_ref data = NULL;
   sqlite3_stmt *_temp1_stmt = NULL;
 
-  cql_object_release(sql_file);
-  sql_file = cql_fopen(sql_name, _literal_15_r_read_test_results);
+  cql_set_created_object_ref(&sql_file, cql_fopen(sql_name, _literal_15_r_read_test_results));
   if (!sql_file) {
     cql_alloc_cstr(_cstr_9, sql_name);
     printf("unable to open file '%s'\n", _cstr_9);
@@ -1264,8 +1326,7 @@ static CQL_WARN_UNUSED cql_code read_test_file(sqlite3 *_Nonnull _db_, cql_strin
   line = 1;
   for (;;) {
     if (!(1)) break;
-    cql_string_release(data);
-    data = readline_object_file(sql_file);
+    cql_set_created_string_ref(&data, readline_object_file(sql_file));
     if (!data) {
       break;
     }
@@ -1297,7 +1358,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:449
+// Generated from cql-verify.sql:453
 
 /*
 [[private]]
@@ -1325,7 +1386,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:466
+// Generated from cql-verify.sql:470
 
 /*
 [[private]]
@@ -1381,7 +1442,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:478
+// Generated from cql-verify.sql:482
 
 /*
 PROC dbhelp_main (args OBJECT<cql_string_list>!)

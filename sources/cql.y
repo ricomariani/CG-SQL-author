@@ -403,7 +403,7 @@ program: top_level_stmts[stmts] {
       if (options.expand) {
         expand_macros($stmts);
         if (macro_expansion_errors) {
-          cql_cleanup_and_exit(1);
+          cql_cleanup_and_exit(3);
         }
       }
       if (options.semantic) {

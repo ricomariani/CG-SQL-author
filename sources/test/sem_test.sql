@@ -25574,15 +25574,16 @@ set loaded := load_extension('foo');
 @endif
 
 
-@macro(expr) macro_one!(x! expr)
-begin
-   x! + x!
-end;
-
-@macro(stmt_list) macro_two!(x! expr, y! expr)
+@macro(stmt_list) macro_one!(x! expr)
 begin
    let @tmp(x) := x!;
-   let @id(y!) := macro_one!(@tmp(x));
+   let @tmp(y) := @tmp(x) + @tmp(x);
+end;
+
+@macro(stmt_list) macro_two!(x! expr)
+begin
+   let @tmp(x) := x!;
+   macro_one!(@tmp(x));
 end;
 
 declare function expensive(x int) int!;
@@ -25595,10 +25596,15 @@ declare function expensive(x int) int!;
 -- The number might change if other @tmp is added above here.
 -- But no errors.
 -- + LET tmp_%x := expensive(100);
--- + LET zz := tmp_%x + tmp_%x;
+-- + LET tmp_%x := tmp_%x;
+-- + LET tmp_%y := tmp_%x + tmp_%x;
+-- + LET tmp_%x := expensive(200);
+-- + LET tmp_%x := tmp_%x;
+-- + LET tmp_%y := tmp_%x + tmp_%x;
 -- + {create_proc_stmt}: ok
 -- - error:
 proc use_nested_macros_with_at_tmp()
 begin
-   macro_two!(expensive(100), zz);
+   macro_two!(expensive(100));
+   macro_two!(expensive(200));
 end;

@@ -96667,43 +96667,19 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 
 The statement ending at line XXXX
 
-@MACRO(EXPR) macro_one!(x! EXPR)
+@MACRO(STMT_LIST) macro_one!(x! EXPR)
 BEGIN
-  x! + x!
+  LET @TMP(x) := x!;
+  LET @TMP(y) := @TMP(x) + @TMP(x);
 END;
 
-  {expr_macro_def}: ok
+  {stmt_list_macro_def}: ok
   | {macro_name_formals}
   | | {name macro_one}
   | | {macro_formals}
   |   | {macro_formal}
   |     | {name x}
   |     | {name EXPR}
-  | {add}
-    | {expr_macro_arg_ref}
-    | | {name x}
-    | {expr_macro_arg_ref}
-      | {name x}
-
-The statement ending at line XXXX
-
-@MACRO(STMT_LIST) macro_two!(x! EXPR, y! EXPR)
-BEGIN
-  LET @TMP(x) := x!;
-  LET @ID(y!) := macro_one!(@TMP(x));
-END;
-
-  {stmt_list_macro_def}: ok
-  | {macro_name_formals}
-  | | {name macro_two}
-  | | {macro_formals}
-  |   | {macro_formal}
-  |   | | {name x}
-  |   | | {name EXPR}
-  |   | {macro_formals}
-  |     | {macro_formal}
-  |       | {name y}
-  |       | {name EXPR}
   | {stmt_list}
     | {let_stmt}
     | | {at_id}
@@ -96716,17 +96692,54 @@ END;
     | {let_stmt}
       | {at_id}
       | | {text_args}
-      |   | {expr_macro_arg_ref}
+      |   | {name @TMP}
+      |   | {text_args}
       |     | {name y}
-      | {expr_macro_ref}
-        | {name macro_one}
-        | {macro_args}
-          | {expr_macro_arg}
-            | {at_id}
+      | {add}
+        | {at_id}
+        | | {text_args}
+        |   | {name @TMP}
+        |   | {text_args}
+        |     | {name x}
+        | {at_id}
+          | {text_args}
+            | {name @TMP}
+            | {text_args}
+              | {name x}
+
+The statement ending at line XXXX
+
+@MACRO(STMT_LIST) macro_two!(x! EXPR)
+BEGIN
+  LET @TMP(x) := x!;
+  macro_one!(@TMP(x));
+END;
+
+  {stmt_list_macro_def}: ok
+  | {macro_name_formals}
+  | | {name macro_two}
+  | | {macro_formals}
+  |   | {macro_formal}
+  |     | {name x}
+  |     | {name EXPR}
+  | {stmt_list}
+    | {let_stmt}
+    | | {at_id}
+    | | | {text_args}
+    | |   | {name @TMP}
+    | |   | {text_args}
+    | |     | {name x}
+    | | {expr_macro_arg_ref}
+    |   | {name x}
+    | {stmt_list_macro_ref}
+      | {name macro_one}
+      | {macro_args}
+        | {expr_macro_arg}
+          | {at_id}
+            | {text_args}
+              | {name @TMP}
               | {text_args}
-                | {name @TMP}
-                | {text_args}
-                  | {name x}
+                | {name x}
 
 The statement ending at line XXXX
 
@@ -96748,7 +96761,11 @@ The statement ending at line XXXX
 PROC use_nested_macros_with_at_tmp ()
 BEGIN
   LET tmp_1x := expensive(100);
-  LET zz := tmp_1x + tmp_1x;
+  LET tmp_2x := tmp_1x;
+  LET tmp_2y := tmp_2x + tmp_2x;
+  LET tmp_3x := expensive(200);
+  LET tmp_4x := tmp_3x;
+  LET tmp_4y := tmp_4x + tmp_4x;
 END;
 
   {create_proc_stmt}: ok
@@ -96763,9 +96780,28 @@ END;
       |     | {call_filter_clause}
       |     | {arg_list}: ok
       |       | {int 100}: integer notnull
-      | {let_stmt}: zz: integer notnull variable
-        | {name zz}: zz: integer notnull variable
+      | {let_stmt}: tmp_2x: integer notnull variable
+      | | {name tmp_2x}: tmp_2x: integer notnull variable
+      | | {name tmp_1x}: tmp_1x: integer notnull variable
+      | {let_stmt}: tmp_2y: integer notnull variable
+      | | {name tmp_2y}: tmp_2y: integer notnull variable
+      | | {add}: integer notnull
+      |   | {name tmp_2x}: tmp_2x: integer notnull variable
+      |   | {name tmp_2x}: tmp_2x: integer notnull variable
+      | {let_stmt}: tmp_3x: integer notnull variable
+      | | {name tmp_3x}: tmp_3x: integer notnull variable
+      | | {call}: integer notnull
+      |   | {name expensive}
+      |   | {call_arg_list}
+      |     | {call_filter_clause}
+      |     | {arg_list}: ok
+      |       | {int 200}: integer notnull
+      | {let_stmt}: tmp_4x: integer notnull variable
+      | | {name tmp_4x}: tmp_4x: integer notnull variable
+      | | {name tmp_3x}: tmp_3x: integer notnull variable
+      | {let_stmt}: tmp_4y: integer notnull variable
+        | {name tmp_4y}: tmp_4y: integer notnull variable
         | {add}: integer notnull
-          | {name tmp_1x}: tmp_1x: integer notnull variable
-          | {name tmp_1x}: tmp_1x: integer notnull variable
+          | {name tmp_4x}: tmp_4x: integer notnull variable
+          | {name tmp_4x}: tmp_4x: integer notnull variable
 

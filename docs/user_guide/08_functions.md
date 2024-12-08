@@ -470,11 +470,11 @@ Lists can use pipeline notation such as:
 
 ##### Special Functions
 
-These are not real functions but rather notations to the compiler.
+* `nullable`
+* `sensitive`
+* `ptr`
 
- * `nullable`
- * `sensitive`
- * `ptr`
+These are not real functions but rather notations to the compiler.
 
 `Nullable` casts an operand to the nullable version of its type and
 otherwise does nothing.  This cast might be useful if you need an exact
@@ -492,6 +492,27 @@ consequences of changing the storage class of its operand.
 integer to SQLite. This is a way of giving object pointers to SQLite
 UDFs. Not all versions of Sqlite support binding object variables,
 so passing memory addresses is the best we can do on all versions.
+
+##### Throwing exceptions
+
+* `cql_throw`
+
+`cql_throw` can be used to generate an exception with whatever code you desire.
+
+```sql
+declare const group error_codes (
+  ARG_ERROR = 1,
+  OTHER_ERROR = 2,
+  ETC_ERROR = 3
+);
+
+proc foo(x int)
+begin
+   if x < 0 or x > 5 then
+      cql_throw(ARG_ERROR);
+   end;
+end;
+```
 
 ### Operators That Become Functions
 

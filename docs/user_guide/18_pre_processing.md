@@ -451,12 +451,17 @@ would have been much less useful, reporting the line of the `printf`.
 
 #### Token Pasting
 
-You can create new tokens in one of two ways:
+You can create new tokens in one of three ways:
 
 * `@TEXT` will create a string from one or more parts.
 * `@ID` will make a new identifier from one or more parts
   * If the parts do not concatenate into a valid identifier an error is
     generated.
+* `@TMP` will make an identifier just like `@ID` but it will include a `tmp_nnn` prefix
+  where `nnn` is unique to the macro expansion it appears in.  This lets you safely
+  create temporary variables for use in a macro body without fear of conflict with
+  other expansions of the same macro.  `@TMP(_foo)` creates  `tmp_nnn_foo` so you can
+  make as many such temporaries as you need.  `@TMP` is otherwise identical to `@ID`.
 
 This can be used to create very powerful code-helpers.  Consider this code,
 which is very similar to the actual test helpers in the compiler's test cases.
@@ -536,6 +541,21 @@ Since `@id(...)` can go anywhere an identifier can go, it is not only suitable
 for use for type names but also for procedure names, table names -- any
 identifer.  As mentioned above `@id` will generate an error if the expression
 does not make a legal normal identifier.
+
+Sometimes type can be inferred, and indeed it might make sense to infer it.  For
+instance part of a test macro might look like this:
+
+```
+-- this uses @ID (via @TMP) and @TEXT for errors
+@macro(stmt_list) expect_equal!(x! expr, y! expr)
+begin
+  let @tmp(x) := x!;  -- evaluate only once
+  let @tmp(y) := y!;  -- evaluate only once
+  if @tmp(x) IS MOT !tmp(y) then
+    printf("%s IS NOT %s\nleft: %s\nright:%s", @TEXT(x!), @TEXT(y!), @tmp(x), @tmp(y));
+  end;
+end;
+```
 
 ### Pipeline syntax for Expression Macros
 

@@ -851,6 +851,7 @@ static void cg_lua_expr_and_or(ast_node *ast, CSTR str, charbuf *value, int32_t 
     return;
   }
 
+  CG_LUA_RESERVE_RESULT_VAR(ast, sem_type_result);
   CG_LUA_PUSH_EVAL(l, pri_new);
   CHARBUF_OPEN(right_eval);
   charbuf *saved = cg_main_output;
@@ -860,12 +861,12 @@ static void cg_lua_expr_and_or(ast_node *ast, CSTR str, charbuf *value, int32_t 
   cg_main_output = saved;
 
   if (!is_nullable(sem_type_result) && right_eval.used == 1) {
-    if (lua_needs_paren(ast, pri_new, pri)) {
-      bprintf(value, "(");
-    }
     cg_lua_to_bool(sem_type_left, &l_value);
     cg_lua_to_bool(sem_type_right, &r_value);
 
+    if (lua_needs_paren(ast, pri_new, pri)) {
+      bprintf(value, "(");
+    }
     bprintf(value, "%s %s %s", l_value.ptr, str, r_value.ptr);
 
     if (lua_needs_paren(ast, pri_new, pri)) {
@@ -874,9 +875,43 @@ static void cg_lua_expr_and_or(ast_node *ast, CSTR str, charbuf *value, int32_t 
   }
   else {
     if (right_eval.used > 1) {
-      // multi-line version
-      bprintf(value, "cql_shortcircuit_%s(%s,\nfunction()\n%s\nreturn %s\nend\n)",
-        str, l_value.ptr, right_eval.ptr, r_value.ptr);
+      // the answer is coming back in a variable
+      CG_LUA_USE_RESULT_VAR();
+
+      // we don't need to normalize the left or the right to bool because
+      // the helper functions will handle that for us.
+      //
+      // NOPE, don't even: cg_lua_to_bool(sem_type_left, &l_value);
+      // NOPE, don't even: cg_lua_to_bool(sem_type_right, &r_value);
+
+      CSTR short_circuit_value = !strcmp("or", str) ? "true" : "false";
+
+      // we need a scratch for the left to avoid evaluating it twice
+      CG_LUA_PUSH_TEMP(temp, SEM_TYPE_BOOL);
+      cg_lua_store_same_type(cg_main_output, temp.ptr, SEM_TYPE_BOOL, l_value.ptr);
+
+      // This is the open coded short circuit version, the only difference between
+      // `and` and `or` is the short circuit value (true or false) and of course
+      // the test and final logical operation.  The rest of the code is the same.
+      bprintf(cg_main_output, "if cql_is_%s(%s) then\n", short_circuit_value, temp.ptr);
+      bprintf(cg_main_output, "  "); // indent the one line
+      cg_lua_store_same_type(cg_main_output, result_var.ptr, sem_type_result, short_circuit_value);
+      bprintf(cg_main_output, "else\n");
+
+        // The evaluation of the right goes here, it could include things that
+        // throw (like proc as func calls) so we have to be careful to leave it
+        // in a context where "goto cleanup" still works, that means we can't wrap it
+        // in a function call like we do in the easier case below.
+        CG_PUSH_MAIN_INDENT(r, 2)
+        bprintf(cg_main_output, "%s", right_eval.ptr);
+        CHARBUF_OPEN(result_expr);
+        bprintf(&result_expr, "cql_logical_%s(%s, %s)", str, temp.ptr, r_value.ptr);
+        cg_lua_store_same_type(cg_main_output, result_var.ptr, sem_type_result, result_expr.ptr);
+        CHARBUF_CLOSE(result_expr);
+        CG_POP_MAIN_INDENT(r);
+
+      bprintf(cg_main_output, "end\n");  // end if
+      CG_LUA_POP_TEMP(temp);
     }
     else {
       // one line version
@@ -888,6 +923,7 @@ static void cg_lua_expr_and_or(ast_node *ast, CSTR str, charbuf *value, int32_t 
   CG_LUA_POP_EVAL(r);
   CHARBUF_CLOSE(right_eval);
   CG_LUA_POP_EVAL(l);
+  CG_LUA_CLEANUP_RESULT_VAR();
 }
 
 // The unary operators are handled just like the binary operators.  All of the

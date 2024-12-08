@@ -181,29 +181,32 @@ declare function side_effect2() integer;
 -- safe  to use the (x && y) form because the operands are non-null.
 -- it isn't though because there was expression work to get to the non-null
 -- state.  The Coalesce is important to this test for that reason.
+-- note that the right side might even throw an exception and so it can't use
+-- the function form
+-- - cql_shortcircuit
 -- + repeat
--- +   _tmp_n_int_1 = side_effect1()
--- +   if _tmp_n_int_1 ~= nil then
--- +     _tmp_int_0 = _tmp_n_int_1
--- +     break
--- +   end
--- +   _tmp_int_0 = 7
--- + until true
--- the first arg was fully evaluated into a temp
--- + i2 = cql_to_num(cql_shortcircuit_and(_tmp_int_0,
--- + function()
--- second arg is deferred
--- + repeat
--- +   _tmp_n_int_2 = side_effect2()
+-- +   _tmp_n_int_2 = side_effect1()
 -- +   if _tmp_n_int_2 ~= nil then
 -- +     _tmp_int_1 = _tmp_n_int_2
 -- +     break
 -- +   end
--- +   _tmp_int_1 = 5
+-- +   _tmp_int_1 = 7
+-- + until true
+-- + _tmp_n_bool_3 = _tmp_int_1
+-- + if cql_is_false(_tmp_n_bool_3) then
+-- +   _tmp_bool_0 = false
+-- + else
+-- +   repeat
+-- +     _tmp_n_int_3 = side_effect2()
+-- +     if _tmp_n_int_3 ~= nil then
+-- +       _tmp_int_2 = _tmp_n_int_3
+-- +       break
+-- +     end
+-- +     _tmp_int_2 = 5
 -- +   until true
--- +   return _tmp_int_1
+-- +   _tmp_bool_0 = cql_logical_and(_tmp_n_bool_3, _tmp_int_2)
 -- + end
--- + ))
+-- + i2 = cql_to_num(_tmp_bool_0)
 set i2 := coalesce(side_effect1(), 7) and coalesce(side_effect2(), 5);
 
 -- TEST: trival NULL on AND
@@ -227,27 +230,32 @@ set i0_nullable := i0_nullable and NULL;
 set i2 := r2 or l2;
 
 -- TEST: complex side effect, looks safe (no nullables) but it isn't because of codegen on the right
+-- note that the right side might even throw an exception and so it can't use the function form
+-- because we can't do the necessary goto inside of the function
+-- - cql_shortcircuit
 -- + repeat
--- +   _tmp_n_int_1 = side_effect1()
--- +   if _tmp_n_int_1 ~= nil then
--- +     _tmp_int_0 = _tmp_n_int_1
--- +     break
--- +   end
--- +   _tmp_int_0 = 7
--- + until true
--- + i2 = cql_to_num(cql_shortcircuit_or(_tmp_int_0,
--- + function()
--- + repeat
--- +   _tmp_n_int_2 = side_effect2()
+-- +   _tmp_n_int_2 = side_effect1()
 -- +   if _tmp_n_int_2 ~= nil then
 -- +     _tmp_int_1 = _tmp_n_int_2
 -- +     break
 -- +   end
--- +   _tmp_int_1 = 5
+-- +   _tmp_int_1 = 7
 -- + until true
--- + return _tmp_int_1
+-- + _tmp_n_bool_3 = _tmp_int_1
+-- + if cql_is_true(_tmp_n_bool_3) then
+-- +   _tmp_bool_0 = true
+-- + else
+-- +   repeat
+-- +     _tmp_n_int_3 = side_effect2()
+-- +     if _tmp_n_int_3 ~= nil then
+-- +       _tmp_int_2 = _tmp_n_int_3
+-- +       break
+-- +     end
+-- +     _tmp_int_2 = 5
+-- +   until true
+-- +   _tmp_bool_0 = cql_logical_or(_tmp_n_bool_3, _tmp_int_2)
 -- + end
--- + ))
+-- + i2 = cql_to_num(_tmp_bool_0)
 set i2 := coalesce(side_effect1(), 7) or coalesce(side_effect2(), 5);
 
 -- TEST: trival NULL on OR

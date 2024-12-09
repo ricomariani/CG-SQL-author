@@ -64,7 +64,7 @@ end;
 
 @MACRO(stmt_list) TEST!(name! expr, body! stmt_list)
 begin
-  proc @ID("test_", name!)()
+  proc @id("test_", name!)()
   begin
     try
       tests := tests + 1;
@@ -85,7 +85,7 @@ begin
 
   -- this loose goes into the global proc and invokes the test
   start_refs := get_outstanding_refs();
-  @ID("test_", name!)();
+  @id("test_", name!)();
   end_refs := get_outstanding_refs();
   if start_refs != end_refs then
     printf("Test %s unbalanced refs.", @text(name!));
@@ -7169,28 +7169,27 @@ begin
   EXPECT_EQ!(a_global, 22);
 end);
 
-@MACRO(stmt_list) box_test!(x! expr, t! expr, tval! expr)
+@MACRO(stmt_list) box_test!(x! expr, t! expr, type_val! expr)
 begin
   -- make nullable variable and hold the given value to test
-  var @ID(val_, t!) @ID(t!);
-  @ID(val_, t!) := x!;
+  let @tmp(val) := nullable(x!);
 
   -- now box and unbox
-  let @ID(box_, t!) := @ID(val_, t!):box;
-  let @ID(unboxed_, t!) := @ID(box_, t!):@ID('to_', t!);
-  EXPECT_EQ!(@ID(unboxed_, t!), @ID(val_, t!));
-  EXPECT_EQ!(@ID(box_, t!):cql_box_get_type, tval!);
+  let @tmp(box) := @tmp(val):box;
+  let @tmp(unboxed) := @tmp(box):@id('to_', t!);
+  EXPECT_EQ!(@tmp(unboxed), @tmp(val));
+  EXPECT_EQ!(@tmp(box):cql_box_get_type, type_val!);
 
   -- test null value
-  @ID(val_, t!) := null;
+  @tmp(val) := null;
 
   -- now box and unbox
-  set @ID(box_, t!) := @ID(val_, t!):box;
-  set @ID(unboxed_, t!) := @ID(box_, t!):@ID('to_', t!);
-  EXPECT_EQ!(@ID(unboxed_, t!), null);
+  set @tmp(box) := @tmp(val):box;
+  set @tmp(unboxed) := @tmp(box):@id('to_', t!);
+  EXPECT_EQ!(@tmp(unboxed), null);
 end;
 
-TEST!(boxing,
+TEST!(boxing_normal,
 begin
   let bl := (select 'a blob' ~blob~);
 
@@ -7200,18 +7199,21 @@ begin
   box_test!(1000L, 'long', CQL_DATA_TYPE_INT64);
   box_test!('abcde', 'text', CQL_DATA_TYPE_STRING);
   box_test!(bl, 'blob', CQL_DATA_TYPE_BLOB);
-  box_test!(box_int, 'object', CQL_DATA_TYPE_OBJECT);
+  box_test!(5:box, 'object', CQL_DATA_TYPE_OBJECT);
+end);
 
+TEST!(boxing_incorrect_types,
+begin
   -- now we store the wrong kind of stuff in the boxed object
   -- all the unboxing operations should fail.
 
-  box_bool := 5:box;
-  box_int := 5.0:box;
-  box_long := 5:box;
-  box_real := 5:box;
-  box_text := 5:box;
-  box_blob := 5:box;
-  box_object := 5:box;
+  let box_bool := 5:box;
+  let box_int := 5.0:box;
+  let box_long := 5:box;
+  let box_real := 5:box;
+  let box_text := 5:box;
+  let box_blob := 5:box;
+  let box_object := 5:box;
 
   -- they all have the wrong thing in them
   EXPECT_EQ!(box_int:cql_unbox_int, null);
@@ -7221,7 +7223,12 @@ begin
   EXPECT_EQ!(box_text:cql_unbox_text, null);
   EXPECT_EQ!(box_blob:cql_unbox_blob, null);
   EXPECT_EQ!(box_object:cql_unbox_object, null);
+end);
 
+TEST!(boxing_from_nil,
+begin
+  -- try to recover from nil, these should all fail
+  -- we need a null object that is of the right type
   var _nil object<cql_box>;
 
   EXPECT_EQ!(_nil:to_bool, null);
@@ -7232,7 +7239,6 @@ begin
   EXPECT_EQ!(_nil:to_blob, null);
   EXPECT_EQ!(_nil:to_object, null);
   EXPECT_EQ!(_nil:type, CQL_DATA_TYPE_NULL);
-
 end);
 
 TEST!(object_dictionary,

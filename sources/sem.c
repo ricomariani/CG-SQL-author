@@ -9335,11 +9335,6 @@ static bool_t validate_cql_cursor_diff(ast_node *ast, uint32_t arg_count) {
   ast_node *arg1 = first_arg(arg_list);
   ast_node *arg2 = second_arg(arg_list);
 
-  // We've already validated that the two argument are variables for auto cursor. We just
-  // need to validate their shapes are identical
-  sem_struct *sptr1 = arg1->sem->sptr;
-  sem_struct *sptr2 = arg2->sem->sptr;
-
   // already verified by function prototype
   Contract(is_auto_cursor(arg1->sem->sem_type));
   Contract(is_auto_cursor(arg2->sem->sem_type));

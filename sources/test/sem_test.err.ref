@@ -1093,7 +1093,16 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0205: not a cursor 'an_int'
 test/sem_test.sql:XXXX:1: error: in str : CQL0067: cursor was not used with 'fetch [cursor]' 'c1'
 test/sem_test.sql:XXXX:1: error: in str : CQL0067: cursor was not used with 'fetch [cursor]' 'C'
 test/sem_test.sql:XXXX:1: error: in str : CQL0061: in cql_cursor_diff_col, all columns must be an exact type match (expected integer notnull; found text notnull) 'x'
-test/sem_test.sql:XXXX:1: error: in call : CQL0342: cursor arguments must have identical column count 'cql_cursor_diff_col'
+test/sem_test.sql:XXXX:1: error: in str : CQL0057: in cql_cursor_diff_col, all must have the same column count
+test/sem_test.sql:XXXX:1: error: in str : additional difference diagnostic info:
+
+test/sem_test.sql:XXXX:1: error: likely end location of the 1st item
+  this item has 2 columns
+test/sem_test.sql:XXXX:1: error: likely end location of the 2nd item
+  this item has 1 columns
+
+only in 1st: z text notnull
+
 test/sem_test.sql:XXXX:1: error: in str : CQL0058: in cql_cursor_diff_col, all column names must be identical so they have unambiguous names; error in column 1: 'x' vs. 'z'
 test/sem_test.sql:XXXX:1: error: in str : additional difference diagnostic info:
 

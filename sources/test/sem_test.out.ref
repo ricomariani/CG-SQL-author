@@ -51593,7 +51593,16 @@ BEGIN
   SET a_string := cql_cursor_diff_col(c1, c2);
 END;
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0342: cursor arguments must have identical column count 'cql_cursor_diff_col'
+test/sem_test.sql:XXXX:1: error: in str : CQL0057: in cql_cursor_diff_col, all must have the same column count
+test/sem_test.sql:XXXX:1: error: in str : additional difference diagnostic info:
+
+test/sem_test.sql:XXXX:1: error: likely end location of the 1st item
+  this item has 2 columns
+test/sem_test.sql:XXXX:1: error: likely end location of the 2nd item
+  this item has 1 columns
+
+only in 1st: z text notnull
+
 
   {create_proc_stmt}: err
   | {name cql_cursor_diff_col_with_wrong_col_count_arg}: err
@@ -51653,7 +51662,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0342: cursor arguments must have i
             | {arg_list}: ok
               | {name c1}: c1: select: { x: integer notnull, z: text notnull } variable dml_proc shape_storage
               | {arg_list}
-                | {name c2}: c2: select: { x: integer notnull } variable dml_proc shape_storage
+                | {name c2}: err
 
 The statement ending at line XXXX
 

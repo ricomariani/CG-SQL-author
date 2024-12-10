@@ -9340,12 +9340,6 @@ static bool_t validate_cql_cursor_diff(ast_node *ast, uint32_t arg_count) {
   sem_struct *sptr1 = arg1->sem->sptr;
   sem_struct *sptr2 = arg2->sem->sptr;
 
-  if (sptr1->count != sptr2->count) {
-    report_error(ast, "CQL0342: cursor arguments must have identical column count", name);
-    record_error(ast);
-    return false;
-  }
-
   // already verified by function prototype
   Contract(is_auto_cursor(arg1->sem->sem_type));
   Contract(is_auto_cursor(arg2->sem->sem_type));

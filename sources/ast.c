@@ -1639,7 +1639,10 @@ static void expand_at_id(ast_node *ast) {
     report_macro_error(ast, "CQL0085: @ID expansion is not a valid identifier", str.ptr);
   }
 
-  replace_node(ast, new_ast_str(Strdup(str.ptr)));
+  ast_node *new = new_ast_str(Strdup(str.ptr));
+  replace_node(ast, new);
+  new->lineno = ast->lineno;
+  new->filename = ast->filename;
   CHARBUF_CLOSE(str);
 }
 
@@ -1667,6 +1670,9 @@ static void expand_at_text(ast_node *ast) {
   str_ast_node *sast = (str_ast_node *)new;
   sast->str_type = STRING_TYPE_C;
   replace_node(ast, new);
+
+  new->lineno = ast->lineno;
+  new->filename = ast->filename;
 
   CHARBUF_CLOSE(quote);
   CHARBUF_CLOSE(tmp);

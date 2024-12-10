@@ -2766,9 +2766,7 @@ This is almost certainly a cut/paste from a different location that needs to be 
 
 -----
 
-### CQL0342: cursor arguments must have identical column count 'function_name'
-
-The number of column in the cursor arguments must be identical to accurately do diffing between two cursors.
+### CQL0342 available for re-use
 
 -----
 

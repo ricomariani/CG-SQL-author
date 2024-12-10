@@ -13753,11 +13753,14 @@ begin
 end;
 
 -- TEST: call cql_cursor_diff_col with invalid column count arguments
+-- + error: % in cql_cursor_diff_col, all must have the same column count
+-- + error: % additional difference diagnostic info:
+-- + this item has 2 columns
+-- + this item has 1 columns
+-- + only in 1st: z text notnull
 -- + {create_proc_stmt}: err
 -- + {assign}: err
 -- + {call}: err
--- * error: % cursor arguments must have identical column count 'cql_cursor_diff_col'
--- +1 error:
 proc cql_cursor_diff_col_with_wrong_col_count_arg()
 begin
   cursor c1 for select 1 x, 'z' z;

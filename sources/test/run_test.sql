@@ -56,9 +56,11 @@ end;
 begin
   -- this tests the pipeline syntax for statement list macros
   -- there's no reason to write it this way other than
-  -- because it's an interesting test. This could obbviously
+  -- because it's an interesting test. This could obviously
   -- be EXPECT!(pred!) etc.
   pred!:EXPECT!;
+
+  -- verify that SQLite gives the same answer
   (select pred!):EXPECT!;
 end;
 
@@ -4612,6 +4614,7 @@ begin
   -- note: using Cursor_both and cursor_both ensures codegen is canonicalizing the name
   declare blob_both blob<storage_both>;
   blob_both := Cursor_both:to_blob;
+
   declare test_cursor_both cursor like cursor_both;
   test_cursor_both:from_blob(blob_both);
 
@@ -7072,14 +7075,19 @@ create table compound_backed(
   primary key (id1, id2)
 );
 
+@macro(stmt_list) insert_basic_data!(tab! expr)
+begin
+  insert into @ID(tab!) values('foo', 'bar', 1);
+  insert into @ID(tab!) values('goo', 'bar', 2);
+  insert into @ID(tab!) values('foo', 'stew', 3);
+end;
+
  -- We're going to make sure that the key blob stays in canonical form
  -- no matter how we update it.  This is a bit tricky for variable fields
  -- which have to stay in a fixed order so this test exercises that.
 TEST!(mutate_compound_backed_key,
 begin
-  insert into compound_backed values('foo', 'bar', 1);
-  insert into compound_backed values('goo', 'bar', 2);
-  insert into compound_backed values('foo', 'stew', 3);
+  insert_basic_data!(compound_backed);
 
   -- this should conflict (the net key blob must be the same as the one for val == 1)
   let caught := false;
@@ -7137,10 +7145,10 @@ begin
   EXPECT!(not C);
 end);
 
--- This a bogus proc but it makes an interesting test
--- it can be called directly or using proc as func
--- and we need both for this test.
-
+-- This a bogus proc but it makes an interesting test it can be called directly
+-- or using proc as func and we need both for this test.  The purpose is to
+-- make sure that we can handle expression statements and rewrite them as
+-- CALL statements and do so with an observable side-effect.
 var a_global int!;
 proc mutator(new_val int!, out result int!)
 begin
@@ -7148,27 +7156,36 @@ begin
   a_global := result;
 end;
 
+-- verify that we can create expression statementsd we use "mutator" to ensure
+-- that the code ran because it has an observable side effect
 TEST!(expr_stmt_rewrite,
 begin
   a_global := 0;
-  -- not a call
+  
+  -- not a top level call
   case when 1 then mutator(1) end;
   EXPECT_EQ!(a_global, 2);
+  -- not a top level call
   case when 1 then mutator(100) end;
   EXPECT_EQ!(a_global, 101);
+  
+  -- same thing but this time we rewrite as a CALL statement
   var result int!;
   mutator(2, result);
   EXPECT_EQ!(a_global, 3);
   EXPECT_EQ!(result, 3);
-  -- chained call, the last one is the proc form so it needs all the args
-  -- we can actually do better on this by adding special logic to allow
-  -- proc_as_func at the top level if the arg count is ok for that
-  -- not yet implemented though
+
+  -- pipeline syntax call, the last one is the proc form so it needs all the
+  -- args we can actually do better on this by adding special logic to allow
+  -- proc_as_func at the top level if the arg count is ok for that not yet
+  -- implemented though
   20:mutator():mutator(result);
   EXPECT_EQ!(result, 22);
   EXPECT_EQ!(a_global, 22);
 end);
 
+
+-- handling box tests generically,  box the value and unbox it
 @MACRO(stmt_list) box_test!(x! expr, t! expr, type_val! expr)
 begin
   -- make nullable variable and hold the given value to test
@@ -7180,15 +7197,18 @@ begin
   EXPECT_EQ!(@tmp(unboxed), @tmp(val));
   EXPECT_EQ!(@tmp(box):cql_box_get_type, type_val!);
 
-  -- test null value
+  -- test null value of the correct type (e.g. nullable bool)
   @tmp(val) := null;
 
-  -- now box and unbox
-  set @tmp(box) := @tmp(val):box;
-  set @tmp(unboxed) := @tmp(box):@id('to_', t!);
+  -- now box and unbox a value that happens to be null
+  @tmp(box) := @tmp(val):box;
+  @tmp(unboxed) := @tmp(box):@id('to_', t!);
   EXPECT_EQ!(@tmp(unboxed), null);
 end;
 
+-- normal boxing validation for the various types
+-- the box_test! macro does the work, box and unbox
+-- and expect the same result.
 TEST!(boxing_normal,
 begin
   let bl := (select 'a blob' ~blob~);
@@ -7202,13 +7222,14 @@ begin
   box_test!(5:box, 'object', CQL_DATA_TYPE_OBJECT);
 end);
 
-TEST!(boxing_incorrect_types,
+-- unboxing validation, unbox incorrect type
+TEST!(unboxing_incorrect_types,
 begin
   -- now we store the wrong kind of stuff in the boxed object
   -- all the unboxing operations should fail.
 
-  let box_bool := 5:box;
-  let box_int := 5.0:box;
+  let box_bool := 5:box;   -- not a boxed bool
+  let box_int := 5.0:box;  -- etc.
   let box_long := 5:box;
   let box_real := 5:box;
   let box_text := 5:box;
@@ -7225,7 +7246,8 @@ begin
   EXPECT_EQ!(box_object:cql_unbox_object, null);
 end);
 
-TEST!(boxing_from_nil,
+-- unboxing validation: attempt to unbox nil
+TEST!(unboxing_from_nil,
 begin
   -- try to recover from nil, these should all fail
   -- we need a null object that is of the right type
@@ -7249,10 +7271,25 @@ begin
   EXPECT_EQ!(v, 101);
 end);
 
+-- Verify cursor field access for not nullables, by field number.
+-- The verifications include:
+-- 1. field count and types are correct
+-- 2. field names are correct
+-- 3. field values are correct
+-- 4. out of bound indexes return null
+-- 5. negative indexes return null
 TEST!(cursor_accessors_notnull,
 begin
-  cursor C for select true a, 1 b, 2L c, 3.0 d, "foo" e, "bar" ~blob~ f;
+  cursor C for select
+    true a,
+    1 b,
+    2L c,
+    3.0 d,
+    "foo" e,
+    "bar" ~blob~ f;
   fetch C;
+
+  -- field count and types correct
   EXPECT_EQ!(6, C:count);
   EXPECT_EQ!(CQL_DATA_TYPE_BOOL | CQL_DATA_TYPE_NOT_NULL, C:type(0));
   EXPECT_EQ!(CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, C:type(1));
@@ -7261,6 +7298,7 @@ begin
   EXPECT_EQ!(CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_NOT_NULL, C:type(4));
   EXPECT_EQ!(CQL_DATA_TYPE_BLOB | CQL_DATA_TYPE_NOT_NULL, C:type(5));
 
+  -- field names
   EXPECT_EQ!(C:name(-1), null);
   EXPECT_EQ!(C:name(0), "a");
   EXPECT_EQ!(C:name(1), "b");
@@ -7270,6 +7308,7 @@ begin
   EXPECT_EQ!(C:name(5), "f");
   EXPECT_EQ!(C:name(6), null);
 
+  -- expected values
   EXPECT_EQ!(-1, C:type(-1));
   EXPECT_EQ!(-1, C:type(C:count));
   EXPECT_EQ!(true, C:get_bool(0));
@@ -7280,10 +7319,18 @@ begin
   EXPECT_NE!(C:get_blob(5), null);
 end);
 
+-- try reading out all the nullable types from a cursor, these are all
+-- th eleagal fields except for object, handled without using SQL in
+-- the next test case
 TEST!(cursor_accessors_nullable,
 begin
-  cursor C for select true:nullable a, 1:nullable b,
-         2L:nullable c, 3.0:nullable d, "foo":nullable e, "bar" ~blob~:nullable f;
+  cursor C for select
+    true:nullable a,
+    1:nullable b,
+    2L:nullable c,
+    3.0:nullable d,
+    "foo":nullable e,
+    "bar" ~blob~:nullable f;
   fetch C;
 
   EXPECT_EQ!(6, C:count);
@@ -7302,6 +7349,8 @@ begin
   EXPECT_NE!(C:get_blob(5), null);
 end);
 
+-- test reading object fields out of a cursor, we use a
+-- boxed int as our test case
 TEST!(cursor_accessors_object,
 begin
   let v := 1:box;
@@ -7312,6 +7361,7 @@ begin
   EXPECT_EQ!(C:get_object(1), null);
 end);
 
+-- verify that we can cast anything to null
 TEST!(null_casting,
 begin
   let f1 := null ~bool~;
@@ -7322,6 +7372,7 @@ begin
   let b1 := null ~blob~;
   let o1 := null ~object~;
 
+  -- sanity check null initialization
   EXPECT_EQ!(f1, null);
   EXPECT_EQ!(i1, null);
   EXPECT_EQ!(l1, null);
@@ -7330,7 +7381,8 @@ begin
   EXPECT_EQ!(b1, null);
   EXPECT_EQ!(o1, null);
 
-  -- make everything not null again
+  -- make everything not null again, this sets us up for the
+  -- test we actually want to do
   f1 := true;
   i1 := 1;
   l1 := 1;
@@ -7339,6 +7391,9 @@ begin
   b1 := randomblob(1);
   o1 := b1:box;
 
+  -- we need the :nullable to avoid the warning that these are
+  -- provably not null, we want to make sure that the compiler
+  -- doesn't complain about the casts.
   EXPECT_NE!(f1 :nullable, null);
   EXPECT_NE!(i1 :nullable, null);
   EXPECT_NE!(l1 :nullable, null);
@@ -7347,6 +7402,8 @@ begin
   EXPECT_NE!(b1 :nullable, null);
   EXPECT_NE!(o1 :nullable, null);
 
+  -- casing only supported limited values, one is null
+  -- the point of this is to verify that we can cast null to anything
   set f1 := null ~bool~;
   set i1 := null ~int~;
   set l1 := null ~long~;
@@ -7367,6 +7424,8 @@ end);
 END_SUITE();
 
 -- manually force tracing on by redefining the macros
+-- in Lua we have tracing on by default so we don't a separate test
+-- there is trace output already
 @echo c, '
 #undef cql_error_trace
 #define cql_error_trace() run_test_trace_callback(_PROC_, __FILE__, __LINE__)
@@ -7412,17 +7471,27 @@ end;
 
 @emit_enums;
 
--- parent child test case
+-- parent child test case, this code is exercised from run_test_client.c
+-- Lua has no such test case at this time, though in fairness this test
+-- is trivial for Lua because "everything in an object".  The code is
+-- in an ifdef as a reminder that it is not a Lua test case.
+
+@ifndef __rt__lua
+
+-- make our schema and add a few dummy rows
 proc TestParentChildInit()
 begin
-  create table test_tasks(
-   taskID int!,
-   roomID int!
+  create table test_rooms (
+    roomID int! primary key,
+    name text
   );
 
-  create table test_rooms (
-    roomID int!,
-    name text
+  -- fk is here just to make the relationship clear, it is not required
+  -- to have a foreign key in the child table for the parent/child
+  -- relationship to work in the test case.
+  create table test_tasks(
+   taskID int!,
+   roomID int! references test_rooms(roomID)
   );
 
   insert into test_rooms values (1, "foo"), (2, "bar");
@@ -7440,7 +7509,12 @@ begin
   select roomID, test_tasks.taskID as thisIsATask from test_tasks;
 end;
 
+-- create the parent/child result set using the sugar, this does a "manual" hash join
+-- from the parent result set to the child result set and then makes the result
+-- with a nested result set in it.
 proc TestParentChild()
 begin
   out union call TestParent() join call TestChild() using (roomID) as test_tasks;
 end;
+
+@endif

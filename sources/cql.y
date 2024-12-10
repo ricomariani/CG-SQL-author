@@ -1048,6 +1048,23 @@ name:
   | IGNORE { $name = new_ast_str("ignore"); }
   | IMMEDIATE { $name = new_ast_str("immediate"); }
   | INITIALLY { $name = new_ast_str("initially"); }
+  | INSTEAD { $name = new_ast_str("instead"); }
+  | INTO { $name = new_ast_str("into"); }
+  | NULLS { $name = new_ast_str("nulls"); }
+  | OUTER { $name = new_ast_str("outer"); }
+  | PARTITION { $name = new_ast_str("partition"); }
+  | PRECEDING { $name = new_ast_str("preceding"); }
+  | RANGE { $name = new_ast_str("range"); }
+  | REFERENCES { $name = new_ast_str("references"); }
+  | RELEASE { $name = new_ast_str("release"); }
+  | RENAME { $name = new_ast_str("rename"); }
+  | RESTRICT { $name = new_ast_str("restrict"); }
+  | SAVEPOINT { $name = new_ast_str("savepoint"); }
+  | STATEMENT { $name = new_ast_str("statement"); }
+  | TABLE { $name = new_ast_str("table"); }
+  | TEMP { $name = new_ast_str("temp"); }
+  | TRANSACTION { $name = new_ast_str("transaction"); }
+  | WITHOUT { $name = new_ast_str("without"); }
   ;
 
 loose_name:

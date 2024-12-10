@@ -2525,3 +2525,37 @@ LET ignore := 0;
 LET immediate := 0;
 
 LET initially := 0;
+
+LET instead := 0;
+
+LET into := 0;
+
+LET nulls := 0;
+
+LET outer := 0;
+
+LET partition := 0;
+
+LET preceding := 0;
+
+LET range := 0;
+
+LET references := 0;
+
+LET release := 0;
+
+LET rename := 0;
+
+LET restrict := 0;
+
+LET savepoint := 0;
+
+LET statement := 0;
+
+LET table := 0;
+
+LET temp := 0;
+
+LET transaction := 0;
+
+LET without := 0;

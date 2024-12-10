@@ -19286,3 +19286,105 @@ The statement ending at line XXXX
   | {name initially}
   | {int 0}
 
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name instead}
+  | {int 0}
+
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name into}
+  | {int 0}
+
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name nulls}
+  | {int 0}
+
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name outer}
+  | {int 0}
+
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name partition}
+  | {int 0}
+
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name preceding}
+  | {int 0}
+
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name range}
+  | {int 0}
+
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name references}
+  | {int 0}
+
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name release}
+  | {int 0}
+
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name rename}
+  | {int 0}
+
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name restrict}
+  | {int 0}
+
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name savepoint}
+  | {int 0}
+
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name statement}
+  | {int 0}
+
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name table}
+  | {int 0}
+
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name temp}
+  | {int 0}
+
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name transaction}
+  | {int 0}
+
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name without}
+  | {int 0}
+

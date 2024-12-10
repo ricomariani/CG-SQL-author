@@ -20,7 +20,7 @@ begin
   errcheck(pred!, @text(pred!), @MACRO_LINE);
 end;
 
--- storage for the expecation check
+-- storage for the expectation check
 var expected bool @sensitive;
 
 @MACRO(stmt_list) EXPECT_EQ!(a! expr, b! expr)
@@ -160,6 +160,9 @@ end;
 
 -- for the test cases, all the blob function will be offset based rather than hash based
 -- this makes the dumb test implementation of these b* functions easier
+--
+-- NOTE: an interesting future direction would be to use @op to make these
+-- rather than having an ad hoc mechanism like this.  @op is more general.
 @blob_get_key_type bgetkey_type;
 @blob_get_val_type bgetval_type;
 @blob_get_key bgetkey offset;
@@ -185,8 +188,6 @@ declare const group blob_types (
 -- Note that these are configurable so the compiler can't literally
 -- predeclare them for you.  You tell it what you are going to do.
 
--- NOTE: an interesting future direction would be to use @op to make these
--- rather than having an ad hoc mechanism like this.  @op is more general.
 declare select function bgetkey_type(b blob) long;
 declare select function bgetval_type(b blob) long;
 declare select function bgetkey(b blob, iarg int) long;
@@ -334,7 +335,7 @@ begin
   -- verifying that they were called the right number of times.  We have to do
   -- this for null and true/false with both "and" and "or".  Given the number of
   -- times this code was broken in the project, these tests are considered
-  -- indespensible.
+  -- indispensable.
 
   EXPECT_EQ!(side_effect_0() and side_effect_0(), 0);
   EXPECT_EQ!(side_effect_0_count, 1);
@@ -423,7 +424,7 @@ begin
 
   -- even though this looks like all non nulls we do not eval side_effect_1 we
   -- can't use the simple && form of code-gen because there is statement output
-  -- requred to evaluate the coalesce.
+  -- required to evaluate the coalesce.
 
   EXPECT_EQ!((0 and coalesce(side_effect_1(), 1)), 0);
   EXPECT_EQ!(side_effect_1_count, 0);
@@ -684,7 +685,7 @@ begin
   update mixed set code = code_, bl = bl_ where id = id_;
 end;
 
--- test readback of two rows
+-- test read back of two rows
 TEST!(read_mixed,
 begin
   declare id_ int!;
@@ -1392,25 +1393,29 @@ begin
   EXPECT_EQ!(count, 2); -- there should be two rows
 end);
 
-proc savepoint_maybe_commit(do_commit bool!)
+proc savepoint_maybe_commit(do_commit bool!, out result int!)
 begin
   load_mixed();
   savepoint foo;
   delete from mixed where id = 1;
   EXPECT_EQ!(1, (select count(*) from mixed));  -- delete successful
   if do_commit then
+    -- this is a commit
     release savepoint foo;
   else
+    -- this is a rollback
     rollback transaction to savepoint foo;
   end if;
+  result := (select count(*) from mixed);
 end;
 
 TEST!(savepoint_mechanics,
 begin
-  savepoint_maybe_commit(1);
-  EXPECT_EQ!(1, (select count(*) from mixed));  -- savepoint commit successful
-  savepoint_maybe_commit(0);
-  EXPECT_EQ!(2, (select count(*) from mixed));  -- savepoint rollback successful
+  -- savepoint commit successful (1 row deleted)
+  EXPECT_EQ!(1, savepoint_maybe_commit(true));
+
+  -- savepoint rollback successful (no rows deleted)
+  EXPECT_EQ!(2, savepoint_maybe_commit(false));
 end);
 
 TEST!(exists_test,
@@ -7186,14 +7191,14 @@ end;
 TEST!(expr_stmt_rewrite,
 begin
   a_global := 0;
-  
+
   -- not a top level call
   case when 1 then mutator(1) end;
   EXPECT_EQ!(a_global, 2);
   -- not a top level call
   case when 1 then mutator(100) end;
   EXPECT_EQ!(a_global, 101);
-  
+
   -- same thing but this time we rewrite as a CALL statement
   var result int!;
   mutator(2, result);

@@ -19148,3 +19148,141 @@ The statement ending at line XXXX
     | {select_limit}
       | {select_offset}
 
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name abort}
+  | {int 0}
+
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name action}
+  | {int 0}
+
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name alter}
+  | {int 0}
+
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name asc}
+  | {int 0}
+
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name autoincrement}
+  | {int 0}
+
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name cascade}
+  | {int 0}
+
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name create}
+  | {int 0}
+
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name default}
+  | {int 0}
+
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name deferrable}
+  | {int 0}
+
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name deferred}
+  | {int 0}
+
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name delete}
+  | {int 0}
+
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name desc}
+  | {int 0}
+
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name drop}
+  | {int 0}
+
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name encode}
+  | {int 0}
+
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name exclusive}
+  | {int 0}
+
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name explain}
+  | {int 0}
+
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name fail}
+  | {int 0}
+
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name fetch}
+  | {int 0}
+
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name following}
+  | {int 0}
+
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name groups}
+  | {int 0}
+
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name ignore}
+  | {int 0}
+
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name immediate}
+  | {int 0}
+
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name initially}
+  | {int 0}
+

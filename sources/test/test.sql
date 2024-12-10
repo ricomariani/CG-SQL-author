@@ -1913,3 +1913,28 @@ cursor @ID(x) for select 1 x;
 fetch @ID(x);
 cursor @ID(x) fetch from call @ID(y)();
 select @ID(x) from @ID(x) join @ID(y);
+
+-- tokens that can be used as an identifier
+let ABORT:= 0;
+let ACTION:= 0;
+let ALTER:= 0;
+let ASC:= 0;
+let AUTOINCREMENT:= 0;
+let CASCADE:= 0;
+let CREATE:= 0;
+let DEFAULT:= 0;
+let DEFERRABLE:= 0;
+let DEFERRED:= 0;
+let DELETE:= 0;
+let DESC:= 0;
+let DROP:= 0;
+let ENCODE:= 0;
+let EXCLUSIVE:= 0;
+let EXPLAIN:= 0;
+let FAIL:= 0;
+let FETCH:= 0;
+let FOLLOWING:= 0;
+let GROUPS:= 0;
+let IGNORE:= 0;
+let IMMEDIATE:= 0;
+let INITIALLY:= 0;

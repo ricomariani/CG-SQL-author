@@ -1025,6 +1025,29 @@ name:
   | SELECT_EXPR { $name = new_ast_str("select_expr"); }
   | AT_ID '(' text_args ')' { $name = new_ast_at_id($text_args); }
   | AT_TMP '(' text_args ')' { $name = new_ast_at_id(new_ast_text_args(new_ast_str("@TMP"), $text_args)); }
+  | ABORT { $name = new_ast_str("abort"); }
+  | ACTION { $name = new_ast_str("action"); }
+  | ALTER { $name = new_ast_str("alter"); }
+  | ASC { $name = new_ast_str("asc"); }
+  | AUTOINCREMENT { $name = new_ast_str("autoincrement"); }
+  | CASCADE { $name = new_ast_str("cascade"); }
+  | CREATE { $name = new_ast_str("create"); }
+  | DEFAULT { $name = new_ast_str("default"); }
+  | DEFERRABLE { $name = new_ast_str("deferrable"); }
+  | DEFERRED { $name = new_ast_str("deferred"); }
+  | DELETE { $name = new_ast_str("delete"); }
+  | DESC { $name = new_ast_str("desc"); }
+  | DROP { $name = new_ast_str("drop"); }
+  | ENCODE { $name = new_ast_str("encode"); }
+  | EXCLUSIVE { $name = new_ast_str("exclusive"); }
+  | EXPLAIN { $name = new_ast_str("explain"); }
+  | FAIL { $name = new_ast_str("fail"); }
+  | FETCH { $name = new_ast_str("fetch"); }
+  | FOLLOWING { $name = new_ast_str("following"); }
+  | GROUPS { $name = new_ast_str("groups"); }
+  | IGNORE { $name = new_ast_str("ignore"); }
+  | IMMEDIATE { $name = new_ast_str("immediate"); }
+  | INITIALLY { $name = new_ast_str("initially"); }
   ;
 
 loose_name:

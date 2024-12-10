@@ -2479,3 +2479,49 @@ CURSOR @ID(x) FETCH FROM CALL @ID(y)();
 SELECT @ID(x)
   FROM @ID(x)
     INNER JOIN @ID(y);
+
+LET abort := 0;
+
+LET action := 0;
+
+LET alter := 0;
+
+LET asc := 0;
+
+LET autoincrement := 0;
+
+LET cascade := 0;
+
+LET create := 0;
+
+LET default := 0;
+
+LET deferrable := 0;
+
+LET deferred := 0;
+
+LET delete := 0;
+
+LET desc := 0;
+
+LET drop := 0;
+
+LET encode := 0;
+
+LET exclusive := 0;
+
+LET explain := 0;
+
+LET fail := 0;
+
+LET fetch := 0;
+
+LET following := 0;
+
+LET groups := 0;
+
+LET ignore := 0;
+
+LET immediate := 0;
+
+LET initially := 0;

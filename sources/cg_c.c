@@ -4950,16 +4950,19 @@ static bool_t cg_inline_func(ast_node *call_ast, void *context, charbuf *buffer)
 //  X(*) as (call foo(1,2,3) USING foo as source1, bar = source2)
 // select * from X;
 //
-// What we're going to do is replace the call with the body of the procedure that is being called.
-// We have to do a few things to make this work:
+// What we're going to do is replace the call with the body of the procedure
+// that is being called. We have to do a few things to make this work:
 //  * the args to the procedure have to be evaluated and put into locals
-//  * any use of those arguments has to be redirected to said locals (so rename the locals)
-//  * naturally any of those arguments can't be database things (wrong context) so we can evaluate them
-//    all in advance
-//  * if the call has the "USING" form then we have to alias all instances of the mentioned
-//    tables in the target procedure to be the values that were provided
+//  * any use of those arguments has to be redirected to said locals (so rename
+//    the locals)
+//  * naturally any of those arguments can't be database things (wrong context)
+//    so we can evaluate them all in advance
+//  * if the call has the "USING" form then we have to alias all instances of
+//    the mentioned tables in the target procedure to be the values that were
+//    provided
 //  * any such args/aliases have been pre-validated during semantic analysis
-//  * code gen is designed to keep as many string literals identical as possible so that they can be folded
+//  * code gen is designed to keep as many string literals identical as possible
+//    so that they can be folded
 static bool_t cg_call_in_cte(ast_node *cte_body, void *context, charbuf *buffer) {
   EXTRACT_NOTNULL(call_stmt, cte_body->left);
   EXTRACT(cte_binding_list, cte_body->right);
@@ -5208,11 +5211,12 @@ static void cg_classify_fragments(ast_node *stmt) {
 // lifting of generating the C code to prepare and bind a SQL statement. If
 // cg_exec is true (CG_EXEC) then the statement is executed immediately and
 // finalized.  No results are expected.  To accomplish this we do the following:
-//   * figure out the name of the statement, either it's given to us
-//     or we're using the temp statement
+//   * figure out the name of the statement, either it's given to us or we're
+//     using the temp statement
 //   * call get_statement_with_callback to get the text of the SQL from the AST
 //     * the callback will give us all the variables to bind
-//     * count the variables so we know what column numbers to use (the list is backwards!)
+//     * count the variables so we know what column numbers to use (the list is
+//       backwards!)
 //   * if CG_EXEC and no variables we can use the simpler sqlite3_exec form
 //   * bind any variables
 //   * if there are variables CG_EXEC will step and finalize

@@ -51,7 +51,9 @@ begin
   end if;
 end;
 
--- use this for both normal eval and SQLite eval
+-- use this for both normal eval and SQLite eval this is where we expect CQL to
+-- give us the same result as SQLite we do this by evaluating the predicate
+-- normally and also wrapped in a (select x).  This is a valueable control.
 @MACRO(stmt_list) EXPECT_SQL_TOO!(pred! expr)
 begin
   -- this tests the pipeline syntax for statement list macros
@@ -176,6 +178,15 @@ declare const group blob_types (
   CQL_BLOB_TYPE_BLOB   = 5
 );
 
+-- These are normally auto-generated so they don't need
+-- a declaration, however, here we are going to call them
+-- directly for test purposes so we make some kind of approximate
+-- declaration.  We'll make it perfect by adding explicit casts.
+-- Note that these are configurable so the compiler can't literally
+-- predeclare them for you.  You tell it what you are going to do.
+
+-- NOTE: an interesting future direction would be to use @op to make these
+-- rather than having an ad hoc mechanism like this.  @op is more general.
 declare select function bgetkey_type(b blob) long;
 declare select function bgetval_type(b blob) long;
 declare select function bgetkey(b blob, iarg int) long;
@@ -185,11 +196,13 @@ declare select function bcreatekey no check blob;
 declare select function bupdateval no check blob;
 declare select function bupdatekey no check blob;
 
+-- some test helpers we will need
 declare function create_truncated_blob(b blob!, truncated_size int!) create blob!;
 declare function blob_from_string(str text @sensitive) create blob!;
 declare function string_from_blob(b blob @sensitive) create text!;
 declare procedure _cql_init_extensions() using transaction;
 
+-- we will use these constants in various tests
 declare enum floats real (
   one = 1.0,
   two = 2.0
@@ -201,6 +214,8 @@ declare enum longs long (
   neg = -1
 );
 
+-- creates the backing table for the backed table tests
+-- this is a generic table with blob key and value as is normal
 proc make_schema()
 begin
   [[backing_table]]
@@ -210,6 +225,7 @@ begin
   );
 end;
 
+-- having declared the above we can make as many backed tables as we like
 [[backed_by=backing]]
 create table backed (
   id int primary key,
@@ -223,6 +239,10 @@ create table backed2 (
   `value one` int
 );
 
+-- begin the run with the schema we need and the initialize the extensions
+-- _cql_init_extensions is a test helper defined in either the C or the Lua
+-- test helpers code.  As it sounds the main job is to declare Sqlite extensions
+-- that we can then call.
 call make_schema();
 call _cql_init_extensions();
 
@@ -255,6 +275,8 @@ begin
   EXPECT_SQL_TOO!(-3 % -2 == -1);
 end);
 
+-- we will examine these to make sure the side effect functions are getting call
+-- the correct number of times
 declare side_effect_0_count int!;
 declare side_effect_1_count int!;
 declare side_effect_null_count int!;
@@ -289,6 +311,8 @@ end;
 
 TEST!(logical_operations,
 begin
+  -- first the truth table, note that we verify that we get the same answer
+  -- from the code gen as we would from asking SQLite.
   EXPECT_SQL_TOO!((null and 0) = 0);
   EXPECT_SQL_TOO!((null and 0) = 0);
   EXPECT_SQL_TOO!((0 and null) = 0);
@@ -304,15 +328,13 @@ begin
   EXPECT_SQL_TOO!(null + null is null);
   EXPECT_SQL_TOO!((null between null and null) is null);
 
-  -- the purpose of all this business is to ensure that the
-  -- expressions that are evaluated are the ones that are
-  -- supposed to be.  We do this by putting functions with
-  -- side-effects into the and/or expressions and then
-  -- verifying that they were called the right number of
-  -- times.  We have to do this for null and true/false
-  -- with both "and" and "or".  Given the number of times
-  -- this code was broken in the project, these tests
-  -- are considered indespensible.
+  -- the purpose of all this business is to ensure that the expressions that are
+  -- evaluated are the ones that are supposed to be evaluated.  We do this by
+  -- putting functions with side-effects into the and/or expressions and then
+  -- verifying that they were called the right number of times.  We have to do
+  -- this for null and true/false with both "and" and "or".  Given the number of
+  -- times this code was broken in the project, these tests are considered
+  -- indespensible.
 
   EXPECT_EQ!(side_effect_0() and side_effect_0(), 0);
   EXPECT_EQ!(side_effect_0_count, 1);
@@ -399,9 +421,9 @@ begin
   EXPECT_EQ!(side_effect_null_count, 2);
   reset_counts();
 
-  -- even though this looks like all non nulls we do not eval side_effect_1
-  -- we can't use the simple && form of code-gen because there is statement
-  -- output requred to evaluate the coalesce.
+  -- even though this looks like all non nulls we do not eval side_effect_1 we
+  -- can't use the simple && form of code-gen because there is statement output
+  -- requred to evaluate the coalesce.
 
   EXPECT_EQ!((0 and coalesce(side_effect_1(), 1)), 0);
   EXPECT_EQ!(side_effect_1_count, 0);
@@ -3526,6 +3548,9 @@ TEST!(const_folding1,
 begin
   EXPECT_EQ!(const(1 + 1), 2);
   EXPECT_EQ!(const(1.0 + 1), 2.0);
+  EXPECT_EQ!(const(1.0 + 1), floats.two);
+  EXPECT_EQ!(const(floats.one + 1), 2.0);
+  EXPECT_EQ!(const(floats.one + 1), floats.two);
   EXPECT_EQ!(const(1 + 1L), 2L);
   EXPECT_EQ!(const(1 + (1==1) ), 2);
   EXPECT_EQ!(const(1.0 + 1L), 2.0);

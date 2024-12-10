@@ -419,7 +419,6 @@ function bupdateval(context, b, ...)
 ::done::
 end
 
-
 function rscount(context, rsid)
   local rs = cql_get_aux_value_for_id(rsid)
   context:result_int(#rs)

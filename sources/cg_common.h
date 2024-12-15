@@ -313,8 +313,6 @@ typedef struct cg_blob_mappings_struct {
   bool_t blob_update_val_use_offsets;
 } cg_blob_mappings_t;
 
-cql_data_decl( cg_blob_mappings_t *_Nullable cg_blob_mappings );
-
 // Hashing helpers
 
 cql_noexport crc_t crc_charbuf(charbuf *_Nonnull input);

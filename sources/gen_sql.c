@@ -1485,7 +1485,6 @@ cql_noexport CSTR get_field_hash(CSTR name, sem_t sem_type) {
 // again all this would be screen out much earlier if it was otherwise.
 static void gen_field_hash(ast_node *ast) {
   Contract(is_ast_dot(ast));
-  Contract(cg_blob_mappings);
   Contract(ast->sem);
   EXTRACT_STRING(cname, ast->right);
 
@@ -1578,7 +1577,6 @@ cache_hit:
 
 static void gen_cql_blob_get_type(ast_node *ast) {
   Contract(is_ast_call(ast));
-  Contract(cg_blob_mappings);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
   EXTRACT_STRING(t_name, first_arg(arg_list));
@@ -1772,7 +1770,6 @@ static void gen_cql_blob_create(ast_node *ast) {
 
 static void gen_cql_blob_update(ast_node *ast) {
   Contract(is_ast_call(ast));
-  Contract(cg_blob_mappings);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
@@ -1854,7 +1851,7 @@ static void gen_expr_call(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) 
       return;
     }
 
-    if (for_sqlite() && cg_blob_mappings) {
+    if (for_sqlite()) {
       if (!StrCaseCmp("cql_blob_get", name)) {
         gen_cql_blob_get(ast);
         return;
@@ -5195,68 +5192,6 @@ static void gen_with_upsert_stmt(ast_node *ast) {
   gen_upsert_stmt(upsert_stmt);
 }
 
-static void gen_blob_get_key_type_stmt(ast_node *ast) {
-  Contract(is_ast_blob_get_key_type_stmt(ast));
-  EXTRACT_STRING(name, ast->left);
-
-  gen_printf("@BLOB_GET_KEY_TYPE %s", name);
-}
-
-static void gen_blob_get_val_type_stmt(ast_node *ast) {
-  Contract(is_ast_blob_get_val_type_stmt(ast));
-  EXTRACT_STRING(name, ast->left);
-
-  gen_printf("@BLOB_GET_VAL_TYPE %s", name);
-}
-
-static void gen_blob_get_key_stmt(ast_node *ast) {
-  Contract(is_ast_blob_get_key_stmt(ast));
-  EXTRACT_STRING(name, ast->left);
-  EXTRACT_OPTION(offset, ast->right);
-
-  gen_printf("@BLOB_GET_KEY %s%s", name, offset ? " OFFSET" : "");
-}
-
-static void gen_blob_get_val_stmt(ast_node *ast) {
-  Contract(is_ast_blob_get_val_stmt(ast));
-  EXTRACT_STRING(name, ast->left);
-  EXTRACT_OPTION(offset, ast->right);
-
-  gen_printf("@BLOB_GET_VAL %s%s", name, offset ? " OFFSET" : "");
-}
-
-static void gen_blob_create_key_stmt(ast_node *ast) {
-  Contract(is_ast_blob_create_key_stmt(ast));
-  EXTRACT_STRING(name, ast->left);
-  EXTRACT_OPTION(offset, ast->right);
-
-  gen_printf("@BLOB_CREATE_KEY %s%s", name, offset ? " OFFSET" : "");
-}
-
-static void gen_blob_create_val_stmt(ast_node *ast) {
-  Contract(is_ast_blob_create_val_stmt(ast));
-  EXTRACT_STRING(name, ast->left);
-  EXTRACT_OPTION(offset, ast->right);
-
-  gen_printf("@BLOB_CREATE_VAL %s%s", name, offset ? " OFFSET" : "");
-}
-
-static void gen_blob_update_key_stmt(ast_node *ast) {
-  Contract(is_ast_blob_update_key_stmt(ast));
-  EXTRACT_STRING(name, ast->left);
-  EXTRACT_OPTION(offset, ast->right);
-
-  gen_printf("@BLOB_UPDATE_KEY %s%s", name, offset ? " OFFSET" : "");
-}
-
-static void gen_blob_update_val_stmt(ast_node *ast) {
-  Contract(is_ast_blob_update_val_stmt(ast));
-  EXTRACT_STRING(name, ast->left);
-  EXTRACT_OPTION(offset, ast->right);
-
-  gen_printf("@BLOB_UPDATE_VAL %s%s", name, offset ? " OFFSET" : "");
-}
-
 static void gen_keep_table_name_in_aliases_stmt(ast_node *ast) {
   Contract(is_ast_keep_table_name_in_aliases_stmt(ast));
   gen_printf("@KEEP_TABLE_NAME_IN_ALIASES");
@@ -5583,15 +5518,6 @@ cql_noexport void gen_init() {
   STMT_INIT(with_select_stmt);
   STMT_INIT(with_update_stmt);
   STMT_INIT(with_upsert_stmt);
-
-  STMT_INIT(blob_get_key_type_stmt);
-  STMT_INIT(blob_get_val_type_stmt);
-  STMT_INIT(blob_get_key_stmt);
-  STMT_INIT(blob_get_val_stmt);
-  STMT_INIT(blob_create_key_stmt);
-  STMT_INIT(blob_create_val_stmt);
-  STMT_INIT(blob_update_key_stmt);
-  STMT_INIT(blob_update_val_stmt);
 
   STMT_INIT(keep_table_name_in_aliases_stmt);
 

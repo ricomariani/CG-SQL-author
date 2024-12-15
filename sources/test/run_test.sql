@@ -158,20 +158,6 @@ end;
 ';
 */
 
--- for the test cases, all the blob function will be offset based rather than hash based
--- this makes the dumb test implementation of these b* functions easier
---
--- NOTE: an interesting future direction would be to use @op to make these
--- rather than having an ad hoc mechanism like this.  @op is more general.
-@blob_get_key_type bgetkey_type;
-@blob_get_val_type bgetval_type;
-@blob_get_key bgetkey offset;
-@blob_get_val bgetval offset;
-@blob_create_key bcreatekey offset;
-@blob_create_val bcreateval offset;
-@blob_update_key bupdatekey offset;
-@blob_update_val bupdateval offset;
-
 declare const group blob_types (
   CQL_BLOB_TYPE_BOOL   = 0,
   CQL_BLOB_TYPE_INT32  = 1,

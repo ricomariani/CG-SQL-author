@@ -5272,18 +5272,6 @@ begin
   out union C;
 end;
 
--- these are largely no-op directives until we generate SQL for them
--- at this point we just make sure we can generate these without crashing
-
-@blob_get_key_type bgetkey_type;
-@blob_get_val_type bgetval_type;
-@blob_get_key bgetkey offset;
-@blob_get_val bgetval;
-@blob_create_key bcreatekey offset;
-@blob_create_val bcreateval;
-@blob_update_key bupdatekey offset;
-@blob_update_val bupdateval;
-
 [[backing_table]]
 create table backing(
   k blob primary key,
@@ -5559,9 +5547,6 @@ proc use_backed_table_select_expr_value_offsets(out x bool!)
 begin
   set x := (select flag from backed_offsets);
 end;
-
--- go back to the other way
-@blob_get_val bgetval;
 
 [[backed_by=backing]]
 create table small_backed(

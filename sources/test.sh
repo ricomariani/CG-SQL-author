@@ -932,8 +932,7 @@ json_schema_test() {
 test_helpers_test() {
 	echo '--------------------------------- STAGE 12 -- TEST HELPERS TEST'
 	echo running test builders test
-	cc -DCQL_TEST -E -x c "$T/cg_test_test_helpers.sql" >"$O/__temp"
-	if ! ${CQL} --test --cg "$O/cg_test_test_helpers.out" --in "$O/__temp" --rt test_helpers 2>"$O/cg_test_test_helpers.err"; then
+	if ! ${CQL} --test --cg "$O/cg_test_test_helpers.out" --in "$T/cg_test_test_helpers.sql" --rt test_helpers 2>"$O/cg_test_test_helpers.err"; then
 		echo "ERROR:"
 		cat "$O/cg_test_test_helpers.err"
 		failed
@@ -1030,18 +1029,15 @@ upgrade_test() {
 query_plan_test() {
 	echo '--------------------------------- STAGE 15 -- TEST QUERY PLAN'
 
-	echo C preprocessing
-	cc -DCQL_TEST -E -x c "$T/cg_test_query_plan.sql" >"$O/cg_test_query_plan2.sql"
-
 	echo semantic analysis
-	if ! ${CQL} --sem --ast --dev --in "$O/cg_test_query_plan2.sql" >"$O/__temp" 2>"$O/cg_test_query_plan.err"; then
+	if ! ${CQL} --sem --ast --dev --in "$T/cg_test_query_plan.sql" >"$O/__temp" 2>"$O/cg_test_query_plan.err"; then
 		echo "CQL semantic analysis returned unexpected error code"
 		cat "$O/cg_test_query_plan.err"
 		failed
 	fi
 
 	echo codegen query plan
-	if ! ${CQL} --test --dev --cg "$O/cg_test_query_plan.out" --in "$O/cg_test_query_plan2.sql" --rt query_plan 2>"$O/cg_test_query_plan.err"; then
+	if ! ${CQL} --test --dev --cg "$O/cg_test_query_plan.out" --in "$T/cg_test_query_plan.sql" --rt query_plan 2>"$O/cg_test_query_plan.err"; then
 		echo "ERROR:"
 		cat "$O/cg_test_query_plan.err"
 		failed

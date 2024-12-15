@@ -1576,13 +1576,38 @@ cache_hit:
   return dup_printf("%lld", (llint_t)hash);
 }
 
+static CSTR get_backing_table_attr(CSTR table_name, CSTR attr, CSTR default_value)
+{
+  ast_node *table = find_table_or_view_even_deleted(table_name);
+  Contract(table); // already checked
+  Contract(table->sem);  // already checked
+  
+  if (is_backed(table->sem->sem_type)) {
+     EXTRACT_MISC_ATTRS(table, misc_attrs_backed);
+     table_name = get_named_string_attribute_value(misc_attrs_backed, "backed_by");
+     Contract(table_name); // already checked
+     table = find_table_or_view_even_deleted(table_name);
+     Contract(table); // already checked
+     Contract(table->sem);  // already checked
+  }
+
+  Contract(is_backing(table->sem->sem_type));
+  EXTRACT_MISC_ATTRS(table, misc_attrs);
+  Contract(misc_attrs);
+
+  CSTR result = get_named_string_attribute_value(misc_attrs, attr);
+  return result ? result : default_value;
+}
+
 static void gen_cql_blob_get_type(ast_node *ast) {
   Contract(is_ast_call(ast));
   Contract(cg_blob_mappings);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
-  CSTR func = cg_blob_mappings->blob_get_key_type;
+  EXTRACT_STRING(table_name, first_arg(arg_list));
+
+  CSTR func = get_backing_table_attr(table_name, "get_type", "bgetkey_type");
 
   gen_printf("%s(", func);
   gen_root_expr(second_arg(arg_list));

@@ -21475,6 +21475,36 @@ begin
   let z := (select cql_blob_get_type(basic_table2, x));
 end;
 
+-- TEST: incorrect call to blob_get_type, not even a name
+-- + {select_stmt}: err
+-- * error: % argument 1 must be a table name that is a backed table 'cql_blob_get_type'
+-- +1 error:
+proc blob_get_type_not_a_table()
+begin
+  declare x blob @sensitive;
+  let z := (select cql_blob_get_type(1, x));
+end;
+
+-- TEST: incorrect call to blob_get_type, invalid table name
+-- + {select_stmt}: err
+-- * error: % table/view not defined 'not_a_table_name'
+-- +1 error:
+proc blob_get_type_not_a_table_name()
+begin
+  declare x blob @sensitive;
+  let z := (select cql_blob_get_type(not_a_table_name, x));
+end;
+
+-- TEST: incorrect call to blob_get_type, table is not backed/backing
+-- + {select_stmt}: err
+-- * error: % the indicated table is not declared for backed or backing storage 'foo'
+-- +1 error:
+proc blob_get_type_not_a_backed_table_name()
+begin
+  declare x blob @sensitive;
+  let z := (select cql_blob_get_type(foo, x));
+end;
+
 -- TEST: blob get type wrong argument count
 -- + {call}: err
 -- * error: % function got incorrect number of arguments 'cql_blob_get_type'

@@ -80560,6 +80560,135 @@ END;
 
 The statement ending at line XXXX
 
+PROC blob_get_type_not_a_table ()
+BEGIN
+  DECLARE x BLOB @SENSITIVE;
+  LET z := ( SELECT cql_blob_get_type(1, x) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in num : CQL0491: argument 1 must be a table name that is a backed table 'cql_blob_get_type'
+
+  {create_proc_stmt}: err
+  | {name blob_get_type_not_a_table}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_vars_type}: blob sensitive
+      | | {name_list}: x: blob variable sensitive
+      | | | {name x}: x: blob variable sensitive
+      | | {sensitive_attr}: blob sensitive
+      |   | {type_blob}: blob
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}
+          |     |   | {call}
+          |     |     | {name cql_blob_get_type}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {int 1}: err
+          |     |         | {arg_list}
+          |     |           | {name x}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+PROC blob_get_type_not_a_table_name ()
+BEGIN
+  DECLARE x BLOB @SENSITIVE;
+  LET z := ( SELECT cql_blob_get_type(not_a_table_name, x) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0095: table/view not defined 'not_a_table_name'
+
+  {create_proc_stmt}: err
+  | {name blob_get_type_not_a_table_name}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_vars_type}: blob sensitive
+      | | {name_list}: x: blob variable sensitive
+      | | | {name x}: x: blob variable sensitive
+      | | {sensitive_attr}: blob sensitive
+      |   | {type_blob}: blob
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_get_type}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name not_a_table_name}
+          |     |         | {arg_list}
+          |     |           | {name x}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+PROC blob_get_type_not_a_backed_table_name ()
+BEGIN
+  DECLARE x BLOB @SENSITIVE;
+  LET z := ( SELECT cql_blob_get_type(foo, x) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0488: the indicated table is not declared for backed or backing storage 'foo'
+
+  {create_proc_stmt}: err
+  | {name blob_get_type_not_a_backed_table_name}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_vars_type}: blob sensitive
+      | | {name_list}: x: blob variable sensitive
+      | | | {name x}: x: blob variable sensitive
+      | | {sensitive_attr}: blob sensitive
+      |   | {type_blob}: blob
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_get_type}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name foo}
+          |     |         | {arg_list}
+          |     |           | {name x}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
 PROC blob_get_type_wrong_arg_count ()
 BEGIN
   DECLARE x BLOB;

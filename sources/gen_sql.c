@@ -1585,7 +1585,7 @@ static void gen_cql_blob_get_type(ast_node *ast) {
   CSTR func = cg_blob_mappings->blob_get_key_type;
 
   gen_printf("%s(", func);
-  gen_root_expr(first_arg(arg_list));
+  gen_root_expr(second_arg(arg_list));
   gen_printf(")");
 }
 

@@ -21472,7 +21472,7 @@ create table basic_table2(
 proc blob_get_type()
 begin
   declare x blob @sensitive;
-  let z := (select cql_blob_get_type(x));
+  let z := (select cql_blob_get_type(basic_table2, x));
 end;
 
 -- TEST: blob get type wrong argument count
@@ -21491,7 +21491,7 @@ end;
 -- +1 error:
 proc blob_get_type_wrong_arg_type()
 begin
-  let z := (select cql_blob_get_type(1));
+  let z := (select cql_blob_get_type(basic_table2, 1));
 end;
 
 -- TEST: blob get type arg expression has errors
@@ -21500,7 +21500,7 @@ end;
 -- +1 error:
 proc blob_get_type_bad_expr()
 begin
-  let z := (select cql_blob_get_type(not "x"));
+  let z := (select cql_blob_get_type(basic_table2, not "x"));
 end;
 
 -- TEST: blob get type called outside of SQL context

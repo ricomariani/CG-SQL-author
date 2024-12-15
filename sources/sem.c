@@ -8219,6 +8219,7 @@ static void sem_special_func_cql_blob_get_type(ast_node *ast, uint32_t arg_count
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
+  EXTRACT_STRING(name, name_ast);
 
   *is_aggregate = false;
 
@@ -8227,11 +8228,40 @@ static void sem_special_func_cql_blob_get_type(ast_node *ast, uint32_t arg_count
     return;
   }
 
-  if (!sem_validate_arg_count(ast, arg_count, 1)) {
+  if (!sem_validate_arg_count(ast, arg_count, 2)) {
     return;
   }
 
-  ast_node *blob_expr = first_arg(arg_list);
+  ast_node *table_name_ast = first_arg(arg_list);
+  ast_node *blob_expr = second_arg(arg_list);
+
+  if (!is_ast_str(table_name_ast)) {
+    report_error(table_name_ast, "CQL0491: argument 1 must be a table name that is a backed table", name);
+    record_error(table_name_ast);
+    return;
+  }
+
+  EXTRACT_STRING(table_name, table_name_ast);
+
+  // give a better error if the table is not found
+  ast_node *ref_table_ast = find_usable_and_not_deleted_table_or_view(
+      table_name,
+      table_name_ast,
+      "CQL0095: table/view not defined");
+  if (!ref_table_ast) {
+    record_error(ast);
+    return;
+  }
+
+  sem_t sem_type = ref_table_ast->sem->sem_type;
+
+  if (!is_backed(sem_type) && !is_backing(sem_type)) {
+    report_error(ast, 
+      "CQL0488: the indicated table is not declared for backed or backing storage",
+      table_name);
+    record_error(ast);
+    return;
+  }
 
   sem_expr(blob_expr);
   if (is_error(blob_expr)) {
@@ -8239,12 +8269,14 @@ static void sem_special_func_cql_blob_get_type(ast_node *ast, uint32_t arg_count
     return;
   }
 
-  if (!sem_verify_compat(blob_expr, blob_expr->sem->sem_type, SEM_TYPE_BLOB, "cql_blob_get_type")) {
+  if (!sem_verify_compat(blob_expr, blob_expr->sem->sem_type, SEM_TYPE_BLOB, name)) {
     record_error(ast);
     return;
   }
 
-  name_ast->sem = ast->sem = new_sem_std(SEM_TYPE_LONG_INTEGER, arg_list);
+  // compute the usual semantic type preserving sensitivity etc.
+  // but skip the table name hence ->right
+  name_ast->sem = ast->sem = new_sem_std(SEM_TYPE_LONG_INTEGER, arg_list->right);
 }
 
 // cql_blob_create(backed_type, value, backed_type.col, value2, backed_type.col, ...),

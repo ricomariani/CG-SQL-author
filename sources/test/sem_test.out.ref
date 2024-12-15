@@ -80522,7 +80522,7 @@ The statement ending at line XXXX
 PROC blob_get_type ()
 BEGIN
   DECLARE x BLOB @SENSITIVE;
-  LET z := ( SELECT cql_blob_get_type(x) );
+  LET z := ( SELECT cql_blob_get_type(basic_table2, x) );
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -80547,7 +80547,9 @@ END;
           |     |     | {call_arg_list}
           |     |       | {call_filter_clause}
           |     |       | {arg_list}: ok
-          |     |         | {name x}: x: blob variable sensitive
+          |     |         | {name basic_table2}
+          |     |         | {arg_list}
+          |     |           | {name x}: x: blob variable sensitive
           |     | {select_from_etc}: ok
           |       | {select_where}
           |         | {select_groupby}
@@ -80598,7 +80600,7 @@ The statement ending at line XXXX
 
 PROC blob_get_type_wrong_arg_type ()
 BEGIN
-  LET z := ( SELECT cql_blob_get_type(1) );
+  LET z := ( SELECT cql_blob_get_type(basic_table2, 1) );
 END;
 
 test/sem_test.sql:XXXX:1: error: in num : CQL0012: incompatible types in expression 'cql_blob_get_type'
@@ -80620,7 +80622,9 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0012: incompatible types in express
           |     |     | {call_arg_list}
           |     |       | {call_filter_clause}
           |     |       | {arg_list}: ok
-          |     |         | {int 1}: err
+          |     |         | {name basic_table2}
+          |     |         | {arg_list}
+          |     |           | {int 1}: err
           |     | {select_from_etc}: ok
           |       | {select_where}
           |         | {select_groupby}
@@ -80633,7 +80637,7 @@ The statement ending at line XXXX
 
 PROC blob_get_type_bad_expr ()
 BEGIN
-  LET z := ( SELECT cql_blob_get_type(NOT "x") );
+  LET z := ( SELECT cql_blob_get_type(basic_table2, NOT "x") );
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
@@ -80655,8 +80659,10 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
           |     |     | {call_arg_list}
           |     |       | {call_filter_clause}
           |     |       | {arg_list}: ok
-          |     |         | {not}: err
-          |     |           | {strlit 'x'}: text notnull
+          |     |         | {name basic_table2}
+          |     |         | {arg_list}
+          |     |           | {not}: err
+          |     |             | {strlit 'x'}: text notnull
           |     | {select_from_etc}: ok
           |       | {select_where}
           |         | {select_groupby}

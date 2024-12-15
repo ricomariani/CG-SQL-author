@@ -284,6 +284,7 @@ cql_noexport ast_node *find_proc(CSTR name);
 cql_noexport bytebuf *find_proc_arg_info(CSTR name);
 cql_noexport ast_node *find_local_or_global_variable(CSTR name);
 cql_noexport ast_node *find_region(CSTR name);
+cql_noexport struct cg_blob_mappings_struct *find_backing_info(CSTR name);
 cql_noexport CSTR find_op(CSTR op_key);
 cql_noexport ast_node *find_func(CSTR name);
 cql_noexport ast_node *find_unchecked_func(CSTR name);

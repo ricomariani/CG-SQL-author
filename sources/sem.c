@@ -624,6 +624,7 @@ static symtab *unchecked_funcs;
 static symtab *exprs;
 static symtab *tables;
 static symtab *table_default_values;
+static symtab *backing_info;
 static symtab *ops;
 static symtab *indices;
 static symtab *globals;
@@ -2142,6 +2143,17 @@ static bool_t add_trigger(ast_node *ast, CSTR name) {
 static ast_node *find_trigger(CSTR name) {
   symtab_entry *entry = symtab_find(triggers, name);
   return entry ? (ast_node*)(entry->val) : NULL;
+}
+
+// Wrappers for the backing_info table.
+static bool_t add_backing_info(struct cg_blob_mappings_struct *data, CSTR name) {
+  return symtab_add(backing_info, name, data);
+}
+
+// Wrapper for backing info
+cql_noexport struct cg_blob_mappings_struct *find_backing_info(CSTR name) {
+  symtab_entry *entry = symtab_find(backing_info, name);
+  return entry ? (struct cg_blob_mappings_struct *)(entry->val) : NULL;
 }
 
 // Wrapper for variable groups.
@@ -16014,6 +16026,60 @@ static void sem_validate_table_for_backed(ast_node *ast) {
   Invariant(value_count == table_info->value_count);
 }
 
+static CSTR get_backing_attr(ast_node *table, CSTR attr, CSTR default_value) {
+  Contract(table);
+  Contract(table->sem);
+  Contract(is_backing(table->sem->sem_type));
+  EXTRACT_MISC_ATTRS(table, misc_attrs);
+  Contract(misc_attrs);
+
+  CSTR result = get_named_string_attribute_value(misc_attrs, attr);
+  return result ? result : default_value;
+}
+
+static bool_t has_backing_attr(ast_node *table, CSTR attr) {
+  Contract(table);
+  Contract(table->sem);
+  Contract(is_backing(table->sem->sem_type));
+  EXTRACT_MISC_ATTRS(table, misc_attrs);
+  Contract(misc_attrs);
+
+  return !!find_named_attr(misc_attrs, attr);
+}
+
+static void create_backing_table_functions(ast_node *table, CSTR name) {
+  cg_blob_mappings_t *map = _ast_pool_new(cg_blob_mappings_t);
+
+  map->blob_get_key_type = get_backing_attr(table, "get_type", "bgetkey_type");
+  map->blob_get_val_type = map->blob_get_key_type;  // this is never used
+  map->blob_get_key = get_backing_attr(table, "get_key", "bgetkey");
+  map->blob_get_val = get_backing_attr(table, "get_val", "bgetval");
+  map->blob_create_key = get_backing_attr(table, "create_key", "bcreatekey");
+  map->blob_create_val = get_backing_attr(table, "create_val", "bcreateval");
+  map->blob_update_key = get_backing_attr(table, "update_key", "bupdatekey");
+  map->blob_update_val = get_backing_attr(table, "update_val", "bupdateval");
+
+  map->blob_get_key_use_offsets = !has_backing_attr(table, "use_key_codes");  // offsets are the default
+  map->blob_get_val_use_offsets = has_backing_attr(table, "use_val_offsets");  // codes are the default
+  map->blob_create_key_use_offsets = map->blob_get_key_use_offsets;
+  map->blob_update_key_use_offsets = map->blob_get_key_use_offsets;
+  map->blob_create_val_use_offsets = map->blob_get_val_use_offsets;
+  map->blob_update_val_use_offsets = map->blob_get_val_use_offsets;
+
+  add_backing_info(map, name);
+}
+
+static void clone_backing_table_functions(ast_node *table, CSTR name) {
+  Contract(is_backed(table->sem->sem_type));
+  EXTRACT_MISC_ATTRS(table, misc_attrs_backed);
+  CSTR table_name = get_named_string_attribute_value(misc_attrs_backed, "backed_by");
+  Contract(table_name); // already checked
+
+  cg_blob_mappings_t *map = find_backing_info(table_name);
+  Contract(map);  // already added for sure!
+  add_backing_info(map, name);
+}
+
 // Unlike the other parts of DDL we actually deeply care about the tables.
 // We have to grab all the columns and column types out of it and create
 // the appropriate sem_struct, as well as the sem_join with just one table.
@@ -16042,6 +16108,8 @@ static void sem_create_table_stmt(ast_node *ast) {
   // the self-referencing table case needs to use these to detect the self-reference.
   current_table_name = name;
   current_table_ast = ast;
+
+  // stashed default values for the tables
   symtab *def_values = symtab_new();
 
   int32_t temp = flags & TABLE_IS_TEMP;
@@ -16304,7 +16372,12 @@ static void sem_create_table_stmt(ast_node *ast) {
 
       sem_record_annotation_from_vers_info(&table_vers_info);
 
+      if (is_backing(ast->sem->sem_type)) {
+        create_backing_table_functions(ast, name);
+      }
+
       if (is_backed(ast->sem->sem_type)) {
+        clone_backing_table_functions(ast, name);
         rewrite_shared_fragment_from_backed_table(ast);
       }
     }
@@ -26278,6 +26351,7 @@ cql_noexport void sem_main(ast_node *ast) {
   ad_hoc_migrates = symtab_new();
   tables = symtab_new();
   table_default_values = symtab_new();
+  backing_info = symtab_new();
   indices = symtab_new();
   globals = symtab_new();
   constant_groups = symtab_new();
@@ -26888,6 +26962,7 @@ cql_noexport void sem_cleanup() {
   SYMTAB_CLEANUP(sql_stmts);
   SYMTAB_CLEANUP(table_items);
   SYMTAB_CLEANUP(tables);
+  SYMTAB_CLEANUP(backing_info);
   SYMTAB_CLEANUP(triggers);
   SYMTAB_CLEANUP(upgrade_procs);
   SYMTAB_CLEANUP(builtin_aggregated_funcs);

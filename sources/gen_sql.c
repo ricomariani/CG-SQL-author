@@ -1576,38 +1576,16 @@ cache_hit:
   return dup_printf("%lld", (llint_t)hash);
 }
 
-static CSTR get_backing_table_attr(CSTR table_name, CSTR attr, CSTR default_value)
-{
-  ast_node *table = find_table_or_view_even_deleted(table_name);
-  Contract(table); // already checked
-  Contract(table->sem);  // already checked
-  
-  if (is_backed(table->sem->sem_type)) {
-     EXTRACT_MISC_ATTRS(table, misc_attrs_backed);
-     table_name = get_named_string_attribute_value(misc_attrs_backed, "backed_by");
-     Contract(table_name); // already checked
-     table = find_table_or_view_even_deleted(table_name);
-     Contract(table); // already checked
-     Contract(table->sem);  // already checked
-  }
-
-  Contract(is_backing(table->sem->sem_type));
-  EXTRACT_MISC_ATTRS(table, misc_attrs);
-  Contract(misc_attrs);
-
-  CSTR result = get_named_string_attribute_value(misc_attrs, attr);
-  return result ? result : default_value;
-}
-
 static void gen_cql_blob_get_type(ast_node *ast) {
   Contract(is_ast_call(ast));
   Contract(cg_blob_mappings);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
+  EXTRACT_STRING(t_name, first_arg(arg_list));
 
-  EXTRACT_STRING(table_name, first_arg(arg_list));
-
-  CSTR func = get_backing_table_attr(table_name, "get_type", "bgetkey_type");
+  cg_blob_mappings_t *map = find_backing_info(t_name);
+  Contract(map);
+  CSTR func = map->blob_get_key_type;
 
   gen_printf("%s(", func);
   gen_root_expr(second_arg(arg_list));
@@ -1657,26 +1635,26 @@ static int32_t get_table_col_offset(ast_node *create_table_stmt, CSTR name, bool
 
 static void gen_cql_blob_get(ast_node *ast) {
   Contract(is_ast_call(ast));
-  Contract(cg_blob_mappings);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
   ast_node *table_expr = second_arg(arg_list);
 
-  EXTRACT_STRING(tname, table_expr->left);
-  EXTRACT_STRING(cname, table_expr->right);
+  EXTRACT_STRING(t_name, table_expr->left);
+  EXTRACT_STRING(c_name, table_expr->right);
+
+  cg_blob_mappings_t *map = find_backing_info(t_name);
 
   // table known to exist (and not deleted) already
-  ast_node *table_ast = find_table_or_view_even_deleted(tname);
+  ast_node *table_ast = find_table_or_view_even_deleted(t_name);
   Invariant(table_ast);
 
-  int32_t pk_col_offset = get_table_col_offset(table_ast, cname, CQL_SEARCH_COL_KEYS);
+  int32_t pk_col_offset = get_table_col_offset(table_ast, c_name, CQL_SEARCH_COL_KEYS);
 
-  CSTR func = pk_col_offset >= 0 ?
-    cg_blob_mappings->blob_get_key : cg_blob_mappings->blob_get_val;
+  CSTR func = pk_col_offset >= 0 ? map->blob_get_key : map->blob_get_val;
 
   bool_t offsets = pk_col_offset >= 0 ?
-    cg_blob_mappings->blob_get_key_use_offsets : cg_blob_mappings->blob_get_val_use_offsets;
+    map->blob_get_key_use_offsets : map->blob_get_val_use_offsets;
 
   gen_printf("%s(", func);
   gen_root_expr(first_arg(arg_list));
@@ -1685,7 +1663,7 @@ static void gen_cql_blob_get(ast_node *ast) {
     int32_t offset = pk_col_offset;
     if (offset < 0) {
       // if column not part of the key then we need to index the value, not the key
-      offset = get_table_col_offset(table_ast, cname, CQL_SEARCH_COL_VALUES);
+      offset = get_table_col_offset(table_ast, c_name, CQL_SEARCH_COL_VALUES);
       // we know it's a valid column so it's either a key or it isn't
       // since it isn't a key it must be a value
       Invariant(offset >= 0);
@@ -1734,13 +1712,13 @@ static int32_t sem_type_to_blob_type[] = {
 
 static void gen_cql_blob_create(ast_node *ast) {
   Contract(is_ast_call(ast));
-  Contract(cg_blob_mappings);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
   ast_node *table_name_ast = first_arg(arg_list);
 
   EXTRACT_STRING(t_name, table_name_ast);
+  cg_blob_mappings_t *map = find_backing_info(t_name);
 
   bool_t is_pk = false;
 
@@ -1754,13 +1732,9 @@ static void gen_cql_blob_create(ast_node *ast) {
     is_pk = is_primary_key(sem_type3) || is_partial_pk(sem_type3);
   }
 
-  CSTR func = is_pk ?
-      cg_blob_mappings->blob_create_key :
-      cg_blob_mappings->blob_create_val;
+  CSTR func = is_pk ? map->blob_create_key : map->blob_create_val;
 
-  bool_t use_offsets = is_pk ?
-      cg_blob_mappings->blob_create_key_use_offsets :
-      cg_blob_mappings->blob_create_val_use_offsets;
+  bool_t use_offsets = is_pk ?  map->blob_create_key_use_offsets : map->blob_create_val_use_offsets;
 
   // table known to exist (and not deleted) already
   ast_node *table_ast = find_table_or_view_even_deleted(t_name);
@@ -1805,17 +1779,14 @@ static void gen_cql_blob_update(ast_node *ast) {
   // known to be dot operator and known to have a table
   EXTRACT_NOTNULL(dot, third_arg(arg_list));
   EXTRACT_STRING(t_name, dot->left);
+  cg_blob_mappings_t *map = find_backing_info(t_name);
 
   sem_t sem_type_dot = dot->sem->sem_type;
   bool_t is_pk = is_primary_key(sem_type_dot) || is_partial_pk(sem_type_dot);
 
-  CSTR func = is_pk ?
-      cg_blob_mappings->blob_update_key :
-      cg_blob_mappings->blob_update_val;
+  CSTR func = is_pk ? map->blob_update_key : map->blob_update_val;
 
-  bool_t use_offsets = is_pk ?
-      cg_blob_mappings->blob_update_key_use_offsets :
-      cg_blob_mappings->blob_update_val_use_offsets;
+  bool_t use_offsets = is_pk ?  map->blob_update_key_use_offsets : map->blob_update_val_use_offsets;
 
   // table known to exist (and not deleted) already
   ast_node *table_ast = find_table_or_view_even_deleted(t_name);

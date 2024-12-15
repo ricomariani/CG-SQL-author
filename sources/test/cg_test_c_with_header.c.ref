@@ -16420,9 +16420,9 @@ cql_cleanup:
 PROC use_backed_table_select_expr_value_offsets (OUT x BOOL!)
 BEGIN
   SET x := (   WITH
-    backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
+    backed_offsets (rowid, flag, id, name, age, storage, pk) AS (CALL _backed_offsets())
   SELECT flag
-    FROM backed );
+    FROM backed_offsets );
 END;
 */
 
@@ -16442,7 +16442,7 @@ CQL_WARN_UNUSED cql_code use_backed_table_select_expr_value_offsets(sqlite3 *_No
   _rc_ = cql_prepare_var(_db_, &_temp_stmt,
     3, NULL,
   "WITH "
-      "backed (rowid, flag, id, name, age, storage, pk) AS (",
+      "backed_offsets (rowid, flag, id, name, age, storage, pk) AS (",
   "SELECT "
           "rowid, "
           "bgetval(T.v, 0), "
@@ -16451,11 +16451,11 @@ CQL_WARN_UNUSED cql_code use_backed_table_select_expr_value_offsets(sqlite3 *_No
           "bgetval(T.v, 3), "
           "bgetval(T.v, 4), "
           "bgetkey(T.k, 0) "
-        "FROM backing AS T "
-        "WHERE bgetkey_type(T.k) = -5417664364642960231",
+        "FROM backing_val_offsets AS T "
+        "WHERE bgetkey_type(T.k) = -2244274099422101851",
   ") "
     "SELECT flag "
-      "FROM backed"
+      "FROM backed_offsets"
   );
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = sqlite3_step(_temp_stmt);

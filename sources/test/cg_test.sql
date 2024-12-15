@@ -5290,8 +5290,27 @@ create table backing(
   v blob
 );
 
+[[backing_table]]
+[[use_val_offsets]]
+create table backing_val_offsets(
+  k blob primary key,
+  v blob
+);
+
 [[backed_by=backing]]
 create table backed(
+  flag bool!,
+  id long,
+  name text,
+  age real,
+  storage blob,
+
+  -- pk not at position 0 tests column index array computation
+  pk int primary key
+);
+
+[[backed_by=backing_val_offsets]]
+create table backed_offsets(
   flag bool!,
   id long,
   name text,
@@ -5527,9 +5546,6 @@ begin
   explain query plan select * from backed;
 end;
 
--- try the path where we use offsets in the value blob
-@blob_get_val bgetval offset;
-
 -- TEST: we should get value indexes 0, 1, 2, 3, 4 not hashes
 -- + SELECT
 -- + rowid,
@@ -5541,7 +5557,7 @@ end;
 -- + bgetkey(T.k, 0)
 proc use_backed_table_select_expr_value_offsets(out x bool!)
 begin
-  set x := (select flag from backed);
+  set x := (select flag from backed_offsets);
 end;
 
 -- go back to the other way

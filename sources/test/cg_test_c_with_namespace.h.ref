@@ -8143,6 +8143,12 @@ extern CQL_WARN_UNUSED cql_code delete_from_backed_no_where_clause(sqlite3 *_Non
 extern CQL_WARN_UNUSED cql_code test_blob_update_expand(sqlite3 *_Nonnull _db_);
 
 // The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code test_blob_insert_key_codes(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code test_blob_insert_val_offsets(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
 extern CQL_WARN_UNUSED cql_code update_backed_set_value(sqlite3 *_Nonnull _db_);
 
 // The statement ending at line XXXX

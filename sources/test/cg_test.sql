@@ -5285,6 +5285,13 @@ create table backing_val_offsets(
   v blob
 );
 
+[[backing_table]]
+[[use_key_codes]]
+create table backing_key_codes(
+  k blob primary key,
+  v blob
+);
+
 [[backed_by=backing]]
 create table backed(
   flag bool!,
@@ -5317,6 +5324,22 @@ create table backed2(
   id long,
   name text,
   extra int,
+  primary key(pk2, pk1) -- offsets reversed
+);
+
+[[backed_by=backing_key_codes]]
+create table backed3(
+  pk1 int,
+  pk2 int,
+  name text,
+  primary key(pk2, pk1) -- offsets reversed
+);
+
+[[backed_by=backing_val_offsets]]
+create table backed3_offsets(
+  pk1 int,
+  pk2 int,
+  name text,
   primary key(pk2, pk1) -- offsets reversed
 );
 
@@ -5655,6 +5678,30 @@ begin
   let z := (select cql_blob_update(b, 21, backed.age, "dave", backed.name));
 end;
 
+-- TEST: use key fields with codes not offsets
+-- + "INSERT INTO backing_key_codes(k, v) "
+-- + "SELECT bcreatekey(-4381524886612374514, 3424884698372330699, V.pk2, 1, 3320730843156438477, V.pk1, 1), bcreateval(-4381524886612374514, -6946718245010482247, V.name, 4) "
+-- + "rowid, "
+-- + "bgetkey(T.k, 3320730843156438477),
+-- + "bgetkey(T.k, 3424884698372330699),
+-- + "bgetval(T.v, -6946718245010482247)
+proc test_blob_insert_key_codes()
+begin
+  insert into backed3 values (1,2,"foo");
+  declare C cursor for select * from backed3;
+end;
+
+-- TEST: use create with value offsets
+-- + "INSERT INTO backing_val_offsets(k, v) "
+-- + "SELECT bcreatekey(1236461322253850149, V.pk2, 1, V.pk1, 1), bcreateval(1236461322253850149, 0, V.name, 4) "
+-- + "bgetkey(T.k, 3320730843156438477), "
+-- + "bgetkey(T.k, 3424884698372330699), "
+-- + "bgetval(T.v, -6946718245010482247) "
+proc test_blob_insert_val_offsets()
+begin
+  insert into backed3_offsets values (1,2,"foo");
+  declare C cursor for select * from backed3;
+end;
 
 -- TEST: simple update into backed table value only
 -- + UPDATE backing

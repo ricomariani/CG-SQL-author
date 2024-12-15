@@ -968,8 +968,6 @@ AST1(asc)
 AST1(at_id);
 AST1(begin_schema_region_stmt);
 AST1(begin_trans_stmt);
-AST1(blob_get_key_type_stmt)
-AST1(blob_get_val_type_stmt)
 AST1(close_stmt)
 AST1(column_spec);
 AST1(const)

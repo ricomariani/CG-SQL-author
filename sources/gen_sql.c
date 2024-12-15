@@ -1583,7 +1583,7 @@ static void gen_cql_blob_get_type(ast_node *ast) {
 
   cg_blob_mappings_t *map = find_backing_info(t_name);
   Contract(map);
-  CSTR func = map->blob_get_key_type;
+  CSTR func = map->get_key_type;
 
   gen_printf("%s(", func);
   gen_root_expr(second_arg(arg_list));
@@ -1649,10 +1649,9 @@ static void gen_cql_blob_get(ast_node *ast) {
 
   int32_t pk_col_offset = get_table_col_offset(table_ast, c_name, CQL_SEARCH_COL_KEYS);
 
-  CSTR func = pk_col_offset >= 0 ? map->blob_get_key : map->blob_get_val;
+  CSTR func = pk_col_offset >= 0 ? map->get_key : map->get_val;
 
-  bool_t offsets = pk_col_offset >= 0 ?
-    map->blob_get_key_use_offsets : map->blob_get_val_use_offsets;
+  bool_t offsets = pk_col_offset >= 0 ? map->key_use_offsets : map->val_use_offsets;
 
   gen_printf("%s(", func);
   gen_root_expr(first_arg(arg_list));
@@ -1730,9 +1729,9 @@ static void gen_cql_blob_create(ast_node *ast) {
     is_pk = is_primary_key(sem_type3) || is_partial_pk(sem_type3);
   }
 
-  CSTR func = is_pk ? map->blob_create_key : map->blob_create_val;
+  CSTR func = is_pk ? map->create_key : map->create_val;
 
-  bool_t use_offsets = is_pk ?  map->blob_create_key_use_offsets : map->blob_create_val_use_offsets;
+  bool_t use_offsets = is_pk ? map->key_use_offsets : map->val_use_offsets;
 
   // table known to exist (and not deleted) already
   ast_node *table_ast = find_table_or_view_even_deleted(t_name);
@@ -1781,9 +1780,9 @@ static void gen_cql_blob_update(ast_node *ast) {
   sem_t sem_type_dot = dot->sem->sem_type;
   bool_t is_pk = is_primary_key(sem_type_dot) || is_partial_pk(sem_type_dot);
 
-  CSTR func = is_pk ? map->blob_update_key : map->blob_update_val;
+  CSTR func = is_pk ? map->update_key : map->update_val;
 
-  bool_t use_offsets = is_pk ?  map->blob_update_key_use_offsets : map->blob_update_val_use_offsets;
+  bool_t use_offsets = is_pk ? map->key_use_offsets : map->val_use_offsets;
 
   // table known to exist (and not deleted) already
   ast_node *table_ast = find_table_or_view_even_deleted(t_name);

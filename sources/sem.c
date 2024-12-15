@@ -16049,21 +16049,17 @@ static bool_t has_backing_attr(ast_node *table, CSTR attr) {
 static void create_backing_table_functions(ast_node *table, CSTR name) {
   cg_blob_mappings_t *map = _ast_pool_new(cg_blob_mappings_t);
 
-  map->blob_get_key_type = get_backing_attr(table, "get_type", "bgetkey_type");
-  map->blob_get_val_type = map->blob_get_key_type;  // this is never used
-  map->blob_get_key = get_backing_attr(table, "get_key", "bgetkey");
-  map->blob_get_val = get_backing_attr(table, "get_val", "bgetval");
-  map->blob_create_key = get_backing_attr(table, "create_key", "bcreatekey");
-  map->blob_create_val = get_backing_attr(table, "create_val", "bcreateval");
-  map->blob_update_key = get_backing_attr(table, "update_key", "bupdatekey");
-  map->blob_update_val = get_backing_attr(table, "update_val", "bupdateval");
+  map->get_key_type = get_backing_attr(table, "get_type", "bgetkey_type");
+  map->get_val_type = map->get_key_type;  // this is never used
+  map->get_key = get_backing_attr(table, "get_key", "bgetkey");
+  map->get_val = get_backing_attr(table, "get_val", "bgetval");
+  map->create_key = get_backing_attr(table, "create_key", "bcreatekey");
+  map->create_val = get_backing_attr(table, "create_val", "bcreateval");
+  map->update_key = get_backing_attr(table, "update_key", "bupdatekey");
+  map->update_val = get_backing_attr(table, "update_val", "bupdateval");
 
-  map->blob_get_key_use_offsets = !has_backing_attr(table, "use_key_codes");  // offsets are the default
-  map->blob_get_val_use_offsets = has_backing_attr(table, "use_val_offsets");  // codes are the default
-  map->blob_create_key_use_offsets = map->blob_get_key_use_offsets;
-  map->blob_update_key_use_offsets = map->blob_get_key_use_offsets;
-  map->blob_create_val_use_offsets = map->blob_get_val_use_offsets;
-  map->blob_update_val_use_offsets = map->blob_get_val_use_offsets;
+  map->key_use_offsets = !has_backing_attr(table, "use_key_codes");  // offsets are the default
+  map->val_use_offsets = has_backing_attr(table, "use_val_offsets");  // codes are the default
 
   add_backing_info(map, name);
 }

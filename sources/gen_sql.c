@@ -1436,8 +1436,8 @@ static void gen_expr_not_in(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new
 // for them to bind to fields and generate hashes.  We have to pick some
 // canonical thing so we canonicalize to camelCase.  It's not perfect but it seems
 // like the best trade-off. Lots of languages wrap SQLite columns.
-static void gen_append_field_desc(charbuf *tmp, CSTR cname, sem_t sem_type) {
-  cg_sym_name(cg_symbol_case_camel, tmp, "", cname, NULL); // no prefix camel
+static void gen_append_field_desc(charbuf *tmp, CSTR c_name, sem_t sem_type) {
+  cg_sym_name(cg_symbol_case_camel, tmp, "", c_name, NULL); // no prefix camel
   bputc(tmp, ':');
 
   if (is_nullable(sem_type)) {
@@ -1486,10 +1486,10 @@ cql_noexport CSTR get_field_hash(CSTR name, sem_t sem_type) {
 static void gen_field_hash(ast_node *ast) {
   Contract(is_ast_dot(ast));
   Contract(ast->sem);
-  EXTRACT_STRING(cname, ast->right);
+  EXTRACT_STRING(c_name, ast->right);
 
   CHARBUF_OPEN(tmp);
-  gen_append_field_desc(&tmp, cname, ast->sem->sem_type);
+  gen_append_field_desc(&tmp, c_name, ast->sem->sem_type);
   int64_t hash = sha256_charbuf(&tmp);
   gen_printf("%lld", (llint_t)hash);
   CHARBUF_CLOSE(tmp);
@@ -1543,11 +1543,11 @@ cql_noexport CSTR gen_type_hash(ast_node *ast) {
   // now compute the fields we need
   for (uint32_t i = 0; i < count; i++) {
     int16_t icol = table_info->notnull_cols[i];
-    CSTR cname = sptr->names[icol];
+    CSTR c_name = sptr->names[icol];
     sem_t sem_type = sptr->semtypes[icol];
 
     CHARBUF_OPEN(field);
-      gen_append_field_desc(&field, cname, sem_type);
+      gen_append_field_desc(&field, c_name, sem_type);
       ptrs[i] = Strdup(field.ptr);
     CHARBUF_CLOSE(field);
   }
@@ -1771,8 +1771,8 @@ static void gen_cql_blob_create(ast_node *ast) {
       for (ast_node *args = arg_list->right; args; args = args->right->right) {
         ast_node *val = first_arg(args);
         ast_node *col = second_arg(args);
-        EXTRACT_STRING(cname, col->right);
-        gen_printf("'%s', ", cname);
+        EXTRACT_STRING(c_name, col->right);
+        gen_printf("'%s', ", c_name);
         gen_root_expr(val);
         if (args->right->right) {
           gen_printf(",  ");
@@ -1800,8 +1800,8 @@ static void gen_cql_blob_create(ast_node *ast) {
        // emit the offsets, they are assumed.  However, value blobs can have
        // some or all of the values and might skip some
        if (!is_pk) {
-         EXTRACT_STRING(cname, col->right);
-         int32_t offset = get_table_col_offset(table_ast, cname, CQL_SEARCH_COL_VALUES);
+         EXTRACT_STRING(c_name, col->right);
+         int32_t offset = get_table_col_offset(table_ast, c_name, CQL_SEARCH_COL_VALUES);
          gen_printf(", %d", offset);
        }
      }
@@ -1846,15 +1846,14 @@ static void gen_cql_blob_update(ast_node *ast) {
     for (ast_node *args = arg_list->right; args; args = args->right->right) {
       ast_node *val = first_arg(args);
       ast_node *col = second_arg(args);
-      EXTRACT_STRING(cname, col->right);
+      EXTRACT_STRING(c_name, col->right);
       if (is_pk) {
-        int32_t offset = get_table_col_offset(table_ast, cname, CQL_SEARCH_COL_KEYS);
+        int32_t offset = get_table_col_offset(table_ast, c_name, CQL_SEARCH_COL_KEYS);
         Invariant(offset >= 0);
         gen_printf(", '$.[%d]',  ", offset + 1);  // the type is offset 0
       }
       else {
-        EXTRACT_STRING(cname, col->right);
-        gen_printf(", '$.%s',  ", cname);
+        gen_printf(", '$.%s',  ", c_name);
       }
       gen_root_expr(val);
     }
@@ -1869,10 +1868,10 @@ static void gen_cql_blob_update(ast_node *ast) {
   for (ast_node *args = arg_list->right; args; args = args->right->right) {
      ast_node *val = first_arg(args);
      ast_node *col = second_arg(args);
-     EXTRACT_STRING(cname, col->right);
+     EXTRACT_STRING(c_name, col->right);
      if (use_offsets) {
       // we know it's a valid column
-      int32_t offset = get_table_col_offset(table_ast, cname,
+      int32_t offset = get_table_col_offset(table_ast, c_name,
          is_pk ? CQL_SEARCH_COL_KEYS : CQL_SEARCH_COL_VALUES);
       Invariant(offset >= 0);
       gen_printf(", %d", offset);

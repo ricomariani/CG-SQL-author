@@ -80522,7 +80522,7 @@ The statement ending at line XXXX
 PROC blob_get_type ()
 BEGIN
   DECLARE x BLOB @SENSITIVE;
-  LET z := ( SELECT cql_blob_get_type(x) );
+  LET z := ( SELECT cql_blob_get_type(basic_table2, x) );
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -80547,7 +80547,138 @@ END;
           |     |     | {call_arg_list}
           |     |       | {call_filter_clause}
           |     |       | {arg_list}: ok
-          |     |         | {name x}: x: blob variable sensitive
+          |     |         | {name basic_table2}
+          |     |         | {arg_list}
+          |     |           | {name x}: x: blob variable sensitive
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+PROC blob_get_type_not_a_table ()
+BEGIN
+  DECLARE x BLOB @SENSITIVE;
+  LET z := ( SELECT cql_blob_get_type(1, x) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in num : CQL0491: argument 1 must be a table name that is a backed table 'cql_blob_get_type'
+
+  {create_proc_stmt}: err
+  | {name blob_get_type_not_a_table}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_vars_type}: blob sensitive
+      | | {name_list}: x: blob variable sensitive
+      | | | {name x}: x: blob variable sensitive
+      | | {sensitive_attr}: blob sensitive
+      |   | {type_blob}: blob
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}
+          |     |   | {call}
+          |     |     | {name cql_blob_get_type}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {int 1}: err
+          |     |         | {arg_list}
+          |     |           | {name x}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+PROC blob_get_type_not_a_table_name ()
+BEGIN
+  DECLARE x BLOB @SENSITIVE;
+  LET z := ( SELECT cql_blob_get_type(not_a_table_name, x) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0095: table/view not defined 'not_a_table_name'
+
+  {create_proc_stmt}: err
+  | {name blob_get_type_not_a_table_name}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_vars_type}: blob sensitive
+      | | {name_list}: x: blob variable sensitive
+      | | | {name x}: x: blob variable sensitive
+      | | {sensitive_attr}: blob sensitive
+      |   | {type_blob}: blob
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_get_type}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name not_a_table_name}
+          |     |         | {arg_list}
+          |     |           | {name x}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+PROC blob_get_type_not_a_backed_table_name ()
+BEGIN
+  DECLARE x BLOB @SENSITIVE;
+  LET z := ( SELECT cql_blob_get_type(foo, x) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0488: the indicated table is not declared for backed or backing storage 'foo'
+
+  {create_proc_stmt}: err
+  | {name blob_get_type_not_a_backed_table_name}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_vars_type}: blob sensitive
+      | | {name_list}: x: blob variable sensitive
+      | | | {name x}: x: blob variable sensitive
+      | | {sensitive_attr}: blob sensitive
+      |   | {type_blob}: blob
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_get_type}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name foo}
+          |     |         | {arg_list}
+          |     |           | {name x}
           |     | {select_from_etc}: ok
           |       | {select_where}
           |         | {select_groupby}
@@ -80598,7 +80729,7 @@ The statement ending at line XXXX
 
 PROC blob_get_type_wrong_arg_type ()
 BEGIN
-  LET z := ( SELECT cql_blob_get_type(1) );
+  LET z := ( SELECT cql_blob_get_type(basic_table2, 1) );
 END;
 
 test/sem_test.sql:XXXX:1: error: in num : CQL0012: incompatible types in expression 'cql_blob_get_type'
@@ -80620,7 +80751,9 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0012: incompatible types in express
           |     |     | {call_arg_list}
           |     |       | {call_filter_clause}
           |     |       | {arg_list}: ok
-          |     |         | {int 1}: err
+          |     |         | {name basic_table2}
+          |     |         | {arg_list}
+          |     |           | {int 1}: err
           |     | {select_from_etc}: ok
           |       | {select_where}
           |         | {select_groupby}
@@ -80633,7 +80766,7 @@ The statement ending at line XXXX
 
 PROC blob_get_type_bad_expr ()
 BEGIN
-  LET z := ( SELECT cql_blob_get_type(NOT "x") );
+  LET z := ( SELECT cql_blob_get_type(basic_table2, NOT "x") );
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
@@ -80655,8 +80788,10 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
           |     |     | {call_arg_list}
           |     |       | {call_filter_clause}
           |     |       | {arg_list}: ok
-          |     |         | {not}: err
-          |     |           | {strlit 'x'}: text notnull
+          |     |         | {name basic_table2}
+          |     |         | {arg_list}
+          |     |           | {not}: err
+          |     |             | {strlit 'x'}: text notnull
           |     | {select_from_etc}: ok
           |       | {select_where}
           |         | {select_groupby}
@@ -82873,68 +83008,6 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0488: the indicated t
           | {select_orderby}
             | {select_limit}
               | {select_offset}
-
-The statement ending at line XXXX
-
-@BLOB_GET_KEY_TYPE BGETKEY_TYPE;
-
-  {blob_get_key_type_stmt}: ok
-  | {name BGETKEY_TYPE}
-
-The statement ending at line XXXX
-
-@BLOB_GET_VAL_TYPE BGETVAL_TYPE;
-
-  {blob_get_val_type_stmt}: ok
-  | {name BGETVAL_TYPE}
-
-The statement ending at line XXXX
-
-@BLOB_GET_KEY BGETKEY;
-
-  {blob_get_key_stmt}: ok
-  | {name BGETKEY}
-  | {int 0}
-
-The statement ending at line XXXX
-
-@BLOB_GET_VAL BGETVAL;
-
-  {blob_get_val_stmt}: ok
-  | {name BGETVAL}
-  | {int 0}
-
-The statement ending at line XXXX
-
-@BLOB_CREATE_KEY BCREATEKEY;
-
-  {blob_create_key_stmt}: ok
-  | {name BCREATEKEY}
-  | {int 0}
-
-The statement ending at line XXXX
-
-@BLOB_CREATE_VAL BCREATEVAL;
-
-  {blob_create_val_stmt}: ok
-  | {name BCREATEVAL}
-  | {int 0}
-
-The statement ending at line XXXX
-
-@BLOB_UPDATE_KEY BUPDATEKEY;
-
-  {blob_update_key_stmt}: ok
-  | {name BUPDATEKEY}
-  | {int 0}
-
-The statement ending at line XXXX
-
-@BLOB_UPDATE_VAL BUPDATEVAL;
-
-  {blob_update_val_stmt}: ok
-  | {name BUPDATEVAL}
-  | {int 0}
 
 The statement ending at line XXXX
 

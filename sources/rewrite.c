@@ -2247,11 +2247,14 @@ cql_noexport void rewrite_shared_fragment_from_backed_table(ast_node *_Nonnull b
                       new_ast_call_arg_list(
                         new_ast_call_filter_clause(NULL, NULL),
                         new_ast_arg_list(
-                          new_ast_dot(
-                            new_ast_str("T"),
-                            new_str_or_qstr(info.key, info.sem_type_key)
-                          ),
-                          NULL
+                          new_ast_str(backed_table_name),
+                          new_ast_arg_list(
+                            new_ast_dot(
+                              new_ast_str("T"),
+                              new_str_or_qstr(info.key, info.sem_type_key)
+                            ),
+                            NULL
+                          )
                         )
                       )
                     ),

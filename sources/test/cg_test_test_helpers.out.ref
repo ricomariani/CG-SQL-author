@@ -2837,7 +2837,7 @@ BEGIN
     k BLOB PRIMARY KEY,
     v BLOB
   );
-  CREATE INDEX IF NOT EXISTS backing_type_index ON backing (cql_blob_get_type(k));
+  CREATE INDEX IF NOT EXISTS backing_type_index ON backing (cql_blob_get_type(backing, k));
 END;
 
 [[backed_by=backing]]

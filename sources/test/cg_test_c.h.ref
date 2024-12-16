@@ -7754,22 +7754,6 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
 extern CQL_WARN_UNUSED cql_code simple_container_proc_fetch_results(sqlite3 *_Nonnull _db_, simple_container_proc_result_set_ref _Nullable *_Nonnull _result_set_);
 
 // The statement ending at line XXXX
-
-// The statement ending at line XXXX
-
-// The statement ending at line XXXX
-
-// The statement ending at line XXXX
-
-// The statement ending at line XXXX
-
-// The statement ending at line XXXX
-
-// The statement ending at line XXXX
-
-// The statement ending at line XXXX
-
-// The statement ending at line XXXX
 extern CQL_WARN_UNUSED cql_code use_cql_blob_get_backed(sqlite3 *_Nonnull _db_);
 
 // The statement ending at line XXXX
@@ -8135,11 +8119,7 @@ extern CQL_WARN_UNUSED cql_code use_backed_table_select_expr(sqlite3 *_Nonnull _
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
-
-// The statement ending at line XXXX
 extern CQL_WARN_UNUSED cql_code use_backed_table_select_expr_value_offsets(sqlite3 *_Nonnull _db_, cql_bool *_Nonnull x);
-
-// The statement ending at line XXXX
 
 // The statement ending at line XXXX
 extern CQL_WARN_UNUSED cql_code insert_backed_values(sqlite3 *_Nonnull _db_);
@@ -8161,6 +8141,12 @@ extern CQL_WARN_UNUSED cql_code delete_from_backed_no_where_clause(sqlite3 *_Non
 
 // The statement ending at line XXXX
 extern CQL_WARN_UNUSED cql_code test_blob_update_expand(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code test_blob_insert_key_codes(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code test_blob_insert_val_offsets(sqlite3 *_Nonnull _db_);
 
 // The statement ending at line XXXX
 extern CQL_WARN_UNUSED cql_code update_backed_set_value(sqlite3 *_Nonnull _db_);
@@ -8241,6 +8227,82 @@ extern CQL_WARN_UNUSED cql_code qid_t6(sqlite3 *_Nonnull _db_);
 
 // The statement ending at line XXXX
 extern void declare_constant_variable(void);
+
+// The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code jdata_dml_select(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code jdata_dml_insert(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code jdata_dml_update(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code a_dml_delete(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+#define CRC_a_backed_join -2698685787772094819L
+
+extern cql_string_ref _Nonnull a_backed_join_stored_procedure_name;
+
+#define a_backed_join_data_types_count 3
+
+extern uint8_t a_backed_join_data_types[a_backed_join_data_types_count];
+
+#ifndef result_set_type_decl_a_backed_join_result_set
+#define result_set_type_decl_a_backed_join_result_set 1
+cql_result_set_type_decl(a_backed_join_result_set, a_backed_join_result_set_ref);
+#endif
+#ifndef _a_backed_join_get_jname_inline_
+#define _a_backed_join_get_jname_inline_
+
+
+static inline cql_string_ref _Nonnull a_backed_join_get_jname(a_backed_join_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_string_col((cql_result_set_ref)result_set, row, 0);
+}
+
+#endif
+
+#ifndef _a_backed_join_get_jage_is_null_inline_
+#define _a_backed_join_get_jage_is_null_inline_
+
+
+static inline cql_bool a_backed_join_get_jage_is_null(a_backed_join_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 1);
+}
+
+#endif
+
+#ifndef _a_backed_join_get_jage_value_inline_
+#define _a_backed_join_get_jage_value_inline_
+
+
+static inline cql_int32 a_backed_join_get_jage_value(a_backed_join_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 1);
+}
+
+#endif
+
+#ifndef _a_backed_join_get_bname_inline_
+#define _a_backed_join_get_bname_inline_
+
+
+static inline cql_string_ref _Nullable a_backed_join_get_bname(a_backed_join_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 2) ? NULL : cql_result_set_get_string_col((cql_result_set_ref)result_set, row, 2);
+}
+
+#endif
+
+
+extern cql_int32 a_backed_join_result_count(a_backed_join_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code a_backed_join_fetch_results(sqlite3 *_Nonnull _db_, a_backed_join_result_set_ref _Nullable *_Nonnull result_set);
+#define a_backed_join_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define a_backed_join_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
 
 // The statement ending at line XXXX
 extern cql_int32 this_is_the_end;

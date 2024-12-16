@@ -1688,21 +1688,6 @@ create table unary_plus_default_value(
   x integer default +7
 );
 
-@blob_get_key_type bgetkey_type;
-@blob_get_val_type bgetval_type;
-@blob_get_key bgetkey;
-@blob_get_val bgetval;
-@blob_create_key bcreatekey;
-@blob_create_val bcreateval;
-@blob_update_key bupdatekey;
-@blob_update_val bupdateval;
-@blob_get_key bgetkey_offs offset;
-@blob_get_val bgetval_offs offset;
-@blob_create_key bcreatekey_offs offset;
-@blob_create_val bcreateval_offs offset;
-@blob_update_key bupdatekey_offs offset;
-@blob_update_val bupdateval_offs offset;
-
 declare proc foo(like X(-x));
 
 select nothing;

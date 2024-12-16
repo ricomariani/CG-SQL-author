@@ -8695,15 +8695,6 @@ cql_noexport void cg_c_init(void) {
   NO_OP_STMT_INIT(op_stmt);
   NO_OP_STMT_INIT(keep_table_name_in_aliases_stmt);
 
-  COMMON_STMT_INIT(blob_get_key_type_stmt);
-  COMMON_STMT_INIT(blob_get_val_type_stmt);
-  COMMON_STMT_INIT(blob_get_key_stmt);
-  COMMON_STMT_INIT(blob_get_val_stmt);
-  COMMON_STMT_INIT(blob_create_key_stmt);
-  COMMON_STMT_INIT(blob_create_val_stmt);
-  COMMON_STMT_INIT(blob_update_key_stmt);
-  COMMON_STMT_INIT(blob_update_val_stmt);
-
   STD_DML_STMT_INIT(begin_trans_stmt);
   STD_DML_STMT_INIT(commit_trans_stmt);
   STD_DML_STMT_INIT(rollback_trans_stmt);

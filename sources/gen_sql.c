@@ -1436,8 +1436,8 @@ static void gen_expr_not_in(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new
 // for them to bind to fields and generate hashes.  We have to pick some
 // canonical thing so we canonicalize to camelCase.  It's not perfect but it seems
 // like the best trade-off. Lots of languages wrap SQLite columns.
-static void gen_append_field_desc(charbuf *tmp, CSTR cname, sem_t sem_type) {
-  cg_sym_name(cg_symbol_case_camel, tmp, "", cname, NULL); // no prefix camel
+static void gen_append_field_desc(charbuf *tmp, CSTR c_name, sem_t sem_type) {
+  cg_sym_name(cg_symbol_case_camel, tmp, "", c_name, NULL); // no prefix camel
   bputc(tmp, ':');
 
   if (is_nullable(sem_type)) {
@@ -1485,12 +1485,11 @@ cql_noexport CSTR get_field_hash(CSTR name, sem_t sem_type) {
 // again all this would be screen out much earlier if it was otherwise.
 static void gen_field_hash(ast_node *ast) {
   Contract(is_ast_dot(ast));
-  Contract(cg_blob_mappings);
   Contract(ast->sem);
-  EXTRACT_STRING(cname, ast->right);
+  EXTRACT_STRING(c_name, ast->right);
 
   CHARBUF_OPEN(tmp);
-  gen_append_field_desc(&tmp, cname, ast->sem->sem_type);
+  gen_append_field_desc(&tmp, c_name, ast->sem->sem_type);
   int64_t hash = sha256_charbuf(&tmp);
   gen_printf("%lld", (llint_t)hash);
   CHARBUF_CLOSE(tmp);
@@ -1544,11 +1543,11 @@ cql_noexport CSTR gen_type_hash(ast_node *ast) {
   // now compute the fields we need
   for (uint32_t i = 0; i < count; i++) {
     int16_t icol = table_info->notnull_cols[i];
-    CSTR cname = sptr->names[icol];
+    CSTR c_name = sptr->names[icol];
     sem_t sem_type = sptr->semtypes[icol];
 
     CHARBUF_OPEN(field);
-      gen_append_field_desc(&field, cname, sem_type);
+      gen_append_field_desc(&field, c_name, sem_type);
       ptrs[i] = Strdup(field.ptr);
     CHARBUF_CLOSE(field);
   }
@@ -1578,14 +1577,24 @@ cache_hit:
 
 static void gen_cql_blob_get_type(ast_node *ast) {
   Contract(is_ast_call(ast));
-  Contract(cg_blob_mappings);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
+  EXTRACT_STRING(t_name, first_arg(arg_list));
 
-  CSTR func = cg_blob_mappings->blob_get_key_type;
+  cg_blob_mappings_t *map = find_backing_info(t_name);
+  Contract(map);
 
+  // special case json and jsonb, we use the extraction operator
+  if (map->use_json || map->use_jsonb) {
+    gen_printf("((");
+    gen_root_expr(second_arg(arg_list));
+    gen_printf(")->>0)");
+    return;
+  }
+
+  CSTR func = map->get_key_type;
   gen_printf("%s(", func);
-  gen_root_expr(first_arg(arg_list));
+  gen_root_expr(second_arg(arg_list));
   gen_printf(")");
 }
 
@@ -1632,26 +1641,40 @@ static int32_t get_table_col_offset(ast_node *create_table_stmt, CSTR name, bool
 
 static void gen_cql_blob_get(ast_node *ast) {
   Contract(is_ast_call(ast));
-  Contract(cg_blob_mappings);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
   ast_node *table_expr = second_arg(arg_list);
 
-  EXTRACT_STRING(tname, table_expr->left);
-  EXTRACT_STRING(cname, table_expr->right);
+  EXTRACT_STRING(t_name, table_expr->left);
+  EXTRACT_STRING(c_name, table_expr->right);
+
+  cg_blob_mappings_t *map = find_backing_info(t_name);
 
   // table known to exist (and not deleted) already
-  ast_node *table_ast = find_table_or_view_even_deleted(tname);
+  ast_node *table_ast = find_table_or_view_even_deleted(t_name);
   Invariant(table_ast);
 
-  int32_t pk_col_offset = get_table_col_offset(table_ast, cname, CQL_SEARCH_COL_KEYS);
+  int32_t pk_col_offset = get_table_col_offset(table_ast, c_name, CQL_SEARCH_COL_KEYS);
 
-  CSTR func = pk_col_offset >= 0 ?
-    cg_blob_mappings->blob_get_key : cg_blob_mappings->blob_get_val;
+  // special case json and jsonb
+  if (map->use_json || map->use_jsonb) {
+    if (pk_col_offset >= 0) {
+      gen_printf("((");
+      gen_root_expr(first_arg(arg_list));
+      gen_printf(")->>%d)", pk_col_offset+1);
+    }
+    else {
+      gen_printf("((");
+      gen_root_expr(first_arg(arg_list));
+      gen_printf(")->>'$.%s')", c_name);
+    }
+    return;
+  }
 
-  bool_t offsets = pk_col_offset >= 0 ?
-    cg_blob_mappings->blob_get_key_use_offsets : cg_blob_mappings->blob_get_val_use_offsets;
+  CSTR func = pk_col_offset >= 0 ? map->get_key : map->get_val;
+
+  bool_t offsets = pk_col_offset >= 0 ? map->key_use_offsets : map->val_use_offsets;
 
   gen_printf("%s(", func);
   gen_root_expr(first_arg(arg_list));
@@ -1660,7 +1683,7 @@ static void gen_cql_blob_get(ast_node *ast) {
     int32_t offset = pk_col_offset;
     if (offset < 0) {
       // if column not part of the key then we need to index the value, not the key
-      offset = get_table_col_offset(table_ast, cname, CQL_SEARCH_COL_VALUES);
+      offset = get_table_col_offset(table_ast, c_name, CQL_SEARCH_COL_VALUES);
       // we know it's a valid column so it's either a key or it isn't
       // since it isn't a key it must be a value
       Invariant(offset >= 0);
@@ -1709,13 +1732,13 @@ static int32_t sem_type_to_blob_type[] = {
 
 static void gen_cql_blob_create(ast_node *ast) {
   Contract(is_ast_call(ast));
-  Contract(cg_blob_mappings);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
   ast_node *table_name_ast = first_arg(arg_list);
 
   EXTRACT_STRING(t_name, table_name_ast);
+  cg_blob_mappings_t *map = find_backing_info(t_name);
 
   bool_t is_pk = false;
 
@@ -1729,13 +1752,38 @@ static void gen_cql_blob_create(ast_node *ast) {
     is_pk = is_primary_key(sem_type3) || is_partial_pk(sem_type3);
   }
 
-  CSTR func = is_pk ?
-      cg_blob_mappings->blob_create_key :
-      cg_blob_mappings->blob_create_val;
+  CSTR func = is_pk ? map->create_key : map->create_val;
 
-  bool_t use_offsets = is_pk ?
-      cg_blob_mappings->blob_create_key_use_offsets :
-      cg_blob_mappings->blob_create_val_use_offsets;
+  if (map->use_json || map->use_jsonb) {
+    if (is_pk) {
+      gen_printf("json%s_array(", map->use_jsonb ? "b" : "");
+      for (ast_node *args = arg_list->right; args; args = args->right->right) {
+        ast_node *val = first_arg(args);
+        gen_root_expr(val);
+        if (args->right->right) {
+          gen_printf(", ");
+        }
+      }
+      gen_printf(")");
+    }
+    else {
+      gen_printf("json%s_object(", map->use_jsonb ? "b" : "");
+      for (ast_node *args = arg_list->right; args; args = args->right->right) {
+        ast_node *val = first_arg(args);
+        ast_node *col = second_arg(args);
+        EXTRACT_STRING(c_name, col->right);
+        gen_printf("'%s', ", c_name);
+        gen_root_expr(val);
+        if (args->right->right) {
+          gen_printf(",  ");
+        }
+      }
+      gen_printf(")");
+    }
+    return;
+  }
+
+  bool_t use_offsets = is_pk ? map->key_use_offsets : map->val_use_offsets;
 
   // table known to exist (and not deleted) already
   ast_node *table_ast = find_table_or_view_even_deleted(t_name);
@@ -1752,8 +1800,8 @@ static void gen_cql_blob_create(ast_node *ast) {
        // emit the offsets, they are assumed.  However, value blobs can have
        // some or all of the values and might skip some
        if (!is_pk) {
-         EXTRACT_STRING(cname, col->right);
-         int32_t offset = get_table_col_offset(table_ast, cname, CQL_SEARCH_COL_VALUES);
+         EXTRACT_STRING(c_name, col->right);
+         int32_t offset = get_table_col_offset(table_ast, c_name, CQL_SEARCH_COL_VALUES);
          gen_printf(", %d", offset);
        }
      }
@@ -1773,28 +1821,45 @@ static void gen_cql_blob_create(ast_node *ast) {
 
 static void gen_cql_blob_update(ast_node *ast) {
   Contract(is_ast_call(ast));
-  Contract(cg_blob_mappings);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
   // known to be dot operator and known to have a table
   EXTRACT_NOTNULL(dot, third_arg(arg_list));
   EXTRACT_STRING(t_name, dot->left);
+  cg_blob_mappings_t *map = find_backing_info(t_name);
 
   sem_t sem_type_dot = dot->sem->sem_type;
   bool_t is_pk = is_primary_key(sem_type_dot) || is_partial_pk(sem_type_dot);
 
-  CSTR func = is_pk ?
-      cg_blob_mappings->blob_update_key :
-      cg_blob_mappings->blob_update_val;
+  CSTR func = is_pk ? map->update_key : map->update_val;
 
-  bool_t use_offsets = is_pk ?
-      cg_blob_mappings->blob_update_key_use_offsets :
-      cg_blob_mappings->blob_update_val_use_offsets;
+  bool_t use_offsets = is_pk ? map->key_use_offsets : map->val_use_offsets;
 
   // table known to exist (and not deleted) already
   ast_node *table_ast = find_table_or_view_even_deleted(t_name);
   Invariant(table_ast);
+
+  if (map->use_json || map->use_jsonb) {
+    gen_printf("json%s_set(", map->use_jsonb ? "b" : "");
+    gen_root_expr(first_arg(arg_list));
+    for (ast_node *args = arg_list->right; args; args = args->right->right) {
+      ast_node *val = first_arg(args);
+      ast_node *col = second_arg(args);
+      EXTRACT_STRING(c_name, col->right);
+      if (is_pk) {
+        int32_t offset = get_table_col_offset(table_ast, c_name, CQL_SEARCH_COL_KEYS);
+        Invariant(offset >= 0);
+        gen_printf(", '$.[%d]',  ", offset + 1);  // the type is offset 0
+      }
+      else {
+        gen_printf(", '$.%s',  ", c_name);
+      }
+      gen_root_expr(val);
+    }
+    gen_printf(")");
+    return;
+  }
 
   gen_printf("%s(", func);
   gen_root_expr(first_arg(arg_list));
@@ -1803,10 +1868,10 @@ static void gen_cql_blob_update(ast_node *ast) {
   for (ast_node *args = arg_list->right; args; args = args->right->right) {
      ast_node *val = first_arg(args);
      ast_node *col = second_arg(args);
-     EXTRACT_STRING(cname, col->right);
+     EXTRACT_STRING(c_name, col->right);
      if (use_offsets) {
       // we know it's a valid column
-      int32_t offset = get_table_col_offset(table_ast, cname,
+      int32_t offset = get_table_col_offset(table_ast, c_name,
          is_pk ? CQL_SEARCH_COL_KEYS : CQL_SEARCH_COL_VALUES);
       Invariant(offset >= 0);
       gen_printf(", %d", offset);
@@ -1858,7 +1923,7 @@ static void gen_expr_call(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) 
       return;
     }
 
-    if (for_sqlite() && cg_blob_mappings) {
+    if (for_sqlite()) {
       if (!StrCaseCmp("cql_blob_get", name)) {
         gen_cql_blob_get(ast);
         return;
@@ -5199,68 +5264,6 @@ static void gen_with_upsert_stmt(ast_node *ast) {
   gen_upsert_stmt(upsert_stmt);
 }
 
-static void gen_blob_get_key_type_stmt(ast_node *ast) {
-  Contract(is_ast_blob_get_key_type_stmt(ast));
-  EXTRACT_STRING(name, ast->left);
-
-  gen_printf("@BLOB_GET_KEY_TYPE %s", name);
-}
-
-static void gen_blob_get_val_type_stmt(ast_node *ast) {
-  Contract(is_ast_blob_get_val_type_stmt(ast));
-  EXTRACT_STRING(name, ast->left);
-
-  gen_printf("@BLOB_GET_VAL_TYPE %s", name);
-}
-
-static void gen_blob_get_key_stmt(ast_node *ast) {
-  Contract(is_ast_blob_get_key_stmt(ast));
-  EXTRACT_STRING(name, ast->left);
-  EXTRACT_OPTION(offset, ast->right);
-
-  gen_printf("@BLOB_GET_KEY %s%s", name, offset ? " OFFSET" : "");
-}
-
-static void gen_blob_get_val_stmt(ast_node *ast) {
-  Contract(is_ast_blob_get_val_stmt(ast));
-  EXTRACT_STRING(name, ast->left);
-  EXTRACT_OPTION(offset, ast->right);
-
-  gen_printf("@BLOB_GET_VAL %s%s", name, offset ? " OFFSET" : "");
-}
-
-static void gen_blob_create_key_stmt(ast_node *ast) {
-  Contract(is_ast_blob_create_key_stmt(ast));
-  EXTRACT_STRING(name, ast->left);
-  EXTRACT_OPTION(offset, ast->right);
-
-  gen_printf("@BLOB_CREATE_KEY %s%s", name, offset ? " OFFSET" : "");
-}
-
-static void gen_blob_create_val_stmt(ast_node *ast) {
-  Contract(is_ast_blob_create_val_stmt(ast));
-  EXTRACT_STRING(name, ast->left);
-  EXTRACT_OPTION(offset, ast->right);
-
-  gen_printf("@BLOB_CREATE_VAL %s%s", name, offset ? " OFFSET" : "");
-}
-
-static void gen_blob_update_key_stmt(ast_node *ast) {
-  Contract(is_ast_blob_update_key_stmt(ast));
-  EXTRACT_STRING(name, ast->left);
-  EXTRACT_OPTION(offset, ast->right);
-
-  gen_printf("@BLOB_UPDATE_KEY %s%s", name, offset ? " OFFSET" : "");
-}
-
-static void gen_blob_update_val_stmt(ast_node *ast) {
-  Contract(is_ast_blob_update_val_stmt(ast));
-  EXTRACT_STRING(name, ast->left);
-  EXTRACT_OPTION(offset, ast->right);
-
-  gen_printf("@BLOB_UPDATE_VAL %s%s", name, offset ? " OFFSET" : "");
-}
-
 static void gen_keep_table_name_in_aliases_stmt(ast_node *ast) {
   Contract(is_ast_keep_table_name_in_aliases_stmt(ast));
   gen_printf("@KEEP_TABLE_NAME_IN_ALIASES");
@@ -5587,15 +5590,6 @@ cql_noexport void gen_init() {
   STMT_INIT(with_select_stmt);
   STMT_INIT(with_update_stmt);
   STMT_INIT(with_upsert_stmt);
-
-  STMT_INIT(blob_get_key_type_stmt);
-  STMT_INIT(blob_get_val_type_stmt);
-  STMT_INIT(blob_get_key_stmt);
-  STMT_INIT(blob_get_val_stmt);
-  STMT_INIT(blob_create_key_stmt);
-  STMT_INIT(blob_create_val_stmt);
-  STMT_INIT(blob_update_key_stmt);
-  STMT_INIT(blob_update_val_stmt);
 
   STMT_INIT(keep_table_name_in_aliases_stmt);
 

@@ -653,12 +653,6 @@ AST(between)
 AST(between_rewrite)
 AST(bin_and)
 AST(bin_or)
-AST(blob_create_key_stmt)
-AST(blob_create_val_stmt)
-AST(blob_get_key_stmt)
-AST(blob_get_val_stmt)
-AST(blob_update_key_stmt)
-AST(blob_update_val_stmt)
 AST(call)
 AST(call_arg_list)
 AST(call_filter_clause)
@@ -974,8 +968,6 @@ AST1(asc)
 AST1(at_id);
 AST1(begin_schema_region_stmt);
 AST1(begin_trans_stmt);
-AST1(blob_get_key_type_stmt)
-AST1(blob_get_val_type_stmt)
 AST1(close_stmt)
 AST1(column_spec);
 AST1(const)

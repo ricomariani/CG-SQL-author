@@ -683,6 +683,7 @@ extern void expr_proc_b(cql_nullable_int32 x);
 
 extern cql_int32 an_alias_func(cql_int32 x);
 #define an_alias_func some_native_func
+extern CQL_WARN_UNUSED cql_code a_backed_join(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 cql_string_literal(_literal_1_text_, "text");
 cql_string_literal(_literal_2_This_is_a_test_, "This is a \" \\ test '' \n \" ");
 cql_string_literal(_literal_3_b_, "b");
@@ -16420,9 +16421,9 @@ cql_cleanup:
 PROC use_backed_table_select_expr_value_offsets (OUT x BOOL!)
 BEGIN
   SET x := (   WITH
-    backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
+    backed_offsets (rowid, flag, id, name, age, storage, pk) AS (CALL _backed_offsets())
   SELECT flag
-    FROM backed );
+    FROM backed_offsets );
 END;
 */
 
@@ -16442,7 +16443,7 @@ CQL_WARN_UNUSED cql_code use_backed_table_select_expr_value_offsets(sqlite3 *_No
   _rc_ = cql_prepare_var(_db_, &_temp_stmt,
     3, NULL,
   "WITH "
-      "backed (rowid, flag, id, name, age, storage, pk) AS (",
+      "backed_offsets (rowid, flag, id, name, age, storage, pk) AS (",
   "SELECT "
           "rowid, "
           "bgetval(T.v, 0), "
@@ -16451,11 +16452,11 @@ CQL_WARN_UNUSED cql_code use_backed_table_select_expr_value_offsets(sqlite3 *_No
           "bgetval(T.v, 3), "
           "bgetval(T.v, 4), "
           "bgetkey(T.k, 0) "
-        "FROM backing AS T "
-        "WHERE bgetkey_type(T.k) = -5417664364642960231",
+        "FROM backing_val_offsets AS T "
+        "WHERE bgetkey_type(T.k) = -2244274099422101851",
   ") "
     "SELECT flag "
-      "FROM backed"
+      "FROM backed_offsets"
   );
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = sqlite3_step(_temp_stmt);
@@ -16811,6 +16812,134 @@ cql_cleanup:
   cql_blob_release(x);
   cql_finalize_stmt(&_temp_stmt);
   cql_blob_release(z);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+PROC test_blob_insert_key_codes ()
+BEGIN
+  WITH
+    _vals (pk1, pk2, name) AS (
+      VALUES(1, 2, "foo")
+    )
+  INSERT INTO backing_key_codes(k, v)
+    SELECT cql_blob_create(backed3, V.pk2, backed3.pk2, V.pk1, backed3.pk1), cql_blob_create(backed3, V.name, backed3.name)
+      FROM _vals AS V;
+  CURSOR C FOR
+    WITH
+      backed3 (rowid, pk1, pk2, name) AS (CALL _backed3())
+    SELECT *
+      FROM backed3;
+END;
+*/
+
+#define _PROC_ "test_blob_insert_key_codes"
+/*
+export:
+DECLARE PROC test_blob_insert_key_codes () USING TRANSACTION;
+*/
+CQL_WARN_UNUSED cql_code test_blob_insert_key_codes(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
+  sqlite3_stmt *C_stmt = NULL;
+
+  _rc_ = cql_exec(_db_,
+    "WITH "
+      "_vals (pk1, pk2, name) AS ( "
+        "VALUES(1, 2, 'foo') "
+      ") "
+    "INSERT INTO backing_key_codes(k, v) "
+      "SELECT bcreatekey(-4381524886612374514, 3424884698372330699, V.pk2, 1, 3320730843156438477, V.pk1, 1), bcreateval(-4381524886612374514, -6946718245010482247, V.name, 4) "
+        "FROM _vals AS V");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = cql_prepare_var(_db_, &C_stmt,
+    3, NULL,
+  "WITH "
+      "backed3 (rowid, pk1, pk2, name) AS (",
+  "SELECT "
+          "rowid, "
+          "bgetkey(T.k, 3320730843156438477), "
+          "bgetkey(T.k, 3424884698372330699), "
+          "bgetval(T.v, -6946718245010482247) "
+        "FROM backing_key_codes AS T "
+        "WHERE bgetkey_type(T.k) = -4381524886612374514",
+  ") "
+    "SELECT rowid, pk1, pk2, name "
+      "FROM backed3"
+  );
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_error_report();
+  cql_finalize_stmt(&C_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+PROC test_blob_insert_val_offsets ()
+BEGIN
+  WITH
+    _vals (pk1, pk2, name) AS (
+      VALUES(1, 2, "foo")
+    )
+  INSERT INTO backing_val_offsets(k, v)
+    SELECT cql_blob_create(backed3_offsets, V.pk2, backed3_offsets.pk2, V.pk1, backed3_offsets.pk1), cql_blob_create(backed3_offsets, V.name, backed3_offsets.name)
+      FROM _vals AS V;
+  CURSOR C FOR
+    WITH
+      backed3 (rowid, pk1, pk2, name) AS (CALL _backed3())
+    SELECT *
+      FROM backed3;
+END;
+*/
+
+#define _PROC_ "test_blob_insert_val_offsets"
+/*
+export:
+DECLARE PROC test_blob_insert_val_offsets () USING TRANSACTION;
+*/
+CQL_WARN_UNUSED cql_code test_blob_insert_val_offsets(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
+  sqlite3_stmt *C_stmt = NULL;
+
+  _rc_ = cql_exec(_db_,
+    "WITH "
+      "_vals (pk1, pk2, name) AS ( "
+        "VALUES(1, 2, 'foo') "
+      ") "
+    "INSERT INTO backing_val_offsets(k, v) "
+      "SELECT bcreatekey(1236461322253850149, V.pk2, 1, V.pk1, 1), bcreateval(1236461322253850149, 0, V.name, 4) "
+        "FROM _vals AS V");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = cql_prepare_var(_db_, &C_stmt,
+    3, NULL,
+  "WITH "
+      "backed3 (rowid, pk1, pk2, name) AS (",
+  "SELECT "
+          "rowid, "
+          "bgetkey(T.k, 3320730843156438477), "
+          "bgetkey(T.k, 3424884698372330699), "
+          "bgetval(T.v, -6946718245010482247) "
+        "FROM backing_key_codes AS T "
+        "WHERE bgetkey_type(T.k) = -4381524886612374514",
+  ") "
+    "SELECT rowid, pk1, pk2, name "
+      "FROM backed3"
+  );
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_error_report();
+  cql_finalize_stmt(&C_stmt);
   return _rc_;
 }
 #undef _PROC_
@@ -17791,6 +17920,307 @@ void declare_constant_variable(void) {
 
   const_variable = 1;
 
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+PROC jdata_dml_select ()
+BEGIN
+  CURSOR C FOR
+    WITH
+      jdata (rowid, id, name, age, zip) AS (CALL _jdata())
+    SELECT *
+      FROM jdata;
+END;
+*/
+
+#define _PROC_ "jdata_dml_select"
+/*
+export:
+DECLARE PROC jdata_dml_select () USING TRANSACTION;
+*/
+CQL_WARN_UNUSED cql_code jdata_dml_select(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
+  sqlite3_stmt *C_stmt = NULL;
+
+  _rc_ = cql_prepare_var(_db_, &C_stmt,
+    3, NULL,
+  "WITH "
+      "jdata (rowid, id, name, age, zip) AS (",
+  "SELECT "
+          "rowid, "
+          "((T.k)->>2), "
+          "((T.k)->>1), "
+          "((T.v)->>'$.age'), "
+          "((T.v)->>'$.zip') "
+        "FROM json_backing AS T "
+        "WHERE ((T.k)->>0) = -1916485007726025434",
+  ") "
+    "SELECT rowid, id, name, age, zip "
+      "FROM jdata"
+  );
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_error_report();
+  cql_finalize_stmt(&C_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+PROC jdata_dml_insert ()
+BEGIN
+  WITH
+    _vals (id, name, age, zip) AS (
+      VALUES(1, "a name", 13, 98033)
+    )
+  INSERT INTO json_backing(k, v)
+    SELECT cql_blob_create(jdata, V.name, jdata.name, V.id, jdata.id), cql_blob_create(jdata, V.age, jdata.age, V.zip, jdata.zip)
+      FROM _vals AS V;
+END;
+*/
+
+#define _PROC_ "jdata_dml_insert"
+/*
+export:
+DECLARE PROC jdata_dml_insert () USING TRANSACTION;
+*/
+CQL_WARN_UNUSED cql_code jdata_dml_insert(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
+
+  _rc_ = cql_exec(_db_,
+    "WITH "
+      "_vals (id, name, age, zip) AS ( "
+        "VALUES(1, 'a name', 13, 98033) "
+      ") "
+    "INSERT INTO json_backing(k, v) "
+      "SELECT json_array(V.name, V.id), json_object('age', V.age,  'zip', V.zip) "
+        "FROM _vals AS V");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_error_report();
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+PROC jdata_dml_update ()
+BEGIN
+  WITH
+    jdata (rowid, id, name, age, zip) AS (CALL _jdata())
+  UPDATE json_backing
+    SET k = cql_blob_update(k, 21, jdata.id, 'new name', jdata.name), v = cql_blob_update(v, 99, jdata.age)
+    WHERE rowid IN (SELECT rowid
+      FROM jdata
+      WHERE id = 1);
+END;
+*/
+
+#define _PROC_ "jdata_dml_update"
+/*
+export:
+DECLARE PROC jdata_dml_update () USING TRANSACTION;
+*/
+CQL_WARN_UNUSED cql_code jdata_dml_update(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
+
+  _rc_ = cql_exec_var(_db_,
+    3, NULL,
+  "WITH "
+      "jdata (rowid, id, name, age, zip) AS (",
+  "SELECT "
+          "rowid, "
+          "((T.k)->>2), "
+          "((T.k)->>1), "
+          "((T.v)->>'$.age'), "
+          "((T.v)->>'$.zip') "
+        "FROM json_backing AS T "
+        "WHERE ((T.k)->>0) = -1916485007726025434",
+  ") "
+    "UPDATE json_backing "
+      "SET k = json_set(k, '$.[2]',  21, '$.[1]',  'new name'), v = json_set(v, '$.age',  99) "
+      "WHERE rowid IN (SELECT rowid "
+        "FROM jdata "
+        "WHERE id = 1)"
+  );
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_error_report();
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+PROC a_dml_delete ()
+BEGIN
+  WITH
+    jdata (rowid, id, name, age, zip) AS (CALL _jdata())
+  DELETE FROM json_backing WHERE rowid IN (SELECT rowid
+    FROM jdata
+    WHERE name = 'a name');
+END;
+*/
+
+#define _PROC_ "a_dml_delete"
+/*
+export:
+DECLARE PROC a_dml_delete () USING TRANSACTION;
+*/
+CQL_WARN_UNUSED cql_code a_dml_delete(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
+
+  _rc_ = cql_exec_var(_db_,
+    3, NULL,
+  "WITH "
+      "jdata (rowid, id, name, age, zip) AS (",
+  "SELECT "
+          "rowid, "
+          "((T.k)->>2), "
+          "((T.k)->>1), "
+          "((T.v)->>'$.age'), "
+          "((T.v)->>'$.zip') "
+        "FROM json_backing AS T "
+        "WHERE ((T.k)->>0) = -1916485007726025434",
+  ") "
+    "DELETE FROM json_backing WHERE rowid IN (SELECT rowid "
+      "FROM jdata "
+      "WHERE name = 'a name')"
+  );
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_error_report();
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+PROC a_backed_join ()
+BEGIN
+  WITH
+    jdata (rowid, id, name, age, zip) AS (CALL _jdata()),
+    backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
+  SELECT T1.name AS jname, T1.age AS jage, T2.name AS bname
+    FROM jdata AS T1
+      INNER JOIN backed AS T2 ON T1.id = T2.id;
+END;
+*/
+
+#define _PROC_ "a_backed_join"
+static int32_t a_backed_join_perf_index;
+
+cql_string_proc_name(a_backed_join_stored_procedure_name, "a_backed_join");
+
+typedef struct a_backed_join_row {
+  cql_nullable_int32 jage;
+  cql_string_ref _Nonnull jname;
+  cql_string_ref _Nullable bname;
+} a_backed_join_row;
+
+uint8_t a_backed_join_data_types[a_backed_join_data_types_count] = {
+  CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_NOT_NULL, // jname
+  CQL_DATA_TYPE_INT32, // jage
+  CQL_DATA_TYPE_STRING, // bname
+};
+
+#define a_backed_join_refs_offset cql_offsetof(a_backed_join_row, jname) // count = 2
+
+static cql_uint16 a_backed_join_col_offsets[] = { 3,
+  cql_offsetof(a_backed_join_row, jname),
+  cql_offsetof(a_backed_join_row, jage),
+  cql_offsetof(a_backed_join_row, bname)
+};
+
+cql_int32 a_backed_join_result_count(a_backed_join_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code a_backed_join_fetch_results(sqlite3 *_Nonnull _db_, a_backed_join_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_a_backed_join, &a_backed_join_perf_index);
+  cql_code rc = a_backed_join(_db_, &stmt);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = a_backed_join_data_types,
+    .col_offsets = a_backed_join_col_offsets,
+    .refs_count = 2,
+    .refs_offset = a_backed_join_refs_offset,
+    .encode_context_index = -1,
+    .rowsize = sizeof(a_backed_join_row),
+    .crc = CRC_a_backed_join,
+    .perf_index = &a_backed_join_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+/*
+export:
+DECLARE PROC a_backed_join () (jname TEXT!, jage INT, bname TEXT);
+*/
+CQL_WARN_UNUSED cql_code a_backed_join(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  cql_error_prepare();
+
+  _rc_ = cql_prepare_var(_db_, _result_stmt,
+    5, NULL,
+  "WITH "
+      "jdata (rowid, id, name, age, zip) AS (",
+  "SELECT "
+          "rowid, "
+          "((T.k)->>2), "
+          "((T.k)->>1), "
+          "((T.v)->>'$.age'), "
+          "((T.v)->>'$.zip') "
+        "FROM json_backing AS T "
+        "WHERE ((T.k)->>0) = -1916485007726025434",
+  "), "
+      "backed (rowid, flag, id, name, age, storage, pk) AS (",
+  "SELECT "
+          "rowid, "
+          "bgetval(T.v, 1055660242183705531), "
+          "bgetval(T.v, -9155171551243524439), "
+          "bgetval(T.v, -6946718245010482247), "
+          "bgetval(T.v, -3683705396192132539), "
+          "bgetval(T.v, -7635294210585028660), "
+          "bgetkey(T.k, 0) "
+        "FROM backing AS T "
+        "WHERE bgetkey_type(T.k) = -5417664364642960231",
+  ") "
+    "SELECT T1.name AS jname, T1.age AS jage, T2.name AS bname "
+      "FROM jdata AS T1 "
+        "INNER JOIN backed AS T2 ON T1.id = T2.id"
+  );
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_error_report();
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
 }
 #undef _PROC_
 cql_int32 this_is_the_end = 0;

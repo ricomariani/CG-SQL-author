@@ -1030,7 +1030,9 @@ create table backing(
   v blob
 );
 
-create index backing_type_index on backing(cql_blob_get_type(k));
+-- we should be able to support indices on backed tables by doing this mapping
+-- but we don't do that yet.
+create index backing_type_index on backing(cql_blob_get_type(backing, k));
 
 [[backed_by=backing]]
 create table backed(
@@ -1046,7 +1048,7 @@ create table backed(
 --
 -- + [[backing_table]]
 -- + CREATE TABLE IF NOT EXISTS backing(
--- + CREATE INDEX IF NOT EXISTS backing_type_index ON backing (cql_blob_get_type(k));
+-- + CREATE INDEX IF NOT EXISTS backing_type_index ON backing (cql_blob_get_type(backing, k));
 --
 -- + [[backed_by=backing]]
 -- + CREATE TABLE IF NOT EXISTS backed(

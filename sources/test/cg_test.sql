@@ -5272,26 +5272,40 @@ begin
   out union C;
 end;
 
--- these are largely no-op directives until we generate SQL for them
--- at this point we just make sure we can generate these without crashing
-
-@blob_get_key_type bgetkey_type;
-@blob_get_val_type bgetval_type;
-@blob_get_key bgetkey offset;
-@blob_get_val bgetval;
-@blob_create_key bcreatekey offset;
-@blob_create_val bcreateval;
-@blob_update_key bupdatekey offset;
-@blob_update_val bupdateval;
-
 [[backing_table]]
 create table backing(
   k blob primary key,
   v blob
 );
 
+[[backing_table]]
+[[use_val_offsets]]
+create table backing_val_offsets(
+  k blob primary key,
+  v blob
+);
+
+[[backing_table]]
+[[use_key_codes]]
+create table backing_key_codes(
+  k blob primary key,
+  v blob
+);
+
 [[backed_by=backing]]
 create table backed(
+  flag bool!,
+  id long,
+  name text,
+  age real,
+  storage blob,
+
+  -- pk not at position 0 tests column index array computation
+  pk int primary key
+);
+
+[[backed_by=backing_val_offsets]]
+create table backed_offsets(
   flag bool!,
   id long,
   name text,
@@ -5310,6 +5324,22 @@ create table backed2(
   id long,
   name text,
   extra int,
+  primary key(pk2, pk1) -- offsets reversed
+);
+
+[[backed_by=backing_key_codes]]
+create table backed3(
+  pk1 int,
+  pk2 int,
+  name text,
+  primary key(pk2, pk1) -- offsets reversed
+);
+
+[[backed_by=backing_val_offsets]]
+create table backed3_offsets(
+  pk1 int,
+  pk2 int,
+  name text,
   primary key(pk2, pk1) -- offsets reversed
 );
 
@@ -5527,9 +5557,6 @@ begin
   explain query plan select * from backed;
 end;
 
--- try the path where we use offsets in the value blob
-@blob_get_val bgetval offset;
-
 -- TEST: we should get value indexes 0, 1, 2, 3, 4 not hashes
 -- + SELECT
 -- + rowid,
@@ -5541,11 +5568,8 @@ end;
 -- + bgetkey(T.k, 0)
 proc use_backed_table_select_expr_value_offsets(out x bool!)
 begin
-  set x := (select flag from backed);
+  set x := (select flag from backed_offsets);
 end;
-
--- go back to the other way
-@blob_get_val bgetval;
 
 [[backed_by=backing]]
 create table small_backed(
@@ -5654,6 +5678,30 @@ begin
   let z := (select cql_blob_update(b, 21, backed.age, "dave", backed.name));
 end;
 
+-- TEST: use key fields with codes not offsets
+-- + "INSERT INTO backing_key_codes(k, v) "
+-- + "SELECT bcreatekey(-4381524886612374514, 3424884698372330699, V.pk2, 1, 3320730843156438477, V.pk1, 1), bcreateval(-4381524886612374514, -6946718245010482247, V.name, 4) "
+-- + "rowid, "
+-- + "bgetkey(T.k, 3320730843156438477),
+-- + "bgetkey(T.k, 3424884698372330699),
+-- + "bgetval(T.v, -6946718245010482247)
+proc test_blob_insert_key_codes()
+begin
+  insert into backed3 values (1,2,"foo");
+  declare C cursor for select * from backed3;
+end;
+
+-- TEST: use create with value offsets
+-- + "INSERT INTO backing_val_offsets(k, v) "
+-- + "SELECT bcreatekey(1236461322253850149, V.pk2, 1, V.pk1, 1), bcreateval(1236461322253850149, 0, V.name, 4) "
+-- + "bgetkey(T.k, 3320730843156438477), "
+-- + "bgetkey(T.k, 3424884698372330699), "
+-- + "bgetval(T.v, -6946718245010482247) "
+proc test_blob_insert_val_offsets()
+begin
+  insert into backed3_offsets values (1,2,"foo");
+  declare C cursor for select * from backed3;
+end;
 
 -- TEST: simple update into backed table value only
 -- + UPDATE backing
@@ -5968,6 +6016,132 @@ end;
 proc declare_constant_variable()
 begin
   const const_variable := 1;
+end;
+
+
+-- backing storage using JSON (!!)
+[[backing_table]]
+[[json]]
+create table json_backing
+(
+  k blob primary key,
+  v blob
+);
+
+[[backed_by=json_backing]]
+create table jdata(
+  id integer,
+  name text,
+  age int,
+  zip long,
+  primary key (name, id) -- reverse order to make it harder
+);
+
+-- TEST: backing storage with json: select
+-- + "WITH "
+-- +     "jdata (rowid, id, name, age, zip) AS (",
+-- + "SELECT "
+-- +     "rowid, "
+-- +     "((T.k)->>2), "
+-- +     "((T.k)->>1), "
+-- +     "((T.v)->>'$.age'), "
+-- +     "((T.v)->>'$.zip') "
+-- +   "FROM json_backing AS T "
+-- +   "WHERE ((T.k)->>0) = -1916485007726025434",
+-- + ") "
+-- +   "SELECT rowid, id, name, age, zip "
+-- +     "FROM jdata"
+proc jdata_dml_select()
+begin
+  declare C cursor for select * from jdata;
+end;
+
+-- TEST: backing storage with json: insert
+-- + "WITH "
+-- +   "_vals (id, name, age, zip) AS ( "
+-- +     "VALUES(1, 'a name', 13, 98033) "
+-- +   ") "
+-- + "INSERT INTO json_backing(k, v) "
+-- +   "SELECT json_array(V.name, V.id), json_object('age', V.age,  'zip', V.zip) "
+-- +     "FROM _vals AS V");
+proc jdata_dml_insert()
+begin
+  insert into jdata values(1, "a name", 13, 98033);
+end;
+
+-- TEST: backing storage with json: update
+-- + "WITH "
+-- +     "jdata (rowid, id, name, age, zip) AS (",
+-- + "SELECT "
+-- +     "rowid, "
+-- +     "((T.k)->>2), "
+-- +     "((T.k)->>1), "
+-- +     "((T.v)->>'$.age'), "
+-- +     "((T.v)->>'$.zip') "
+-- +   "FROM json_backing AS T "
+-- +   "WHERE ((T.k)->>0) = -1916485007726025434",
+-- + ") "
+-- +   "UPDATE json_backing "
+-- +     "SET k = json_set(k, '$.[2]',  21, '$.[1]',  'new name'), v = json_set(v, '$.age',  99) "
+-- +     "WHERE rowid IN (SELECT rowid "
+-- +       "FROM jdata "
+-- +       "WHERE id = 1)"
+proc jdata_dml_update()
+begin
+  update jdata set id = 21, name = 'new name', age = 99 where id = 1;
+end;
+
+-- TEST: backing storage with json: delete
+-- + "WITH "
+-- +     "jdata (rowid, id, name, age, zip) AS (",
+-- + "SELECT "
+-- +         "rowid, "
+-- +         "((T.k)->>2), "
+-- +         "((T.k)->>1), "
+-- +         "((T.v)->>'$.age'), "
+-- +         "((T.v)->>'$.zip') "
+-- +       "FROM json_backing AS T "
+-- +       "WHERE ((T.k)->>0) = -1916485007726025434",
+-- + ") "
+-- +   "DELETE FROM json_backing WHERE rowid IN (SELECT rowid "
+-- +     "FROM jdata "
+-- +     "WHERE name = 'a name')"
+proc a_dml_delete()
+begin
+  delete from jdata where name = 'a name';
+end;
+
+-- TEST: join two tables with different backing
+-- + "WITH "
+-- +     "jdata (rowid, id, name, age, zip) AS (",
+-- + "SELECT "
+-- +         "rowid, "
+-- +         "((T.k)->>2), "
+-- +         "((T.k)->>1), "
+-- +         "((T.v)->>'$.age'), "
+-- +         "((T.v)->>'$.zip') "
+-- +       "FROM json_backing AS T "
+-- +       "WHERE ((T.k)->>0) = -1916485007726025434",
+-- + "), "
+-- +     "backed (rowid, flag, id, name, age, storage, pk) AS (",
+-- + "SELECT "
+-- +         "rowid, "
+-- +         "bgetval(T.v, 1055660242183705531), "
+-- +         "bgetval(T.v, -9155171551243524439), "
+-- +         "bgetval(T.v, -6946718245010482247), "
+-- +         "bgetval(T.v, -3683705396192132539), "
+-- +         "bgetval(T.v, -7635294210585028660), "
+-- +         "bgetkey(T.k, 0) "
+-- +       "FROM backing AS T "
+-- +       "WHERE bgetkey_type(T.k) = -5417664364642960231",
+-- + ") "
+-- +   "SELECT T1.name AS jname, T1.age AS jage, T2.name AS bname "
+-- +     "FROM jdata AS T1 "
+-- +       "INNER JOIN backed AS T2 ON T1.id = T2.id"
+proc a_backed_join()
+begin
+  select T1.name jname, T1.age jage, T2.name bname
+    from jdata T1 join backed T2 on T1.id = T2.id;
 end;
 
 --------------------------------------------------------------------

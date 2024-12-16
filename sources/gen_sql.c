@@ -1754,15 +1754,17 @@ static void gen_cql_blob_create(ast_node *ast) {
 
   CSTR func = is_pk ? map->create_key : map->create_val;
 
+  // table known to exist (and not deleted) already
+  ast_node *table_ast = find_table_or_view_even_deleted(t_name);
+  Invariant(table_ast);
+
   if (map->use_json || map->use_jsonb) {
     if (is_pk) {
-      gen_printf("json%s_array(", map->use_jsonb ? "b" : "");
+      gen_printf("json%s_array(%s", map->use_jsonb ? "b" : "", gen_type_hash(table_ast));
       for (ast_node *args = arg_list->right; args; args = args->right->right) {
         ast_node *val = first_arg(args);
+        gen_printf(", ");
         gen_root_expr(val);
-        if (args->right->right) {
-          gen_printf(", ");
-        }
       }
       gen_printf(")");
     }
@@ -1784,11 +1786,6 @@ static void gen_cql_blob_create(ast_node *ast) {
   }
 
   bool_t use_offsets = is_pk ? map->key_use_offsets : map->val_use_offsets;
-
-  // table known to exist (and not deleted) already
-  ast_node *table_ast = find_table_or_view_even_deleted(t_name);
-  Invariant(table_ast);
-
   gen_printf("%s(%s", func, gen_type_hash(table_ast));
 
   // 2n+1 args already confirmed, safe to do this

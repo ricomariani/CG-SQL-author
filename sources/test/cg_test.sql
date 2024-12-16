@@ -6062,7 +6062,7 @@ end;
 -- +     "VALUES(1, 'a name', 13, 98033) "
 -- +   ") "
 -- + "INSERT INTO json_backing(k, v) "
--- +   "SELECT json_array(V.name, V.id), json_object('age', V.age,  'zip', V.zip) "
+-- +   "SELECT json_array(-1916485007726025434, V.name, V.id), json_object('age', V.age,  'zip', V.zip) "
 -- +     "FROM _vals AS V");
 proc jdata_dml_insert()
 begin

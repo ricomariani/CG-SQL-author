@@ -384,6 +384,9 @@ expected to be precious data.  `@recreate` is an error.  If it's an
 in-memory table then versioning is somewhat moot but really the backing
 store schema is not supposed to change over time, that's the point.
 
+As showwn below there are additional attributes that can be put on the backing
+table to define the functions that will be used to store data there.
+
 In future versions we expect to allow some number of additional physical
 columns which can be used by the backed tables (discussed below) but for
 now only the simple key/value pattern is allowed.  The columns can have
@@ -428,7 +431,7 @@ functions. This would work, but then we'd be trading view schema for
 table schema so the schema savings we're trying to achieve would be lost.
 
 We can't use an actual VIEW but CQL already has something very "view
-like" -- the shared fragment structure.  So what we do instead of views
+like" -- the shared fragment structure.  So what CQL does instead of views
 is to automatically create a shared fragment just like the view we could
 have made.  The shared fragment looks like this:
 
@@ -442,7 +445,7 @@ BEGIN
    cql_blob_get(T.v, backed.name) AS name,
    cql_blob_get(T.v, backed.bias) AS bias
     FROM backing AS T
-    WHERE cql_blob_get_type(T.k) = 2105552408096159860L;
+    WHERE cql_blob_get_type(backed, T.k) = 2105552408096159860L;
 END;
 ```
 
@@ -453,10 +456,8 @@ doesn't directly call blob extraction UDFs.  Rather it uses indirect
 functions like `cql_blob_get`. The point of these helpers is to make
 the actual blob functions configurable.  The default runtime includes
 an implementation of extration functions with the default names, but
-you can create whatever blob format you want. You could even use
-[blob storage](#blob-storage) as your backing store (though it isn't well
-suited for field-at-a-time extraction). You can even have different
-encodings in different backed tables.
+you can create whatever blob format you want by defining suitable functions.
+You can even have different encodings in different backed tables.
 
 Second, there is a type code embedded in the procedure.  The type
 code is a hash of the _type name_ and the _names_ and _types_ of all
@@ -479,7 +480,7 @@ BEGIN
     cql_blob_get(T.k, backed2.id) AS id,
     cql_blob_get(T.v, backed2.name) AS name
     FROM backing AS T
-    WHERE cql_blob_get_type(T.k) = -1844763880292276559L;
+    WHERE cql_blob_get_type(backed, T.k) = -1844763880292276559L;
 END;
 ```
 As you can see it's very similar -- the type hash is different and of
@@ -487,51 +488,72 @@ course it has different columns but the pattern should be clear.
 
 #### Computation of the Type Hash
 
-The type hash, which is also sometimes called the record type, is
-designed to stay fixed over time even if you add new optional fields.
-Contrariwise, if you change the name of the type or if you add new not
-null fields the type identity is considered to be changed and any data
-you have in the backing table will basically be ignored because the
-type hash will not match.  This is lossy but safe.  More complicated
-migrations from one type shape to another or possibly by introducing a
-new backed type and moving data.
+The type hash, which is also sometimes called the record type, is designed to
+stay fixed over time even if you add new optional fields. Contrariwise, if you
+change the name of the type or if you add new not null fields the type identity
+is considered to be changed and any data you have in the backing table will
+basically be ignored because the type hash will not match.  This is lossy but
+safe.  More complicated migrations from one type shape to another are possible
+by introducing a new backed type and moving data.
 
 ####  `cql_blob_get` and `cql_blob_get_type`
 
-By default cql_blob_get turns into either `bgetkey` or `bgetval` depending
-on if you are reading from the key blob or the value blob.  The directives
-for configuring this function are:
+By default `cql_blob_get` turns into either `bgetkey` or `bgetval` depending on
+if you are reading from the key blob or the value blob.  This is controlled by
+attributes on the backing table.  All users of that table will apply the same
+functions.
 
 ```sql
-@blob_get_key bgetkey offset;
-@blob_get_val bgetval;
+[[get_key = bgetkey]]
+[[get_val = bgetval]]
+[[get_type = bgetkey_type]]
 ```
 
-You can configure the system to ask for the column by offset (this is
-normal for the primary key because it has a fixed number of columns
-for any given key type and they are all mandatory), or by hash code
-(this is normal for the value type because it might be missing some
-columns and so offset is probably not appropriate).  However both are
-configurable so you want to do key by hashcode simply omit the "offset"
-part of the directive.  Likewise if your values are offset addressable
-you can add "offset" to the value directive.  Here the offset means the
-zero based ordinal of the column in the key or the value.
+The key can no optional fields, it is formed from the primary key of the backing
+table. As a result it's possible to index the fields by number and infer their types.
+Values, on the other hand, are expected to have nullable fields so some might be
+missing. They are indexed using a hash of the field name and the type, similar
+to the type code that identifies the backed table in the storage.
 
->NOTE: The blob format for keys must be canonical in the sense that the
->same values always produce the same blob so if you use a field id based
->blob it will be important to always store the fields in the same order.
->Contrariwise use of offsets for the value blob indicates that your
->particular value blob will have fixed storage that is addressable by
->offset.  This may be suitable for your needs, for instance maybe you
->only ever need to store 0-3 integers in the value.
-
-The type access functions are similarly configurable (these functions
-get no argument).
+These attributes control offsets vs. codes:
 
 ```sql
-@blob_get_key_type bgetkey_type;
-@blob_get_val_type bgetval_type;
+[[use_key_codes]]    -- omit and keys use offsets by default
+[[use_val_offsets]]  -- omit and values use codes by default
 ```
+
+Here the offset means the zero based ordinal of the column in the key or the value.
+The order is the order that they appear in the table definition, there might be gaps
+because keys and values could interleave, each gets its own ordinals.
+
+```sql
+[[backed_by=something]]
+create table foo(
+  x int,    -- ordinal 0 for keys
+  a int,    -- ordinal 0 for values
+  b int     -- ordinal 1 for values
+  y int,    -- ordinal 1 for keys
+  c int     -- ordinal 2 for values
+  primary key (x,y)
+);
+```
+
+>NOTE: The blob format for _keys_ must be canonical in the sense that the same
+>values always produce the same blob, even after replacements, so if you use a
+>field id based blob it will be important to always store the fields in the same
+>order. Contrariwise use of offsets for the value blob indicates that your
+>particular value blob will have fixed storage that is addressable by offset.
+>This may be suitable for your needs, for instance maybe you only ever need to
+>store 0-3 integers in the value.
+
+#### JSON options
+
+The attributes `[[json]]` and `[[jsonb]]` cause the compiler to ignore the other
+backing attributes and use a JSON array for the keys (with the leading column
+being the type) and a JSON.  This requires that the SQLite you are using
+supports the JSON functions, in particular `json_array`, `json_object`,
+`json_set`, and the `->>` extraction operator.  Some stock versions of Linux do
+not have them but any recent SQLite amalgamation will have these features.
 
 #### Selecting from a Backed Table
 
@@ -587,14 +609,15 @@ CREATE INDEX backing_index ON backing(bgetkey_type(k));
 or more cleanly:
 
 ```sql
-CREATE INDEX backing_index ON backing(cql_blob_get_type(k));
+CREATE INDEX backing_index ON backing(cql_blob_get_type(backing, k));
 ```
 
 Either of these results in a computed index on the row type stored in
 the blob.  Other physical indices might be helpful too and these can
 potentially be shared by many backed tables, or used in partial indicies.
 
->NOTE: Your type function can be named something other than the default `bgetkey_type`.
+>NOTE: Your type function can be named something other than the default
+>`bgetkey_type`.
 
 Now consider a slightly more complex example:
 
@@ -621,6 +644,7 @@ All the compiler had to do was add both backed table fragments.  Even if
 #### Inserting Into a Backed Table
 
 It will be useful to consider a simple example such as:
+
 ```sql
 insert into backed values (1, "n001", 1.2), (2, "n002", 3.7);
 ```
@@ -660,8 +684,8 @@ to a user configured function with optional hash codes and mandatory
 field types.  The default configuration that corresponds to this:
 
 ```sql
-@blob_create_key bcreatekey offset;
-@blob_create_val bcreateval;
+[[create_key = bcreatekey]]
+[[create_val = bcreateval]]
 ```
 
 The final SQL for an insert operation looks like this:
@@ -718,7 +742,6 @@ Looking closely at the above we see a few things:
 * we added `backed(*)` as usual
 * `_vals` once again just has the exact unchanged insert clause
 * the `insert into backing(k, v)` part is identical, the same recipe always works
-
 
 #### Deleting From a Backed Table
 
@@ -780,25 +803,24 @@ What happened:
 * the `WHERE` clause went directly into the body of the rowid select
 * `backed` was used as before but now we also need `backed2`
 
-The delete pattern does not need any additional cql helpers beyond what
-we've already seen.
+The delete pattern does not need any additional cql helpers beyond what we've
+already seen.
 
 #### Updating Backed Tables
 
-The `update` statement is the most complicated of all the DML forms,
-it requires all the transforms from the previous statements plus one
-additional transform.
+The `update` statement is the most complicated of all the DML forms, it requires
+all the transforms from the previous statements plus one additional transform.
 
-First, the compiler requires two more blob helpers that are configurable.
-By default they look like this:
+First, the compiler requires two more blob helpers that are configurable. By
+default they look like this:
 
 ```sql
-@blob_update_key bupdatekey offset;
-@blob_update_val bupdateval;
+[[update_key = bupdatekey]]
+[[update_val = bupdateval]];
 ```
 
-These are used to replace particular columns in a stored blob.  Now let's
-start with a very simple update to see now it all works:
+These are used to replace particular columns in a stored blob.  Now let's start
+with a very simple update to see now it all works:
 
 ```sql
 update backed set name = 'foo' where id = 5;
@@ -808,8 +830,10 @@ Fundamentally we need to do these things:
 
 * the target of the update has to end up being the backing table
 * we need the backed table CTE so we can do the filtering
-* we want to use the rowid trick to figure out which rows to update which handles our `where` clause
-* we need to modify the existing key and/or value blobs rather than create them from scratch
+* we want to use the rowid trick to figure out which rows to update which
+  handles our `where` clause
+* we need to modify the existing key and/or value blobs rather than create them
+  from scratch
 
 Applying all of the above, we get a transform like the following:
 
@@ -826,15 +850,17 @@ UPDATE backing
 Looking into the details:
 
 * we needed the normal CTE so that we can use `backed` rows
-* the `WHERE` clause moved into a `WHERE rowid` sub-select just like in the `DELETE` case
-* they compiler changed the SET targets to be `k` and `v` very much like the `INSERT` case, except we used an update helper that takes the current blob and creates a new blob to store
+* the `WHERE` clause moved into a `WHERE rowid` sub-select just like in the
+  `DELETE` case
+* they compiler changed the SET targets to be `k` and `v` very much like the
+  `INSERT` case, except we used an update helper that takes the current blob and
+  creates a new blob to store
   * the helper is varargs so as we'll see it can mutate many columns in one call
 
 The above gives a update statement that is almost working.  The remaining
-problem is that it is possible to use the existing column values in
-the update expressions and there is no way to use our `backed` CTE to
-get those values in that context since the final update has to be all
-relative to the backing table.
+problem is that it is possible to use the existing column values in the update
+expressions and there is no way to use our `backed` CTE to get those values in
+that context since the final update has to be all relative to the backing table.
 
 Let's look at another example to illustrate this last wrinkle:
 
@@ -842,11 +868,10 @@ Let's look at another example to illustrate this last wrinkle:
 update backed set name = name || 'y' where bias < 5;
 ```
 
-This update basically adds the letter 'y' to the name of some rows.
-This is a silly example but this kind of thing happens in many contexts
-that are definitely not silly.  To make these cases work the reference
-to `name` inside of the set expression has to change. We end up with
-something like this:
+This update basically adds the letter 'y' to the name of some rows. This is a
+silly example but this kind of thing happens in many contexts that are
+definitely not silly.  To make these cases work the reference to `name` inside
+of the set expression has to change. We end up with something like this:
 
 ```sql
 WITH
@@ -861,18 +886,19 @@ UPDATE backing
 ```
 
 Importantly the reference to `name` in the set expression was changed to
-`cql_blob_get(v, backed.name)` -- extracting the name from the value
-blob. After which it is appended with 'y' as usual.
+`cql_blob_get(v, backed.name)` -- extracting the name from the value blob. After
+which it is appended with 'y' as usual.
 
-The rest of the pattern is just as it was after the first attempt above,
-in fact literally everything else is unchanged.  It's easy to see that
-the `WHERE` clause could be arbitrarily complex with no difficulty.
+The rest of the pattern is just as it was after the first attempt above, in fact
+literally everything else is unchanged.  It's easy to see that the `WHERE`
+clause could be arbitrarily complex with no difficulty.
 
->NOTE: Since the `UPDATE` statement has no `FROM` clause only the fields
->in the target table might need to be rewritten, so in this case `name`,
->`id`, and `bias` were possible but only `name` was mentioned.
+>NOTE: Since the `UPDATE` statement has no `FROM` clause only the fields in the
+>target table might need to be rewritten, so in this case `name`, `id`, and
+>`bias` were possible but only `name` was mentioned.
 
-After the `cql_blob_get` and `cql_blob_update` are expanded the result looks like this:
+After the `cql_blob_get` and `cql_blob_update` are expanded the result looks
+like this:
 
 ```sql
 WITH
@@ -970,10 +996,35 @@ for indices you'll also need to do something like this:
 ```
 
 `bgetval` and `bgetkey` are not readily declarable generally because their
-result is polymorphic so it's preferable to use `cql_blob_get` like the
-compiler does (see examples above) which then does the rewrite for you.
-But it is helpful to have a UDF declaration for each of the above,
-especially if you want the `--rt query_plan` output to work seamlessly.
-Typically `bgetval` or `bgetval` would only be needed in the context
-of a `create index` statement and `cql_blob_get` can be used instead in
-that case.
+result is polymorphic so it's preferable to use `cql_blob_get` like the compiler
+does (see examples above) which then does the rewrite for you. But it is helpful
+to have a UDF declaration for each of the above, especially if you want the
+`--rt query_plan` output to work seamlessly. Typically `bgetval` or `bgetval`
+would only be needed in the context of a `create index` statement and
+`cql_blob_get` can be used instead in that case.
+
+>NOTE: it's possible to rewrite `CREATE INDEX` on a backed table into and index
+>on the backing table but this has not yet been implemented.
+
+#### Backed Table Attributes Summary
+
+This example has the whole set.
+
+```sql
+[[backing_table]]             -- this makes it a backing table
+[[get_type = bgetkey_type]]   -- the function to get the type out of the key blob
+[[get_key = bgetkey]]         -- the function to get a column out of the key blob
+[[get_val = bgetval]]         -- the function to get a column out of the value blob
+[[create_key = bcreatekey]]   -- the function to create a key blob
+[[create_val = bcreateval]]   -- the function to create a value blob
+[[update_key = bupdatekey]]   -- the function to update a key blob
+[[update_val = bupdateval]]   -- the function to update a value blob
+[[use_key_codes]]             -- if present key functions use a column code, by default key funcs use column offsets
+[[use_val_offsets]]           -- if present value functions use a column offset, by default value funcs use column codes
+[[json]]                      -- ignores the above and targets json_* instead (don't combine it)
+[[jsonb]]                     -- ignores the above and targets jsonb_* instead (don't combine it)
+create table foo(
+  k blob primary key,
+  v blob
+);
+```

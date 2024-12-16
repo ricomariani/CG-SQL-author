@@ -683,6 +683,7 @@ extern void expr_proc_b(cql_nullable_int32 x);
 
 extern cql_int32 an_alias_func(cql_int32 x);
 #define an_alias_func some_native_func
+extern CQL_WARN_UNUSED cql_code a_backed_join(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 cql_string_literal(_literal_1_text_, "text");
 cql_string_literal(_literal_2_This_is_a_test_, "This is a \" \\ test '' \n \" ");
 cql_string_literal(_literal_3_b_, "b");
@@ -18108,6 +18109,117 @@ CQL_WARN_UNUSED cql_code a_dml_delete(sqlite3 *_Nonnull _db_) {
 
 cql_cleanup:
   cql_error_report();
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+PROC a_backed_join ()
+BEGIN
+  WITH
+    jdata (rowid, id, name, age, zip) AS (CALL _jdata()),
+    backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
+  SELECT T1.name AS jname, T1.age AS jage, T2.name AS bname
+    FROM jdata AS T1
+      INNER JOIN backed AS T2 ON T1.id = T2.id;
+END;
+*/
+
+#define _PROC_ "a_backed_join"
+static int32_t a_backed_join_perf_index;
+
+cql_string_proc_name(a_backed_join_stored_procedure_name, "a_backed_join");
+
+typedef struct a_backed_join_row {
+  cql_nullable_int32 jage;
+  cql_string_ref _Nonnull jname;
+  cql_string_ref _Nullable bname;
+} a_backed_join_row;
+
+uint8_t a_backed_join_data_types[a_backed_join_data_types_count] = {
+  CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_NOT_NULL, // jname
+  CQL_DATA_TYPE_INT32, // jage
+  CQL_DATA_TYPE_STRING, // bname
+};
+
+#define a_backed_join_refs_offset cql_offsetof(a_backed_join_row, jname) // count = 2
+
+static cql_uint16 a_backed_join_col_offsets[] = { 3,
+  cql_offsetof(a_backed_join_row, jname),
+  cql_offsetof(a_backed_join_row, jage),
+  cql_offsetof(a_backed_join_row, bname)
+};
+
+cql_int32 a_backed_join_result_count(a_backed_join_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code a_backed_join_fetch_results(sqlite3 *_Nonnull _db_, a_backed_join_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_a_backed_join, &a_backed_join_perf_index);
+  cql_code rc = a_backed_join(_db_, &stmt);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = a_backed_join_data_types,
+    .col_offsets = a_backed_join_col_offsets,
+    .refs_count = 2,
+    .refs_offset = a_backed_join_refs_offset,
+    .encode_context_index = -1,
+    .rowsize = sizeof(a_backed_join_row),
+    .crc = CRC_a_backed_join,
+    .perf_index = &a_backed_join_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+/*
+export:
+DECLARE PROC a_backed_join () (jname TEXT!, jage INT, bname TEXT);
+*/
+CQL_WARN_UNUSED cql_code a_backed_join(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  cql_error_prepare();
+
+  _rc_ = cql_prepare_var(_db_, _result_stmt,
+    5, NULL,
+  "WITH "
+      "jdata (rowid, id, name, age, zip) AS (",
+  "SELECT "
+          "rowid, "
+          "((T.k)->>2), "
+          "((T.k)->>1), "
+          "((T.v)->>'$.age'), "
+          "((T.v)->>'$.zip') "
+        "FROM json_backing AS T "
+        "WHERE ((T.k)->>0) = -1916485007726025434",
+  "), "
+      "backed (rowid, flag, id, name, age, storage, pk) AS (",
+  "SELECT "
+          "rowid, "
+          "bgetval(T.v, 1055660242183705531), "
+          "bgetval(T.v, -9155171551243524439), "
+          "bgetval(T.v, -6946718245010482247), "
+          "bgetval(T.v, -3683705396192132539), "
+          "bgetval(T.v, -7635294210585028660), "
+          "bgetkey(T.k, 0) "
+        "FROM backing AS T "
+        "WHERE bgetkey_type(T.k) = -5417664364642960231",
+  ") "
+    "SELECT T1.name AS jname, T1.age AS jage, T2.name AS bname "
+      "FROM jdata AS T1 "
+        "INNER JOIN backed AS T2 ON T1.id = T2.id"
+  );
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_error_report();
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
   return _rc_;
 }
 #undef _PROC_

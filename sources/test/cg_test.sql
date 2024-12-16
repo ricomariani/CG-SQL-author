@@ -6111,6 +6111,39 @@ begin
   delete from jdata where name = 'a name';
 end;
 
+-- TEST: join two tables with different backing
+-- + "WITH "
+-- +     "jdata (rowid, id, name, age, zip) AS (",
+-- + "SELECT "
+-- +         "rowid, "
+-- +         "((T.k)->>2), "
+-- +         "((T.k)->>1), "
+-- +         "((T.v)->>'$.age'), "
+-- +         "((T.v)->>'$.zip') "
+-- +       "FROM json_backing AS T "
+-- +       "WHERE ((T.k)->>0) = -1916485007726025434",
+-- + "), "
+-- +     "backed (rowid, flag, id, name, age, storage, pk) AS (",
+-- + "SELECT "
+-- +         "rowid, "
+-- +         "bgetval(T.v, 1055660242183705531), "
+-- +         "bgetval(T.v, -9155171551243524439), "
+-- +         "bgetval(T.v, -6946718245010482247), "
+-- +         "bgetval(T.v, -3683705396192132539), "
+-- +         "bgetval(T.v, -7635294210585028660), "
+-- +         "bgetkey(T.k, 0) "
+-- +       "FROM backing AS T "
+-- +       "WHERE bgetkey_type(T.k) = -5417664364642960231",
+-- + ") "
+-- +   "SELECT T1.name AS jname, T1.age AS jage, T2.name AS bname "
+-- +     "FROM jdata AS T1 "
+-- +       "INNER JOIN backed AS T2 ON T1.id = T2.id"
+proc a_backed_join()
+begin
+  select T1.name jname, T1.age jage, T2.name bname
+    from jdata T1 join backed T2 on T1.id = T2.id;
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

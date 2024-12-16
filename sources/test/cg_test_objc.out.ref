@@ -4735,4 +4735,54 @@ static inline BOOL CGS_use_backed_table_directly_in_with_select_row_equal(CGS_us
   return use_backed_table_directly_in_with_select_row_equal(use_backed_table_directly_in_with_select_from_CGS_use_backed_table_directly_in_with_select(resultSet1), row1, use_backed_table_directly_in_with_select_from_CGS_use_backed_table_directly_in_with_select(resultSet2), row2);
 }
 
+@class CGS_a_backed_join;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGS_a_backed_join
+@end
+#endif
+
+static inline CGS_a_backed_join *CGS_a_backed_join_from_a_backed_join(a_backed_join_result_set_ref resultSet)
+{
+  return (__bridge CGS_a_backed_join *)resultSet;
+}
+
+static inline a_backed_join_result_set_ref a_backed_join_from_CGS_a_backed_join(CGS_a_backed_join *resultSet)
+{
+  return (__bridge a_backed_join_result_set_ref)resultSet;
+}
+
+static inline NSString *CGS_a_backed_join_get_jname(CGS_a_backed_join *resultSet, cql_int32 row)
+{
+  a_backed_join_result_set_ref cResultSet = a_backed_join_from_CGS_a_backed_join(resultSet);
+  return (__bridge NSString *)a_backed_join_get_jname(cResultSet, row);
+}
+
+static inline NSNumber *_Nullable CGS_a_backed_join_get_jage(CGS_a_backed_join *resultSet, cql_int32 row)
+{
+  a_backed_join_result_set_ref cResultSet = a_backed_join_from_CGS_a_backed_join(resultSet);
+  return a_backed_join_get_jage_is_null(cResultSet, row) ? nil : @(a_backed_join_get_jage_value(cResultSet, row));
+}
+
+static inline NSString *_Nullable CGS_a_backed_join_get_bname(CGS_a_backed_join *resultSet, cql_int32 row)
+{
+  a_backed_join_result_set_ref cResultSet = a_backed_join_from_CGS_a_backed_join(resultSet);
+  return (__bridge NSString *)a_backed_join_get_bname(cResultSet, row);
+}
+
+static inline cql_int32 CGS_a_backed_join_result_count(CGS_a_backed_join *resultSet)
+{
+  return a_backed_join_result_count(a_backed_join_from_CGS_a_backed_join(resultSet));
+}
+
+static inline NSUInteger CGS_a_backed_join_row_hash(CGS_a_backed_join *resultSet, cql_int32 row)
+{
+  return a_backed_join_row_hash(a_backed_join_from_CGS_a_backed_join(resultSet), row);
+}
+
+static inline BOOL CGS_a_backed_join_row_equal(CGS_a_backed_join *resultSet1, cql_int32 row1, CGS_a_backed_join *resultSet2, cql_int32 row2)
+{
+  return a_backed_join_row_equal(a_backed_join_from_CGS_a_backed_join(resultSet1), row1, a_backed_join_from_CGS_a_backed_join(resultSet2), row2);
+}
+
 NS_ASSUME_NONNULL_END

@@ -16060,6 +16060,8 @@ static void create_backing_table_functions(ast_node *table, CSTR name) {
 
   map->key_use_offsets = !has_backing_attr(table, "use_key_codes");  // offsets are the default
   map->val_use_offsets = has_backing_attr(table, "use_val_offsets");  // codes are the default
+  map->use_json = has_backing_attr(table, "json");
+  map->use_jsonb = has_backing_attr(table, "jsonb");
 
   add_backing_info(map, name);
 }

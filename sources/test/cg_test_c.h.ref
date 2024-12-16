@@ -8229,6 +8229,18 @@ extern CQL_WARN_UNUSED cql_code qid_t6(sqlite3 *_Nonnull _db_);
 extern void declare_constant_variable(void);
 
 // The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code jdata_dml_select(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code jdata_dml_insert(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code jdata_dml_update(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code a_dml_delete(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
 extern cql_int32 this_is_the_end;
 
 // The statement ending at line XXXX

@@ -6018,6 +6018,99 @@ begin
   const const_variable := 1;
 end;
 
+
+-- backing storage using JSON (!!)
+[[backing_table]]
+[[json]]
+create table json_backing
+(
+  k blob primary key,
+  v blob
+);
+
+[[backed_by=json_backing]]
+create table jdata(
+  id  integer primary key,
+  name text,
+  age int,
+  zip long
+);
+
+
+-- TEST: backing storage with json: select
+-- + "WITH "
+-- +     "jdata (rowid, id, name, age, zip) AS (",
+-- + "SELECT "
+-- +     "rowid, "
+-- +     "((T.k)->>1), "
+-- +     "((T.v)->>'$.name'), "
+-- +     "((T.v)->>'$.age'), "
+-- +     "((T.v)->>'$.zip') "
+-- +   "FROM json_backing AS T "
+-- +   "WHERE ((T.k)->>0) = 3763585718811526669",
+-- + ") "
+-- +   "SELECT rowid, id, name, age, zip "
+-- +     "FROM jdata"
+proc jdata_dml_select()
+begin
+  declare C cursor for select * from jdata;
+end;
+
+-- TEST: backing storage with json: insert
+-- + "WITH "
+-- +   "_vals (id, name, age, zip) AS ( "
+-- +     "VALUES(1, 'a name', 13, 98033) "
+-- +   ") "
+-- + "INSERT INTO json_backing(k, v) "
+-- +   "SELECT json_array(V.id), json_object('name', V.name,  'age', V.age,  'zip', V.zip) "
+-- +     "FROM _vals AS V");
+proc jdata_dml_insert()
+begin
+  insert into jdata values(1, "a name", 13, 98033);
+end;
+
+-- TEST: backing storage with json: update
+-- + "WITH "
+-- +     "jdata (rowid, id, name, age, zip) AS (",
+-- + "SELECT "
+-- +     "rowid, "
+-- +     "((T.k)->>1), "
+-- +     "((T.v)->>'$.name'), "
+-- +     "((T.v)->>'$.age'), "
+-- +     "((T.v)->>'$.zip') "
+-- +   "FROM json_backing AS T "
+-- +   "WHERE ((T.k)->>0) = 3763585718811526669",
+-- + ") "
+-- +   "UPDATE json_backing "
+-- +     "SET k = json_set(k, '$.[1]',  21), v = json_set(v, '$.name',  'new name') "
+-- +     "WHERE rowid IN (SELECT rowid "
+-- +       "FROM jdata "
+-- +       "WHERE id = 1)"
+proc jdata_dml_update()
+begin
+  update jdata set id = 21, name = 'new name' where id = 1;
+end;
+
+-- TEST: backing storage with json: delete
+-- + "WITH "
+-- +     "jdata (rowid, id, name, age, zip) AS (",
+-- + "SELECT "
+-- +         "rowid, "
+-- +         "((T.k)->>1), "
+-- +         "((T.v)->>'$.name'), "
+-- +         "((T.v)->>'$.age'), "
+-- +         "((T.v)->>'$.zip') "
+-- +       "FROM json_backing AS T "
+-- +       "WHERE ((T.k)->>0) = 3763585718811526669",
+-- + ") "
+-- +   "DELETE FROM json_backing WHERE rowid IN (SELECT rowid "
+-- +     "FROM jdata "
+-- +     "WHERE name = 'a name')"
+proc a_dml_delete()
+begin
+  delete from jdata where name = 'a name';
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

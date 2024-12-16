@@ -17921,6 +17921,196 @@ void declare_constant_variable(void) {
 
 }
 #undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+PROC jdata_dml_select ()
+BEGIN
+  CURSOR C FOR
+    WITH
+      jdata (rowid, id, name, age, zip) AS (CALL _jdata())
+    SELECT *
+      FROM jdata;
+END;
+*/
+
+#define _PROC_ "jdata_dml_select"
+/*
+export:
+DECLARE PROC jdata_dml_select () USING TRANSACTION;
+*/
+CQL_WARN_UNUSED cql_code jdata_dml_select(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
+  sqlite3_stmt *C_stmt = NULL;
+
+  _rc_ = cql_prepare_var(_db_, &C_stmt,
+    3, NULL,
+  "WITH "
+      "jdata (rowid, id, name, age, zip) AS (",
+  "SELECT "
+          "rowid, "
+          "((T.k)->>1), "
+          "((T.v)->>'$.name'), "
+          "((T.v)->>'$.age'), "
+          "((T.v)->>'$.zip') "
+        "FROM json_backing AS T "
+        "WHERE ((T.k)->>0) = 3763585718811526669",
+  ") "
+    "SELECT rowid, id, name, age, zip "
+      "FROM jdata"
+  );
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_error_report();
+  cql_finalize_stmt(&C_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+PROC jdata_dml_insert ()
+BEGIN
+  WITH
+    _vals (id, name, age, zip) AS (
+      VALUES(1, "a name", 13, 98033)
+    )
+  INSERT INTO json_backing(k, v)
+    SELECT cql_blob_create(jdata, V.id, jdata.id), cql_blob_create(jdata, V.name, jdata.name, V.age, jdata.age, V.zip, jdata.zip)
+      FROM _vals AS V;
+END;
+*/
+
+#define _PROC_ "jdata_dml_insert"
+/*
+export:
+DECLARE PROC jdata_dml_insert () USING TRANSACTION;
+*/
+CQL_WARN_UNUSED cql_code jdata_dml_insert(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
+
+  _rc_ = cql_exec(_db_,
+    "WITH "
+      "_vals (id, name, age, zip) AS ( "
+        "VALUES(1, 'a name', 13, 98033) "
+      ") "
+    "INSERT INTO json_backing(k, v) "
+      "SELECT json_array(V.id), json_object('name', V.name,  'age', V.age,  'zip', V.zip) "
+        "FROM _vals AS V");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_error_report();
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+PROC jdata_dml_update ()
+BEGIN
+  WITH
+    jdata (rowid, id, name, age, zip) AS (CALL _jdata())
+  UPDATE json_backing
+    SET k = cql_blob_update(k, 21, jdata.id), v = cql_blob_update(v, 'new name', jdata.name)
+    WHERE rowid IN (SELECT rowid
+      FROM jdata
+      WHERE id = 1);
+END;
+*/
+
+#define _PROC_ "jdata_dml_update"
+/*
+export:
+DECLARE PROC jdata_dml_update () USING TRANSACTION;
+*/
+CQL_WARN_UNUSED cql_code jdata_dml_update(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
+
+  _rc_ = cql_exec_var(_db_,
+    3, NULL,
+  "WITH "
+      "jdata (rowid, id, name, age, zip) AS (",
+  "SELECT "
+          "rowid, "
+          "((T.k)->>1), "
+          "((T.v)->>'$.name'), "
+          "((T.v)->>'$.age'), "
+          "((T.v)->>'$.zip') "
+        "FROM json_backing AS T "
+        "WHERE ((T.k)->>0) = 3763585718811526669",
+  ") "
+    "UPDATE json_backing "
+      "SET k = json_set(k, '$.[1]',  21), v = json_set(v, '$.name',  'new name') "
+      "WHERE rowid IN (SELECT rowid "
+        "FROM jdata "
+        "WHERE id = 1)"
+  );
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_error_report();
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+PROC a_dml_delete ()
+BEGIN
+  WITH
+    jdata (rowid, id, name, age, zip) AS (CALL _jdata())
+  DELETE FROM json_backing WHERE rowid IN (SELECT rowid
+    FROM jdata
+    WHERE name = 'a name');
+END;
+*/
+
+#define _PROC_ "a_dml_delete"
+/*
+export:
+DECLARE PROC a_dml_delete () USING TRANSACTION;
+*/
+CQL_WARN_UNUSED cql_code a_dml_delete(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
+
+  _rc_ = cql_exec_var(_db_,
+    3, NULL,
+  "WITH "
+      "jdata (rowid, id, name, age, zip) AS (",
+  "SELECT "
+          "rowid, "
+          "((T.k)->>1), "
+          "((T.v)->>'$.name'), "
+          "((T.v)->>'$.age'), "
+          "((T.v)->>'$.zip') "
+        "FROM json_backing AS T "
+        "WHERE ((T.k)->>0) = 3763585718811526669",
+  ") "
+    "DELETE FROM json_backing WHERE rowid IN (SELECT rowid "
+      "FROM jdata "
+      "WHERE name = 'a name')"
+  );
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_error_report();
+  return _rc_;
+}
+#undef _PROC_
 cql_int32 this_is_the_end = 0;
 
 // The statement ending at line XXXX

@@ -297,6 +297,8 @@ typedef struct cg_blob_mappings_struct {
   CSTR _Nullable update_val;
   bool_t key_use_offsets;
   bool_t val_use_offsets;
+  bool_t use_json;
+  bool_t use_jsonb;
 } cg_blob_mappings_t;
 
 // Hashing helpers

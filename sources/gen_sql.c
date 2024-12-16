@@ -1583,8 +1583,16 @@ static void gen_cql_blob_get_type(ast_node *ast) {
 
   cg_blob_mappings_t *map = find_backing_info(t_name);
   Contract(map);
-  CSTR func = map->get_key_type;
 
+  // special case json and jsonb, we use the extraction operator
+  if (map->use_json || map->use_jsonb) {
+    gen_printf("((");
+    gen_root_expr(second_arg(arg_list));
+    gen_printf(")->>0)");
+    return;
+  }
+
+  CSTR func = map->get_key_type;
   gen_printf("%s(", func);
   gen_root_expr(second_arg(arg_list));
   gen_printf(")");
@@ -1648,6 +1656,21 @@ static void gen_cql_blob_get(ast_node *ast) {
   Invariant(table_ast);
 
   int32_t pk_col_offset = get_table_col_offset(table_ast, c_name, CQL_SEARCH_COL_KEYS);
+
+  // special case json and jsonb
+  if (map->use_json || map->use_jsonb) {
+    if (pk_col_offset >= 0) {
+      gen_printf("((");
+      gen_root_expr(first_arg(arg_list));
+      gen_printf(")->>%d)", pk_col_offset+1);
+    }
+    else {
+      gen_printf("((");
+      gen_root_expr(first_arg(arg_list));
+      gen_printf(")->>'$.%s')", c_name);
+    }
+    return;
+  }
 
   CSTR func = pk_col_offset >= 0 ? map->get_key : map->get_val;
 
@@ -1731,6 +1754,35 @@ static void gen_cql_blob_create(ast_node *ast) {
 
   CSTR func = is_pk ? map->create_key : map->create_val;
 
+  if (map->use_json || map->use_jsonb) {
+    if (is_pk) {
+      gen_printf("json%s_array(", map->use_jsonb ? "b" : "");
+      for (ast_node *args = arg_list->right; args; args = args->right->right) {
+        ast_node *val = first_arg(args);
+        gen_root_expr(val);
+        if (args->right->right) {
+          gen_printf(", ");
+        }
+      }
+      gen_printf(")");
+    }
+    else {
+      gen_printf("json%s_object(", map->use_jsonb ? "b" : "");
+      for (ast_node *args = arg_list->right; args; args = args->right->right) {
+        ast_node *val = first_arg(args);
+        ast_node *col = second_arg(args);
+        EXTRACT_STRING(cname, col->right);
+        gen_printf("'%s', ", cname);
+        gen_root_expr(val);
+        if (args->right->right) {
+          gen_printf(",  ");
+        }
+      }
+      gen_printf(")");
+    }
+    return;
+  }
+
   bool_t use_offsets = is_pk ? map->key_use_offsets : map->val_use_offsets;
 
   // table known to exist (and not deleted) already
@@ -1787,6 +1839,28 @@ static void gen_cql_blob_update(ast_node *ast) {
   // table known to exist (and not deleted) already
   ast_node *table_ast = find_table_or_view_even_deleted(t_name);
   Invariant(table_ast);
+
+  if (map->use_json || map->use_jsonb) {
+    gen_printf("json%s_set(", map->use_jsonb ? "b" : "");
+    gen_root_expr(first_arg(arg_list));
+    for (ast_node *args = arg_list->right; args; args = args->right->right) {
+      ast_node *val = first_arg(args);
+      ast_node *col = second_arg(args);
+      EXTRACT_STRING(cname, col->right);
+      if (is_pk) {
+        int32_t offset = get_table_col_offset(table_ast, cname, CQL_SEARCH_COL_KEYS);
+        Invariant(offset >= 0);
+        gen_printf(", '$.[%d]',  ", offset + 1);  // the type is offset 0
+      }
+      else {
+        EXTRACT_STRING(cname, col->right);
+        gen_printf(", '$.%s',  ", cname);
+      }
+      gen_root_expr(val);
+    }
+    gen_printf(")");
+    return;
+  }
 
   gen_printf("%s(", func);
   gen_root_expr(first_arg(arg_list));

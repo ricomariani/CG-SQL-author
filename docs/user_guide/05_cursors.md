@@ -9,14 +9,16 @@ weight: 5
 -- LICENSE file in the root directory of this source tree.
 -->
 
-In the previous chapters we have used cursor variables without fully discussing them.
-Most of the uses are fairly self-evident but a more exhaustive discussion is also useful.
+In the previous chapters we have used cursor variables without fully discussing
+them. Most of the uses are fairly self-evident but a more exhaustive discussion
+is also useful.
 
 First there are three types of cursors, as we will see below.
 
 ### Statement Cursors
 
-A statement cursor is based on a SQL `SELECT` statement.  A full example might look like this:
+A statement cursor is based on a SQL `SELECT` statement.  A full example might
+look like this:
 
 ```sql
 -- elsewhere
@@ -25,8 +27,9 @@ create table xy_table(x integer, y integer);
 declare C cursor for select x, y from xy_table;
 ```
 
-When compiled, this will result in creating a SQLite statement object (type `sqlite_stmt *`)
-and storing it in a variable called `C_stmt`.  This statement can then be used later in various ways.
+When compiled, this will result in creating a SQLite statement object (type
+`sqlite_stmt *`) and storing it in a variable called `C_stmt`.  This statement
+can then be used later in various ways.
 
 Here's perhaps the simplest way to use the cursor above:
 
@@ -45,9 +48,9 @@ These variables might then be used to create some output such as:
 call printf("x:%d y:%d\n", ifnull(x, 0), ifnull(y,0));
 ```
 
-More generally, there the cursor may or may not be holding fetched values.
-The cursor variable `C` can be used by itself as a boolean indicating the
-presence of a row.  So a more complete example might be
+More generally, there the cursor may or may not be holding fetched values. The
+cursor variable `C` can be used by itself as a boolean indicating the presence
+of a row.  So a more complete example might be
 
 ```sql
 if C then
@@ -68,13 +71,14 @@ end;
 
 The last example above reads all the rows and prints them.
 
-Now if the table `xy_table` had instead had dozens of columns, those declarations
-would be very verbose and error prone, and frankly annoying, especially if
-the table definition was changing over time.
+Now if the table `xy_table` had instead had dozens of columns, those
+declarations would be very verbose and error prone, and frankly annoying,
+especially if the table definition was changing over time.
 
 To make this a little easier, there are so-called 'automatic' cursors.  These
-happen implicitly and include all the necessary storage to exactly match
-the rows in their statement.  Using the automatic syntax for the above looks like so:
+happen implicitly and include all the necessary storage to exactly match the
+rows in their statement.  Using the automatic syntax for the above looks like
+so:
 
 ```sql
 declare C cursor for select * from xy_table;
@@ -94,20 +98,20 @@ begin
 end;
 ```
 
-All the necessary local state is automatically created, hence "automatic" cursor.
-This pattern is generally preferred, but the loose variables pattern is in
-some sense more general.
+All the necessary local state is automatically created, hence "automatic"
+cursor. This pattern is generally preferred, but the loose variables pattern is
+in some sense more general.
 
-In all the cases if the number or type of variables do not match the select statement,
-semantic errors are produced.
+In all the cases if the number or type of variables do not match the select
+statement, semantic errors are produced.
 
 ### Value Cursors
 
 The purpose of value cursors is to make it possible for a stored procedure to
-work with structures as a unit rather than only field by field.  SQL doesn't have
-the notion of structure types, but structures actually appear pretty directly
-in many places.  Generally we call these things "Shapes" and there are a variety
-of source for shapes including:
+work with structures as a unit rather than only field by field.  SQL doesn't
+have the notion of structure types, but structures actually appear pretty
+directly in many places.  Generally we call these things "Shapes" and there are
+a variety of source for shapes including:
 
 * the columns of a table
 * the projection of a `SELECT` statement
@@ -116,8 +120,8 @@ of source for shapes including:
 * the arguments of a procedure
 * other things derived from the above
 
-Let's first start with how you declare a value cursor.  It is providing one of the
-shape sources above.
+Let's first start with how you declare a value cursor.  It is providing one of
+the shape sources above.
 
 So:
 
@@ -140,12 +144,12 @@ The last two examples assume that there is a stored procedure defined somewhere
 earlier in the same translation unit and that the procedure returns a result set
 or has arguments, respectively.
 
-In all cases the cursor declaration makes a cursor that could hold the indicated result.
-That result can then be loaded with `FETCH` or emitted with `OUT` or `OUT UNION` which
-will be discussed below.
+In all cases the cursor declaration makes a cursor that could hold the indicated
+result. That result can then be loaded with `FETCH` or emitted with `OUT` or
+`OUT UNION` which will be discussed below.
 
-Once we have declared a value cursor we can load it with values using `FETCH` in its
-value form. Here are some examples:
+Once we have declared a value cursor we can load it with values using `FETCH` in
+its value form. Here are some examples:
 
 Fetch from compatible values:
 
@@ -164,10 +168,10 @@ Fetch from another cursor:
 fetch C from D;
 ```
 
-In this last case if D is a statement cursor it must also be "automatic" (i.e. it has
-the storage).  This form lets you copy a row and save it for later.  For instance, in
-a loop you could copy the current max-value row into a value cursor and use it after
-the loop, like so:
+In this last case if D is a statement cursor it must also be "automatic" (i.e.
+it has the storage).  This form lets you copy a row and save it for later.  For
+instance, in a loop you could copy the current max-value row into a value cursor
+and use it after the loop, like so:
 
 ```sql
 declare C cursor for select * from somewhere;
@@ -181,11 +185,12 @@ begin
 end;
 ```
 
-After the loop, D either empty because there were no rows (thus `if D` would fail)
-or else it has the row with the maximum value of `something`, whatever that is.
+After the loop, D either empty because there were no rows (thus `if D` would
+fail) or else it has the row with the maximum value of `something`, whatever
+that is.
 
-Value cursors are always have their own storage, so you could say all value cursors
-are "automatic".
+Value cursors are always have their own storage, so you could say all value
+cursors are "automatic".
 
 And as we saw above, value cursors may or may not be holding a row.
 
@@ -199,9 +204,10 @@ end if;
 When you call a procedure you may or may not get a row as we'll see below.
 
 The third type of cursor is a "result set" cursor but that won't make any sense
-until we've discussed result sets a little which requires `OUT` and/or `OUT UNION`
-and so we'll go on to those statements next.  As it happens, we are recapitulating
-the history of cursor features in the CQL language by exploring the system in this way.
+until we've discussed result sets a little which requires `OUT` and/or `OUT
+UNION` and so we'll go on to those statements next.  As it happens, we are
+recapitulating the history of cursor features in the CQL language by exploring
+the system in this way.
 
 #### Benefits of using named typed to declare a cursor
 
@@ -227,20 +233,20 @@ fetch C from values (from D, 2.5, false);
 
 and now you have D plus 2 more fields which maybe you want to output.
 
-Importantly this way of doing it means that C always includes D, even if D changes
-over time.  As long as the `extra1` and `extra2` fields don't conflict names
-it will always work.
+Importantly this way of doing it means that C always includes D, even if D
+changes over time.  As long as the `extra1` and `extra2` fields don't conflict
+names it will always work.
 
 
 ### OUT Statement
 
-Value cursors were initially designed to create a convenient way for
-a procedure to return a single row from a complex query
-without having a crazy number of `OUT` parameters.  It's easiest
-to illustrate this with an example.
+Value cursors were initially designed to create a convenient way for a procedure
+to return a single row from a complex query without having a crazy number of
+`OUT` parameters.  It's easiest to illustrate this with an example.
 
-Suppose you want to return several variables, the "classic" way to do so
-would be a procedure like this:
+Suppose you want to return several variables, the "classic" way to do so would
+be a procedure like this:
+
 ```sql
 create proc get_a_row(
   id_ integer not null,
@@ -257,9 +263,9 @@ begin
 end;
 ```
 
-This is already verbose, but you can imagine the situation gets very annoying
-if `get_a_row` has to produce a couple dozen column values.  And of course you
-have to get the types exactly right. And they might evolve over time.  Joy.
+This is already verbose, but you can imagine the situation gets very annoying if
+`get_a_row` has to produce a couple dozen column values.  And of course you have
+to get the types exactly right. And they might evolve over time.  Joy.
 
 On the receiving side you get to do something just as annoying:
 
@@ -290,42 +296,45 @@ declare C cursor like get_a_row;
 fetch C from call get_a_row(id);
 ```
 
-In fact, originally you did the two steps above in one statement and that was the
-only way to load a value cursor. Later, the calculus was generalized. The original
-form still works:
+In fact, originally you did the two steps above in one statement and that was
+the only way to load a value cursor. Later, the calculus was generalized. The
+original form still works:
+
 ```sql
 declare C cursor fetch from call get_a_row(id);
 ```
 
-The `OUT` statement lets you return a single row economically and
-lets you then test if there actually was a row and if so, read the columns.
-It infers all the various column names and types so it is resilient
-to schema change and generally a lot less error prone than having a
-large number of `out` arguments to your procedure.
+The `OUT` statement lets you return a single row economically and lets you then
+test if there actually was a row and if so, read the columns. It infers all the
+various column names and types so it is resilient to schema change and generally
+a lot less error prone than having a large number of `out` arguments to your
+procedure.
 
-Once you have the result in a value cursor you can do the usual
-cursor operations to move it around or otherwise work with it.
+Once you have the result in a value cursor you can do the usual cursor
+operations to move it around or otherwise work with it.
 
-The use of the `LIKE` keyword to refer to groups of columns spread
-to other places in CQL as a very useful construct, but it began here
-with the need to describe a cursor shape economically, by reference.
+The use of the `LIKE` keyword to refer to groups of columns spread to other
+places in CQL as a very useful construct, but it began here with the need to
+describe a cursor shape economically, by reference.
 
 ### OUT UNION Statement
-The semantics of the `OUT` statement are that it always produces one row
-of output (a procedure can produce no row if an `out` never actually rans
-but the procedure does use `OUT`).
+The semantics of the `OUT` statement are that it always produces one row of
+output (a procedure can produce no row if an `out` never actually rans but the
+procedure does use `OUT`).
 
 If an `OUT` statement runs more than once, the most recent row becomes the
-result.  So the `OUT` statement really does mirror having one `out` variable
-for each output column.  This was its intent and procedures that return at most,
-or exactly, one row are very common so it works well enough.
+result.  So the `OUT` statement really does mirror having one `out` variable for
+each output column.  This was its intent and procedures that return at most, or
+exactly, one row are very common so it works well enough.
 
 However, in general, one row results do not suffice; you might want to produce a
-result set from various sources, possibly with some computation as part of
-the row creation process.  To make general results, you need to be able to emit
-multiple rows from a computed source.  This is exactly what `OUT UNION` provides.
+result set from various sources, possibly with some computation as part of the
+row creation process.  To make general results, you need to be able to emit
+multiple rows from a computed source.  This is exactly what `OUT UNION`
+provides.
 
-Here's a (somewhat contrived) example of the kind of thing you can do with this form:
+Here's a (somewhat contrived) example of the kind of thing you can do with this
+form:
 
 ```sql
 create proc foo(n integer not null)
@@ -1099,10 +1108,10 @@ then:
 * all integers, and long integers get _seed_ as their value (possibly truncated)
 * booleans get 1 if and only if _seed_ is non-zero
 * strings get the name of the string column an underscore and the value as text (e.g.   "myText_7" if _seed_ is 7)
-* blobs are not currently supported for dummy data (CQL is missing blob conversions which are needed first)
+* blobs get the name of the blob column and the value as text (e.g. "myBlob7")
 
-This construct is hugely powerful in a loop to create many complete rows
-with very little effort, even if the schema change over time.
+This construct is hugely powerful in a loop to create many complete rows with
+very little effort, even if the schema change over time.
 
 ```sql
 declare i integer not null;
@@ -1110,41 +1119,48 @@ declare C like my_table;
 set i := 0;
 while (i < 20)
 begin
-   fetch C(id) from values(i+10000) @dummy_seed(i);
-   insert into my_table from cursor C;
+  -- the id is fully specified the rest come from the dummy
+  fetch C(id) from values(i+10000) @dummy_seed(i);
+  insert into my_table from cursor C;
 end;
 ```
 
-Now in this example we don't need to know anything about `my_table`
-other than that it has a column named `id`.  This example shows several things:
+Now in this example we don't need to know anything about `my_table` other than
+that it has a column named `id`.  This example shows several things:
 
  * we got the shape of the cursor from the table we were inserting into
- * you can do your own computation for some of the columns (those named) and leave the unnamed values to be defaulted
- * the rewrites mentioned above work for the `insert` statement as well as `fetch`
- * in fact `insert into my_table(id) values(i+10000) @dummy_seed(i)` would have worked too with no cursor at all
-   * bonus, dummy blob data does work in insert statements because SQLite can do the string conversion easily
-   * the dummy value for a blob is a blob that holds the text of the column name and the text of the seed just like a string column
+ * you can do your own computation for some of the columns (those named) and
+   leave the unnamed values to be defaulted
+ * the rewrites mentioned above work for the `insert` statement as well as
+   `fetch`
+ * in fact `insert into my_table(id) values(i+10000) @dummy_seed(i)` would have
+   worked too with no cursor at all
+   * bonus, dummy blob data does work in insert statements because SQLite can do
+     the string conversion easily
+   * the dummy value for a blob is a blob that holds the text of the column name
+     and the text of the seed just like a string column
 
-The `@dummy_seed` form can be modified with `@dummy_nullables`, this
-indicates that rather than using NULL for any nullable value that is
-missing, CQL should use the seed value.  This overrides the default
-behavior of using NULL where columns are needed.  Note the NULL filling
-works a little differently on insert statements.  Since SQLite will
-provide a NULL if one is legal the column doesn't have to be added to
-the list with a NULL value during rewriting, it can simply be omitted,
-making the statement smaller.
+The `@dummy_seed` form can be modified with `@dummy_nullables`, this indicates
+that rather than using NULL for any nullable value that is missing, CQL should
+use the seed value.  This overrides the default behavior of using NULL where
+columns are needed.  Note the NULL filling works a little differently on insert
+statements.  Since SQLite will provide a NULL if one is legal the column doesn't
+have to be added to the list with a NULL value during rewriting, it can simply
+be omitted, making the statement smaller.
 
-Finally for `insert` statement only, SQLite will normally use the default
-value of a column if it has one, so there is no need to add missing
-columns with default values to the insert statement.  However if you
-specify `@dummy_defaults` then columns with a default value will instead
-be rewritten and they will get `_seed_` as their value.
+Finally for `insert` statement only, SQLite will normally use the default value
+of a column if it has one, so there is no need to add missing columns with
+default values to the insert statement.  However if you specify
+`@dummy_defaults` then columns with a default value will instead be rewritten
+and they will get `_seed_` as their value.
 
-Some examples.  Suppose columns a, b, c are not null;  m, n are nullable; and x, y have defaults.
+Some examples.  Suppose columns `a`, `b`, `c` are not null;  `m`, `n` are nullable; and `x`,
+`y` have defaults.
 
 ```
 -- as written
 insert into my_table(a) values(7) @dummy_seed(1000)
+
 -- rewrites to
 insert into my_table(a, b, c) values(7, 1000, 1000);
 ```
@@ -1152,6 +1168,7 @@ insert into my_table(a, b, c) values(7, 1000, 1000);
 ```
 -- as written
 insert into my_table(a) values(7) @dummy_seed(1000) @dummy_nullables
+
 -- rewrites to
 insert into my_table(a, b, c, m, n) values(7, 1000, 1000, 1000, 1000);
 ```
@@ -1159,25 +1176,26 @@ insert into my_table(a, b, c, m, n) values(7, 1000, 1000, 1000, 1000);
 ```
 -- as written
 insert into my_table(a) values(7) @dummy_seed(1000) @dummy_nullables @dummy_defaults
+
 -- rewrites to
 insert into my_table(a, b, c, m, n, x, y) values(7, 1000, 1000, 1000, 1000, 1000, 1000);
 ```
 
-The sugar features on `fetch`, `insert`, and `update cursor` are as
-symmetric as possible, but again, dummy data is generally only interesting
-in test code. Dummy  data will continue to give you valid test rows even
-if columns are added or removed from the tables in question.
+The sugar features on `fetch`, `insert`, and `update cursor` are as symmetric as
+possible, but again, dummy data is generally only interesting in test code.
+Dummy data will continue to give you valid test rows even if columns are added
+or removed from the tables in question so it's a nice toil saver.
 
 ### Generalized Cursor Lifetimes aka Cursor "Boxing"
 
-Generalized Cursor Lifetime refers to capturing a Statement Cursor in an
-object so that it can used more flexibly.  Wrapping something in an object
-is often called "boxing".  Since Generalized Cursor Lifetime is a mouthful
-we'll refer to it as "boxing" from here forward. The symmetric operation
-"unboxing" refers to converting the boxed object back into a cursor.
+Generalized Cursor Lifetime refers to capturing a Statement Cursor in an object
+so that it can used more flexibly.  Wrapping something in an object is often
+called "boxing".  Since Generalized Cursor Lifetime is a mouthful we'll refer to
+it as "boxing" from here forward. The symmetric operation "unboxing" refers to
+converting the boxed object back into a cursor.
 
-The normal cursor usage pattern is by far the most common, a cursor is
-created directly with something like these forms:
+The normal cursor usage pattern is by far the most common, a cursor is created
+directly with something like these forms:
 
 ```sql
 declare C cursor for select * from shape_source;
@@ -1194,15 +1212,15 @@ begin
 end;
 ```
 
-Those are the usual patterns and they allow statement cursors to be
-consumed sort of "up" the call chain from where the cursor was created.
-But what if you want some worker procedures that consume a cursor? There
-is no way to pass your cursor down again with these normal patterns alone.
+Those are the usual patterns and they allow statement cursors to be consumed
+sort of "up" the call chain from where the cursor was created. But what if you
+want some worker procedures that consume a cursor? There is no way to pass your
+cursor down again with these normal patterns alone.
 
-To generalize the patterns, allowing, for instance, a cursor to be
-returned as an out parameter or accepted as an in parameter you first
-need to declare an object variable that can hold the cursor and has a
-type indicating the shape of the cursor.
+To generalize the patterns, allowing, for instance, a cursor to be returned as
+an out parameter or accepted as an in parameter you first need to declare an
+object variable that can hold the cursor and has a type indicating the shape of
+the cursor.
 
 To make an object that can hold a cursor:
 
@@ -1210,30 +1228,26 @@ To make an object that can hold a cursor:
 declare obj object<T cursor>;
 ```
 
-Where `T` is the name of a shape. It can be a table name, or a view
-name, or it can be the name of the canonical procedure that returns
-the result.  T should be some kind of global name, something that
-could be accessed with `#include` in various places.  Referring to the
-examples above, choices for `T` might be `shape_source` the table or
-`proc_that_returns_a_shape` the procedure.
+Where `T` is the name of a shape. It can be a table name, or a view name, or it
+can be the name of the canonical procedure that returns the result.  T should be
+some kind of global name, something that could be accessed with `#include` in
+various places.  Referring to the examples above, choices for `T` might be
+`shape_source` the table or `proc_that_returns_a_shape` the procedure.
 
->NOTE: it's always possible make a fake procedure that returns a result to sort of "typedef" a shape name.  e.g.
+>NOTE: A key purpose of the `interface` keyword is to create shapes. e.g.
 
 ```sql
-declare proc my_shape() (id integer not null, name text);
+interface my_shape (id integer not null, name text);
 ```
 
-The procedure here `my_shape` doesn’t have to actually ever be created,
-in fact it’s better if it isn't.  It won’t ever be called; its
-hypothetical result is just being as a shape.  This can be useful if
-you have several procedures like `proc_that_returns_a_shape` that all
-return results with the columns of `my_shape`.
+The declared interface `my_shape` can be used to help define columns, arguments,
+etc. Anywhere a shape goes.
 
-To create the boxed cursor, first declare the object variable that will
-hold it and then set object from the cursor.  Note that in the following
-example the cursor `C` must have the shape defined by `my_shape` or an
-error is produced.  The type of the object is crucial because, as we'll
-see, during unboxing that type defines the shape of the unboxed cursor.
+To create the boxed cursor, first declare the object variable that will hold it
+and then set the object from the cursor.  Note that in the following example the
+cursor `C` must have the shape defined by `my_shape` or an error is produced.
+The type of the object is crucial because, as we'll see, during unboxing that
+type defines the shape of the unboxed cursor.
 
 
 ```sql
@@ -1254,7 +1268,7 @@ cursor back. Like so:
 declare D cursor for box_obj;
 ```
 
-These primitives will allow cursors to be passed around with general purpose lifetime.
+These primitives allow cursors to be passed around with general purpose lifetime.
 
 Example:
 
@@ -1262,41 +1276,50 @@ Example:
 -- consumes a cursor
 create proc cursor_user(box_obj object<my_shape cursor>)
 begin
-   declare C cursor for box_obj;  -- the cursors shape will be my_shape matching box
-   loop fetch C
-   begin
-      -- do something with C
-   end;
+  -- the cursors shape will be my_shape, matching box_obj
+  cursor C for box_obj;
+  loop fetch C
+  begin
+    -- do something with C
+  end;
 end;
 
 -- captures a cursor and passes it on
 create proc cursor_boxer()
 begin
-   declare C cursor for select * from something_like_my_shape;
-   declare box_obj object<my_shape cursor>
-   set box from cursor C; -- produces error if shape doesn't match
-   call cursor_user(box_obj);
+  declare C cursor for select * from something_like_my_shape;
+  declare box_obj object<my_shape cursor>
+  set box from cursor C; -- produces error if shape doesn't match
+  call cursor_user(box_obj);
 end;
 ```
 
-Importantly, once you box a cursor the underlying SQLite statement’s
-lifetime is managed by the box object with normal retain/release
-semantics.  The box and underlying statement can be released simply by
-setting all references to it to null as usual.
+Importantly, once you box a cursor the underlying SQLite statement’s lifetime is
+managed by the box object with normal retain/release semantics.  The box and
+underlying statement can be released simply by setting all references to it to
+null as usual.
 
-With this pattern it's possible to, for instance, create a cursor,
-box it, consume some of the rows in one procedure, do some other stuff,
-and then consume the rest of the rows in another different procedure.
+With this pattern it's possible to, for instance, create a cursor, box it,
+consume some of the rows in one procedure, do some other stuff, and then consume
+the rest of the rows in another different procedure.
 
 Important Notes:
 
-* the underlying SQLite statement is shared by all references to it.  Unboxing does not reset the cursor's position.  It is possible, even desirable, to have different procedures advancing the same cursor
-* there is no operation for "peeking" at a cursor without advancing it; if your code requires that you inspect the row and then delegate it, you can do this simply by passing the cursor data as a value rather than the cursor statement.  Boxing and unboxing are for cases where you need to stream data out of the cursor in helper procedures
-* durably storing a boxed cursor (e.g. in a global) could lead to all manner of problems -- it SQLite terms is *exactly* like holding on to a `sqlite3_stmt *` for a long time with all the same problems, because that is exactly is happening
+* the underlying SQLite statement is shared by all references to it.  Unboxing
+  does not reset the cursor's position.  It is possible, even desirable, to have
+  different procedures advancing the same cursor
+* there is no operation for "peeking" at a cursor without advancing it; if your
+  code requires that you inspect the row and then delegate it, you can do this
+  simply by passing the cursor data as a value rather than the cursor statement.
+  Boxing and unboxing are for cases where you need to stream data out of the
+  cursor in helper procedures
+* durably storing a boxed cursor (e.g. in a global) could lead to all manner of
+  problems -- it SQLite terms is *exactly* like holding on to a `sqlite3_stmt *`
+  for a long time with all the same problems, because that is exactly is
+  happening
 
-Summarizing, the main reason for using the boxing patterns is to allow
-for standard helper procedures that can get a cursor from a variety
-of places and process it.  Boxing isn’t the usual pattern at all and
-returning cursors in a box, while possible, should be avoided in favor
-of the simpler patterns, if only because then then lifetime management
-is very simple in all those cases.
+Summarizing, the main reason for using the boxing patterns is to allow for
+standard helper procedures that can get a cursor from a variety of places and
+process it.  Boxing isn’t the usual pattern at all and returning cursors in a
+box, while possible, should be avoided in favor of the simpler patterns, if only
+because then then lifetime management is very simple in all those cases.

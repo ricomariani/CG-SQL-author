@@ -6030,24 +6030,24 @@ create table json_backing
 
 [[backed_by=json_backing]]
 create table jdata(
-  id  integer primary key,
+  id integer,
   name text,
   age int,
-  zip long
+  zip long,
+  primary key (name, id) -- reverse order to make it harder
 );
-
 
 -- TEST: backing storage with json: select
 -- + "WITH "
 -- +     "jdata (rowid, id, name, age, zip) AS (",
 -- + "SELECT "
 -- +     "rowid, "
+-- +     "((T.k)->>2), "
 -- +     "((T.k)->>1), "
--- +     "((T.v)->>'$.name'), "
 -- +     "((T.v)->>'$.age'), "
 -- +     "((T.v)->>'$.zip') "
 -- +   "FROM json_backing AS T "
--- +   "WHERE ((T.k)->>0) = 3763585718811526669",
+-- +   "WHERE ((T.k)->>0) = -1916485007726025434",
 -- + ") "
 -- +   "SELECT rowid, id, name, age, zip "
 -- +     "FROM jdata"
@@ -6062,7 +6062,7 @@ end;
 -- +     "VALUES(1, 'a name', 13, 98033) "
 -- +   ") "
 -- + "INSERT INTO json_backing(k, v) "
--- +   "SELECT json_array(V.id), json_object('name', V.name,  'age', V.age,  'zip', V.zip) "
+-- +   "SELECT json_array(V.name, V.id), json_object('age', V.age,  'zip', V.zip) "
 -- +     "FROM _vals AS V");
 proc jdata_dml_insert()
 begin
@@ -6074,21 +6074,21 @@ end;
 -- +     "jdata (rowid, id, name, age, zip) AS (",
 -- + "SELECT "
 -- +     "rowid, "
+-- +     "((T.k)->>2), "
 -- +     "((T.k)->>1), "
--- +     "((T.v)->>'$.name'), "
 -- +     "((T.v)->>'$.age'), "
 -- +     "((T.v)->>'$.zip') "
 -- +   "FROM json_backing AS T "
--- +   "WHERE ((T.k)->>0) = 3763585718811526669",
+-- +   "WHERE ((T.k)->>0) = -1916485007726025434",
 -- + ") "
 -- +   "UPDATE json_backing "
--- +     "SET k = json_set(k, '$.[1]',  21), v = json_set(v, '$.name',  'new name') "
+-- +     "SET k = json_set(k, '$.[2]',  21, '$.[1]',  'new name'), v = json_set(v, '$.age',  99) "
 -- +     "WHERE rowid IN (SELECT rowid "
 -- +       "FROM jdata "
 -- +       "WHERE id = 1)"
 proc jdata_dml_update()
 begin
-  update jdata set id = 21, name = 'new name' where id = 1;
+  update jdata set id = 21, name = 'new name', age = 99 where id = 1;
 end;
 
 -- TEST: backing storage with json: delete
@@ -6096,12 +6096,12 @@ end;
 -- +     "jdata (rowid, id, name, age, zip) AS (",
 -- + "SELECT "
 -- +         "rowid, "
+-- +         "((T.k)->>2), "
 -- +         "((T.k)->>1), "
--- +         "((T.v)->>'$.name'), "
 -- +         "((T.v)->>'$.age'), "
 -- +         "((T.v)->>'$.zip') "
 -- +       "FROM json_backing AS T "
--- +       "WHERE ((T.k)->>0) = 3763585718811526669",
+-- +       "WHERE ((T.k)->>0) = -1916485007726025434",
 -- + ") "
 -- +   "DELETE FROM json_backing WHERE rowid IN (SELECT rowid "
 -- +     "FROM jdata "

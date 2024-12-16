@@ -17951,12 +17951,12 @@ CQL_WARN_UNUSED cql_code jdata_dml_select(sqlite3 *_Nonnull _db_) {
       "jdata (rowid, id, name, age, zip) AS (",
   "SELECT "
           "rowid, "
+          "((T.k)->>2), "
           "((T.k)->>1), "
-          "((T.v)->>'$.name'), "
           "((T.v)->>'$.age'), "
           "((T.v)->>'$.zip') "
         "FROM json_backing AS T "
-        "WHERE ((T.k)->>0) = 3763585718811526669",
+        "WHERE ((T.k)->>0) = -1916485007726025434",
   ") "
     "SELECT rowid, id, name, age, zip "
       "FROM jdata"
@@ -17981,7 +17981,7 @@ BEGIN
       VALUES(1, "a name", 13, 98033)
     )
   INSERT INTO json_backing(k, v)
-    SELECT cql_blob_create(jdata, V.id, jdata.id), cql_blob_create(jdata, V.name, jdata.name, V.age, jdata.age, V.zip, jdata.zip)
+    SELECT cql_blob_create(jdata, V.name, jdata.name, V.id, jdata.id), cql_blob_create(jdata, V.age, jdata.age, V.zip, jdata.zip)
       FROM _vals AS V;
 END;
 */
@@ -18001,7 +18001,7 @@ CQL_WARN_UNUSED cql_code jdata_dml_insert(sqlite3 *_Nonnull _db_) {
         "VALUES(1, 'a name', 13, 98033) "
       ") "
     "INSERT INTO json_backing(k, v) "
-      "SELECT json_array(V.id), json_object('name', V.name,  'age', V.age,  'zip', V.zip) "
+      "SELECT json_array(V.name, V.id), json_object('age', V.age,  'zip', V.zip) "
         "FROM _vals AS V");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
@@ -18020,7 +18020,7 @@ BEGIN
   WITH
     jdata (rowid, id, name, age, zip) AS (CALL _jdata())
   UPDATE json_backing
-    SET k = cql_blob_update(k, 21, jdata.id), v = cql_blob_update(v, 'new name', jdata.name)
+    SET k = cql_blob_update(k, 21, jdata.id, 'new name', jdata.name), v = cql_blob_update(v, 99, jdata.age)
     WHERE rowid IN (SELECT rowid
       FROM jdata
       WHERE id = 1);
@@ -18042,15 +18042,15 @@ CQL_WARN_UNUSED cql_code jdata_dml_update(sqlite3 *_Nonnull _db_) {
       "jdata (rowid, id, name, age, zip) AS (",
   "SELECT "
           "rowid, "
+          "((T.k)->>2), "
           "((T.k)->>1), "
-          "((T.v)->>'$.name'), "
           "((T.v)->>'$.age'), "
           "((T.v)->>'$.zip') "
         "FROM json_backing AS T "
-        "WHERE ((T.k)->>0) = 3763585718811526669",
+        "WHERE ((T.k)->>0) = -1916485007726025434",
   ") "
     "UPDATE json_backing "
-      "SET k = json_set(k, '$.[1]',  21), v = json_set(v, '$.name',  'new name') "
+      "SET k = json_set(k, '$.[2]',  21, '$.[1]',  'new name'), v = json_set(v, '$.age',  99) "
       "WHERE rowid IN (SELECT rowid "
         "FROM jdata "
         "WHERE id = 1)"
@@ -18092,12 +18092,12 @@ CQL_WARN_UNUSED cql_code a_dml_delete(sqlite3 *_Nonnull _db_) {
       "jdata (rowid, id, name, age, zip) AS (",
   "SELECT "
           "rowid, "
+          "((T.k)->>2), "
           "((T.k)->>1), "
-          "((T.v)->>'$.name'), "
           "((T.v)->>'$.age'), "
           "((T.v)->>'$.zip') "
         "FROM json_backing AS T "
-        "WHERE ((T.k)->>0) = 3763585718811526669",
+        "WHERE ((T.k)->>0) = -1916485007726025434",
   ") "
     "DELETE FROM json_backing WHERE rowid IN (SELECT rowid "
       "FROM jdata "

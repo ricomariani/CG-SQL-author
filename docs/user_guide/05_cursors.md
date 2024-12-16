@@ -265,7 +265,7 @@ end;
 
 This is already verbose, but you can imagine the situation gets very annoying if
 `get_a_row` has to produce a couple dozen column values.  And of course you have
-to get the types exactly right. And they might evolve over time.  Joy.
+to get the types exactly right. And they might evolve over time. Joy.
 
 On the receiving side you get to do something just as annoying:
 
@@ -396,30 +396,33 @@ end;
 
 Just like `foo`, in `bar`, each time `OUT UNION` runs a new row is accumulated.
 
-Now, if you build a procedure that ends with a `SELECT` statement CQL automatically
-creates a fetcher function that does something like an `OUT UNION` loop -- it loops
-over the SQLite statement for the `SELECT` and fetches each row, materializing a result.
+Now, if you build a procedure that ends with a `SELECT` statement CQL
+automatically creates a fetcher function that does something like an `OUT UNION`
+loop -- it loops over the SQLite statement for the `SELECT` and fetches each
+row, materializing a result.
 
-With `OUT UNION` you take manual control of this process, allowing you to build arbitrary
-result sets.  Note that either of `C` or `D` above could have been modified, replaced,
-skipped, normalized, etc. with any kind of computation.  Even entirely synthetic rows can
-be computed and inserted into the output as we saw in `foo`.
+With `OUT UNION` you take manual control of this process, allowing you to build
+arbitrary result sets.  Note that either of `C` or `D` above could have been
+modified, replaced, skipped, normalized, etc. with any kind of computation.
+Even entirely synthetic rows can be computed and inserted into the output as we
+saw in `foo`.
 
 ### Result Set Cursors
 
-Now that we have `OUT UNION` it makes sense to talk about the final type of cursor.
+Now that we have `OUT UNION` it makes sense to talk about the final type of
+cursor.
 
-`OUT UNION` makes it possible to create arbitrary result sets using a mix of sources
-and filtering.  Unfortunately this result type is not a simple row, nor is it a SQLite
-statement.  This meant that neither of the existing types of cursors could hold the
-result of a procedure that used `OUT UNION`. -- CQL could not itself consume its own
-results.
+`OUT UNION` makes it possible to create arbitrary result sets using a mix of
+sources and filtering.  Unfortunately this result type is not a simple row, nor
+is it a SQLite statement.  This meant that neither of the existing types of
+cursors could hold the result of a procedure that used `OUT UNION`. -- CQL could
+not itself consume its own results.
 
-To address this hole, we need an additional cursor type.  The syntax is exactly the same
-as the statement cursor cases described above but, instead of holding a SQLite statement,
-the cursor holds a result set pointer and the current and maximum row numbers.
-Stepping through the cursor simply increments the row number and fetches the next row
-out of the rowset instead of from SQLite.
+To address this hole, we need an additional cursor type.  The syntax is exactly
+the same as the statement cursor cases described above but, instead of holding a
+SQLite statement, the cursor holds a result set pointer and the current and
+maximum row numbers. Stepping through the cursor simply increments the row
+number and fetches the next row out of the rowset instead of from SQLite.
 
 Example:
 ```sql
@@ -434,31 +437,34 @@ begin
 end;
 ```
 
-If `bar` had been created with a `SELECT`, `UNION ALL`, and `ORDER BY` to merge the
-results, the above would have worked with `C` being a standard statement cursor,
-iterating over the union. Since `foo` produces a result set, CQL transparently produces
-a suitable cursor implementation behind the scenes, but otherwise the usage is the same.
+If `bar` had been created with a `SELECT`, `UNION ALL`, and `ORDER BY` to merge
+the results, the above would have worked with `C` being a standard statement
+cursor, iterating over the union. Since `foo` produces a result set, CQL
+transparently produces a suitable cursor implementation behind the scenes, but
+otherwise the usage is the same.
 
-Note this is a lousy way to simply iterate over rows; you have to materialize the entire
-result set so that you can just step over it.  Re-consuming like this is not recommended
-at all for production code, but it is ideal for testing result sets that were made with
-`OUT UNION` which otherwise would require C/C++ to test.  Testing CQL with CQL is
-generally a lot easier.
+Note this is a lousy way to simply iterate over rows; you have to materialize
+the entire result set so that you can just step over it.  Re-consuming like this
+is not recommended at all for production code, but it is ideal for testing
+result sets that were made with `OUT UNION` which otherwise would require C/C++
+to test.  Testing CQL with CQL is generally a lot easier.
 
 ### Reshaping Data, Cursor `LIKE` forms
 
-There are lots of cases where you have big rows with many columns, and there are various manipulations
-you might need to do.
+There are lots of cases where you have big rows with many columns, and there are
+various manipulations you might need to do.
 
-What follows is a set of useful syntactic sugar constructs that simplify handling
-complex rows.  The idea is that pretty much anywhere you can specify a list of columns
-you can instead use the `LIKE x` construct to get the columns as they appear in the
-shape `x` -- which is usually a table or a cursor.
+What follows is a set of useful syntactic sugar constructs that simplify
+handling complex rows.  The idea is that pretty much anywhere you can specify a
+list of columns you can instead use the `LIKE x` construct to get the columns as
+they appear in the shape `x` -- which is usually a table or a cursor.
 
-It’s a lot easier to illustrate with examples, even though these are, again, a bit contrived.
+It’s a lot easier to illustrate with examples, even though these are, again, a
+bit contrived.
 
-First we need some table with lots of columns -- usually the column names are much bigger which makes
-it all the more important to not have to type them over and over, but in the interest of some brevity,
+First we need some table with lots of columns -- usually the column names are
+much bigger which makes it all the more important to not have to type them over
+and over, but in the interest of some brevity,
 here is a big table:
 
 ```sql
@@ -520,21 +526,21 @@ and
 
 `update cursor result(like alt_row) from cursor alt_row;`
 
-In the first case what we're saying is that we want to load the columns
-of `result` from `main_row` but we only want to take the columns that are
-actually present in `result`.  So this is a narrowing of a wide row into a
-smaller row.  In this case, the smaller row, `result`, is what we want to emit.
-We needed the other columns to compute `alt_row`.
+In the first case what we're saying is that we want to load the columns of
+`result` from `main_row` but we only want to take the columns that are actually
+present in `result`.  So this is a narrowing of a wide row into a smaller row.
+In this case, the smaller row, `result`, is what we want to emit. We needed the
+other columns to compute `alt_row`.
 
 The second case, what we're saying is that we want to update `result` by
-replacing the columns found in `alt_row` with the values in `alt_row`.
-So in this case we're writing a smaller cursor into part of a wider cursor.
-Note that we used the `update cursor` form here because it preserves all other
-columns.  If we used `fetch` we would be rewriting the entire row contents,
-using `NULL` if necessary, and that is not desired here.
+replacing the columns found in `alt_row` with the values in `alt_row`. So in
+this case we're writing a smaller cursor into part of a wider cursor. Note that
+we used the `update cursor` form here because it preserves all other columns.
+If we used `fetch` we would be rewriting the entire row contents, using `NULL`
+if necessary, and that is not desired here.
 
-Here is the rewritten version of the above procedure; this is what ultimately gets
-compiled into C.
+Here is the rewritten version of the above procedure; this is what ultimately
+gets compiled into C.
 
 ```sql
 CREATE PROC foo (id_ INTEGER NOT NULL)
@@ -555,11 +561,12 @@ BEGIN
 END;
 ```
 
-Of course you could have typed the above directly but if there are 50 odd columns it
-gets old fast and is very error prone.  The sugar form is going to be 100% correct
-and will require much less typing and maintenance.
+Of course you could have typed the above directly but if there are 50 odd
+columns it gets old fast and is very error prone.  The sugar form is going to be
+100% correct and will require much less typing and maintenance.
 
-Finally, while I've shown both `LIKE` forms separately, they can also be used together.  For instance:
+Finally, while I've shown both `LIKE` forms separately, they can also be used
+together.  For instance:
 
 ```sql
   update cursor C(like X) from cursor D(like X);
@@ -570,9 +577,10 @@ The above would mean, "move the columns that are found in `X` from cursor
 
 ### Fetch Statement Specifics
 
-Many of the examples used the `FETCH` statement in a sort of demonstrative way that is
-hopefully self-evident but the statement has many forms and so it's worth going over
-them specifically.  Below we'll use the letters `C` and `D` for the names of cursors.  Usually `C`;
+Many of the examples used the `FETCH` statement in a sort of demonstrative way
+that is hopefully self-evident but the statement has many forms and so it's
+worth going over them specifically.  Below we'll use the letters `C` and `D` for
+the names of cursors.  Usually `C`;
 
 #### Fetch with Statement or Result Set Cursors
 
@@ -581,8 +589,8 @@ A cursor declared in one of these forms:
 * `declare C cursor for select * from foo;`
 * `declare C cursor for call foo();`  (foo might end with a `select` or use `out union`)
 
-is either a statement cursor or a result set cursor.  In either case the cursor moves
-through the results.  You load the next row with:
+is either a statement cursor or a result set cursor.  In either case the cursor
+moves through the results.  You load the next row with:
 
 * `FETCH C`, or
 * `FETCH C into x, y, z;`
@@ -591,7 +599,8 @@ In the first form `C` is said to be *automatic* in that it automatically
 declares the storage needed to hold all its columns.  As mentioned above,
 automatic cursors have storage for their row.
 
-Having done this fetch you can use C as a scalar variable to see if it holds a row, e.g.
+Having done this fetch you can use C as a scalar variable to see if it holds a
+row, e.g.
 
 ```sql
 declare C cursor for select * from foo limit 1;
@@ -613,9 +622,10 @@ begin
 end;
 ```
 
-Automatic cursors are so much easier to use than explicit storage that explicit storage
-is rarely seen.  Storing to `out` parameters is one case where explicit storage actually
-is the right choice, as the `out` parameters have to be declared anyway.
+Automatic cursors are so much easier to use than explicit storage that explicit
+storage is rarely seen.  Storing to `out` parameters is one case where explicit
+storage actually is the right choice, as the `out` parameters have to be
+declared anyway.
 
 #### Fetch with Value Cursors
 
@@ -625,12 +635,14 @@ is the right choice, as the `out` parameters have to be declared anyway.
    * `foo` must be a procedure that returns one row with `OUT`
  * `declare C cursor like select 1 id, "x" name;`
  * `declare C cursor like X;`
-   * where X is the name of a table, a view, another cursor, or a procedure that returns a structured result
+   * where X is the name of a table, a view, another cursor, or a procedure that
+     returns a structured result
 
- A value cursor is *always* automatic; it's purpose is to hold a row.
- It doesn't iterate over anything but it can be re-loaded in a loop.
+ A value cursor is *always* automatic; it's purpose is to hold a row. It doesn't
+ iterate over anything but it can be re-loaded in a loop.
 
- * `fetch C` or `fetch C into ...` is not valid on such a cursor, because it doesn't have a source to step through.
+ * `fetch C` or `fetch C into ...` is not valid on such a cursor, because it
+   doesn't have a source to step through.
 
  The canonical way to load such a cursor is:
 
@@ -638,64 +650,82 @@ is the right choice, as the `out` parameters have to be declared anyway.
    * `foo` must be a procedure that returns one row with `OUT`
  * `fetch C(a,b,c...) from values(x, y, z);`
 
-The first form is in some sense the origin of the value cursor.
-Value cursors were added to the language initially to provide a way to
-capture the single row `OUT` statement results, much like result set
-cursors were added to capture procedure results from `OUT UNION`.  In the
-first form, the cursor storage (a C struct) is provided by reference as
-a hidden out parameter to the procedure and the procedure fills it in.
-The procedure may or may not use the `OUT` statement in its control
-flow, as the cursor might not hold a row.  You can use `if C then ...`
-as before to test for a row.
+The first form is in some sense the origin of the value cursor. Value cursors
+were added to the language initially to provide a way to capture the single row
+`OUT` statement results, much like result set cursors were added to capture
+procedure results from `OUT UNION`.  In the first form, the cursor storage (a C
+struct) is provided by reference as a hidden out parameter to the procedure and
+the procedure fills it in. The procedure may or may not use the `OUT` statement
+in its control flow, as the cursor might not hold a row.  You can use `if C then
+...` as before to test for a row.
 
-The second form is more interesting as it allows the cursor to be loaded
-from arbitrary expressions subject to some rules:
+The second form is more interesting as it allows the cursor to be loaded from
+arbitrary expressions subject to some rules:
 
-* you should think of the cursor as a logical row: it's either fully loaded or it's not, therefore you must specify enough columns in the column list to ensure that all `NOT NULL` columns will get a value
+* you should think of the cursor as a logical row: it's either fully loaded or
+  it's not, therefore you must specify enough columns in the column list to
+  ensure that all `NOT NULL` columns will get a value
 * if not mentioned in the list, NULL will be loaded where possible
 * if insufficient columns are named, an error is generated
-* if the value types specified are not compatible with the column types mentioned, an error is generated
-* later in this chapter, we'll show that columns can also be filled with dummy data using a seed value
+* if the value types specified are not compatible with the column types
+  mentioned, an error is generated
+* later in this chapter, we'll show that columns can also be filled with dummy
+  data using a seed value
 
-With this form, any possible valid cursor values could be set, but many forms of updates
-that are common would be awkward. So there are various forms of syntactic sugar that are
-automatically rewritten into the canonical form.  See the examples below:
+With this form, any possible valid cursor values could be set, but many forms of
+updates that are common would be awkward. So there are various forms of
+syntactic sugar that are automatically rewritten into the canonical form.  See
+the examples below:
 
 * `fetch C from values(x, y, z)`
-  * if no columns are specified this is the same as naming all the columns, in declared order
+  * if no columns are specified this is the same as naming all the columns, in
+    declared order
 
 * `fetch C from arguments`
-  * the arguments to the procedure in which this statement appears are used as the values, in order
+  * the arguments to the procedure in which this statement appears are used as
+    the values, in order
   * in this case `C` was also rewritten into `C(a,b,c,..)` etc.
 
 * `fetch C from arguments like C`
-  * the arguments to the procedure in which this statement appears are used, by name, as the values, using the names of of the indicated shape
-  * the order in which the arguments appeared no longer matters, the names that match the columns of C are used if present
-  * the formal parameter name may have a single trailing underscore (this is what `like C` would generate)
-  * e.g. if `C` has columns `a` and `b` then there must exist formals named `a` or `a_` and `b` or `b_`, in any position
+  * the arguments to the procedure in which this statement appears are used, by
+    name, as the values, using the names of of the indicated shape
+  * the order in which the arguments appeared no longer matters, the names that
+    match the columns of C are used if present
+  * the formal parameter name may have a single trailing underscore (this is
+    what `like C` would generate)
+  * e.g. if `C` has columns `a` and `b` then there must exist formals named `a`
+    or `a_` and `b` or `b_`, in any position
 
 * `fetch C(a,b) from cursor D(a,b)`
   * the named columns of D are used as the values
   * in this case the statement becomes: `fetch C(a,b) from values(D.a, D.b);`
 
-That most recent form doesn't seem like it saves much, but recall the first rewrite:
+That most recent form doesn't seem like it saves much, but recall the first
+rewrite:
 
 * `fetch C from cursor D`
-  * both cursors are expanded into all their columns, creating a copy from one to the other
-  * `fetch C from D` can be used if the cursors have the exact same column names and types; it also generates slightly better code and is a common case
+  * both cursors are expanded into all their columns, creating a copy from one
+    to the other
+  * `fetch C from D` can be used if the cursors have the exact same column names
+    and types; it also generates slightly better code and is a common case
 
- It is very normal to want to use only some of the columns of a cursor;
- these `LIKE` forms do that job.  We saw some of these forms in an earlier example.
+ It is very normal to want to use only some of the columns of a cursor; these
+ `LIKE` forms do that job.  We saw some of these forms in an earlier example.
 
  * `fetch C from cursor D(like C)`
-   * here `D` is presumed to be "bigger" than `C`, in that it has all of the `C` columns and maybe more.  The `like C` expands into the names of the `C` columns so `C` is loaded from the `C` part of `D`
+   * here `D` is presumed to be "bigger" than `C`, in that it has all of the `C`
+     columns and maybe more.  The `like C` expands into the names of the `C`
+     columns so `C` is loaded from the `C` part of `D`
    * the expansion might be `fetch C(a, b, g) from values (D.a, D.b, D.g)`
-   * `D` might have had fields `c, d, e, f` which were not used because they are not in `C`.
+   * `D` might have had fields `c, d, e, f` which were not used because they are
+     not in `C`.
 
- The symmetric operation, loading some of the columns of a wider cursor can be expressed neatly:
+ The symmetric operation, loading some of the columns of a wider cursor can be
+ expressed neatly:
 
  * `fetch C(like D) from cursor D`
-   * the `like D` expands into the columns of `D` causing the cursor to be loaded with what's in `D` and `NULL` (if needed)
+   * the `like D` expands into the columns of `D` causing the cursor to be
+     loaded with what's in `D` and `NULL` (if needed)
    * when expanded, this might look like `fetch C(x, y) from values(D.x, D.y)`
 
 `LIKE` can be used in both places, for instance suppose `E` is a shape
@@ -706,23 +736,24 @@ like this:
   * this means take the column names found in `E` and copy them from D to C.
   * the usual type checking is done
 
- As is mentioned above, the `fetch` form means "load an entire row into the cursor". This
- is important because "half loaded" cursors would be semantically problematic.  However
- there are many cases where you might like to amend the values of an already loaded
- cursor.  You can do this with the `update` form.
+ As is mentioned above, the `fetch` form means "load an entire row into the
+ cursor". This is important because "half loaded" cursors would be semantically
+ problematic.  However there are many cases where you might like to amend the
+ values of an already loaded cursor.  You can do this with the `update` form.
 
  * `update cursor C(a,b,..) from values(1,2,..);`
    * the update form is a no-op if the cursor is not already loaded with values (!!)
    * the columns and values are type checked so a valid row is ensured (or no row)
-   * all the re-writes above are legal so `update cursor C(like D) from D` is possible; it is in fact the use-case for which this was designed.
+   * all the re-writes above are legal so `update cursor C(like D) from D` is
+     possible; it is in fact the use-case for which this was designed.
 
 ### Calling Procedures with Argument Bundles
 
-It's often desirable to treat bundles of arguments as a unit, or cursors
-as a unit, especially when calling other procedures.  The shape patterns
-above are very helpful for moving data between cursors, and the database.
-These can be rounded out with similar constructs for procedure definitions
-and procedure calls as follows.
+It's often desirable to treat bundles of arguments as a unit, or cursors as a
+unit, especially when calling other procedures.  The shape patterns above are
+very helpful for moving data between cursors, and the database. These can be
+rounded out with similar constructs for procedure definitions and procedure
+calls as follows.
 
 First we'll define some shapes to use in the examples.  Note that we made `U` using `T`.
 
@@ -731,13 +762,14 @@ create table T(x integer not null, y integer not null,  z integer not null);
 create table U(like T, a integer not null, b integer not null);
 ```
 
-We haven't mentioned this before but the implication of the above is that you can
-use the `LIKE` construct inside a table definition to add columns from a shape.
+We haven't mentioned this before but the implication of the above is that you
+can use the `LIKE` construct inside a table definition to add columns from a
+shape.
 
-We can also use the `LIKE` construct to create procedure arguments.  To avoid conflicts
-with column names, when used this way the procedure arguments all get a trailing
-underscore appended to them.  The arguments will be `x_`, `y_`, and `z_` as we can
-see if the following:
+We can also use the `LIKE` construct to create procedure arguments.  To avoid
+conflicts with column names, when used this way the procedure arguments all get
+a trailing underscore appended to them.  The arguments will be `x_`, `y_`, and
+`z_` as we can see if the following:
 
 ```sql
 create proc p1(like T)
@@ -746,8 +778,9 @@ begin
 end;
 ```
 
-Shapes can also be used in a procedure call, as showed below. This next example is
-obviously contrived, but of course it generalizes. It is exactly equivalent to the above.
+Shapes can also be used in a procedure call, as showed below. This next example
+is obviously contrived, but of course it generalizes. It is exactly equivalent
+to the above.
 
 ```sql
 create proc p2(like T)
@@ -756,8 +789,8 @@ begin
 end;
 ```
 
-Now we might want to chain these things together.  This next example uses a cursor to
-call `p1`.
+Now we might want to chain these things together.  This next example uses a
+cursor to call `p1`.
 
 ```sql
 create proc q1()
@@ -771,10 +804,10 @@ begin
 end;
 ```
 
-The `LIKE` construct allows you to select some of the arguments, or
-some of a cursor to use as arguments.  This next procedure has more arguments
-than just `T`. The arguments will be `x_`, `y_`, `z_`, `a_`, `b_`.  But the
-call will still have the `T` arguments `x_`, `y_`, and `z_`.
+The `LIKE` construct allows you to select some of the arguments, or some of a
+cursor to use as arguments.  This next procedure has more arguments than just
+`T`. The arguments will be `x_`, `y_`, `z_`, `a_`, `b_`.  But the call will
+still have the `T` arguments `x_`, `y_`, and `z_`.
 
 ```sql
 create proc q2(like U)
@@ -798,15 +831,16 @@ begin
 end;
 ```
 
-Note that the `from` argument forms do not have to be all the arguments.  For instance
-you can get columns from two cursors like so:
+Note that the `from` argument forms do not have to be all the arguments.  For
+instance you can get columns from two cursors like so:
 
 ```sql
   call something(from C, from D)
 ```
 
-All the varieties can be combined but of course the procedure signature must match.  And
-all these forms work in function expressions as well as procedure calls.
+All the varieties can be combined but of course the procedure signature must
+match.  And all these forms work in function expressions as well as procedure
+calls.
 
 e.g.
 
@@ -814,19 +848,20 @@ e.g.
   set x := a_function(from C);
 ```
 
-Since these forms are simply syntatic sugar, they can also appear inside of function calls
-that are in SQL statements. The variables mentioned will be expanded and become bound
-variables just like any other variable that appears in a SQL statement.
+Since these forms are simply syntatic sugar, they can also appear inside of
+function calls that are in SQL statements. The variables mentioned will be
+expanded and become bound variables just like any other variable that appears in
+a SQL statement.
 
-Note the form `x IN (from arguments)` is not supported at this time, though this would be
-a relatively easy addition.
+Note the form `x IN (from arguments)` is not supported at this time, though this
+would be a relatively easy addition.
 
 ### Using Named Argument Bundles
 
-There are many cases where stored procedures require complex arguments using data shapes
-that come from the schema, or from other procedures.  As we have seen the `LIKE` construct
-for arguments can help with this, but it has some limitations. Let's consider a specific
-example to study:
+There are many cases where stored procedures require complex arguments using
+data shapes that come from the schema, or from other procedures.  As we have
+seen the `LIKE` construct for arguments can help with this, but it has some
+limitations. Let's consider a specific example to study:
 
 ```sql
 create table Person (
@@ -863,13 +898,13 @@ end;
 It's clear that the sugared version is a lot easier to reason about than the
 fully expanded version, and much less prone to errors as well.
 
-This much is already helpful, but just those forms aren't general enough to handle
-the usual mix of situations.  For instance, what if we need a procedure that works
-with two people? A hypothetical `insert_two_people` procedure cannot be written with
-the forms we have so far.
+This much is already helpful, but just those forms aren't general enough to
+handle the usual mix of situations.  For instance, what if we need a procedure
+that works with two people? A hypothetical `insert_two_people` procedure cannot
+be written with the forms we have so far.
 
-To generalize this the language adds the notion of named argument bundles. The idea here
-is to name the bundles which provides a useful scoping.  Example:
+To generalize this the language adds the notion of named argument bundles. The
+idea here is to name the bundles which provides a useful scoping.  Example:
 
 ```sql
 create proc insert_two_people(p1 like Person, p2 like Person)
@@ -911,12 +946,12 @@ begin
 end;
 ```
 
-Or course different named bundles can have different types -- you can create and name
-shapes of your choice.  The language allows you to use an argument bundle name in all
-the places that a cursor was previously a valid source.  That includes `insert`,
-`fetch`, `update cursor`, and procedure calls.  You can refer to the arguments by
-their expanded name such as `p1_address` or alternatively `p1.address` -- they mean
-the same thing.
+Or course different named bundles can have different types -- you can create and
+name shapes of your choice.  The language allows you to use an argument bundle
+name in all the places that a cursor was previously a valid source.  That
+includes `insert`, `fetch`, `update cursor`, and procedure calls.  You can refer
+to the arguments by their expanded name such as `p1_address` or alternatively
+`p1.address` -- they mean the same thing.
 
 Here's another example showing a silly but illustrative thing you could do:
 
@@ -941,9 +976,9 @@ end;
 ```
 
 The above shows that you can use a bundle as the source of a shape, and you can
-use a bundle as a source of data to load a cursor.  After which you can do all the
-usual value cursor things.  Of course in this case the value cursor was redundant,
-we could just as easily have done something like this:
+use a bundle as a source of data to load a cursor.  After which you can do all
+the usual value cursor things.  Of course in this case the value cursor was
+redundant, we could just as easily have done something like this:
 
 ```sql
   set P_id := printf("id_%d", i);
@@ -957,13 +992,14 @@ we could just as easily have done something like this:
 
 ### The @COLUMNS construct in the SELECT statement
 
-The select list of a `SELECT` statement already has complex syntax and functionality,
-but it is a very interesting place to use shapes.  To make it possible to use
-shape notations and not confuse that notation with standard SQL the `@COLUMNS` construct was
-added to the language.  This allows for a sugared syntax for extracting columns in bulk.
+The select list of a `SELECT` statement already has complex syntax and
+functionality, but it is a very interesting place to use shapes.  To make it
+possible to use shape notations and not confuse that notation with standard SQL
+the `@COLUMNS` construct was added to the language.  This allows for a sugared
+syntax for extracting columns in bulk.
 
-The `@COLUMNS` clause is like of a generalization of the `select T.*`
-with shape slicing and type-checking.  The forms are discussed below:
+The `@COLUMNS` clause is like of a generalization of the `select T.*` with shape
+slicing and type-checking.  The forms are discussed below:
 
 
 #### Columns from a join table or tables
@@ -992,8 +1028,8 @@ select @columns(A like Foo, B like Bar) from ...;
 
 #### Columns from any that match a shape, from anywhere in the FROM
 
-Here we do not specify a particular table that contains the columns,
-the could come from any of the tables in the FROM clause.
+Here we do not specify a particular table that contains the columns, they could
+come from any of the tables in the FROM clause.
 
 ```
 --- get the Foo shape from anywhere in the join
@@ -1011,7 +1047,7 @@ This pattern can be helpful for getting part of a shape.
 select @columns(like Foo(a,b))
 ```
 
-This pattern is great for getting almost all of a shape (e.g. everything but the pk).
+This pattern is great for getting almost all of a shape (e.g. all but the pk).
 
 ```
 -- get the Foo shape except the a and b columns
@@ -1032,9 +1068,9 @@ select @columns(T1.x, T2.y, like Foo) from ...;
 
 Its often the case that there are duplicate column names in the `FROM` clause.
 For instance, you could join `A` to `B` with both having a column `pk`. The
-final result set can only have one column named `pk`, the distinct clause
-helps you to get distinct column names.  In this context `distinct` is about
-column names, not values.
+final result set can only have one column named `pk`, the distinct clause helps
+you to get distinct column names.  In this context `distinct` is about column
+names, not values.
 
 ```
 -- removes duplicate column names
@@ -1054,8 +1090,8 @@ select @columns(distinct T.x, F like Foo, B like Bar) from F, B ..;
 ```
 
 Of course this is all just sugar, so it all compiles to a column list with table
-qualifications -- but the syntax is very powerful.  You can easily narrow a
-wide table, or fuse joins that share common keys without creating conflicts.
+qualifications -- but the syntax is very powerful.  You can easily narrow a wide
+table, or fuse joins that share common keys without creating conflicts.
 
 ```
 -- just the Foo columns
@@ -1066,11 +1102,11 @@ select @columns(distinct A,B,C) from
   A join B using (pk) join C using (pk);
 ```
 
-And of course you can define shapes however you like and then use them
-to slice off column chucks of your choice.  There are many ways to build
-up shapes from other shapes.  For instance, you can declare procedures
-that return the shape you want and never actually create the procedure --
-a pattern is very much like a shape "typedef".  E.g.
+And of course you can define shapes however you like and then use them to slice
+off column chucks of your choice.  There are many ways to build up shapes from
+other shapes.  For instance, you can declare procedures that return the shape
+you want and never actually create the procedure -- a pattern is very much like
+a shape "typedef".  E.g.
 
 ```
 declare proc shape1() (x integer, y real, z text);
@@ -1082,23 +1118,23 @@ out of complex queries without having to type the columns names over and over.
 
 ### Missing Data Columns, Nulls and Dummy Data
 
-What follows are the rules for columns that are missing in an `INSERT`,
-or `FETCH` statement. As with many of the other things discussed here,
-the forms result in automatic rewriting of the code to include the
-specified dummy data.  So SQLite will never see these forms.
+What follows are the rules for columns that are missing in an `INSERT`, or
+`FETCH` statement. As with many of the other things discussed here, the forms
+result in automatic rewriting of the code to include the specified dummy data.
+So SQLite will never see these forms.
 
-Two things to note: First, the dummy data options described below are
-really only interesting in test code, it's hard to imagine them being
-useful in production code.  Second, none of what follows applies to the
-`update cursor` statement because its purpose is to do partial updates
-on exactly the specified columns and we're about to talk about what
-happens with the columns that were not specified.
+Two things to note: First, the dummy data options described below are really
+only interesting in test code, it's hard to imagine them being useful in
+production code.  Second, none of what follows applies to the `update cursor`
+statement because its purpose is to do partial updates on exactly the specified
+columns and we're about to talk about what happens with the columns that were
+not specified.
 
-When fetching a row all the columns must come from somewhere; if the
-column is mentioned or mentioned by rewrite then it must have a value
-mentioned, or a value mentioned by rewrite. For columns that are not
-mentioned, a NULL value is used if it is legal to do so.  For example,
-`fetch C(a) from values(1)` might turn into `fetch C(a,b,c,d) from values (1, NULL, NULL, NULL)`
+When fetching a row all the columns must come from somewhere; if the column is
+mentioned or mentioned by rewrite then it must have a value mentioned, or a
+value mentioned by rewrite. For columns that are not mentioned, a NULL value is
+used if it is legal to do so.  For example, `fetch C(a) from values(1)` might
+turn into `fetch C(a,b,c,d) from values (1, NULL, NULL, NULL)`
 
 In addition to the automatic NULL you may add the annotation
 `@dummy_seed([long integer expression])`. If this annotation is present
@@ -1107,7 +1143,8 @@ then:
 * the expression is evaluated and stored in the hidden variable _seed_
 * all integers, and long integers get _seed_ as their value (possibly truncated)
 * booleans get 1 if and only if _seed_ is non-zero
-* strings get the name of the string column an underscore and the value as text (e.g.   "myText_7" if _seed_ is 7)
+* strings get the name of the string column an underscore and the value as text
+  (e.g. "myText_7" if _seed_ is 7)
 * blobs get the name of the blob column and the value as text (e.g. "myBlob7")
 
 This construct is hugely powerful in a loop to create many complete rows with

@@ -44,14 +44,6 @@ AS                                    { put_quoted("AS"); }
 ASC                                   { put_quoted("ASC"); }
 AT_ATTRIBUTE                          { put_quoted("@ATTRIBUTE"); }
 AT_BEGIN_SCHEMA_REGION                { put_quoted("@BEGIN_SCHEMA_REGION"); }
-AT_BLOB_CREATE_KEY                    { put_quoted("@BLOB_CREATE_KEY"); }
-AT_BLOB_CREATE_VAL                    { put_quoted("@BLOB_CREATE_VAL"); }
-AT_BLOB_GET_KEY                       { put_quoted("@BLOB_GET_KEY"); }
-AT_BLOB_GET_KEY_TYPE                  { put_quoted("@BLOB_GET_KEY_TYPE"); }
-AT_BLOB_GET_VAL                       { put_quoted("@BLOB_GET_VAL"); }
-AT_BLOB_GET_VAL_TYPE                  { put_quoted("@BLOB_GET_VAL_TYPE"); }
-AT_BLOB_UPDATE_KEY                    { put_quoted("@BLOB_UPDATE_KEY"); }
-AT_BLOB_UPDATE_VAL                    { put_quoted("@BLOB_UPDATE_VAL"); }
 AT_COLUMNS                            { put_quoted("@COLUMNS"); }
 AT_CREATE                             { put_quoted("@CREATE"); }
 AT_DECLARE_DEPLOYABLE_REGION          { put_quoted("@DECLARE_DEPLOYABLE_REGION"); }
@@ -92,6 +84,7 @@ AT_SCHEMA_UPGRADE_SCRIPT              { put_quoted("@SCHEMA_UPGRADE_SCRIPT"); }
 AT_SCHEMA_UPGRADE_VERSION             { put_quoted("@SCHEMA_UPGRADE_VERSION"); }
 AT_SENSITIVE                          { put_quoted("@SENSITIVE"); }
 AT_TEXT                               { put_quoted("@TEXT"); }
+AT_TMP                                { put_quoted("@TMP"); }
 AT_UNSUB                              { put_quoted("@UNSUB"); }
 AUTOINCREMENT                         { put_quoted("AUTOINCREMENT"); }
 BEFORE                                { put_quoted("BEFORE"); }

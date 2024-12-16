@@ -6082,7 +6082,7 @@ end;
 -- +   "WHERE ((T.k)->>0) = -1916485007726025434",
 -- + ") "
 -- +   "UPDATE json_backing "
--- +     "SET k = json_set(k, '$.[2]',  21, '$.[1]',  'new name'), v = json_set(v, '$.age',  99) "
+-- +     "SET k = json_set(k,  '$[2]', 21,  '$[1]', 'new name'), v = json_set(v,  '$.age', 99) "
 -- +     "WHERE rowid IN (SELECT rowid "
 -- +       "FROM jdata "
 -- +       "WHERE id = 1)"

@@ -1847,10 +1847,10 @@ static void gen_cql_blob_update(ast_node *ast) {
       if (is_pk) {
         int32_t offset = get_table_col_offset(table_ast, c_name, CQL_SEARCH_COL_KEYS);
         Invariant(offset >= 0);
-        gen_printf(", '$.[%d]',  ", offset + 1);  // the type is offset 0
+        gen_printf(",  '$[%d]', ", offset + 1);  // the type is offset 0
       }
       else {
-        gen_printf(", '$.%s',  ", c_name);
+        gen_printf(",  '$.%s', ", c_name);
       }
       gen_root_expr(val);
     }

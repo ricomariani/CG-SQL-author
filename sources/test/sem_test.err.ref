@@ -1763,6 +1763,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0079: starting at argument 1, argu
 test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'json_patch'
 test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'json_patch'
 test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'jsonb_patch'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 2 'integer' is an invalid type; valid types are: 'text' in 'json_pretty'
 test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'json_valid'
 test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'json_valid'
 test/sem_test.sql:XXXX:1: error: in str : CQL0084: argument 2 'text' is an invalid type; valid types are: 'bool' 'integer' 'long' 'real' in 'json_valid'

@@ -9087,7 +9087,26 @@ static void sem_func_jsonb(ast_node *ast, uint32_t arg_count) {
 }
 
 static void sem_func_json_pretty(ast_node *ast, uint32_t arg_count) {
-  sem_func_json_helper(ast, arg_count, SEM_TYPE_TEXT);
+  Contract(is_ast_call(ast));
+  EXTRACT_NAME_AST(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  // json functions can only appear inside of SQL, they are rewritten if elsewhere
+  Contract(sem_validate_appear_inside_sql_stmt(ast));
+
+  if (!sem_validate_arg_pattern("sb,[s]", ast, arg_count)) {
+    return;
+  }
+
+  ast_node *arg1 = first_arg(arg_list);
+
+  // sensitivity and nullability come from the one argument
+  name_ast->sem = ast->sem = new_sem_std(SEM_TYPE_TEXT, arg_list);
+
+  // preserve the string kind of the main arg, otherwise no kind checks needed for json
+  ast->sem->kind = arg1->sem->kind;
 }
 
 // helper for json_array() and jsonb_array()

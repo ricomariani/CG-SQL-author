@@ -93920,6 +93920,34 @@ SELECT json_pretty('[1]');
 
 The statement ending at line XXXX
 
+SELECT json_pretty('[1]', 5);
+
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 2 'integer' is an invalid type; valid types are: 'text' in 'json_pretty'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name json_pretty}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '[1]'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {int 5}: err
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
 SELECT json_type('[]');
 
   {select_stmt}: select: { _anon: text notnull }

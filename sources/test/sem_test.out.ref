@@ -21786,6 +21786,7 @@ SELECT *
   FROM x;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'z'
+test/sem_test.sql:XXXX:1: error: in str : additional info: provided table column 'some_cte.z' is not compatible with target 'source.z'
 
   {with_select_stmt}: err
   | {with}

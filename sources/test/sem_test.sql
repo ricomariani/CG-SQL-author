@@ -5735,7 +5735,8 @@ with
 -- + {name some_cte}: err
 -- + {name source}: source: { x: integer notnull, y: integer notnull, z: real notnull }
 -- * error: % incompatible types in expression 'z'
--- +1 error:
+-- * error: % additional info: provided table column 'some_cte.z' is not compatible with target 'source.z'
+-- +2 error:
 with
   some_cte(*) as (select 1 x, 2 y, '3.0' z),
   x(*) AS (call shared_frag2(1, 2) USING some_cte as source)

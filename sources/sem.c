@@ -13613,6 +13613,10 @@ static void sem_shared_fragment_table_binding(
       CSTR kactual = sptr_actuals->kinds[j];
 
       if (!sem_verify_assignment(ast_actual, sem_type_formal, sem_type_actual, name)) {
+        CSTR msg = dup_printf(
+          "additional info: provided table column '%s.%s' is not compatible with target '%s.%s'",
+          actual, name, formal, name);
+        report_error(ast_actual, msg, NULL);
         record_error(call_stmt);
         goto cleanup;
       }

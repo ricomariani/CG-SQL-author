@@ -62,12 +62,8 @@ extra_tests() {
 MAKE_ARGS="${MAKE_COVERAGE_ARGS}"
 
 do_make() {
-	if [ "${MAKE_ARGS}" == "" ]; then
-		# we don't want to send empty strings "" to make, so avoid that
-		make "$@"
-	else
-		make "$@" "${MAKE_ARGS}"
-	fi
+  # echo gives us a free whitespace trim avoiding empty args with ""
+  make $(echo "$@" "${MAKE_ARGS}")
 }
 
 sem_check() {
@@ -990,11 +986,8 @@ run_test() {
 		echo "  compiling code"
 		do_make run_test
     MAKE_ARGS_SAVED=${MAKE_ARGS}
-	  if [ "${MAKE_ARGS}" == "" ]; then
-		  MAKE_ARGS=SQLITE_PATH=./sqlite
-	  else
-		  MAKE_ARGS=SQLITE_PATH=./sqlite ${MAKE_ARGS}
-	  fi
+    # echo gives us a free whitespace trim avoiding empty args with ""
+		MAKE_ARGS=$(echo SQLITE_PATH=./sqlite ${MAKE_ARGS})
     do_make sqlite
 		do_make run_test_modern
     MAKE_ARGS=${MAKE_ARGS_SAVED}

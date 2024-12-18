@@ -152,8 +152,9 @@ $O/minipool.o: minipool.c minipool.h
 
 sqlite: ${SQLITE_OBJ}
 
+# disable coverage for sqlite3.o
 ${SQLITE_OBJ}: $(SQLITE_PATH)/sqlite3.c
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS:--coverage=) -c -o $@ $<
 
 clean:
 	rm -rf *.gcno *.gcda $O .pbcopy.swp

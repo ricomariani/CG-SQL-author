@@ -2910,19 +2910,21 @@ call proc1();
 call proc2(1, 'foo');
 
 -- TEST: call known method with correct bogus int (arg1 should be an int)
+-- + error: % incompatible types in expression 'arg1'
+-- + error: % additional info: calling 'proc2' argument #1 intended for parameter 'arg1' has the problem
 -- + {call_stmt}: err
 -- + {name proc2}: ok dml_proc
 -- + {strlit 'bar'}: err
--- * error: % incompatible types in expression 'arg1'
--- +1 error:
+-- +2 error:
 call proc2('bar', 'foo');
 
 -- TEST: call known method with bogus string  (arg2 should be a string)
+-- + error: % incompatible types in expression 'arg2'
+-- + error: % additional info: calling 'proc2' argument #2 intended for parameter 'arg2' has the problem
 -- + {call_stmt}: err
 -- + {name proc2}: ok dml_proc
 -- + {int 2}: err
--- * error: % incompatible types in expression 'arg2'
--- +1 error:
+-- +2 error:
 call proc2(1, 2);
 
 -- TEST: call known method with too many args
@@ -2953,15 +2955,17 @@ begin
 end;
 
 -- TEST: can't use an integer for inout arg
+-- + error: % expected a variable name for OUT or INOUT argument 'arg2'
+-- + error: % additional info: calling 'proc_with_output' argument #2 intended for parameter 'arg2' has the problem
 -- + {call_stmt}: err
--- * error: % expected a variable name for OUT or INOUT argument 'arg2'
--- +1 error:
+-- +2 error:
 call proc_with_output(1, 2, X);
 
 -- TEST: can't use an integer for out arg
+-- + error: % expected a variable name for OUT or INOUT argument 'arg3'
+-- + error: % additional info: calling 'proc_with_output' argument #3 intended for parameter 'arg3' has the problem
 -- + {call_stmt}: err
--- * error: % expected a variable name for OUT or INOUT argument 'arg3'
--- +1 error:
+-- +2 error:
 call proc_with_output(1, X, 3);
 
 -- TEST: out values satisfied
@@ -3018,9 +3022,10 @@ call proc_with_output(X, Y, X);
 -- - error:
 call proc_with_output(1 + X, Y, X);
 
--- TEST: Cursors cannot be passed as OUT arguments.
--- * error: % expected a variable name for OUT or INOUT argument 'arg1'
--- +1 error:
+-- TEST: cursors cannot be passed as OUT arguments.
+-- + error: % expected a variable name for OUT or INOUT argument 'arg1'
+-- + error: % additional info: calling 'test_proc3' argument #1 intended for parameter 'arg1' has the problem
+-- +2 error:
 procedure cursors_cannot_be_used_as_out_args()
 begin
   cursor c for select 0 as x;
@@ -3028,16 +3033,18 @@ begin
 end;
 
 -- TEST: Enum cases cannot be passed as OUT arguments.
--- * error: % expected a variable name for OUT or INOUT argument 'arg1'
--- +1 error:
+-- + error: % expected a variable name for OUT or INOUT argument 'arg1'
+-- + error: % additional info: calling 'test_proc3' argument #1 intended for parameter 'arg1' has the problem
+-- +2 error:
 procedure enum_cases_cannot_be_used_as_out_args()
 begin
   call test_proc3(ints.negative_one);
 end;
 
 -- TEST: Unbound variables cannot be passed as OUT arguments.
--- * error: % name not found 'unbound'
--- +1 error:
+-- + error: % name not found 'unbound'
+-- + error: % additional info: calling 'test_proc3' argument #1 intended for parameter 'arg1' has the problem
+-- +2 error:
 procedure unbound_variables_cannot_be_used_as_out_args()
 begin
   call test_proc3(unbound);
@@ -3559,8 +3566,9 @@ end;
 declare my_int int!;
 
 -- TEST: my_int is not nullable, must be exact match in out parameter, ordinarily this would be compatible
--- * error: % cannot assign/copy possibly null expression to not null target 'my_int'
--- +1 error:
+-- + error: % cannot assign/copy possibly null expression to not null target 'my_int'
+-- + error: % additional info: calling 'out_proc' argument #1 intended for parameter 'result' has the problem
+-- +2 error:
 call out_proc(my_int);
 
 -- TEST: my_real is real, must be exact match in out parameter, ordinarily this would be compatible
@@ -3569,9 +3577,10 @@ call out_proc(my_int);
 declare my_real real;
 
 -- TEST: Try to make the call with a bogus out arg now
+-- + error: % proc out parameter: arg must be an exact type match (expected integer; found real) 'my_real'
+-- + error: % additional info: calling 'out_proc' argument #1 intended for parameter 'result' has the problem
 -- + {call_stmt}: err
--- * error: % proc out parameter: arg must be an exact type match (expected integer; found real) 'my_real'
--- +1 error:
+-- +2 error:
 call out_proc(my_real);
 
 -- TEST: try an exists clause
@@ -6040,17 +6049,19 @@ declare real_result real;
 set real_result := simple_func(1);
 
 -- TEST: function call with bogus arg type
+-- + error: % incompatible types in expression 'arg1'
+-- + error: % additional info: calling 'simple_func' argument #1 intended for parameter 'arg1' has the problem
 -- + {assign}: err
 -- + {call}: err
--- * error: % incompatible types in expression 'arg1'
--- +1 error:
+-- +2 error:
 set real_result := simple_func('xx');
 
 -- TEST: function call with invalid args
+-- + error: % string operand not allowed in 'NOT'
+-- + error: % additional info: calling 'simple_func' argument #1 intended for parameter 'arg1' has the problem
 -- + {assign}: err
 -- + {call}: err
--- * error: % string operand not allowed in 'NOT'
--- +1 error:
+-- +2 error:
 set real_result := simple_func(not 'xx');
 
 -- TEST: try to use user func in a sql statement
@@ -6355,9 +6366,10 @@ set bar_obj := case 1 when 1 then bar_obj else foo_object end;
 set bar_obj := case 1 when 1 then bar_obj when 2 then bar_obj else bar_obj end;
 
 -- TEST: non-user func with bogus arg
+-- + error: % string operand not allowed in 'NOT'
+-- + error: % additional info: calling 'simple_func' argument #1 intended for parameter 'arg1' has the problem
 -- + {call_stmt}: err
--- * error: % string operand not allowed in 'NOT'
--- +1 error:
+-- +2 error:
 call printf('%d', simple_func(not 'x'));
 
 -- TEST: insert with column names, types match
@@ -6416,15 +6428,17 @@ insert into garbonzo(id) values ('x');
 declare function goo_func(goo object<Goo>) text;
 
 -- TEST: function with mismatched arg type
+-- + error: % expressions of different kinds can't be mixed: 'Goo' vs. 'Bar'
+-- + error: % additional info: calling 'goo_func' argument #1 intended for parameter 'goo' has the problem
 -- + {assign}: err
--- * error: % expressions of different kinds can't be mixed: 'Goo' vs. 'Bar'
--- +1 error:
+-- +2 error:
 set a_string := goo_func(bar_obj);
 
 -- TEST: user function with bogus arg
+-- + error: % string operand not allowed in 'NOT'
+-- + error: % additional info: calling 'goo_func' argument #1 intended for parameter 'goo' has the problem
 -- + {assign}: err
--- * error: % string operand not allowed in 'NOT'
--- +1 error:
+-- +2 error:
 set a_string := goo_func(not 'x');
 
 -- TEST: insert columns with mismatched count
@@ -7422,9 +7436,10 @@ end;
 declare proc declared_proc(id integer) out (t text);
 
 -- TEST: fetch call a procedure with bogus args
+-- + error: % string operand not allowed in 'NOT'
+-- + error: % additional info: calling 'declared_proc' argument #1 intended for parameter 'id' has the problem
 -- + {create_proc_stmt}: err
--- * error: % string operand not allowed in 'NOT'
--- +1 error:
+-- +2 error:
 proc invalid_proc_fetch_bogus_call()
 begin
   cursor C fetch from call declared_proc(not 'x');
@@ -9436,16 +9451,17 @@ select T1.id from with_sensitive T1 inner join with_sensitive T2 using(info);
 select T1.id from with_sensitive T1 inner join with_sensitive T2 using(id);
 
 -- TEST: try to assign sensitive data to a non-sensitive variable
+-- + error: % cannot assign/copy sensitive expression to non-sensitive target 'X'
 -- + {assign}: err
 -- + {name _sens}: _sens: integer variable sensitive
--- * error: % cannot assign/copy sensitive expression to non-sensitive target 'X'
 -- +1 error:
 set X := _sens;
 
 -- TEST: try to call a normal proc with a sensitive parameter
+-- + error: % cannot assign/copy sensitive expression to non-sensitive target 'id'
+-- + error: % additional info: calling 'decl1' argument #1 intended for parameter 'id' has the problem
 -- + {call_stmt}: err
--- * error: % cannot assign/copy sensitive expression to non-sensitive target 'id'
--- +1 error:
+-- +2 error:
 call decl1(_sens);
 
 declare proc sens_proc(out foo integer @sensitive);
@@ -9453,8 +9469,9 @@ declare proc non_sens_proc(out foo integer);
 declare proc non_sens_proc_nonnull(out foo int!);
 
 -- TEST: try to call a proc with a sensitive out parameter
--- * error: % cannot assign/copy sensitive expression to non-sensitive target 'X'
--- +1 error:
+-- + error: % cannot assign/copy sensitive expression to non-sensitive target 'X'
+-- + error: % additional info: calling 'sens_proc' argument #1 intended for parameter 'foo' has the problem
+-- +2 error:
 call sens_proc(X);
 
 -- TEST: control case: ok to call a proc with a non-sensitive out parameter
@@ -9463,13 +9480,15 @@ call sens_proc(X);
 call non_sens_proc(_sens);
 
 -- TEST: make sure we can't call a proc that takes a nullable int out with a not-null integer
--- * error: % cannot assign/copy possibly null expression to not null target 'int_nn'
--- +1 error:
+-- + error: % cannot assign/copy possibly null expression to not null target 'int_nn'
+-- + error: % additional info: calling 'non_sens_proc' argument #1 intended for parameter 'foo' has the problem
+-- +2 error:
 call non_sens_proc(int_nn);
 
 -- TEST: make sure we can't call a proc that takes a non-nullable int out with a nullable integer
--- * error: % proc out parameter: arg must be an exact type match (even nullability) (expected integer notnull; found integer)
--- +1 error:
+-- + error: % proc out parameter: arg must be an exact type match (even nullability) (expected integer notnull; found integer)
+-- + error: % additional info: calling 'non_sens_proc_nonnull' argument #1 intended for parameter 'foo' has the problem
+-- +2 error:
 call non_sens_proc_nonnull(X);
 
 
@@ -9518,9 +9537,10 @@ set sens_text := sens_func(1, 'x');
 set non_sens_text := sens_func(1, 'x');
 
 -- TEST: not ok to pass sensitive text as non-sensitive arg
--- * error: % cannot assign/copy sensitive expression to non-sensitive target 't'
+-- + error: % cannot assign/copy sensitive expression to non-sensitive target 't'
+-- + error: % additional info: calling 'sens_func' argument #2 intended for parameter 't' has the problem
 -- + {call}: err
--- +1 error:
+-- +2 error:
 set sens_text := sens_func(1, sens_text);
 
 -- TEST: make sure that the expression in the update is evaluated in the select context
@@ -10594,20 +10614,22 @@ begin
 end;
 
 -- TEST: use a table valued function but with a arg error
+-- + error: % string operand not allowed in 'NOT'
+-- + error: % additional info: calling 'tvf' argument #1 intended for parameter 'id' has the problem
 -- + {select_stmt}: err
 -- + {table_function}: err
--- * error: % string operand not allowed in 'NOT'
--- +1 error:
+-- +2 error:
 proc using_tvf_invalid_arg()
 begin
   select * from tvf(NOT 'x');
 end;
 
 -- TEST: use a table valued function but with a bogus arg type
+-- + error: % incompatible types in expression 'id'
+-- + error: % additional info: calling 'tvf' argument #1 intended for parameter 'id' has the problem
 -- + {select_stmt}: err
 -- + {table_function}: err
--- * error: % incompatible types in expression 'id'
--- +1 error:
+-- +2 error:
 proc using_tvf_arg_mismatch()
 begin
   select * from tvf('x');
@@ -13490,8 +13512,7 @@ end;
 -- TEST: try to call shape_consumer using a statement cursor.  This is bogus...
 -- + {create_proc_stmt}: err
 -- + {call_stmt}: err
--- * error: % Cursor was not used with 'fetch [cursor]' 'C'
--- +1 error:
+-- +2 error:
 proc shape_some_columns_statement_cursor()
 begin
    cursor C for select 1 x, 'y' y;
@@ -13626,9 +13647,10 @@ begin
 end;
 
 -- TEST: try to do from arguments with a type but there is no matching arg
+-- + error: % expanding FROM ARGUMENTS, there is no argument matching 'id'
+-- + error: % additional info: calling 'lotsa_ints' argument #4 intended for parameter 'd' has the problem
 -- + {call_stmt}: err
--- * error: % expanding FROM ARGUMENTS, there is no argument matching 'id'
--- +1 error:
+-- +2 error:
 proc call_with_missing_type(x integer)
 begin
   -- the table foo has a column 'id' but we have no such arg
@@ -13688,26 +13710,29 @@ begin
 end;
 
 -- TEST: call cql_cursor_diff_col with non variable arguments
+-- + error: % CQL0205: not a cursor '1'
+-- + error: % additional info: calling 'cql_cursor_diff_col' argument #1 intended for parameter 'l' has the problem
 -- + {assign}: err
 -- + {call}: err
--- * error: % CQL0205: not a cursor '1'
--- +1 error:
+-- +2 error:
 set a_string := cql_cursor_diff_col(1, "bogus");
 
 -- TEST: call cql_cursor_diff_col with invalid variable arguments
+-- + error: % not a cursor 'an_int'
+-- + error: % additional info: calling 'cql_cursor_diff_col' argument #1 intended for parameter 'l' has the problem
 -- + {assign}: err
 -- + {call}: err
--- * error: % not a cursor 'an_int'
--- +1 error:
+-- +2 error:
 set a_string := cql_cursor_diff_col(an_int, an_int2);
 
 -- TEST: call cql_cursor_diff_col with cursor with fetch value and same shape
+-- + error: % cursor was not used with 'fetch [cursor]' 'c1'
+-- + error: % additional info: calling 'cql_cursor_diff_col' argument #1 intended for parameter 'l' has the problem
 -- + {create_proc_stmt}: err
 -- + {assign}: err
 -- + {call}: err
 -- + {name c1}: err
--- * error: % cursor was not used with 'fetch [cursor]' 'c1'
--- +1 error:
+-- +2 error:
 proc cql_cursor_diff_col_without_cursor_arg()
 begin
   declare x int!;
@@ -13967,11 +13992,12 @@ begin
 end;
 
 -- TEST: call cql_cursor_format on a not auto cursor
+-- + error: % cursor was not used with 'fetch [cursor]' 'c'
+-- + error: % additional info: calling 'cql_cursor_format' argument #1 intended for parameter 'C' has the problem
 -- + {create_proc_stmt}: err
 -- + {call}: err
 -- + {name c}: err
--- * error: % cursor was not used with 'fetch [cursor]' 'c'
--- +1 error:
+-- +2 error:
 proc print_call_cql_not_fetch_cursor_format()
 begin
   cursor c for select 1;
@@ -16952,9 +16978,10 @@ declare out call not_defined();
 declare out call decl1(1);
 
 -- TEST: try to call a proc but the args have errors
+-- + error: % string operand not allowed in 'NOT'
+-- + error: % additional info: calling 'out2_proc' argument #1 intended for parameter 'x' has the problem
 -- + {declare_out_call_stmt}: err
--- * error: % string operand not allowed in 'NOT'
--- +1 error:
+-- +2 error:
 proc decl_test_err()
 begin
   declare out call out2_proc(not 'x', u, v);
@@ -17574,9 +17601,10 @@ begin
 end;
 
 -- TEST: Improvements do NOT work for OUT arguments.
+-- + error: % proc out parameter: arg must be an exact type match (even nullability) (expected integer notnull; found integer) 'a'
+-- + error: % additional info: calling 'requires_notnull_out' argument #1 intended for parameter 'a' has the problem
 -- + {call_stmt}: err
--- * error: % proc out parameter: arg must be an exact type match (even nullability) (expected integer notnull; found integer) 'a'
--- +1 error:
+-- +2 error:
 proc improvements_do_not_work_for_out()
 begin
   declare a int;
@@ -17592,9 +17620,10 @@ begin
 end;
 
 -- TEST: Improvements do NOT work for INOUT arguments.
+-- + error: % cannot assign/copy possibly null expression to not null target 'a'
+-- + error: % additional info: calling 'requires_notnull_inout' argument #1 intended for parameter 'a' has the problem
 -- + {call_stmt}: err
--- * error: % cannot assign/copy possibly null expression to not null target 'a'
--- +1 error:
+-- +2 error:
 proc improvements_do_not_work_for_inout()
 begin
   declare a int;
@@ -22041,8 +22070,9 @@ begin
 end;
 
 -- TEST: verify blob fetch from cursor; cursor has storage
--- * error: % cursor was not used with 'fetch [cursor]' 'C'
--- +1 error:
+-- + error: % cursor was not used with 'fetch [cursor]' 'C'
+-- + error: % additional info: calling 'cql_cursor_to_blob' argument #1 intended for parameter 'C' has the problem
+-- +2 error:
 proc blob_serialization_test_no_storage()
 begin
   cursor C for select 1 id, 5 name;
@@ -23994,8 +24024,9 @@ select 1, * from foo;
 declare proc a_target_proc(x integer, y integer);
 
 -- TEST: catch cases where * is in a bad place in the arg list
--- * error: % argument can only be used in count(*) '*'
--- +1 error:
+-- + error: % argument can only be used in count(*) '*'
+-- + error: % additional info: calling 'a_target_proc' argument #2 intended for parameter 'y' has the problem
+-- +2 error:
 proc abuse_star1(like a_target_proc arguments)
 begin
   a_target_proc(1, *, 1);
@@ -24531,14 +24562,15 @@ end;
 const a_constant_variable := 1;
 
 -- TEST: constant variables cannot be changed
--- + error: % Cannot re-assign value to constant variable 'cant_change'
--- + error: % Cannot re-assign value to constant variable 'cant_change'
--- + error: % Cannot re-assign value to constant variable 'cant_change'
+-- + error: % cannot re-assign value to constant variable 'cant_change'
+-- + error: % cannot re-assign value to constant variable 'cant_change'
+-- + error: % additional info: calling 'using_rc' argument #1 intended for parameter 'result_code' has the problem
+-- + error: % cannot re-assign value to constant variable 'cant_change'
 -- + {const_stmt}: cant_change: integer notnull variable was_set constant
 -- + {assign}: err
 -- + {call_stmt}: err
 -- + {fetch_stmt}: err
--- +3 error:
+-- +4 error:
 proc try_modifying_constant_variables()
 begin
   const cant_change := 1;

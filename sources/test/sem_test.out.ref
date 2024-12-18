@@ -9534,6 +9534,7 @@ The statement ending at line XXXX
 CALL proc2('bar', 'foo');
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'arg1'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'proc2' argument #1 intended for parameter 'arg1' has the problem
 
   {call_stmt}: err
   | {name proc2}: ok dml_proc
@@ -9547,6 +9548,7 @@ The statement ending at line XXXX
 CALL proc2(1, 2);
 
 test/sem_test.sql:XXXX:1: error: in num : CQL0009: incompatible types in expression 'arg2'
+test/sem_test.sql:XXXX:1: error: in num : additional info: calling 'proc2' argument #2 intended for parameter 'arg2' has the problem
 
   {call_stmt}: err
   | {name proc2}: ok dml_proc
@@ -9627,6 +9629,7 @@ The statement ending at line XXXX
 CALL proc_with_output(1, 2, X);
 
 test/sem_test.sql:XXXX:1: error: in num : CQL0207: expected a variable name for OUT or INOUT argument 'arg2'
+test/sem_test.sql:XXXX:1: error: in num : additional info: calling 'proc_with_output' argument #2 intended for parameter 'arg2' has the problem
 
   {call_stmt}: err
   | {name proc_with_output}: ok
@@ -9642,6 +9645,7 @@ The statement ending at line XXXX
 CALL proc_with_output(1, X, 3);
 
 test/sem_test.sql:XXXX:1: error: in num : CQL0207: expected a variable name for OUT or INOUT argument 'arg3'
+test/sem_test.sql:XXXX:1: error: in num : additional info: calling 'proc_with_output' argument #3 intended for parameter 'arg3' has the problem
 
   {call_stmt}: err
   | {name proc_with_output}: ok
@@ -9787,6 +9791,7 @@ BEGIN
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0207: expected a variable name for OUT or INOUT argument 'arg1'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'test_proc3' argument #1 intended for parameter 'arg1' has the problem
 
   {create_proc_stmt}: err
   | {name cursors_cannot_be_used_as_out_args}: err
@@ -9823,6 +9828,7 @@ BEGIN
 END;
 
 test/sem_test.sql:XXXX:1: error: in dot : CQL0207: expected a variable name for OUT or INOUT argument 'arg1'
+test/sem_test.sql:XXXX:1: error: in dot : additional info: calling 'test_proc3' argument #1 intended for parameter 'arg1' has the problem
 
   {create_proc_stmt}: err
   | {name enum_cases_cannot_be_used_as_out_args}: err
@@ -9841,6 +9847,7 @@ BEGIN
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'unbound'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'test_proc3' argument #1 intended for parameter 'arg1' has the problem
 
   {create_proc_stmt}: err
   | {name unbound_variables_cannot_be_used_as_out_args}: err
@@ -12011,6 +12018,7 @@ The statement ending at line XXXX
 CALL out_proc(my_int);
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0013: cannot assign/copy possibly null expression to not null target 'my_int'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'out_proc' argument #1 intended for parameter 'result' has the problem
 
   {call_stmt}: err
   | {name out_proc}: ok
@@ -12031,6 +12039,7 @@ The statement ending at line XXXX
 CALL out_proc(my_real);
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0209: proc out parameter: arg must be an exact type match (expected integer; found real) 'my_real'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'out_proc' argument #1 intended for parameter 'result' has the problem
 
   {call_stmt}: err
   | {name out_proc}: ok
@@ -23566,6 +23575,7 @@ The statement ending at line XXXX
 SET real_result := simple_func('xx');
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'arg1'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'simple_func' argument #1 intended for parameter 'arg1' has the problem
 
   {assign}: err
   | {name real_result}: real_result: real variable was_set
@@ -23581,6 +23591,7 @@ The statement ending at line XXXX
 SET real_result := simple_func(NOT 'xx');
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
+test/sem_test.sql:XXXX:1: error: in not : additional info: calling 'simple_func' argument #1 intended for parameter 'arg1' has the problem
 
   {assign}: err
   | {name real_result}: real_result: real variable was_set
@@ -24331,6 +24342,7 @@ The statement ending at line XXXX
 CALL printf('%d', simple_func(NOT 'x'));
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
+test/sem_test.sql:XXXX:1: error: in not : additional info: calling 'simple_func' argument #1 intended for parameter 'arg1' has the problem
 
   {call_stmt}: err
   | {name printf}: ok
@@ -24577,6 +24589,7 @@ The statement ending at line XXXX
 SET a_string := goo_func(bar_obj);
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0070: expressions of different kinds can't be mixed: 'Goo' vs. 'Bar'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'goo_func' argument #1 intended for parameter 'goo' has the problem
 
   {assign}: err
   | {name a_string}: a_string: text variable was_set
@@ -24592,6 +24605,7 @@ The statement ending at line XXXX
 SET a_string := goo_func(NOT 'x');
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
+test/sem_test.sql:XXXX:1: error: in not : additional info: calling 'goo_func' argument #1 intended for parameter 'goo' has the problem
 
   {assign}: err
   | {name a_string}: a_string: text variable was_set
@@ -27847,6 +27861,7 @@ BEGIN
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
+test/sem_test.sql:XXXX:1: error: in not : additional info: calling 'declared_proc' argument #1 intended for parameter 'id' has the problem
 
   {create_proc_stmt}: err
   | {name invalid_proc_fetch_bogus_call}: err
@@ -35710,6 +35725,7 @@ The statement ending at line XXXX
 CALL decl1(_sens);
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 'id'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'decl1' argument #1 intended for parameter 'id' has the problem
 
   {call_stmt}: err
   | {name decl1}: ok
@@ -35771,6 +35787,7 @@ The statement ending at line XXXX
 CALL sens_proc(X);
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 'X'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'sens_proc' argument #1 intended for parameter 'foo' has the problem
 
   {call_stmt}: err
   | {name sens_proc}: ok
@@ -35791,6 +35808,7 @@ The statement ending at line XXXX
 CALL non_sens_proc(int_nn);
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0013: cannot assign/copy possibly null expression to not null target 'int_nn'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'non_sens_proc' argument #1 intended for parameter 'foo' has the problem
 
   {call_stmt}: err
   | {name non_sens_proc}: ok
@@ -35802,6 +35820,7 @@ The statement ending at line XXXX
 CALL non_sens_proc_nonnull(X);
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0210: proc out parameter: arg must be an exact type match (even nullability) (expected integer notnull; found integer) 'X'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'non_sens_proc_nonnull' argument #1 intended for parameter 'foo' has the problem
 
   {call_stmt}: err
   | {name non_sens_proc_nonnull}: ok
@@ -35986,6 +36005,7 @@ The statement ending at line XXXX
 SET sens_text := sens_func(1, sens_text);
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 't'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'sens_func' argument #2 intended for parameter 't' has the problem
 
   {assign}: err
   | {name sens_text}: sens_text: text variable sensitive was_set
@@ -39894,6 +39914,7 @@ BEGIN
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
+test/sem_test.sql:XXXX:1: error: in not : additional info: calling 'tvf' argument #1 intended for parameter 'id' has the problem
 
   {create_proc_stmt}: err
   | {name using_tvf_invalid_arg}: err
@@ -39929,6 +39950,7 @@ BEGIN
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'id'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'tvf' argument #1 intended for parameter 'id' has the problem
 
   {create_proc_stmt}: err
   | {name using_tvf_arg_mismatch}: err
@@ -50472,6 +50494,7 @@ BEGIN
 END;
 
 test/sem_test.sql:XXXX:1: error: in dot : CQL0067: cursor was not used with 'fetch [cursor]' 'C'
+test/sem_test.sql:XXXX:1: error: in dot : additional info: calling 'shape_consumer' argument #1 intended for parameter 'x_' has the problem
 
   {create_proc_stmt}: err
   | {name shape_some_columns_statement_cursor}: err
@@ -51163,6 +51186,7 @@ BEGIN
 END;
 
 test/sem_test.sql:XXXX:1: error: in dot : CQL0201: expanding FROM ARGUMENTS, there is no argument matching 'id'
+test/sem_test.sql:XXXX:1: error: in dot : additional info: calling 'lotsa_ints' argument #4 intended for parameter 'd' has the problem
 
   {create_proc_stmt}: err
   | {name call_with_missing_type}: err
@@ -51372,6 +51396,7 @@ The statement ending at line XXXX
 SET a_string := cql_cursor_diff_col(1, "bogus");
 
 test/sem_test.sql:XXXX:1: error: in num : CQL0205: not a cursor '1'
+test/sem_test.sql:XXXX:1: error: in num : additional info: calling 'cql_cursor_diff_col' argument #1 intended for parameter 'l' has the problem
 
   {assign}: err
   | {name a_string}: a_string: text variable was_set
@@ -51389,6 +51414,7 @@ The statement ending at line XXXX
 SET a_string := cql_cursor_diff_col(an_int, an_int2);
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0205: not a cursor 'an_int'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'cql_cursor_diff_col' argument #1 intended for parameter 'l' has the problem
 
   {assign}: err
   | {name a_string}: a_string: text variable was_set
@@ -51417,6 +51443,7 @@ BEGIN
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0067: cursor was not used with 'fetch [cursor]' 'c1'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'cql_cursor_diff_col' argument #1 intended for parameter 'l' has the problem
 
   {create_proc_stmt}: err
   | {name cql_cursor_diff_col_without_cursor_arg}: err
@@ -52648,6 +52675,7 @@ BEGIN
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0067: cursor was not used with 'fetch [cursor]' 'c'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'cql_cursor_format' argument #1 intended for parameter 'C' has the problem
 
   {create_proc_stmt}: err
   | {name print_call_cql_not_fetch_cursor_format}: err
@@ -62744,6 +62772,7 @@ BEGIN
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
+test/sem_test.sql:XXXX:1: error: in not : additional info: calling 'out2_proc' argument #1 intended for parameter 'x' has the problem
 
   {create_proc_stmt}: err
   | {name decl_test_err}: err
@@ -65085,6 +65114,7 @@ BEGIN
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0210: proc out parameter: arg must be an exact type match (even nullability) (expected integer notnull; found integer) 'a'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'requires_notnull_out' argument #1 intended for parameter 'a' has the problem
 
   {create_proc_stmt}: err
   | {name improvements_do_not_work_for_out}: err
@@ -65134,6 +65164,7 @@ BEGIN
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0013: cannot assign/copy possibly null expression to not null target 'a'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'requires_notnull_inout' argument #1 intended for parameter 'a' has the problem
 
   {create_proc_stmt}: err
   | {name improvements_do_not_work_for_inout}: err
@@ -68529,6 +68560,7 @@ BEGIN
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0013: cannot assign/copy possibly null expression to not null target 'a'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'requires_int_notnull' argument #1 intended for parameter 'a' has the problem
 
   {create_proc_stmt}: err
   | {name unimprovements_in_loops_affect_earlier_statements}: err
@@ -69753,8 +69785,11 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0438: variable possibly used before
 test/sem_test.sql:XXXX:1: error: in str : CQL0438: variable possibly used before initialization 'b'
 test/sem_test.sql:XXXX:1: error: in str : CQL0438: variable possibly used before initialization 'c'
 test/sem_test.sql:XXXX:1: error: in str : CQL0438: variable possibly used before initialization 'a'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'requires_inout_text_notnull' argument #1 intended for parameter 't' has the problem
 test/sem_test.sql:XXXX:1: error: in str : CQL0438: variable possibly used before initialization 'b'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'requires_inout_blob_notnull' argument #1 intended for parameter 't' has the problem
 test/sem_test.sql:XXXX:1: error: in str : CQL0438: variable possibly used before initialization 'c'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'requires_inout_object_notnull' argument #1 intended for parameter 't' has the problem
 
   {create_proc_stmt}: err
   | {name initialization_is_required_for_nonnull_reference_types}: err
@@ -83324,6 +83359,7 @@ BEGIN
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0067: cursor was not used with 'fetch [cursor]' 'C'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'cql_cursor_to_blob' argument #1 intended for parameter 'C' has the problem
 
   {create_proc_stmt}: err
   | {name blob_serialization_test_no_storage}: err
@@ -86092,6 +86128,7 @@ The statement ending at line XXXX
 SET result := external_cursor_func(1);
 
 test/sem_test.sql:XXXX:1: error: in num : CQL0205: not a cursor '1'
+test/sem_test.sql:XXXX:1: error: in num : additional info: calling 'external_cursor_func' argument #1 intended for parameter 'x' has the problem
 
   {assign}: err
   | {name result}: result: integer variable
@@ -90365,6 +90402,7 @@ BEGIN
 END;
 
 test/sem_test.sql:XXXX:1: error: in star : CQL0051: argument can only be used in count(*) '*'
+test/sem_test.sql:XXXX:1: error: in star : additional info: calling 'a_target_proc' argument #2 intended for parameter 'y' has the problem
 
   {create_proc_stmt}: err
   | {name abuse_star1}: err
@@ -92042,9 +92080,10 @@ BEGIN
   FETCH fetch_cursor INTO cant_change;
 END;
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0502: Cannot re-assign value to constant variable 'cant_change'
-test/sem_test.sql:XXXX:1: error: in str : CQL0502: Cannot re-assign value to constant variable 'cant_change'
-test/sem_test.sql:XXXX:1: error: in str : CQL0502: Cannot re-assign value to constant variable 'cant_change'
+test/sem_test.sql:XXXX:1: error: in num : CQL0502: cannot re-assign value to constant variable 'cant_change'
+test/sem_test.sql:XXXX:1: error: in str : CQL0502: cannot re-assign value to constant variable 'cant_change'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'using_rc' argument #1 intended for parameter 'result_code' has the problem
+test/sem_test.sql:XXXX:1: error: in str : CQL0502: cannot re-assign value to constant variable 'cant_change'
 
   {create_proc_stmt}: err
   | {name try_modifying_constant_variables}: err

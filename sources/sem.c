@@ -3131,7 +3131,7 @@ cql_noexport bool_t sem_verify_assignment(
   CSTR var_name)
 {
   if (is_constant(sem_type_needed)) {
-    report_error(ast, "CQL0502: Cannot re-assign value to constant variable", var_name);
+    report_error(ast, "CQL0502: cannot re-assign value to constant variable", var_name);
     return false;
   }
   if (!sem_verify_compat(ast, sem_type_needed, sem_type_found, var_name)) {
@@ -23173,13 +23173,18 @@ static bool_t sem_validate_out_args_are_unique(ast_node *arg_list, ast_node *par
 static void sem_validate_args_vs_formals(ast_node *ast, CSTR name, ast_node *arg_list, ast_node *params, bool_t proc_as_func) {
   ast_node *arg_item = arg_list;
   ast_node *param_item = params;
+  int iarg = 1;
 
   // First, we check the arguments themselves.
-  for (; arg_item && param_item; arg_item = arg_item->right, param_item = param_item->right) {
+  for (; arg_item && param_item; arg_item = arg_item->right, param_item = param_item->right, iarg++) {
     EXTRACT_ANY_NOTNULL(arg, arg_item->left);
     EXTRACT_NOTNULL(param, param_item->left);
 
     if (!sem_validate_arg_vs_formal(arg, param)) {
+      CSTR err_msg = dup_printf(
+          "additional info: calling '%s' argument #%d intended for parameter '%s' has the problem",
+          name, iarg, param->sem->name);
+      report_error(arg, err_msg, NULL);
       record_error(ast);
       return;
     }

@@ -232,18 +232,25 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'T'
 test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'foo.id'
 test/sem_test.sql:XXXX:1: error: in null : CQL0013: cannot assign/copy possibly null expression to not null target 'int_nn'
 test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'arg1'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'proc2' argument #1 intended for parameter 'arg1' has the problem
 test/sem_test.sql:XXXX:1: error: in num : CQL0009: incompatible types in expression 'arg2'
+test/sem_test.sql:XXXX:1: error: in num : additional info: calling 'proc2' argument #2 intended for parameter 'arg2' has the problem
 test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0235: too many arguments provided to procedure 'proc2'
 test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0212: too few arguments provided to procedure 'proc2'
 test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0213: procedure had errors, can't call 'proc3'
 test/sem_test.sql:XXXX:1: error: in num : CQL0207: expected a variable name for OUT or INOUT argument 'arg2'
+test/sem_test.sql:XXXX:1: error: in num : additional info: calling 'proc_with_output' argument #2 intended for parameter 'arg2' has the problem
 test/sem_test.sql:XXXX:1: error: in num : CQL0207: expected a variable name for OUT or INOUT argument 'arg3'
+test/sem_test.sql:XXXX:1: error: in num : additional info: calling 'proc_with_output' argument #3 intended for parameter 'arg3' has the problem
 test/sem_test.sql:XXXX:1: error: in str : CQL0426: OUT or INOUT argument cannot be used again in same call 'X'
 test/sem_test.sql:XXXX:1: error: in str : CQL0426: OUT or INOUT argument cannot be used again in same call 'X'
 test/sem_test.sql:XXXX:1: error: in str : CQL0426: OUT or INOUT argument cannot be used again in same call 'X'
 test/sem_test.sql:XXXX:1: error: in str : CQL0207: expected a variable name for OUT or INOUT argument 'arg1'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'test_proc3' argument #1 intended for parameter 'arg1' has the problem
 test/sem_test.sql:XXXX:1: error: in dot : CQL0207: expected a variable name for OUT or INOUT argument 'arg1'
+test/sem_test.sql:XXXX:1: error: in dot : additional info: calling 'test_proc3' argument #1 intended for parameter 'arg1' has the problem
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'unbound'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'test_proc3' argument #1 intended for parameter 'arg1' has the problem
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'this_does_not_exist'
 test/sem_test.sql:XXXX:1: error: in call : CQL0304: DISTINCT may only be used with one explicit argument in an aggregate function 'count'
 test/sem_test.sql:XXXX:1: error: in call : CQL0079: too many arguments in function 'total'
@@ -300,7 +307,9 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in t
 test/sem_test.sql:XXXX:1: error: in call : CQL0081: aggregates only make sense if there is a FROM clause 'max'
 test/sem_test.sql:XXXX:1: error: in call : CQL0081: aggregates only make sense if there is a FROM clause 'avg'
 test/sem_test.sql:XXXX:1: error: in str : CQL0013: cannot assign/copy possibly null expression to not null target 'my_int'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'out_proc' argument #1 intended for parameter 'result' has the problem
 test/sem_test.sql:XXXX:1: error: in str : CQL0209: proc out parameter: arg must be an exact type match (expected integer; found real) 'my_real'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'out_proc' argument #1 intended for parameter 'result' has the problem
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 test/sem_test.sql:XXXX:1: error: in exists_expr : CQL0080: function may not appear in this context 'exists'
@@ -536,7 +545,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0192: func name conflicts with proc
 test/sem_test.sql:XXXX:1: error: in str : CQL0191: declared functions must be top level 'foo'
 test/sem_test.sql:XXXX:1: error: in str : CQL0175: duplicate parameter name 'a'
 test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'arg1'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'simple_func' argument #1 intended for parameter 'arg1' has the problem
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
+test/sem_test.sql:XXXX:1: error: in not : additional info: calling 'simple_func' argument #1 intended for parameter 'arg1' has the problem
 test/sem_test.sql:XXXX:1: error: in call : CQL0088: user function may not appear in the context of a SQL statement 'simple_func'
 test/sem_test.sql:XXXX:1: error: in str : CQL0002: left operand cannot be an object in '<'
 test/sem_test.sql:XXXX:1: error: in str : CQL0003: right operand cannot be an object in '<'
@@ -568,13 +579,16 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'bar_object'
 test/sem_test.sql:XXXX:1: error: in str : CQL0070: expressions of different kinds can't be mixed: 'Bar' vs. 'Foo'
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'foo_object'
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
+test/sem_test.sql:XXXX:1: error: in not : additional info: calling 'simple_func' argument #1 intended for parameter 'arg1' has the problem
 test/sem_test.sql:XXXX:1: error: in insert_stmt : CQL0158: required column missing in INSERT statement 'id'
 test/sem_test.sql:XXXX:1: error: in str : CQL0171: name not found 'garbonzo'
 test/sem_test.sql:XXXX:1: error: in str : CQL0172: name list has duplicate name 'id'
 test/sem_test.sql:XXXX:1: error: in str : CQL0161: cannot insert into a view 'MyView'
 test/sem_test.sql:XXXX:1: error: in str : CQL0160: table in insert statement does not exist 'garbonzo'
 test/sem_test.sql:XXXX:1: error: in str : CQL0070: expressions of different kinds can't be mixed: 'Goo' vs. 'Bar'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'goo_func' argument #1 intended for parameter 'goo' has the problem
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
+test/sem_test.sql:XXXX:1: error: in not : additional info: calling 'goo_func' argument #1 intended for parameter 'goo' has the problem
 test/sem_test.sql:XXXX:1: error: in insert_stmt : CQL0157: count of columns differs from count of values
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'id'
@@ -696,6 +710,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0205: not a cursor 'C'
 test/sem_test.sql:XXXX:1: error: in out_stmt : CQL0222: out cursor statement only makes sense inside of a procedure
 test/sem_test.sql:XXXX:1: error: in str : CQL0215: value cursors are not used with FETCH C, or FETCH C INTO 'C'
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
+test/sem_test.sql:XXXX:1: error: in not : additional info: calling 'declared_proc' argument #1 intended for parameter 'id' has the problem
 test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0203: cursor requires a procedure that returns a cursor with OUT 'C'
 test/sem_test.sql:XXXX:1: error: in declare_value_cursor : CQL0197: duplicate variable name in the same scope 'C'
 test/sem_test.sql:XXXX:1: error: in call : CQL0451: procedure as function call is not compatible with DISTINCT or filter clauses 'proc_func'
@@ -834,13 +849,18 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'a_key_'
 test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'b.a_key_'
 test/sem_test.sql:XXXX:1: error: in str : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 'X'
 test/sem_test.sql:XXXX:1: error: in str : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 'id'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'decl1' argument #1 intended for parameter 'id' has the problem
 test/sem_test.sql:XXXX:1: error: in str : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 'X'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'sens_proc' argument #1 intended for parameter 'foo' has the problem
 test/sem_test.sql:XXXX:1: error: in str : CQL0013: cannot assign/copy possibly null expression to not null target 'int_nn'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'non_sens_proc' argument #1 intended for parameter 'foo' has the problem
 test/sem_test.sql:XXXX:1: error: in str : CQL0210: proc out parameter: arg must be an exact type match (even nullability) (expected integer notnull; found integer) 'X'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'non_sens_proc_nonnull' argument #1 intended for parameter 'foo' has the problem
 test/sem_test.sql:XXXX:1: error: in call : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 'id'
 test/sem_test.sql:XXXX:1: error: in call : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 'id'
 test/sem_test.sql:XXXX:1: error: in call : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 'non_sens_text'
 test/sem_test.sql:XXXX:1: error: in str : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 't'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'sens_func' argument #2 intended for parameter 't' has the problem
 test/sem_test.sql:XXXX:1: error: in select_core : CQL0012: incompatible types in expression '_anon'
 test/sem_test.sql:XXXX:1: error: in str : CQL0151: table in delete statement does not exist 'not_valid_table'
 test/sem_test.sql:XXXX:1: error: in select_core : CQL0012: incompatible types in expression '_anon'
@@ -909,7 +929,9 @@ test/sem_test.sql:XXXX:1: error: in create_index_stmt : CQL0066: if a table is m
 test/sem_test.sql:XXXX:1: error: in call : CQL0395: table valued functions may not be used in an expression context 'tvf'
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'does_not_exist'
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
+test/sem_test.sql:XXXX:1: error: in not : additional info: calling 'tvf' argument #1 intended for parameter 'id' has the problem
 test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'id'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'tvf' argument #1 intended for parameter 'id' has the problem
 test/sem_test.sql:XXXX:1: error: in str : CQL0249: function is not a table-valued-function 'SqlUserFunc'
 test/sem_test.sql:XXXX:1: error: in str : CQL0250: table-valued function not declared 'ThisDoesNotExist'
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
@@ -1083,15 +1105,20 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'bogus'
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0339: WITHOUT ROWID tables are forbidden if strict without rowid mode is enabled 'table_with_invalid_without_rowid_mode'
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_cursor'
 test/sem_test.sql:XXXX:1: error: in dot : CQL0067: cursor was not used with 'fetch [cursor]' 'C'
+test/sem_test.sql:XXXX:1: error: in dot : additional info: calling 'shape_consumer' argument #1 intended for parameter 'x_' has the problem
 test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, table, or view 'not_a_real_shape'
 test/sem_test.sql:XXXX:1: error: in str : CQL0340: FROM ARGUMENTS used in a procedure with no arguments 'arg_rewrite_no_args'
 test/sem_test.sql:XXXX:1: error: in str : CQL0163: FROM ARGUMENTS construct is only valid inside a procedure
 test/sem_test.sql:XXXX:1: error: in dot : CQL0201: expanding FROM ARGUMENTS, there is no argument matching 'id'
+test/sem_test.sql:XXXX:1: error: in dot : additional info: calling 'lotsa_ints' argument #4 intended for parameter 'd' has the problem
 test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, table, or view 'no_such_type_dude'
 test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, table, or view 'not_a_shape'
 test/sem_test.sql:XXXX:1: error: in num : CQL0205: not a cursor '1'
+test/sem_test.sql:XXXX:1: error: in num : additional info: calling 'cql_cursor_diff_col' argument #1 intended for parameter 'l' has the problem
 test/sem_test.sql:XXXX:1: error: in str : CQL0205: not a cursor 'an_int'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'cql_cursor_diff_col' argument #1 intended for parameter 'l' has the problem
 test/sem_test.sql:XXXX:1: error: in str : CQL0067: cursor was not used with 'fetch [cursor]' 'c1'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'cql_cursor_diff_col' argument #1 intended for parameter 'l' has the problem
 test/sem_test.sql:XXXX:1: error: in str : CQL0067: cursor was not used with 'fetch [cursor]' 'C'
 test/sem_test.sql:XXXX:1: error: in str : CQL0061: in cql_cursor_diff_col, all columns must be an exact type match (expected integer notnull; found text notnull) 'x'
 test/sem_test.sql:XXXX:1: error: in str : CQL0057: in cql_cursor_diff_col, all must have the same column count
@@ -1123,6 +1150,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 'integer' is an in
 test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 2 'integer' is an invalid type; valid types are: 'text' in 'trim'
 test/sem_test.sql:XXXX:1: error: in call : CQL0088: user function may not appear in the context of a SQL statement 'cql_cursor_format'
 test/sem_test.sql:XXXX:1: error: in str : CQL0067: cursor was not used with 'fetch [cursor]' 'c'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'cql_cursor_format' argument #1 intended for parameter 'C' has the problem
 test/sem_test.sql:XXXX:1: error: in num : CQL0242: lossy conversion from type 'LONG' in 1L
 test/sem_test.sql:XXXX:1: error: in num : CQL0242: lossy conversion from type 'REAL' in 1.0
 test/sem_test.sql:XXXX:1: error: in num : CQL0242: lossy conversion from type 'REAL' in 1.0
@@ -1354,6 +1382,7 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0374: SELECT expression is 
 test/sem_test.sql:XXXX:1: error: in declare_out_call_stmt : CQL0389: DECLARE OUT requires that the procedure be already declared 'not_defined'
 test/sem_test.sql:XXXX:1: error: in str : CQL0390: DECLARE OUT CALL used on a procedure with no missing OUT arguments 'decl1'
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
+test/sem_test.sql:XXXX:1: error: in not : additional info: calling 'out2_proc' argument #1 intended for parameter 'x' has the problem
 test/sem_test.sql:XXXX:1: error: in declare_out_call_stmt : CQL0213: procedure had errors, can't call 'decl_test_err'
 test/sem_test.sql:XXXX:1: error: in str : CQL0426: OUT or INOUT argument cannot be used again in same call 'u'
 test/sem_test.sql:XXXX:1: error: in str : CQL0426: OUT or INOUT argument cannot be used again in same call 'u'
@@ -1375,15 +1404,21 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CREATE TABLE foo(
 The above must be identical.
 test/sem_test.sql:XXXX:1: error: in str : CQL0103: duplicate table/view name 'foo'
 test/sem_test.sql:XXXX:1: error: in str : CQL0210: proc out parameter: arg must be an exact type match (even nullability) (expected integer notnull; found integer) 'a'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'requires_notnull_out' argument #1 intended for parameter 'a' has the problem
 test/sem_test.sql:XXXX:1: error: in str : CQL0013: cannot assign/copy possibly null expression to not null target 'a'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'requires_notnull_inout' argument #1 intended for parameter 'a' has the problem
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'some_undefined_variable'
 test/sem_test.sql:XXXX:1: error: in str : CQL0013: cannot assign/copy possibly null expression to not null target 'a'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'requires_int_notnull' argument #1 intended for parameter 'a' has the problem
 test/sem_test.sql:XXXX:1: error: in str : CQL0438: variable possibly used before initialization 'a'
 test/sem_test.sql:XXXX:1: error: in str : CQL0438: variable possibly used before initialization 'b'
 test/sem_test.sql:XXXX:1: error: in str : CQL0438: variable possibly used before initialization 'c'
 test/sem_test.sql:XXXX:1: error: in str : CQL0438: variable possibly used before initialization 'a'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'requires_inout_text_notnull' argument #1 intended for parameter 't' has the problem
 test/sem_test.sql:XXXX:1: error: in str : CQL0438: variable possibly used before initialization 'b'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'requires_inout_blob_notnull' argument #1 intended for parameter 't' has the problem
 test/sem_test.sql:XXXX:1: error: in str : CQL0438: variable possibly used before initialization 'c'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'requires_inout_object_notnull' argument #1 intended for parameter 't' has the problem
 test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0439: nonnull reference OUT parameter possibly not always initialized 'a'
 test/sem_test.sql:XXXX:1: error: in return_stmt : CQL0439: nonnull reference OUT parameter possibly not always initialized 'a'
 test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0439: nonnull reference OUT parameter possibly not always initialized 'a'
@@ -1591,6 +1626,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0453: blob type is not a valid tabl
 test/sem_test.sql:XXXX:1: error: in str : CQL0456: blob type is a view, not a table 'MyView'
 test/sem_test.sql:XXXX:1: error: in str : CQL0455: blob variable must have a type-kind for type safety 'B'
 test/sem_test.sql:XXXX:1: error: in str : CQL0067: cursor was not used with 'fetch [cursor]' 'C'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'cql_cursor_to_blob' argument #1 intended for parameter 'C' has the problem
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_cursor'
 test/sem_test.sql:XXXX:1: error: in str : CQL0457: the indicated table is not marked with [[blob_storage]] 'foo'
 test/sem_test.sql:XXXX:1: error: in create_trigger_stmt : CQL0458: the indicated table may only be used for blob storage 'structured_storage'
@@ -1652,6 +1688,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'locals'
 test/sem_test.sql:XXXX:1: error: in like : CQL0069: name not found 'does_not_exist'
 test/sem_test.sql:XXXX:1: error: in like : CQL0069: name not found (proc had errors, cannot be used) 'broken_thing'
 test/sem_test.sql:XXXX:1: error: in num : CQL0205: not a cursor '1'
+test/sem_test.sql:XXXX:1: error: in num : additional info: calling 'external_cursor_func' argument #1 intended for parameter 'x' has the problem
 test/sem_test.sql:XXXX:1: error: in like : CQL0069: name not found (proc had errors, cannot be used) 'broken_thing'
 test/sem_test.sql:XXXX:1: error: in declare_interface_stmt : CQL0478: interface name conflicts with procedure name 'proc4'
 test/sem_test.sql:XXXX:1: error: in str : CQL0190: duplicate column name 'id'
@@ -1710,6 +1747,7 @@ test/sem_test.sql:XXXX:1: error: in eq : CQL0471: a top level equality is almost
 test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0474: when '*' appears in an expression list there can be nothing else in the list
 test/sem_test.sql:XXXX:1: error: in star : CQL0492: operator found in an invalid position '*'
 test/sem_test.sql:XXXX:1: error: in star : CQL0051: argument can only be used in count(*) '*'
+test/sem_test.sql:XXXX:1: error: in star : additional info: calling 'a_target_proc' argument #2 intended for parameter 'y' has the problem
 test/sem_test.sql:XXXX:1: error: in arg_list : CQL0474: when '*' appears in an expression list there can be nothing else in the list
 test/sem_test.sql:XXXX:1: error: in arg_list : CQL0474: when '*' appears in an expression list there can be nothing else in the list
 test/sem_test.sql:XXXX:1: error: in param : CQL0475: select functions cannot have out parameters 'inout_param'
@@ -1719,9 +1757,10 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0112: index in drop statement was n
 test/sem_test.sql:XXXX:1: error: in str : CQL0113: trigger in drop statement was not declared '`abc def`'
 test/sem_test.sql:XXXX:1: error: in str : CQL0110: view in drop statement does not exist '`vvv v`'
 test/sem_test.sql:XXXX:1: error: in col_def : CQL0148: added column must already be reflected in declared schema, with @create, exact name match required '`a b`'
-test/sem_test.sql:XXXX:1: error: in num : CQL0502: Cannot re-assign value to constant variable 'cant_change'
-test/sem_test.sql:XXXX:1: error: in str : CQL0502: Cannot re-assign value to constant variable 'cant_change'
-test/sem_test.sql:XXXX:1: error: in str : CQL0502: Cannot re-assign value to constant variable 'cant_change'
+test/sem_test.sql:XXXX:1: error: in num : CQL0502: cannot re-assign value to constant variable 'cant_change'
+test/sem_test.sql:XXXX:1: error: in str : CQL0502: cannot re-assign value to constant variable 'cant_change'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'using_rc' argument #1 intended for parameter 'result_code' has the problem
+test/sem_test.sql:XXXX:1: error: in str : CQL0502: cannot re-assign value to constant variable 'cant_change'
 test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'foo.rowid'
 test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'foo.rowid'
 test/sem_test.sql:XXXX:1: error: in jex1 : CQL0044: operator may only appear in the context of a SQL statement '->'

@@ -2106,8 +2106,8 @@ SELECT *
 CALL foo(*);
 
 WITH
-  bar AS (CALL bar(1, 5) USING goo AS too),
-  tar AS (CALL tar(3) USING soo AS woo, goo AS too)
+  (CALL bar(1, 5) USING goo AS too),
+  (CALL tar(3) USING soo AS woo, goo AS too)
 SELECT *
   FROM bar,
     tar;

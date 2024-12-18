@@ -3014,24 +3014,45 @@ static void gen_cte_table(ast_node *ast)  {
   EXTRACT(cte_decl, ast->left);
   EXTRACT_ANY_NOTNULL(cte_body, ast->right);
 
-  gen_cte_decl(cte_decl);
+  bool_t suppress_decl = false;
+  if (is_ast_shared_cte(cte_body) && is_ast_star(cte_decl->right)) {
+    // special case for foo(*) as (call foo(...))
+    // we want to emit the abbreviated form in that case
+
+    EXTRACT_STRING(cte_name, cte_decl->left);
+    EXTRACT_NOTNULL(call_stmt, cte_body->left);
+    EXTRACT_STRING(call_name, call_stmt->left);
+
+    // skip the redunant cte decl if the names are the same
+    // this is much cleaner looking and avoids the "is it the same?" question
+    // when reading the source
+    suppress_decl = !StrCaseCmp(cte_name, call_name);
+  }
+
+  if (!suppress_decl) {
+    gen_cte_decl(cte_decl);
+  }
 
   if (is_ast_like(cte_body)) {
     gen_printf(" LIKE ");
     if (is_ast_str(cte_body->left)) {
       gen_name(cte_body->left);
     }
-   else {
-     gen_printf("(\n");
-     GEN_BEGIN_INDENT(cte_indent, 2);
-       gen_select_stmt(cte_body->left);
-     GEN_END_INDENT(cte_indent);
-     gen_printf("\n)");
-   }
-   return;
+    else {
+      gen_printf("(\n");
+      GEN_BEGIN_INDENT(cte_indent, 2);
+        gen_select_stmt(cte_body->left);
+      GEN_END_INDENT(cte_indent);
+      gen_printf("\n)");
+    }
+    return;
   }
 
-  gen_printf(" AS (");
+  if (!suppress_decl) {
+    gen_printf(" AS ");
+  }
+
+  gen_printf("(");
 
   if (is_ast_shared_cte(cte_body)) {
     gen_shared_cte(cte_body);

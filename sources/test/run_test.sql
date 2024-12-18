@@ -7437,6 +7437,59 @@ begin
   EXPECT_EQ!(o1, null);
 end);
 
+@ifdef modern_test
+
+proc make_json_backed_schema()
+begin
+  [[backing_table]]
+  [[json]]
+  create table json_backed(
+    k blob primary key,
+    v blob
+  );
+
+  [[backed_by=json_backed]]
+  create table my_data(
+   id int! primary key,
+   name text!,
+   age int!
+  );
+
+  let i := 0;
+  while i < 15
+  begin
+    i += 1;
+    insert into my_data() values() @dummy_seed(i);
+  end;
+
+  update my_data set name = 'modified' where id = 5;
+  delete from my_data where id = 11;
+  update my_data set id = 100 where id = 6;
+end;
+
+-- verify that we can cast anything to null
+TEST!(json_backing,
+begin
+  cursor C for select * from my_data;
+  cursor D like C;
+  let i := 0;
+  loop fetch C
+  begin
+     i += 1;
+     printf("%d, %s\n", C.id, C.name);
+     if i == 11 or id = 6 then i += 1; end; -- these were moved
+     EXPECT_NE(C.id, 11);  -- this was deleted
+     fetch D from values() @dummy_seed(i);
+     if not cql_cursors_equal(C, D) then
+       printf("cursors differ at %s\n", C:diff_val(D));
+       EXPECT!(cql_cursors_equal(C,D));
+     end;
+  end;
+  EXPECT_EQ!(i, 15);
+end);
+
+@endif
+
 END_SUITE();
 
 -- manually force tracing on by redefining the macros

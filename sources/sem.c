@@ -16393,6 +16393,7 @@ static void sem_create_table_stmt(ast_node *ast) {
       }
 
       if (is_backed(ast->sem->sem_type)) {
+        // if (current_proc) exit(1);  // This needs an error : rico
         clone_backing_table_functions(ast, name);
         rewrite_shared_fragment_from_backed_table(ast);
       }

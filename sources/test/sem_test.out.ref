@@ -80248,6 +80248,83 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not su
 
 The statement ending at line XXXX
 
+[[backing_table]]
+[[json]]
+CREATE TABLE json_backing(
+  k BLOB PRIMARY KEY,
+  v BLOB
+);
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  | | | {dot}
+  | |   | {name cql}
+  | |   | {name backing_table}
+  | | {misc_attrs}
+  |   | {misc_attr}
+  |     | {dot}
+  |       | {name cql}
+  |       | {name json}
+  | {create_table_stmt}: json_backing: { k: blob notnull primary_key, v: blob } backing
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name json_backing}
+    | {col_key_list}
+      | {col_def}: k: blob notnull primary_key
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name k}
+      |   | | {type_blob}: blob
+      |   | {col_attrs_pk}: ok
+      |     | {autoinc_and_conflict_clause}
+      | {col_key_list}
+        | {col_def}: v: blob
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name v}
+              | {type_blob}: blob
+
+The statement ending at line XXXX
+
+[[backed_by=json_backing]]
+CREATE TABLE backed_with_blobs(
+  pk INT PRIMARY KEY,
+  x BLOB
+);
+
+test/sem_test.sql:XXXX:1: error: in col_def : CQL0487: table is not suitable for use as backed storage: column 'x' is a blob column, but blobs cannot appear in tables backed by JSON in 'backed_with_blobs'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name backed_by}
+  |   | {name json_backing}: ok
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name backed_with_blobs}
+    | {col_key_list}
+      | {col_def}: pk: integer notnull primary_key
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name pk}
+      |   | | {type_int}: integer
+      |   | {col_attrs_pk}: ok
+      |     | {autoinc_and_conflict_clause}
+      | {col_key_list}
+        | {col_def}: err
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name x}
+              | {type_blob}: blob
+
+The statement ending at line XXXX
+
 [[blob_storage]]
 CREATE TABLE structured_storage(
   id INT!,

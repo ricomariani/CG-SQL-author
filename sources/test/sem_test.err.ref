@@ -1578,6 +1578,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not su
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not suitable for use as backed storage: column 't' has create attribute in 'created_col_backed'
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not suitable for use as backed storage: @recreate attribute doesn't match the backing table 'recreate_backed'
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not suitable for use as backed storage: @recreate group doesn't match the backing table 'recreate_backed_wrong_group'
+test/sem_test.sql:XXXX:1: error: in col_def : CQL0487: table is not suitable for use as backed storage: column 'x' is a blob column, but blobs cannot appear in tables backed by JSON in 'backed_with_blobs'
 test/sem_test.sql:XXXX:1: error: in str : CQL0024: cursor not declared with 'LIKE table_name', blob type can't be inferred 'C'
 test/sem_test.sql:XXXX:1: error: in str : CQL0455: blob variable must have a type-kind for type safety 'a_blob'
 test/sem_test.sql:XXXX:1: error: in str : CQL0455: blob variable must have a type-kind for type safety 'a_blob'

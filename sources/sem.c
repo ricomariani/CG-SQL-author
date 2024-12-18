@@ -15870,6 +15870,12 @@ static void sem_validate_table_for_backed(ast_node *ast) {
     return;
   }
 
+  cg_blob_mappings_t *map = find_backing_info(backing_table_name);
+  Invariant(map);  // already added for sure!
+
+  // JSON backing tables can't hold blobs, so backed tables must not have any
+  bool_t is_json = map->use_json || map->use_jsonb;
+
   int32_t temp = flags & TABLE_IS_TEMP;
   int32_t no_rowid = flags & TABLE_IS_NO_ROWID;
   bool_t has_key = false;
@@ -15922,6 +15928,17 @@ static void sem_validate_table_for_backed(ast_node *ast) {
 
     if (is_primary_key(sem_type)) {
       icol_pk = icol;
+    }
+
+    if (is_blob(sem_type) && is_json) {
+      Invariant(def->sem->name);
+      report_invalid_backed_column (
+        def,
+        "is a blob column, but blobs cannot appear in tables backed by JSON",
+        def->sem->name,
+        name);
+      record_error(ast);
+      return;
     }
 
     sem_backed_col_def(ast, def, name);
@@ -16101,7 +16118,7 @@ static void clone_backing_table_functions(ast_node *table, CSTR name) {
   Contract(table_name); // already checked
 
   cg_blob_mappings_t *map = find_backing_info(table_name);
-  Contract(map);  // already added for sure!
+  Invariant(map);  // already added for sure!
   add_backing_info(map, name);
 }
 

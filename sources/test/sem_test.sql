@@ -21424,6 +21424,25 @@ create table recreate_backed_wrong_group(
   t text
 ) @recreate(wrong_group_name);
 
+-- TEST: simple json backing table for later test
+-- - error:
+[[backing_table]]
+[[json]]
+create table json_backing(
+  k blob primary key,
+  v blob
+);
+
+-- TEST json backed tables may not hold blobs
+-- + error: % table is not suitable for use as backed storage: column 'x' is a blob column, but blobs cannot appear in tables backed by JSON in 'backed_with_blobs'
+-- + {create_table_stmt}: err
+-- +1 error:
+[[backed_by=json_backing]]
+create table backed_with_blobs(
+  pk int primary key,
+  x blob
+);
+
 [[blob_storage]]
 create table structured_storage(
   id int!,

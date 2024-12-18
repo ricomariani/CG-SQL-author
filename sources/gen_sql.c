@@ -3982,6 +3982,20 @@ static void gen_with_insert_stmt(ast_node *ast) {
   gen_insert_stmt(insert_stmt);
 }
 
+static void gen_insert_returning_stmt(ast_node *ast) {
+  Contract(is_ast_insert_returning_stmt(ast));
+  EXTRACT_ANY_NOTNULL(insert_stmt, ast->left);
+  if (is_ast_with_insert_stmt(insert_stmt)) {
+    gen_with_insert_stmt(insert_stmt);
+  }
+  else {
+    gen_insert_stmt(insert_stmt);
+  }
+  gen_printf("\n  RETURNING (");
+  gen_select_expr_list(ast->right);
+  gen_printf(")");
+}
+
 static void gen_expr_names(ast_node *ast) {
   Contract(is_ast_expr_names(ast));
 
@@ -5577,6 +5591,7 @@ cql_noexport void gen_init() {
   STMT_INIT(ifdef_stmt);
   STMT_INIT(ifndef_stmt);
   STMT_INIT(insert_stmt);
+  STMT_INIT(insert_returning_stmt);
   STMT_INIT(leave_stmt);
   STMT_INIT(let_stmt);
   STMT_INIT(loop_stmt);

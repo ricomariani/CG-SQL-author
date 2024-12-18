@@ -772,6 +772,7 @@ AST(indexed_columns)
 AST(indexed_columns_conflict_clause)
 AST(insert_dummy_spec);
 AST(insert_list)
+AST(insert_returning_stmt)
 AST(insert_stmt)
 AST(is)
 AST(is_not)

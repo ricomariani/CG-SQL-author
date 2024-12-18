@@ -1946,14 +1946,14 @@ insert_stmt_plain:
 returning_suffix: RETURNING '(' select_expr_list ')' { $$ = $select_expr_list; }
 
 insert_stmt:
-     insert_stmt_plain
-     { $$ = $insert_stmt_plain; }
-   | insert_stmt_plain returning_suffix
-     { $$ = $insert_stmt_plain; }
-   | with_prefix insert_stmt_plain
-     { $$ = new_ast_with_insert_stmt($with_prefix, $insert_stmt_plain); }
-   | with_prefix insert_stmt_plain returning_suffix
-     { $$ = new_ast_with_insert_stmt($with_prefix, $insert_stmt_plain); }
+     insert_stmt_plain { $$ = $insert_stmt_plain; }
+   | insert_stmt_plain returning_suffix {
+     $$ = new_ast_insert_returning_stmt($insert_stmt_plain, $returning_suffix); }
+   | with_prefix insert_stmt_plain {
+     $$ = new_ast_with_insert_stmt($with_prefix, $insert_stmt_plain); }
+   | with_prefix insert_stmt_plain returning_suffix {
+     ast_node *tmp = new_ast_with_insert_stmt($with_prefix, $insert_stmt_plain); 
+     $$ = new_ast_insert_returning_stmt(tmp, $returning_suffix); }
    ;
 
 insert_list_item:

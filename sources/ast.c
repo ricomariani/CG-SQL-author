@@ -209,6 +209,7 @@ cql_noexport bool_t is_update_stmt(ast_node *ast) {
 }
 
 // Any of the insert forms
+// TODO update this as needed and fix the callers
 cql_noexport bool_t is_insert_stmt(ast_node *ast) {
   return is_ast_insert_stmt(ast) ||
          is_ast_with_insert_stmt(ast) ||

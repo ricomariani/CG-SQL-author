@@ -3491,7 +3491,11 @@ PROC with_upsert_form ()
 BEGIN
   WITH
     names (id) AS (
-      VALUES(1), (5), (3), (12)
+      VALUES
+        (1),
+        (5),
+        (3),
+        (12)
     )
   INSERT INTO foo(id)
     SELECT id
@@ -3506,7 +3510,7 @@ END;
 function with_upsert_form(_db_)
   local _rc_ = CQL_OK
   _rc_ = cql_exec(_db_,
-    "WITH names (id) AS ( VALUES(1), (5), (3), (12) ) INSERT INTO foo(id) SELECT id FROM names WHERE 1 ON CONFLICT (id) DO UPDATE SET id = 10 WHERE id <> 10")
+    "WITH names (id) AS ( VALUES (1), (5), (3), (12) ) INSERT INTO foo(id) SELECT id FROM names WHERE 1 ON CONFLICT (id) DO UPDATE SET id = 10 WHERE id <> 10")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 

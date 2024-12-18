@@ -507,7 +507,7 @@ end;
 -- TEST: an update statement and with clause
 -- + "name" : "update_with_proc",
 -- + "table" : "Foo",
--- + "statement" : "WITH names (n) AS ( VALUES('this'), ('that') ) UPDATE foO SET name = ? WHERE name IN (SELECT n FROM names)",
+-- + "statement" : "WITH names (n) AS ( VALUES ('this'), ('that') ) UPDATE foO SET name = ? WHERE name IN (SELECT n FROM names)",
 -- + "statementArgs" : [ "name_" ]
 proc update_with_proc(id_ integer!, name_ text)
 begin
@@ -768,7 +768,7 @@ end;
 -- + "insertTables" : [ "T3" ],
 -- + "usesTables" : [ "T3" ],
 -- + "table" : "T3",
--- + "statement" : "INSERT INTO T3(id) VALUES(1), (2), (3)",
+-- + "statement" : "INSERT INTO T3(id) VALUES (1), (2), (3)",
 -- + "statementArgs" : [  ],
 -- + "statementType" : "INSERT",
 -- - "values"
@@ -811,7 +811,7 @@ end;
 -- + "args" : [
 -- + ],
 -- + "usesTables" : [ "T3" ],
--- + "statement" : "WITH data (id) AS ( VALUES(1), (2), (3) ) INSERT INTO T3(id) SELECT id FROM data WHERE 1 ON CONFLICT DO UPDATE SET id = 1 WHERE id = 9",
+-- + "statement" : "WITH data (id) AS ( VALUES (1), (2), (3) ) INSERT INTO T3(id) SELECT id FROM data WHERE 1 ON CONFLICT DO UPDATE SET id = 1 WHERE id = 9",
 -- + "statementArgs" : [  ],
 -- + "statementType" : "INSERT",
 proc with_upsert_proc()
@@ -828,7 +828,7 @@ end;
 -- + "insertTables" : [ "T3" ],
 -- + "usesTables" : [ "T3" ],
 -- + "table" : "T3",
--- + "statement" : "WITH data (id) AS ( VALUES(1), (2), (?) ) INSERT INTO T3(id) SELECT id FROM data",
+-- + "statement" : "WITH data (id) AS ( VALUES (1), (2), (?) ) INSERT INTO T3(id) SELECT id FROM data",
 -- + "statementArgs" : [ "x" ],
 -- + "statementType" : "INSERT",
 -- + "columns" : [ "id" ]

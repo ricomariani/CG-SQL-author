@@ -2497,7 +2497,11 @@ END;
 -- + cql_code with_upsert_form(sqlite3 *_Nonnull _db_) {
 -- + "WITH "
 -- +   "names (id) AS ( "
--- +     "VALUES(1), (5), (3), (12) "
+-- +     "VALUES
+-- +      "(1), "
+-- +      "(5), "
+-- +      "(3), "
+-- +      "(12) "
 -- +   ") "
 -- + "INSERT INTO foo(id) "
 -- +   "SELECT id "
@@ -5580,7 +5584,10 @@ create table small_backed(
 
 -- TEST: simple insert with values
 -- + _vals (pk, x, y) AS (
--- + VALUES(1, '2', 3.14), (4, '5', 6), (7, '8', 9.7)
+-- + VALUES
+-- + (1, '2', 3.14),
+-- + (4, '5', 6),
+-- + (7, '8', 9.7)
 -- + )
 -- + INSERT INTO backing(k, v)
 -- + SELECT bcreatekey(-4190907309554122430, V.pk, 1), bcreateval(-4190907309554122430, 7953209610392031882, V.x, 4, 3032304244189539277, V.y, 3)

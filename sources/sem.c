@@ -13551,7 +13551,7 @@ static void sem_shared_fragment_table_binding(
     EXTRACT_STRING(formal, ast_formal);
 
     // sanity check, the name matches, we just looked it up...
-    Invariant(!strcmp(formal, cte_name));
+    Invariant(!StrCaseCmp(formal, cte_name));
 
     bool_t added = symtab_add(formals, cte_name, cte_decl);
     Contract(added); // known to be unique due to previous checks

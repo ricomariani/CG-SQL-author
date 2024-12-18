@@ -2901,15 +2901,19 @@ static void gen_select_statement_type(ast_node *ast) {
 
 static void gen_values(ast_node *ast) {
   Contract(is_ast_values(ast));
+  bool_t many_items = ast && ast->right;
   for (ast_node *item = ast; item; item = item->right) {
     EXTRACT(insert_list, item->left);
+    if (many_items) {
+      gen_printf("\n  ");
+    }
     gen_printf("(");
     if (insert_list) {
       gen_insert_list(insert_list);
     }
     gen_printf(")");
     if (item->right) {
-      gen_printf(", ");
+      gen_printf(",");
     }
   }
 }

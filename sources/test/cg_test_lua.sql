@@ -2408,7 +2408,7 @@ END;
 
 -- TEST: codegen with upsert statement form
 -- + function with_upsert_form(_db_)
--- + "WITH names (id) AS ( VALUES(1), (5), (3), (12) ) INSERT INTO foo(id)
+-- + "WITH names (id) AS ( VALUES (1), (5), (3), (12) ) INSERT INTO foo(id)
 -- = SELECT id FROM names WHERE 1 ON CONFLICT (id) DO UPDATE SET id = 10 WHERE id <> 10"
 proc with_upsert_form()
 BEGIN

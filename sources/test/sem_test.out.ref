@@ -41352,7 +41352,10 @@ PROC with_upsert_do_nothing ()
 BEGIN
   WITH
     data (id) AS (
-      VALUES(1), (2), (3)
+      VALUES
+        (1),
+        (2),
+        (3)
     )
   INSERT INTO foo(id)
     SELECT id
@@ -49594,7 +49597,9 @@ VALUES(1);
 
 The statement ending at line XXXX
 
-VALUES(1), (5);
+VALUES
+  (1),
+  (5);
 
   {select_stmt}: values: { column1: integer notnull }
   | {select_core_list}: values: { column1: integer notnull }
@@ -49612,7 +49617,9 @@ VALUES(1), (5);
 
 The statement ending at line XXXX
 
-VALUES(1), (_sens);
+VALUES
+  (1),
+  (_sens);
 
   {select_stmt}: values: { column1: integer sensitive }
   | {select_core_list}: values: { column1: integer sensitive }
@@ -49630,7 +49637,9 @@ VALUES(1), (_sens);
 
 The statement ending at line XXXX
 
-VALUES(1), (3, 4.5);
+VALUES
+  (1),
+  (3, 4.5);
 
 test/sem_test.sql:XXXX:1: error: in num : CQL0337: the number of columns values for each row should be identical in VALUES clause
 
@@ -49652,7 +49661,9 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0337: the number of columns values 
 
 The statement ending at line XXXX
 
-VALUES("ok"), (1);
+VALUES
+  ("ok"),
+  (1);
 
 test/sem_test.sql:XXXX:1: error: in num : CQL0009: incompatible types in expression 'VALUES clause'
 
@@ -49714,7 +49725,10 @@ The statement ending at line XXXX
 INSERT INTO foo(id)
   WITH
     T (x) AS (
-      VALUES(1), (2), (3)
+      VALUES
+        (1),
+        (2),
+        (3)
     )
   SELECT *
     FROM T @DUMMY_SEED(1);
@@ -49778,7 +49792,10 @@ The statement ending at line XXXX
 INSERT INTO foo(id)
   WITH
     T (x) AS (
-      VALUES(1), (2), (3)
+      VALUES
+        (1),
+        (2),
+        (3)
     )
   SELECT *
     FROM T;
@@ -49868,7 +49885,9 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0334: @dummy_seed @dummy_nu
 The statement ending at line XXXX
 
 INSERT INTO foo(id)
-  VALUES(1), (2) @DUMMY_SEED(1);
+  VALUES
+    (1),
+    (2) @DUMMY_SEED(1);
 
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0334: @dummy_seed @dummy_nullables @dummy_defaults many only be used with a single VALUES row
 
@@ -50015,7 +50034,9 @@ INSERT INTO foo(id)
 The statement ending at line XXXX
 
 INSERT INTO foo(id)
-  VALUES(1), (2) @DUMMY_SEED(1);
+  VALUES
+    (1),
+    (2) @DUMMY_SEED(1);
 
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0334: @dummy_seed @dummy_nullables @dummy_defaults many only be used with a single VALUES row
 
@@ -50046,7 +50067,9 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0334: @dummy_seed @dummy_nu
 
 The statement ending at line XXXX
 
-VALUES(1, 2), (10);
+VALUES
+  (1, 2),
+  (10);
 
 test/sem_test.sql:XXXX:1: error: in num : CQL0337: the number of columns values for each row should be identical in VALUES clause
 
@@ -50068,7 +50091,9 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0337: the number of columns values 
 
 The statement ending at line XXXX
 
-VALUES("ok"), (bogus);
+VALUES
+  ("ok"),
+  (bogus);
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'bogus'
 
@@ -58208,7 +58233,9 @@ test/sem_test.sql:XXXX:1: error: in select_core : CQL0070: expressions of differ
 The statement ending at line XXXX
 
 INSERT INTO xy(x, y)
-  VALUES(x1, y1), (x2, y2);
+  VALUES
+    (x1, y1),
+    (x2, y2);
 
   {insert_stmt}: ok
   | {insert_normal}
@@ -58241,7 +58268,10 @@ INSERT INTO xy(x, y)
 The statement ending at line XXXX
 
 INSERT INTO xy(x, y)
-  VALUES(x1, y1), (y2, x2), (x3, y3);
+  VALUES
+    (x1, y1),
+    (y2, x2),
+    (x3, y3);
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0070: expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 
@@ -61786,7 +61816,10 @@ INSERT INTO foo(id)
 The statement ending at line XXXX
 
 INSERT INTO foo(id)
-  VALUES(1), (2), (3);
+  VALUES
+    (1),
+    (2),
+    (3);
 
   {insert_stmt}: ok
   | {insert_normal}
@@ -77491,7 +77524,10 @@ BEGIN
   INSERT INTO Shape_xy(x, y)
     VALUES(C.x, C.y);
   INSERT INTO Shape_xy(x, y)
-    VALUES(1, 2), (3, 4), (C.x, C.y);
+    VALUES
+      (1, 2),
+      (3, 4),
+      (C.x, C.y);
   CURSOR D FOR
     SELECT *
       FROM Shape_uv;
@@ -77510,7 +77546,9 @@ BEGIN
   CURSOR T FOR
     WITH
       cte2 (l, m, n, o) AS (
-        VALUES(1, 2, '3', '4'), (C.x, C.y, D.u, D.v)
+        VALUES
+          (1, 2, '3', '4'),
+          (C.x, C.y, D.u, D.v)
       )
     SELECT *
       FROM cte2;
@@ -77962,7 +78000,9 @@ The statement ending at line XXXX
 PROC ShapeTrixError4 ()
 BEGIN
   INSERT INTO Shape_xy(x, y)
-    VALUES(1, 2), (FROM not_a_cursor LIKE Shape_xy);
+    VALUES
+      (1, 2),
+      (FROM not_a_cursor LIKE Shape_xy);
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_cursor'

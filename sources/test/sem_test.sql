@@ -20748,14 +20748,19 @@ create table Shape_uvxy (like Shape_xy, like Shape_uv);
 -- + INSERT INTO Shape_xy(x, y)
 -- +   VALUES(C.x, C.y);
 -- + INSERT INTO Shape_xy(x, y)
--- +   VALUES(1, 2), (3, 4), (C.x, C.y);
+-- +   VALUES
+-- +  (1, 2),
+-- +  (3, 4),
+-- +  (C.x, C.y);
 -- + FETCH R(x, y, u, v) FROM VALUES(C.x, C.y, D.u, D.v);
 -- + UPDATE CURSOR R(x, y, u, v) FROM VALUES(C.x, C.y, D.u, D.v);
 -- + cte1 (l, m, n, o) AS (
 -- +   VALUES(C.x, C.y, D.u, D.v)
 -- + )
 -- + cte2 (l, m, n, o) AS (
--- +  VALUES(1, 2, '3', '4'), (C.x, C.y, D.u, D.v)
+-- +  VALUES
+-- +   (1, 2, '3', '4'),
+-- +   (C.x, C.y, D.u, D.v)
 -- + )
 -- - error:
 proc ShapeTrix()

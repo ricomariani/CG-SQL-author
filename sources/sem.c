@@ -5299,8 +5299,8 @@ static void sem_jex1(ast_node *ast, CSTR op) {
   sem_t sem_type_left = left->sem->sem_type;
   sem_t sem_type_right = right->sem->sem_type;
 
-  if (!is_text(sem_type_right)) {
-    report_error(right, "CQL0504: right operand must be json text path", op);
+  if (!is_text(sem_type_right) && !is_any_int(sem_type_right)) {
+    report_error(right, "CQL0504: right operand must be json text path or integer", op);
     record_error(ast);
     return;
   }
@@ -5349,8 +5349,8 @@ static void sem_jex2(ast_node *ast, CSTR op) {
   sem_t sem_type_left = left->sem->sem_type;
   sem_t sem_type_right = right->sem->sem_type;
 
-  if (!is_text(sem_type_right)) {
-    report_error(right, "CQL0504: right operand must be json text path", op);
+  if (!is_text(sem_type_right) && !is_any_int(sem_type_right)) {
+    report_error(right, "CQL0504: right operand must be json text path or integer", op);
     record_error(ast);
     return;
   }
@@ -15844,6 +15844,11 @@ static void sem_validate_table_for_backed(ast_node *ast) {
   EXTRACT_MISC_ATTRS(ast, misc_attrs);
 
   Contract(!is_error(ast));
+
+  if (current_proc) {
+    report_invalid_backed(ast, "backed table must appear outside of any procedure", name);
+    return;
+  }
 
   // the table has the attribute or we would not be here
   CSTR backing_table_name = get_named_string_attribute_value(misc_attrs, "backed_by");

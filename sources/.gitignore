@@ -18,3 +18,5 @@
 *.gcda
 *.gcno
 .pbcopy.swp
+sqlite/sqlite3.o
+sqlite/sqlite3

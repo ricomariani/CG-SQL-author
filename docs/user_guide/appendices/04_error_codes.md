@@ -5528,7 +5528,7 @@ Declare these variables with a `let` statement instead if you would like to muta
 
 ----
 
-### CQL0503: [argument/operand] must be json text or json blob 'context'
+### CQL0503: left operand must be json text or json blob 'context'
 
 The indicated argument or operand is expected to be JSON in the form of either
 text or a blob. will indicate which argument number or operand that is
@@ -5536,7 +5536,7 @@ incorrect.
 
 ----
 
-### CQL0504: [argument/operand] must be json text path 'context'
+### CQL0504: right operand must be json text path or integer 'context'
 
 The indicated argument or operand is expected to be a json path in text form.
 The error will indicate which argument number or operand that is incorrect.

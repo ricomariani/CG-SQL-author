@@ -20,7 +20,7 @@ T=test
 # and so forth.  This is also a good way to test a specific version of sqlite3,
 # e.g. the latest new release.
 ifdef SQLITE_PATH
-SQLITE_OBJ = $O/sqlite3.o
+SQLITE_OBJ = sqlite/sqlite3.o
 SQLITE_LINK = $(SQLITE_OBJ)
 CFLAGS += -I$(SQLITE_PATH)
 else
@@ -150,8 +150,11 @@ $O/symtab.o: symtab.c symtab.h bytebuf.h
 
 $O/minipool.o: minipool.c minipool.h
 
-$O/sqlite3.o: $(SQLITE_PATH)/sqlite3.c
-	$(CC) $(CFLAGS) -c -o $@ $<
+sqlite: ${SQLITE_OBJ}
+
+# disable coverage for sqlite3.o
+${SQLITE_OBJ}: $(SQLITE_PATH)/sqlite3.c
+	$(CC) $(CFLAGS:--coverage=) -c -o $@ $<
 
 clean:
 	rm -rf *.gcno *.gcda $O .pbcopy.swp
@@ -196,12 +199,17 @@ $O/cqlrt_mocked.o: cqlrt.c cqlrt.h cqlrt_common.c cqlrt_common.h
 RUN_TEST_DEPS=$O/run_test.o $O/cqltest.o $O/run_test_client.o $O/cqlrt_mocked.o $O/result_set_extension.o
 
 run_test: $(RUN_TEST_DEPS)
-	$(CC) -o $O/run_test $(CFLAGS) $(RUN_TEST_DEPS) $(SQLITE_LINK)
+	$(CC) -o $O/$@ $(CFLAGS) $^ $(SQLITE_LINK)
+
+RUN_TEST_MODERN_DEPS=$(RUN_TEST_DEPS:run_test.o=run_test_modern.o)
+
+run_test_modern: $(RUN_TEST_MODERN_DEPS)
+	$(CC) -o $O/$@ $(CFLAGS) $^ $(SQLITE_LINK)
 
 RUN_TEST_COMPRESSED_DEPS=$(RUN_TEST_DEPS:run_test.o=run_test_compressed.o)
 
 run_test_compressed: $(RUN_TEST_COMPRESSED_DEPS)
-	$(CC) -o $O/run_test_compressed $(CFLAGS) $(RUN_TEST_COMPRESSED_DEPS) $(SQLITE_LINK)
+	$(CC) -o $O/run_test_compressed $(CFLAGS) $^ $(SQLITE_LINK)
 
 # ensure that the same .o file is used exactly, rather than rebuilding from .c, this avoids gcov errors
 

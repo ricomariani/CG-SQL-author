@@ -2907,6 +2907,9 @@ static void gen_values(ast_node *ast) {
     if (many_items) {
       gen_printf("\n  ");
     }
+    else {
+      gen_printf(" ");
+    }
     gen_printf("(");
     if (insert_list) {
       gen_insert_list(insert_list);
@@ -3692,7 +3695,7 @@ static void gen_update_cursor_stmt(ast_node *ast) {
       gen_from_shape(insert_list);
     }
     else {
-      gen_printf("FROM VALUES(");
+      gen_printf("FROM VALUES (");
       gen_insert_list(insert_list);
       gen_printf(")");
     }
@@ -3932,7 +3935,7 @@ static void gen_insert_stmt(ast_node *ast) {
       gen_from_shape(insert_list);
     }
     else {
-      gen_printf(" VALUES(");
+      gen_printf(" VALUES (");
       gen_insert_list(insert_list);
       gen_printf(")");
     }
@@ -3998,7 +4001,7 @@ static void gen_fetch_values_stmt(ast_node *ast) {
     }
     else {
       EXTRACT(insert_list, columns_values->right);
-      gen_printf("FROM VALUES(");
+      gen_printf("FROM VALUES (");
       gen_insert_list(insert_list);
       gen_printf(")");
     }

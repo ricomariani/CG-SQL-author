@@ -3255,13 +3255,13 @@
       WHERE name > old.name AND name < new.name;
 
     INSERT INTO Foo(id, name)
-      VALUES(7, 'goo');
+      VALUES (7, 'goo');
     END
 
     ,
     {
       "name" : "trigger3",
-      "CRC" : "1697192564179557363",
+      "CRC" : "5975803729841823154",
       "target" : "MyView",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -3270,7 +3270,7 @@
       "isUpdateTrigger" : 1,
       "whenExpr" : "old.id > 1 AND new.id < 3",
       "whenExprArgs" : [  ],
-      "statement" : "CREATE TRIGGER trigger3 INSTEAD OF UPDATE ON MyView WHEN old.id > 1 AND new.id < 3 BEGIN UPDATE Foo SET id = 7 WHERE name > old.name AND name < new.name;  INSERT INTO Foo(id, name) VALUES(7, 'goo'); END",
+      "statement" : "CREATE TRIGGER trigger3 INSTEAD OF UPDATE ON MyView WHEN old.id > 1 AND new.id < 3 BEGIN UPDATE Foo SET id = 7 WHERE name > old.name AND name < new.name;  INSERT INTO Foo(id, name) VALUES (7, 'goo'); END",
       "statementArgs" : [  ],
       "insertTables" : [ "Foo" ],
       "updateTables" : [ "Foo" ],
@@ -4124,7 +4124,7 @@
     PROC insert_proc (id_ INT!, name_ TEXT)
     BEGIN
     INSERT OR REPLACE INTO Foo(id, name)
-      VALUES(id_, name_);
+      VALUES (id_, name_);
     END
 
     {
@@ -4148,7 +4148,7 @@
       "insertTables" : [ "Foo" ],
       "usesTables" : [ "Foo" ],
       "table" : "Foo",
-      "statement" : "INSERT OR REPLACE INTO Foo(id, name) VALUES(?, ?)",
+      "statement" : "INSERT OR REPLACE INTO Foo(id, name) VALUES (?, ?)",
       "statementArgs" : [ "id_", "name_" ],
       "statementType" : "INSERT OR REPLACE",
       "columns" : [ "id", "name" ],
@@ -4168,7 +4168,7 @@
 
     PROC dummy_insert_proc (seed_ INT!)
     BEGIN
-    INSERT INTO fOo(id, name) VALUES(_seed_, printf('name_%d', _seed_)) @DUMMY_SEED(seed_) @DUMMY_NULLABLES;
+    INSERT INTO fOo(id, name) VALUES (_seed_, printf('name_%d', _seed_)) @DUMMY_SEED(seed_) @DUMMY_NULLABLES;
     END
 
     {
@@ -4186,7 +4186,7 @@
       "insertTables" : [ "Foo" ],
       "usesTables" : [ "Foo" ],
       "table" : "Foo",
-      "statement" : "INSERT INTO fOo(id, name) VALUES(?, printf('name_%d', ?))",
+      "statement" : "INSERT INTO fOo(id, name) VALUES (?, printf('name_%d', ?))",
       "statementArgs" : [ "_seed_", "_seed_" ],
       "statementType" : "INSERT",
       "columns" : [ "id", "name" ],
@@ -4232,7 +4232,7 @@
     PROC insert_compound ()
     BEGIN
     INSERT INTO T3(id)
-      VALUES(1)
+      VALUES (1)
       UNION ALL
       SELECT 1 AS column1;
     END
@@ -4246,7 +4246,7 @@
       "insertTables" : [ "T3" ],
       "usesTables" : [ "T3" ],
       "table" : "T3",
-      "statement" : "INSERT INTO T3(id) VALUES(1) UNION ALL SELECT 1 AS column1",
+      "statement" : "INSERT INTO T3(id) VALUES (1) UNION ALL SELECT 1 AS column1",
       "statementArgs" : [  ],
       "statementType" : "INSERT",
       "columns" : [ "id" ]
@@ -4283,7 +4283,7 @@
     PROC upsert_proc ()
     BEGIN
     INSERT INTO T3(id)
-      VALUES(1)
+      VALUES (1)
     ON CONFLICT DO UPDATE
       SET id = 1
       WHERE id = 9;
@@ -4298,7 +4298,7 @@
       "insertTables" : [ "T3" ],
       "usesTables" : [ "T3" ],
       "table" : "T3",
-      "statement" : "INSERT INTO T3(id) VALUES(1) ON CONFLICT DO UPDATE SET id = 1 WHERE id = 9",
+      "statement" : "INSERT INTO T3(id) VALUES (1) ON CONFLICT DO UPDATE SET id = 1 WHERE id = 9",
       "statementArgs" : [  ],
       "statementType" : "INSERT",
       "columns" : [ "id" ]
@@ -4582,7 +4582,7 @@
     BEGIN
     CURSOR C LIKE SELECT 1 AS A;
 
-    FETCH C(A) FROM VALUES(7);
+    FETCH C(A) FROM VALUES (7);
 
     OUT C;
     END
@@ -4611,7 +4611,7 @@
     BEGIN
     CURSOR C LIKE SELECT 1 AS A;
 
-    FETCH C(A) FROM VALUES(7);
+    FETCH C(A) FROM VALUES (7);
 
     OUT UNION C;
 

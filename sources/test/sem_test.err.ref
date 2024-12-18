@@ -794,7 +794,7 @@ UPDATE bar
   WHERE rowid = old.rowid OR rowid = new.rowid;
 
 INSERT INTO bar(id, name, rate)
-  VALUES(7, 'goo', 17L);
+  VALUES (7, 'goo', 17L);
 END
 test/sem_test.sql:XXXX:1: error: in create_trigger_stmt : CREATE TRIGGER trigger3
   INSTEAD OF UPDATE ON ViewShape

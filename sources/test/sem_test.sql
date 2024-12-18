@@ -2384,7 +2384,7 @@ insert into bar values (1, 2, 3);
 -- + {name foo}: foo: { id: integer notnull primary_key autoinc }
 -- * error: % count of columns differs from count of values
 -- +1 error:
-insert into foo values(NULL, 2);
+insert into foo values (NULL, 2);
 
 -- TEST: insert too few columns
 -- + {insert_stmt}: err
@@ -2393,7 +2393,7 @@ insert into foo values(NULL, 2);
 -- + {select_core}: err
 -- * error: % select statement with VALUES clause requires a non empty list of values
 -- +1 error:
-insert into foo values();
+insert into foo values ();
 
 -- TEST: insert into bar, null not allowed in non-null field
 -- * error: % cannot assign/copy possibly null expression to not null target 'id'
@@ -6370,31 +6370,31 @@ insert into bar(id, name, rate) values (1, '2', 3);
 -- + {name_columns_values}
 -- + {name foo}: foo: { id: integer notnull primary_key autoinc }
 -- - error:
-insert into foo(id) values(NULL);
+insert into foo(id) values (NULL);
 
 -- TEST: insert missing column
 -- + {insert_stmt}: err
 -- * error: % required column missing in INSERT statement 'id'
 -- +1 error:
-insert into bar(name) values('x');
+insert into bar(name) values ('x');
 
 -- TEST: insert column name doesn't exist
 -- + {insert_stmt}: err
 -- * error: % name not found 'garbonzo'
 -- +1 error:
-insert into bar(garbonzo) values('x');
+insert into bar(garbonzo) values ('x');
 
 -- TEST: insert duplicate column name
 -- + {insert_stmt}: err
 -- * error: % name list has duplicate name 'id'
 -- +1 error:
-insert into bar(id, id) values('x');
+insert into bar(id, id) values ('x');
 
 -- TEST: insert column with default value
 -- + {insert_stmt}: ok
 -- + {name booly}: booly: { id: integer has_default, flag: bool }
 -- - error:
-insert into booly(id) values(1);
+insert into booly(id) values (1);
 
 -- TEST: insert into a view (with columns)
 -- * error: % cannot insert into a view 'MyView'
@@ -6407,7 +6407,7 @@ insert into MyView(id) values (1);
 -- + {insert_stmt}: err
 -- * error: % table in insert statement does not exist 'garbonzo'
 -- +1 error:
-insert into garbonzo(id) values('x');
+insert into garbonzo(id) values ('x');
 
 -- TEST: declare a function with object arg type
 -- + {param_detail}: goo: object<Goo> variable in
@@ -6430,26 +6430,26 @@ set a_string := goo_func(not 'x');
 -- + {insert_stmt}: err
 -- * error: % count of columns differs from count of values
 -- +1 error:
-insert into foo(id) values(NULL, NULL);
+insert into foo(id) values (NULL, NULL);
 
 -- TEST: insert columns with error in expression
 -- + {insert_stmt}: err
 -- * error: % string operand not allowed in 'NOT'
 -- +1 error:
-insert into foo(id) values(not 'x');
+insert into foo(id) values (not 'x');
 
 -- TEST: insert auto inc column with not null value
 -- + {insert_stmt}: ok
 -- + {name_columns_values}
 -- + {name foo}: foo: { id: integer notnull primary_key autoinc }
 -- - error:
-insert into foo(id) values(1);
+insert into foo(id) values (1);
 
 -- TEST: insert with not matching column types
 -- + {insert_stmt}: err
 -- * error: % incompatible types in expression 'id'
 -- +1 error:
-insert into bar(id) values('x');
+insert into bar(id) values ('x');
 
 -- TEST: create a temporary view
 -- + {create_view_stmt}: temp_view: { A: integer notnull, B: integer notnull }
@@ -6693,12 +6693,12 @@ delete from versioned_table;
 -- TEST: try to insert into a deprecated table
 -- * error: % table in insert statement does not exist (hidden by @delete) 'versioned_table'
 -- +1 error:
-insert into versioned_table values(1);
+insert into versioned_table values (1);
 
 -- TEST: try to insert into a deprecated table (column syntax)
 -- * error: % table in insert statement does not exist (hidden by @delete) 'versioned_table'
 -- +1 error:
-insert into versioned_table(id) values(1);
+insert into versioned_table(id) values (1);
 
 -- TEST: try to create a view with the same name as the versioned table
 -- note: the name is found even though the table is deleted
@@ -6866,9 +6866,9 @@ end;
 -- TEST: try to use the non-column insert syntax on a table with deleted columns
 -- we should get a fully formed insert on the non deleted column
 -- + INSERT INTO hides_id_not_name(name)
--- +   VALUES('x');
+-- +   VALUES ('x');
 -- + {name hides_id_not_name}: hides_id_not_name: { name: text }
-insert into hides_id_not_name values('x');
+insert into hides_id_not_name values ('x');
 
 -- TEST: create a table with more mixed column stuff for use testing alter statements later
 -- + {create_table_stmt}: trickier_alter_target: { id: integer notnull partial_pk, added: text }
@@ -6995,7 +6995,7 @@ insert into bar (id, name, rate) values (1, 'bazzle', 3) @dummy_seed(not 'x');
 
 -- TEST: ok to go insert with dummy values
 -- note that the insert statement has been mutated!!
--- + INSERT INTO bar(id, name, rate) VALUES(_seed_, printf('name_%d', _seed_), _seed_) @DUMMY_SEED(1 + 2) @DUMMY_DEFAULTS @DUMMY_NULLABLES;
+-- + INSERT INTO bar(id, name, rate) VALUES (_seed_, printf('name_%d', _seed_), _seed_) @DUMMY_SEED(1 + 2) @DUMMY_DEFAULTS @DUMMY_NULLABLES;
 -- + {seed_stub}
 -- + {call}: text notnull
 -- + {name printf}: text notnull
@@ -7006,7 +7006,7 @@ insert into bar () values () @dummy_seed(1+2) @dummy_nullables @dummy_defaults;
 -- TEST: use default value of a table
 -- + {name booly}: booly: { id: integer has_default, flag: bool }
 -- - error:
-insert into booly(flag) values(1);
+insert into booly(flag) values (1);
 
 -- TEST: try to declare a blob variable
 -- + {declare_vars_type}: blob
@@ -7205,7 +7205,7 @@ begin
 end;
 
 -- TEST: try to make a dummy blob -- not supported
--- + INSERT INTO blob_table_test(b) VALUES(CAST(printf('b_%d', _seed_) AS BLOB)) @DUMMY_SEED(1) @DUMMY_NULLABLES;
+-- + INSERT INTO blob_table_test(b) VALUES (CAST(printf('b_%d', _seed_) AS BLOB)) @DUMMY_SEED(1) @DUMMY_NULLABLES;
 -- + {insert_stmt}: ok
 -- + {cast_expr}: blob notnull
 -- + {call}: text notnull
@@ -7213,7 +7213,7 @@ end;
 -- + {strlit 'b_%d'}: text notnull
 -- + {name _seed_}: _seed_: integer notnull variable
 -- - error:
-insert into blob_table_test() values() @dummy_seed(1) @dummy_nullables;
+insert into blob_table_test() values () @dummy_seed(1) @dummy_nullables;
 
 -- TEST: simple out statement case
 proc out_cursor_proc()
@@ -7529,18 +7529,18 @@ end;
 proc fetch_values()
 begin
   cursor C fetch from call out_cursor_proc();
-  fetch C from values(1,2);
+  fetch C from values (1,2);
 end;
 
 -- TEST: fetch cursor from values with dummy values
--- + FETCH C(A, B) FROM VALUES(_seed_, _seed_) @DUMMY_SEED(123) @DUMMY_NULLABLES;
+-- + FETCH C(A, B) FROM VALUES (_seed_, _seed_) @DUMMY_SEED(123) @DUMMY_NULLABLES;
 -- + {name C}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
 -- + {fetch_values_stmt}: ok
 -- +2 {name _seed_}: _seed_: integer notnull variable
 proc fetch_values_dummy()
 begin
   cursor C fetch from call out_cursor_proc();
-  fetch C() from values() @dummy_seed(123) @dummy_nullables;
+  fetch C() from values () @dummy_seed(123) @dummy_nullables;
 end;
 
 -- TEST: fetch cursor from call
@@ -7607,13 +7607,13 @@ end;
 -- + {fetch_values_stmt}: err
 -- * error: % name not found 'not_a_cursor'
 -- +1 error:
-fetch not_a_cursor from values(1,2,3);
+fetch not_a_cursor from values (1,2,3);
 
 -- TEST: try to use fetch values on a statement cursor
 -- + {fetch_values_stmt}: err
 -- * error: % fetch values is only for value cursors, not for sqlite cursors 'my_cursor'
 -- +1 error:
-fetch my_cursor from values(1,2,3);
+fetch my_cursor from values (1,2,3);
 
 -- TEST: attempt bogus seed
 -- + {fetch_values_stmt}: err
@@ -7622,7 +7622,7 @@ fetch my_cursor from values(1,2,3);
 proc fetch_values_bogus_seed_value()
 begin
   cursor C fetch from call out_cursor_proc();
-  fetch C() from values() @dummy_seed(not 'x');
+  fetch C() from values () @dummy_seed(not 'x');
 end;
 
 -- TEST: missing columns in fetch values
@@ -7632,7 +7632,7 @@ end;
 proc fetch_values_missing_value()
 begin
   cursor C fetch from call out_cursor_proc();
-  fetch C from values();
+  fetch C from values ();
 end;
 
 
@@ -7654,7 +7654,7 @@ end;
 proc fetch_values_blob_dummy()
 begin
   cursor C fetch from call blob_out();
-  fetch C() from values() @dummy_seed(123) @dummy_nullables;
+  fetch C() from values () @dummy_seed(123) @dummy_nullables;
 end;
 
 -- TEST: fetch cursor from values but not all columns mentioned
@@ -7664,7 +7664,7 @@ end;
 proc fetch_values_missing_columns()
 begin
   cursor C fetch from call out_cursor_proc();
-  fetch C(A) from values(1);
+  fetch C(A) from values (1);
 end;
 
 -- TEST: fetch cursor from values bogus value expression
@@ -7674,7 +7674,7 @@ end;
 proc fetch_values_bogus_value()
 begin
   cursor C fetch from call out_cursor_proc();
-  fetch C(A,B) from values(1, not 'x');
+  fetch C(A,B) from values (1, not 'x');
 end;
 
 -- TEST: fetch cursor from values bogus value type
@@ -7684,22 +7684,22 @@ end;
 proc fetch_values_bogus_type()
 begin
   cursor C fetch from call out_cursor_proc();
-  fetch C(A,B) from values(1, 'x');
+  fetch C(A,B) from values (1, 'x');
 end;
 
 -- TEST: fetch cursor from values provide null for blob (works)
--- + FETCH C(B) FROM VALUES(NULL) @DUMMY_SEED(123);
+-- + FETCH C(B) FROM VALUES (NULL) @DUMMY_SEED(123);
 -- + fetch_values_stmt}: ok
 -- - error:
 proc fetch_values_blob_dummy_with_null()
 begin
   cursor C fetch from call blob_out();
-  fetch C() from values() @dummy_seed(123);
+  fetch C() from values () @dummy_seed(123);
 end;
 
 -- TEST: fetch to a cursor from another cursor
--- + FETCH C0(A, B) FROM VALUES(1, 2);
--- + FETCH C1(A, B) FROM VALUES(C0.A, C0.B);
+-- + FETCH C0(A, B) FROM VALUES (1, 2);
+-- + FETCH C1(A, B) FROM VALUES (C0.A, C0.B);
 -- + {create_proc_stmt}: C1: fetch_to_cursor_from_cursor: { A: integer notnull, B: integer notnull } variable shape_storage uses_out
 -- + {fetch_values_stmt}: ok
 -- - error:
@@ -7707,7 +7707,7 @@ proc fetch_to_cursor_from_cursor()
 begin
   cursor C0 like select 1 A, 2 B;
   cursor C1 like C0;
-  fetch C0 from values(1, 2);
+  fetch C0 from values (1, 2);
   fetch C1 from C0;
   out C1;
 end;
@@ -7740,7 +7740,7 @@ proc fetch_to_invalid_cursor_from_cursor()
 begin
   cursor C0 like select 1 A, 2 B;
   declare C1 int;
-  fetch C0 from values(1, 2);
+  fetch C0 from values (1, 2);
   fetch C1 from C0;
 end;
 
@@ -7755,7 +7755,7 @@ proc fetch_to_statement_cursor_from_cursor()
 begin
   cursor C0 like select 1 A, 2 B;
   cursor C1 for select 1 A, 2 B;
-  fetch C0 from values(1, 2);
+  fetch C0 from values (1, 2);
   fetch C1 from C0;
 end;
 
@@ -7770,7 +7770,7 @@ proc fetch_to_cursor_from_cursor_with_different_columns()
 begin
   cursor C0 like select 1 A, 2 B;
   cursor C1 like select 1 A, 2 B, 3 C;
-  fetch C0 from values(1, 2);
+  fetch C0 from values (1, 2);
   fetch C1 from C0;
 end;
 
@@ -7897,7 +7897,7 @@ end;
 -- TEST: use like syntax to cursor a of the type of a select statement
 -- + PROC declare_cursor_like_select ()
 -- + CURSOR C LIKE SELECT 1 AS A, 2.5 AS B, 'x' AS C;
--- + FETCH C(A, B, C) FROM VALUES(_seed_, _seed_, printf('C_%d', _seed_)) @DUMMY_SEED(123);
+-- + FETCH C(A, B, C) FROM VALUES (_seed_, _seed_, printf('C_%d', _seed_)) @DUMMY_SEED(123);
 -- + {declare_cursor_like_select}: C: select: { A: integer notnull, B: real notnull, C: text notnull } variable shape_storage value_cursor
 -- + {fetch_values_stmt}: ok
 -- - dml_proc
@@ -7905,7 +7905,7 @@ end;
 proc declare_cursor_like_select()
 begin
   cursor C like select 1 A, 2.5 B, 'x' C;
-  fetch C() from values() @dummy_seed(123);
+  fetch C() from values () @dummy_seed(123);
   out C;
 end;
 
@@ -8248,7 +8248,7 @@ declare select func foo(x integer, x integer) integer;
 -- TEST: create a cursor and fetch from arguments
 -- AST rewritten
 -- + PROC arg_fetcher (arg1 TEXT!, arg2 INT!, arg3 REAL!)
--- + FETCH curs(A, B, C) FROM VALUES(arg1, arg2, arg3);
+-- + FETCH curs(A, B, C) FROM VALUES (arg1, arg2, arg3);
 -- + {fetch_values_stmt}: ok
 -- + {name_columns_values}
 -- + {name curs}: curs: select: { A: text notnull, B: integer notnull, C: real notnull } variable shape_storage value_cursor
@@ -8275,7 +8275,7 @@ end;
 -- TEST: use the arguments like "bar" even though there are other arguments
 -- AST rewritten, note "extra" does not appear
 -- + PROC fetch_bar (extra INT, id_ INT!, name_ TEXT, rate_ LONG)
--- + FETCH curs(id, name, rate) FROM VALUES(id_, name_, rate_);
+-- + FETCH curs(id, name, rate) FROM VALUES (id_, name_, rate_);
 -- + {create_proc_stmt}: ok
 -- - error:
 proc fetch_bar(extra integer, like bar)
@@ -8293,7 +8293,7 @@ end;
 -- TEST: use the arguments like "bar" even though there are other arguments
 -- AST rewritten, note "extra" does not appear
 -- + PROC insert_bar (extra INT, id_ INT!, name_ TEXT, rate_ LONG)
--- + INSERT INTO bar(id, name, rate) VALUES(id_, name_, rate_);
+-- + INSERT INTO bar(id, name, rate) VALUES (id_, name_, rate_);
 -- + {create_proc_stmt}: ok
 -- - error:
 proc insert_bar(extra integer, like bar)
@@ -8303,7 +8303,7 @@ end;
 
 -- TEST: use the arguments like "bar" some have trailing _ and some do not
 -- AST rewritten, note some have _ and some do not
--- + INSERT INTO bar(id, name, rate) VALUES(id, name_, rate);
+-- + INSERT INTO bar(id, name, rate) VALUES (id, name_, rate);
 -- + {create_proc_stmt}: ok
 -- - error:
 proc insert_bar_explicit(extra integer, id int!, name_ text, rate long integer)
@@ -8313,7 +8313,7 @@ end;
 
 -- TEST: use the locals like "bar" some have trailing _ and some do not
 -- AST rewritten, note some have _ and some do not
--- + INSERT INTO bar(id, name, rate) VALUES(LOCALS.id, LOCALS.name, LOCALS.rate);
+-- + INSERT INTO bar(id, name, rate) VALUES (LOCALS.id, LOCALS.name, LOCALS.rate);
 -- + {create_proc_stmt}: ok
 -- - error:
 proc insert_bar_locals(extra integer, id int!, name_ text, rate long integer)
@@ -8360,7 +8360,7 @@ begin
 end;
 
 -- TEST: rewrite insert statement using arguments
--- + INSERT INTO bar(id, name, rate) VALUES(id, name, rate);
+-- + INSERT INTO bar(id, name, rate) VALUES (id, name, rate);
 -- + {insert_stmt}: ok
 -- + {name bar}: bar: { id: integer notnull, name: text, rate: longint }
 -- These appear as a parameter AND in the insert list
@@ -8374,7 +8374,7 @@ begin
 end;
 
 -- TEST: rewrite insert statement but minimal columns
--- + INSERT INTO bar(id) VALUES(id);
+-- + INSERT INTO bar(id) VALUES (id);
 -- + {insert_stmt}: ok
 -- + {name bar}: bar: { id: integer notnull, name: text, rate: longint }
 -- These appear as a parameters
@@ -8408,7 +8408,7 @@ end;
 -- TEST: rewrite proc arguments using the LIKE table form
 -- - error:
 -- + PROC rewritten_like_args (id_ INT!, name_ TEXT, rate_ LONG)
--- + INSERT INTO bar(id, name, rate) VALUES(id_, name_, rate_);
+-- + INSERT INTO bar(id, name, rate) VALUES (id_, name_, rate_);
 -- + {create_proc_stmt}: ok dml_proc
 -- + {param}: id_: integer notnull variable in
 -- + {param}: name_: text variable in
@@ -9489,7 +9489,7 @@ end;
 -- TEST: try to insert sensitive data to a non-sensitive column
 -- * error: % cannot assign/copy sensitive expression to non-sensitive target 'id'
 -- +1 error:
-insert into foo(id) values(coalesce(_sens,0));
+insert into foo(id) values (coalesce(_sens,0));
 
 -- TEST: try to update to sensitive
 -- * error: % cannot assign/copy sensitive expression to non-sensitive target 'id'
@@ -10052,7 +10052,7 @@ end;
 procedure autodrop_no_db()
 begin
   cursor C like select 1 id;
-  fetch c (id) from values(1);
+  fetch c (id) from values (1);
   out c;
 end;
 
@@ -11033,7 +11033,7 @@ end;
 -- - error:
 proc upsert_without_conflict_target()
 begin
-  insert into foo(id) values(1) on conflict do nothing;
+  insert into foo(id) values (1) on conflict do nothing;
 end;
 
 -- TEST: upsert or update statement
@@ -11048,7 +11048,7 @@ end;
 -- - error:
 proc upsert_update()
 begin
-  insert into foo(id) values(1) on conflict(id) where id=10 do update set id=id+1 where id=20;
+  insert into foo(id) values (1) on conflict(id) where id=10 do update set id=id+1 where id=20;
 end;
 
 -- TEST: upsert with conflict on unknown column
@@ -11059,7 +11059,7 @@ end;
 -- +1 error:
 proc upsert_conflict_on_unknown_column()
 begin
-  insert into foo(id) values(1) on conflict(id, bogus) do nothing;
+  insert into foo(id) values (1) on conflict(id, bogus) do nothing;
 end;
 
 -- TEST: upsert with table name added to update statement
@@ -11070,7 +11070,7 @@ end;
 -- +1 error:
 proc upsert_invalid_update_stmt()
 begin
-  insert into foo(id) values(1) on conflict(id) do update foo set id = 0;
+  insert into foo(id) values (1) on conflict(id) do update foo set id = 0;
 end;
 
 -- TEST: upsert with select statement without WHERE
@@ -11108,7 +11108,7 @@ end;
 -- +1 error:
 proc upsert_with_bogus_where_stmt()
 begin
-  insert into foo(id) values(1) on conflict(id) where bogus=1 do nothing;
+  insert into foo(id) values (1) on conflict(id) where bogus=1 do nothing;
 end;
 
 -- TEST: update statement without table name
@@ -11136,7 +11136,7 @@ end;
 -- +1 error:
 proc upsert_conflict_target_column_not_unique_key()
 begin
-  insert into bar(id) values(1) on conflict(name) do nothing;
+  insert into bar(id) values (1) on conflict(name) do nothing;
 end;
 
 -- TEST: upsert statement. The set of columns in conflict target do match unique key
@@ -11149,7 +11149,7 @@ end;
 -- - error:
 proc upsert_conflict_target_columns_valid()
 begin
-  insert into simple_ak_table_2(a, b, c, d) values(1, "t", 1.7, 1) on conflict(a, b) do nothing;
+  insert into simple_ak_table_2(a, b, c, d) values (1, "t", 1.7, 1) on conflict(a, b) do nothing;
 end;
 
 -- TEST: enforce strict upsert statement
@@ -11163,7 +11163,7 @@ end;
 -- + {upsert_stmt}: err
 -- * error: % upsert statement are forbidden if strict upsert statement mode is enabled
 -- +1 error:
-insert into bar(id) values(1) on conflict do nothing;
+insert into bar(id) values (1) on conflict do nothing;
 
 -- TEST: enforcement normal upsert statement
 -- + @ENFORCE_NORMAL UPSERT STATEMENT;
@@ -11174,7 +11174,7 @@ insert into bar(id) values(1) on conflict do nothing;
 -- TEST: upsert statement succeed validation in normal mode
 -- + {upsert_stmt}: ok
 -- - error:
-insert into bar(id) values(1) on conflict do nothing;
+insert into bar(id) values (1) on conflict do nothing;
 
 -- TEST: enforce strict window function
 -- + @ENFORCE_STRICT WINDOW FUNCTION;
@@ -11540,7 +11540,7 @@ create table upsert_test( id integer primary key, name text, rate real);
 -- + {conflict_target}: excluded: { id: integer notnull, name: text }
 -- + {update_stmt}: upsert_test: { id: integer notnull primary_key, name: text, rate: real }
 -- - error:
-insert into upsert_test(id, name) values(1, 'name')
+insert into upsert_test(id, name) values (1, 'name')
 on conflict(id) do update set name = excluded.name, rate = id+1;
 
 -- TEST: upsert statement with insert default values
@@ -12404,7 +12404,7 @@ select total(info) as t from with_sensitive;
 
 -- TEST: combine dummy data and FROM arguments in INSERT
 -- This is all sugar
--- + INSERT INTO referenceable(a, b, c, d, e) VALUES(x, y, printf('c_%d', _seed_), printf('d_%d', _seed_), _seed_) @DUMMY_SEED(1) @DUMMY_NULLABLES;
+-- + INSERT INTO referenceable(a, b, c, d, e) VALUES (x, y, printf('c_%d', _seed_), printf('d_%d', _seed_), _seed_) @DUMMY_SEED(1) @DUMMY_NULLABLES;
 -- - error:
 proc insert_using_args_with_dummy(x int!, y real!)
 begin
@@ -12413,7 +12413,7 @@ end;
 
 -- TEST: combine dummy data and FROM arguments in FETCH
 -- This is all sugar
--- + FETCH C(a, b, c, d, e) FROM VALUES(x, y, printf('c_%d', _seed_), printf('d_%d', _seed_), _seed_) @DUMMY_SEED(1) @DUMMY_NULLABLES;
+-- + FETCH C(a, b, c, d, e) FROM VALUES (x, y, printf('c_%d', _seed_), printf('d_%d', _seed_), _seed_) @DUMMY_SEED(1) @DUMMY_NULLABLES;
 -- - error:
 proc fetch_using_args_with_dummy(x int!, y real!)
 begin
@@ -12422,12 +12422,12 @@ begin
 end;
 
 -- TEST: ensure that empty list is expanded
--- + FETCH C(a, b, c, d, e) FROM VALUES(1, 2, 'x', 'y', 5);
+-- + FETCH C(a, b, c, d, e) FROM VALUES (1, 2, 'x', 'y', 5);
 -- - error:
 proc fetch_from_empty_col_list()
 begin
   cursor C like referenceable;
-  fetch C from values(1, 2, 'x', 'y', 5);
+  fetch C from values (1, 2, 'x', 'y', 5);
   out C;
 END;
 
@@ -12437,7 +12437,7 @@ cursor c_bar like referenceable;
 -- TEST: verify that we can insert from a match cursor
 -- This is a sugar feature, so we only need to check the rewrite
 -- Further semantic validation of the expansion happens normally as though the fields had been typed manually
--- + INSERT INTO referenceable(a, b, c, d, e) VALUES(c_bar.a, c_bar.b, c_bar.c, c_bar.d, c_bar.e);
+-- + INSERT INTO referenceable(a, b, c, d, e) VALUES (c_bar.a, c_bar.b, c_bar.c, c_bar.d, c_bar.e);
 -- + {insert_stmt}: ok
 -- + {name referenceable}: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint }
 -- - error:
@@ -12509,7 +12509,7 @@ update cursor my_cursor(one) from values (2);
 -- TEST -- like statement can't be resolved in an update statement
 -- * error: % must be a cursor, proc, table, or view 'not_a_symbol'
 -- +1 error:
-update cursor small_cursor(like not_a_symbol) from values(1);
+update cursor small_cursor(like not_a_symbol) from values (1);
 
 -- TEST -- not a cursor
 -- + {update_cursor_stmt}: err
@@ -12544,31 +12544,31 @@ create temp table foo_data (
 cursor nully_cursor like foo_data;
 
 -- TEST: use the "null fill" feature of value cursors to rewrite this monster into valid full row fetch
--- + FETCH nully_cursor(c1, c2, c3, c4, c5, c6, c7, c8, c9, c10) FROM VALUES('x', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+-- + FETCH nully_cursor(c1, c2, c3, c4, c5, c6, c7, c8, c9, c10) FROM VALUES ('x', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 -- + {fetch_values_stmt}: ok
 -- +10 {insert_list}
 -- +9 {null}: null
 -- - error:
-fetch nully_cursor(c1) from values('x');
+fetch nully_cursor(c1) from values ('x');
 
 -- TEST: the one and only non-null column is missing, that's an error
 -- * error: % required column missing in FETCH statement 'c1'
 -- +1 error:
 -- + {fetch_values_stmt}: err
-fetch nully_cursor(c2) from values('x');
+fetch nully_cursor(c2) from values ('x');
 
 -- make a small cursor and load it up, it has only 2 of the columns
 cursor c1c7 like select 'x' c1, nullable(3.2) c7;
-fetch c1c7 from values('x', 3.2);
+fetch c1c7 from values ('x', 3.2);
 
 -- TEST: rewrite to use the columns of small cursor
--- + UPDATE CURSOR nully_cursor(c1, c7) FROM VALUES(c1c7.c1, c1c7.c7);
+-- + UPDATE CURSOR nully_cursor(c1, c7) FROM VALUES (c1c7.c1, c1c7.c7);
 -- + {update_cursor_stmt}: ok
 -- - error:
 update cursor nully_cursor(like c1c7) from values (c1c7.c1, c1c7.c7);
 
 -- TEST: full rewrite to use the columns of small cursor
--- + UPDATE CURSOR nully_cursor(c1, c7) FROM VALUES(c1c7.c1, c1c7.c7);
+-- + UPDATE CURSOR nully_cursor(c1, c7) FROM VALUES (c1c7.c1, c1c7.c7);
 -- + {update_cursor_stmt}: ok
 -- - error:
 update cursor nully_cursor(like c1c7) from cursor c1c7;
@@ -12581,13 +12581,13 @@ update cursor nully_cursor(like c1c7) from cursor not_a_symbol;
 
 -- TEST: rewrite to use the columns of small cursor
 -- note that c7 did not get null and it's out of order, that confirms it came form the LIKE expression
--- + FETCH nully_cursor(c1, c7, c2, c3, c4, c5, c6, c8, c9, c10) FROM VALUES(c1c7.c1, c1c7.c7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+-- + FETCH nully_cursor(c1, c7, c2, c3, c4, c5, c6, c8, c9, c10) FROM VALUES (c1c7.c1, c1c7.c7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 -- + {fetch_values_stmt}: ok
 -- - error:
 fetch nully_cursor(like c1c7) from values (c1c7.c1, c1c7.c7);
 
 -- TEST: full rewrite get the values from the cursor, same as above
--- + FETCH nully_cursor(c1, c7, c2, c3, c4, c5, c6, c8, c9, c10) FROM VALUES(c1c7.c1, c1c7.c7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+-- + FETCH nully_cursor(c1, c7, c2, c3, c4, c5, c6, c8, c9, c10) FROM VALUES (c1c7.c1, c1c7.c7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 -- + {fetch_values_stmt}: ok
 -- - error:
 fetch nully_cursor(like c1c7) from cursor c1c7;
@@ -12609,21 +12609,21 @@ cursor id_name_cursor like select 1 id, 'x' name;
 
 -- TEST: rewrite the columns of an insert from a cursor source
 -- + INSERT INTO bar(id, name)
--- +   VALUES(1, 'x');
+-- +   VALUES (1, 'x');
 -- + {insert_stmt}: ok
 -- - error:
-insert into bar(like id_name_cursor) values(1, 'x');
+insert into bar(like id_name_cursor) values (1, 'x');
 
 -- TEST: insert using the like form, bogus symbol
 -- + {insert_stmt}: err
 -- * error: % must be a cursor, proc, table, or view 'not_a_symbol'
 -- +1 error:
-insert into bar(like not_a_symbol) values(1, 'x');
+insert into bar(like not_a_symbol) values (1, 'x');
 
 -- TEST: fetch using from a cursor using the like form
 -- this is sugar, again we just verify the rewrite
 -- we got a subset of the nully_cursor columns as desired.
--- + FETCH c1c7(c1, c7) FROM VALUES(nully_cursor.c1, nully_cursor.c7);
+-- + FETCH c1c7(c1, c7) FROM VALUES (nully_cursor.c1, nully_cursor.c7);
 -- + {fetch_values_stmt}: ok
 -- - error:
 fetch c1c7 from cursor nully_cursor(like c1c7);
@@ -13286,7 +13286,7 @@ values ("ok"), (1);
 -- + {insert_stmt}: err
 -- * error: % @dummy_seed @dummy_nullables @dummy_defaults many only be used with a single VALUES row
 -- +1 error:
-insert into foo (id) values (1) union values(2) @dummy_seed(1);
+insert into foo (id) values (1) union values (2) @dummy_seed(1);
 
 -- TEST: test values from a with statement, and seed, this not a supported form
 -- + {insert_stmt}: err
@@ -13471,7 +13471,7 @@ declare proc shape_consumer(like shape);
 proc shape_all_columns()
 begin
    cursor C like shape;
-   fetch C from values(1, 'x');
+   fetch C from values (1, 'x');
    call shape_consumer(from C);
 end;
 
@@ -13506,7 +13506,7 @@ declare proc shape_y_only(like small_shape);
 proc shape_some_columns()
 begin
    cursor C like shape;
-   fetch C(x, y) from values(1, 'x');
+   fetch C(x, y) from values (1, 'x');
    call shape_y_only(from C like small_shape);
 end;
 
@@ -13516,7 +13516,7 @@ end;
 proc shape_some_columns_bogus_name()
 begin
    cursor C like shape;
-   fetch C(x, y) from values(1, 'x');
+   fetch C(x, y) from values (1, 'x');
    call shape_y_only(from C like not_a_real_shape);
 end;
 
@@ -13531,7 +13531,7 @@ declare proc lotsa_ints(a int!, b int!, c int!, d int!);
 proc shape_args_middle()
 begin
    cursor C like select 1 x, 2 y;
-   fetch C from values(1, 2);
+   fetch C from values (1, 2);
    call lotsa_ints(from C, 1, 2);
    call lotsa_ints(1, from C, 2);
    call lotsa_ints(1, 2, from C);
@@ -14262,7 +14262,7 @@ begin
 end;
 
 -- TEST: test rewrite for [FETCH [c] USING ... ] grammar
--- + FETCH C(id, name, rate) FROM VALUES(1, NULL, 99);
+-- + FETCH C(id, name, rate) FROM VALUES (1, NULL, 99);
 -- + {create_proc_stmt}: ok
 -- - error:
 proc test_fetch_using()
@@ -14272,7 +14272,7 @@ begin
 end;
 
 -- TEST: test rewrite for [FETCH [c] USING ... ] grammar with dummy_seed
--- + FETCH C(id, name, rate) FROM VALUES(1, printf('name_%d', _seed_), _seed_) @DUMMY_SEED(9) @DUMMY_DEFAULTS @DUMMY_NULLABLES;
+-- + FETCH C(id, name, rate) FROM VALUES (1, printf('name_%d', _seed_), _seed_) @DUMMY_SEED(9) @DUMMY_DEFAULTS @DUMMY_NULLABLES;
 -- + {create_proc_stmt}: ok
 -- - error:
 proc test_fetch_using_with_dummy_seed()
@@ -14346,7 +14346,7 @@ create table bad_order(
 );
 
 -- TEST: test rewrite for [INSERT name USING ... ] grammar
--- + INSERT INTO foo(id) VALUES(1);
+-- + INSERT INTO foo(id) VALUES (1);
 -- + {create_proc_stmt}: ok dml_proc
 -- - error:
 proc test_insert_using()
@@ -14355,7 +14355,7 @@ begin
 end;
 
 -- TEST: test rewrite for [INSERT name USING ... ] grammar with dummy_seed
--- + INSERT INTO bar(id, name, rate) VALUES(1, printf('name_%d', _seed_), _seed_) @DUMMY_SEED(9) @DUMMY_DEFAULTS @DUMMY_NULLABLES
+-- + INSERT INTO bar(id, name, rate) VALUES (1, printf('name_%d', _seed_), _seed_) @DUMMY_SEED(9) @DUMMY_DEFAULTS @DUMMY_NULLABLES
 -- + {create_proc_stmt}: ok dml_proc
 -- - error:
 proc test_insert_using_with_dummy_seed()
@@ -14435,7 +14435,7 @@ select iif(an_int is null, 2, x'23');
 set an_int := iif(an_int is null, iif(4, 5, 6), 2);
 
 -- TEST: test rewrite for [UPDATE cursor USING ... ] grammar
--- + UPDATE CURSOR small_cursor(x) FROM VALUES(2);
+-- + UPDATE CURSOR small_cursor(x) FROM VALUES (2);
 -- + {create_proc_stmt}: ok dml_proc
 -- - error:
 proc test_update_cursor_using()
@@ -14777,7 +14777,7 @@ create table BA(
 declare proc use_c() (c integer);
 
 -- TEST: arg bundle with a specific column
--- + INSERT INTO AB(a) VALUES(a2.c);
+-- + INSERT INTO AB(a) VALUES (a2.c);
 -- - error:
 proc arg_bundle_1(a1 like AB, a2 like CD)
 begin
@@ -14785,7 +14785,7 @@ begin
 end;
 
 -- TEST: arg bundle with a specific column using LIKE
--- + INSERT INTO AB(a) VALUES(a2.c);
+-- + INSERT INTO AB(a) VALUES (a2.c);
 -- - error:
 proc arg_bundle_2(a1 like AB, a2 like CD)
 begin
@@ -14793,7 +14793,7 @@ begin
 end;
 
 -- TEST: arg bundle one column, in order
--- + INSERT INTO AB(a) VALUES(a2.c);
+-- + INSERT INTO AB(a) VALUES (a2.c);
 -- - error:
 proc arg_bundle_3(a1 like AB, a2 like CD)
 begin
@@ -14801,7 +14801,7 @@ begin
 end;
 
 -- TEST: arg bundle all columns
--- + INSERT INTO AB(a, b) VALUES(a1.a, a1.b);
+-- + INSERT INTO AB(a, b) VALUES (a1.a, a1.b);
 -- - error:
 proc arg_bundle_4(a1 like AB, a2 like CD)
 begin
@@ -14809,7 +14809,7 @@ begin
 end;
 
 -- TEST: arg bundle reverse order using LIKE (arg mismatch)
--- + INSERT INTO AB(a, b) VALUES(a1.b, a1.a);
+-- + INSERT INTO AB(a, b) VALUES (a1.b, a1.a);
 -- + incompatible types in expression 'a'
 -- +1 error:
 proc arg_bundle_5(a1 like AB, a2 like CD)
@@ -14818,7 +14818,7 @@ begin
 end;
 
 -- TEST: arg bundle reverse order using LIKE both reversed
--- + INSERT INTO AB(b, a) VALUES(a1.b, a1.a);
+-- + INSERT INTO AB(b, a) VALUES (a1.b, a1.a);
 -- - error:
 proc arg_bundle_6(a1 like AB, a2 like CD)
 begin
@@ -14826,7 +14826,7 @@ begin
 end;
 
 -- TEST: arg bundle non-name matching columns (this is ok, all in order)
--- + INSERT INTO AB(a, b) VALUES(a2.c, a2.d);
+-- + INSERT INTO AB(a, b) VALUES (a2.c, a2.d);
 -- - error:
 proc arg_bundle_7(a1 like AB, a2 like CD)
 begin
@@ -14834,7 +14834,7 @@ begin
 end;
 
 -- TEST: arg bundle out of order, no autoexpand (types mismatch)
--- + INSERT INTO AB(b, a) VALUES(a1.a, a1.b);
+-- + INSERT INTO AB(b, a) VALUES (a1.a, a1.b);
 -- * error: % incompatible types in expression 'b'
 -- +1 error:
 proc arg_bundle_8(a1 like AB, a2 like CD)
@@ -14843,7 +14843,7 @@ begin
 end;
 
 -- TEST: arg bundle out of order, no autoexpand, loading from alternate names (types mismatch)
--- + INSERT INTO AB(b, a) VALUES(a2.c, a2.d);
+-- + INSERT INTO AB(b, a) VALUES (a2.c, a2.d);
 -- * error: % incompatible types in expression 'b'
 -- +1 error:
 proc arg_bundle_9(a1 like AB, a2 like CD)
@@ -14852,7 +14852,7 @@ begin
 end;
 
 -- TEST: arg bundle into cursor in order but field names different
--- + FETCH C(a, b) FROM VALUES(a2.c, a2.d);
+-- + FETCH C(a, b) FROM VALUES (a2.c, a2.d);
 -- - error:
 proc arg_bundle_10(a1 like AB, a2 like CD)
 begin
@@ -14861,7 +14861,7 @@ begin
 end;
 
 -- TEST: arg bundle into cursor in order field names same
--- + FETCH C(a, b) FROM VALUES(a1.a, a1.b);
+-- + FETCH C(a, b) FROM VALUES (a1.a, a1.b);
 -- - error:
 proc arg_bundle_11(a1 like AB, a2 like CD)
 begin
@@ -14870,7 +14870,7 @@ begin
 end;
 
 -- TEST: arg bundle into cursor in order, but not all fields
--- + FETCH C(a, b) FROM VALUES(a1.a, NULL);
+-- + FETCH C(a, b) FROM VALUES (a1.a, NULL);
 -- - error:
 proc arg_bundle_12(a1 like AB, a2 like CD)
 begin
@@ -14879,7 +14879,7 @@ begin
 end;
 
 -- TEST: arg bundle update cursor, all fields, autoexpand
--- + UPDATE CURSOR C(a, b) FROM VALUES(a1.a, a1.b);
+-- + UPDATE CURSOR C(a, b) FROM VALUES (a1.a, a1.b);
 -- - error:
 proc arg_bundle_13(a1 like AB, a2 like CD)
 begin
@@ -14888,7 +14888,7 @@ begin
 end;
 
 -- TEST: arg bundle update cursor, one field, name doesn't match
--- + UPDATE CURSOR C(a) FROM VALUES(a2.c);
+-- + UPDATE CURSOR C(a) FROM VALUES (a2.c);
 -- - error:
 proc arg_bundle_14(a1 like AB, a2 like CD)
 begin
@@ -14897,7 +14897,7 @@ begin
 end;
 
 -- TEST: arg bundle update cursor, all fields, names don't match
--- + UPDATE CURSOR C(a, b) FROM VALUES(a2.c, a2.d);
+-- + UPDATE CURSOR C(a, b) FROM VALUES (a2.c, a2.d);
 -- - error:
 proc arg_bundle_15(a1 like AB, a2 like CD)
 begin
@@ -14906,7 +14906,7 @@ begin
 end;
 
 -- TEST: arg bundle update cursor, all fields, names don't match
--- + UPDATE CURSOR C(a, b) FROM VALUES(a2.c, a2.d);
+-- + UPDATE CURSOR C(a, b) FROM VALUES (a2.c, a2.d);
 -- - error:
 proc arg_bundle_16(a1 like AB, a2 like CD)
 begin
@@ -15681,12 +15681,12 @@ cursor xy_curs like xy;
 -- + {fetch_values_stmt}: ok
 -- + {name xy_curs}: xy_curs: xy: { x: integer<x_coord>, y: integer<y_coord> } variable shape_storage value_cursor
 -- - error:
-fetch xy_curs from values(x1, y1);
+fetch xy_curs from values (x1, y1);
 
 -- TEST: fetch cursor but kinds do not match
 -- * error: % expressions of different kinds can't be mixed: 'y_coord' vs. 'x_coord'
 -- +1 error:
-fetch xy_curs from values(y1, x1);
+fetch xy_curs from values (y1, x1);
 
 -- some variables of a different type
 -- - error:
@@ -20746,16 +20746,16 @@ create table Shape_uvxy (like Shape_xy, like Shape_uv);
 -- these are all rewrites so we verify that the rewrite was correct
 -- these four forms are exhaustive
 -- + INSERT INTO Shape_xy(x, y)
--- +   VALUES(C.x, C.y);
+-- +   VALUES (C.x, C.y);
 -- + INSERT INTO Shape_xy(x, y)
 -- +   VALUES
 -- +  (1, 2),
 -- +  (3, 4),
 -- +  (C.x, C.y);
--- + FETCH R(x, y, u, v) FROM VALUES(C.x, C.y, D.u, D.v);
--- + UPDATE CURSOR R(x, y, u, v) FROM VALUES(C.x, C.y, D.u, D.v);
+-- + FETCH R(x, y, u, v) FROM VALUES (C.x, C.y, D.u, D.v);
+-- + UPDATE CURSOR R(x, y, u, v) FROM VALUES (C.x, C.y, D.u, D.v);
 -- + cte1 (l, m, n, o) AS (
--- +   VALUES(C.x, C.y, D.u, D.v)
+-- +   VALUES (C.x, C.y, D.u, D.v)
 -- + )
 -- + cte2 (l, m, n, o) AS (
 -- +  VALUES
@@ -20767,7 +20767,7 @@ proc ShapeTrix()
 begin
   cursor C for select Shape_xy.*, 1 u, 2 v from Shape_xy;
   fetch C;
-  insert into Shape_xy values(from C like Shape_xy);
+  insert into Shape_xy values (from C like Shape_xy);
   insert into Shape_xy values (1,2), (3,4), (from C like Shape_xy);
 
   cursor D for select * from Shape_uv;
@@ -20794,7 +20794,7 @@ end;
 -- +1 error:
 proc ShapeTrixError1()
 begin
-  insert into Shape_xy values(from not_a_cursor like Shape_xy);
+  insert into Shape_xy values (from not_a_cursor like Shape_xy);
 end;
 
 -- TEST: bogus shape name in fetch cursor
@@ -20821,7 +20821,7 @@ end;
 -- +1 error:
 proc ShapeTrixError4()
 begin
-  insert into Shape_xy values(1,2), (from not_a_cursor like Shape_xy);
+  insert into Shape_xy values (1,2), (from not_a_cursor like Shape_xy);
 end;
 
 -- TEST: disallow use of sign in SQL
@@ -21791,7 +21791,7 @@ create table bt_default(
 -- TEST: generate defaults for pk2 and y but pk1 and x
 -- + WITH
 -- + _vals (pk1, x) AS (
--- +   VALUES(1, 2)
+-- +   VALUES (1, 2)
 -- + )
 -- + INSERT INTO simple_backing_table(k, v)
 -- + SELECT cql_blob_create
@@ -21808,7 +21808,7 @@ insert into bt_default(pk1,x) values (1, 2);
 -- verify rewrite
 -- + WITH
 -- + _vals (id, name) AS (
--- +  VALUES(1, 'foo')
+-- +  VALUES (1, 'foo')
 -- + )
 -- + INSERT INTO simple_backing_table(k, v)
 -- + SELECT cql_blob_create(basic_table, V.id, basic_table.id), cql_blob_create(basic_table, V.name, basic_table.name)
@@ -21838,7 +21838,7 @@ INSERT INTO basic_table
 -- + {upsert_stmt}: err
 -- * error: % table in insert statement does not exist 'bogus_table_not_present'
 -- +1 error:
-INSERT INTO bogus_table_not_present VALUES(1,2) on conflict(id) do nothing;
+INSERT INTO bogus_table_not_present VALUES (1,2) on conflict(id) do nothing;
 
 -- TEST: upsert form, update and with clause
 -- verify the rewrite
@@ -23119,7 +23119,7 @@ end;
 -- +     CALL test_child(1);
 -- +   LOOP FETCH __child_cursor__0
 -- +   BEGIN
--- +     FETCH __key__0(x) FROM VALUES(__child_cursor__0.x);
+-- +     FETCH __key__0(x) FROM VALUES (__child_cursor__0.x);
 -- +     SET __result__0 := cql_partition_cursor(__partition__0, __key__0, __child_cursor__0);
 -- +   END;
 -- +   CURSOR __out_cursor__0 LIKE (x INT, my_child OBJECT<test_child SET>!);
@@ -23127,8 +23127,8 @@ end;
 -- +     CALL test_parent(2);
 -- +   LOOP FETCH __parent__0
 -- +   BEGIN
--- +     FETCH __key__0(x) FROM VALUES(__parent__0.x);
--- +     FETCH __out_cursor__0(x, my_child) FROM VALUES(__parent__0.x, cql_extract_partition(__partition__0, __key__0));
+-- +     FETCH __key__0(x) FROM VALUES (__parent__0.x);
+-- +     FETCH __out_cursor__0(x, my_child) FROM VALUES (__parent__0.x, cql_extract_partition(__partition__0, __key__0));
 -- +     OUT UNION __out_cursor__0;
 -- +   END;
 -- + END;
@@ -23301,7 +23301,7 @@ begin
 
   -- Update statement from a cursor
   cursor C like update_test_1;
-  fetch C from values(1, "foo");
+  fetch C from values (1, "foo");
   update update_test_1
   set (like update_test_1) = (from C)
   where id = locals.id
@@ -23362,7 +23362,7 @@ create table update_stmt_table(
 proc test_update_from_insert_list(like update_stmt_table(id, name))
 begin
   cursor cur like update_stmt_table(a, b, c);
-  fetch cur from values("a", "b", "c");
+  fetch cur from values ("a", "b", "c");
 
   update update_stmt_table
     set (like update_stmt_table(-id)) = (locals.name, from cur, 1, 2, 3)
@@ -24158,16 +24158,16 @@ end;
 -- verify that echoing is re-emitting the escaped text
 -- + CURSOR Q LIKE `xyz``abc`(-`a b`);
 -- + CURSOR R LIKE `xyz``abc`;
--- + FETCH R(x, `a b`) FROM VALUES(1, 2);
+-- + FETCH R(x, `a b`) FROM VALUES (1, 2);
 -- + CALL printf("%d %d\n", R.x, R.`a b`);
--- + FETCH R(x, `a b`) FROM VALUES(3, 4);
+-- + FETCH R(x, `a b`) FROM VALUES (3, 4);
 -- + {declare_cursor_like_name}: Q: select: { x: integer notnull } variable shape_storage value_cursor
 -- + {declare_cursor_like_name}: R: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } variable shape_storage value_cursor
 proc qid_t4()
 begin
   cursor Q like `xyz``abc`(-`a b`);
   cursor R like `xyz``abc`;
-  fetch R from values(1, 2);
+  fetch R from values (1, 2);
   printf("%d %d\n", R.x, R.`a b`);
   fetch R using  3 x, 4 `a b`;
 end;
@@ -24252,31 +24252,31 @@ update `xyz``abc` set `a b` = 5;
 -- TEST: insert statement vanilla with quoted names
 -- verify that echoing is re-emitting the escaped text
 -- + INSERT INTO `xyz``abc`(x, `a b`)
--- +   VALUES(1, 5);
+-- +   VALUES (1, 5);
 -- + {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
 -- - error:
 insert into `xyz``abc` values (1, 5);
 
 -- TEST: insert statement using syntaxwith quoted names
 -- verify that echoing is re-emitting the escaped text
--- + INSERT INTO `xyz``abc`(`a b`, x) VALUES(1, 2);
+-- + INSERT INTO `xyz``abc`(`a b`, x) VALUES (1, 2);
 -- + {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
 -- - error:
 insert into `xyz``abc` using 1 `a b`, 2 x;
 
 -- TEST: insert statement dummy seed using form
 -- verify that echoing is re-emitting the escaped text
--- + INSERT INTO `xyz``abc`(x, `a b`) VALUES(2, _seed_) @DUMMY_SEED(500);
+-- + INSERT INTO `xyz``abc`(x, `a b`) VALUES (2, _seed_) @DUMMY_SEED(500);
 -- + {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
 -- - error:
 insert into `xyz``abc` using 2 x @dummy_seed(500);
 
 -- TEST: insert statement dummy seed values form
 -- verify that echoing is re-emitting the escaped text
--- + INSERT INTO `xyz``abc`(x, `a b`) VALUES(2, _seed_) @DUMMY_SEED(500);
+-- + INSERT INTO `xyz``abc`(x, `a b`) VALUES (2, _seed_) @DUMMY_SEED(500);
 -- + {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
 -- - error:
-insert into `xyz``abc`(x) values(2) @dummy_seed(500);
+insert into `xyz``abc`(x) values (2) @dummy_seed(500);
 
 -- TEST: create a cursor and expand it using the from form
 -- verify that echoing is re-emitting the escaped text
@@ -24284,7 +24284,7 @@ insert into `xyz``abc`(x) values(2) @dummy_seed(500);
 -- +   SELECT *
 -- + FROM `xyz``abc`;
 -- + INSERT INTO `xyz``abc`(x, `a b`)
--- +   VALUES(C.x, C.`a b`);
+-- +   VALUES (C.x, C.`a b`);
 -- + {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
 -- + {name `a b`}
 -- - error:
@@ -24292,7 +24292,7 @@ proc quoted_from_forms()
 begin
   cursor C for select * from `xyz``abc`;
   fetch C;
-  insert into `xyz``abc`(like `xyz``abc`) values(from C);
+  insert into `xyz``abc`(like `xyz``abc`) values (from C);
 end;
 
 -- TEST: drop a table with quoted named

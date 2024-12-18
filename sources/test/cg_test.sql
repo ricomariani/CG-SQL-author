@@ -1243,7 +1243,7 @@ end;
 
 -- TEST: insert or replace form
 -- + "INSERT OR REPLACE INTO bar(id, type) "
--- +   "VALUES(1, 5)");
+-- +   "VALUES (1, 5)");
 insert or replace into bar(id, type) values (1,5);
 
 -- TEST: insert default from
@@ -1253,7 +1253,7 @@ insert into foo default values;
 -- TEST: insert from stored procedure
 -- + cql_code insert_values(sqlite3 *_Nonnull _db_, cql_int32 id_, cql_nullable_int32 type_) {
 -- + "INSERT INTO bar(id, type) "
--- +   "VALUES(?, ?)");
+-- +   "VALUES (?, ?)");
 proc insert_values(id_ int!, type_ int)
 begin
   insert into bar(id, type) values (id_, type_);
@@ -1323,24 +1323,24 @@ end;
 
 -- TEST: simple DML statements for json_schema cg
 -- + "INSERT INTO foo(id) "
--- +   "VALUES(NULL)");
+-- +   "VALUES (NULL)");
 -- + "INSERT INTO foo(id) "
--- +   "VALUES(NULL)");
+-- +   "VALUES (NULL)");
 -- + "UPDATE bar "
 -- +   "SET name = 'bar' "
 -- +     "WHERE name = 'baz'");
 proc misc_dml_proc()
 begin
-  insert into foo values(NULL);
-  insert into foo(id) values(NULL);
+  insert into foo values (NULL);
+  insert into foo(id) values (NULL);
   update bar set name = 'bar' where name = 'baz';
   delete from foo where id = 1;
 end;
 
 -- TEST: use dummy data
--- + INSERT INTO bar(id, name, rate, type, size) VALUES(_seed_, printf('name_%d', _seed_), _seed_, _seed_, _seed_) @DUMMY_SEED(123) @DUMMY_DEFAULTS @DUMMY_NULLABLES;
+-- + INSERT INTO bar(id, name, rate, type, size) VALUES (_seed_, printf('name_%d', _seed_), _seed_, _seed_, _seed_) @DUMMY_SEED(123) @DUMMY_DEFAULTS @DUMMY_NULLABLES;
 -- + _seed_ = 123;
--- + "INSERT INTO bar(id, name, rate, type, size) VALUES(?, printf('name_%d', ?), ?, ?, ?)"
+-- + "INSERT INTO bar(id, name, rate, type, size) VALUES (?, printf('name_%d', ?), ?, ?, ?)"
 -- + cql_multibind(&_rc_, _db_, &_temp_stmt, 5,
 -- +4              CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, _seed_,
 -- +               CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, _seed_);
@@ -1504,13 +1504,13 @@ set blob_var_notnull := blob_notnull_func();
 
 -- TEST: bind a nullable blob and a not null blob
 -- + INSERT INTO blob_table(blob_id, b_nullable, b_notnull)
--- +   VALUES(0, blob_var, blob_var_notnull);
+-- +   VALUES (0, blob_var, blob_var_notnull);
 -- + "INSERT INTO blob_table(blob_id, b_nullable, b_notnull) "
--- +   "VALUES(0, ?, ?)");
+-- +   "VALUES (0, ?, ?)");
 -- + cql_multibind(&_rc_, _db_, &_temp_stmt, 2,
 -- +               CQL_DATA_TYPE_BLOB, blob_var,
 -- +               CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_BLOB, blob_var_notnull);
-insert into blob_table(blob_id, b_nullable, b_notnull) values(0, blob_var, blob_var_notnull);
+insert into blob_table(blob_id, b_nullable, b_notnull) values (0, blob_var, blob_var_notnull);
 
 -- TEST: a result set that includes blobs
 proc blob_returner()
@@ -1644,7 +1644,7 @@ end;
 proc fetch_values_dummy()
 begin
   declare C cursor like select * from bar;
-  fetch C() from values() @dummy_seed(123) @dummy_nullables;
+  fetch C() from values () @dummy_seed(123) @dummy_nullables;
 end;
 
 -- TEST: value cursor fetch, using type syntax
@@ -1666,7 +1666,7 @@ end;
 proc fetch_values_extended()
 begin
   declare C cursor like (like bar, xx real, yy text);
-  fetch C() from values() @dummy_seed(123) @dummy_nullables;
+  fetch C() from values () @dummy_seed(123) @dummy_nullables;
 end;
 
 -- TEST: c style literal
@@ -1718,7 +1718,7 @@ end;
 proc out_no_db()
 begin
   declare C cursor like select 1 A, 2.5 B;
-  fetch C(A,B) from values(3,12);
+  fetch C(A,B) from values (3,12);
   out C;
 end;
 
@@ -1736,7 +1736,7 @@ proc declare_cursor_like_cursor()
 begin
   declare C0 cursor like select 1 A, 2.5 B;
   declare C1 cursor like C0;
-  fetch C1(A,B) from values(3,12);
+  fetch C1(A,B) from values (3,12);
   out C1;
 end;
 
@@ -1870,7 +1870,7 @@ end;
 -- +     "SELECT 111 "
 -- +   ") "
 -- + "INSERT INTO foo(id) "
--- +   "VALUES(ifnull(( SELECT a "
+-- +   "VALUES (ifnull(( SELECT a "
 -- +     "FROM x ), 0))");
 with x(a) as (select 111)
 insert into foo values ( ifnull((select a from x), 0));
@@ -1904,7 +1904,7 @@ set r2 := (select SqlUserFunc(123));
 -- It's hard to think of a real use case for this but I want to make sure the rewriter doesn't screw it up.
 --
 -- + cql_code multi_rewrite(sqlite3 *_Nonnull _db_, cql_int32 blob_id_, cql_blob_ref _Nonnull b_notnull_, cql_blob_ref _Nullable b_nullable_, cql_int32 id_, cql_string_ref _Nullable name_, cql_nullable_int64 rate_, cql_nullable_int32 type_, cql_nullable_double size_, cql_int32 *_Nonnull out_arg)
--- + "INSERT INTO blob_table(blob_id, b_notnull, b_nullable) VALUES(?, ?, ?)"
+-- + "INSERT INTO blob_table(blob_id, b_notnull, b_nullable) VALUES (?, ?, ?)"
 -- + cql_multibind(&_rc_, _db_, &_temp_stmt, 3,
 -- +               CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, blob_id_,
 -- +               CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_BLOB, b_notnull_,
@@ -2356,7 +2356,7 @@ end;
 procedure simple_cursor_proc()
 begin
   declare A_CURSOR cursor like select 1 id;
-  fetch a_cursor (id) from values(1);
+  fetch a_cursor (id) from values (1);
   out a_cursor;
 end;
 
@@ -2519,11 +2519,11 @@ END;
 -- TEST: codegen upsert statement with do nothing
 -- + cql_code upsert_do_nothing(sqlite3 *_Nonnull _db_, cql_int32 id_) {
 -- + "INSERT INTO foo(id) "
--- +   "VALUES(?) "
+-- +   "VALUES (?) "
 -- +  "ON CONFLICT DO NOTHING");
 proc upsert_do_nothing(id_ int!)
 BEGIN
- insert into foo(id) values(id_) on conflict do nothing;
+ insert into foo(id) values (id_) on conflict do nothing;
 END;
 
 -- TEST: codegen with-insert with a seed
@@ -2533,7 +2533,7 @@ END;
 -- +   "some_cte (id) AS ( "
 -- +     "SELECT 1 AS id "
 -- +   ") "
--- + "INSERT INTO bar(id) VALUES(ifnull(( SELECT id "
+-- + "INSERT INTO bar(id) VALUES (ifnull(( SELECT id "
 -- +   "FROM some_cte ), 0))");
 -- + if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
 with some_cte(id) as (select 1 id)
@@ -2544,11 +2544,11 @@ values (ifnull((select id from some_cte), 0))
 -- TEST: codegen upsert with a seed
 -- + _seed_ = 1338;
 -- + _rc_ = cql_exec(_db_,
--- + "INSERT INTO bar(id) VALUES(1) "
+-- + "INSERT INTO bar(id) VALUES (1) "
 -- + "ON CONFLICT (id) DO UPDATE "
 -- + "SET id = 10");
 -- + if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-insert into bar(id) values(1) @dummy_seed(1338)
+insert into bar(id) values (1) @dummy_seed(1338)
 on conflict(id) do
 update set id=10;
 
@@ -2608,7 +2608,7 @@ end;
 proc out_union_two()
 begin
  declare C cursor like select 1 x, '2' y;
- fetch C from values(1, "y");
+ fetch C from values (1, "y");
  out union C;
  out union C;
 end;
@@ -2681,7 +2681,7 @@ end;
 proc out_union_values(a int!, b int!)
 begin
   declare x cursor like select 1 x, 2 y;
-  fetch x from values(a,b);
+  fetch x from values (a,b);
   out union x;
 end;
 
@@ -2862,18 +2862,18 @@ end;
 -- note the newline is escaped and present
 -- + "INSERT INTO bar(id, name) "
 -- note that the newline has no extra spaces after it even though we are indenting
--- +   "VALUES(1, 'it''s high noon\r\n\f\b\t\v')");
+-- +   "VALUES (1, 'it''s high noon\r\n\f\b\t\v')");
 proc pretty_print_with_quote()
 begin
-  insert into bar(id, name) values(1, "it's high noon\r\n\f\b\t\v");
+  insert into bar(id, name) values (1, "it's high noon\r\n\f\b\t\v");
 end;
 
 -- TEST: string literal with hex forms
 -- + "INSERT INTO bar(id, name) "
--- +   "VALUES(1, '\x01\x02\xa1\x1bg')");
+-- +   "VALUES (1, '\x01\x02\xa1\x1bg')");
 proc hex_quote()
 begin
-  insert into bar(id, name) values(1, "\x01\x02\xA1\x1b\x00\xg");
+  insert into bar(id, name) values (1, "\x01\x02\xA1\x1b\x00\xg");
 end;
 
 -- TEST: no getters generated for this function
@@ -3705,7 +3705,7 @@ end;
 proc out_arg_cursor(x int!, out y int!)
 begin
   declare C cursor like out_arg_cursor arguments;
-  fetch C from values(1,1);
+  fetch C from values (1,1);
   call out_arg_cursor(from C);
 end;
 
@@ -3752,14 +3752,14 @@ end;
 -- TEST: insert into the table, verify autoexpand is correct there, too
 -- only "y" should be inserted here
 -- + "INSERT INTO virtual_with_hidden(vy) "
--- +   "VALUES(1)");
-insert into virtual_with_hidden values(1);
+-- +   "VALUES (1)");
+insert into virtual_with_hidden values (1);
 
 -- TEST: you can use the hidden column if you do it by name
 -- + _rc_ = cql_exec(_db_,
 -- + "INSERT INTO virtual_with_hidden(vx, vy) "
--- +    "VALUES(1, 2)");
-insert into virtual_with_hidden(vx, vy) values(1,2);
+-- +    "VALUES (1, 2)");
+insert into virtual_with_hidden(vx, vy) values (1,2);
 
 -- TEST: get row from the bar table or else -1
 -- + if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
@@ -3839,7 +3839,7 @@ proc private_out_union()
 begin
   declare C cursor like select 1 a_field;
 
-  fetch C from values(1);
+  fetch C from values (1);
   out union C;
 end;
 
@@ -3878,7 +3878,7 @@ proc no_getters_out_union()
 begin
   declare C cursor like select 1 a_field;
 
-  fetch C from values(1);
+  fetch C from values (1);
   out union C;
 end;
 
@@ -3908,7 +3908,7 @@ proc suppress_results_out_union()
 begin
   declare C cursor like select 1 a_field;
 
-  fetch C from values(1);
+  fetch C from values (1);
   out union C;
 end;
 
@@ -5388,7 +5388,7 @@ end;
 -- + SELECT bcreatekey(3942979045122214775, V.pk2, 1, V.pk1, 1), bcreateval(3942979045122214775, 1055660242183705531, V.flag, 0, -9155171551243524439, V.id, 2, -6946718245010482247, V.name, 4, 4605090824299507084, V.extra, 1)
 proc insert_into_backed2()
 begin
-  insert into backed2 values(1, 2, true, 1000, 'hi', 5);
+  insert into backed2 values (1, 2, true, 1000, 'hi', 5);
 end;
 
 -- TEST update backed2 -- keys should be the correct offsets
@@ -5594,15 +5594,15 @@ create table small_backed(
 -- + FROM _vals AS V
 proc insert_backed_values()
 begin
-  insert into small_backed values(1, "2", 3.14),  (4, "5", 6),  (7, "8", 9.7);
+  insert into small_backed values (1, "2", 3.14),  (4, "5", 6),  (7, "8", 9.7);
 end;
 
 -- TEST: simple with-insert using values
 -- + U (x, y, z) AS (
--- + VALUES(1, '2', 3.14)
+-- + VALUES (1, '2', 3.14)
 -- + )
 -- + V (x, y, z) AS (
--- + VALUES(1, '2', 3.14)
+-- + VALUES (1, '2', 3.14)
 -- + )
 -- + _vals (pk, x, y) AS (
 -- + SELECT x, y, z
@@ -5621,7 +5621,7 @@ end;
 
 -- TEST: simple insert using form
 -- + _vals (pk, x, y) AS (
--- + VALUES(1, '2', 3.14)
+-- + VALUES (1, '2', 3.14)
 -- + )
 -- + INSERT INTO backing(k, v)
 -- + SELECT bcreatekey(-4190907309554122430, V.pk, 1), bcreateval(-4190907309554122430, 7953209610392031882, V.x, 4, 3032304244189539277, V.y, 3)
@@ -5667,11 +5667,11 @@ end;
 -- + DELETE FROM backing WHERE rowid IN (SELECT rowid
 -- + FROM small_backed)
 -- + v (x) AS (
--- + VALUES(1)
+-- + VALUES (1)
 -- + )
 proc delete_from_backed_no_where_clause()
 begin
-  with v(x) as (values(1)) -- force the with select form
+  with v(x) as (values (1)) -- force the with select form
   delete from small_backed;
 end;
 
@@ -5723,7 +5723,7 @@ end;
 
 -- TEST: simple update into backed table value only, using with clause
 -- + V (x) AS (
--- + VALUES(1)
+-- + VALUES (1)
 -- + )
 -- + UPDATE backing
 -- + SET v = bupdateval(v, -6946718245010482247, 'goo', 4)
@@ -5732,7 +5732,7 @@ end;
 -- + WHERE name = 'with_update')
 proc update_backed_with_clause()
 begin
-  with V(x) as (values(1)) -- force a with clause
+  with V(x) as (values (1)) -- force a with clause
   update backed set name = 'goo' where name = 'with_update';
 end;
 
@@ -5995,7 +5995,7 @@ end;
 proc qid_t4b()
 begin
   cursor R like `xyz``abc`;
-  fetch R from values(1, 2);
+  fetch R from values (1, 2);
   printf("%d %d\n", R.x, R.`a b`);
   fetch R using  3 x, 4 `a b`;
 end;
@@ -6066,14 +6066,14 @@ end;
 -- TEST: backing storage with json: insert
 -- + "WITH "
 -- +   "_vals (id, name, age, zip) AS ( "
--- +     "VALUES(1, 'a name', 13, 98033) "
+-- +     "VALUES (1, 'a name', 13, 98033) "
 -- +   ") "
 -- + "INSERT INTO json_backing(k, v) "
 -- +   "SELECT json_array(-1916485007726025434, V.name, V.id), json_object('age', V.age,  'zip', V.zip) "
 -- +     "FROM _vals AS V");
 proc jdata_dml_insert()
 begin
-  insert into jdata values(1, "a name", 13, 98033);
+  insert into jdata values (1, "a name", 13, 98033);
 end;
 
 -- TEST: backing storage with json: update

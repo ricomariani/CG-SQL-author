@@ -2596,7 +2596,7 @@ void obj_proc(cql_object_ref _Nullable *_Nonnull an_object) {
 PROC cursor_with_object (object_ OBJECT)
 BEGIN
   CURSOR C LIKE cursor_with_object ARGUMENTS;
-  FETCH C(object_) FROM VALUES(object_);
+  FETCH C(object_) FROM VALUES (object_);
   OUT C;
 END;
 */
@@ -2744,7 +2744,7 @@ void echo_test(void) {
 PROC insert_values (id_ INT!, type_ INT)
 BEGIN
   INSERT INTO bar(id, type)
-    VALUES(id_, type_);
+    VALUES (id_, type_);
 END;
 */
 
@@ -2760,7 +2760,7 @@ CQL_WARN_UNUSED cql_code insert_values(sqlite3 *_Nonnull _db_, cql_int32 id_, cq
 
   _rc_ = cql_prepare(_db_, &_temp_stmt,
     "INSERT INTO bar(id, type) "
-      "VALUES(?, ?)");
+      "VALUES (?, ?)");
   cql_multibind(&_rc_, _db_, &_temp_stmt, 2,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, id_,
                 CQL_DATA_TYPE_INT32, &type_);
@@ -2959,9 +2959,9 @@ cql_cleanup:
 PROC misc_dml_proc ()
 BEGIN
   INSERT INTO foo(id)
-    VALUES(NULL);
+    VALUES (NULL);
   INSERT INTO foo(id)
-    VALUES(NULL);
+    VALUES (NULL);
   UPDATE bar
     SET name = 'bar'
     WHERE name = 'baz';
@@ -2980,11 +2980,11 @@ CQL_WARN_UNUSED cql_code misc_dml_proc(sqlite3 *_Nonnull _db_) {
 
   _rc_ = cql_exec(_db_,
     "INSERT INTO foo(id) "
-      "VALUES(NULL)");
+      "VALUES (NULL)");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = cql_exec(_db_,
     "INSERT INTO foo(id) "
-      "VALUES(NULL)");
+      "VALUES (NULL)");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = cql_exec(_db_,
     "UPDATE bar "
@@ -3007,7 +3007,7 @@ cql_cleanup:
 /*
 PROC dummy_user ()
 BEGIN
-  INSERT INTO bar(id, name, rate, type, size) VALUES(_seed_, printf('name_%d', _seed_), _seed_, _seed_, _seed_) @DUMMY_SEED(123) @DUMMY_DEFAULTS @DUMMY_NULLABLES;
+  INSERT INTO bar(id, name, rate, type, size) VALUES (_seed_, printf('name_%d', _seed_), _seed_, _seed_, _seed_) @DUMMY_SEED(123) @DUMMY_DEFAULTS @DUMMY_NULLABLES;
 END;
 */
 
@@ -3024,7 +3024,7 @@ CQL_WARN_UNUSED cql_code dummy_user(sqlite3 *_Nonnull _db_) {
 
   _seed_ = 123;
   _rc_ = cql_prepare(_db_, &_temp_stmt,
-    "INSERT INTO bar(id, name, rate, type, size) VALUES(?, printf('name_%d', ?), ?, ?, ?)");
+    "INSERT INTO bar(id, name, rate, type, size) VALUES (?, printf('name_%d', ?), ?, ?, ?)");
   cql_multibind(&_rc_, _db_, &_temp_stmt, 5,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, _seed_,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, _seed_,
@@ -3599,7 +3599,7 @@ PROC fetch_values_dummy ()
 BEGIN
   CURSOR C LIKE SELECT *
     FROM bar;
-  FETCH C(id, name, rate, type, size) FROM VALUES(_seed_, printf('name_%d', _seed_), _seed_, _seed_, _seed_) @DUMMY_SEED(123) @DUMMY_NULLABLES;
+  FETCH C(id, name, rate, type, size) FROM VALUES (_seed_, printf('name_%d', _seed_), _seed_, _seed_, _seed_) @DUMMY_SEED(123) @DUMMY_NULLABLES;
 END;
 */
 
@@ -3651,7 +3651,7 @@ void fetch_values_dummy(void) {
 PROC fetch_values_extended ()
 BEGIN
   CURSOR C LIKE (id INT!, name TEXT, rate LONG, type INT, size REAL, xx REAL, yy TEXT);
-  FETCH C(id, name, rate, type, size, xx, yy) FROM VALUES(_seed_, printf('name_%d', _seed_), _seed_, _seed_, _seed_, _seed_, printf('yy_%d', _seed_)) @DUMMY_SEED(123) @DUMMY_NULLABLES;
+  FETCH C(id, name, rate, type, size, xx, yy) FROM VALUES (_seed_, printf('name_%d', _seed_), _seed_, _seed_, _seed_, _seed_, printf('yy_%d', _seed_)) @DUMMY_SEED(123) @DUMMY_NULLABLES;
 END;
 */
 
@@ -3835,7 +3835,7 @@ CQL_WARN_UNUSED cql_code no_code_after_catch(sqlite3 *_Nonnull _db_) {
 PROC out_no_db ()
 BEGIN
   CURSOR C LIKE SELECT 1 AS A, 2.5 AS B;
-  FETCH C(A, B) FROM VALUES(3, 12);
+  FETCH C(A, B) FROM VALUES (3, 12);
   OUT C;
 END;
 */
@@ -3909,7 +3909,7 @@ PROC declare_cursor_like_cursor ()
 BEGIN
   CURSOR C0 LIKE SELECT 1 AS A, 2.5 AS B;
   CURSOR C1 LIKE C0;
-  FETCH C1(A, B) FROM VALUES(3, 12);
+  FETCH C1(A, B) FROM VALUES (3, 12);
   OUT C1;
 END;
 */
@@ -4444,7 +4444,7 @@ cql_cleanup:
 /*
 PROC multi_rewrite (blob_id_ INT!, b_notnull_ BLOB!, b_nullable_ BLOB, id_ INT!, name_ TEXT, rate_ LONG, type_ INT, size_ REAL, OUT out_arg INT!)
 BEGIN
-  INSERT INTO blob_table(blob_id, b_notnull, b_nullable) VALUES(blob_id_, b_notnull_, b_nullable_);
+  INSERT INTO blob_table(blob_id, b_notnull, b_nullable) VALUES (blob_id_, b_notnull_, b_nullable_);
   SET out_arg := 1;
 END;
 */
@@ -4464,7 +4464,7 @@ CQL_WARN_UNUSED cql_code multi_rewrite(sqlite3 *_Nonnull _db_, cql_int32 blob_id
 
   *out_arg = 0; // set out arg to non-garbage
   _rc_ = cql_prepare(_db_, &_temp_stmt,
-    "INSERT INTO blob_table(blob_id, b_notnull, b_nullable) VALUES(?, ?, ?)");
+    "INSERT INTO blob_table(blob_id, b_notnull, b_nullable) VALUES (?, ?, ?)");
   cql_multibind(&_rc_, _db_, &_temp_stmt, 3,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, blob_id_,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_BLOB, b_notnull_,
@@ -4490,8 +4490,8 @@ PROC fetch_to_cursor_from_cursor ()
 BEGIN
   CURSOR C0 LIKE SELECT 1 AS A, "foo" AS B;
   CURSOR C1 LIKE C0;
-  FETCH C0(A, B) FROM VALUES(2, "bar");
-  FETCH C1(A, B) FROM VALUES(C0.A, C0.B);
+  FETCH C0(A, B) FROM VALUES (2, "bar");
+  FETCH C1(A, B) FROM VALUES (C0.A, C0.B);
   OUT C1;
 END;
 */
@@ -4910,7 +4910,7 @@ cql_cleanup:
 PROC out_union_helper ()
 BEGIN
   CURSOR C LIKE SELECT 1 AS x;
-  FETCH C(x) FROM VALUES(1);
+  FETCH C(x) FROM VALUES (1);
   OUT UNION C;
 END;
 */
@@ -5990,7 +5990,7 @@ cql_cleanup:
 PROC simple_cursor_proc ()
 BEGIN
   CURSOR A_CURSOR LIKE SELECT 1 AS id;
-  FETCH a_cursor(id) FROM VALUES(1);
+  FETCH a_cursor(id) FROM VALUES (1);
   OUT a_cursor;
 END;
 */
@@ -6548,7 +6548,7 @@ cql_cleanup:
 PROC upsert_do_nothing (id_ INT!)
 BEGIN
   INSERT INTO foo(id)
-    VALUES(id_)
+    VALUES (id_)
   ON CONFLICT DO NOTHING;
 END;
 */
@@ -6565,7 +6565,7 @@ CQL_WARN_UNUSED cql_code upsert_do_nothing(sqlite3 *_Nonnull _db_, cql_int32 id_
 
   _rc_ = cql_prepare(_db_, &_temp_stmt,
     "INSERT INTO foo(id) "
-      "VALUES(?) "
+      "VALUES (?) "
     "ON CONFLICT DO NOTHING");
   cql_multibind(&_rc_, _db_, &_temp_stmt, 1,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, id_);
@@ -6721,7 +6721,7 @@ cql_cleanup:
 PROC out_union_two ()
 BEGIN
   CURSOR C LIKE SELECT 1 AS x, '2' AS y;
-  FETCH C(x, y) FROM VALUES(1, "y");
+  FETCH C(x, y) FROM VALUES (1, "y");
   OUT UNION C;
   OUT UNION C;
 END;
@@ -7018,7 +7018,7 @@ cql_cleanup:
 PROC out_union_values (a INT!, b INT!)
 BEGIN
   CURSOR x LIKE SELECT 1 AS x, 2 AS y;
-  FETCH x(x, y) FROM VALUES(a, b);
+  FETCH x(x, y) FROM VALUES (a, b);
   OUT UNION x;
 END;
 */
@@ -7410,7 +7410,7 @@ cql_cleanup:
 PROC update_cursor ()
 BEGIN
   CURSOR C LIKE SELECT 1 AS x, 2 AS y;
-  UPDATE CURSOR C(x) FROM VALUES(2);
+  UPDATE CURSOR C(x) FROM VALUES (2);
 END;
 */
 
@@ -7720,7 +7720,7 @@ CQL_WARN_UNUSED cql_code tail_catch(sqlite3 *_Nonnull _db_) {
 PROC pretty_print_with_quote ()
 BEGIN
   INSERT INTO bar(id, name)
-    VALUES(1, "it's high noon\r\n\f\b\t\v");
+    VALUES (1, "it's high noon\r\n\f\b\t\v");
 END;
 */
 
@@ -7735,7 +7735,7 @@ CQL_WARN_UNUSED cql_code pretty_print_with_quote(sqlite3 *_Nonnull _db_) {
 
   _rc_ = cql_exec(_db_,
     "INSERT INTO bar(id, name) "
-      "VALUES(1, 'it''s high noon\r\n\f\b\t\v')");
+      "VALUES (1, 'it''s high noon\r\n\f\b\t\v')");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
 
@@ -7751,7 +7751,7 @@ cql_cleanup:
 PROC hex_quote ()
 BEGIN
   INSERT INTO bar(id, name)
-    VALUES(1, "\x01\x02\xa1\x1bg");
+    VALUES (1, "\x01\x02\xa1\x1bg");
 END;
 */
 
@@ -7766,7 +7766,7 @@ CQL_WARN_UNUSED cql_code hex_quote(sqlite3 *_Nonnull _db_) {
 
   _rc_ = cql_exec(_db_,
     "INSERT INTO bar(id, name) "
-      "VALUES(1, '\x01\x02\xa1\x1bg')");
+      "VALUES (1, '\x01\x02\xa1\x1bg')");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
 
@@ -7959,7 +7959,7 @@ cql_cleanup:
 PROC emit_object_with_setters (o OBJECT!, x OBJECT!, i INT!, l LONG!, b BOOL!, d REAL!, t TEXT!, bl BLOB!)
 BEGIN
   CURSOR C LIKE emit_object_with_setters ARGUMENTS;
-  FETCH C(o, x, i, l, b, d, t, bl) FROM VALUES(o, x, i, l, b, d, t, bl);
+  FETCH C(o, x, i, l, b, d, t, bl) FROM VALUES (o, x, i, l, b, d, t, bl);
   OUT C;
 END;
 */
@@ -8077,7 +8077,7 @@ void emit_object_with_setters(cql_object_ref _Nonnull o, cql_object_ref _Nonnull
 PROC emit_setters_with_nullables (o OBJECT, x OBJECT, i INT, l LONG, b BOOL, d REAL, t TEXT, bl BLOB)
 BEGIN
   CURSOR C LIKE emit_setters_with_nullables ARGUMENTS;
-  FETCH C(o, x, i, l, b, d, t, bl) FROM VALUES(o, x, i, l, b, d, t, bl);
+  FETCH C(o, x, i, l, b, d, t, bl) FROM VALUES (o, x, i, l, b, d, t, bl);
   OUT C;
 END;
 */
@@ -11361,7 +11361,7 @@ cql_cleanup:
 PROC out_arg_cursor (x INT!, OUT y INT!)
 BEGIN
   CURSOR C LIKE out_arg_cursor ARGUMENTS;
-  FETCH C(x, y) FROM VALUES(1, 1);
+  FETCH C(x, y) FROM VALUES (1, 1);
   CALL out_arg_cursor(C.x, C.y);
 END;
 */
@@ -11622,7 +11622,7 @@ static void private_proc(cql_nullable_int32 *_Nonnull x) {
 PROC private_out_union ()
 BEGIN
   CURSOR C LIKE SELECT 1 AS a_field;
-  FETCH C(a_field) FROM VALUES(1);
+  FETCH C(a_field) FROM VALUES (1);
   OUT UNION C;
 END;
 */
@@ -11763,7 +11763,7 @@ CQL_WARN_UNUSED cql_code use_private_out_union(sqlite3 *_Nonnull _db_) {
 PROC no_getters_out_union ()
 BEGIN
   CURSOR C LIKE SELECT 1 AS a_field;
-  FETCH C(a_field) FROM VALUES(1);
+  FETCH C(a_field) FROM VALUES (1);
   OUT UNION C;
 END;
 */
@@ -11880,7 +11880,7 @@ CQL_WARN_UNUSED cql_code use_no_getters_out_union(sqlite3 *_Nonnull _db_) {
 PROC suppress_results_out_union ()
 BEGIN
   CURSOR C LIKE SELECT 1 AS a_field;
-  FETCH C(a_field) FROM VALUES(1);
+  FETCH C(a_field) FROM VALUES (1);
   OUT UNION C;
 END;
 */
@@ -12482,7 +12482,7 @@ cql_cleanup:
 PROC out_object (o OBJECT!)
 BEGIN
   CURSOR C LIKE out_object ARGUMENTS;
-  FETCH C(o) FROM VALUES(o);
+  FETCH C(o) FROM VALUES (o);
   OUT C;
 END;
 */
@@ -15392,7 +15392,7 @@ DECLARE PROC a_proc_we_need () (id INT, t TEXT);
 PROC a_proc_that_needs_dependents ()
 BEGIN
   CURSOR C LIKE (a_foo OBJECT<a_proc_we_need SET>, another_foo OBJECT<a_proc_we_need SET>);
-  FETCH C(a_foo, another_foo) FROM VALUES(a_proc_we_need(), a_proc_we_need());
+  FETCH C(a_foo, another_foo) FROM VALUES (a_proc_we_need(), a_proc_we_need());
   OUT UNION C;
 END;
 */
@@ -15582,7 +15582,7 @@ cql_cleanup:
 PROC simple_container_proc ()
 BEGIN
   CURSOR C LIKE (a INT, b INT!, c OBJECT<simple_child_proc SET>);
-  FETCH C(a, b, c) FROM VALUES(1, 2, simple_child_proc());
+  FETCH C(a, b, c) FROM VALUES (1, 2, simple_child_proc());
   OUT UNION C;
 END;
 */
@@ -15768,7 +15768,7 @@ PROC insert_into_backed2 ()
 BEGIN
   WITH
     _vals (pk1, pk2, flag, id, name, extra) AS (
-      VALUES(1, 2, TRUE, 1000, 'hi', 5)
+      VALUES (1, 2, TRUE, 1000, 'hi', 5)
     )
   INSERT INTO backing(k, v)
     SELECT cql_blob_create(backed2, V.pk2, backed2.pk2, V.pk1, backed2.pk1), cql_blob_create(backed2, V.flag, backed2.flag, V.id, backed2.id, V.name, backed2.name, V.extra, backed2.extra)
@@ -15788,7 +15788,7 @@ CQL_WARN_UNUSED cql_code insert_into_backed2(sqlite3 *_Nonnull _db_) {
   _rc_ = cql_exec(_db_,
     "WITH "
       "_vals (pk1, pk2, flag, id, name, extra) AS ( "
-        "VALUES(1, 2, 1, 1000, 'hi', 5) "
+        "VALUES (1, 2, 1, 1000, 'hi', 5) "
       ") "
     "INSERT INTO backing(k, v) "
       "SELECT bcreatekey(3942979045122214775, V.pk2, 1, V.pk1, 1), bcreateval(3942979045122214775, 1055660242183705531, V.flag, 0, -9155171551243524439, V.id, 2, -6946718245010482247, V.name, 4, 4605090824299507084, V.extra, 1) "
@@ -16534,10 +16534,10 @@ PROC insert_backed_values_using_with ()
 BEGIN
   WITH
     U (x, y, z) AS (
-      VALUES(1, "2", 3.14)
+      VALUES (1, "2", 3.14)
     ),
     V (x, y, z) AS (
-      VALUES(1, "2", 3.14)
+      VALUES (1, "2", 3.14)
     ),
     _vals (pk, x, y) AS (
       SELECT *
@@ -16561,10 +16561,10 @@ CQL_WARN_UNUSED cql_code insert_backed_values_using_with(sqlite3 *_Nonnull _db_)
   _rc_ = cql_exec(_db_,
     "WITH "
       "U (x, y, z) AS ( "
-        "VALUES(1, '2', 3.14) "
+        "VALUES (1, '2', 3.14) "
       "), "
       "V (x, y, z) AS ( "
-        "VALUES(1, '2', 3.14) "
+        "VALUES (1, '2', 3.14) "
       "), "
       "_vals (pk, x, y) AS ( "
         "SELECT x, y, z "
@@ -16589,7 +16589,7 @@ PROC insert_backed_values_using_form ()
 BEGIN
   WITH
     _vals (pk, x, y) AS (
-      VALUES(1, "2", 3.14)
+      VALUES (1, "2", 3.14)
     )
   INSERT INTO backing(k, v)
     SELECT cql_blob_create(small_backed, V.pk, small_backed.pk), cql_blob_create(small_backed, V.x, small_backed.x, V.y, small_backed.y)
@@ -16609,7 +16609,7 @@ CQL_WARN_UNUSED cql_code insert_backed_values_using_form(sqlite3 *_Nonnull _db_)
   _rc_ = cql_exec(_db_,
     "WITH "
       "_vals (pk, x, y) AS ( "
-        "VALUES(1, '2', 3.14) "
+        "VALUES (1, '2', 3.14) "
       ") "
     "INSERT INTO backing(k, v) "
       "SELECT bcreatekey(-4190907309554122430, V.pk, 1), bcreateval(-4190907309554122430, 7953209610392031882, V.x, 4, 3032304244189539277, V.y, 3) "
@@ -16733,7 +16733,7 @@ BEGIN
   WITH
     small_backed (rowid, pk, x, y) AS (CALL _small_backed()),
     v (x) AS (
-      VALUES(1)
+      VALUES (1)
     )
   DELETE FROM backing WHERE rowid IN (SELECT rowid
     FROM small_backed);
@@ -16762,7 +16762,7 @@ CQL_WARN_UNUSED cql_code delete_from_backed_no_where_clause(sqlite3 *_Nonnull _d
         "WHERE bgetkey_type(T.k) = -4190907309554122430",
   "), "
       "v (x) AS ( "
-        "VALUES(1) "
+        "VALUES (1) "
       ") "
     "DELETE FROM backing WHERE rowid IN (SELECT rowid "
       "FROM small_backed)"
@@ -16837,7 +16837,7 @@ PROC test_blob_insert_key_codes ()
 BEGIN
   WITH
     _vals (pk1, pk2, name) AS (
-      VALUES(1, 2, "foo")
+      VALUES (1, 2, "foo")
     )
   INSERT INTO backing_key_codes(k, v)
     SELECT cql_blob_create(backed3, V.pk2, backed3.pk2, V.pk1, backed3.pk1), cql_blob_create(backed3, V.name, backed3.name)
@@ -16863,7 +16863,7 @@ CQL_WARN_UNUSED cql_code test_blob_insert_key_codes(sqlite3 *_Nonnull _db_) {
   _rc_ = cql_exec(_db_,
     "WITH "
       "_vals (pk1, pk2, name) AS ( "
-        "VALUES(1, 2, 'foo') "
+        "VALUES (1, 2, 'foo') "
       ") "
     "INSERT INTO backing_key_codes(k, v) "
       "SELECT bcreatekey(-4381524886612374514, 3424884698372330699, V.pk2, 1, 3320730843156438477, V.pk1, 1), bcreateval(-4381524886612374514, -6946718245010482247, V.name, 4) "
@@ -16901,7 +16901,7 @@ PROC test_blob_insert_val_offsets ()
 BEGIN
   WITH
     _vals (pk1, pk2, name) AS (
-      VALUES(1, 2, "foo")
+      VALUES (1, 2, "foo")
     )
   INSERT INTO backing_val_offsets(k, v)
     SELECT cql_blob_create(backed3_offsets, V.pk2, backed3_offsets.pk2, V.pk1, backed3_offsets.pk1), cql_blob_create(backed3_offsets, V.name, backed3_offsets.name)
@@ -16927,7 +16927,7 @@ CQL_WARN_UNUSED cql_code test_blob_insert_val_offsets(sqlite3 *_Nonnull _db_) {
   _rc_ = cql_exec(_db_,
     "WITH "
       "_vals (pk1, pk2, name) AS ( "
-        "VALUES(1, 2, 'foo') "
+        "VALUES (1, 2, 'foo') "
       ") "
     "INSERT INTO backing_val_offsets(k, v) "
       "SELECT bcreatekey(1236461322253850149, V.pk2, 1, V.pk1, 1), bcreateval(1236461322253850149, 0, V.name, 4) "
@@ -17020,7 +17020,7 @@ BEGIN
   WITH
     backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed()),
     V (x) AS (
-      VALUES(1)
+      VALUES (1)
     )
   UPDATE backing
     SET v = cql_blob_update(v, 'goo', backed.name)
@@ -17055,7 +17055,7 @@ CQL_WARN_UNUSED cql_code update_backed_with_clause(sqlite3 *_Nonnull _db_) {
         "WHERE bgetkey_type(T.k) = -5417664364642960231",
   "), "
       "V (x) AS ( "
-        "VALUES(1) "
+        "VALUES (1) "
       ") "
     "UPDATE backing "
       "SET v = bupdateval(v, -6946718245010482247, 'goo', 4) "
@@ -17822,9 +17822,9 @@ void qid_t4a(void) {
 PROC qid_t4b ()
 BEGIN
   CURSOR R LIKE `xyz``abc`;
-  FETCH R(x, `a b`) FROM VALUES(1, 2);
+  FETCH R(x, `a b`) FROM VALUES (1, 2);
   CALL printf("%d %d\n", R.x, R.`a b`);
-  FETCH R(x, `a b`) FROM VALUES(3, 4);
+  FETCH R(x, `a b`) FROM VALUES (3, 4);
 END;
 */
 
@@ -17993,7 +17993,7 @@ PROC jdata_dml_insert ()
 BEGIN
   WITH
     _vals (id, name, age, zip) AS (
-      VALUES(1, "a name", 13, 98033)
+      VALUES (1, "a name", 13, 98033)
     )
   INSERT INTO json_backing(k, v)
     SELECT cql_blob_create(jdata, V.name, jdata.name, V.id, jdata.id), cql_blob_create(jdata, V.age, jdata.age, V.zip, jdata.zip)
@@ -18013,7 +18013,7 @@ CQL_WARN_UNUSED cql_code jdata_dml_insert(sqlite3 *_Nonnull _db_) {
   _rc_ = cql_exec(_db_,
     "WITH "
       "_vals (id, name, age, zip) AS ( "
-        "VALUES(1, 'a name', 13, 98033) "
+        "VALUES (1, 'a name', 13, 98033) "
       ") "
     "INSERT INTO json_backing(k, v) "
       "SELECT json_array(-1916485007726025434, V.name, V.id), json_object('age', V.age,  'zip', V.zip) "
@@ -19613,11 +19613,11 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
 
   /*
   INSERT OR REPLACE INTO bar(id, type)
-    VALUES(1, 5);
+    VALUES (1, 5);
   */
   _rc_ = cql_exec(_db_,
     "INSERT OR REPLACE INTO bar(id, type) "
-      "VALUES(1, 5)");
+      "VALUES (1, 5)");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
 
   // The statement ending at line XXXX
@@ -19912,11 +19912,11 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
 
   /*
   INSERT INTO blob_table(blob_id, b_nullable, b_notnull)
-    VALUES(0, blob_var, blob_var_notnull);
+    VALUES (0, blob_var, blob_var_notnull);
   */
   _rc_ = cql_prepare(_db_, &_temp_stmt,
     "INSERT INTO blob_table(blob_id, b_nullable, b_notnull) "
-      "VALUES(0, ?, ?)");
+      "VALUES (0, ?, ?)");
   cql_multibind(&_rc_, _db_, &_temp_stmt, 2,
                 CQL_DATA_TYPE_BLOB, blob_var,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_BLOB, blob_var_notnull);
@@ -19973,7 +19973,7 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
       SELECT 111
     )
   INSERT INTO foo(id)
-    VALUES(ifnull(( SELECT a
+    VALUES (ifnull(( SELECT a
       FROM x ), 0));
   */
   _rc_ = cql_exec(_db_,
@@ -19982,7 +19982,7 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
         "SELECT 111 "
       ") "
     "INSERT INTO foo(id) "
-      "VALUES(ifnull(( SELECT a "
+      "VALUES (ifnull(( SELECT a "
         "FROM x ), 0))");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
 
@@ -20126,7 +20126,7 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     some_cte (id) AS (
       SELECT 1 AS id
     )
-  INSERT INTO bar(id) VALUES(ifnull(( SELECT id
+  INSERT INTO bar(id) VALUES (ifnull(( SELECT id
     FROM some_cte ), 0)) @DUMMY_SEED(1337);
   */
   _seed_ = 1337;
@@ -20135,20 +20135,20 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
       "some_cte (id) AS ( "
         "SELECT 1 AS id "
       ") "
-    "INSERT INTO bar(id) VALUES(ifnull(( SELECT id "
+    "INSERT INTO bar(id) VALUES (ifnull(( SELECT id "
       "FROM some_cte ), 0))");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
 
   // The statement ending at line XXXX
 
   /*
-  INSERT INTO bar(id) VALUES(1) @DUMMY_SEED(1338)
+  INSERT INTO bar(id) VALUES (1) @DUMMY_SEED(1338)
   ON CONFLICT (id) DO UPDATE
     SET id = 10;
   */
   _seed_ = 1338;
   _rc_ = cql_exec(_db_,
-    "INSERT INTO bar(id) VALUES(1) "
+    "INSERT INTO bar(id) VALUES (1) "
     "ON CONFLICT (id) DO UPDATE "
       "SET id = 10");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -20411,22 +20411,22 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
 
   /*
   INSERT INTO virtual_with_hidden(vy)
-    VALUES(1);
+    VALUES (1);
   */
   _rc_ = cql_exec(_db_,
     "INSERT INTO virtual_with_hidden(vy) "
-      "VALUES(1)");
+      "VALUES (1)");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
 
   // The statement ending at line XXXX
 
   /*
   INSERT INTO virtual_with_hidden(vx, vy)
-    VALUES(1, 2);
+    VALUES (1, 2);
   */
   _rc_ = cql_exec(_db_,
     "INSERT INTO virtual_with_hidden(vx, vy) "
-      "VALUES(1, 2)");
+      "VALUES (1, 2)");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
 
   // The statement ending at line XXXX

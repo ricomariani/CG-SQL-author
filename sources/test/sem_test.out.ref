@@ -7784,7 +7784,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'missing_colum
 The statement ending at line XXXX
 
 INSERT INTO bar(id, name, rate)
-  VALUES(1, 'bazzle', 3);
+  VALUES (1, 'bazzle', 3);
 
   {insert_stmt}: ok
   | {insert_normal}
@@ -7816,7 +7816,7 @@ INSERT INTO bar(id, name, rate)
 The statement ending at line XXXX
 
 REPLACE INTO bar(id, name, rate)
-  VALUES(1, 'bazzle', 3);
+  VALUES (1, 'bazzle', 3);
 
   {insert_stmt}: ok
   | {insert_replace}
@@ -7848,7 +7848,7 @@ REPLACE INTO bar(id, name, rate)
 The statement ending at line XXXX
 
 INSERT OR FAIL INTO bar(id, name, rate)
-  VALUES(1, 'bazzle', 3);
+  VALUES (1, 'bazzle', 3);
 
   {insert_stmt}: ok
   | {insert_or_fail}
@@ -7880,7 +7880,7 @@ INSERT OR FAIL INTO bar(id, name, rate)
 The statement ending at line XXXX
 
 INSERT OR ROLLBACK INTO bar(id, name, rate)
-  VALUES(1, 'bazzle', 3);
+  VALUES (1, 'bazzle', 3);
 
   {insert_stmt}: ok
   | {insert_or_rollback}
@@ -7912,7 +7912,7 @@ INSERT OR ROLLBACK INTO bar(id, name, rate)
 The statement ending at line XXXX
 
 INSERT OR ABORT INTO bar(id, name, rate)
-  VALUES(1, 'bazzle', 3);
+  VALUES (1, 'bazzle', 3);
 
   {insert_stmt}: ok
   | {insert_or_abort}
@@ -7966,7 +7966,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0315: mandatory column with no defa
 The statement ending at line XXXX
 
 INSERT INTO bogus_table
-  VALUES(1);
+  VALUES (1);
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0160: table in insert statement does not exist 'bogus_table'
 
@@ -7989,7 +7989,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0160: table in insert statement doe
 The statement ending at line XXXX
 
 INSERT INTO MyView
-  VALUES(1);
+  VALUES (1);
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0161: cannot insert into a view 'MyView'
 
@@ -8012,7 +8012,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0161: cannot insert into a view 'My
 The statement ending at line XXXX
 
 INSERT INTO bar(id, name, rate)
-  VALUES(id, 'bazzle', 3);
+  VALUES (id, 'bazzle', 3);
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'id'
 
@@ -8046,7 +8046,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'id'
 The statement ending at line XXXX
 
 INSERT INTO foo(id)
-  VALUES(NULL);
+  VALUES (NULL);
 
   {insert_stmt}: ok
   | {insert_normal}
@@ -8070,7 +8070,7 @@ INSERT INTO foo(id)
 The statement ending at line XXXX
 
 INSERT INTO bar(id, name, rate)
-  VALUES('string is wrong', 'string', 1);
+  VALUES ('string is wrong', 'string', 1);
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'id'
 
@@ -8104,7 +8104,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in express
 The statement ending at line XXXX
 
 INSERT INTO bar(id, name, rate)
-  VALUES(1, 2, 3);
+  VALUES (1, 2, 3);
 
 test/sem_test.sql:XXXX:1: error: in num : CQL0009: incompatible types in expression 'name'
 
@@ -8138,7 +8138,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0009: incompatible types in express
 The statement ending at line XXXX
 
 INSERT INTO foo(id)
-  VALUES(NULL, 2);
+  VALUES (NULL, 2);
 
 test/sem_test.sql:XXXX:1: error: in insert_stmt : CQL0157: count of columns differs from count of values
 
@@ -8166,7 +8166,7 @@ test/sem_test.sql:XXXX:1: error: in insert_stmt : CQL0157: count of columns diff
 The statement ending at line XXXX
 
 INSERT INTO foo(id)
-  VALUES();
+  VALUES ();
 
 test/sem_test.sql:XXXX:1: error: in values : CQL0336: select statement with VALUES clause requires a non empty list of values
 
@@ -8190,7 +8190,7 @@ test/sem_test.sql:XXXX:1: error: in values : CQL0336: select statement with VALU
 The statement ending at line XXXX
 
 INSERT INTO bar(id, name, rate)
-  VALUES(NULL, 'string', 1);
+  VALUES (NULL, 'string', 1);
 
 test/sem_test.sql:XXXX:1: error: in null : CQL0013: cannot assign/copy possibly null expression to not null target 'id'
 
@@ -24347,7 +24347,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 The statement ending at line XXXX
 
 INSERT INTO bar(id, name, rate)
-  VALUES(1, '2', 3);
+  VALUES (1, '2', 3);
 
   {insert_stmt}: ok
   | {insert_normal}
@@ -24379,7 +24379,7 @@ INSERT INTO bar(id, name, rate)
 The statement ending at line XXXX
 
 INSERT INTO foo(id)
-  VALUES(NULL);
+  VALUES (NULL);
 
   {insert_stmt}: ok
   | {insert_normal}
@@ -24403,7 +24403,7 @@ INSERT INTO foo(id)
 The statement ending at line XXXX
 
 INSERT INTO bar(name)
-  VALUES('x');
+  VALUES ('x');
 
 test/sem_test.sql:XXXX:1: error: in insert_stmt : CQL0158: required column missing in INSERT statement 'id'
 
@@ -24429,7 +24429,7 @@ test/sem_test.sql:XXXX:1: error: in insert_stmt : CQL0158: required column missi
 The statement ending at line XXXX
 
 INSERT INTO bar(garbonzo)
-  VALUES('x');
+  VALUES ('x');
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0171: name not found 'garbonzo'
 
@@ -24455,7 +24455,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0171: name not found 'garbonzo'
 The statement ending at line XXXX
 
 INSERT INTO bar(id, id)
-  VALUES('x');
+  VALUES ('x');
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0172: name list has duplicate name 'id'
 
@@ -24483,7 +24483,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0172: name list has duplicate name 
 The statement ending at line XXXX
 
 INSERT INTO booly(id)
-  VALUES(1);
+  VALUES (1);
 
   {insert_stmt}: ok
   | {insert_normal}
@@ -24507,7 +24507,7 @@ INSERT INTO booly(id)
 The statement ending at line XXXX
 
 INSERT INTO MyView(id)
-  VALUES(1);
+  VALUES (1);
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0161: cannot insert into a view 'MyView'
 
@@ -24533,7 +24533,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0161: cannot insert into a view 'My
 The statement ending at line XXXX
 
 INSERT INTO garbonzo(id)
-  VALUES('x');
+  VALUES ('x');
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0160: table in insert statement does not exist 'garbonzo'
 
@@ -24605,7 +24605,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 The statement ending at line XXXX
 
 INSERT INTO foo(id)
-  VALUES(NULL, NULL);
+  VALUES (NULL, NULL);
 
 test/sem_test.sql:XXXX:1: error: in insert_stmt : CQL0157: count of columns differs from count of values
 
@@ -24633,7 +24633,7 @@ test/sem_test.sql:XXXX:1: error: in insert_stmt : CQL0157: count of columns diff
 The statement ending at line XXXX
 
 INSERT INTO foo(id)
-  VALUES(NOT 'x');
+  VALUES (NOT 'x');
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 
@@ -24660,7 +24660,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 The statement ending at line XXXX
 
 INSERT INTO foo(id)
-  VALUES(1);
+  VALUES (1);
 
   {insert_stmt}: ok
   | {insert_normal}
@@ -24684,7 +24684,7 @@ INSERT INTO foo(id)
 The statement ending at line XXXX
 
 INSERT INTO bar(id)
-  VALUES('x');
+  VALUES ('x');
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'id'
 
@@ -25485,7 +25485,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0151: table in delete statement doe
 The statement ending at line XXXX
 
 INSERT INTO versioned_table
-  VALUES(1);
+  VALUES (1);
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0160: table in insert statement does not exist (hidden by @delete) 'versioned_table'
 
@@ -25508,7 +25508,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0160: table in insert statement doe
 The statement ending at line XXXX
 
 INSERT INTO versioned_table(id)
-  VALUES(1);
+  VALUES (1);
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0160: table in insert statement does not exist (hidden by @delete) 'versioned_table'
 
@@ -26046,7 +26046,7 @@ test/sem_test.sql:XXXX:1: error: in schema_upgrade_script_stmt : CQL0226: schema
 The statement ending at line XXXX
 
 INSERT INTO hides_id_not_name(name)
-  VALUES('x');
+  VALUES ('x');
 
   {insert_stmt}: ok
   | {insert_normal}
@@ -26376,7 +26376,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0143: more than one primary key in 
 
 The statement ending at line XXXX
 
-INSERT INTO bar(id, name, rate) VALUES(1, 'bazzle', 3) @DUMMY_SEED('x');
+INSERT INTO bar(id, name, rate) VALUES (1, 'bazzle', 3) @DUMMY_SEED('x');
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0156: seed expression must be a non-nullable integer
 
@@ -26404,7 +26404,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0156: seed expression must be a non
 
 The statement ending at line XXXX
 
-INSERT INTO bar(id, name, rate) VALUES(1, 'bazzle', 3) @DUMMY_SEED(NOT 'x');
+INSERT INTO bar(id, name, rate) VALUES (1, 'bazzle', 3) @DUMMY_SEED(NOT 'x');
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 
@@ -26433,7 +26433,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 
 The statement ending at line XXXX
 
-INSERT INTO bar(id, name, rate) VALUES(_seed_, printf('name_%d', _seed_), _seed_) @DUMMY_SEED(1 + 2) @DUMMY_DEFAULTS @DUMMY_NULLABLES;
+INSERT INTO bar(id, name, rate) VALUES (_seed_, printf('name_%d', _seed_), _seed_) @DUMMY_SEED(1 + 2) @DUMMY_DEFAULTS @DUMMY_NULLABLES;
 
   {insert_stmt}: ok
   | {insert_normal}
@@ -26469,7 +26469,7 @@ INSERT INTO bar(id, name, rate) VALUES(_seed_, printf('name_%d', _seed_), _seed_
 The statement ending at line XXXX
 
 INSERT INTO booly(flag)
-  VALUES(1);
+  VALUES (1);
 
   {insert_stmt}: ok
   | {insert_normal}
@@ -27031,7 +27031,7 @@ test/sem_test.sql:XXXX:1: error: in not_in : CQL0078: [not] in (select ...) is o
 
 The statement ending at line XXXX
 
-INSERT INTO blob_table_test(b) VALUES(CAST(printf('b_%d', _seed_) AS BLOB)) @DUMMY_SEED(1) @DUMMY_NULLABLES;
+INSERT INTO blob_table_test(b) VALUES (CAST(printf('b_%d', _seed_) AS BLOB)) @DUMMY_SEED(1) @DUMMY_NULLABLES;
 
   {insert_stmt}: ok
   | {insert_normal}
@@ -27583,7 +27583,7 @@ The statement ending at line XXXX
 PROC out_union ()
 BEGIN
   CURSOR C LIKE SELECT 1 AS A, 2 AS B;
-  FETCH C(A, B) FROM VALUES(1, 2);
+  FETCH C(A, B) FROM VALUES (1, 2);
   OUT UNION C;
 END;
 
@@ -28135,7 +28135,7 @@ The statement ending at line XXXX
 PROC fetch_values ()
 BEGIN
   CURSOR C FETCH FROM CALL out_cursor_proc();
-  FETCH C(A, B) FROM VALUES(1, 2);
+  FETCH C(A, B) FROM VALUES (1, 2);
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -28165,7 +28165,7 @@ The statement ending at line XXXX
 PROC fetch_values_dummy ()
 BEGIN
   CURSOR C FETCH FROM CALL out_cursor_proc();
-  FETCH C(A, B) FROM VALUES(_seed_, _seed_) @DUMMY_SEED(123) @DUMMY_NULLABLES;
+  FETCH C(A, B) FROM VALUES (_seed_, _seed_) @DUMMY_SEED(123) @DUMMY_NULLABLES;
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -28331,7 +28331,7 @@ only in 2nd: B integer notnull
 
 The statement ending at line XXXX
 
-FETCH not_a_cursor FROM VALUES(1, 2, 3);
+FETCH not_a_cursor FROM VALUES (1, 2, 3);
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_cursor'
 
@@ -28348,7 +28348,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_cursor'
 
 The statement ending at line XXXX
 
-FETCH my_cursor FROM VALUES(1, 2, 3);
+FETCH my_cursor FROM VALUES (1, 2, 3);
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0165: fetch values is only for value cursors, not for sqlite cursors 'my_cursor'
 
@@ -28368,7 +28368,7 @@ The statement ending at line XXXX
 PROC fetch_values_bogus_seed_value ()
 BEGIN
   CURSOR C FETCH FROM CALL out_cursor_proc();
-  FETCH C() FROM VALUES() @DUMMY_SEED(NOT 'x');
+  FETCH C() FROM VALUES () @DUMMY_SEED(NOT 'x');
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
@@ -28396,7 +28396,7 @@ The statement ending at line XXXX
 PROC fetch_values_missing_value ()
 BEGIN
   CURSOR C FETCH FROM CALL out_cursor_proc();
-  FETCH C(A, B) FROM VALUES();
+  FETCH C(A, B) FROM VALUES ();
 END;
 
 test/sem_test.sql:XXXX:1: error: in fetch_values_stmt : CQL0166: count of columns differs from count of values
@@ -28472,7 +28472,7 @@ The statement ending at line XXXX
 PROC fetch_values_blob_dummy ()
 BEGIN
   CURSOR C FETCH FROM CALL blob_out();
-  FETCH C(B) FROM VALUES(cql_blob_from_int('B_', _seed_)) @DUMMY_SEED(123) @DUMMY_NULLABLES;
+  FETCH C(B) FROM VALUES (cql_blob_from_int('B_', _seed_)) @DUMMY_SEED(123) @DUMMY_NULLABLES;
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -28508,7 +28508,7 @@ The statement ending at line XXXX
 PROC fetch_values_missing_columns ()
 BEGIN
   CURSOR C FETCH FROM CALL out_cursor_proc();
-  FETCH C(A) FROM VALUES(1);
+  FETCH C(A) FROM VALUES (1);
 END;
 
 test/sem_test.sql:XXXX:1: error: in fetch_values_stmt : CQL0167: required column missing in FETCH statement 'B'
@@ -28536,7 +28536,7 @@ The statement ending at line XXXX
 PROC fetch_values_bogus_value ()
 BEGIN
   CURSOR C FETCH FROM CALL out_cursor_proc();
-  FETCH C(A, B) FROM VALUES(1, NOT 'x');
+  FETCH C(A, B) FROM VALUES (1, NOT 'x');
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
@@ -28569,7 +28569,7 @@ The statement ending at line XXXX
 PROC fetch_values_bogus_type ()
 BEGIN
   CURSOR C FETCH FROM CALL out_cursor_proc();
-  FETCH C(A, B) FROM VALUES(1, 'x');
+  FETCH C(A, B) FROM VALUES (1, 'x');
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'B'
@@ -28601,7 +28601,7 @@ The statement ending at line XXXX
 PROC fetch_values_blob_dummy_with_null ()
 BEGIN
   CURSOR C FETCH FROM CALL blob_out();
-  FETCH C(B) FROM VALUES(NULL) @DUMMY_SEED(123);
+  FETCH C(B) FROM VALUES (NULL) @DUMMY_SEED(123);
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -28631,8 +28631,8 @@ PROC fetch_to_cursor_from_cursor ()
 BEGIN
   CURSOR C0 LIKE SELECT 1 AS A, 2 AS B;
   CURSOR C1 LIKE C0;
-  FETCH C0(A, B) FROM VALUES(1, 2);
-  FETCH C1(A, B) FROM VALUES(C0.A, C0.B);
+  FETCH C0(A, B) FROM VALUES (1, 2);
+  FETCH C1(A, B) FROM VALUES (C0.A, C0.B);
   OUT C1;
 END;
 
@@ -28764,7 +28764,7 @@ PROC fetch_to_invalid_cursor_from_cursor ()
 BEGIN
   CURSOR C0 LIKE SELECT 1 AS A, 2 AS B;
   DECLARE C1 INT;
-  FETCH C0(A, B) FROM VALUES(1, 2);
+  FETCH C0(A, B) FROM VALUES (1, 2);
   FETCH C1 FROM C0;
 END;
 
@@ -28828,7 +28828,7 @@ BEGIN
   CURSOR C0 LIKE SELECT 1 AS A, 2 AS B;
   CURSOR C1 FOR
     SELECT 1 AS A, 2 AS B;
-  FETCH C0(A, B) FROM VALUES(1, 2);
+  FETCH C0(A, B) FROM VALUES (1, 2);
   FETCH C1 FROM C0;
 END;
 
@@ -28910,7 +28910,7 @@ PROC fetch_to_cursor_from_cursor_with_different_columns ()
 BEGIN
   CURSOR C0 LIKE SELECT 1 AS A, 2 AS B;
   CURSOR C1 LIKE SELECT 1 AS A, 2 AS B, 3 AS C;
-  FETCH C0(A, B) FROM VALUES(1, 2);
+  FETCH C0(A, B) FROM VALUES (1, 2);
   FETCH C1(A, B, C) FROM C0(A, B);
 END;
 
@@ -29243,7 +29243,7 @@ The statement ending at line XXXX
 PROC declare_cursor_like_select ()
 BEGIN
   CURSOR C LIKE SELECT 1 AS A, 2.5 AS B, 'x' AS C;
-  FETCH C(A, B, C) FROM VALUES(_seed_, _seed_, printf('C_%d', _seed_)) @DUMMY_SEED(123);
+  FETCH C(A, B, C) FROM VALUES (_seed_, _seed_, printf('C_%d', _seed_)) @DUMMY_SEED(123);
   OUT C;
 END;
 
@@ -29991,7 +29991,7 @@ BEGIN
       SELECT 12, 'foo', 35L
     )
   INSERT INTO bar(id, name, rate)
-    VALUES(ifnull(( SELECT a
+    VALUES (ifnull(( SELECT a
       FROM x ), 0), ifnull(( SELECT b
       FROM x ), 'foo'), ifnull(( SELECT 1L AS c
       WHERE 0 ), 0));
@@ -30139,7 +30139,7 @@ BEGIN
       SELECT 12, 'foo', 35L
     )
   INSERT INTO bar(id, name, rate)
-    VALUES(ifnull(( SELECT a
+    VALUES (ifnull(( SELECT a
       FROM x ), 0), ifnull(( SELECT b
       FROM x ), 'foo'), ifnull(( SELECT 1L AS c
       WHERE 0 ), 0));
@@ -30287,7 +30287,7 @@ BEGIN
       SELECT NOT 'x'
     )
   INSERT INTO bar(id, name, rate)
-    VALUES(1, 'x', 2);
+    VALUES (1, 'x', 2);
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
@@ -30355,7 +30355,7 @@ BEGIN
       SELECT 1
     )
   INSERT INTO bar(id, name, rate)
-    VALUES(1, NOT 'x', 1);
+    VALUES (1, NOT 'x', 1);
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
@@ -30746,7 +30746,7 @@ The statement ending at line XXXX
 PROC arg_fetcher (arg1 TEXT!, arg2 INT!, arg3 REAL!)
 BEGIN
   CURSOR curs LIKE SELECT 'x' AS A, 1 AS B, 3.5 AS C;
-  FETCH curs(A, B, C) FROM VALUES(arg1, arg2, arg3);
+  FETCH curs(A, B, C) FROM VALUES (arg1, arg2, arg3);
 END;
 
   {create_proc_stmt}: ok
@@ -30828,7 +30828,7 @@ The statement ending at line XXXX
 PROC fetch_bar (extra INT, id_ INT!, name_ TEXT, rate_ LONG)
 BEGIN
   CURSOR curs LIKE bar;
-  FETCH curs(id, name, rate) FROM VALUES(id_, name_, rate_);
+  FETCH curs(id, name, rate) FROM VALUES (id_, name_, rate_);
 END;
 
   {create_proc_stmt}: ok
@@ -30931,7 +30931,7 @@ The statement ending at line XXXX
 
 PROC insert_bar (extra INT, id_ INT!, name_ TEXT, rate_ LONG)
 BEGIN
-  INSERT INTO bar(id, name, rate) VALUES(id_, name_, rate_);
+  INSERT INTO bar(id, name, rate) VALUES (id_, name_, rate_);
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -30988,7 +30988,7 @@ The statement ending at line XXXX
 
 PROC insert_bar_explicit (extra INT, id INT!, name_ TEXT, rate LONG)
 BEGIN
-  INSERT INTO bar(id, name, rate) VALUES(id, name_, rate);
+  INSERT INTO bar(id, name, rate) VALUES (id, name_, rate);
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -31045,7 +31045,7 @@ The statement ending at line XXXX
 
 PROC insert_bar_locals (extra INT, id INT!, name_ TEXT, rate LONG)
 BEGIN
-  INSERT INTO bar(id, name, rate) VALUES(LOCALS.id, LOCALS.name, LOCALS.rate);
+  INSERT INTO bar(id, name, rate) VALUES (LOCALS.id, LOCALS.name, LOCALS.rate);
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -31102,7 +31102,7 @@ The statement ending at line XXXX
 
 PROC insert_bar_missing (extra INT, id INT!)
 BEGIN
-  INSERT INTO bar(id, name, rate) VALUES(id, ARGUMENTS.name, ARGUMENTS.rate);
+  INSERT INTO bar(id, name, rate) VALUES (id, ARGUMENTS.name, ARGUMENTS.rate);
 END;
 
 test/sem_test.sql:XXXX:1: error: in dot : CQL0201: expanding FROM ARGUMENTS, there is no argument matching 'name'
@@ -31297,7 +31297,7 @@ The statement ending at line XXXX
 
 PROC bar_auto_inserter (id INT!, name TEXT, rate LONG)
 BEGIN
-  INSERT INTO bar(id, name, rate) VALUES(id, name, rate);
+  INSERT INTO bar(id, name, rate) VALUES (id, name, rate);
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -31349,7 +31349,7 @@ The statement ending at line XXXX
 
 PROC bar_auto_inserter_mininal (id INT!, name TEXT, rate LONG)
 BEGIN
-  INSERT INTO bar(id) VALUES(id);
+  INSERT INTO bar(id) VALUES (id);
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -31466,7 +31466,7 @@ The statement ending at line XXXX
 
 PROC rewritten_like_args (id_ INT!, name_ TEXT, rate_ LONG)
 BEGIN
-  INSERT INTO bar(id, name, rate) VALUES(id_, name_, rate_);
+  INSERT INTO bar(id, name, rate) VALUES (id_, name_, rate_);
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -31848,7 +31848,7 @@ The statement ending at line XXXX
 PROC like_other_proc (A_ INT!, B_ INT!)
 BEGIN
   CURSOR C LIKE out_cursor_proc;
-  FETCH C(A, B) FROM VALUES(A_, B_);
+  FETCH C(A, B) FROM VALUES (A_, B_);
   OUT C;
 END;
 
@@ -32814,7 +32814,7 @@ BEGIN
     SET id = 8
     WHERE rowid = old.rowid OR rowid = new.rowid;
   INSERT INTO bar(id, name, rate)
-    VALUES(7, 'goo', 17L);
+    VALUES (7, 'goo', 17L);
 END;
 
   {create_trigger_stmt}: ok
@@ -32928,7 +32928,7 @@ BEGIN
     SET id = 8
     WHERE rowid = old.rowid OR rowid = new.rowid;
   INSERT INTO bar(id, name, rate)
-    VALUES(7, 'goo', 17L);
+    VALUES (7, 'goo', 17L);
 END;
 
   {create_trigger_stmt}: ok alias
@@ -33051,7 +33051,7 @@ UPDATE bar
   WHERE rowid = old.rowid OR rowid = new.rowid;
 
 INSERT INTO bar(id, name, rate)
-  VALUES(7, 'goo', 17L);
+  VALUES (7, 'goo', 17L);
 END
 test/sem_test.sql:XXXX:1: error: in create_trigger_stmt : CREATE TRIGGER trigger3
   INSTEAD OF UPDATE ON ViewShape
@@ -35848,7 +35848,7 @@ END;
 The statement ending at line XXXX
 
 INSERT INTO foo(id)
-  VALUES(coalesce(_sens, 0));
+  VALUES (coalesce(_sens, 0));
 
 test/sem_test.sql:XXXX:1: error: in call : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 'id'
 
@@ -38063,7 +38063,7 @@ The statement ending at line XXXX
 PROC autodrop_no_db ()
 BEGIN
   CURSOR C LIKE SELECT 1 AS id;
-  FETCH c(id) FROM VALUES(1);
+  FETCH c(id) FROM VALUES (1);
   OUT c;
 END;
 
@@ -41432,7 +41432,7 @@ PROC with_upsert_cte_err ()
 BEGIN
   WITH
     data (id) AS (
-      VALUES(NOT 'x')
+      VALUES (NOT 'x')
     )
   INSERT INTO foo
     SELECT id
@@ -41503,7 +41503,7 @@ PROC with_upsert_insert_err ()
 BEGIN
   WITH
     data (id) AS (
-      VALUES(1)
+      VALUES (1)
     )
   INSERT INTO foo(id)
     SELECT id
@@ -41576,7 +41576,7 @@ The statement ending at line XXXX
 PROC upsert_without_conflict_target ()
 BEGIN
   INSERT INTO foo(id)
-    VALUES(1)
+    VALUES (1)
   ON CONFLICT DO NOTHING;
 END;
 
@@ -41611,7 +41611,7 @@ The statement ending at line XXXX
 PROC upsert_update ()
 BEGIN
   INSERT INTO foo(id)
-    VALUES(1)
+    VALUES (1)
   ON CONFLICT (id) 
   WHERE id = 10 DO UPDATE
     SET id = id + 1
@@ -41671,7 +41671,7 @@ The statement ending at line XXXX
 PROC upsert_conflict_on_unknown_column ()
 BEGIN
   INSERT INTO foo(id)
-    VALUES(1)
+    VALUES (1)
   ON CONFLICT (id, bogus) DO NOTHING;
 END;
 
@@ -41714,7 +41714,7 @@ The statement ending at line XXXX
 PROC upsert_invalid_update_stmt ()
 BEGIN
   INSERT INTO foo(id)
-    VALUES(1)
+    VALUES (1)
   ON CONFLICT (id) DO UPDATE foo
     SET id = 0;
 END;
@@ -41877,7 +41877,7 @@ The statement ending at line XXXX
 PROC upsert_with_bogus_where_stmt ()
 BEGIN
   INSERT INTO foo(id)
-    VALUES(1)
+    VALUES (1)
   ON CONFLICT (id) 
   WHERE bogus = 1 DO NOTHING;
 END;
@@ -41971,7 +41971,7 @@ The statement ending at line XXXX
 PROC upsert_conflict_target_column_not_unique_key ()
 BEGIN
   INSERT INTO bar(id)
-    VALUES(1)
+    VALUES (1)
   ON CONFLICT (name) DO NOTHING;
 END;
 
@@ -42011,7 +42011,7 @@ The statement ending at line XXXX
 PROC upsert_conflict_target_columns_valid ()
 BEGIN
   INSERT INTO simple_ak_table_2(a, b, c, d)
-    VALUES(1, "t", 1.7, 1)
+    VALUES (1, "t", 1.7, 1)
   ON CONFLICT (a, b) DO NOTHING;
 END;
 
@@ -42069,7 +42069,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 INSERT INTO bar(id)
-  VALUES(1)
+  VALUES (1)
 ON CONFLICT DO NOTHING;
 
 test/sem_test.sql:XXXX:1: error: in upsert_stmt : CQL0289: upsert statement are forbidden if strict upsert statement mode is enabled
@@ -42106,7 +42106,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 INSERT INTO bar(id)
-  VALUES(1)
+  VALUES (1)
 ON CONFLICT DO NOTHING;
 
   {upsert_stmt}: ok
@@ -43461,7 +43461,7 @@ CREATE TABLE upsert_test(
 The statement ending at line XXXX
 
 INSERT INTO upsert_test(id, name)
-  VALUES(1, 'name')
+  VALUES (1, 'name')
 ON CONFLICT (id) DO UPDATE
   SET name = excluded.name, rate = id + 1;
 
@@ -46250,7 +46250,7 @@ The statement ending at line XXXX
 
 PROC insert_using_args_with_dummy (x INT!, y REAL!)
 BEGIN
-  INSERT INTO referenceable(a, b, c, d, e) VALUES(x, y, printf('c_%d', _seed_), printf('d_%d', _seed_), _seed_) @DUMMY_SEED(1) @DUMMY_NULLABLES;
+  INSERT INTO referenceable(a, b, c, d, e) VALUES (x, y, printf('c_%d', _seed_), printf('d_%d', _seed_), _seed_) @DUMMY_SEED(1) @DUMMY_NULLABLES;
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -46322,7 +46322,7 @@ The statement ending at line XXXX
 PROC fetch_using_args_with_dummy (x INT!, y REAL!)
 BEGIN
   CURSOR C LIKE referenceable;
-  FETCH C(a, b, c, d, e) FROM VALUES(x, y, printf('c_%d', _seed_), printf('d_%d', _seed_), _seed_) @DUMMY_SEED(1) @DUMMY_NULLABLES;
+  FETCH C(a, b, c, d, e) FROM VALUES (x, y, printf('c_%d', _seed_), printf('d_%d', _seed_), _seed_) @DUMMY_SEED(1) @DUMMY_NULLABLES;
 END;
 
   {create_proc_stmt}: ok
@@ -46398,7 +46398,7 @@ The statement ending at line XXXX
 PROC fetch_from_empty_col_list ()
 BEGIN
   CURSOR C LIKE referenceable;
-  FETCH C(a, b, c, d, e) FROM VALUES(1, 2, 'x', 'y', 5);
+  FETCH C(a, b, c, d, e) FROM VALUES (1, 2, 'x', 'y', 5);
   OUT C;
 END;
 
@@ -46451,7 +46451,7 @@ CURSOR c_bar LIKE referenceable;
 
 The statement ending at line XXXX
 
-INSERT INTO referenceable(a, b, c, d, e) VALUES(c_bar.a, c_bar.b, c_bar.c, c_bar.d, c_bar.e);
+INSERT INTO referenceable(a, b, c, d, e) VALUES (c_bar.a, c_bar.b, c_bar.c, c_bar.d, c_bar.e);
 
   {insert_stmt}: ok
   | {insert_normal}
@@ -46615,7 +46615,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0205: not a cursor 'X'
 
 The statement ending at line XXXX
 
-UPDATE CURSOR small_cursor(x) FROM VALUES(2);
+UPDATE CURSOR small_cursor(x) FROM VALUES (2);
 
   {update_cursor_stmt}: ok
   | {name small_cursor}: small_cursor: select: { x: integer notnull } variable shape_storage value_cursor
@@ -46628,7 +46628,7 @@ UPDATE CURSOR small_cursor(x) FROM VALUES(2);
 
 The statement ending at line XXXX
 
-UPDATE CURSOR small_cursor(x) FROM VALUES('x');
+UPDATE CURSOR small_cursor(x) FROM VALUES ('x');
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'x'
 
@@ -46643,7 +46643,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in express
 
 The statement ending at line XXXX
 
-UPDATE CURSOR small_cursor(x) FROM VALUES(1, 2);
+UPDATE CURSOR small_cursor(x) FROM VALUES (1, 2);
 
 test/sem_test.sql:XXXX:1: error: in update_cursor_stmt : CQL0157: count of columns differs from count of values
 
@@ -46660,7 +46660,7 @@ test/sem_test.sql:XXXX:1: error: in update_cursor_stmt : CQL0157: count of colum
 
 The statement ending at line XXXX
 
-UPDATE CURSOR small_cursor(w) FROM VALUES(1);
+UPDATE CURSOR small_cursor(w) FROM VALUES (1);
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0171: name not found 'w'
 
@@ -46675,7 +46675,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0171: name not found 'w'
 
 The statement ending at line XXXX
 
-UPDATE CURSOR my_cursor(one) FROM VALUES(2);
+UPDATE CURSOR my_cursor(one) FROM VALUES (2);
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0067: cursor was not used with 'fetch [cursor]' 'my_cursor'
 
@@ -46690,7 +46690,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0067: cursor was not used with 'fet
 
 The statement ending at line XXXX
 
-UPDATE CURSOR small_cursor(LIKE not_a_symbol) FROM VALUES(1);
+UPDATE CURSOR small_cursor(LIKE not_a_symbol) FROM VALUES (1);
 
 test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, table, or view 'not_a_symbol'
 
@@ -46706,7 +46706,7 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
 
 The statement ending at line XXXX
 
-UPDATE CURSOR X(one) FROM VALUES(2);
+UPDATE CURSOR X(one) FROM VALUES (2);
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0205: not a cursor 'X'
 
@@ -46926,7 +46926,7 @@ CURSOR nully_cursor LIKE foo_data;
 
 The statement ending at line XXXX
 
-FETCH nully_cursor(c1, c2, c3, c4, c5, c6, c7, c8, c9, c10) FROM VALUES('x', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+FETCH nully_cursor(c1, c2, c3, c4, c5, c6, c7, c8, c9, c10) FROM VALUES ('x', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
   {fetch_values_stmt}: ok
   | {name_columns_values}
@@ -46976,7 +46976,7 @@ FETCH nully_cursor(c1, c2, c3, c4, c5, c6, c7, c8, c9, c10) FROM VALUES('x', NUL
 
 The statement ending at line XXXX
 
-FETCH nully_cursor(c2) FROM VALUES('x');
+FETCH nully_cursor(c2) FROM VALUES ('x');
 
 test/sem_test.sql:XXXX:1: error: in fetch_values_stmt : CQL0167: required column missing in FETCH statement 'c1'
 
@@ -47025,7 +47025,7 @@ CURSOR c1c7 LIKE SELECT 'x' AS c1, nullable(3.2) AS c7;
 
 The statement ending at line XXXX
 
-FETCH c1c7(c1, c7) FROM VALUES('x', 3.2);
+FETCH c1c7(c1, c7) FROM VALUES ('x', 3.2);
 
   {fetch_values_stmt}: ok
   | {name_columns_values}
@@ -47043,7 +47043,7 @@ FETCH c1c7(c1, c7) FROM VALUES('x', 3.2);
 
 The statement ending at line XXXX
 
-UPDATE CURSOR nully_cursor(c1, c7) FROM VALUES(c1c7.c1, c1c7.c7);
+UPDATE CURSOR nully_cursor(c1, c7) FROM VALUES (c1c7.c1, c1c7.c7);
 
   {update_cursor_stmt}: ok
   | {name nully_cursor}: nully_cursor: foo_data: { c1: text notnull, c2: integer, c3: real, c4: real, c5: real, c6: real, c7: real, c8: real, c9: real, c10: real } variable shape_storage value_cursor
@@ -47064,7 +47064,7 @@ UPDATE CURSOR nully_cursor(c1, c7) FROM VALUES(c1c7.c1, c1c7.c7);
 
 The statement ending at line XXXX
 
-UPDATE CURSOR nully_cursor(c1, c7) FROM VALUES(c1c7.c1, c1c7.c7);
+UPDATE CURSOR nully_cursor(c1, c7) FROM VALUES (c1c7.c1, c1c7.c7);
 
   {update_cursor_stmt}: ok
   | {name nully_cursor}: nully_cursor: foo_data: { c1: text notnull, c2: integer, c3: real, c4: real, c5: real, c6: real, c7: real, c8: real, c9: real, c10: real } variable shape_storage value_cursor
@@ -47102,7 +47102,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_symbol'
 
 The statement ending at line XXXX
 
-FETCH nully_cursor(c1, c7, c2, c3, c4, c5, c6, c8, c9, c10) FROM VALUES(c1c7.c1, c1c7.c7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+FETCH nully_cursor(c1, c7, c2, c3, c4, c5, c6, c8, c9, c10) FROM VALUES (c1c7.c1, c1c7.c7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
   {fetch_values_stmt}: ok
   | {name_columns_values}
@@ -47156,7 +47156,7 @@ FETCH nully_cursor(c1, c7, c2, c3, c4, c5, c6, c8, c9, c10) FROM VALUES(c1c7.c1,
 
 The statement ending at line XXXX
 
-FETCH nully_cursor(c1, c7, c2, c3, c4, c5, c6, c8, c9, c10) FROM VALUES(c1c7.c1, c1c7.c7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+FETCH nully_cursor(c1, c7, c2, c3, c4, c5, c6, c8, c9, c10) FROM VALUES (c1c7.c1, c1c7.c7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
   {fetch_values_stmt}: ok
   | {name_columns_values}
@@ -47228,7 +47228,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_symbol'
 
 The statement ending at line XXXX
 
-FETCH nully_cursor(LIKE not_a_symbol) FROM VALUES(1, 2);
+FETCH nully_cursor(LIKE not_a_symbol) FROM VALUES (1, 2);
 
 test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, table, or view 'not_a_symbol'
 
@@ -47276,7 +47276,7 @@ CURSOR id_name_cursor LIKE SELECT 1 AS id, 'x' AS name;
 The statement ending at line XXXX
 
 INSERT INTO bar(id, name)
-  VALUES(1, 'x');
+  VALUES (1, 'x');
 
   {insert_stmt}: ok
   | {insert_normal}
@@ -47304,7 +47304,7 @@ INSERT INTO bar(id, name)
 The statement ending at line XXXX
 
 INSERT INTO bar(LIKE not_a_symbol)
-  VALUES(1, 'x');
+  VALUES (1, 'x');
 
 test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, table, or view 'not_a_symbol'
 
@@ -47332,7 +47332,7 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
 
 The statement ending at line XXXX
 
-FETCH c1c7(c1, c7) FROM VALUES(nully_cursor.c1, nully_cursor.c7);
+FETCH c1c7(c1, c7) FROM VALUES (nully_cursor.c1, nully_cursor.c7);
 
   {fetch_values_stmt}: ok
   | {name_columns_values}
@@ -49582,7 +49582,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0327: a value should not be assigne
 
 The statement ending at line XXXX
 
-VALUES(1);
+VALUES (1);
 
   {select_stmt}: values: { column1: integer notnull }
   | {select_core_list}: values: { column1: integer notnull }
@@ -49684,9 +49684,9 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0009: incompatible types in express
 The statement ending at line XXXX
 
 INSERT INTO foo(id)
-  VALUES(1)
+  VALUES (1)
   UNION
-  VALUES(2) @DUMMY_SEED(1);
+  VALUES (2) @DUMMY_SEED(1);
 
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0334: @dummy_seed @dummy_nullables @dummy_defaults many only be used with a single VALUES row
 
@@ -49918,7 +49918,7 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0334: @dummy_seed @dummy_nu
 
 The statement ending at line XXXX
 
-INSERT INTO foo(id) VALUES(bogus) @DUMMY_SEED(1);
+INSERT INTO foo(id) VALUES (bogus) @DUMMY_SEED(1);
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'bogus'
 
@@ -49938,7 +49938,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'bogus'
 
 The statement ending at line XXXX
 
-INSERT INTO foo(id) VALUES(NULL) @DUMMY_SEED(1);
+INSERT INTO foo(id) VALUES (NULL) @DUMMY_SEED(1);
 
   {insert_stmt}: ok
   | {insert_normal}
@@ -49956,7 +49956,7 @@ INSERT INTO foo(id) VALUES(NULL) @DUMMY_SEED(1);
 
 The statement ending at line XXXX
 
-INSERT INTO foo(id) VALUES("k") @DUMMY_SEED(1);
+INSERT INTO foo(id) VALUES ("k") @DUMMY_SEED(1);
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'id'
 
@@ -49976,7 +49976,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in express
 
 The statement ending at line XXXX
 
-VALUES(l);
+VALUES (l);
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'l'
 
@@ -49994,7 +49994,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'l'
 The statement ending at line XXXX
 
 INSERT INTO foo(id)
-  VALUES(1)
+  VALUES (1)
   UNION ALL
   SELECT 2 AS column1;
 
@@ -50142,7 +50142,7 @@ CREATE TABLE values_table(
 The statement ending at line XXXX
 
 INSERT INTO values_table(name, id)
-  VALUES("ok", NULL);
+  VALUES ("ok", NULL);
 
   {insert_stmt}: ok
   | {insert_normal}
@@ -50405,7 +50405,7 @@ The statement ending at line XXXX
 PROC shape_all_columns ()
 BEGIN
   CURSOR C LIKE shape;
-  FETCH C(x, y) FROM VALUES(1, 'x');
+  FETCH C(x, y) FROM VALUES (1, 'x');
   CALL shape_consumer(C.x, C.y);
 END;
 
@@ -50531,7 +50531,7 @@ The statement ending at line XXXX
 PROC shape_some_columns ()
 BEGIN
   CURSOR C LIKE shape;
-  FETCH C(x, y) FROM VALUES(1, 'x');
+  FETCH C(x, y) FROM VALUES (1, 'x');
   CALL shape_y_only(C.y);
 END;
 
@@ -50569,7 +50569,7 @@ The statement ending at line XXXX
 PROC shape_some_columns_bogus_name ()
 BEGIN
   CURSOR C LIKE shape;
-  FETCH C(x, y) FROM VALUES(1, 'x');
+  FETCH C(x, y) FROM VALUES (1, 'x');
   CALL shape_y_only(FROM C LIKE not_a_real_shape);
 END;
 
@@ -50645,7 +50645,7 @@ The statement ending at line XXXX
 PROC shape_args_middle ()
 BEGIN
   CURSOR C LIKE SELECT 1 AS x, 2 AS y;
-  FETCH C(x, y) FROM VALUES(1, 2);
+  FETCH C(x, y) FROM VALUES (1, 2);
   CALL lotsa_ints(C.x, C.y, 1, 2);
   CALL lotsa_ints(1, C.x, C.y, 2);
   CALL lotsa_ints(1, 2, C.x, C.y);
@@ -53774,7 +53774,7 @@ The statement ending at line XXXX
 PROC test_fetch_using ()
 BEGIN
   CURSOR C LIKE bar;
-  FETCH C(id, name, rate) FROM VALUES(1, NULL, 99);
+  FETCH C(id, name, rate) FROM VALUES (1, NULL, 99);
 END;
 
   {create_proc_stmt}: ok
@@ -53809,7 +53809,7 @@ The statement ending at line XXXX
 PROC test_fetch_using_with_dummy_seed ()
 BEGIN
   CURSOR C LIKE bar;
-  FETCH C(id, name, rate) FROM VALUES(1, printf('name_%d', _seed_), _seed_) @DUMMY_SEED(9) @DUMMY_DEFAULTS @DUMMY_NULLABLES;
+  FETCH C(id, name, rate) FROM VALUES (1, printf('name_%d', _seed_), _seed_) @DUMMY_SEED(9) @DUMMY_DEFAULTS @DUMMY_NULLABLES;
 END;
 
   {create_proc_stmt}: ok
@@ -54028,7 +54028,7 @@ The statement ending at line XXXX
 
 PROC test_insert_using ()
 BEGIN
-  INSERT INTO foo(id) VALUES(1);
+  INSERT INTO foo(id) VALUES (1);
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -54050,7 +54050,7 @@ The statement ending at line XXXX
 
 PROC test_insert_using_with_dummy_seed ()
 BEGIN
-  INSERT INTO bar(id, name, rate) VALUES(1, printf('name_%d', _seed_), _seed_) @DUMMY_SEED(9) @DUMMY_DEFAULTS @DUMMY_NULLABLES;
+  INSERT INTO bar(id, name, rate) VALUES (1, printf('name_%d', _seed_), _seed_) @DUMMY_SEED(9) @DUMMY_DEFAULTS @DUMMY_NULLABLES;
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -54357,7 +54357,7 @@ The statement ending at line XXXX
 
 PROC test_update_cursor_using ()
 BEGIN
-  UPDATE CURSOR small_cursor(x) FROM VALUES(2);
+  UPDATE CURSOR small_cursor(x) FROM VALUES (2);
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -54568,7 +54568,7 @@ The statement ending at line XXXX
 PROC enum_users ()
 BEGIN
   CURSOR C LIKE test_shape;
-  FETCH C(x) FROM VALUES(1);
+  FETCH C(x) FROM VALUES (1);
   LET z := C.x;
 END;
 
@@ -54624,7 +54624,7 @@ The statement ending at line XXXX
 PROC enum_users_out (i INT<integer_things>!)
 BEGIN
   CURSOR C LIKE test_shape;
-  FETCH C(x) FROM VALUES(i);
+  FETCH C(x) FROM VALUES (i);
   OUT C;
 END;
 
@@ -55358,7 +55358,7 @@ The statement ending at line XXXX
 
 PROC arg_bundle_1 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
-  INSERT INTO AB(a) VALUES(a2.c);
+  INSERT INTO AB(a) VALUES (a2.c);
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -55402,7 +55402,7 @@ The statement ending at line XXXX
 
 PROC arg_bundle_2 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
-  INSERT INTO AB(a) VALUES(a2.c);
+  INSERT INTO AB(a) VALUES (a2.c);
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -55446,7 +55446,7 @@ The statement ending at line XXXX
 
 PROC arg_bundle_3 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
-  INSERT INTO AB(a) VALUES(a2.c);
+  INSERT INTO AB(a) VALUES (a2.c);
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -55490,7 +55490,7 @@ The statement ending at line XXXX
 
 PROC arg_bundle_4 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
-  INSERT INTO AB(a, b) VALUES(a1.a, a1.b);
+  INSERT INTO AB(a, b) VALUES (a1.a, a1.b);
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -55540,7 +55540,7 @@ The statement ending at line XXXX
 
 PROC arg_bundle_5 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
-  INSERT INTO AB(a, b) VALUES(a1.b, a1.a);
+  INSERT INTO AB(a, b) VALUES (a1.b, a1.a);
 END;
 
 test/sem_test.sql:XXXX:1: error: in dot : CQL0012: incompatible types in expression 'a'
@@ -55592,7 +55592,7 @@ The statement ending at line XXXX
 
 PROC arg_bundle_6 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
-  INSERT INTO AB(b, a) VALUES(a1.b, a1.a);
+  INSERT INTO AB(b, a) VALUES (a1.b, a1.a);
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -55642,7 +55642,7 @@ The statement ending at line XXXX
 
 PROC arg_bundle_7 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
-  INSERT INTO AB(a, b) VALUES(a2.c, a2.d);
+  INSERT INTO AB(a, b) VALUES (a2.c, a2.d);
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -55692,7 +55692,7 @@ The statement ending at line XXXX
 
 PROC arg_bundle_8 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
-  INSERT INTO AB(b, a) VALUES(a1.a, a1.b);
+  INSERT INTO AB(b, a) VALUES (a1.a, a1.b);
 END;
 
 test/sem_test.sql:XXXX:1: error: in dot : CQL0009: incompatible types in expression 'b'
@@ -55744,7 +55744,7 @@ The statement ending at line XXXX
 
 PROC arg_bundle_9 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
-  INSERT INTO AB(b, a) VALUES(a2.c, a2.d);
+  INSERT INTO AB(b, a) VALUES (a2.c, a2.d);
 END;
 
 test/sem_test.sql:XXXX:1: error: in dot : CQL0009: incompatible types in expression 'b'
@@ -55797,7 +55797,7 @@ The statement ending at line XXXX
 PROC arg_bundle_10 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
   CURSOR C LIKE AB;
-  FETCH C(a, b) FROM VALUES(a2.c, a2.d);
+  FETCH C(a, b) FROM VALUES (a2.c, a2.d);
 END;
 
   {create_proc_stmt}: ok
@@ -55852,7 +55852,7 @@ The statement ending at line XXXX
 PROC arg_bundle_11 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
   CURSOR C LIKE AB;
-  FETCH C(a, b) FROM VALUES(a1.a, a1.b);
+  FETCH C(a, b) FROM VALUES (a1.a, a1.b);
 END;
 
   {create_proc_stmt}: ok
@@ -55907,7 +55907,7 @@ The statement ending at line XXXX
 PROC arg_bundle_12 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
   CURSOR C LIKE AB;
-  FETCH C(a, b) FROM VALUES(a1.a, NULL);
+  FETCH C(a, b) FROM VALUES (a1.a, NULL);
 END;
 
   {create_proc_stmt}: ok
@@ -55960,7 +55960,7 @@ The statement ending at line XXXX
 PROC arg_bundle_13 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
   CURSOR C LIKE AB;
-  UPDATE CURSOR C(a, b) FROM VALUES(a1.a, a1.b);
+  UPDATE CURSOR C(a, b) FROM VALUES (a1.a, a1.b);
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -56014,7 +56014,7 @@ The statement ending at line XXXX
 PROC arg_bundle_14 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
   CURSOR C LIKE AB;
-  UPDATE CURSOR C(a) FROM VALUES(a2.c);
+  UPDATE CURSOR C(a) FROM VALUES (a2.c);
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -56062,7 +56062,7 @@ The statement ending at line XXXX
 PROC arg_bundle_15 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
   CURSOR C LIKE AB;
-  UPDATE CURSOR C(a, b) FROM VALUES(a2.c, a2.d);
+  UPDATE CURSOR C(a, b) FROM VALUES (a2.c, a2.d);
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -56116,7 +56116,7 @@ The statement ending at line XXXX
 PROC arg_bundle_16 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
   CURSOR C LIKE a1;
-  UPDATE CURSOR C(a, b) FROM VALUES(a2.c, a2.d);
+  UPDATE CURSOR C(a, b) FROM VALUES (a2.c, a2.d);
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -57998,7 +57998,7 @@ CREATE TABLE xy(
 
 The statement ending at line XXXX
 
-INSERT INTO xy(x, y) VALUES(x1, y1);
+INSERT INTO xy(x, y) VALUES (x1, y1);
 
   {insert_stmt}: ok
   | {insert_normal}
@@ -58017,7 +58017,7 @@ INSERT INTO xy(x, y) VALUES(x1, y1);
 
 The statement ending at line XXXX
 
-INSERT INTO xy(x, y) VALUES(y1, x1);
+INSERT INTO xy(x, y) VALUES (y1, x1);
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0070: expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 
@@ -58320,7 +58320,7 @@ CURSOR xy_curs LIKE xy;
 
 The statement ending at line XXXX
 
-FETCH xy_curs(x, y) FROM VALUES(x1, y1);
+FETCH xy_curs(x, y) FROM VALUES (x1, y1);
 
   {fetch_values_stmt}: ok
   | {name_columns_values}
@@ -58338,7 +58338,7 @@ FETCH xy_curs(x, y) FROM VALUES(x1, y1);
 
 The statement ending at line XXXX
 
-FETCH xy_curs(x, y) FROM VALUES(y1, x1);
+FETCH xy_curs(x, y) FROM VALUES (y1, x1);
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0070: expressions of different kinds can't be mixed: 'y_coord' vs. 'x_coord'
 
@@ -64625,13 +64625,13 @@ The statement ending at line XXXX
 PROC improvements_work_for_local_auto_cursors_that_do_not_shadow_a_global ()
 BEGIN
   CURSOR c_local LIKE tnull;
-  FETCH c_local(xn, yn) FROM VALUES(0, 0);
+  FETCH c_local(xn, yn) FROM VALUES (0, 0);
   LET x0 := c_local.xn;
   LET y0 := c_local.yn;
   IF c_local.xn IS NOT NULL AND c_local.yn IS NOT NULL THEN
     LET x1 := c_local.xn;
     LET y1 := c_local.yn;
-    FETCH c_local(xn, yn) FROM VALUES(0, 0);
+    FETCH c_local(xn, yn) FROM VALUES (0, 0);
     LET x2 := c_local.xn;
     LET y2 := c_local.yn;
   END;
@@ -64733,13 +64733,13 @@ The statement ending at line XXXX
 PROC improvements_work_for_auto_cursors_that_shadow_a_global ()
 BEGIN
   CURSOR c_global LIKE SELECT nullable(1) AS xn, nullable(2) AS yn;
-  FETCH c_global(xn, yn) FROM VALUES(0, 0);
+  FETCH c_global(xn, yn) FROM VALUES (0, 0);
   LET x0 := c_global.xn;
   LET y0 := c_global.yn;
   IF c_global.xn IS NOT NULL AND c_global.yn IS NOT NULL THEN
     LET x1 := c_global.xn;
     LET y1 := c_global.yn;
-    FETCH c_global(xn, yn) FROM VALUES(0, 0);
+    FETCH c_global(xn, yn) FROM VALUES (0, 0);
     LET x2 := c_global.xn;
     LET y2 := c_global.yn;
   END;
@@ -64868,13 +64868,13 @@ The statement ending at line XXXX
 
 PROC improvements_work_for_global_auto_cursors ()
 BEGIN
-  FETCH c_global(xn, yn) FROM VALUES(0, 0);
+  FETCH c_global(xn, yn) FROM VALUES (0, 0);
   LET x0 := c_global.xn;
   LET y0 := c_global.yn;
   IF c_global.xn IS NOT NULL AND c_global.yn IS NOT NULL THEN
     LET x1 := c_global.xn;
     LET y1 := c_global.yn;
-    FETCH c_global(xn, yn) FROM VALUES(0, 0);
+    FETCH c_global(xn, yn) FROM VALUES (0, 0);
     LET x2 := c_global.xn;
     LET y2 := c_global.yn;
     IF c_global.xn IS NULL OR c_global.yn IS NULL THEN
@@ -66088,7 +66088,7 @@ The statement ending at line XXXX
 PROC notnull_inferred_does_not_get_copied_via_declare_cursor_like_cursor ()
 BEGIN
   CURSOR c LIKE tnull;
-  FETCH c(xn, yn) FROM VALUES(1, 2);
+  FETCH c(xn, yn) FROM VALUES (1, 2);
   IF c.xn IS NOT NULL AND c.yn IS NOT NULL THEN
     LET x0 := c.xn;
     LET y0 := c.yn;
@@ -66198,11 +66198,11 @@ The statement ending at line XXXX
 PROC notnull_inferred_does_not_get_copied_via_declare_cursor_like_proc ()
 BEGIN
   CURSOR c LIKE improvements_work_for_in_args ARGUMENTS;
-  FETCH c(a) FROM VALUES(0);
+  FETCH c(a) FROM VALUES (0);
   IF c.a IS NOT NULL THEN
     LET x0 := c.a;
     CURSOR d LIKE improvements_work_for_in_args ARGUMENTS;
-    FETCH d(a) FROM VALUES(0);
+    FETCH d(a) FROM VALUES (0);
     LET x1 := c.a;
     LET x2 := d.a;
     CURSOR e LIKE improvements_work_for_in_args ARGUMENTS;
@@ -77522,7 +77522,7 @@ BEGIN
       FROM Shape_xy;
   FETCH C;
   INSERT INTO Shape_xy(x, y)
-    VALUES(C.x, C.y);
+    VALUES (C.x, C.y);
   INSERT INTO Shape_xy(x, y)
     VALUES
       (1, 2),
@@ -77533,12 +77533,12 @@ BEGIN
       FROM Shape_uv;
   FETCH D;
   CURSOR R LIKE Shape_uvxy;
-  FETCH R(x, y, u, v) FROM VALUES(C.x, C.y, D.u, D.v);
-  UPDATE CURSOR R(x, y, u, v) FROM VALUES(C.x, C.y, D.u, D.v);
+  FETCH R(x, y, u, v) FROM VALUES (C.x, C.y, D.u, D.v);
+  UPDATE CURSOR R(x, y, u, v) FROM VALUES (C.x, C.y, D.u, D.v);
   CURSOR S FOR
     WITH
       cte1 (l, m, n, o) AS (
-        VALUES(C.x, C.y, D.u, D.v)
+        VALUES (C.x, C.y, D.u, D.v)
       )
     SELECT *
       FROM cte1;
@@ -77865,7 +77865,7 @@ The statement ending at line XXXX
 PROC ShapeTrixError1 ()
 BEGIN
   INSERT INTO Shape_xy(x, y)
-    VALUES(FROM not_a_cursor LIKE Shape_xy);
+    VALUES (FROM not_a_cursor LIKE Shape_xy);
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_cursor'
@@ -77904,7 +77904,7 @@ The statement ending at line XXXX
 PROC ShapeTrixError2 ()
 BEGIN
   CURSOR R LIKE Shape_uvxy;
-  FETCH R(x, y, u, v) FROM VALUES(FROM not_a_cursor);
+  FETCH R(x, y, u, v) FROM VALUES (FROM not_a_cursor);
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_cursor'
@@ -77940,8 +77940,8 @@ The statement ending at line XXXX
 PROC ShapeTrixError3 ()
 BEGIN
   CURSOR R LIKE Shape_uvxy;
-  FETCH R(x, y, u, v) FROM VALUES(NULL, NULL, NULL, NULL) @DUMMY_SEED(1);
-  UPDATE CURSOR R(x, y, u, v) FROM VALUES(FROM not_a_cursor);
+  FETCH R(x, y, u, v) FROM VALUES (NULL, NULL, NULL, NULL) @DUMMY_SEED(1);
+  UPDATE CURSOR R(x, y, u, v) FROM VALUES (FROM not_a_cursor);
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_cursor'
@@ -81933,7 +81933,7 @@ The statement ending at line XXXX
 
 WITH
   _vals (pk1, x) AS (
-    VALUES(1, 2)
+    VALUES (1, 2)
   )
 INSERT INTO simple_backing_table(k, v)
   SELECT cql_blob_create(bt_default, V.pk1, bt_default.pk1, 99, bt_default.pk2), cql_blob_create(bt_default, V.x, bt_default.x, 42, bt_default.y)
@@ -82036,7 +82036,7 @@ The statement ending at line XXXX
 
 WITH
   _vals (id, name) AS (
-    VALUES(1, 'foo')
+    VALUES (1, 'foo')
   )
 INSERT INTO simple_backing_table(k, v)
   SELECT cql_blob_create(basic_table, V.id, basic_table.id), cql_blob_create(basic_table, V.name, basic_table.name)
@@ -82320,7 +82320,7 @@ ON CONFLICT (k) DO UPDATE
 The statement ending at line XXXX
 
 INSERT INTO bogus_table_not_present
-  VALUES(1, 2)
+  VALUES (1, 2)
 ON CONFLICT (id) DO NOTHING;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0160: table in insert statement does not exist 'bogus_table_not_present'
@@ -84176,10 +84176,10 @@ The statement ending at line XXXX
 PROC fetch_values_requires_no_has_row_check (a_ TEXT!, b_ TEXT)
 BEGIN
   CURSOR c0 LIKE has_row_check_table;
-  FETCH c0(a, b) FROM VALUES("text", NULL);
+  FETCH c0(a, b) FROM VALUES ("text", NULL);
   LET x0 := c0.a;
   CURSOR c1 LIKE has_row_check_table;
-  FETCH c1(a, b) FROM VALUES(a_, b_);
+  FETCH c1(a, b) FROM VALUES (a_, b_);
   LET x1 := c1.a;
   DECLARE b BLOB<has_row_check_blob>;
   CURSOR c2 LIKE has_row_check_blob;
@@ -87100,7 +87100,7 @@ BEGIN
     CALL test_child(1);
   LOOP FETCH __child_cursor__0
   BEGIN
-    FETCH __key__0(x) FROM VALUES(__child_cursor__0.x);
+    FETCH __key__0(x) FROM VALUES (__child_cursor__0.x);
     SET __result__0 := cql_partition_cursor(__partition__0, __key__0, __child_cursor__0);
   END;
   CURSOR __out_cursor__0 LIKE (x INT, my_child OBJECT<test_child SET>!);
@@ -87108,8 +87108,8 @@ BEGIN
     CALL test_parent(2);
   LOOP FETCH __parent__0
   BEGIN
-    FETCH __key__0(x) FROM VALUES(__parent__0.x);
-    FETCH __out_cursor__0(x, my_child) FROM VALUES(__parent__0.x, cql_extract_partition(__partition__0, __key__0));
+    FETCH __key__0(x) FROM VALUES (__parent__0.x);
+    FETCH __out_cursor__0(x, my_child) FROM VALUES (__parent__0.x, cql_extract_partition(__partition__0, __key__0));
     OUT UNION __out_cursor__0;
   END;
 END;
@@ -87240,7 +87240,7 @@ BEGIN
     CALL test_child(1);
   LOOP FETCH __child_cursor__1
   BEGIN
-    FETCH __key__1(x) FROM VALUES(__child_cursor__1.x);
+    FETCH __key__1(x) FROM VALUES (__child_cursor__1.x);
     SET __result__1 := cql_partition_cursor(__partition__1, __key__1, __child_cursor__1);
   END;
   CURSOR __out_cursor__1 LIKE (x INT, child1 OBJECT<test_child SET>!);
@@ -87248,8 +87248,8 @@ BEGIN
     CALL test_parent(2);
   LOOP FETCH __parent__1
   BEGIN
-    FETCH __key__1(x) FROM VALUES(__parent__1.x);
-    FETCH __out_cursor__1(x, child1) FROM VALUES(__parent__1.x, cql_extract_partition(__partition__1, __key__1));
+    FETCH __key__1(x) FROM VALUES (__parent__1.x);
+    FETCH __out_cursor__1(x, child1) FROM VALUES (__parent__1.x, cql_extract_partition(__partition__1, __key__1));
     OUT UNION __out_cursor__1;
   END;
 END;
@@ -87926,7 +87926,7 @@ BEGIN
     ORDER BY update_test_1.id
       LIMIT 1;
   CURSOR C LIKE update_test_1;
-  FETCH C(id, name) FROM VALUES(1, "foo");
+  FETCH C(id, name) FROM VALUES (1, "foo");
   UPDATE update_test_1
     SET id = C.id, name = C.name
     WHERE id = locals.id
@@ -88106,7 +88106,7 @@ The statement ending at line XXXX
 PROC test_update_from_insert_list (id_ INT!, name_ TEXT)
 BEGIN
   CURSOR cur LIKE update_stmt_table(a, b, c);
-  FETCH cur(a, b, c) FROM VALUES("a", "b", "c");
+  FETCH cur(a, b, c) FROM VALUES ("a", "b", "c");
   UPDATE update_stmt_table
     SET
       name = locals.name,
@@ -90929,9 +90929,9 @@ PROC qid_t4 ()
 BEGIN
   CURSOR Q LIKE `xyz``abc`(-`a b`);
   CURSOR R LIKE `xyz``abc`;
-  FETCH R(x, `a b`) FROM VALUES(1, 2);
+  FETCH R(x, `a b`) FROM VALUES (1, 2);
   CALL printf("%d %d\n", R.x, R.`a b`);
-  FETCH R(x, `a b`) FROM VALUES(3, 4);
+  FETCH R(x, `a b`) FROM VALUES (3, 4);
 END;
 
   {create_proc_stmt}: ok
@@ -91177,7 +91177,7 @@ UPDATE `xyz``abc`
 The statement ending at line XXXX
 
 INSERT INTO `xyz``abc`(x, `a b`)
-  VALUES(1, 5);
+  VALUES (1, 5);
 
   {insert_stmt}: ok
   | {insert_normal}
@@ -91204,7 +91204,7 @@ INSERT INTO `xyz``abc`(x, `a b`)
 
 The statement ending at line XXXX
 
-INSERT INTO `xyz``abc`(`a b`, x) VALUES(1, 2);
+INSERT INTO `xyz``abc`(`a b`, x) VALUES (1, 2);
 
   {insert_stmt}: ok
   | {insert_normal}
@@ -91223,7 +91223,7 @@ INSERT INTO `xyz``abc`(`a b`, x) VALUES(1, 2);
 
 The statement ending at line XXXX
 
-INSERT INTO `xyz``abc`(x, `a b`) VALUES(2, _seed_) @DUMMY_SEED(500);
+INSERT INTO `xyz``abc`(x, `a b`) VALUES (2, _seed_) @DUMMY_SEED(500);
 
   {insert_stmt}: ok
   | {insert_normal}
@@ -91245,7 +91245,7 @@ INSERT INTO `xyz``abc`(x, `a b`) VALUES(2, _seed_) @DUMMY_SEED(500);
 
 The statement ending at line XXXX
 
-INSERT INTO `xyz``abc`(x, `a b`) VALUES(2, _seed_) @DUMMY_SEED(500);
+INSERT INTO `xyz``abc`(x, `a b`) VALUES (2, _seed_) @DUMMY_SEED(500);
 
   {insert_stmt}: ok
   | {insert_normal}
@@ -91274,7 +91274,7 @@ BEGIN
       FROM `xyz``abc`;
   FETCH C;
   INSERT INTO `xyz``abc`(x, `a b`)
-    VALUES(C.x, C.`a b`);
+    VALUES (C.x, C.`a b`);
 END;
 
   {create_proc_stmt}: ok dml_proc

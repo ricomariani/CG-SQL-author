@@ -403,7 +403,7 @@ end;
 -- + "type" : "text",
 -- + "isNotNull" : 0
 -- + "table" : "Foo",
--- + "statement" : "INSERT OR REPLACE INTO Foo(id, name) VALUES(?, ?)",
+-- + "statement" : "INSERT OR REPLACE INTO Foo(id, name) VALUES (?, ?)",
 -- + "statementArgs" : [ "id_", "name_" ]
 proc insert_proc(id_ integer!, name_ text)
 begin
@@ -613,7 +613,7 @@ create view MyOtherView as select * from MyView;
 create view MyViewWithAttributes as select * from Foo;
 
 -- TEST: dummy inserts
--- + "statement" : "INSERT INTO Foo(id, name) VALUES(?, printf('name_%d', ?))",
+-- + "statement" : "INSERT INTO Foo(id, name) VALUES (?, printf('name_%d', ?))",
 -- + "columns" : [ "id", "name" ],
 -- + "value" : "?",
 -- + "valueArgs" : [ "_seed_" ]
@@ -750,7 +750,7 @@ end;
 -- + "insertTables" : [ "T3" ],
 -- + "usesTables" : [ "T3" ],
 -- + "table" : "T3",
--- + "statement" : "INSERT INTO T3(id) VALUES(1) UNION ALL SELECT 1 AS column1",
+-- + "statement" : "INSERT INTO T3(id) VALUES (1) UNION ALL SELECT 1 AS column1",
 -- + "statementArgs" : [  ],
 -- + "statementType" : "INSERT",
 -- + "columns" : [ "id" ]
@@ -798,7 +798,7 @@ end;
 -- + "args" : [
 -- + ],
 -- + "usesTables" : [ "T3" ],
--- + "statement" : "INSERT INTO T3(id) VALUES(1) ON CONFLICT DO UPDATE SET id = 1 WHERE id = 9",
+-- + "statement" : "INSERT INTO T3(id) VALUES (1) ON CONFLICT DO UPDATE SET id = 1 WHERE id = 9",
 -- + "statementArgs" : [  ],
 -- + "statementType" : "INSERT",
 proc upsert_proc()

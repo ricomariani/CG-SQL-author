@@ -1187,7 +1187,7 @@ end
 PROC cursor_with_object (object_ OBJECT)
 BEGIN
   CURSOR C LIKE cursor_with_object ARGUMENTS;
-  FETCH C(object_) FROM VALUES(object_);
+  FETCH C(object_) FROM VALUES (object_);
   OUT C;
 END;
 --]]
@@ -1279,7 +1279,7 @@ end
 PROC insert_values (id_ INT!, type_ INT)
 BEGIN
   INSERT INTO bar(id, type)
-    VALUES(id_, type_);
+    VALUES (id_, type_);
 END;
 --]]
 
@@ -1290,7 +1290,7 @@ function insert_values(_db_, id_, type_)
   local _temp_stmt = nil
 
   _rc_, _temp_stmt = cql_prepare(_db_, 
-    "INSERT INTO bar(id, type) VALUES(?, ?)")
+    "INSERT INTO bar(id, type) VALUES (?, ?)")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = cql_multibind(_db_, _temp_stmt, "Ii", id_, type_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -1417,9 +1417,9 @@ end
 PROC misc_dml_proc ()
 BEGIN
   INSERT INTO foo(id)
-    VALUES(NULL);
+    VALUES (NULL);
   INSERT INTO foo(id)
-    VALUES(NULL);
+    VALUES (NULL);
   UPDATE bar
     SET name = 'bar'
     WHERE name = 'baz';
@@ -1430,10 +1430,10 @@ END;
 function misc_dml_proc(_db_)
   local _rc_ = CQL_OK
   _rc_ = cql_exec(_db_,
-    "INSERT INTO foo(id) VALUES(NULL)")
+    "INSERT INTO foo(id) VALUES (NULL)")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = cql_exec(_db_,
-    "INSERT INTO foo(id) VALUES(NULL)")
+    "INSERT INTO foo(id) VALUES (NULL)")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = cql_exec(_db_,
     "UPDATE bar SET name = 'bar' WHERE name = 'baz'")
@@ -1452,7 +1452,7 @@ end
 --[[
 PROC dummy_user ()
 BEGIN
-  INSERT INTO bar(id, name, rate, type, size) VALUES(_seed_, printf('name_%d', _seed_), _seed_, _seed_, _seed_) @DUMMY_SEED(123) @DUMMY_DEFAULTS @DUMMY_NULLABLES;
+  INSERT INTO bar(id, name, rate, type, size) VALUES (_seed_, printf('name_%d', _seed_), _seed_, _seed_, _seed_) @DUMMY_SEED(123) @DUMMY_DEFAULTS @DUMMY_NULLABLES;
 END;
 --]]
 
@@ -1463,7 +1463,7 @@ function dummy_user(_db_)
 
   _seed_ = 123
   _rc_, _temp_stmt = cql_prepare(_db_, 
-    "INSERT INTO bar(id, name, rate, type, size) VALUES(?, printf('name_%d', ?), ?, ?, ?)")
+    "INSERT INTO bar(id, name, rate, type, size) VALUES (?, printf('name_%d', ?), ?, ?, ?)")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = cql_multibind(_db_, _temp_stmt, "IIIII", _seed_, _seed_, _seed_, _seed_, _seed_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -1796,7 +1796,7 @@ PROC fetch_values_dummy ()
 BEGIN
   CURSOR C LIKE SELECT *
     FROM bar;
-  FETCH C(id, name, rate, type, size) FROM VALUES(_seed_, printf('name_%d', _seed_), _seed_, _seed_, _seed_) @DUMMY_SEED(123) @DUMMY_NULLABLES;
+  FETCH C(id, name, rate, type, size) FROM VALUES (_seed_, printf('name_%d', _seed_), _seed_, _seed_, _seed_) @DUMMY_SEED(123) @DUMMY_NULLABLES;
 END;
 --]]
 
@@ -1824,7 +1824,7 @@ end
 PROC fetch_values_extended ()
 BEGIN
   CURSOR C LIKE (id INT!, name TEXT, rate LONG, type INT, size REAL, xx REAL, yy TEXT);
-  FETCH C(id, name, rate, type, size, xx, yy) FROM VALUES(_seed_, printf('name_%d', _seed_), _seed_, _seed_, _seed_, _seed_, printf('yy_%d', _seed_)) @DUMMY_SEED(123) @DUMMY_NULLABLES;
+  FETCH C(id, name, rate, type, size, xx, yy) FROM VALUES (_seed_, printf('name_%d', _seed_), _seed_, _seed_, _seed_, _seed_, printf('yy_%d', _seed_)) @DUMMY_SEED(123) @DUMMY_NULLABLES;
 END;
 --]]
 
@@ -1952,7 +1952,7 @@ end
 PROC out_no_db ()
 BEGIN
   CURSOR C LIKE SELECT 1 AS A, 2.5 AS B;
-  FETCH C(A, B) FROM VALUES(3, 12);
+  FETCH C(A, B) FROM VALUES (3, 12);
   OUT C;
 END;
 --]]
@@ -1988,7 +1988,7 @@ PROC declare_cursor_like_cursor ()
 BEGIN
   CURSOR C0 LIKE SELECT 1 AS A, 2.5 AS B;
   CURSOR C1 LIKE C0;
-  FETCH C1(A, B) FROM VALUES(3, 12);
+  FETCH C1(A, B) FROM VALUES (3, 12);
   OUT C1;
 END;
 --]]
@@ -2270,7 +2270,7 @@ end
 --[[
 PROC multi_rewrite (blob_id_ INT!, b_notnull_ BLOB!, b_nullable_ BLOB, id_ INT!, name_ TEXT, rate_ LONG, type_ INT, size_ REAL, OUT out_arg INT!)
 BEGIN
-  INSERT INTO blob_table(blob_id, b_notnull, b_nullable) VALUES(blob_id_, b_notnull_, b_nullable_);
+  INSERT INTO blob_table(blob_id, b_notnull, b_nullable) VALUES (blob_id_, b_notnull_, b_nullable_);
   SET out_arg := 1;
 END;
 --]]
@@ -2285,7 +2285,7 @@ function multi_rewrite(_db_, blob_id_, b_notnull_, b_nullable_, id_, name_, rate
   local _temp_stmt = nil
 
   _rc_, _temp_stmt = cql_prepare(_db_, 
-    "INSERT INTO blob_table(blob_id, b_notnull, b_nullable) VALUES(?, ?, ?)")
+    "INSERT INTO blob_table(blob_id, b_notnull, b_nullable) VALUES (?, ?, ?)")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = cql_multibind(_db_, _temp_stmt, "IBb", blob_id_, b_notnull_, b_nullable_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -2309,8 +2309,8 @@ PROC fetch_to_cursor_from_cursor ()
 BEGIN
   CURSOR C0 LIKE SELECT 1 AS A, "foo" AS B;
   CURSOR C1 LIKE C0;
-  FETCH C0(A, B) FROM VALUES(2, "bar");
-  FETCH C1(A, B) FROM VALUES(C0.A, C0.B);
+  FETCH C0(A, B) FROM VALUES (2, "bar");
+  FETCH C1(A, B) FROM VALUES (C0.A, C0.B);
   OUT C1;
 END;
 --]]
@@ -2600,7 +2600,7 @@ end
 PROC out_union_helper ()
 BEGIN
   CURSOR C LIKE SELECT 1 AS x;
-  FETCH C(x) FROM VALUES(1);
+  FETCH C(x) FROM VALUES (1);
   OUT UNION C;
 END;
 --]]
@@ -3190,7 +3190,7 @@ end
 PROC simple_cursor_proc ()
 BEGIN
   CURSOR A_CURSOR LIKE SELECT 1 AS id;
-  FETCH a_cursor(id) FROM VALUES(1);
+  FETCH a_cursor(id) FROM VALUES (1);
   OUT a_cursor;
 END;
 --]]
@@ -3524,7 +3524,7 @@ end
 PROC upsert_do_nothing (id_ INT!)
 BEGIN
   INSERT INTO foo(id)
-    VALUES(id_)
+    VALUES (id_)
   ON CONFLICT DO NOTHING;
 END;
 --]]
@@ -3536,7 +3536,7 @@ function upsert_do_nothing(_db_, id_)
   local _temp_stmt = nil
 
   _rc_, _temp_stmt = cql_prepare(_db_, 
-    "INSERT INTO foo(id) VALUES(?) ON CONFLICT DO NOTHING")
+    "INSERT INTO foo(id) VALUES (?) ON CONFLICT DO NOTHING")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = cql_multibind(_db_, _temp_stmt, "I", id_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -3642,7 +3642,7 @@ end
 PROC out_union_two ()
 BEGIN
   CURSOR C LIKE SELECT 1 AS x, '2' AS y;
-  FETCH C(x, y) FROM VALUES(1, "y");
+  FETCH C(x, y) FROM VALUES (1, "y");
   OUT UNION C;
   OUT UNION C;
 END;
@@ -3800,7 +3800,7 @@ end
 PROC out_union_values (a INT!, b INT!)
 BEGIN
   CURSOR x LIKE SELECT 1 AS x, 2 AS y;
-  FETCH x(x, y) FROM VALUES(a, b);
+  FETCH x(x, y) FROM VALUES (a, b);
   OUT UNION x;
 END;
 --]]
@@ -4018,7 +4018,7 @@ end
 PROC update_cursor ()
 BEGIN
   CURSOR C LIKE SELECT 1 AS x, 2 AS y;
-  UPDATE CURSOR C(x) FROM VALUES(2);
+  UPDATE CURSOR C(x) FROM VALUES (2);
 END;
 --]]
 
@@ -4252,14 +4252,14 @@ end
 PROC pretty_print_with_quote ()
 BEGIN
   INSERT INTO bar(id, name)
-    VALUES(1, "it's high noon\r\n\f\b\t\v");
+    VALUES (1, "it's high noon\r\n\f\b\t\v");
 END;
 --]]
 
 function pretty_print_with_quote(_db_)
   local _rc_ = CQL_OK
   _rc_ = cql_exec(_db_,
-    "INSERT INTO bar(id, name) VALUES(1, 'it''s high noon\r\n\f\b\t\v')")
+    "INSERT INTO bar(id, name) VALUES (1, 'it''s high noon\r\n\f\b\t\v')")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -4273,14 +4273,14 @@ end
 PROC hex_quote ()
 BEGIN
   INSERT INTO bar(id, name)
-    VALUES(1, "\x01\x02\xa1\x1bg");
+    VALUES (1, "\x01\x02\xa1\x1bg");
 END;
 --]]
 
 function hex_quote(_db_)
   local _rc_ = CQL_OK
   _rc_ = cql_exec(_db_,
-    "INSERT INTO bar(id, name) VALUES(1, '\x01\x02\xa1\x1bg')")
+    "INSERT INTO bar(id, name) VALUES (1, '\x01\x02\xa1\x1bg')")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -4371,7 +4371,7 @@ end
 PROC emit_object_with_setters (o OBJECT!, x OBJECT!, i INT!, l LONG!, b BOOL!, d REAL!, t TEXT!, bl BLOB!)
 BEGIN
   CURSOR C LIKE emit_object_with_setters ARGUMENTS;
-  FETCH C(o, x, i, l, b, d, t, bl) FROM VALUES(o, x, i, l, b, d, t, bl);
+  FETCH C(o, x, i, l, b, d, t, bl) FROM VALUES (o, x, i, l, b, d, t, bl);
   OUT C;
 END;
 --]]
@@ -4422,7 +4422,7 @@ end
 PROC emit_setters_with_nullables (o OBJECT, x OBJECT, i INT, l LONG, b BOOL, d REAL, t TEXT, bl BLOB)
 BEGIN
   CURSOR C LIKE emit_setters_with_nullables ARGUMENTS;
-  FETCH C(o, x, i, l, b, d, t, bl) FROM VALUES(o, x, i, l, b, d, t, bl);
+  FETCH C(o, x, i, l, b, d, t, bl) FROM VALUES (o, x, i, l, b, d, t, bl);
   OUT C;
 END;
 --]]
@@ -6269,7 +6269,7 @@ end
 PROC out_arg_cursor (x INT!, OUT y INT!)
 BEGIN
   CURSOR C LIKE out_arg_cursor ARGUMENTS;
-  FETCH C(x, y) FROM VALUES(1, 1);
+  FETCH C(x, y) FROM VALUES (1, 1);
   CALL out_arg_cursor(C.x, C.y);
 END;
 --]]
@@ -6424,7 +6424,7 @@ end
 PROC private_out_union ()
 BEGIN
   CURSOR C LIKE SELECT 1 AS a_field;
-  FETCH C(a_field) FROM VALUES(1);
+  FETCH C(a_field) FROM VALUES (1);
   OUT UNION C;
 END;
 --]]
@@ -6493,7 +6493,7 @@ end
 PROC no_getters_out_union ()
 BEGIN
   CURSOR C LIKE SELECT 1 AS a_field;
-  FETCH C(a_field) FROM VALUES(1);
+  FETCH C(a_field) FROM VALUES (1);
   OUT UNION C;
 END;
 --]]
@@ -6562,7 +6562,7 @@ end
 PROC suppress_results_out_union ()
 BEGIN
   CURSOR C LIKE SELECT 1 AS a_field;
-  FETCH C(a_field) FROM VALUES(1);
+  FETCH C(a_field) FROM VALUES (1);
   OUT UNION C;
 END;
 --]]
@@ -7024,7 +7024,7 @@ end
 PROC out_object (o OBJECT!)
 BEGIN
   CURSOR C LIKE out_object ARGUMENTS;
-  FETCH C(o) FROM VALUES(o);
+  FETCH C(o) FROM VALUES (o);
   OUT C;
 END;
 --]]
@@ -8367,7 +8367,7 @@ end
 PROC simple_container_proc ()
 BEGIN
   CURSOR C LIKE (a INT, b INT!, c OBJECT<simple_child_proc SET>);
-  FETCH C(a, b, c) FROM VALUES(1, 2, simple_child_proc());
+  FETCH C(a, b, c) FROM VALUES (1, 2, simple_child_proc());
   OUT UNION C;
 END;
 --]]
@@ -9927,10 +9927,10 @@ function cql_startup(_db_)
 
   --[[
   INSERT OR REPLACE INTO bar(id, type)
-    VALUES(1, 5);
+    VALUES (1, 5);
   --]]
   _rc_ = cql_exec(_db_,
-    "INSERT OR REPLACE INTO bar(id, type) VALUES(1, 5)")
+    "INSERT OR REPLACE INTO bar(id, type) VALUES (1, 5)")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
 
   -- The statement ending at line XXXX
@@ -10221,10 +10221,10 @@ function cql_startup(_db_)
 
   --[[
   INSERT INTO blob_table(blob_id, b_nullable, b_notnull)
-    VALUES(0, blob_var, blob_var_notnull);
+    VALUES (0, blob_var, blob_var_notnull);
   --]]
   _rc_, _temp_stmt = cql_prepare(_db_, 
-    "INSERT INTO blob_table(blob_id, b_nullable, b_notnull) VALUES(0, ?, ?)")
+    "INSERT INTO blob_table(blob_id, b_nullable, b_notnull) VALUES (0, ?, ?)")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = cql_multibind(_db_, _temp_stmt, "bB", blob_var, blob_var_notnull)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -10281,11 +10281,11 @@ function cql_startup(_db_)
       SELECT 111
     )
   INSERT INTO foo(id)
-    VALUES(ifnull(( SELECT a
+    VALUES (ifnull(( SELECT a
       FROM x ), 0));
   --]]
   _rc_ = cql_exec(_db_,
-    "WITH x (a) AS ( SELECT 111 ) INSERT INTO foo(id) VALUES(ifnull(( SELECT a FROM x ), 0))")
+    "WITH x (a) AS ( SELECT 111 ) INSERT INTO foo(id) VALUES (ifnull(( SELECT a FROM x ), 0))")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
 
   -- The statement ending at line XXXX
@@ -10430,24 +10430,24 @@ function cql_startup(_db_)
     some_cte (id) AS (
       SELECT 1 AS id
     )
-  INSERT INTO bar(id) VALUES(ifnull(( SELECT id
+  INSERT INTO bar(id) VALUES (ifnull(( SELECT id
     FROM some_cte ), 0)) @DUMMY_SEED(1337);
   --]]
   _seed_ = 1337
   _rc_ = cql_exec(_db_,
-    "WITH some_cte (id) AS ( SELECT 1 AS id ) INSERT INTO bar(id) VALUES(ifnull(( SELECT id FROM some_cte ), 0))")
+    "WITH some_cte (id) AS ( SELECT 1 AS id ) INSERT INTO bar(id) VALUES (ifnull(( SELECT id FROM some_cte ), 0))")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
 
   -- The statement ending at line XXXX
 
   --[[
-  INSERT INTO bar(id) VALUES(1) @DUMMY_SEED(1338)
+  INSERT INTO bar(id) VALUES (1) @DUMMY_SEED(1338)
   ON CONFLICT (id) DO UPDATE
     SET id = 10;
   --]]
   _seed_ = 1338
   _rc_ = cql_exec(_db_,
-    "INSERT INTO bar(id) VALUES(1) ON CONFLICT (id) DO UPDATE SET id = 10")
+    "INSERT INTO bar(id) VALUES (1) ON CONFLICT (id) DO UPDATE SET id = 10")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
 
   -- The statement ending at line XXXX
@@ -10737,20 +10737,20 @@ function cql_startup(_db_)
 
   --[[
   INSERT INTO virtual_with_hidden(vy)
-    VALUES(1);
+    VALUES (1);
   --]]
   _rc_ = cql_exec(_db_,
-    "INSERT INTO virtual_with_hidden(vy) VALUES(1)")
+    "INSERT INTO virtual_with_hidden(vy) VALUES (1)")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
 
   -- The statement ending at line XXXX
 
   --[[
   INSERT INTO virtual_with_hidden(vx, vy)
-    VALUES(1, 2);
+    VALUES (1, 2);
   --]]
   _rc_ = cql_exec(_db_,
-    "INSERT INTO virtual_with_hidden(vx, vy) VALUES(1, 2)")
+    "INSERT INTO virtual_with_hidden(vx, vy) VALUES (1, 2)")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
 
   -- The statement ending at line XXXX

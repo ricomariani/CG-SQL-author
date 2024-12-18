@@ -1168,7 +1168,7 @@ begin
 end;
 
 -- TEST: insert or replace form
--- +  "INSERT OR REPLACE INTO bar(id, type) VALUES(1, 5)"
+-- +  "INSERT OR REPLACE INTO bar(id, type) VALUES (1, 5)"
 insert or replace into bar(id, type) values (1,5);
 
 -- TEST: insert default from
@@ -1177,12 +1177,12 @@ insert into foo default values;
 
 -- TEST: insert from stored procedure
 -- + function insert_values(_db_, id_, type_)
--- +   "INSERT INTO bar(id, type) VALUES(?, ?)"
+-- +   "INSERT INTO bar(id, type) VALUES (?, ?)"
 -- + ::cql_cleanup::
 -- +   cql_finalize_stmt(_temp_stmt)
 -- +   return _rc_
 -- + end
-proc insert_values(id_ integer not null, type_ integer)
+proc insert_values (id_ integer not null, type_ integer)
 begin
   insert into bar(id, type) values (id_, type_);
 end;
@@ -1249,23 +1249,23 @@ begin
 end;
 
 -- TEST: simple DML statements for json_schema cg
--- + "INSERT INTO foo(id) VALUES(NULL)"
--- + "INSERT INTO foo(id) VALUES(NULL)"
+-- + "INSERT INTO foo(id) VALUES (NULL)"
+-- + "INSERT INTO foo(id) VALUES (NULL)"
 -- + "UPDATE bar SET name = 'bar' WHERE name = 'baz'"
 -- + "DELETE FROM foo WHERE id = 1"
 proc misc_dml_proc()
 begin
-  insert into foo values(NULL);
-  insert into foo(id) values(NULL);
+  insert into foo values (NULL);
+  insert into foo(id) values (NULL);
   update bar set name = 'bar' where name = 'baz';
   delete from foo where id = 1;
 end;
 
 -- TEST: use dummy data
--- + INSERT INTO bar(id, name, rate, type, size) VALUES(_seed_, printf('name_%d', _seed_), _seed_, _seed_, _seed_)
+-- + INSERT INTO bar(id, name, rate, type, size) VALUES (_seed_, printf('name_%d', _seed_), _seed_, _seed_, _seed_)
 -- = @DUMMY_SEED(123) @DUMMY_DEFAULTS @DUMMY_NULLABLES;
 -- + _seed_ = 123
--- + "INSERT INTO bar(id, name, rate, type, size) VALUES(?, printf('name_%d', ?), ?, ?, ?)"
+-- + "INSERT INTO bar(id, name, rate, type, size) VALUES (?, printf('name_%d', ?), ?, ?, ?)"
 -- + _rc_ = cql_multibind(_db_, _temp_stmt, "IIIII", _seed_, _seed_, _seed_, _seed_, _seed_)
 proc dummy_user()
 begin
@@ -1425,10 +1425,10 @@ set blob_var_notnull := blob_notnull_func();
 
 -- TEST: bind a nullable blob and a not null blob
 -- + INSERT INTO blob_table(blob_id, b_nullable, b_notnull)
--- +   VALUES(0, blob_var, blob_var_notnull);
--- + "INSERT INTO blob_table(blob_id, b_nullable, b_notnull) VALUES(0, ?, ?)"
+-- +   VALUES (0, blob_var, blob_var_notnull);
+-- + "INSERT INTO blob_table(blob_id, b_nullable, b_notnull) VALUES (0, ?, ?)"
 -- + _rc_ = cql_multibind(_db_, _temp_stmt, "bB", blob_var, blob_var_notnull)
-insert into blob_table(blob_id, b_nullable, b_notnull) values(0, blob_var, blob_var_notnull);
+insert into blob_table(blob_id, b_nullable, b_notnull) values (0, blob_var, blob_var_notnull);
 
 -- TEST: a result set that includes blobs
 -- +  "SELECT blob_id, b_notnull, b_nullable FROM blob_table
@@ -1570,7 +1570,7 @@ end;
 proc fetch_values_dummy()
 begin
   declare C cursor like select * from bar;
-  fetch C() from values() @dummy_seed(123) @dummy_nullables;
+  fetch C() from values () @dummy_seed(123) @dummy_nullables;
 end;
 
 -- TEST: value cursor fetch, using type syntax
@@ -1591,7 +1591,7 @@ end;
 proc fetch_values_extended()
 begin
   declare C cursor like (like bar, xx real, yy text);
-  fetch C() from values() @dummy_seed(123) @dummy_nullables;
+  fetch C() from values () @dummy_seed(123) @dummy_nullables;
 end;
 
 -- TEST: c style literal
@@ -1656,7 +1656,7 @@ end;
 proc out_no_db()
 begin
   declare C cursor like select 1 A, 2.5 B;
-  fetch C(A,B) from values(3,12);
+  fetch C(A,B) from values (3,12);
   out C;
 end;
 -- TEST: declare cursor like cursor
@@ -1670,7 +1670,7 @@ proc declare_cursor_like_cursor()
 begin
   declare C0 cursor like select 1 A, 2.5 B;
   declare C1 cursor like C0;
-  fetch C1(A,B) from values(3,12);
+  fetch C1(A,B) from values (3,12);
   out C1;
 end;
 
@@ -1776,7 +1776,7 @@ end;
 
 -- TEST: use with-insert form
 -- +  _rc_ = cql_exec(_db_,
--- + "WITH x (a) AS ( SELECT 111 ) INSERT INTO foo(id) VALUES(ifnull(( SELECT a FROM x ), 0))"
+-- + "WITH x (a) AS ( SELECT 111 ) INSERT INTO foo(id) VALUES (ifnull(( SELECT a FROM x ), 0))"
 with x(a) as (select 111)
 insert into foo values ( ifnull((select a from x), 0));
 
@@ -1805,7 +1805,7 @@ set r2 := (select SqlUserFunc(123));
 -- + cql_contract_argument_notnull(blob_id_, 1)
 -- + cql_contract_argument_notnull(b_notnull_, 2)
 -- + cql_contract_argument_notnull(id_, 4)
--- + "INSERT INTO blob_table(blob_id, b_notnull, b_nullable) VALUES(?, ?, ?)")
+-- + "INSERT INTO blob_table(blob_id, b_notnull, b_nullable) VALUES (?, ?, ?)")
 -- + _rc_ = cql_multibind(_db_, _temp_stmt, "IBb", blob_id_, b_notnull_, b_nullable_)
 -- + out_arg = 1
 -- + return _rc_, out_arg
@@ -2285,7 +2285,7 @@ end;
 procedure simple_cursor_proc()
 begin
   declare A_CURSOR cursor like select 1 id;
-  fetch a_cursor (id) from values(1);
+  fetch a_cursor (id) from values (1);
   out a_cursor;
 end;
 
@@ -2418,15 +2418,15 @@ END;
 
 -- TEST: codegen upsert statement with do nothing
 -- + function upsert_do_nothing(_db_, id_)
--- + "INSERT INTO foo(id) VALUES(?) ON CONFLICT DO NOTHING"
+-- + "INSERT INTO foo(id) VALUES (?) ON CONFLICT DO NOTHING"
 proc upsert_do_nothing(id_ integer not null)
 BEGIN
- insert into foo(id) values(id_) on conflict do nothing;
+ insert into foo(id) values (id_) on conflict do nothing;
 END;
 
 -- TEST: codegen with-insert with a seed
 -- + _seed_ = 1337
--- + "WITH some_cte (id) AS ( SELECT 1 AS id ) INSERT INTO bar(id) VALUES(ifnull(( SELECT id FROM some_cte ), 0))"
+-- + "WITH some_cte (id) AS ( SELECT 1 AS id ) INSERT INTO bar(id) VALUES (ifnull(( SELECT id FROM some_cte ), 0))"
 with some_cte(id) as (select 1 id)
 insert into bar(id)
 values (ifnull((select id from some_cte), 0))
@@ -2434,8 +2434,8 @@ values (ifnull((select id from some_cte), 0))
 
 -- TEST: codegen upsert with a seed
 -- + _seed_ = 1338
--- + "INSERT INTO bar(id) VALUES(1) ON CONFLICT (id) DO UPDATE SET id = 10"
-insert into bar(id) values(1) @dummy_seed(1338)
+-- + "INSERT INTO bar(id) VALUES (1) ON CONFLICT (id) DO UPDATE SET id = 10"
+insert into bar(id) values (1) @dummy_seed(1338)
 on conflict(id) do
 update set id=10;
 
@@ -2489,7 +2489,7 @@ end;
 proc out_union_two()
 begin
  declare C cursor like select 1 x, '2' y;
- fetch C from values(1, "y");
+ fetch C from values (1, "y");
  out union C;
  out union C;
 end;
@@ -2542,10 +2542,10 @@ begin
 end;
 
 -- This just sets up a call to a procedure that takes two integers
-proc out_union_values(a integer not null, b integer not null)
+proc out_union_values (a integer not null, b integer not null)
 begin
   declare x cursor like select 1 x, 2 y;
-  fetch x from values(a,b);
+  fetch x from values (a,b);
   out union x;
 end;
 
@@ -2561,9 +2561,9 @@ end;
 -- +  C = C_result_set_[C_row_num_]
 -- + else
 -- +  C = { _has_row_ = false }
-proc read_out_union_values(a integer not null, b integer not null)
+proc read_out_union_values (a integer not null, b integer not null)
 begin
-  declare C cursor for call out_union_values(a,b);
+  declare C cursor for call out_union_values (a,b);
   fetch C;
 end;
 
@@ -2723,17 +2723,17 @@ end;
 -- in particular the newline would get messed up because we thought
 -- it was a line break in non-quoted SQL which can be replaced with a space
 -- note the newline is escaped and present
--- + "INSERT INTO bar(id, name) VALUES(1, 'it''s high noon\r\n\f\b\t\v')"
+-- + "INSERT INTO bar(id, name) VALUES (1, 'it''s high noon\r\n\f\b\t\v')"
 proc pretty_print_with_quote()
 begin
-  insert into bar(id, name) values(1, "it's high noon\r\n\f\b\t\v");
+  insert into bar(id, name) values (1, "it's high noon\r\n\f\b\t\v");
 end;
 
 -- TEST: string literal with hex forms
--- + "INSERT INTO bar(id, name) VALUES(1, '\x01\x02\xa1\x1bg')"
+-- + "INSERT INTO bar(id, name) VALUES (1, '\x01\x02\xa1\x1bg')"
 proc hex_quote()
 begin
-  insert into bar(id, name) values(1, "\x01\x02\xA1\x1b\x00\xg");
+  insert into bar(id, name) values (1, "\x01\x02\xA1\x1b\x00\xg");
 end;
 
 -- TEST: no getters generated for this function
@@ -3646,7 +3646,7 @@ end;
 proc out_arg_cursor(x integer not null, out y integer not null)
 begin
   declare C cursor like out_arg_cursor arguments;
-  fetch C from values(1,1);
+  fetch C from values (1,1);
   call out_arg_cursor(from C);
 end;
 
@@ -3687,13 +3687,13 @@ end;
 -- TEST: insert into the table, verify autoexpand is correct there, too
 -- only "y" should be inserted here
 -- + _rc_ = cql_exec(_db_,
--- + "INSERT INTO virtual_with_hidden(vy) VALUES(1)"
-insert into virtual_with_hidden values(1);
+-- + "INSERT INTO virtual_with_hidden(vy) VALUES (1)"
+insert into virtual_with_hidden values (1);
 
 -- TEST: you can use the hidden column if you do it by name
 -- + _rc_ = cql_exec(_db_,
--- + "INSERT INTO virtual_with_hidden(vx, vy) VALUES(1, 2)"
-insert into virtual_with_hidden(vx, vy) values(1,2);
+-- + "INSERT INTO virtual_with_hidden(vx, vy) VALUES (1, 2)"
+insert into virtual_with_hidden(vx, vy) values (1,2);
 
 -- TEST: get row from the bar table or else -1
 -- +  _rc_ = cql_step(_temp_stmt)
@@ -3766,7 +3766,7 @@ proc private_out_union()
 begin
   declare C cursor like select 1 a_field;
 
-  fetch C from values(1);
+  fetch C from values (1);
   out union C;
 end;
 
@@ -3796,7 +3796,7 @@ proc no_getters_out_union()
 begin
   declare C cursor like select 1 a_field;
 
-  fetch C from values(1);
+  fetch C from values (1);
   out union C;
 end;
 
@@ -3822,7 +3822,7 @@ proc suppress_results_out_union()
 begin
   declare C cursor like select 1 a_field;
 
-  fetch C from values(1);
+  fetch C from values (1);
   out union C;
 end;
 
@@ -5226,7 +5226,7 @@ declare interface should_not_frag(id integer);
 -- + __ignored__ = 1 + 2 + 3
 -- + __ignored__ = 4 + 5 + 6
 -- +2 __ignored__ = nil
-proc ignored_values()
+proc ignored_values ()
 begin
   1+2+3;
   4+5+6;

@@ -981,9 +981,23 @@ run_test() {
 		failed
 	fi
 
+	if ! ${CQL} --defines modern_test --nolines --cg "$O/run_test_modern.h" "$O/run_test_modern.c" --in "$T/run_test.sql" --global_proc cql_startup --rt c; then
+		echo codegen failed.
+		failed
+	fi
+
 	if ! (
 		echo "  compiling code"
 		do_make run_test
+    MAKE_ARGS_SAVED=${MAKE_ARGS}
+	  if [ "${MAKE_ARGS}" == "" ]; then
+		  MAKE_ARGS=SQLITE_PATH=./sqlite
+	  else
+		  MAKE_ARGS=SQLITE_PATH=./sqlite ${MAKE_ARGS}
+	  fi
+    do_make sqlite
+		do_make run_test_modern
+    MAKE_ARGS=${MAKE_ARGS_SAVED}
 	); then
 		echo build failed
 		failed
@@ -994,6 +1008,14 @@ run_test() {
 		"./$O/run_test"
 	); then
 		echo tests failed
+		failed
+	fi
+
+	if ! (
+		echo "  executing tests with modern SQLite"
+		"./$O/run_test_modern"
+	); then
+		echo modern run tests failed
 		failed
 	fi
 
@@ -1279,6 +1301,7 @@ if ! building; then
 fi
 
 # each of these will exit if anything goes wrong
+run_test
 basic_test
 unit_tests
 macro_test

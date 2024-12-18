@@ -7447,14 +7447,18 @@ begin
     k blob primary key,
     v blob
   );
+end;
 
-  [[backed_by=json_backed]]
-  create table my_data(
-   id int! primary key,
-   name text!,
-   age int!
-  );
+[[backed_by=json_backed]]
+create table my_data(
+ id int! primary key,
+ name text!,
+ age int!
+);
 
+proc insert_data_into_json()
+begin
+  make_json_backed_schema();
   let i := 0;
   while i < 15
   begin
@@ -7464,22 +7468,32 @@ begin
 
   update my_data set name = 'modified' where id = 5;
   delete from my_data where id = 11;
-  update my_data set id = 100 where id = 6;
+  update my_data set id = 1234 where id = 6;
 end;
 
 -- verify that we can cast anything to null
 TEST!(json_backing,
 begin
-  cursor C for select * from my_data;
-  cursor D like C;
+  insert_data_into_json();
+
+  cursor C for select @columns(like my_data) from my_data;
+  cursor D like my_data;
   let i := 0;
   loop fetch C
   begin
      i += 1;
      printf("%d, %s\n", C.id, C.name);
-     if i == 11 or id = 6 then i += 1; end; -- these were moved
-     EXPECT_NE(C.id, 11);  -- this was deleted
-     fetch D from values() @dummy_seed(i);
+     if i == 11 then i += 1; end; -- these were moved
+     EXPECT_NE!(C.id, 11);  -- this was deleted
+     fetch D() from values() @dummy_seed(i);
+
+     -- adjust for expected updates
+     if i == 5 then
+       update cursor D using 'modified' name;
+     else if i == 6 then 
+       update cursor D using 1234 id;
+     end if;
+
      if not cql_cursors_equal(C, D) then
        printf("cursors differ at %s\n", C:diff_val(D));
        EXPECT!(cql_cursors_equal(C,D));

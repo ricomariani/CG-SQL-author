@@ -20933,6 +20933,19 @@ BEGIN
   SELECT an_enum.ONE AS x FROM backed;
 END;
 
+-- TEST: backed tables may not appear in a procedure
+-- + {create_table_stmt}: err
+-- * error: % table is not suitable for use as backed storage: backed table must appear outside of any procedure 'backed_error'
+-- +1 error:
+proc backed_decl()
+begin
+  [[backed_by=simple_backing_table]]
+  create table backed_error (
+   status_id int primary key,
+   global_connection_state long
+  );
+end;
+
 -- TEST: can't put triggers on backed tables
 -- + {create_trigger_stmt}: err
 -- * error: % backed storage tables may not be used in indexes/triggers/drop 'simple_backed_table'

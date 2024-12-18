@@ -1502,6 +1502,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0452: function may not be used in 
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not suitable for use as backing storage: it does not have a primary key 'simple_backing_table_missing_pk'
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not suitable for use as backing storage: it has only primary key columns 'simple_backing_table_only_pk'
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not suitable for use as backing storage: it has an expression in its primary key 'length(k)'
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not suitable for use as backed storage: backed table must appear outside of any procedure 'backed_error'
 test/sem_test.sql:XXXX:1: error: in create_trigger_stmt : CQL0493: backed storage tables may not be used in indexes/triggers/drop 'simple_backed_table'
 test/sem_test.sql:XXXX:1: error: in drop_table_stmt : CQL0493: backed storage tables may not be used in indexes/triggers/drop 'simple_backed_table'
 test/sem_test.sql:XXXX:1: error: in create_index_stmt : CQL0493: backed storage tables may not be used in indexes/triggers/drop 'simple_backed_table'

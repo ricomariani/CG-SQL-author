@@ -78476,6 +78476,50 @@ END;
 
 The statement ending at line XXXX
 
+PROC backed_decl ()
+BEGIN
+  [[backed_by=simple_backing_table]]
+  CREATE TABLE backed_error(
+    status_id INT PRIMARY KEY,
+    global_connection_state LONG
+  );
+END;
+
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not suitable for use as backed storage: backed table must appear outside of any procedure 'backed_error'
+
+  {create_proc_stmt}: err
+  | {name backed_decl}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {stmt_and_attr}: err
+        | {misc_attrs}: ok
+        | | {misc_attr}
+        |   | {dot}
+        |   | | {name cql}
+        |   | | {name backed_by}
+        |   | {name simple_backing_table}: ok
+        | {create_table_stmt}: err
+          | {create_table_name_flags}
+          | | {table_flags_attrs}
+          | | | {int 0}
+          | | {name backed_error}
+          | {col_key_list}
+            | {col_def}: status_id: integer notnull primary_key
+            | | {col_def_type_attrs}: ok
+            |   | {col_def_name_type}
+            |   | | {name status_id}
+            |   | | {type_int}: integer
+            |   | {col_attrs_pk}: ok
+            |     | {autoinc_and_conflict_clause}
+            | {col_key_list}
+              | {col_def}: global_connection_state: longint
+                | {col_def_type_attrs}: ok
+                  | {col_def_name_type}
+                    | {name global_connection_state}
+                    | {type_long}: longint
+
+The statement ending at line XXXX
+
 CREATE TRIGGER bogus_backed_trigger
   BEFORE DELETE ON simple_backed_table
 BEGIN

@@ -15845,6 +15845,11 @@ static void sem_validate_table_for_backed(ast_node *ast) {
 
   Contract(!is_error(ast));
 
+  if (current_proc) {
+    report_invalid_backed(ast, "backed table must appear outside of any procedure", name);
+    return;
+  }
+
   // the table has the attribute or we would not be here
   CSTR backing_table_name = get_named_string_attribute_value(misc_attrs, "backed_by");
   Contract(backing_table_name);
@@ -16393,7 +16398,6 @@ static void sem_create_table_stmt(ast_node *ast) {
       }
 
       if (is_backed(ast->sem->sem_type)) {
-        // if (current_proc) exit(1);  // This needs an error : rico
         clone_backing_table_functions(ast, name);
         rewrite_shared_fragment_from_backed_table(ast);
       }

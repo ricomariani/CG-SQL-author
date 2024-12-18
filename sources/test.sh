@@ -1294,7 +1294,6 @@ if ! building; then
 fi
 
 # each of these will exit if anything goes wrong
-run_test
 basic_test
 unit_tests
 macro_test

@@ -92215,9 +92215,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 
 The statement ending at line XXXX
 
-SELECT '{ "x" : 1}' -> 1 AS X;
+SELECT '{ "x" : 1}' -> 1.5 AS X;
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0504: right operand must be json text path '->'
+test/sem_test.sql:XXXX:1: error: in num : CQL0504: right operand must be json text path or integer '->'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -92227,7 +92227,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0504: right operand must be json te
   |     | | {select_expr}: err
   |     |   | {jex1}: err
   |     |   | | {strlit '{ "x" : 1}'}: text notnull
-  |     |   | | {int 1}: integer notnull
+  |     |   | | {dbl 1.5}: real notnull
   |     |   | {opt_as_alias}
   |     |     | {name X}
   |     | {select_from_etc}: ok
@@ -92344,9 +92344,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0360: unknown type 'not_a_type'
 
 The statement ending at line XXXX
 
-SELECT '{ "x" : 1}' ->> ~INT~ 1 AS X;
+SELECT '{ "x" : 1}' ->> ~INT~ 1.5 AS X;
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0504: right operand must be json text path '->>'
+test/sem_test.sql:XXXX:1: error: in num : CQL0504: right operand must be json text path or integer '->>'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -92358,7 +92358,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0504: right operand must be json te
   |     |   | | {strlit '{ "x" : 1}'}: text notnull
   |     |   | | {jex2}
   |     |   |   | {type_int}: integer
-  |     |   |   | {int 1}: integer notnull
+  |     |   |   | {dbl 1.5}: real notnull
   |     |   | {opt_as_alias}
   |     |     | {name X}
   |     | {select_from_etc}: ok

@@ -24589,8 +24589,8 @@ select '{ "x" : 1}' -> '$.x' as X;
 
 -- TEST: basic extraction operator, invalid right type
 -- + {jex1}: err
--- * error: % right operand must be json text path '->'
-select '{ "x" : 1}' -> 1 as X;
+-- * error: % right operand must be json text path or integer '->'
+select '{ "x" : 1}' -> 1.5 as X;
 
 -- TEST: basic extraction operator, invalid left type
 -- + {jex1}: err
@@ -24619,8 +24619,8 @@ select 'x' ->> ~not_a_type~ '$.x' as X;
 
 -- TEST: extended extraction operator, invalid right type
 -- + {jex2}: err
--- * error: % right operand must be json text path '->>'
-select '{ "x" : 1}' ->> ~int~ 1 as X;
+-- * error: % right operand must be json text path or integer '->>'
+select '{ "x" : 1}' ->> ~int~ 1.5 as X;
 
 -- TEST: extended extraction operator, invalid left type
 -- + {jex2}: err

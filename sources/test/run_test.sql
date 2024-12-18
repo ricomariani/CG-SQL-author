@@ -7443,13 +7443,13 @@ proc make_json_backed_schema()
 begin
   [[backing_table]]
   [[json]]
-  create table json_backed(
+  create table json_backing(
     k blob primary key,
     v blob
   );
 end;
 
-[[backed_by=json_backed]]
+[[backed_by=json_backing]]
 create table my_data(
  id int! primary key,
  name text!,
@@ -7472,17 +7472,17 @@ begin
 end;
 
 -- verify that we can cast anything to null
-TEST!(json_backing,
+TEST!(verify_json_backing,
 begin
   insert_data_into_json();
 
-  cursor C for select @columns(like my_data) from my_data;
+  cursor C for select @columns(like my_data) from my_data order by rowid;
   cursor D like my_data;
+
   let i := 0;
   loop fetch C
   begin
      i += 1;
-     printf("%d, %s\n", C.id, C.name);
      if i == 11 then i += 1; end; -- these were moved
      EXPECT_NE!(C.id, 11);  -- this was deleted
      fetch D() from values() @dummy_seed(i);
@@ -7499,6 +7499,31 @@ begin
        EXPECT!(cql_cursors_equal(C,D));
      end;
   end;
+  EXPECT_EQ!(i, 15);
+end);
+
+TEST!(verify_backing_store,
+begin
+  cursor C for select k ~text~ k, v ~text~ v from json_backing order by rowid;
+  let i := 0;
+  loop fetch C
+  begin
+     i += 1;
+     if i == 1 then
+        let code := (select C.k ->> ~long~ 0);
+     end;
+     if i == 11 then i += 1; end;
+     let name := case when i  == 5 then "modified" else printf("name_%d", i) end;
+     let j := json_object('name', name, "age", i);
+     EXPECT_EQ!(j, C.v);
+     EXPECT_EQ!(code, (select C.k ->>  ~long~ 0));
+     let x := case when i == 6 then 1234 else i end;
+     let y := (select C.k ->>  ~long~ 1);
+     EXPECT_NE!(y, 11);
+     EXPECT_EQ!(x, y);
+     -- printf("%d %s %s\n", i, C.k, C.v); for debugging
+  end;
+  -- we should be at the last row and done
   EXPECT_EQ!(i, 15);
 end);
 

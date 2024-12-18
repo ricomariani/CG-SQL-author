@@ -62,61 +62,61 @@ SELECT *
 
 @MACRO(CTE_TABLES) cte!()
 BEGIN
-  foo (*) AS (
+  foo AS (
     SELECT 1 AS x, 2 AS y
   ),
-  bar (*) AS (
+  bar AS (
     SELECT 3 AS u, 4 AS v
   )
 END;
 
 WITH
-  vv (*) AS (
+  vv AS (
     SELECT 1 AS x, 2 AS y
   ),
-  foo (*) AS (
+  foo AS (
     SELECT 1 AS x, 2 AS y
   ),
-  bar (*) AS (
+  bar AS (
     SELECT 3 AS u, 4 AS v
   ),
-  uu (*) AS (
+  uu AS (
     SELECT 1 AS x, 2 AS y
   )
 SELECT *
   FROM foo;
 
 WITH
-  foo (*) AS (
+  foo AS (
     SELECT 1 AS x, 2 AS y
   ),
-  bar (*) AS (
+  bar AS (
     SELECT 3 AS u, 4 AS v
   ),
-  uu (*) AS (
+  uu AS (
     SELECT 1 AS x, 2 AS y
   )
 SELECT *
   FROM foo;
 
 WITH
-  foo (*) AS (
+  foo AS (
     SELECT 1 AS x, 2 AS y
   ),
-  bar (*) AS (
+  bar AS (
     SELECT 3 AS u, 4 AS v
   )
 SELECT *
   FROM foo;
 
 WITH
-  vv (*) AS (
+  vv AS (
     SELECT 1 AS x, 2 AS y
   ),
-  foo (*) AS (
+  foo AS (
     SELECT 1 AS x, 2 AS y
   ),
-  bar (*) AS (
+  bar AS (
     SELECT 3 AS u, 4 AS v
   )
 SELECT *
@@ -131,7 +131,7 @@ BEGIN
 END;
 
 WITH
-  foo (*) AS (
+  foo AS (
     SELECT 100 AS x, 200 AS y
   )
 SELECT *
@@ -225,7 +225,7 @@ LET zz := "(SELECT 1 AS x, 2 AS y) AS T";
 
 SET zz := "T1\nINNER JOIN T2 ON T1.id = T2.id";
 
-SET zz := "x (*) AS (\n  SELECT 1 AS x, 2 AS y\n)\n";
+SET zz := "x AS (\n  SELECT 1 AS x, 2 AS y\n)\n";
 
 SET zz := "SELECT 1 AS x\n  FROM foo";
 
@@ -253,7 +253,7 @@ BEGIN
   mondo1!(a!, b!, c!, d!, e!, f!);
 END;
 
-SET zz := "1 + 2x\nINNER JOIN ySELECT 1\n  FROM foo\nUNION\nSELECT 2\n  FROM bar20 AS xxf (*) AS (\n  SELECT 99\n    FROM yy\n)\nLET qq := 201;\n";
+SET zz := "1 + 2x\nINNER JOIN ySELECT 1\n  FROM foo\nUNION\nSELECT 2\n  FROM bar20 AS xxf AS (\n  SELECT 99\n    FROM yy\n)\nLET qq := 201;\n";
 
 LET expr := 1;
 
@@ -1646,7 +1646,7 @@ UPDATE CURSOR d(a, b) FROM VALUES (1, 'x');
 UPDATE CURSOR d USING 1 AS a, 'x' AS b;
 
 WITH
-  foo (*) AS (
+  foo AS (
     SELECT 1 AS x, '2' AS y
   )
 SELECT *
@@ -2094,20 +2094,20 @@ DECLARE CONST GROUP foo (
 @EMIT_CONSTANTS foo;
 
 WITH
-  foo (*) AS (CALL bar(1, 2) USING a AS x, b AS y)
+  foo AS (CALL bar(1, 2) USING a AS x, b AS y)
 SELECT *
   FROM foo;
 
 WITH
-  foo (*) AS (CALL bar(1, 2))
+  foo AS (CALL bar(1, 2))
 SELECT *
   FROM foo;
 
 CALL foo(*);
 
 WITH
-  bar (*) AS (CALL bar(1, 5) USING goo AS too),
-  tar (*) AS (CALL tar(3) USING soo AS woo, goo AS too)
+  bar AS (CALL bar(1, 5) USING goo AS too),
+  tar AS (CALL tar(3) USING soo AS woo, goo AS too)
 SELECT *
   FROM bar,
     tar;
@@ -2346,7 +2346,7 @@ IF x THEN
 END;
 
 WITH
-  foo (*) AS (
+  foo AS (
     SELECT 1 AS x, '2' AS y
   )
 SELECT *
@@ -2435,7 +2435,7 @@ IF 1 + 2 THEN
   LET qq := 201;
 ELSE
   WITH
-    f (*) AS (
+    f AS (
       SELECT 99
         FROM yy
     )

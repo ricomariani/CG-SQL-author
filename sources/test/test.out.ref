@@ -54,20 +54,20 @@ SELECT *
 
 @MACRO(CTE_TABLES) cte!()
 BEGIN
-  foo (*) AS (
+  foo AS (
     SELECT 1 AS x, 2 AS y
   ),
-  bar (*) AS (
+  bar AS (
     SELECT 3 AS u, 4 AS v
   )
 END;
 
 WITH
-  vv (*) AS (
+  vv AS (
     SELECT 1 AS x, 2 AS y
   ),
   cte!(),
-  uu (*) AS (
+  uu AS (
     SELECT 1 AS x, 2 AS y
   )
 SELECT *
@@ -75,7 +75,7 @@ SELECT *
 
 WITH
   cte!(),
-  uu (*) AS (
+  uu AS (
     SELECT 1 AS x, 2 AS y
   )
 SELECT *
@@ -87,7 +87,7 @@ SELECT *
   FROM foo;
 
 WITH
-  vv (*) AS (
+  vv AS (
     SELECT 1 AS x, 2 AS y
   ),
   cte!()
@@ -103,7 +103,7 @@ BEGIN
 END;
 
 query!(WITH(
-  foo (*) AS (
+  foo AS (
     SELECT 100 AS x, 200 AS y
   )
 ));
@@ -192,7 +192,7 @@ SET zz := macro3!(FROM(T1
 INNER JOIN T2 ON T1.id = T2.id));
 
 SET zz := macro4!(WITH(
-  x (*) AS (
+  x AS (
     SELECT 1 AS x, 2 AS y
   )
 ));
@@ -230,7 +230,7 @@ INNER JOIN y), ROWS(SELECT 1
 UNION
 SELECT 2
   FROM bar), SELECT(20 AS xx), WITH(
-  f (*) AS (
+  f AS (
     SELECT 99
       FROM yy
   )
@@ -1628,7 +1628,7 @@ UPDATE CURSOR d(a, b) FROM VALUES (1, 'x');
 UPDATE CURSOR d USING 1 AS a, 'x' AS b;
 
 WITH
-  foo (*) AS (
+  foo AS (
     SELECT 1 AS x, '2' AS y
   )
 SELECT *
@@ -2076,20 +2076,20 @@ DECLARE CONST GROUP foo (
 @EMIT_CONSTANTS foo;
 
 WITH
-  foo (*) AS (CALL bar(1, 2) USING a AS x, b AS y)
+  foo AS (CALL bar(1, 2) USING a AS x, b AS y)
 SELECT *
   FROM foo;
 
 WITH
-  foo (*) AS (CALL bar(1, 2))
+  foo AS (CALL bar(1, 2))
 SELECT *
   FROM foo;
 
 CALL foo(*);
 
 WITH
-  bar (*) AS (CALL bar(1, 5) USING goo AS too),
-  tar (*) AS (CALL tar(3) USING soo AS woo, goo AS too)
+  bar AS (CALL bar(1, 5) USING goo AS too),
+  tar AS (CALL tar(3) USING soo AS woo, goo AS too)
 SELECT *
   FROM bar,
     tar;
@@ -2328,7 +2328,7 @@ IF x THEN
 END;
 
 WITH
-  foo (*) AS (
+  foo AS (
     SELECT 1 AS x, '2' AS y
   )
 SELECT *
@@ -2419,7 +2419,7 @@ INNER JOIN y), ROWS(SELECT 1
 UNION
 SELECT 2
   FROM bar), SELECT(20 AS xx), WITH(
-  f (*) AS (
+  f AS (
     SELECT 99
       FROM yy
   )

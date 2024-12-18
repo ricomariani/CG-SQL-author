@@ -156,10 +156,10 @@ sel!(x, qp!());
 -- TEST: cte tables macro
 -- + @MACRO(CTE_TABLES) cte!()
 -- + BEGIN
--- +   foo (*) AS (
+-- +   foo AS (
 -- +     SELECT 1 AS x, 2 AS y
 -- +   ),
--- +   bar (*) AS (
+-- +   bar AS (
 -- +     SELECT 3 AS u, 4 AS v
 -- +   )
 -- + END;
@@ -171,16 +171,16 @@ end;
 
 -- TEST use cte tables
 -- + WITH
--- +   vv (*) AS (
+-- +   vv AS (
 -- +     SELECT 1 AS x, 2 AS y
 -- +   ),
--- +   foo (*) AS (
+-- +   foo AS (
 -- +     SELECT 1 AS x, 2 AS y
 -- +   ),
--- +   bar (*) AS (
+-- +   bar AS (
 -- +     SELECT 3 AS u, 4 AS v
 -- +   ),
--- +   uu (*) AS (
+-- +   uu AS (
 -- +     SELECT 1 AS x, 2 AS y
 -- +   )
 -- + SELECT *
@@ -193,13 +193,13 @@ select * from foo;
 
 -- TEST: cte tables at the front of the list
 -- + WITH
--- +   foo (*) AS (
+-- +   foo AS (
 -- +     SELECT 1 AS x, 2 AS y
 -- +   ),
--- +   bar (*) AS (
+-- +   bar AS (
 -- +     SELECT 3 AS u, 4 AS v
 -- +   ),
--- +   uu (*) AS (
+-- +   uu AS (
 -- +     SELECT 1 AS x, 2 AS y
 -- +   )
 -- + SELECT *
@@ -211,10 +211,10 @@ select * from foo;
 
 -- TEST: cte tables macro as the only element
 -- + WITH
--- +  foo (*) AS (
+-- +  foo AS (
 -- +    SELECT 1 AS x, 2 AS y
 -- +  ),
--- +  bar (*) AS (
+-- +  bar AS (
 -- +    SELECT 3 AS u, 4 AS v
 -- +  )
 -- + SELECT *
@@ -225,13 +225,13 @@ select * from foo;
 
 -- TEST: cte tables macro at the end of the list
 -- + WITH
--- +  vv (*) AS (
+-- +  vv AS (
 -- +    SELECT 1 AS x, 2 AS y
 -- +  ),
--- +  foo (*) AS (
+-- +  foo AS (
 -- +    SELECT 1 AS x, 2 AS y
 -- +  ),
--- +  bar (*) AS (
+-- +  bar AS (
 -- +    SELECT 3 AS u, 4 AS v
 -- +  )
 -- +SELECT *
@@ -256,7 +256,7 @@ end;
 
 -- TEST: use cte tables as a macro arg
 -- + WITH
--- + foo (*) AS (
+-- + foo AS (
 -- +   SELECT 100 AS x, 200 AS y
 -- + )
 -- + SELECT *
@@ -410,7 +410,7 @@ let zz := macro3!(from( (select 1 x, 2 y) as T));
 set zz := macro3!(from( T1 join T2 on T1.id = T2.id));
 
 -- TEST: cte tables as text
--- + SET zz := "x (*) AS (\n  SELECT 1 AS x, 2 AS y\n)\n";
+-- + SET zz := "x AS (\n  SELECT 1 AS x, 2 AS y\n)\n";
 set zz := macro4!(WITH( x(*) as (select 1 x, 2 y) ));
 
 -- TEST: select core list as text
@@ -454,7 +454,7 @@ begin
 end;
 
 -- TEST: make a big chunk of text
--- SET zz := "1 + 2___x\nINNER JOIN y___SELECT 1\n  FROM foo\nUNION\nSELECT 2\n  FROM bar___20 AS first_table___f (*) AS (\n  SELECT 99\n    FROM second_table\n)\n___LET qq := 201;\n";
+-- SET zz := "1 + 2___x\nINNER JOIN y___SELECT 1\n  FROM foo\nUNION\nSELECT 2\n  FROM bar___20 AS first_table___f AS (\n  SELECT 99\n    FROM second_table\n)\n___LET qq := 201;\n";
 mondo2!(
   1+2,
   from(x join y),

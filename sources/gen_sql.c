@@ -2962,14 +2962,15 @@ static void gen_select_no_with(ast_node *ast) {
 static void gen_cte_decl(ast_node *ast)  {
   Contract(is_ast_cte_decl(ast));
   EXTRACT_STRING(name, ast->left);
-  gen_printf("%s (", name);
   if (is_ast_star(ast->right)) {
-    gen_printf("*");
+    // use the shorter syntax for (*) which is just the name
+    gen_printf("%s", name);
   }
   else {
+    gen_printf("%s (", name);
     gen_name_list(ast->right);
+    gen_printf(")");
   }
-  gen_printf(")");
 }
 
 static void gen_cte_binding_list(ast_node *ast) {

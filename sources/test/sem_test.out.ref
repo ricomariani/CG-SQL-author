@@ -19684,7 +19684,7 @@ SELECT *
 The statement ending at line XXXX
 
 WITH
-  foo (*) AS (
+  foo AS (
     SELECT 1 AS x
   )
 SELECT *
@@ -19735,7 +19735,7 @@ test/sem_test.sql:XXXX:1: error: in cte_decl : CQL0437: common table name shadow
 The statement ending at line XXXX
 
 WITH
-  MyView (*) AS (
+  MyView AS (
     SELECT 1 AS x
   )
 SELECT *
@@ -19789,13 +19789,13 @@ The statement ending at line XXXX
 PROC shadows_an_existing_table ()
 BEGIN
   WITH
-    foo (*) LIKE (
+    foo LIKE (
       SELECT 1 AS x
     )
   SELECT *
     FROM foo;
   WITH
-    MyView (*) AS (
+    MyView AS (
       SELECT 1 AS x
     )
   SELECT *
@@ -20783,7 +20783,7 @@ END;
 The statement ending at line XXXX
 
 WITH
-  shared_frag2 (*) AS (CALL shared_frag2(1, 2))
+  shared_frag2 AS (CALL shared_frag2(1, 2))
 SELECT *
   FROM a_shared_frag;
 
@@ -20985,7 +20985,7 @@ SELECT *
 The statement ending at line XXXX
 
 WITH
-  data (*) AS (CALL shared_frag3() USING bad_jobstuff AS source)
+  data AS (CALL shared_frag3() USING bad_jobstuff AS source)
 SELECT *
   FROM data;
 
@@ -21028,7 +21028,7 @@ The statement ending at line XXXX
 PROC shared_frag_bad_like ()
 BEGIN
   WITH
-    source (*) LIKE there_is_no_such_source
+    source LIKE there_is_no_such_source
   SELECT 1 AS x, 2 AS y, 3.0 AS z;
 END;
 
@@ -21083,7 +21083,7 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
 The statement ending at line XXXX
 
 WITH
-  source (*) LIKE there_is_no_such_source
+  source LIKE there_is_no_such_source
 SELECT 1 AS x, 2 AS y, 3.0 AS z;
 
 test/sem_test.sql:XXXX:1: error: in like : CQL0427: LIKE CTE form may only be used inside a shared fragment at the top level i.e. [[shared_fragment]]
@@ -21129,7 +21129,7 @@ The statement ending at line XXXX
 PROC not_a_shared_fragment ()
 BEGIN
   WITH
-    source (*) LIKE there_is_no_such_source
+    source LIKE there_is_no_such_source
   SELECT 1 AS x, 2 AS y, 3.0 AS z;
 END;
 
@@ -21181,7 +21181,7 @@ WITH
   some_cte (x, y, z) AS (
     SELECT 1 AS x, 2 AS y, 3.0 AS z
   ),
-  x (*) AS (CALL a_shared_frag(1, 2) USING some_cte AS foo)
+  x AS (CALL a_shared_frag(1, 2) USING some_cte AS foo)
 SELECT *
   FROM x;
 
@@ -21264,7 +21264,7 @@ WITH
   some_cte (x, y, z) AS (
     SELECT 1 AS x, 2 AS y, 3.0 AS z
   ),
-  x (*) AS (CALL shared_frag2(1, 2) USING some_cte AS foo)
+  x AS (CALL shared_frag2(1, 2) USING some_cte AS foo)
 SELECT *
   FROM x;
 
@@ -21347,7 +21347,7 @@ WITH
   some_cte (x, y, z) AS (
     SELECT 1 AS x, 2 AS y, 3.0 AS z
   ),
-  x (*) AS (CALL shared_frag2(1, 2) USING source AS bar, source AS bar)
+  x AS (CALL shared_frag2(1, 2) USING source AS bar, source AS bar)
 SELECT *
   FROM x;
 
@@ -21434,7 +21434,7 @@ WITH
   some_cte (x, y, z) AS (
     SELECT 1 AS x, 2 AS y, 3.0 AS z
   ),
-  x (*) AS (CALL shared_frag2(1, 2) USING some_cte AS source, some_cte AS bogus)
+  x AS (CALL shared_frag2(1, 2) USING some_cte AS source, some_cte AS bogus)
 SELECT *
   FROM x;
 
@@ -21521,7 +21521,7 @@ WITH
   some_cte (x, y, z) AS (
     SELECT 1 AS x, 2 AS y, 3.0 AS z
   ),
-  x (*) AS (CALL shared_frag2(1, 2) USING bogus AS source)
+  x AS (CALL shared_frag2(1, 2) USING bogus AS source)
 SELECT *
   FROM x;
 
@@ -21608,7 +21608,7 @@ WITH
         3.0 AS z,
         4 AS u
   ),
-  x (*) AS (CALL shared_frag2(1, 2) USING some_cte AS source)
+  x AS (CALL shared_frag2(1, 2) USING some_cte AS source)
 SELECT *
   FROM x;
 
@@ -21698,7 +21698,7 @@ WITH
   some_cte (x, y, w) AS (
     SELECT 1 AS x, 2 AS y, 3.0 AS w
   ),
-  x (*) AS (CALL shared_frag2(1, 2) USING some_cte AS source)
+  x AS (CALL shared_frag2(1, 2) USING some_cte AS source)
 SELECT *
   FROM x;
 
@@ -21781,7 +21781,7 @@ WITH
   some_cte (x, y, z) AS (
     SELECT 1 AS x, 2 AS y, '3.0' AS z
   ),
-  x (*) AS (CALL shared_frag2(1, 2) USING some_cte AS source)
+  x AS (CALL shared_frag2(1, 2) USING some_cte AS source)
 SELECT *
   FROM x;
 
@@ -21864,9 +21864,9 @@ The statement ending at line XXXX
 PROC bogus_like_in_shared ()
 BEGIN
   WITH
-    data (*) AS (
+    data AS (
       WITH
-        source (*) LIKE there_is_no_such_source
+        source LIKE there_is_no_such_source
       SELECT *
         FROM source
     )
@@ -22132,7 +22132,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0206: duplicate name in list 'id'
 The statement ending at line XXXX
 
 WITH
-  some_cte (*) AS (
+  some_cte AS (
     WITH
       garbonzo (goo, goo) AS (
         SELECT 1 AS x, 2 AS y
@@ -22352,7 +22352,7 @@ SELECT *
 The statement ending at line XXXX
 
 WITH
-  some_cte (*) AS (CALL return_with_attr())
+  some_cte AS (CALL return_with_attr())
 SELECT *
   FROM some_cte;
 
@@ -22388,7 +22388,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0224: a CALL statement inside SQL m
 The statement ending at line XXXX
 
 WITH
-  some_cte (*) AS (CALL this_is_not_even_a_proc())
+  some_cte AS (CALL this_is_not_even_a_proc())
 SELECT *
   FROM some_cte;
 
@@ -46786,7 +46786,7 @@ SELECT *
 The statement ending at line XXXX
 
 WITH
-  some_cte (*) AS (
+  some_cte AS (
     SELECT 1
   )
 SELECT *
@@ -75113,7 +75113,7 @@ BEGIN
     possible_conflict (x) AS (
       SELECT 1 AS x
     ),
-    fragtest_1_0 (*) AS (CALL fragtest_1_0() USING possible_conflict AS source)
+    fragtest_1_0 AS (CALL fragtest_1_0() USING possible_conflict AS source)
   SELECT *
     FROM fragtest_1_0;
 END;
@@ -76937,7 +76937,7 @@ The statement ending at line XXXX
 PROC uses_declared_shared_fragment ()
 BEGIN
   WITH
-    x (*) AS (CALL declared_shared_fragment())
+    x AS (CALL declared_shared_fragment())
   SELECT *
     FROM x;
 END;

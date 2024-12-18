@@ -512,10 +512,10 @@ The statement ending at line XXXX
 
 @MACRO(CTE_TABLES) cte!()
 BEGIN
-  foo (*) AS (
+  foo AS (
     SELECT 1 AS x, 2 AS y
   ),
-  bar (*) AS (
+  bar AS (
     SELECT 3 AS u, 4 AS v
   )
 END;
@@ -579,16 +579,16 @@ END;
 The statement ending at line XXXX
 
 WITH
-  vv (*) AS (
+  vv AS (
     SELECT 1 AS x, 2 AS y
   ),
-  foo (*) AS (
+  foo AS (
     SELECT 1 AS x, 2 AS y
   ),
-  bar (*) AS (
+  bar AS (
     SELECT 3 AS u, 4 AS v
   ),
-  uu (*) AS (
+  uu AS (
     SELECT 1 AS x, 2 AS y
   )
 SELECT *
@@ -720,13 +720,13 @@ SELECT *
 The statement ending at line XXXX
 
 WITH
-  foo (*) AS (
+  foo AS (
     SELECT 1 AS x, 2 AS y
   ),
-  bar (*) AS (
+  bar AS (
     SELECT 3 AS u, 4 AS v
   ),
-  uu (*) AS (
+  uu AS (
     SELECT 1 AS x, 2 AS y
   )
 SELECT *
@@ -832,10 +832,10 @@ SELECT *
 The statement ending at line XXXX
 
 WITH
-  foo (*) AS (
+  foo AS (
     SELECT 1 AS x, 2 AS y
   ),
-  bar (*) AS (
+  bar AS (
     SELECT 3 AS u, 4 AS v
   )
 SELECT *
@@ -915,13 +915,13 @@ SELECT *
 The statement ending at line XXXX
 
 WITH
-  vv (*) AS (
+  vv AS (
     SELECT 1 AS x, 2 AS y
   ),
-  foo (*) AS (
+  foo AS (
     SELECT 1 AS x, 2 AS y
   ),
-  bar (*) AS (
+  bar AS (
     SELECT 3 AS u, 4 AS v
   )
 SELECT *
@@ -1067,7 +1067,7 @@ END;
 The statement ending at line XXXX
 
 WITH
-  foo (*) AS (
+  foo AS (
     SELECT 100 AS x, 200 AS y
   )
 SELECT *
@@ -1547,11 +1547,11 @@ INNER JOIN T2 ON T1.id = T2.id'}
 
 The statement ending at line XXXX
 
-SET zz := "x (*) AS (\n  SELECT 1 AS x, 2 AS y\n)\n";
+SET zz := "x AS (\n  SELECT 1 AS x, 2 AS y\n)\n";
 
   {assign}
   | {name zz}
-  | {strlit 'x (*) AS (
+  | {strlit 'x AS (
   SELECT 1 AS x, 2 AS y
 )
 '}
@@ -1728,7 +1728,7 @@ END;
 
 The statement ending at line XXXX
 
-SET zz := "1 + 2___x\nINNER JOIN y___SELECT 1\n  FROM foo\nUNION\nSELECT 2\n  FROM bar___20 AS first_table___f (*) AS (\n  SELECT 99\n    FROM second_table\n)\n___LET qq := 201;\n";
+SET zz := "1 + 2___x\nINNER JOIN y___SELECT 1\n  FROM foo\nUNION\nSELECT 2\n  FROM bar___20 AS first_table___f AS (\n  SELECT 99\n    FROM second_table\n)\n___LET qq := 201;\n";
 
   {assign}
   | {name zz}
@@ -1737,7 +1737,7 @@ INNER JOIN y___SELECT 1
   FROM foo
 UNION
 SELECT 2
-  FROM bar___20 AS first_table___f (*) AS (
+  FROM bar___20 AS first_table___f AS (
   SELECT 99
     FROM second_table
 )

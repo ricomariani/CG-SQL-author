@@ -290,7 +290,7 @@ static void cql_reset_globals(void);
 %token AT_KEEP_TABLE_NAME_IN_ALIASES AT_MACRO EXPR STMT_LIST QUERY_PARTS CTE_TABLES SELECT_CORE SELECT_EXPR
 %token SIGN_FUNCTION CURSOR_HAS_ROW AT_UNSUB
 %left BEGIN_INCLUDE END_INCLUDE
-%token AT_IFDEF AT_IFNDEF AT_ELSE AT_ENDIF
+%token AT_IFDEF AT_IFNDEF AT_ELSE AT_ENDIF RETURNING
 
 /* ddl stuff */
 %type <ival> opt_temp opt_if_not_exists opt_unique opt_no_rowid dummy_modifier compound_operator opt_query_plan
@@ -318,7 +318,7 @@ static void cql_reset_globals(void);
 
 /* dml stuff */
 %type <aval> with_delete_stmt delete_stmt
-%type <aval> insert_stmt with_insert_stmt insert_list_item insert_list insert_stmt_type
+%type <aval> insert_stmt insert_list_item insert_list insert_stmt_type returning_suffix insert_stmt_plain
 %type <aval> column_spec opt_column_spec opt_insert_dummy_spec expr_names expr_name
 %type <aval> with_prefix with_select_stmt cte_table cte_tables cte_binding_list cte_binding cte_decl shared_cte
 %type <aval> select_expr select_expr_list select_opts select_stmt select_core values explain_stmt explain_target
@@ -616,7 +616,6 @@ any_stmt:
   | upsert_stmt
   | while_stmt
   | with_delete_stmt
-  | with_insert_stmt
   | with_update_stmt
   | with_upsert_stmt
   | keep_table_name_in_aliases_stmt
@@ -635,7 +634,6 @@ explain_target: select_stmt
   | update_stmt
   | delete_stmt
   | with_delete_stmt
-  | with_insert_stmt
   | with_update_stmt
   | with_upsert_stmt
   | insert_stmt
@@ -1903,10 +1901,6 @@ insert_stmt_type:
   | REPLACE INTO  { $insert_stmt_type = new_ast_insert_replace(); }
   ;
 
-with_insert_stmt:
-  with_prefix insert_stmt  { $with_insert_stmt = new_ast_with_insert_stmt($with_prefix, $insert_stmt); }
-  ;
-
 opt_column_spec:
   /* nil */  { $opt_column_spec = NULL; }
   | '(' opt_sql_name_list ')'  { $opt_column_spec = new_ast_column_spec($opt_sql_name_list); }
@@ -1924,30 +1918,43 @@ from_shape:
   | FROM ARGUMENTS opt_column_spec  { $from_shape = new_ast_from_shape($opt_column_spec, new_ast_str("ARGUMENTS")); }
   ;
 
-insert_stmt:
+insert_stmt_plain:
   insert_stmt_type sql_name opt_column_spec select_stmt opt_insert_dummy_spec  {
     struct ast_node *columns_values = new_ast_columns_values($opt_column_spec, $select_stmt);
     struct ast_node *name_columns_values = new_ast_name_columns_values($sql_name, columns_values);
     ast_set_left($insert_stmt_type, $opt_insert_dummy_spec);
-    $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values);  }
+    $$ = new_ast_insert_stmt($insert_stmt_type, name_columns_values);  }
   | insert_stmt_type sql_name opt_column_spec from_shape opt_insert_dummy_spec  {
     struct ast_node *columns_values = new_ast_columns_values($opt_column_spec, $from_shape);
     struct ast_node *name_columns_values = new_ast_name_columns_values($sql_name, columns_values);
     ast_set_left($insert_stmt_type, $opt_insert_dummy_spec);
-    $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values);  }
+    $$ = new_ast_insert_stmt($insert_stmt_type, name_columns_values);  }
   | insert_stmt_type sql_name DEFAULT VALUES  {
     struct ast_node *default_columns_values = new_ast_default_columns_values();
     struct ast_node *name_columns_values = new_ast_name_columns_values($sql_name, default_columns_values);
-    $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values); }
+    $$ = new_ast_insert_stmt($insert_stmt_type, name_columns_values); }
   | insert_stmt_type sql_name USING select_stmt {
     struct ast_node *name_columns_values = new_ast_name_columns_values($sql_name, $select_stmt);
     ast_set_left($insert_stmt_type, NULL); // dummy spec not allowed in this form
-    $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values); }
+    $$ = new_ast_insert_stmt($insert_stmt_type, name_columns_values); }
   | insert_stmt_type sql_name USING expr_names opt_insert_dummy_spec {
     struct ast_node *name_columns_values = new_ast_name_columns_values($sql_name, $expr_names);
     ast_set_left($insert_stmt_type, $opt_insert_dummy_spec);
-    $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values); }
+    $$ = new_ast_insert_stmt($insert_stmt_type, name_columns_values); }
   ;
+
+returning_suffix: RETURNING '(' select_expr_list ')' { $$ = $select_expr_list; }
+
+insert_stmt:
+     insert_stmt_plain
+     { $$ = $insert_stmt_plain; }
+   | insert_stmt_plain returning_suffix
+     { $$ = $insert_stmt_plain; }
+   | with_prefix insert_stmt_plain
+     { $$ = new_ast_with_insert_stmt($with_prefix, $insert_stmt_plain); }
+   | with_prefix insert_stmt_plain returning_suffix
+     { $$ = new_ast_with_insert_stmt($with_prefix, $insert_stmt_plain); }
+   ;
 
 insert_list_item:
   expr { $insert_list_item = $expr; }
@@ -2005,12 +2012,12 @@ with_upsert_stmt:
   ;
 
 upsert_stmt:
-  insert_stmt ON_CONFLICT conflict_target DO NOTHING  {
+  insert_stmt_plain[insert] ON_CONFLICT conflict_target DO NOTHING  {
     struct ast_node *upsert_update = new_ast_upsert_update($conflict_target, NULL);
-    $upsert_stmt = new_ast_upsert_stmt($insert_stmt, upsert_update); }
-  | insert_stmt ON_CONFLICT conflict_target DO basic_update_stmt  {
+    $upsert_stmt = new_ast_upsert_stmt($insert, upsert_update); }
+  | insert_stmt_plain[insert] ON_CONFLICT conflict_target DO basic_update_stmt  {
     struct ast_node *upsert_update = new_ast_upsert_update($conflict_target, $basic_update_stmt);
-    $upsert_stmt = new_ast_upsert_stmt($insert_stmt, upsert_update); }
+    $upsert_stmt = new_ast_upsert_stmt($insert, upsert_update); }
   ;
 
 update_cursor_stmt:

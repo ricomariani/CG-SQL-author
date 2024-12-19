@@ -248,6 +248,7 @@ RENAME                                { put_quoted("RENAME"); }
 REPLACE                               { put_quoted("REPLACE"); }
 RESTRICT                              { put_quoted("RESTRICT"); }
 RETURN                                { put_quoted("RETURN"); }
+RETURNING                             { put_quoted("RETURNING"); }
 RIGHT                                 { put_quoted("RIGHT"); }
 ROLLBACK                              { put_quoted("ROLLBACK"); }
 ROWID                                 { put_quoted("ROWID"); }

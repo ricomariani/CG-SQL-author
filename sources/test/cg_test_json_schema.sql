@@ -1944,6 +1944,39 @@ begin
   select * from `abc def`;
 end;
 
+create table insert_returning_test(ix int, iy int);
+
+-- TEST: proc using insert returning for a cursor
+-- verify dependencies are correct
+-- + "insertTables" : [ "insert_returning_test" ],
+-- + "fromTables" : [ "Foo" ],
+-- + "usesTables" : [ "Foo", "insert_returning_test" ],
+-- + "usesDatabase" : 1
+proc insert_returning_cursor()
+begin
+  cursor C for
+  with goo as (select * from Foo)
+  insert into insert_returning_test(ix,iy) values (1,2)
+  returning (ix+iy xy, ix, iy);
+end;
+
+-- TEST: proc using insert returning for a result
+-- verify projection is correct and dependencies are correct
+-- + "name" : "insert_returning_stmt",
+-- + "insertTables" : [ "insert_returning_test" ],
+-- + "usesTables" : [ "insert_returning_test" ],
+-- + "projection" : [
+-- + "name" : "xy",
+-- + "name" : "ix",
+-- + "name" : "iy",
+-- + "statement" : "INSERT INTO insert_returning_test(ix, iy) VALUES (1, 2) RETURNING (ix + iy AS xy, ix, iy)",
+-- + "statementArgs" : [  ]
+proc insert_returning_stmt()
+begin
+  insert into insert_returning_test(ix,iy) values (1,2)
+  returning (ix+iy xy, ix, iy);
+end;
+
 -- TEST: projection from a view
 -- + "name" : "a view",
 -- + "name" : "a b",

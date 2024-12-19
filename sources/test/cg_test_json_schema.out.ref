@@ -2455,6 +2455,55 @@
       ],
       "checkExpressions" : [
       ]
+    },
+
+    The statement ending at line XXXX
+
+    CREATE TABLE insert_returning_test(
+      ix INT,
+      iy INT
+    )
+
+    {
+      "name" : "insert_returning_test",
+      "schema" : "CREATE TABLE insert_returning_test(\n  ix INTEGER,\n  iy INTEGER\n)",
+      "CRC" : "-6742087499962535643",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "columns" : [
+        {
+          "name" : "ix",
+          "type" : "integer",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "iy",
+          "type" : "integer",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [  ],
+      "primaryKeySortOrders" : [  ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
+      ]
     }
   ],
   "virtualTables" : [
@@ -4115,6 +4164,44 @@
       ],
       "statement" : "SELECT [a b], [x y] FROM [abc def]",
       "statementArgs" : [  ]
+    },
+
+    The statement ending at line XXXX
+
+    PROC insert_returning_stmt ()
+    BEGIN
+    INSERT INTO insert_returning_test(ix, iy)
+      VALUES (1, 2)
+      RETURNING (ix + iy AS xy, ix, iy);
+    END
+
+    {
+      "name" : "insert_returning_stmt",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "definedOnLine" : 1974,
+      "args" : [
+      ],
+      "insertTables" : [ "insert_returning_test" ],
+      "usesTables" : [ "insert_returning_test" ],
+      "projection" : [
+        {
+          "name" : "xy",
+          "type" : "integer",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "ix",
+          "type" : "integer",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "iy",
+          "type" : "integer",
+          "isNotNull" : 0
+        }
+      ],
+      "statement" : "INSERT INTO insert_returning_test(ix, iy) VALUES (1, 2) RETURNING (ix + iy AS xy, ix, iy)",
+      "statementArgs" : [  ]
     }
   ],
   "inserts" : [
@@ -5055,6 +5142,33 @@
         }
       ],
       "usesDatabase" : 0
+    },
+
+    The statement ending at line XXXX
+
+    PROC insert_returning_cursor ()
+    BEGIN
+    CURSOR C FOR
+      WITH
+        goo (id, name) AS (
+          SELECT *
+            FROM Foo
+        )
+      INSERT INTO insert_returning_test(ix, iy)
+        VALUES (1, 2)
+        RETURNING (ix + iy AS xy, ix, iy);
+    END
+
+    {
+      "name" : "insert_returning_cursor",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "definedOnLine" : 1955,
+      "args" : [
+      ],
+      "insertTables" : [ "insert_returning_test" ],
+      "fromTables" : [ "Foo" ],
+      "usesTables" : [ "Foo", "insert_returning_test" ],
+      "usesDatabase" : 1
     }
   ],
   "declareProcs" : [
@@ -8602,13 +8716,14 @@
     }
   ],
   "tableUsers" : {
-    "Foo" : [ "a_query", "bigger_query", "insert_proc", "delete_proc", "delete_with_values", "update_proc", "update_with_proc", "dummy_insert_proc", "joiner", "use_view", "null_attribute", "shared_frag_user", "shared_frag_user_nested_select" ],
+    "Foo" : [ "a_query", "bigger_query", "insert_proc", "delete_proc", "delete_with_values", "update_proc", "update_with_proc", "dummy_insert_proc", "joiner", "use_view", "null_attribute", "shared_frag_user", "shared_frag_user_nested_select", "insert_returning_cursor" ],
     "T1" : [ "shared_frag_user", "shared_frag_user_nested_select" ],
     "T2" : [ "shared_frag_user", "shared_frag_user_nested_select", "shared_frag_user_function_style" ],
     "T3" : [ "insert_with_select", "insert_compound", "insert_multi_value", "upsert_proc", "with_upsert_proc", "with_insert_proc" ],
     "T5" : [ "typical_select", "joiner" ],
     "T6" : [ "shared_frag_user", "shared_frag_user_nested_select" ],
     "X_abcX20def" : [ "generate_quoted_items" ],
+    "insert_returning_test" : [ "insert_returning_cursor", "insert_returning_stmt" ],
     "radioactive" : [ "radioactive_proc" ]
   }
 }

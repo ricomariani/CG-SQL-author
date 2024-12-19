@@ -1890,15 +1890,13 @@ static void cg_fragment(charbuf *output, CSTR frag, ast_node *ast, gen_func fn) 
   CHARBUF_CLOSE(sql);
 }
 
-// The select statement is emitted in two ways.  First we emit a fragment for the
-// whole statement and its arguments.  This is really the easiest way to use the data here.
-// Also we emit sub-fragments for each top level piece.  The helpers above do most of that
-// work.  Here we just trigger:
-//  * the big fragment for everything
-//  * the select list
-//  * the expression list and the optional (and highly important) other clauses
-static void cg_json_select_stmt(charbuf *output, ast_node *ast) {
-  Contract(is_select_variant(ast));
+// The row sources (select, insert returns, explain query plan) are emitted
+// along with their projection and the full statement with bindings.  That
+// here we handle the statement and bindings.  Once upon a time we also emitted
+// fragments of the select statement but that was removed because such pieces
+// proved of little use.
+static void cg_json_any_row_source(charbuf *output, ast_node *ast) {
+  Contract(is_row_source(ast));
 
   cg_fragment_with_params(output, "statement", ast, gen_one_stmt);
 }
@@ -1912,6 +1910,8 @@ static void cg_json_select_stmt(charbuf *output, ast_node *ast) {
 static void cg_json_insert_stmt(charbuf *output, ast_node *ast, bool_t emit_values) {
   // Both insert types have been unified in the AST
   Contract(is_insert_stmt(ast));
+  Contract(!is_ast_insert_returning_stmt(ast));  // this is handled as a query
+
   ast_node *insert_stmt = ast;
 
   // extract the insert part it may be behind the WITH clause and it may be the insert part of an upsert
@@ -2455,21 +2455,22 @@ static void cg_json_create_proc(charbuf *unused, ast_node *ast, ast_node *misc_a
 
   // we have to see if it uses shared fragments, this can't be "simple"
   // because the parameters can be synthetic and require assignments and such
-  if (simple && is_select_variant(stmt)) {
+  if (simple && is_row_source(stmt)) {
     found_shared_fragment = false;
     CHARBUF_OPEN(scratch);
-    cg_json_select_stmt(&scratch, stmt); // easy way to walk the tree
+    cg_json_any_row_source(&scratch, stmt); // easy way to walk the tree
     CHARBUF_CLOSE(scratch);
+    // the above sets this by side-effect in the callback
     simple = !found_shared_fragment;
   }
 
-  if (simple && is_select_variant(stmt)) {
+  if (simple && is_row_source(stmt)) {
     output = queries;
     cg_begin_item_attrs(output, ast, misc_attrs);
     BEGIN_INDENT(proc, 2);
     bprintf(output, "%s", param_buffer.ptr);
     cg_json_projection(output, stmt);
-    cg_json_select_stmt(output, stmt);
+    cg_json_any_row_source(output, stmt);
     END_INDENT(proc);
   }
   else if (simple && is_insert_stmt(stmt)) {

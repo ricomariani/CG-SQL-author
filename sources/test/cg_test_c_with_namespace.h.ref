@@ -8305,6 +8305,93 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
   row2)
 
 // The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code insert_returning_cursor(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+#define CRC_insert_returning_resultset 1589162208149797545L
+
+extern cql_string_ref _Nonnull insert_returning_resultset_stored_procedure_name;
+
+#define insert_returning_resultset_data_types_count 3
+
+extern uint8_t insert_returning_resultset_data_types[insert_returning_resultset_data_types_count];
+
+#ifndef result_set_type_decl_insert_returning_resultset_result_set
+#define result_set_type_decl_insert_returning_resultset_result_set 1
+cql_result_set_type_decl(insert_returning_resultset_result_set, insert_returning_resultset_result_set_ref);
+#endif
+#ifndef _insert_returning_resultset_get_xy_is_null_inline_
+#define _insert_returning_resultset_get_xy_is_null_inline_
+
+
+static inline cql_bool insert_returning_resultset_get_xy_is_null(insert_returning_resultset_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 0);
+}
+
+#endif
+
+#ifndef _insert_returning_resultset_get_xy_value_inline_
+#define _insert_returning_resultset_get_xy_value_inline_
+
+
+static inline cql_int32 insert_returning_resultset_get_xy_value(insert_returning_resultset_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 0);
+}
+
+#endif
+
+#ifndef _insert_returning_resultset_get_ix_is_null_inline_
+#define _insert_returning_resultset_get_ix_is_null_inline_
+
+
+static inline cql_bool insert_returning_resultset_get_ix_is_null(insert_returning_resultset_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 1);
+}
+
+#endif
+
+#ifndef _insert_returning_resultset_get_ix_value_inline_
+#define _insert_returning_resultset_get_ix_value_inline_
+
+
+static inline cql_int32 insert_returning_resultset_get_ix_value(insert_returning_resultset_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 1);
+}
+
+#endif
+
+#ifndef _insert_returning_resultset_get_iy_is_null_inline_
+#define _insert_returning_resultset_get_iy_is_null_inline_
+
+
+static inline cql_bool insert_returning_resultset_get_iy_is_null(insert_returning_resultset_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 2);
+}
+
+#endif
+
+#ifndef _insert_returning_resultset_get_iy_value_inline_
+#define _insert_returning_resultset_get_iy_value_inline_
+
+
+static inline cql_int32 insert_returning_resultset_get_iy_value(insert_returning_resultset_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 2);
+}
+
+#endif
+
+
+extern cql_int32 insert_returning_resultset_result_count(insert_returning_resultset_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code insert_returning_resultset_fetch_results(sqlite3 *_Nonnull _db_, insert_returning_resultset_result_set_ref _Nullable *_Nonnull result_set);
+#define insert_returning_resultset_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define insert_returning_resultset_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
 extern cql_int32 this_is_the_end;
 
 // The statement ending at line XXXX

@@ -41953,7 +41953,7 @@ BEGIN
   END;
 END;
 
-test/sem_test.sql:XXXX:1: error: in update_stmt : CQL0282: update statement require table name
+test/sem_test.sql:XXXX:1: error: in update_stmt : CQL0282: update statement requires a table name
 
   {create_proc_stmt}: err
   | {name update_without_table_name}: err
@@ -97115,4 +97115,696 @@ END;
         | {add}: integer notnull
           | {name tmp_4x}: tmp_4x: integer notnull variable
           | {name tmp_4x}: tmp_4x: integer notnull variable
+
+The statement ending at line XXXX
+
+CREATE TABLE insert_returning_test(
+  ix INT,
+  iy INT
+);
+
+  {create_table_stmt}: insert_returning_test: { ix: integer, iy: integer }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name insert_returning_test}
+  | {col_key_list}
+    | {col_def}: ix: integer
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |     | {name ix}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: iy: integer
+        | {col_def_type_attrs}: ok
+          | {col_def_name_type}
+            | {name iy}
+            | {type_int}: integer
+
+The statement ending at line XXXX
+
+PROC insert_returning1 ()
+BEGIN
+  INSERT INTO insert_returning_test(ix, iy)
+    VALUES (1, 2)
+    RETURNING (ix + iy AS xy, ix, iy);
+END;
+
+  {create_proc_stmt}: insert_returning1: { xy: integer, ix: integer, iy: integer } dml_proc
+  | {name insert_returning1}: insert_returning1: { xy: integer, ix: integer, iy: integer } dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {insert_returning_stmt}: select: { xy: integer, ix: integer, iy: integer }
+        | {insert_stmt}: ok
+        | | {insert_normal}
+        | | {name_columns_values}
+        |   | {name insert_returning_test}: insert_returning_test: { ix: integer, iy: integer }
+        |   | {columns_values}: ok
+        |     | {column_spec}
+        |     | | {name_list}
+        |     |   | {name ix}: ix: integer
+        |     |   | {name_list}
+        |     |     | {name iy}: iy: integer
+        |     | {select_stmt}: values: { column1: integer notnull, column2: integer notnull }
+        |       | {select_core_list}: values: { column1: integer notnull, column2: integer notnull }
+        |       | | {select_core}: values: { column1: integer notnull, column2: integer notnull }
+        |       |   | {select_values}
+        |       |   | {values}: values: { column1: integer notnull, column2: integer notnull }
+        |       |     | {insert_list}: ok
+        |       |       | {int 1}: integer notnull
+        |       |       | {insert_list}
+        |       |         | {int 2}: integer notnull
+        |       | {select_orderby}
+        |         | {select_limit}
+        |           | {select_offset}
+        | {select_expr_list}: select: { xy: integer, ix: integer, iy: integer }
+          | {select_expr}: xy: integer
+          | | {add}: integer
+          | | | {name ix}: ix: integer
+          | | | {name iy}: iy: integer
+          | | {opt_as_alias}
+          |   | {name xy}
+          | {select_expr_list}
+            | {select_expr}: ix: integer
+            | | {name ix}: ix: integer
+            | {select_expr_list}
+              | {select_expr}: iy: integer
+                | {name iy}: iy: integer
+
+The statement ending at line XXXX
+
+PROC insert_returning2 ()
+BEGIN
+  WITH
+    base (ix, iy) AS (
+      SELECT *
+        FROM insert_returning_test
+        WHERE x = 7
+    )
+  INSERT INTO insert_returning_test(ix, iy)
+    SELECT ix + 10, iy + 10
+      FROM base
+    RETURNING (ix + iy AS xy, ix, iy);
+END;
+
+  {create_proc_stmt}: insert_returning2: { xy: integer, ix: integer, iy: integer } dml_proc
+  | {name insert_returning2}: insert_returning2: { xy: integer, ix: integer, iy: integer } dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {insert_returning_stmt}: select: { xy: integer, ix: integer, iy: integer }
+        | {with_insert_stmt}: ok
+        | | {with}
+        | | | {cte_tables}: ok
+        | |   | {cte_table}: base: { ix: integer, iy: integer }
+        | |     | {cte_decl}: base: { ix: integer, iy: integer }
+        | |     | | {name base}
+        | |     | | {name_list}
+        | |     |   | {name ix}
+        | |     |   | {name_list}
+        | |     |     | {name iy}
+        | |     | {select_stmt}: select: { ix: integer, iy: integer }
+        | |       | {select_core_list}: select: { ix: integer, iy: integer }
+        | |       | | {select_core}: select: { ix: integer, iy: integer }
+        | |       |   | {select_expr_list_con}: select: { ix: integer, iy: integer }
+        | |       |     | {select_expr_list}: select: { ix: integer, iy: integer }
+        | |       |     | | {star}: select: { ix: integer, iy: integer }
+        | |       |     | {select_from_etc}: TABLE { insert_returning_test: insert_returning_test }
+        | |       |       | {table_or_subquery_list}: TABLE { insert_returning_test: insert_returning_test }
+        | |       |       | | {table_or_subquery}: TABLE { insert_returning_test: insert_returning_test }
+        | |       |       |   | {name insert_returning_test}: TABLE { insert_returning_test: insert_returning_test }
+        | |       |       | {select_where}
+        | |       |         | {opt_where}: bool
+        | |       |         | | {eq}: bool
+        | |       |         |   | {name x}: X: integer variable was_set
+        | |       |         |   | {int 7}: integer notnull
+        | |       |         | {select_groupby}
+        | |       |           | {select_having}
+        | |       | {select_orderby}
+        | |         | {select_limit}
+        | |           | {select_offset}
+        | | {insert_stmt}: ok
+        |   | {insert_normal}
+        |   | {name_columns_values}
+        |     | {name insert_returning_test}: insert_returning_test: { ix: integer, iy: integer }
+        |     | {columns_values}: ok
+        |       | {column_spec}
+        |       | | {name_list}
+        |       |   | {name ix}: ix: integer
+        |       |   | {name_list}
+        |       |     | {name iy}: iy: integer
+        |       | {select_stmt}: select: { _anon: integer, _anon: integer }
+        |         | {select_core_list}: select: { _anon: integer, _anon: integer }
+        |         | | {select_core}: select: { _anon: integer, _anon: integer }
+        |         |   | {select_expr_list_con}: select: { _anon: integer, _anon: integer }
+        |         |     | {select_expr_list}: select: { _anon: integer, _anon: integer }
+        |         |     | | {select_expr}: integer
+        |         |     | | | {add}: integer
+        |         |     | |   | {name ix}: ix: integer
+        |         |     | |   | {int 10}: integer notnull
+        |         |     | | {select_expr_list}
+        |         |     |   | {select_expr}: integer
+        |         |     |     | {add}: integer
+        |         |     |       | {name iy}: iy: integer
+        |         |     |       | {int 10}: integer notnull
+        |         |     | {select_from_etc}: TABLE { base: base }
+        |         |       | {table_or_subquery_list}: TABLE { base: base }
+        |         |       | | {table_or_subquery}: TABLE { base: base }
+        |         |       |   | {name base}: TABLE { base: base }
+        |         |       | {select_where}
+        |         |         | {select_groupby}
+        |         |           | {select_having}
+        |         | {select_orderby}
+        |           | {select_limit}
+        |             | {select_offset}
+        | {select_expr_list}: select: { xy: integer, ix: integer, iy: integer }
+          | {select_expr}: xy: integer
+          | | {add}: integer
+          | | | {name ix}: ix: integer
+          | | | {name iy}: iy: integer
+          | | {opt_as_alias}
+          |   | {name xy}
+          | {select_expr_list}
+            | {select_expr}: ix: integer
+            | | {name ix}: ix: integer
+            | {select_expr_list}
+              | {select_expr}: iy: integer
+                | {name iy}: iy: integer
+
+The statement ending at line XXXX
+
+PROC insert_returning_invalid_insert ()
+BEGIN
+  INSERT INTO insert_returning_yeah_no
+    VALUES (1, 2)
+    RETURNING (ix + iy AS xy, ix, iy);
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0160: table in insert statement does not exist 'insert_returning_yeah_no'
+
+  {create_proc_stmt}: err
+  | {name insert_returning_invalid_insert}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {insert_returning_stmt}: err
+        | {insert_stmt}: err
+        | | {insert_normal}
+        | | {name_columns_values}
+        |   | {name insert_returning_yeah_no}
+        |   | {columns_values}
+        |     | {select_stmt}
+        |       | {select_core_list}
+        |       | | {select_core}
+        |       |   | {select_values}
+        |       |   | {values}
+        |       |     | {insert_list}
+        |       |       | {int 1}
+        |       |       | {insert_list}
+        |       |         | {int 2}
+        |       | {select_orderby}
+        |         | {select_limit}
+        |           | {select_offset}
+        | {select_expr_list}
+          | {select_expr}
+          | | {add}
+          | | | {name ix}
+          | | | {name iy}
+          | | {opt_as_alias}
+          |   | {name xy}
+          | {select_expr_list}
+            | {select_expr}
+            | | {name ix}
+            | {select_expr_list}
+              | {select_expr}
+                | {name iy}
+
+The statement ending at line XXXX
+
+PROC insert_returning_invalid_with_insert ()
+BEGIN
+  WITH
+    foo AS (
+      SELECT NOT 'x'
+    )
+  INSERT INTO insert_returning_test
+    VALUES (1, 2)
+    RETURNING (ix + iy AS xy, ix, iy);
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
+
+  {create_proc_stmt}: err
+  | {name insert_returning_invalid_with_insert}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {insert_returning_stmt}: err
+        | {with_insert_stmt}: err
+        | | {with}
+        | | | {cte_tables}: err
+        | |   | {cte_table}: err
+        | |     | {cte_decl}
+        | |     | | {name foo}
+        | |     | | {star}
+        | |     | {select_stmt}
+        | |       | {select_core_list}
+        | |       | | {select_core}: err
+        | |       |   | {select_expr_list_con}: err
+        | |       |     | {select_expr_list}: err
+        | |       |     | | {select_expr}: err
+        | |       |     |   | {not}: err
+        | |       |     |     | {strlit 'x'}: text notnull
+        | |       |     | {select_from_etc}: ok
+        | |       |       | {select_where}
+        | |       |         | {select_groupby}
+        | |       |           | {select_having}
+        | |       | {select_orderby}
+        | |         | {select_limit}
+        | |           | {select_offset}
+        | | {insert_stmt}
+        |   | {insert_normal}
+        |   | {name_columns_values}
+        |     | {name insert_returning_test}
+        |     | {columns_values}
+        |       | {select_stmt}
+        |         | {select_core_list}
+        |         | | {select_core}
+        |         |   | {select_values}
+        |         |   | {values}
+        |         |     | {insert_list}
+        |         |       | {int 1}
+        |         |       | {insert_list}
+        |         |         | {int 2}
+        |         | {select_orderby}
+        |           | {select_limit}
+        |             | {select_offset}
+        | {select_expr_list}
+          | {select_expr}
+          | | {add}
+          | | | {name ix}
+          | | | {name iy}
+          | | {opt_as_alias}
+          |   | {name xy}
+          | {select_expr_list}
+            | {select_expr}
+            | | {name ix}
+            | {select_expr_list}
+              | {select_expr}
+                | {name iy}
+
+The statement ending at line XXXX
+
+PROC insert_returning_invalid_return ()
+BEGIN
+  INSERT INTO insert_returning_test(ix, iy)
+    VALUES (1, 2)
+    RETURNING (nope);
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'nope'
+
+  {create_proc_stmt}: err
+  | {name insert_returning_invalid_return}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {insert_returning_stmt}: err
+        | {insert_stmt}: ok
+        | | {insert_normal}
+        | | {name_columns_values}
+        |   | {name insert_returning_test}: insert_returning_test: { ix: integer, iy: integer }
+        |   | {columns_values}: ok
+        |     | {column_spec}
+        |     | | {name_list}
+        |     |   | {name ix}: ix: integer
+        |     |   | {name_list}
+        |     |     | {name iy}: iy: integer
+        |     | {select_stmt}: values: { column1: integer notnull, column2: integer notnull }
+        |       | {select_core_list}: values: { column1: integer notnull, column2: integer notnull }
+        |       | | {select_core}: values: { column1: integer notnull, column2: integer notnull }
+        |       |   | {select_values}
+        |       |   | {values}: values: { column1: integer notnull, column2: integer notnull }
+        |       |     | {insert_list}: ok
+        |       |       | {int 1}: integer notnull
+        |       |       | {insert_list}
+        |       |         | {int 2}: integer notnull
+        |       | {select_orderby}
+        |         | {select_limit}
+        |           | {select_offset}
+        | {select_expr_list}: err
+          | {select_expr}: err
+            | {name nope}: err
+
+The statement ending at line XXXX
+
+PROC insert_returning_cursor ()
+BEGIN
+  CURSOR C FOR
+    INSERT INTO insert_returning_test(ix, iy)
+      VALUES (1, 2)
+      RETURNING (ix + iy AS xy, ix, iy);
+  LOOP FETCH C
+  BEGIN
+    CALL printf("%d %d %d", C.ix, C.iy, C.xy);
+  END;
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name insert_returning_cursor}: ok dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_cursor}: C: select: { xy: integer, ix: integer, iy: integer } variable dml_proc
+      | | {name C}: C: select: { xy: integer, ix: integer, iy: integer } variable dml_proc shape_storage
+      | | {insert_returning_stmt}: select: { xy: integer, ix: integer, iy: integer }
+      |   | {insert_stmt}: ok
+      |   | | {insert_normal}
+      |   | | {name_columns_values}
+      |   |   | {name insert_returning_test}: insert_returning_test: { ix: integer, iy: integer }
+      |   |   | {columns_values}: ok
+      |   |     | {column_spec}
+      |   |     | | {name_list}
+      |   |     |   | {name ix}: ix: integer
+      |   |     |   | {name_list}
+      |   |     |     | {name iy}: iy: integer
+      |   |     | {select_stmt}: values: { column1: integer notnull, column2: integer notnull }
+      |   |       | {select_core_list}: values: { column1: integer notnull, column2: integer notnull }
+      |   |       | | {select_core}: values: { column1: integer notnull, column2: integer notnull }
+      |   |       |   | {select_values}
+      |   |       |   | {values}: values: { column1: integer notnull, column2: integer notnull }
+      |   |       |     | {insert_list}: ok
+      |   |       |       | {int 1}: integer notnull
+      |   |       |       | {insert_list}
+      |   |       |         | {int 2}: integer notnull
+      |   |       | {select_orderby}
+      |   |         | {select_limit}
+      |   |           | {select_offset}
+      |   | {select_expr_list}: select: { xy: integer, ix: integer, iy: integer }
+      |     | {select_expr}: xy: integer
+      |     | | {add}: integer
+      |     | | | {name ix}: ix: integer
+      |     | | | {name iy}: iy: integer
+      |     | | {opt_as_alias}
+      |     |   | {name xy}
+      |     | {select_expr_list}
+      |       | {select_expr}: ix: integer
+      |       | | {name ix}: ix: integer
+      |       | {select_expr_list}
+      |         | {select_expr}: iy: integer
+      |           | {name iy}: iy: integer
+      | {loop_stmt}: ok
+        | {fetch_stmt}: C: select: { xy: integer, ix: integer, iy: integer } variable dml_proc shape_storage
+        | | {name C}: C: select: { xy: integer, ix: integer, iy: integer } variable dml_proc shape_storage
+        | {stmt_list}: ok
+          | {call_stmt}: ok
+            | {name printf}: ok
+            | {arg_list}: ok
+              | {strlit '%d %d %d'}: text notnull
+              | {arg_list}
+                | {dot}: C.ix: integer variable
+                | | {name C}
+                | | {name ix}
+                | {arg_list}
+                  | {dot}: C.iy: integer variable
+                  | | {name C}
+                  | | {name iy}
+                  | {arg_list}
+                    | {dot}: C.xy: integer variable
+                      | {name C}
+                      | {name xy}
+
+The statement ending at line XXXX
+
+PROC insert_returning_cursor_bogus ()
+BEGIN
+  CURSOR C FOR
+    INSERT INTO insert_returning_test(ix, iy)
+      VALUES (1, 2);
+END;
+
+test/sem_test.sql:XXXX:1: error: in insert_stmt : CQL0168: only INSERT with a RETURNING clause may be used as a source of rows
+
+  {create_proc_stmt}: err
+  | {name insert_returning_cursor_bogus}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_cursor}: err
+        | {name C}
+        | {insert_stmt}: err
+          | {insert_normal}
+          | {name_columns_values}
+            | {name insert_returning_test}
+            | {columns_values}
+              | {column_spec}
+              | | {name_list}
+              |   | {name ix}
+              |   | {name_list}
+              |     | {name iy}
+              | {select_stmt}
+                | {select_core_list}
+                | | {select_core}
+                |   | {select_values}
+                |   | {values}
+                |     | {insert_list}
+                |       | {int 1}
+                |       | {insert_list}
+                |         | {int 2}
+                | {select_orderby}
+                  | {select_limit}
+                    | {select_offset}
+
+The statement ending at line XXXX
+
+[[backing_table]]
+[[json]]
+CREATE TABLE jb_insert(
+  k BLOB PRIMARY KEY,
+  v BLOB
+);
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  | | | {dot}
+  | |   | {name cql}
+  | |   | {name backing_table}
+  | | {misc_attrs}
+  |   | {misc_attr}
+  |     | {dot}
+  |       | {name cql}
+  |       | {name json}
+  | {create_table_stmt}: jb_insert: { k: blob notnull primary_key, v: blob } backing
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name jb_insert}
+    | {col_key_list}
+      | {col_def}: k: blob notnull primary_key
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name k}
+      |   | | {type_blob}: blob
+      |   | {col_attrs_pk}: ok
+      |     | {autoinc_and_conflict_clause}
+      | {col_key_list}
+        | {col_def}: v: blob
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name v}
+              | {type_blob}: blob
+
+The statement ending at line XXXX
+
+[[backed_by=jb_insert]]
+CREATE TABLE jbacked(
+  id INT PRIMARY KEY,
+  name TEXT,
+  age INT
+);
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name backed_by}
+  |   | {name jb_insert}: ok
+  | {create_table_stmt}: jbacked: { id: integer notnull primary_key, name: text, age: integer } backed
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name jbacked}
+    | {col_key_list}
+      | {col_def}: id: integer notnull primary_key
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name id}
+      |   | | {type_int}: integer
+      |   | {col_attrs_pk}: ok
+      |     | {autoinc_and_conflict_clause}
+      | {col_key_list}
+        | {col_def}: name: text
+        | | {col_def_type_attrs}: ok
+        |   | {col_def_name_type}
+        |     | {name name}
+        |     | {type_text}: text
+        | {col_key_list}
+          | {col_def}: age: integer
+            | {col_def_type_attrs}: ok
+              | {col_def_name_type}
+                | {name age}
+                | {type_int}: integer
+
+The statement ending at line XXXX
+
+PROC insert_into_backed_returning ()
+BEGIN
+  WITH
+    _vals (id, name, age) AS (
+      VALUES
+        (1, 'x', 10),
+        (2, 'y', 15)
+    )
+  INSERT INTO jb_insert(k, v)
+    SELECT cql_blob_create(jbacked, V.id, jbacked.id), cql_blob_create(jbacked, V.name, jbacked.name, V.age, jbacked.age)
+      FROM _vals AS V
+    RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
+END;
+
+  {create_proc_stmt}: insert_into_backed_returning: { id: integer notnull, name: text, age: integer } dml_proc
+  | {name insert_into_backed_returning}: insert_into_backed_returning: { id: integer notnull, name: text, age: integer } dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {insert_returning_stmt}: select: { id: integer notnull, name: text, age: integer }
+        | {with_insert_stmt}: ok
+        | | {with}
+        | | | {cte_tables}: ok
+        | |   | {cte_table}: _vals: { id: integer notnull, name: text notnull, age: integer notnull }
+        | |     | {cte_decl}: _vals: { id: integer notnull, name: text notnull, age: integer notnull }
+        | |     | | {name _vals}
+        | |     | | {name_list}
+        | |     |   | {name id}: id: integer notnull
+        | |     |   | {name_list}
+        | |     |     | {name name}: name: text
+        | |     |     | {name_list}
+        | |     |       | {name age}: age: integer
+        | |     | {select_stmt}: values: { column1: integer notnull, column2: text notnull, column3: integer notnull }
+        | |       | {select_core_list}: values: { column1: integer notnull, column2: text notnull, column3: integer notnull }
+        | |       | | {select_core}: values: { column1: integer notnull, column2: text notnull, column3: integer notnull }
+        | |       |   | {select_values}
+        | |       |   | {values}: values: { column1: integer notnull, column2: text notnull, column3: integer notnull }
+        | |       |     | {insert_list}: ok
+        | |       |     | | {int 1}: integer notnull
+        | |       |     | | {insert_list}
+        | |       |     |   | {strlit 'x'}: text notnull
+        | |       |     |   | {insert_list}
+        | |       |     |     | {int 10}: integer notnull
+        | |       |     | {values}
+        | |       |       | {insert_list}: ok
+        | |       |         | {int 2}: integer notnull
+        | |       |         | {insert_list}
+        | |       |           | {strlit 'y'}: text notnull
+        | |       |           | {insert_list}
+        | |       |             | {int 15}: integer notnull
+        | |       | {select_orderby}
+        | |         | {select_limit}
+        | |           | {select_offset}
+        | | {insert_stmt}: ok
+        |   | {insert_normal}
+        |   | {name_columns_values}
+        |     | {name jb_insert}: jb_insert: { k: blob notnull primary_key, v: blob } backing
+        |     | {columns_values}: ok
+        |       | {column_spec}
+        |       | | {name_list}
+        |       |   | {name k}: k: blob notnull
+        |       |   | {name_list}
+        |       |     | {name v}: v: blob
+        |       | {select_stmt}: select: { _anon: blob notnull, _anon: blob notnull }
+        |         | {select_core_list}: select: { _anon: blob notnull, _anon: blob notnull }
+        |         | | {select_core}: select: { _anon: blob notnull, _anon: blob notnull }
+        |         |   | {select_expr_list_con}: select: { _anon: blob notnull, _anon: blob notnull }
+        |         |     | {select_expr_list}: select: { _anon: blob notnull, _anon: blob notnull }
+        |         |     | | {select_expr}: blob notnull
+        |         |     | | | {call}: blob notnull
+        |         |     | |   | {name cql_blob_create}: blob notnull
+        |         |     | |   | {call_arg_list}
+        |         |     | |     | {call_filter_clause}
+        |         |     | |     | {arg_list}: ok
+        |         |     | |       | {name jbacked}
+        |         |     | |       | {arg_list}
+        |         |     | |         | {dot}: id: integer notnull
+        |         |     | |         | | {name V}
+        |         |     | |         | | {name id}
+        |         |     | |         | {arg_list}
+        |         |     | |           | {dot}: integer notnull primary_key
+        |         |     | |             | {name jbacked}
+        |         |     | |             | {name id}
+        |         |     | | {select_expr_list}
+        |         |     |   | {select_expr}: blob notnull
+        |         |     |     | {call}: blob notnull
+        |         |     |       | {name cql_blob_create}: blob notnull
+        |         |     |       | {call_arg_list}
+        |         |     |         | {call_filter_clause}
+        |         |     |         | {arg_list}: ok
+        |         |     |           | {name jbacked}
+        |         |     |           | {arg_list}
+        |         |     |             | {dot}: name: text notnull
+        |         |     |             | | {name V}
+        |         |     |             | | {name name}
+        |         |     |             | {arg_list}
+        |         |     |               | {dot}: text
+        |         |     |               | | {name jbacked}
+        |         |     |               | | {name name}
+        |         |     |               | {arg_list}
+        |         |     |                 | {dot}: age: integer notnull
+        |         |     |                 | | {name V}
+        |         |     |                 | | {name age}
+        |         |     |                 | {arg_list}
+        |         |     |                   | {dot}: integer
+        |         |     |                     | {name jbacked}
+        |         |     |                     | {name age}
+        |         |     | {select_from_etc}: TABLE { V: _vals }
+        |         |       | {table_or_subquery_list}: TABLE { V: _vals }
+        |         |       | | {table_or_subquery}: TABLE { V: _vals }
+        |         |       |   | {name _vals}: TABLE { V: _vals }
+        |         |       |   | {opt_as_alias}
+        |         |       |     | {name V}
+        |         |       | {select_where}
+        |         |         | {select_groupby}
+        |         |           | {select_having}
+        |         | {select_orderby}
+        |           | {select_limit}
+        |             | {select_offset}
+        | {select_expr_list}: select: { id: integer notnull, name: text, age: integer }
+          | {select_expr}: id: integer notnull
+          | | {call}: id: integer notnull
+          |   | {name cql_blob_get}
+          |   | {call_arg_list}
+          |     | {call_filter_clause}
+          |     | {arg_list}
+          |       | {name k}
+          |       | {arg_list}
+          |         | {dot}
+          |           | {name jbacked}
+          |           | {name id}
+          | {select_expr_list}
+            | {select_expr}: name: text
+            | | {call}: name: text
+            |   | {name cql_blob_get}
+            |   | {call_arg_list}
+            |     | {call_filter_clause}
+            |     | {arg_list}
+            |       | {name v}
+            |       | {arg_list}
+            |         | {dot}
+            |           | {name jbacked}
+            |           | {name name}
+            | {select_expr_list}
+              | {select_expr}: age: integer
+                | {call}: age: integer
+                  | {name cql_blob_get}
+                  | {call_arg_list}
+                    | {call_filter_clause}
+                    | {arg_list}
+                      | {name v}
+                      | {arg_list}
+                        | {dot}
+                          | {name jbacked}
+                          | {name age}
 

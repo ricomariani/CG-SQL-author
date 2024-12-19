@@ -59,4 +59,6 @@ cql_noexport void rewrite_dot_as_call(ast_node *_Nonnull dot, CSTR _Nonnull new_
 cql_noexport ast_node *_Nonnull rewrite_column_values_as_update_list(ast_node *_Nonnull columns_values);
 cql_noexport void rewrite_as_select_expr(ast_node *_Nonnull ast);
 cql_noexport bool_t try_rewrite_op_as_call(ast_node *_Nonnull ast, CSTR _Nonnull op);
+cql_noexport void rewrite_backed_column_references_in_ast(ast_node *_Nonnull root, ast_node *_Nonnull backed_table);
+
 #endif

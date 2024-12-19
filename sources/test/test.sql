@@ -1940,3 +1940,8 @@ let TABLE := 0;
 let TEMP := 0;
 let TRANSACTION := 0;
 let WITHOUT := 0;
+
+insert into foo values(1) returning (a, b, c);
+
+with blah as (select 1 x)
+insert into foo values(1) returning (a, b, c);

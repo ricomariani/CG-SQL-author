@@ -962,7 +962,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0281: upsert statement does not inc
 test/sem_test.sql:XXXX:1: error: in insert_stmt : CQL0280: upsert statement requires a where clause if the insert clause uses select
 test/sem_test.sql:XXXX:1: error: in insert_or_ignore : CQL0283: upsert syntax only supports INSERT INTO 'foo'
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'bogus'
-test/sem_test.sql:XXXX:1: error: in update_stmt : CQL0282: update statement require table name
+test/sem_test.sql:XXXX:1: error: in update_stmt : CQL0282: update statement requires a table name
 test/sem_test.sql:XXXX:1: error: in indexed_columns : CQL0279: columns referenced in an UPSERT conflict target must exactly match a unique key the target table
 test/sem_test.sql:XXXX:1: error: in upsert_stmt : CQL0289: upsert statement are forbidden if strict upsert statement mode is enabled
 test/sem_test.sql:XXXX:1: error: in window_func_inv : CQL0312: window function invocation are forbidden if strict window function mode is enabled
@@ -1848,4 +1848,8 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in t
 test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'load_extension'
 test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'load_extension'
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
+test/sem_test.sql:XXXX:1: error: in str : CQL0160: table in insert statement does not exist 'insert_returning_yeah_no'
+test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'nope'
+test/sem_test.sql:XXXX:1: error: in insert_stmt : CQL0168: only INSERT with a RETURNING clause may be used as a source of rows
 semantic errors present; no code gen.

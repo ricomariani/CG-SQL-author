@@ -2275,7 +2275,7 @@ static void gen_expr_case(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) 
 }
 
 static void gen_expr_select(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
-  Contract(is_select_stmt(ast));
+  Contract(is_select_variant(ast));
   gen_printf("( ");
   gen_select_stmt(ast);
   gen_printf(" )");
@@ -3937,7 +3937,7 @@ static void gen_insert_stmt(ast_node *ast) {
     gen_printf(" USING ");
     gen_expr_names(columns_values);
   }
-  else if (is_select_stmt(columns_values)) {
+  else if (is_select_variant(columns_values)) {
     gen_printf(" USING ");
     gen_select_stmt(columns_values);
   }
@@ -3946,7 +3946,7 @@ static void gen_insert_stmt(ast_node *ast) {
     EXTRACT_ANY(insert_list, columns_values->right);
     gen_column_spec(column_spec);
 
-    if (is_select_stmt(insert_list)) {
+    if (is_select_variant(insert_list)) {
       gen_printf("\n");
       GEN_BEGIN_INDENT(sel, 2);
         gen_select_stmt(insert_list);
@@ -3980,6 +3980,20 @@ static void gen_with_insert_stmt(ast_node *ast) {
 
   gen_with_prefix(with_prefix);
   gen_insert_stmt(insert_stmt);
+}
+
+static void gen_insert_returning_stmt(ast_node *ast) {
+  Contract(is_ast_insert_returning_stmt(ast));
+  EXTRACT_ANY_NOTNULL(insert_stmt, ast->left);
+  if (is_ast_with_insert_stmt(insert_stmt)) {
+    gen_with_insert_stmt(insert_stmt);
+  }
+  else {
+    gen_insert_stmt(insert_stmt);
+  }
+  gen_printf("\n  RETURNING (");
+  gen_select_expr_list(ast->right);
+  gen_printf(")");
 }
 
 static void gen_expr_names(ast_node *ast) {
@@ -4502,7 +4516,10 @@ static void gen_declare_cursor(ast_node *ast) {
   gen_name(name_ast);
   gen_printf(" FOR");
 
-  if (is_select_stmt(source) || is_ast_call_stmt(source)) {
+  // we have to handle an insert statement in the AST here which might not be a row source
+  // we detect that later in semantic analysis, it's wrong but so are many other things
+  // in the ast at this point, we still echo them...
+  if (is_row_source(source) || is_ast_call_stmt(source) || is_insert_stmt(source)) {
     // The two statement cases are unified
     gen_printf("\n");
     GEN_BEGIN_INDENT(cursor, 2);
@@ -5577,6 +5594,7 @@ cql_noexport void gen_init() {
   STMT_INIT(ifdef_stmt);
   STMT_INIT(ifndef_stmt);
   STMT_INIT(insert_stmt);
+  STMT_INIT(insert_returning_stmt);
   STMT_INIT(leave_stmt);
   STMT_INIT(let_stmt);
   STMT_INIT(loop_stmt);

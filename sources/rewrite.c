@@ -626,7 +626,7 @@ cql_noexport void rewrite_expr_names_to_columns_values(ast_node *columns_values)
 // e.g: insert into X using select 1 a, 2 b, 3 c; ==> insert into X (a,b,c) values (1, 2, 3);
 cql_noexport void rewrite_select_stmt_to_columns_values(ast_node *columns_values) {
   EXTRACT_ANY_NOTNULL(select_stmt, columns_values);
-  Contract(is_select_stmt(select_stmt));
+  Contract(is_select_variant(select_stmt));
 
   AST_REWRITE_INFO_SET(columns_values->lineno, columns_values->filename);
 
@@ -2459,7 +2459,7 @@ cql_noexport void rewrite_select_for_backed_tables(
 
   AST_REWRITE_INFO_RESET();
 
-  sem_select(stmt);
+  sem_any_row_source(stmt);
 }
 
 // As we do our recursion creating the fields for blob creation we flow this state
@@ -2703,6 +2703,40 @@ static void rewrite_blob_column_references(
   }
 }
 
+// given just the backed table and the root of the ast to patch (like a select list)
+// we path any names needing to be converted to the backing table.
+cql_noexport void rewrite_backed_column_references_in_ast(
+  ast_node *_Nonnull root,
+  ast_node *_Nonnull backed_table)
+{
+  EXTRACT_MISC_ATTRS(backed_table, misc_attrs);
+
+  CSTR backing_table_name = get_named_string_attribute_value(misc_attrs, "backed_by");
+  Invariant(backing_table_name);  // already validated
+  ast_node *backing_table = find_table_or_view_even_deleted(backing_table_name);
+  Invariant(backing_table);  // already validated
+  sem_struct *sptr_backing = backing_table->sem->sptr;
+  Invariant(sptr_backing);  // table must have a sem_struct
+
+  sem_t sem_type = sptr_backing->semtypes[0];
+  bool_t is_key_first = is_primary_key(sem_type) || is_partial_pk(sem_type);
+
+  update_rewrite_info info = {
+   .backing_key = sptr_backing->names[!is_key_first], // if the order is kv then the key is column 0, else 1
+   .sem_type_key = sptr_backing->semtypes[!is_key_first],
+   .backing_val = sptr_backing->names[is_key_first],
+   .sem_type_val = sptr_backing->semtypes[is_key_first],
+   .backed_table = backed_table,
+   .for_key = false,  // this is ignored anyway
+  };
+
+  AST_REWRITE_INFO_SET(root->lineno, root->filename);
+
+  rewrite_blob_column_references(&info, root);
+
+  AST_REWRITE_INFO_RESET();
+}
+
 // This walks the update list and generates either the args for the key or the
 // args for the value the values come from the assignment in the update entry list
 static ast_node *rewrite_update_blob_args(
@@ -2905,7 +2939,7 @@ cql_noexport void rewrite_insert_statement_for_backed_table(
   // Now either the incoming list came in before it was transformed, in which
   // case contract is broken, or we fixed the one legal case above.  We have an
   // select statement or a broken caller.
-  Contract(is_select_stmt(insert_list));
+  Contract(is_select_variant(insert_list));
 
   EXTRACT_NOTNULL(name_list, column_spec->left);
 

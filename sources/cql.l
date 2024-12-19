@@ -425,6 +425,7 @@ RENAME                           { return RENAME; }
 REPLACE                          { return REPLACE; }
 RESTRICT                         { return RESTRICT; }
 RETURN                           { return RETURN; }
+RETURNING                        { return RETURNING; }
 RIGHT                            { return RIGHT; }
 ROLLBACK                         { return ROLLBACK; }
 ROWID                            { return ROWID; }

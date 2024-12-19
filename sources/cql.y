@@ -290,7 +290,7 @@ static void cql_reset_globals(void);
 %token AT_KEEP_TABLE_NAME_IN_ALIASES AT_MACRO EXPR STMT_LIST QUERY_PARTS CTE_TABLES SELECT_CORE SELECT_EXPR
 %token SIGN_FUNCTION CURSOR_HAS_ROW AT_UNSUB
 %left BEGIN_INCLUDE END_INCLUDE
-%token AT_IFDEF AT_IFNDEF AT_ELSE AT_ENDIF
+%token AT_IFDEF AT_IFNDEF AT_ELSE AT_ENDIF RETURNING
 
 /* ddl stuff */
 %type <ival> opt_temp opt_if_not_exists opt_unique opt_no_rowid dummy_modifier compound_operator opt_query_plan
@@ -318,10 +318,10 @@ static void cql_reset_globals(void);
 
 /* dml stuff */
 %type <aval> with_delete_stmt delete_stmt
-%type <aval> insert_stmt with_insert_stmt insert_list_item insert_list insert_stmt_type
+%type <aval> insert_stmt insert_list_item insert_list insert_stmt_type returning_suffix insert_stmt_plain
 %type <aval> column_spec opt_column_spec opt_insert_dummy_spec expr_names expr_name
 %type <aval> with_prefix with_select_stmt cte_table cte_tables cte_binding_list cte_binding cte_decl shared_cte
-%type <aval> select_expr select_expr_list select_opts select_stmt select_core values explain_stmt explain_target
+%type <aval> select_expr select_expr_list select_opts select_stmt select_core values explain_stmt explain_target row_source
 %type <aval> select_stmt_no_with select_core_list
 %type <aval> window_func_inv opt_filter_clause window_name_or_defn window_defn opt_select_window
 %type <aval> opt_partition_by opt_frame_spec frame_boundary_opts frame_boundary_start frame_boundary_end frame_boundary
@@ -616,7 +616,6 @@ any_stmt:
   | upsert_stmt
   | while_stmt
   | with_delete_stmt
-  | with_insert_stmt
   | with_update_stmt
   | with_upsert_stmt
   | keep_table_name_in_aliases_stmt
@@ -635,7 +634,6 @@ explain_target: select_stmt
   | update_stmt
   | delete_stmt
   | with_delete_stmt
-  | with_insert_stmt
   | with_update_stmt
   | with_upsert_stmt
   | insert_stmt
@@ -988,38 +986,20 @@ create_index_stmt:
 
 name:
   ID  { $name = new_ast_str($ID); }
-  | TEXT  { $name = new_ast_str("text"); }
-  | TRIGGER  { $name = new_ast_str("trigger"); }
-  | ROWID  { $name = new_ast_str("rowid"); }
-  | REPLACE  { $name = new_ast_str("replace"); }
-  | KEY  { $name = new_ast_str("key"); }
-  | VIRTUAL { $name = new_ast_str("virtual"); }
-  | TYPE { $name = new_ast_str("type"); }
-  | HIDDEN { $name = new_ast_str("hidden"); }
-  | PRIVATE { $name = new_ast_str("private"); }
-  | FIRST { $name = new_ast_str("first"); }
-  | LAST { $name = new_ast_str("last"); }
-  | ADD { $name = new_ast_str("add"); }
-  | AFTER { $name = new_ast_str("after"); }
-  | BEFORE { $name = new_ast_str("before"); }
-  | VIEW { $name = new_ast_str("view"); }
-  | INDEX { $name = new_ast_str("index"); }
-  | COLUMN { $name = new_ast_str("column"); }
-  | EXPR { $name = new_ast_str("expr"); }
-  | STMT_LIST { $name = new_ast_str("stmt_list"); }
-  | QUERY_PARTS { $name = new_ast_str("query_parts"); }
-  | CTE_TABLES { $name = new_ast_str("cte_tables"); }
-  | SELECT_CORE { $name = new_ast_str("select_core"); }
-  | SELECT_EXPR { $name = new_ast_str("select_expr"); }
-  | AT_ID '(' text_args ')' { $name = new_ast_at_id($text_args); }
-  | AT_TMP '(' text_args ')' { $name = new_ast_at_id(new_ast_text_args(new_ast_str("@TMP"), $text_args)); }
   | ABORT { $name = new_ast_str("abort"); }
   | ACTION { $name = new_ast_str("action"); }
+  | ADD { $name = new_ast_str("add"); }
+  | AFTER { $name = new_ast_str("after"); }
   | ALTER { $name = new_ast_str("alter"); }
   | ASC { $name = new_ast_str("asc"); }
+  | AT_ID '(' text_args ')' { $name = new_ast_at_id($text_args); }
+  | AT_TMP '(' text_args ')' { $name = new_ast_at_id(new_ast_text_args(new_ast_str("@TMP"), $text_args)); }
   | AUTOINCREMENT { $name = new_ast_str("autoincrement"); }
+  | BEFORE { $name = new_ast_str("before"); }
   | CASCADE { $name = new_ast_str("cascade"); }
+  | COLUMN { $name = new_ast_str("column"); }
   | CREATE { $name = new_ast_str("create"); }
+  | CTE_TABLES { $name = new_ast_str("cte_tables"); }
   | DEFAULT { $name = new_ast_str("default"); }
   | DEFERRABLE { $name = new_ast_str("deferrable"); }
   | DEFERRED { $name = new_ast_str("deferred"); }
@@ -1029,29 +1009,47 @@ name:
   | ENCODE { $name = new_ast_str("encode"); }
   | EXCLUSIVE { $name = new_ast_str("exclusive"); }
   | EXPLAIN { $name = new_ast_str("explain"); }
+  | EXPR { $name = new_ast_str("expr"); }
   | FAIL { $name = new_ast_str("fail"); }
   | FETCH { $name = new_ast_str("fetch"); }
+  | FIRST { $name = new_ast_str("first"); }
   | FOLLOWING { $name = new_ast_str("following"); }
   | GROUPS { $name = new_ast_str("groups"); }
+  | HIDDEN { $name = new_ast_str("hidden"); }
   | IGNORE { $name = new_ast_str("ignore"); }
   | IMMEDIATE { $name = new_ast_str("immediate"); }
+  | INDEX { $name = new_ast_str("index"); }
   | INITIALLY { $name = new_ast_str("initially"); }
   | INSTEAD { $name = new_ast_str("instead"); }
   | INTO { $name = new_ast_str("into"); }
+  | KEY  { $name = new_ast_str("key"); }
+  | LAST { $name = new_ast_str("last"); }
   | NULLS { $name = new_ast_str("nulls"); }
   | OUTER { $name = new_ast_str("outer"); }
   | PARTITION { $name = new_ast_str("partition"); }
   | PRECEDING { $name = new_ast_str("preceding"); }
+  | PRIVATE { $name = new_ast_str("private"); }
+  | QUERY_PARTS { $name = new_ast_str("query_parts"); }
   | RANGE { $name = new_ast_str("range"); }
   | REFERENCES { $name = new_ast_str("references"); }
   | RELEASE { $name = new_ast_str("release"); }
   | RENAME { $name = new_ast_str("rename"); }
+  | REPLACE  { $name = new_ast_str("replace"); }
   | RESTRICT { $name = new_ast_str("restrict"); }
+  | ROWID  { $name = new_ast_str("rowid"); }
   | SAVEPOINT { $name = new_ast_str("savepoint"); }
+  | SELECT_CORE { $name = new_ast_str("select_core"); }
+  | SELECT_EXPR { $name = new_ast_str("select_expr"); }
   | STATEMENT { $name = new_ast_str("statement"); }
+  | STMT_LIST { $name = new_ast_str("stmt_list"); }
   | TABLE { $name = new_ast_str("table"); }
   | TEMP { $name = new_ast_str("temp"); }
+  | TEXT  { $name = new_ast_str("text"); }
   | TRANSACTION { $name = new_ast_str("transaction"); }
+  | TRIGGER  { $name = new_ast_str("trigger"); }
+  | TYPE { $name = new_ast_str("type"); }
+  | VIEW { $name = new_ast_str("view"); }
+  | VIRTUAL { $name = new_ast_str("virtual"); }
   | WITHOUT { $name = new_ast_str("without"); }
   ;
 
@@ -1903,10 +1901,6 @@ insert_stmt_type:
   | REPLACE INTO  { $insert_stmt_type = new_ast_insert_replace(); }
   ;
 
-with_insert_stmt:
-  with_prefix insert_stmt  { $with_insert_stmt = new_ast_with_insert_stmt($with_prefix, $insert_stmt); }
-  ;
-
 opt_column_spec:
   /* nil */  { $opt_column_spec = NULL; }
   | '(' opt_sql_name_list ')'  { $opt_column_spec = new_ast_column_spec($opt_sql_name_list); }
@@ -1924,30 +1918,43 @@ from_shape:
   | FROM ARGUMENTS opt_column_spec  { $from_shape = new_ast_from_shape($opt_column_spec, new_ast_str("ARGUMENTS")); }
   ;
 
-insert_stmt:
+insert_stmt_plain:
   insert_stmt_type sql_name opt_column_spec select_stmt opt_insert_dummy_spec  {
     struct ast_node *columns_values = new_ast_columns_values($opt_column_spec, $select_stmt);
     struct ast_node *name_columns_values = new_ast_name_columns_values($sql_name, columns_values);
     ast_set_left($insert_stmt_type, $opt_insert_dummy_spec);
-    $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values);  }
+    $$ = new_ast_insert_stmt($insert_stmt_type, name_columns_values);  }
   | insert_stmt_type sql_name opt_column_spec from_shape opt_insert_dummy_spec  {
     struct ast_node *columns_values = new_ast_columns_values($opt_column_spec, $from_shape);
     struct ast_node *name_columns_values = new_ast_name_columns_values($sql_name, columns_values);
     ast_set_left($insert_stmt_type, $opt_insert_dummy_spec);
-    $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values);  }
+    $$ = new_ast_insert_stmt($insert_stmt_type, name_columns_values);  }
   | insert_stmt_type sql_name DEFAULT VALUES  {
     struct ast_node *default_columns_values = new_ast_default_columns_values();
     struct ast_node *name_columns_values = new_ast_name_columns_values($sql_name, default_columns_values);
-    $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values); }
+    $$ = new_ast_insert_stmt($insert_stmt_type, name_columns_values); }
   | insert_stmt_type sql_name USING select_stmt {
     struct ast_node *name_columns_values = new_ast_name_columns_values($sql_name, $select_stmt);
     ast_set_left($insert_stmt_type, NULL); // dummy spec not allowed in this form
-    $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values); }
+    $$ = new_ast_insert_stmt($insert_stmt_type, name_columns_values); }
   | insert_stmt_type sql_name USING expr_names opt_insert_dummy_spec {
     struct ast_node *name_columns_values = new_ast_name_columns_values($sql_name, $expr_names);
     ast_set_left($insert_stmt_type, $opt_insert_dummy_spec);
-    $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values); }
+    $$ = new_ast_insert_stmt($insert_stmt_type, name_columns_values); }
   ;
+
+returning_suffix: RETURNING '(' select_expr_list ')' { $$ = $select_expr_list; }
+
+insert_stmt:
+     insert_stmt_plain { $$ = $insert_stmt_plain; }
+   | insert_stmt_plain returning_suffix {
+     $$ = new_ast_insert_returning_stmt($insert_stmt_plain, $returning_suffix); }
+   | with_prefix insert_stmt_plain {
+     $$ = new_ast_with_insert_stmt($with_prefix, $insert_stmt_plain); }
+   | with_prefix insert_stmt_plain returning_suffix {
+     ast_node *tmp = new_ast_with_insert_stmt($with_prefix, $insert_stmt_plain); 
+     $$ = new_ast_insert_returning_stmt(tmp, $returning_suffix); }
+   ;
 
 insert_list_item:
   expr { $insert_list_item = $expr; }
@@ -2005,12 +2012,12 @@ with_upsert_stmt:
   ;
 
 upsert_stmt:
-  insert_stmt ON_CONFLICT conflict_target DO NOTHING  {
+  insert_stmt_plain[insert] ON_CONFLICT conflict_target DO NOTHING  {
     struct ast_node *upsert_update = new_ast_upsert_update($conflict_target, NULL);
-    $upsert_stmt = new_ast_upsert_stmt($insert_stmt, upsert_update); }
-  | insert_stmt ON_CONFLICT conflict_target DO basic_update_stmt  {
+    $upsert_stmt = new_ast_upsert_stmt($insert, upsert_update); }
+  | insert_stmt_plain[insert] ON_CONFLICT conflict_target DO basic_update_stmt  {
     struct ast_node *upsert_update = new_ast_upsert_update($conflict_target, $basic_update_stmt);
-    $upsert_stmt = new_ast_upsert_stmt($insert_stmt, upsert_update); }
+    $upsert_stmt = new_ast_upsert_stmt($insert, upsert_update); }
   ;
 
 update_cursor_stmt:
@@ -2197,13 +2204,11 @@ declare_value_cursor[result]:
   | CURSOR name LIKE '(' typed_names ')' { $result = new_ast_declare_cursor_like_typed_names($name, $typed_names); }
   ;
 
+row_source: select_stmt | explain_stmt | insert_stmt | call_stmt;
+
 declare_forward_read_cursor_stmt[result]:
-  DECLARE name CURSOR FOR select_stmt  { $result = new_ast_declare_cursor($name, $select_stmt); }
-  | CURSOR name FOR select_stmt  { $result = new_ast_declare_cursor($name, $select_stmt); }
-  | DECLARE name CURSOR FOR explain_stmt  { $result = new_ast_declare_cursor($name, $explain_stmt); }
-  | CURSOR name FOR explain_stmt  { $result = new_ast_declare_cursor($name, $explain_stmt); }
-  | DECLARE name CURSOR FOR call_stmt  { $result = new_ast_declare_cursor($name, $call_stmt); }
-  | CURSOR name FOR call_stmt  { $result = new_ast_declare_cursor($name, $call_stmt); }
+  DECLARE name CURSOR FOR row_source  { $result = new_ast_declare_cursor($name, $row_source); }
+  | CURSOR name FOR row_source  { $result = new_ast_declare_cursor($name, $row_source); }
   | DECLARE name[id] CURSOR FOR expr { $result = new_ast_declare_cursor($id, $expr); }
   | CURSOR name[id] FOR expr { $result = new_ast_declare_cursor($id, $expr); }
   ;

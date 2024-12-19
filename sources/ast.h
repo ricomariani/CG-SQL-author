@@ -275,7 +275,8 @@ cql_noexport bool_t is_macro_def(ast_node *_Nonnull ast);
 cql_noexport bool_t is_macro_ref(ast_node *_Nullable ast);
 cql_noexport bool_t is_macro_arg_ref(ast_node *_Nullable ast);
 
-cql_noexport bool_t is_select_stmt(ast_node *_Nullable ast);
+cql_noexport bool_t is_select_variant(ast_node *_Nullable ast);
+cql_noexport bool_t is_row_source(ast_node *_Nullable ast);
 cql_noexport bool_t is_delete_stmt(ast_node *_Nullable ast);
 cql_noexport bool_t is_insert_stmt(ast_node *_Nullable ast);
 cql_noexport bool_t is_update_stmt(ast_node *_Nullable ast);
@@ -772,6 +773,7 @@ AST(indexed_columns)
 AST(indexed_columns_conflict_clause)
 AST(insert_dummy_spec);
 AST(insert_list)
+AST(insert_returning_stmt)
 AST(insert_stmt)
 AST(is)
 AST(is_not)

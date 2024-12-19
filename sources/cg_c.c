@@ -2860,7 +2860,7 @@ static void cg_temp_stmt_cleanup(int32_t stmt_index, charbuf *output) {
 //  * use that variable as the result.
 // The helper methods take care of sqlite error management.
 static void cg_expr_select(ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
-  Contract(is_select_stmt(ast));
+  Contract(is_select_variant(ast));
 
   // SELECT [select_opts] [select_expr_list_con]
 
@@ -5762,7 +5762,7 @@ static void cg_declare_cursor(ast_node *ast) {
     EXTRACT_STRING(name, ast->right->left);
     out_union_result_name = name;
   }
-  else if (is_select_stmt(ast->right)) {
+  else if (is_row_source(ast->right)) {
     is_for_select = true;
     is_unboxing = false;
   }
@@ -5963,7 +5963,7 @@ static void cg_declare_cursor_like_name(ast_node *ast) {
 // we're using the shape of a select statement to declare a cursor
 static void cg_declare_cursor_like_select(ast_node *ast) {
   Contract(is_ast_declare_cursor_like_select(ast));
-  Contract(is_select_stmt(ast->right));
+  Contract(is_select_variant(ast->right));
   EXTRACT_NAME_AST(name_ast, ast->left);
 
   cg_declare_cursor_like(name_ast);
@@ -7175,7 +7175,7 @@ static void cg_std_dml_exec_stmt(ast_node *ast) {
 // variable for the sqlite3_stmt we generate this was previously added when the
 // stored proc params were generated.
 static void cg_select_stmt(ast_node *ast) {
-  Contract(is_select_stmt(ast));
+  Contract(is_select_variant(ast));
   cg_bound_sql_statement("_result", ast, CG_PREPARE|CG_MINIFY_ALIASES);
 }
 
@@ -7238,6 +7238,16 @@ static void cg_with_insert_stmt(ast_node *ast) {
   EXTRACT_NOTNULL(insert_stmt, ast->right);
   cg_opt_seed_process(insert_stmt);
   cg_bound_sql_statement(NULL, ast, CG_EXEC | CG_NO_MINIFY_ALIASES);
+}
+
+// DML invocation but first set the seed variable if present
+static void cg_insert_returning_stmt(ast_node *ast) {
+  Contract(is_ast_insert_returning_stmt(ast));
+  EXTRACT_ANY_NOTNULL(inner, ast->left);
+  inner = is_ast_with_insert_stmt(inner) ? inner->right : inner;
+  Contract(is_ast_insert_stmt(inner));
+  cg_opt_seed_process(inner);
+  cg_bound_sql_statement("_result", ast, CG_PREPARE|CG_NO_MINIFY_ALIASES);
 }
 
 // DML invocation but first set the seed variable if present
@@ -7398,7 +7408,8 @@ static void cg_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
     }
 
     // loose select statements also have no codegen, the global proc has no result type
-    if (is_select_stmt(stmt)) {
+    // todo what to do about insert returning here?  We have to ignore the returning part
+    if (is_select_variant(stmt)) {
        return;
     }
   }
@@ -8707,6 +8718,7 @@ cql_noexport void cg_c_init(void) {
 
   // insert forms have some special processing for the 'seed' case
   STMT_INIT(insert_stmt);
+  STMT_INIT(insert_returning_stmt);
   STMT_INIT(with_insert_stmt);
   STMT_INIT(upsert_stmt);
   STMT_INIT(with_upsert_stmt);

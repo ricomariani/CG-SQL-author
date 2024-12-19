@@ -2531,3 +2531,15 @@ LET temp := 0;
 LET transaction := 0;
 
 LET without := 0;
+
+INSERT INTO foo
+  VALUES (1)
+  RETURNING (a, b, c);
+
+WITH
+  blah AS (
+    SELECT 1 AS x
+  )
+INSERT INTO foo
+  VALUES (1)
+  RETURNING (a, b, c);

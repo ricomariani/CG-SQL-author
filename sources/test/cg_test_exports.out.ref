@@ -290,4 +290,6 @@ DECLARE PROC jdata_dml_insert () USING TRANSACTION;
 DECLARE PROC jdata_dml_update () USING TRANSACTION;
 DECLARE PROC a_dml_delete () USING TRANSACTION;
 DECLARE PROC a_backed_join () (jname TEXT!, jage INT, bname TEXT);
+DECLARE PROC insert_returning_cursor () USING TRANSACTION;
+DECLARE PROC insert_returning_resultset () (xy INT, ix INT, iy INT);
 DECLARE PROC end_proc ();

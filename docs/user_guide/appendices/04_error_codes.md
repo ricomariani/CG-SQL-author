@@ -1681,7 +1681,12 @@ that could be used.  You need to provide a value for the missing column.
 
 -----
 
-### CQL0168 available for re-use
+### CQL0168: only INSERT with a RETURNING clause may be used as a source of rows
+
+An insert statement lacking the RETURNING clause does not produce any result
+therefore it is not suitable for use to fill a cursor or other such things
+that need results.  With the RETURNING clause the INSERT statement is, in
+very real way, behaving like a special SELECT.
 
 -----
 
@@ -2938,7 +2943,7 @@ insert into foo select id from bar where 1 on conflict(id) do update set id=10;
 
 -----
 
-### CQL0282: update statement require table name
+### CQL0282: update statement requires a table name
 
 The UPDATE statement should always include a table name except if the UPDATE
 statement is part of an UPSERT statement. e.g:

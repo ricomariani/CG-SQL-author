@@ -11139,7 +11139,7 @@ end;
 -- + {name update_without_table_name}: err
 -- + {create_trigger_stmt}: err
 -- + {update_stmt}: err
--- * error: % update statement require table name
+-- * error: % update statement requires a table name
 -- +1 error:
 proc update_without_table_name()
 begin
@@ -25673,4 +25673,134 @@ proc use_nested_macros_with_at_tmp()
 begin
    macro_two!(expensive(100));
    macro_two!(expensive(200));
+end;
+
+create table insert_returning_test(
+  ix int,
+  iy int
+);
+
+-- TEST: insert returning normal case -- no with clause
+-- + {create_proc_stmt}: insert_returning1: { xy: integer, ix: integer, iy: integer } dml_proc
+-- + {insert_returning_stmt}: select: { xy: integer, ix: integer, iy: integer }
+-- - error:
+proc insert_returning1 ()
+begin
+  insert into insert_returning_test
+    values (1, 2)
+    returning (ix + iy as xy, ix, iy);
+end;
+
+-- TEST: insert returning normal case -- and with clause
+-- + {create_proc_stmt}: insert_returning2: { xy: integer, ix: integer, iy: integer } dml_proc
+-- + {insert_returning_stmt}: select: { xy: integer, ix: integer, iy: integer }
+-- - error:
+proc insert_returning2 ()
+begin
+  with
+    base as (
+      select *
+        from insert_returning_test
+        where x = 7
+    )
+  insert into insert_returning_test
+    select ix + 10, iy + 10
+      from base
+    returning (ix + iy as xy, ix, iy);
+end;
+
+-- TEST: insert returning error case, bogus insert
+-- + error: % table in insert statement does not exist 'insert_returning_yeah_no'
+-- + {create_proc_stmt}: err
+-- + {insert_returning_stmt}: err
+-- +1 error:
+proc insert_returning_invalid_insert ()
+begin
+  insert into insert_returning_yeah_no
+    values (1, 2)
+    returning (ix + iy as xy, ix, iy);
+end;
+
+-- TEST: insert returning error case, bogus with ... insert
+-- + error: % string operand not allowed in 'NOT'
+-- + {create_proc_stmt}: err
+-- + {insert_returning_stmt}: err
+-- +1 error:
+proc insert_returning_invalid_with_insert ()
+begin
+  with foo as (select not 'x')
+  insert into insert_returning_test
+    values (1, 2)
+    returning (ix + iy as xy, ix, iy);
+end;
+
+-- TEST: insert returning error case, bogus select list
+-- + error: % name not found 'nope'
+-- + {create_proc_stmt}: err
+-- + {insert_returning_stmt}: err
+-- + {select_expr_list}: err
+-- +1 error:
+proc insert_returning_invalid_return ()
+begin
+  insert into insert_returning_test
+    values (1, 2)
+    returning (nope);
+end;
+
+-- TEST: insert returning in a cursor
+-- The procedure did not get the type of the cursor! That only happens if the insert is "loose"
+-- + {create_proc_stmt}: ok dml_proc
+-- + {declare_cursor}: C: select: { xy: integer, ix: integer, iy: integer } variable dml_proc
+-- - error:
+proc insert_returning_cursor()
+begin
+  declare C cursor for insert into insert_returning_test(ix,iy) values (1,2)
+  returning (ix+iy xy, ix, iy);
+  loop fetch C
+  begin
+    printf("%d %d %d", C.ix, C.iy, C.xy);
+  end;
+end;
+
+-- TEST: insert statement without returns doesn't produce a result
+-- + error: % only INSERT with a RETURNING clause may be used as a source of rows
+-- + {declare_cursor}: err
+-- +1 error:
+proc insert_returning_cursor_bogus()
+begin
+  declare C cursor for insert into insert_returning_test(ix,iy) values (1,2);
+end;
+
+[[backing_table]]
+[[json]]
+create table jb_insert (
+  k blob primary key,
+  v blob
+);
+
+[[backed_by=jb_insert]]
+create table jbacked(
+  id int primary key,
+  name text,
+  age int
+);
+
+-- TEST: rewrite backed table returning
+-- verify the rewrite only
+-- + WITH
+-- +   _vals (id, name, age) AS (
+-- +     VALUES
+-- +       (1, 'x', 10),
+-- +       (2, 'y', 15)
+-- +   )
+-- + INSERT INTO jb_insert(k, v)
+-- +   SELECT cql_blob_create(jbacked, V.id, jbacked.id),
+-- = cql_blob_create(jbacked, V.name, jbacked.name, V.age, jbacked.age)
+-- +     FROM _vals AS V
+-- +   RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
+-- - error:
+proc insert_into_backed_returning()
+begin
+  insert into jbacked values (1, 'x', 10), (2, 'y', 15)
+  returning (id, name, age);
 end;

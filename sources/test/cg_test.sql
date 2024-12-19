@@ -6151,6 +6151,46 @@ begin
     from jdata T1 join backed T2 on T1.id = T2.id;
 end;
 
+create table insert_returning_test(ix int, iy int);
+
+-- TEST: test codegen for a cursor that uses insert returning
+-- + DECLARE PROC insert_returning_cursor () USING TRANSACTION;
+-- + CQL_WARN_UNUSED cql_code insert_returning_cursor(sqlite3 *_Nonnull _db_) {
+-- + _rc_ = cql_prepare(_db_, &C_stmt,
+-- + "INSERT INTO insert_returning_test(ix, iy) "
+-- + "VALUES (1, 2) "
+-- + "RETURNING (ix + iy AS xy, ix, iy)");
+proc insert_returning_cursor()
+begin
+  declare C cursor for
+    insert into insert_returning_test(ix,iy) values (1,2)
+      returning (ix+iy xy, ix, iy);
+end;
+
+-- TEST: test codegen for a uses insert returning
+-- prelim info
+-- + static cql_uint16 insert_returning_resultset_col_offsets[] = { 3,
+-- + cql_offsetof(insert_returning_resultset_row, xy),
+-- + cql_offsetof(insert_returning_resultset_row, ix),
+-- + cql_offsetof(insert_returning_resultset_row, iy)
+-- + };
+-- + cql_int32 insert_returning_resultset_result_count
+-- + CQL_WARN_UNUSED cql_code insert_returning_resultset_fetch_results
+--
+--  statement generator
+-- + DECLARE PROC insert_returning_resultset () (xy INT, ix INT, iy INT);
+-- + CQL_WARN_UNUSED cql_code insert_returning_resultset(sqlite3 *_Nonnull _db_, sqlite3_stmt *
+-- + *_result_stmt = NULL;
+-- + _rc_ = cql_prepare(_db_, _result_stmt,
+-- + "INSERT INTO insert_returning_test(ix, iy) "
+-- + "VALUES (1, 2) "
+-- + "RETURNING (ix + iy AS xy, ix, iy)");
+proc insert_returning_resultset()
+begin
+  insert into insert_returning_test(ix,iy) values (1,2)
+    returning (ix+iy xy, ix, iy);
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

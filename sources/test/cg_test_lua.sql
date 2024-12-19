@@ -5272,6 +5272,36 @@ begin
   let z := real_func(1) + real_func(2);
 end;
 
+create table insert_returning_test(ix int, iy int);
+
+-- TEST: test codegen for a cursor that uses insert returning
+-- + function insert_returning_cursor(_db_)
+-- + local C_fields_ = { "xy", "ix", "iy" }
+-- + local C_types_ = "iii"
+-- +  _rc_, C_stmt = cql_prepare(_db_,
+-- + "INSERT INTO insert_returning_test(ix, iy) VALUES (1, 2) RETURNING (ix + iy AS xy, ix, iy)")
+-- + C_stmt = nil
+-- + return _rc_
+proc insert_returning_cursor()
+begin
+  declare C cursor for
+    insert into insert_returning_test(ix,iy) values (1,2)
+      returning (ix+iy xy, ix, iy);
+end;
+
+-- TEST: test codegen for a uses insert returning
+-- + function insert_returning_resultset(_db_)
+-- + _rc_, _result_stmt = cql_prepare(_db_,
+-- + "INSERT INTO insert_returning_test(ix, iy) VALUES (1, 2) RETURNING (ix + iy AS xy, ix, iy)")
+-- + return _rc_, _result_stmt
+-- + function insert_returning_resultset_fetch_results(_db_)
+-- + _rc_, result_set = cql_fetch_all_rows(stmt, "iii", { "xy", "ix", "iy" })
+proc insert_returning_resultset()
+begin
+  insert into insert_returning_test(ix,iy) values (1,2)
+    returning (ix+iy xy, ix, iy);
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

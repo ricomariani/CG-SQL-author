@@ -886,21 +886,22 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
   STMT_INIT_DDL(create_trigger_stmt);
 
   // dml
-  STMT_INIT_EXPL(select_stmt);
-  STMT_INIT_EXPL(with_select_stmt);
-  STMT_INIT_EXPL(with_insert_stmt);
-  STMT_INIT_EXPL(with_update_stmt);
-  STMT_INIT_EXPL(update_stmt);
-  STMT_INIT_EXPL(delete_stmt);
-  STMT_INIT_EXPL(with_delete_stmt);
-  STMT_INIT_EXPL(insert_stmt);
-  STMT_INIT_EXPL(with_upsert_stmt);
-  STMT_INIT_EXPL(upsert_stmt);
-  STMT_INIT_EXPL(drop_table_stmt);
-  STMT_INIT_EXPL(drop_view_stmt);
-  STMT_INIT_EXPL(drop_index_stmt);
   STMT_INIT_EXPL(begin_trans_stmt);
   STMT_INIT_EXPL(commit_trans_stmt);
+  STMT_INIT_EXPL(delete_stmt);
+  STMT_INIT_EXPL(drop_index_stmt);
+  STMT_INIT_EXPL(drop_table_stmt);
+  STMT_INIT_EXPL(drop_view_stmt);
+  STMT_INIT_EXPL(insert_returning_stmt);
+  STMT_INIT_EXPL(insert_stmt);
+  STMT_INIT_EXPL(select_stmt);
+  STMT_INIT_EXPL(update_stmt);
+  STMT_INIT_EXPL(upsert_stmt);
+  STMT_INIT_EXPL(with_delete_stmt);
+  STMT_INIT_EXPL(with_insert_stmt);
+  STMT_INIT_EXPL(with_select_stmt);
+  STMT_INIT_EXPL(with_update_stmt);
+  STMT_INIT_EXPL(with_upsert_stmt);
 
   CHARBUF_OPEN(query_plans_buf);
   query_plans = &query_plans_buf;

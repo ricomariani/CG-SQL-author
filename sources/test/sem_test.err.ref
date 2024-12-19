@@ -1851,4 +1851,5 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 test/sem_test.sql:XXXX:1: error: in str : CQL0160: table in insert statement does not exist 'insert_returning_yeah_no'
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'nope'
+test/sem_test.sql:XXXX:1: error: in insert_stmt : CQL0168: only INSERT with a RETURNING clause may be used as a source of rows
 semantic errors present; no code gen.

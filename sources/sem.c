@@ -298,7 +298,7 @@ static bool_t sem_validate_arg_pattern(CSTR _Nonnull type_string, ast_node *_Non
 static sem_node *_Nonnull new_sem_std(sem_t sem_type, ast_node *_Nonnull ast_call);
 static void sem_infer_result_blob_type(ast_node *ast, ast_node *arg_list);
 static void sem_proc_call_post_check(CSTR name, ast_node *ast, ast_node *arg_list);
-static void sem_insert_returning_stmt(ast_node *ast);
+static void sem_insert_returning(ast_node *ast);
 
 // create a new id node either qid or normal based on the bool
 cql_noexport ast_node *new_str_or_qstr(CSTR name, sem_t sem_type) {
@@ -12904,11 +12904,7 @@ cql_noexport void sem_any_row_source(ast_node *ast) {
     sem_explain(ast);
   }
   else if (is_ast_insert_returning_stmt(ast)) {
-    sem_insert_returning_stmt(ast);
-  }
-  else if (is_insert_stmt(ast)) {
-    report_error(ast, "CQL0168: only INSERT with a RETURNING clause may be used as a source of rows", NULL);
-    record_error(ast);
+    sem_insert_returning(ast);
   }
   else {
     Contract(is_ast_select_stmt(ast));
@@ -18472,7 +18468,7 @@ cleanup:
   sem_pop_cte_state();
 }
 
-static void sem_insert_returning_stmt(ast_node *ast) {
+static void sem_insert_returning(ast_node *ast) {
   Contract(is_ast_insert_returning_stmt(ast));
   EXTRACT_ANY_NOTNULL(insert_stmt, ast->left);
   EXTRACT_NOTNULL(select_expr_list, ast->right);
@@ -18510,6 +18506,10 @@ static void sem_insert_returning_stmt(ast_node *ast) {
   }
 
   ast->sem = select_expr_list->sem;
+}
+
+static void sem_insert_returning_stmt(ast_node *ast) {
+  sem_insert_returning(ast);
   sem_update_proc_type_for_select(ast);
 }
 
@@ -21932,6 +21932,12 @@ static void sem_declare_cursor(ast_node *ast) {
     // A DML source require a not null db pointer. This info is used to
     // decided whether we can do encoding/decoding of result_set's fields.
     out_union_and_dml = SEM_TYPE_DML_PROC;
+  }
+  else if (is_insert_stmt(ast->right)) {
+    report_error(ast->right, "CQL0168: only INSERT with a RETURNING clause may be used as a source of rows", NULL);
+    record_error(ast->right);
+    record_error(ast);
+    return;
   }
   else if (is_ast_call_stmt(ast->right)) {
     EXTRACT_NOTNULL(call_stmt, ast->right);

@@ -25746,3 +25746,27 @@ begin
     values (1, 2)
     returning (nope);
 end;
+
+-- TEST: insert returning in a cursor
+-- The procedure did not get the type of the cursor! That only happens if the insert is "loose"
+-- + {create_proc_stmt}: ok dml_proc
+-- + {declare_cursor}: C: select: { xy: integer, ix: integer, iy: integer } variable dml_proc
+-- - error:
+proc insert_returning_cursor()
+begin
+  declare C cursor for insert into insert_returning_test(ix,iy) values (1,2)
+  returning (ix+iy xy, ix, iy);
+  loop fetch C
+  begin
+    printf("%d %d %d", C.ix, C.iy, C.xy);
+  end;
+end;
+
+-- TEST: insert statement without returns doesn't produce a result
+-- + error: % only INSERT with a RETURNING clause may be used as a source of rows
+-- + {declare_cursor}: err
+-- +1 error:
+proc insert_returning_cursor_bogus()
+begin
+  declare C cursor for insert into insert_returning_test(ix,iy) values (1,2);
+end;

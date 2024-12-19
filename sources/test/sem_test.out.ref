@@ -97452,3 +97452,120 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'nope'
           | {select_expr}: err
             | {name nope}: err
 
+The statement ending at line XXXX
+
+PROC insert_returning_cursor ()
+BEGIN
+  CURSOR C FOR
+    INSERT INTO insert_returning_test(ix, iy)
+      VALUES (1, 2)
+      RETURNING (ix + iy AS xy, ix, iy);
+  LOOP FETCH C
+  BEGIN
+    CALL printf("%d %d %d", C.ix, C.iy, C.xy);
+  END;
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name insert_returning_cursor}: ok dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_cursor}: C: select: { xy: integer, ix: integer, iy: integer } variable dml_proc
+      | | {name C}: C: select: { xy: integer, ix: integer, iy: integer } variable dml_proc shape_storage
+      | | {insert_returning_stmt}: select: { xy: integer, ix: integer, iy: integer }
+      |   | {insert_stmt}: ok
+      |   | | {insert_normal}
+      |   | | {name_columns_values}
+      |   |   | {name insert_returning_test}: insert_returning_test: { ix: integer, iy: integer }
+      |   |   | {columns_values}: ok
+      |   |     | {column_spec}
+      |   |     | | {name_list}
+      |   |     |   | {name ix}: ix: integer
+      |   |     |   | {name_list}
+      |   |     |     | {name iy}: iy: integer
+      |   |     | {select_stmt}: values: { column1: integer notnull, column2: integer notnull }
+      |   |       | {select_core_list}: values: { column1: integer notnull, column2: integer notnull }
+      |   |       | | {select_core}: values: { column1: integer notnull, column2: integer notnull }
+      |   |       |   | {select_values}
+      |   |       |   | {values}: values: { column1: integer notnull, column2: integer notnull }
+      |   |       |     | {insert_list}: ok
+      |   |       |       | {int 1}: integer notnull
+      |   |       |       | {insert_list}
+      |   |       |         | {int 2}: integer notnull
+      |   |       | {select_orderby}
+      |   |         | {select_limit}
+      |   |           | {select_offset}
+      |   | {select_expr_list}: select: { xy: integer, ix: integer, iy: integer }
+      |     | {select_expr}: xy: integer
+      |     | | {add}: integer
+      |     | | | {name ix}: ix: integer
+      |     | | | {name iy}: iy: integer
+      |     | | {opt_as_alias}
+      |     |   | {name xy}
+      |     | {select_expr_list}
+      |       | {select_expr}: ix: integer
+      |       | | {name ix}: ix: integer
+      |       | {select_expr_list}
+      |         | {select_expr}: iy: integer
+      |           | {name iy}: iy: integer
+      | {loop_stmt}: ok
+        | {fetch_stmt}: C: select: { xy: integer, ix: integer, iy: integer } variable dml_proc shape_storage
+        | | {name C}: C: select: { xy: integer, ix: integer, iy: integer } variable dml_proc shape_storage
+        | {stmt_list}: ok
+          | {call_stmt}: ok
+            | {name printf}: ok
+            | {arg_list}: ok
+              | {strlit '%d %d %d'}: text notnull
+              | {arg_list}
+                | {dot}: C.ix: integer variable
+                | | {name C}
+                | | {name ix}
+                | {arg_list}
+                  | {dot}: C.iy: integer variable
+                  | | {name C}
+                  | | {name iy}
+                  | {arg_list}
+                    | {dot}: C.xy: integer variable
+                      | {name C}
+                      | {name xy}
+
+The statement ending at line XXXX
+
+PROC insert_returning_cursor_bogus ()
+BEGIN
+  CURSOR C FOR
+    INSERT INTO insert_returning_test(ix, iy)
+      VALUES (1, 2);
+END;
+
+test/sem_test.sql:XXXX:1: error: in insert_stmt : CQL0168: only INSERT with a RETURNING clause may be used as a source of rows
+
+  {create_proc_stmt}: err
+  | {name insert_returning_cursor_bogus}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_cursor}: err
+        | {name C}
+        | {insert_stmt}: err
+          | {insert_normal}
+          | {name_columns_values}
+            | {name insert_returning_test}
+            | {columns_values}
+              | {column_spec}
+              | | {name_list}
+              |   | {name ix}
+              |   | {name_list}
+              |     | {name iy}
+              | {select_stmt}
+                | {select_core_list}
+                | | {select_core}
+                |   | {select_values}
+                |   | {values}
+                |     | {insert_list}
+                |       | {int 1}
+                |       | {insert_list}
+                |         | {int 2}
+                | {select_orderby}
+                  | {select_limit}
+                    | {select_offset}
+

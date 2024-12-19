@@ -2204,7 +2204,7 @@ declare_value_cursor[result]:
   | CURSOR name LIKE '(' typed_names ')' { $result = new_ast_declare_cursor_like_typed_names($name, $typed_names); }
   ;
 
-row_source: select_stmt | explain_stmt | insert_stmt;
+row_source: select_stmt | explain_stmt | insert_stmt | call_stmt;
 
 declare_forward_read_cursor_stmt[result]:
   DECLARE name CURSOR FOR row_source  { $result = new_ast_declare_cursor($name, $row_source); }

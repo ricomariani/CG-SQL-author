@@ -6208,13 +6208,16 @@ static void sem_update_proc_type_for_select(ast_node *ast) {
 
   Contract(is_out || is_out_union || is_rows || is_calling_out_union);
 
-  // Ignore 'select'/'call'/'out'/'out union' statement nodes inside explain
-  // statement subtree. This method should be called once for explain statement
-  // at the root node
+  // Ignore any row sources that try to set the procedure return code
+  // in the context of an EXPLAIN statement. The result will be set
+  // by the EXPLAIN itself rather than the target of the explain.
+  // The explain target could be anything but only row sources will
+  // try to set the return type of the procedure.
   if (current_explain_stmt && !is_ast_explain_stmt(ast)) {
-    // In this code only select stmt will be used inside explain stmt, let's
-    // make sure it stays the same
-    Contract(is_select_variant(ast));
+    // explainable things like DROP and DELETE do not come here
+    // they are not row sources, they have no business calling
+    // sem_update_proc_type_for_select
+    Contract(is_row_source(ast));
     return;
   }
 

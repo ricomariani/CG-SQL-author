@@ -298,6 +298,7 @@ static bool_t sem_validate_arg_pattern(CSTR _Nonnull type_string, ast_node *_Non
 static sem_node *_Nonnull new_sem_std(sem_t sem_type, ast_node *_Nonnull ast_call);
 static void sem_infer_result_blob_type(ast_node *ast, ast_node *arg_list);
 static void sem_proc_call_post_check(CSTR name, ast_node *ast, ast_node *arg_list);
+static void sem_insert_returning_stmt(ast_node *ast);
 
 // create a new id node either qid or normal based on the bool
 cql_noexport ast_node *new_str_or_qstr(CSTR name, sem_t sem_type) {
@@ -11742,7 +11743,7 @@ static void sem_table_or_subquery(ast_node *ast) {
   }
   else if (is_select_variant(factor)) {
     // [SELECT ...]
-    sem_any_row_source(factor);
+    sem_any_row_source(factor); // handles more than just select variants but that's ok
 
     if (is_error(factor)) {
       record_error(ast);
@@ -12901,6 +12902,13 @@ cql_noexport void sem_any_row_source(ast_node *ast) {
   }
   else if (is_ast_explain_stmt(ast)) {
     sem_explain(ast);
+  }
+  else if (is_ast_insert_returning_stmt(ast)) {
+    sem_insert_returning_stmt(ast);
+  }
+  else if (is_insert_stmt(ast)) {
+    report_error(ast, "CQL0168: only INSERT with a RETURNING clause may be used as a source of rows", NULL);
+    record_error(ast);
   }
   else {
     Contract(is_ast_select_stmt(ast));

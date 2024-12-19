@@ -1681,7 +1681,12 @@ that could be used.  You need to provide a value for the missing column.
 
 -----
 
-### CQL0168 available for re-use
+### CQL0168 : only INSERT with a RETURNING clause may be used as a source of rows
+
+An insert statement lacking the RETURNING clause does not produce any result
+therefore it is not suitable for use to fill a cursor or other such things
+that need results.  With the RETURNING clause the INSERT statement is, in
+very real way, behaving like a special SELECT.
 
 -----
 

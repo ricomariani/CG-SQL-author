@@ -321,7 +321,7 @@ static void cql_reset_globals(void);
 %type <aval> insert_stmt insert_list_item insert_list insert_stmt_type returning_suffix insert_stmt_plain
 %type <aval> column_spec opt_column_spec opt_insert_dummy_spec expr_names expr_name
 %type <aval> with_prefix with_select_stmt cte_table cte_tables cte_binding_list cte_binding cte_decl shared_cte
-%type <aval> select_expr select_expr_list select_opts select_stmt select_core values explain_stmt explain_target
+%type <aval> select_expr select_expr_list select_opts select_stmt select_core values explain_stmt explain_target row_source
 %type <aval> select_stmt_no_with select_core_list
 %type <aval> window_func_inv opt_filter_clause window_name_or_defn window_defn opt_select_window
 %type <aval> opt_partition_by opt_frame_spec frame_boundary_opts frame_boundary_start frame_boundary_end frame_boundary
@@ -2204,13 +2204,11 @@ declare_value_cursor[result]:
   | CURSOR name LIKE '(' typed_names ')' { $result = new_ast_declare_cursor_like_typed_names($name, $typed_names); }
   ;
 
+row_source: select_stmt | explain_stmt | insert_stmt;
+
 declare_forward_read_cursor_stmt[result]:
-  DECLARE name CURSOR FOR select_stmt  { $result = new_ast_declare_cursor($name, $select_stmt); }
-  | CURSOR name FOR select_stmt  { $result = new_ast_declare_cursor($name, $select_stmt); }
-  | DECLARE name CURSOR FOR explain_stmt  { $result = new_ast_declare_cursor($name, $explain_stmt); }
-  | CURSOR name FOR explain_stmt  { $result = new_ast_declare_cursor($name, $explain_stmt); }
-  | DECLARE name CURSOR FOR call_stmt  { $result = new_ast_declare_cursor($name, $call_stmt); }
-  | CURSOR name FOR call_stmt  { $result = new_ast_declare_cursor($name, $call_stmt); }
+  DECLARE name CURSOR FOR row_source  { $result = new_ast_declare_cursor($name, $row_source); }
+  | CURSOR name FOR row_source  { $result = new_ast_declare_cursor($name, $row_source); }
   | DECLARE name[id] CURSOR FOR expr { $result = new_ast_declare_cursor($id, $expr); }
   | CURSOR name[id] FOR expr { $result = new_ast_declare_cursor($id, $expr); }
   ;

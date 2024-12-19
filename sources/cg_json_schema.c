@@ -1898,7 +1898,7 @@ static void cg_fragment(charbuf *output, CSTR frag, ast_node *ast, gen_func fn) 
 //  * the select list
 //  * the expression list and the optional (and highly important) other clauses
 static void cg_json_select_stmt(charbuf *output, ast_node *ast) {
-  Contract(is_select_stmt(ast));
+  Contract(is_select_variant(ast));
 
   cg_fragment_with_params(output, "statement", ast, gen_one_stmt);
 }
@@ -2064,7 +2064,7 @@ bool_t static is_simple_insert(ast_node *ast) {
 
   EXTRACT_NOTNULL(name_columns_values, ast->right);
   EXTRACT_NOTNULL(columns_values, name_columns_values->right);
-  if (!is_select_stmt(columns_values->right)) {
+  if (!is_select_variant(columns_values->right)) {
     // the insert statement does not have a select statement
     return true;
   }
@@ -2455,7 +2455,7 @@ static void cg_json_create_proc(charbuf *unused, ast_node *ast, ast_node *misc_a
 
   // we have to see if it uses shared fragments, this can't be "simple"
   // because the parameters can be synthetic and require assignments and such
-  if (simple && is_select_stmt(stmt)) {
+  if (simple && is_select_variant(stmt)) {
     found_shared_fragment = false;
     CHARBUF_OPEN(scratch);
     cg_json_select_stmt(&scratch, stmt); // easy way to walk the tree
@@ -2463,7 +2463,7 @@ static void cg_json_create_proc(charbuf *unused, ast_node *ast, ast_node *misc_a
     simple = !found_shared_fragment;
   }
 
-  if (simple && is_select_stmt(stmt)) {
+  if (simple && is_select_variant(stmt)) {
     output = queries;
     cg_begin_item_attrs(output, ast, misc_attrs);
     BEGIN_INDENT(proc, 2);

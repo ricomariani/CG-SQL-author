@@ -2938,7 +2938,7 @@ insert into foo select id from bar where 1 on conflict(id) do update set id=10;
 
 -----
 
-### CQL0282: update statement require table name
+### CQL0282: update statement requires a table name
 
 The UPDATE statement should always include a table name except if the UPDATE
 statement is part of an UPSERT statement. e.g:

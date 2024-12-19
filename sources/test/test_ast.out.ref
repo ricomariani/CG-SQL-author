@@ -19306,3 +19306,82 @@ The statement ending at line XXXX
   | {name without}
   | {int 0}
 
+The statement ending at line XXXX
+
+  {insert_returning_stmt}
+  | {insert_stmt}
+  | | {insert_normal}
+  | | {name_columns_values}
+  |   | {name foo}
+  |   | {columns_values}
+  |     | {select_stmt}
+  |       | {select_core_list}
+  |       | | {select_core}
+  |       |   | {select_values}
+  |       |   | {values}
+  |       |     | {insert_list}
+  |       |       | {int 1}
+  |       | {select_orderby}
+  |         | {select_limit}
+  |           | {select_offset}
+  | {select_expr_list}
+    | {select_expr}
+    | | {name a}
+    | {select_expr_list}
+      | {select_expr}
+      | | {name b}
+      | {select_expr_list}
+        | {select_expr}
+          | {name c}
+
+The statement ending at line XXXX
+
+  {insert_returning_stmt}
+  | {with_insert_stmt}
+  | | {with}
+  | | | {cte_tables}
+  | |   | {cte_table}
+  | |     | {cte_decl}
+  | |     | | {name blah}
+  | |     | | {star}
+  | |     | {select_stmt}
+  | |       | {select_core_list}
+  | |       | | {select_core}
+  | |       |   | {select_expr_list_con}
+  | |       |     | {select_expr_list}
+  | |       |     | | {select_expr}
+  | |       |     |   | {int 1}
+  | |       |     |   | {opt_as_alias}
+  | |       |     |     | {name x}
+  | |       |     | {select_from_etc}
+  | |       |       | {select_where}
+  | |       |         | {select_groupby}
+  | |       |           | {select_having}
+  | |       | {select_orderby}
+  | |         | {select_limit}
+  | |           | {select_offset}
+  | | {insert_stmt}
+  |   | {insert_normal}
+  |   | {name_columns_values}
+  |     | {name foo}
+  |     | {columns_values}
+  |       | {select_stmt}
+  |         | {select_core_list}
+  |         | | {select_core}
+  |         |   | {select_values}
+  |         |   | {values}
+  |         |     | {insert_list}
+  |         |       | {int 1}
+  |         | {select_orderby}
+  |           | {select_limit}
+  |             | {select_offset}
+  | {select_expr_list}
+    | {select_expr}
+    | | {name a}
+    | {select_expr_list}
+      | {select_expr}
+      | | {name b}
+      | {select_expr_list}
+        | {select_expr}
+          | {name c}
+

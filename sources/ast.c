@@ -188,11 +188,24 @@ cql_noexport bool_t is_region(ast_node *ast) {
          is_ast_declare_deployable_region_stmt(ast);
 }
 
-// Any of the select forms
-cql_noexport bool_t is_select_stmt(ast_node *ast) {
+// Any of the select forms note that is_ast_select_nothing_stmt(ast) is not a
+// a generally usable form so it can only appear in a few places and
+// therefore is not included here.  It has to have its own checks in exactly
+// those places.  In most places it simply won't do.
+cql_noexport bool_t is_select_variant(ast_node *ast) {
+  return is_ast_select_stmt(ast) ||
+         is_ast_with_select_stmt(ast);
+}
+
+// These are all the things you could reasonably feed to a cursor or that
+// might be a source of rows in a query in a procedure.  These can affect
+// the return type of a procedure if they are "loose" in that procedure.
+cql_noexport bool_t is_row_source(ast_node *ast) {
+  // note that only insert returning is supported at this time
   return is_ast_select_stmt(ast) ||
          is_ast_explain_stmt(ast) ||
          is_ast_select_nothing_stmt(ast) ||
+         is_ast_insert_returning_stmt(ast) ||
          is_ast_with_select_stmt(ast);
 }
 
@@ -209,10 +222,10 @@ cql_noexport bool_t is_update_stmt(ast_node *ast) {
 }
 
 // Any of the insert forms
-// TODO update this as needed and fix the callers
 cql_noexport bool_t is_insert_stmt(ast_node *ast) {
   return is_ast_insert_stmt(ast) ||
          is_ast_with_insert_stmt(ast) ||
+         is_ast_insert_returning_stmt(ast) ||
          is_ast_upsert_stmt(ast) ||
          is_ast_with_upsert_stmt(ast);
 }

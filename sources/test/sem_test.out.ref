@@ -41953,7 +41953,7 @@ BEGIN
   END;
 END;
 
-test/sem_test.sql:XXXX:1: error: in update_stmt : CQL0282: update statement require table name
+test/sem_test.sql:XXXX:1: error: in update_stmt : CQL0282: update statement requires a table name
 
   {create_proc_stmt}: err
   | {name update_without_table_name}: err

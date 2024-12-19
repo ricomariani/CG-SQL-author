@@ -11139,7 +11139,7 @@ end;
 -- + {name update_without_table_name}: err
 -- + {create_trigger_stmt}: err
 -- + {update_stmt}: err
--- * error: % update statement require table name
+-- * error: % update statement requires a table name
 -- +1 error:
 proc update_without_table_name()
 begin

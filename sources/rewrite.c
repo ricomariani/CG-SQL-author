@@ -626,7 +626,7 @@ cql_noexport void rewrite_expr_names_to_columns_values(ast_node *columns_values)
 // e.g: insert into X using select 1 a, 2 b, 3 c; ==> insert into X (a,b,c) values (1, 2, 3);
 cql_noexport void rewrite_select_stmt_to_columns_values(ast_node *columns_values) {
   EXTRACT_ANY_NOTNULL(select_stmt, columns_values);
-  Contract(is_select_stmt(select_stmt));
+  Contract(is_select_variant(select_stmt));
 
   AST_REWRITE_INFO_SET(columns_values->lineno, columns_values->filename);
 
@@ -2459,7 +2459,7 @@ cql_noexport void rewrite_select_for_backed_tables(
 
   AST_REWRITE_INFO_RESET();
 
-  sem_select(stmt);
+  sem_any_row_source(stmt);
 }
 
 // As we do our recursion creating the fields for blob creation we flow this state
@@ -2905,7 +2905,7 @@ cql_noexport void rewrite_insert_statement_for_backed_table(
   // Now either the incoming list came in before it was transformed, in which
   // case contract is broken, or we fixed the one legal case above.  We have an
   // select statement or a broken caller.
-  Contract(is_select_stmt(insert_list));
+  Contract(is_select_variant(insert_list));
 
   EXTRACT_NOTNULL(name_list, column_spec->left);
 

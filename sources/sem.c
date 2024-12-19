@@ -6190,22 +6190,22 @@ cql_noexport void sem_verify_identical_columns(
 static void sem_update_proc_type_for_select(ast_node *ast) {
   bool_t is_out = is_ast_out_stmt(ast);
   bool_t is_out_union = is_ast_out_union_stmt(ast);
-  bool_t is_select = is_select_stmt(ast);
+  bool_t is_rows = is_row_source(ast);
   bool_t is_calling_out_union = false;
 
   if (is_ast_call_stmt(ast)) {
      // still nothing
-      Invariant(!(is_out || is_out_union || is_select));
+      Invariant(!(is_out || is_out_union || is_rows));
 
      // the type of result is based on the call type
      sem_t sem_call = ast->sem->sem_type;
 
      is_out = !!(sem_call & SEM_TYPE_USES_OUT);
      is_calling_out_union = !!(sem_call & SEM_TYPE_USES_OUT_UNION);
-     is_select = !(is_calling_out_union || is_out);
+     is_rows = !(is_calling_out_union || is_out);
   }
 
-  Contract(is_out || is_out_union || is_select || is_calling_out_union);
+  Contract(is_out || is_out_union || is_rows || is_calling_out_union);
 
   // Ignore 'select'/'call'/'out'/'out union' statement nodes inside explain
   // statement subtree. This method should be called once for explain statement
@@ -6213,7 +6213,7 @@ static void sem_update_proc_type_for_select(ast_node *ast) {
   if (current_explain_stmt && !is_ast_explain_stmt(ast)) {
     // In this code only select stmt will be used inside explain stmt, let's
     // make sure it stays the same
-    Contract(is_select_stmt(ast));
+    Contract(is_select_variant(ast));
     return;
   }
 
@@ -6289,7 +6289,7 @@ static void sem_update_proc_type_for_select(ast_node *ast) {
 
   Invariant(did_out + did_out_union + did_select + did_call_out_union == 1);
 
-  if (is_out != did_out || is_out_union != did_out_union || is_select != did_select || is_calling_out_union != did_call_out_union) {
+  if (is_out != did_out || is_out_union != did_out_union || is_rows != did_select || is_calling_out_union != did_call_out_union) {
     report_error(ast, "CQL0063: can't mix and match out, out union, or select/call for return values", name);
     record_error(ast);
     return;
@@ -8174,7 +8174,7 @@ static void sem_expr_exists(ast_node *ast, CSTR cstr) {
     return;
   }
 
-  sem_select(select_stmt);
+  sem_any_row_source(select_stmt);
   if (is_error(select_stmt)) {
     record_error(ast);
     return;
@@ -11740,9 +11740,9 @@ static void sem_table_or_subquery(ast_node *ast) {
     ast->sem = factor->sem = sem;
     alias_target = &ast->sem->jptr->names[0];
   }
-  else if (is_select_stmt(factor)) {
+  else if (is_select_variant(factor)) {
     // [SELECT ...]
-    sem_select(factor);
+    sem_any_row_source(factor);
 
     if (is_error(factor)) {
       record_error(ast);
@@ -12893,8 +12893,8 @@ static void sem_select_core_list(ast_node *ast) {
   ast->sem->used_symbols = select_core->sem->used_symbols;
 }
 
-// Any select in any context (used when a select appears within another statement)
-cql_noexport void sem_select(ast_node *ast) {
+// Any row source in any context (used when a select appears within another statement)
+cql_noexport void sem_any_row_source(ast_node *ast) {
   select_level++;
   if (is_ast_with_select_stmt(ast)) {
     sem_with_select(ast);
@@ -12915,7 +12915,7 @@ cql_noexport void sem_select(ast_node *ast) {
 static void sem_select_rewrite_backing(ast_node *ast) {
   BEGIN_BACKING_REWRITE();
 
-  sem_select(ast);
+  sem_any_row_source(ast);
 
   // select doesn't have a target table like INSERT/UPDATE/DELETE just FROM tables
   ast_node *target_table = NULL;
@@ -12964,7 +12964,7 @@ error:
 
 // Top level statement list processing for select, note that a select statement
 // can't appear in other places (such as a nested expression).  This is only for
-// select in the context of a statement list.  Others use just 'sem_select'
+// select in the context of a statement list.  Others use just 'sem_any_row_source'
 static void sem_select_stmt(ast_node *stmt) {
   sem_select_rewrite_backing(stmt);
 
@@ -13184,7 +13184,18 @@ static void sem_accumulate_stmt_list(ast_node *ast, shared_cte_info *info) {
   if (is_ast_with_select_stmt(stmt)) {
     sem_accumulate_cte_info(stmt, info);
   }
-  else if (!is_select_stmt(stmt)) {
+  else if (is_ast_select_nothing_stmt(stmt)) {
+    // nothing to do here, no info
+    // note that select nothing is not considered a select variant because
+    // it can only go in this one place, it's generally useless and cannot
+    // be used as say a row sourde or in other places a select might go
+    // If you look at sem_select_nothing_stmt you'll see the analysis will
+    // fail if it appears anywhere but exactly in else caluse of a conditional
+    // shared fragment. So this is literally the only place it is allowed to be.
+    // It was made to do this one job. An `else` clause or empty else rewrite that
+    // produces the correct shaped empty row.
+  }
+  else if (!is_select_variant(stmt)) {
     info->non_select_stmt = stmt;
     return;
   }
@@ -13889,7 +13900,7 @@ static void sem_cte_table(ast_node *ast)  {
 
     ast_node *select_stmt = cte_body;
 
-    sem_select(select_stmt);
+    sem_any_row_source(select_stmt);
     if (is_error(select_stmt)) {
       record_error(ast);
       return;
@@ -13972,7 +13983,7 @@ static void sem_with_select(ast_node *ast) {
     goto cleanup;
   }
 
-  sem_select(select_stmt);
+  sem_any_row_source(select_stmt);
   if (is_error(select_stmt)) {
     record_error(ast);
     goto cleanup;
@@ -14164,7 +14175,7 @@ static void sem_create_view_stmt(ast_node *ast) {
   }
 
   // CREATE [opt_temp] VIEW [name] AS [select_stmt]
-  sem_select(select_stmt);
+  sem_any_row_source(select_stmt);
   if (is_error(select_stmt)) {
     record_error(ast);
     return;
@@ -17529,7 +17540,7 @@ static void sem_update_stmt(ast_node *ast) {
     // This means we're in an upsert statement therefore the table name should not
     // be provided in the update statement of upsert otherwise it's a symantical error
     if (!in_upsert) {
-      report_error(ast, "CQL0282: update statement require table name", NULL);
+      report_error(ast, "CQL0282: update statement requires a table name", NULL);
       goto cleanup;
     }
     table_ast = current_upsert_table_ast;
@@ -17906,7 +17917,7 @@ static void sem_column_spec_and_values(ast_node *ast, ast_node *table_ast) {
   else {
     // Since the insert statement does not have insert_dummy_spec, then we
     // don't need to do any rewrite.  Any select form is allowed then.
-    Contract(is_select_stmt(value_source));
+    Contract(is_select_variant(value_source));
     select_stmt = value_source;
   }
 
@@ -17925,7 +17936,7 @@ static void sem_column_spec_and_values(ast_node *ast, ast_node *table_ast) {
   }
 
   if (select_stmt) {
-    sem_select(select_stmt);
+    sem_any_row_source(select_stmt);
     if (is_error(select_stmt)) {
       record_error(ast);
       return;
@@ -18115,7 +18126,7 @@ static void sem_insert_stmt(ast_node *ast) {
   // here we look for the sugar form INSERT foo USING select ... and rewrite it
   // we just need to make sure the select is semantically ok and has names we can use
   // the rewrite itself will just create a name list, easy sugar.
-  if (is_select_stmt(columns_values)) {
+  if (is_select_variant(columns_values)) {
     sem_select_stmt(columns_values);
     if (is_error(columns_values)) {
       record_error(ast);
@@ -18200,14 +18211,17 @@ cleanup:
 }
 
 // Recursively goes through all the node to find the root select_stmt with SELECT token and
-// check whether or not it has WHERE clause.
+// checks whether or not it has WHERE clause.  We're doing this to force the upsert statement
+// we are scanning to have a WHERE clause in the SELECT statement. The upsert statement is
+// otherwise ambgiuously parseable.  So we force the issue in CQL ensuring SQLite will only
+// ever see the unambiguous form.  You might have to add WHERE TRUE like the SQLite docs say.
 static bool_t is_root_select_stmt_has_opt_where_node (ast_node *ast, int32_t *select_count) {
   if (!ast || is_primitive(ast)) {
     return false;
   }
 
   // we're only checking the root select stmt. The nested select stmt are skipped
-  if (is_select_stmt(ast)) {
+  if (is_select_variant(ast)) {
     EXTRACT_NOTNULL(select_core_list, ast->left);
     EXTRACT_NOTNULL(select_core, select_core_list->left);
     if (is_ast_select_values(select_core->left)) {
@@ -18449,6 +18463,48 @@ static void sem_with_insert_stmt(ast_node *stmt) {
 cleanup:
   sem_pop_cte_state();
 }
+
+static void sem_insert_returning_stmt(ast_node *ast) {
+  Contract(is_ast_insert_returning_stmt(ast));
+  EXTRACT_ANY_NOTNULL(insert_stmt, ast->left);
+  EXTRACT_NOTNULL(select_expr_list, ast->right);
+  ast_node *insert_stmt_plain = insert_stmt;
+
+  if (is_ast_with_insert_stmt(insert_stmt)) {
+    sem_with_insert_stmt(insert_stmt);
+    insert_stmt_plain = insert_stmt->right;
+    Contract(is_ast_insert_stmt(insert_stmt_plain));
+  }
+  else {
+    sem_insert_stmt(insert_stmt);
+  }
+
+  if (is_error(insert_stmt)) {
+    record_error(ast);
+    return;
+  }
+
+  Invariant(is_ast_insert_stmt(insert_stmt_plain));
+  EXTRACT_NOTNULL(name_columns_values, insert_stmt_plain->right);
+  EXTRACT_STRING(table_name, name_columns_values->left)
+
+  ast_node *table_ast = find_table_or_view_even_deleted(table_name);
+  Invariant(table_ast);  // already verified by the above
+
+  sem_join join = *table_ast->sem->jptr;
+  PUSH_JOIN(insert_scope, &join);
+  sem_select_expr_list(select_expr_list);
+  POP_JOIN();
+
+  if (is_error(select_expr_list)) {
+     record_error(ast);
+     return;
+  }
+
+  ast->sem = select_expr_list->sem;
+  sem_update_proc_type_for_select(ast);
+}
+
 
 // This code works for any of the cursor to/from blob forms as the checks are the same
 // the blob might be the source or the destination, the last two args tell us which way it is
@@ -20153,7 +20209,7 @@ static void sem_shared_fragment(ast_node *misc_attrs, ast_node *create_proc_stmt
 
   EXTRACT_ANY_NOTNULL(stmt, stmt_list->left);
 
-  if (!is_select_stmt(stmt) && !is_ast_if_stmt(stmt)) {
+  if (!is_select_variant(stmt) && !is_ast_if_stmt(stmt)) {
     report_error(stmt, "CQL0441: shared fragments may only have IF, SELECT, or WITH...SELECT at the top level", proc_name);
     record_error(misc_attrs);
     record_error(stmt_list);
@@ -21852,7 +21908,7 @@ static void sem_declare_cursor(ast_node *ast) {
 
   sem_t out_union_and_dml = 0;
 
-  if (is_select_stmt(ast->right)) {
+  if (is_row_source(ast->right)) {
     EXTRACT_ANY_NOTNULL(select_stmt, ast->right);
 
     // DECLARE [name] CURSOR FOR [select_stmt]
@@ -22124,7 +22180,7 @@ static void sem_declare_cursor_like_name(ast_node *ast) {
 // * The cursor name must be unique
 static void sem_declare_cursor_like_select(ast_node *ast) {
   Contract(is_ast_declare_cursor_like_select(ast));
-  Contract(is_select_stmt(ast->right));
+  Contract(is_select_variant(ast->right));
   EXTRACT_ANY_NOTNULL(cursor, ast->left);
   EXTRACT_STRING(name, cursor);
 
@@ -22134,7 +22190,7 @@ static void sem_declare_cursor_like_select(ast_node *ast) {
   {
     // the select statement doesn't count as DML because we won't be running it
     bool_t has_dml_saved = has_dml;
-    sem_select(select_stmt);
+    sem_any_row_source(select_stmt);
     has_dml = has_dml_saved;
   }
 
@@ -24833,7 +24889,7 @@ static void sem_expr_dot(ast_node *ast, CSTR cstr) {
 //     * if VALUES -> ok
 //     * if not compound, report error if top node is a join
 static bool_t sem_select_stmt_is_mixed_results(ast_node *ast) {
-  Contract(is_select_stmt(ast));
+  Contract(is_select_variant(ast));
   Contract(!is_ast_explain_stmt(ast));  // disallowed by grammar
 
   ast_node *select_stmt;
@@ -25021,7 +25077,7 @@ static bool_t sem_select_expr_must_return_a_row(ast_node *ast) {
 
 // Expression type for nested select expression
 static void sem_expr_select(ast_node *ast, CSTR cstr) {
-  Contract(is_select_stmt(ast));
+  Contract(is_select_variant(ast));
   EXTRACT_ANY_NOTNULL(parent, ast->parent);
 
   // this tells us if we might be the left side of a select if nothing
@@ -26443,6 +26499,7 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(update_stmt);
   STMT_INIT(update_cursor_stmt);
   STMT_INIT(with_update_stmt);
+  STMT_INIT(insert_returning_stmt);
   STMT_INIT(insert_stmt);
   STMT_INIT(with_insert_stmt);
   STMT_INIT(upsert_stmt);

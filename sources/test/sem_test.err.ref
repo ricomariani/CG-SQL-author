@@ -962,7 +962,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0281: upsert statement does not inc
 test/sem_test.sql:XXXX:1: error: in insert_stmt : CQL0280: upsert statement requires a where clause if the insert clause uses select
 test/sem_test.sql:XXXX:1: error: in insert_or_ignore : CQL0283: upsert syntax only supports INSERT INTO 'foo'
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'bogus'
-test/sem_test.sql:XXXX:1: error: in update_stmt : CQL0282: update statement require table name
+test/sem_test.sql:XXXX:1: error: in update_stmt : CQL0282: update statement requires a table name
 test/sem_test.sql:XXXX:1: error: in indexed_columns : CQL0279: columns referenced in an UPSERT conflict target must exactly match a unique key the target table
 test/sem_test.sql:XXXX:1: error: in upsert_stmt : CQL0289: upsert statement are forbidden if strict upsert statement mode is enabled
 test/sem_test.sql:XXXX:1: error: in window_func_inv : CQL0312: window function invocation are forbidden if strict window function mode is enabled

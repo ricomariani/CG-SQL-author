@@ -2275,7 +2275,7 @@ static void gen_expr_case(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) 
 }
 
 static void gen_expr_select(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
-  Contract(is_select_stmt(ast));
+  Contract(is_select_variant(ast));
   gen_printf("( ");
   gen_select_stmt(ast);
   gen_printf(" )");
@@ -3937,7 +3937,7 @@ static void gen_insert_stmt(ast_node *ast) {
     gen_printf(" USING ");
     gen_expr_names(columns_values);
   }
-  else if (is_select_stmt(columns_values)) {
+  else if (is_select_variant(columns_values)) {
     gen_printf(" USING ");
     gen_select_stmt(columns_values);
   }
@@ -3946,7 +3946,7 @@ static void gen_insert_stmt(ast_node *ast) {
     EXTRACT_ANY(insert_list, columns_values->right);
     gen_column_spec(column_spec);
 
-    if (is_select_stmt(insert_list)) {
+    if (is_select_variant(insert_list)) {
       gen_printf("\n");
       GEN_BEGIN_INDENT(sel, 2);
         gen_select_stmt(insert_list);
@@ -4516,7 +4516,7 @@ static void gen_declare_cursor(ast_node *ast) {
   gen_name(name_ast);
   gen_printf(" FOR");
 
-  if (is_select_stmt(source) || is_ast_call_stmt(source)) {
+  if (is_row_source(source) || is_ast_call_stmt(source)) {
     // The two statement cases are unified
     gen_printf("\n");
     GEN_BEGIN_INDENT(cursor, 2);

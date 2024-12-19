@@ -333,7 +333,7 @@ cql_noexport void sem_validate_cursor_blob_compat(ast_node *ast_error, ast_node 
 cql_noexport void sem_any_shape(ast_node *ast);
 cql_noexport sem_node *new_sem(sem_t sem_type);
 cql_noexport bool_t sem_verify_assignment(ast_node *ast, sem_t sem_type_needed, sem_t sem_type_found, CSTR var_name);
-cql_noexport void sem_select(ast_node *node);
+cql_noexport void sem_any_row_source(ast_node *node);
 cql_noexport ast_node *sem_recover_with_stmt(ast_node *ast);
 cql_noexport ast_node *sem_skip_with(ast_node *ast);
 cql_noexport bool_t is_table_not_physical(ast_node *table_ast);

@@ -7241,6 +7241,16 @@ static void cg_with_insert_stmt(ast_node *ast) {
 }
 
 // DML invocation but first set the seed variable if present
+static void cg_insert_returning_stmt(ast_node *ast) {
+  Contract(is_ast_insert_returning_stmt(ast));
+  EXTRACT_ANY_NOTNULL(inner, ast->left);
+  inner = is_ast_with_insert_stmt(inner) ? inner->right : inner;
+  Contract(is_ast_insert_stmt(inner));
+  cg_opt_seed_process(inner);
+  cg_bound_sql_statement("_result", ast, CG_PREPARE|CG_NO_MINIFY_ALIASES);
+}
+
+// DML invocation but first set the seed variable if present
 static void cg_with_upsert_stmt(ast_node *ast) {
   Contract(is_ast_with_upsert_stmt(ast));
   EXTRACT_NOTNULL(upsert_stmt, ast->right);
@@ -8708,6 +8718,7 @@ cql_noexport void cg_c_init(void) {
 
   // insert forms have some special processing for the 'seed' case
   STMT_INIT(insert_stmt);
+  STMT_INIT(insert_returning_stmt);
   STMT_INIT(with_insert_stmt);
   STMT_INIT(upsert_stmt);
   STMT_INIT(with_upsert_stmt);

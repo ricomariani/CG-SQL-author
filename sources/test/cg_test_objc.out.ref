@@ -4785,4 +4785,54 @@ static inline BOOL CGS_a_backed_join_row_equal(CGS_a_backed_join *resultSet1, cq
   return a_backed_join_row_equal(a_backed_join_from_CGS_a_backed_join(resultSet1), row1, a_backed_join_from_CGS_a_backed_join(resultSet2), row2);
 }
 
+@class CGS_insert_returning_resultset;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGS_insert_returning_resultset
+@end
+#endif
+
+static inline CGS_insert_returning_resultset *CGS_insert_returning_resultset_from_insert_returning_resultset(insert_returning_resultset_result_set_ref resultSet)
+{
+  return (__bridge CGS_insert_returning_resultset *)resultSet;
+}
+
+static inline insert_returning_resultset_result_set_ref insert_returning_resultset_from_CGS_insert_returning_resultset(CGS_insert_returning_resultset *resultSet)
+{
+  return (__bridge insert_returning_resultset_result_set_ref)resultSet;
+}
+
+static inline NSNumber *_Nullable CGS_insert_returning_resultset_get_xy(CGS_insert_returning_resultset *resultSet, cql_int32 row)
+{
+  insert_returning_resultset_result_set_ref cResultSet = insert_returning_resultset_from_CGS_insert_returning_resultset(resultSet);
+  return insert_returning_resultset_get_xy_is_null(cResultSet, row) ? nil : @(insert_returning_resultset_get_xy_value(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGS_insert_returning_resultset_get_ix(CGS_insert_returning_resultset *resultSet, cql_int32 row)
+{
+  insert_returning_resultset_result_set_ref cResultSet = insert_returning_resultset_from_CGS_insert_returning_resultset(resultSet);
+  return insert_returning_resultset_get_ix_is_null(cResultSet, row) ? nil : @(insert_returning_resultset_get_ix_value(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGS_insert_returning_resultset_get_iy(CGS_insert_returning_resultset *resultSet, cql_int32 row)
+{
+  insert_returning_resultset_result_set_ref cResultSet = insert_returning_resultset_from_CGS_insert_returning_resultset(resultSet);
+  return insert_returning_resultset_get_iy_is_null(cResultSet, row) ? nil : @(insert_returning_resultset_get_iy_value(cResultSet, row));
+}
+
+static inline cql_int32 CGS_insert_returning_resultset_result_count(CGS_insert_returning_resultset *resultSet)
+{
+  return insert_returning_resultset_result_count(insert_returning_resultset_from_CGS_insert_returning_resultset(resultSet));
+}
+
+static inline NSUInteger CGS_insert_returning_resultset_row_hash(CGS_insert_returning_resultset *resultSet, cql_int32 row)
+{
+  return insert_returning_resultset_row_hash(insert_returning_resultset_from_CGS_insert_returning_resultset(resultSet), row);
+}
+
+static inline BOOL CGS_insert_returning_resultset_row_equal(CGS_insert_returning_resultset *resultSet1, cql_int32 row1, CGS_insert_returning_resultset *resultSet2, cql_int32 row2)
+{
+  return insert_returning_resultset_row_equal(insert_returning_resultset_from_CGS_insert_returning_resultset(resultSet1), row1, insert_returning_resultset_from_CGS_insert_returning_resultset(resultSet2), row2);
+}
+
 NS_ASSUME_NONNULL_END

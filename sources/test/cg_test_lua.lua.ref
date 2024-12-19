@@ -8812,6 +8812,74 @@ function real_caller()
   z = cql_add(_tmp_n_double_0, _tmp_n_double_1)
 
 end
+
+-- The statement ending at line XXXX
+
+--[[
+PROC insert_returning_cursor ()
+BEGIN
+  CURSOR C FOR
+    INSERT INTO insert_returning_test(ix, iy)
+      VALUES (1, 2)
+      RETURNING (ix + iy AS xy, ix, iy);
+END;
+--]]
+
+function insert_returning_cursor(_db_)
+  local _rc_ = CQL_OK
+  local C_stmt = nil
+  local C = { _has_row_ = false }
+  local C_fields_ = { "xy", "ix", "iy" }
+  local C_types_ = "iii"
+
+  _rc_, C_stmt = cql_prepare(_db_, 
+    "INSERT INTO insert_returning_test(ix, iy) VALUES (1, 2) RETURNING (ix + iy AS xy, ix, iy)")
+  if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+  _rc_ = CQL_OK
+
+::cql_cleanup::
+  cql_finalize_stmt(C_stmt)
+  C_stmt = nil
+  return _rc_
+end
+
+-- The statement ending at line XXXX
+
+--[[
+PROC insert_returning_resultset ()
+BEGIN
+  INSERT INTO insert_returning_test(ix, iy)
+    VALUES (1, 2)
+    RETURNING (ix + iy AS xy, ix, iy);
+END;
+--]]
+
+function insert_returning_resultset(_db_)
+  local _rc_ = CQL_OK
+  local _result_stmt = nil
+  _rc_, _result_stmt = cql_prepare(_db_, 
+    "INSERT INTO insert_returning_test(ix, iy) VALUES (1, 2) RETURNING (ix + iy AS xy, ix, iy)")
+  if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+  _rc_ = CQL_OK
+
+::cql_cleanup::
+  if _rc_ == CQL_OK and _result_stmt == nil then _rc_, _result_stmt = cql_no_rows_stmt(_db_) end
+  return _rc_, _result_stmt
+end
+
+function insert_returning_resultset_fetch_results(_db_)
+  local result_set = nil
+  local _rc_
+  _rc_, stmt = insert_returning_resultset(_db_)
+  if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+  _rc_, result_set = cql_fetch_all_rows(stmt, "iii", { "xy", "ix", "iy" })
+
+::cql_cleanup::
+  cql_finalize_stmt(stmt)
+  stmt = nil
+  return _rc_, result_set
+end
+
 local this_is_the_end = 0
 
 -- The statement ending at line XXXX

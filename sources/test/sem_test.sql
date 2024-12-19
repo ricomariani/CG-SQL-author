@@ -25674,3 +25674,75 @@ begin
    macro_two!(expensive(100));
    macro_two!(expensive(200));
 end;
+
+create table insert_returning_test(
+  ix int,
+  iy int
+);
+
+-- TEST: insert returning normal case -- no with clause
+-- + {create_proc_stmt}: insert_returning1: { xy: integer, ix: integer, iy: integer } dml_proc
+-- + {insert_returning_stmt}: select: { xy: integer, ix: integer, iy: integer }
+-- - error:
+proc insert_returning1 ()
+begin
+  insert into insert_returning_test
+    values (1, 2)
+    returning (ix + iy as xy, ix, iy);
+end;
+
+-- TEST: insert returning normal case -- and with clause
+-- + {create_proc_stmt}: insert_returning2: { xy: integer, ix: integer, iy: integer } dml_proc
+-- + {insert_returning_stmt}: select: { xy: integer, ix: integer, iy: integer }
+-- - error:
+proc insert_returning2 ()
+begin
+  with
+    base as (
+      select *
+        from insert_returning_test
+        where x = 7
+    )
+  insert into insert_returning_test
+    select ix + 10, iy + 10
+      from base
+    returning (ix + iy as xy, ix, iy);
+end;
+
+-- TEST: insert returning error case, bogus insert
+-- + error: % table in insert statement does not exist 'insert_returning_yeah_no'
+-- + {create_proc_stmt}: err
+-- + {insert_returning_stmt}: err
+-- +1 error:
+proc insert_returning_invalid_insert ()
+begin
+  insert into insert_returning_yeah_no
+    values (1, 2)
+    returning (ix + iy as xy, ix, iy);
+end;
+
+-- TEST: insert returning error case, bogus with ... insert
+-- + error: % string operand not allowed in 'NOT'
+-- + {create_proc_stmt}: err
+-- + {insert_returning_stmt}: err
+-- +1 error:
+proc insert_returning_invalid_with_insert ()
+begin
+  with foo as (select not 'x')
+  insert into insert_returning_test
+    values (1, 2)
+    returning (ix + iy as xy, ix, iy);
+end;
+
+-- TEST: insert returning error case, bogus select list
+-- + error: % name not found 'nope'
+-- + {create_proc_stmt}: err
+-- + {insert_returning_stmt}: err
+-- + {select_expr_list}: err
+-- +1 error:
+proc insert_returning_invalid_return ()
+begin
+  insert into insert_returning_test
+    values (1, 2)
+    returning (nope);
+end;

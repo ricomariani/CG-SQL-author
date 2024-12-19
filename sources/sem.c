@@ -18478,12 +18478,19 @@ static void sem_insert_returning(ast_node *ast) {
   Contract(is_ast_insert_returning_stmt(ast));
   EXTRACT_ANY_NOTNULL(insert_stmt, ast->left);
   EXTRACT_NOTNULL(select_expr_list, ast->right);
+
   ast_node *insert_stmt_plain = insert_stmt;
 
   if (is_ast_with_insert_stmt(insert_stmt)) {
-    sem_with_insert_stmt(insert_stmt);
     insert_stmt_plain = insert_stmt->right;
-    Contract(is_ast_insert_stmt(insert_stmt_plain));
+  }
+
+  Invariant(is_ast_insert_stmt(insert_stmt_plain));
+  EXTRACT_NOTNULL(name_columns_values, insert_stmt_plain->right);
+  EXTRACT_STRING(table_name, name_columns_values->left)
+
+  if (is_ast_with_insert_stmt(insert_stmt)) {
+    sem_with_insert_stmt(insert_stmt);
   }
   else {
     sem_insert_stmt(insert_stmt);
@@ -18494,14 +18501,27 @@ static void sem_insert_returning(ast_node *ast) {
     return;
   }
 
-  Invariant(is_ast_insert_stmt(insert_stmt_plain));
-  EXTRACT_NOTNULL(name_columns_values, insert_stmt_plain->right);
-  EXTRACT_STRING(table_name, name_columns_values->left)
+  // note that the insert statment might have been rewritten due to backing tables
+  // and now it has a with prefix.  We don't want to get the table name here
+  // it's now the backing table name, instead we want the original table name
+  // the backed name.
 
   ast_node *table_ast = find_table_or_view_even_deleted(table_name);
   Invariant(table_ast);  // already verified by the above
 
   sem_join join = *table_ast->sem->jptr;
+
+  // we record this so we can find it on the join when we do a name lookup
+  // note this jptr is especially handy because when we start an insert/update operation
+  // we begin with a pushed join of just the original table
+  if (is_backed(table_ast->sem->sem_type)) {
+    sem_struct *sptr_new  = _ast_pool_new(sem_struct);
+    *sptr_new = *join.tables[0]; // clone existing value (shallow copy)
+    join.tables = _ast_pool_new(sem_struct *);
+    join.tables[0] = sptr_new;
+    sptr_new->is_backed = true;
+  }
+
   PUSH_JOIN(insert_scope, &join);
   sem_select_expr_list(select_expr_list);
   POP_JOIN();
@@ -18511,6 +18531,12 @@ static void sem_insert_returning(ast_node *ast) {
      return;
   }
 
+  if (is_backed(table_ast->sem->sem_type)) {
+    // we need to change any references to the tables to be the blob extractions
+    // from the key and value blobs
+    rewrite_backed_column_references_in_ast(select_expr_list, table_ast);
+  }
+
   ast->sem = select_expr_list->sem;
 }
 
@@ -18518,7 +18544,6 @@ static void sem_insert_returning_stmt(ast_node *ast) {
   sem_insert_returning(ast);
   sem_update_proc_type_for_select(ast);
 }
-
 
 // This code works for any of the cursor to/from blob forms as the checks are the same
 // the blob might be the source or the destination, the last two args tell us which way it is

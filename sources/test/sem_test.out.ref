@@ -97569,3 +97569,242 @@ test/sem_test.sql:XXXX:1: error: in insert_stmt : CQL0168: only INSERT with a RE
                   | {select_limit}
                     | {select_offset}
 
+The statement ending at line XXXX
+
+[[backing_table]]
+[[json]]
+CREATE TABLE jb_insert(
+  k BLOB PRIMARY KEY,
+  v BLOB
+);
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  | | | {dot}
+  | |   | {name cql}
+  | |   | {name backing_table}
+  | | {misc_attrs}
+  |   | {misc_attr}
+  |     | {dot}
+  |       | {name cql}
+  |       | {name json}
+  | {create_table_stmt}: jb_insert: { k: blob notnull primary_key, v: blob } backing
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name jb_insert}
+    | {col_key_list}
+      | {col_def}: k: blob notnull primary_key
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name k}
+      |   | | {type_blob}: blob
+      |   | {col_attrs_pk}: ok
+      |     | {autoinc_and_conflict_clause}
+      | {col_key_list}
+        | {col_def}: v: blob
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name v}
+              | {type_blob}: blob
+
+The statement ending at line XXXX
+
+[[backed_by=jb_insert]]
+CREATE TABLE jbacked(
+  id INT PRIMARY KEY,
+  name TEXT,
+  age INT
+);
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name backed_by}
+  |   | {name jb_insert}: ok
+  | {create_table_stmt}: jbacked: { id: integer notnull primary_key, name: text, age: integer } backed
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name jbacked}
+    | {col_key_list}
+      | {col_def}: id: integer notnull primary_key
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name id}
+      |   | | {type_int}: integer
+      |   | {col_attrs_pk}: ok
+      |     | {autoinc_and_conflict_clause}
+      | {col_key_list}
+        | {col_def}: name: text
+        | | {col_def_type_attrs}: ok
+        |   | {col_def_name_type}
+        |     | {name name}
+        |     | {type_text}: text
+        | {col_key_list}
+          | {col_def}: age: integer
+            | {col_def_type_attrs}: ok
+              | {col_def_name_type}
+                | {name age}
+                | {type_int}: integer
+
+The statement ending at line XXXX
+
+PROC insert_into_backed_returning ()
+BEGIN
+  WITH
+    _vals (id, name, age) AS (
+      VALUES
+        (1, 'x', 10),
+        (2, 'y', 15)
+    )
+  INSERT INTO jb_insert(k, v)
+    SELECT cql_blob_create(jbacked, V.id, jbacked.id), cql_blob_create(jbacked, V.name, jbacked.name, V.age, jbacked.age)
+      FROM _vals AS V
+    RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
+END;
+
+  {create_proc_stmt}: insert_into_backed_returning: { id: integer notnull, name: text, age: integer } dml_proc
+  | {name insert_into_backed_returning}: insert_into_backed_returning: { id: integer notnull, name: text, age: integer } dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {insert_returning_stmt}: select: { id: integer notnull, name: text, age: integer }
+        | {with_insert_stmt}: ok
+        | | {with}
+        | | | {cte_tables}: ok
+        | |   | {cte_table}: _vals: { id: integer notnull, name: text notnull, age: integer notnull }
+        | |     | {cte_decl}: _vals: { id: integer notnull, name: text notnull, age: integer notnull }
+        | |     | | {name _vals}
+        | |     | | {name_list}
+        | |     |   | {name id}: id: integer notnull
+        | |     |   | {name_list}
+        | |     |     | {name name}: name: text
+        | |     |     | {name_list}
+        | |     |       | {name age}: age: integer
+        | |     | {select_stmt}: values: { column1: integer notnull, column2: text notnull, column3: integer notnull }
+        | |       | {select_core_list}: values: { column1: integer notnull, column2: text notnull, column3: integer notnull }
+        | |       | | {select_core}: values: { column1: integer notnull, column2: text notnull, column3: integer notnull }
+        | |       |   | {select_values}
+        | |       |   | {values}: values: { column1: integer notnull, column2: text notnull, column3: integer notnull }
+        | |       |     | {insert_list}: ok
+        | |       |     | | {int 1}: integer notnull
+        | |       |     | | {insert_list}
+        | |       |     |   | {strlit 'x'}: text notnull
+        | |       |     |   | {insert_list}
+        | |       |     |     | {int 10}: integer notnull
+        | |       |     | {values}
+        | |       |       | {insert_list}: ok
+        | |       |         | {int 2}: integer notnull
+        | |       |         | {insert_list}
+        | |       |           | {strlit 'y'}: text notnull
+        | |       |           | {insert_list}
+        | |       |             | {int 15}: integer notnull
+        | |       | {select_orderby}
+        | |         | {select_limit}
+        | |           | {select_offset}
+        | | {insert_stmt}: ok
+        |   | {insert_normal}
+        |   | {name_columns_values}
+        |     | {name jb_insert}: jb_insert: { k: blob notnull primary_key, v: blob } backing
+        |     | {columns_values}: ok
+        |       | {column_spec}
+        |       | | {name_list}
+        |       |   | {name k}: k: blob notnull
+        |       |   | {name_list}
+        |       |     | {name v}: v: blob
+        |       | {select_stmt}: select: { _anon: blob notnull, _anon: blob notnull }
+        |         | {select_core_list}: select: { _anon: blob notnull, _anon: blob notnull }
+        |         | | {select_core}: select: { _anon: blob notnull, _anon: blob notnull }
+        |         |   | {select_expr_list_con}: select: { _anon: blob notnull, _anon: blob notnull }
+        |         |     | {select_expr_list}: select: { _anon: blob notnull, _anon: blob notnull }
+        |         |     | | {select_expr}: blob notnull
+        |         |     | | | {call}: blob notnull
+        |         |     | |   | {name cql_blob_create}: blob notnull
+        |         |     | |   | {call_arg_list}
+        |         |     | |     | {call_filter_clause}
+        |         |     | |     | {arg_list}: ok
+        |         |     | |       | {name jbacked}
+        |         |     | |       | {arg_list}
+        |         |     | |         | {dot}: id: integer notnull
+        |         |     | |         | | {name V}
+        |         |     | |         | | {name id}
+        |         |     | |         | {arg_list}
+        |         |     | |           | {dot}: integer notnull primary_key
+        |         |     | |             | {name jbacked}
+        |         |     | |             | {name id}
+        |         |     | | {select_expr_list}
+        |         |     |   | {select_expr}: blob notnull
+        |         |     |     | {call}: blob notnull
+        |         |     |       | {name cql_blob_create}: blob notnull
+        |         |     |       | {call_arg_list}
+        |         |     |         | {call_filter_clause}
+        |         |     |         | {arg_list}: ok
+        |         |     |           | {name jbacked}
+        |         |     |           | {arg_list}
+        |         |     |             | {dot}: name: text notnull
+        |         |     |             | | {name V}
+        |         |     |             | | {name name}
+        |         |     |             | {arg_list}
+        |         |     |               | {dot}: text
+        |         |     |               | | {name jbacked}
+        |         |     |               | | {name name}
+        |         |     |               | {arg_list}
+        |         |     |                 | {dot}: age: integer notnull
+        |         |     |                 | | {name V}
+        |         |     |                 | | {name age}
+        |         |     |                 | {arg_list}
+        |         |     |                   | {dot}: integer
+        |         |     |                     | {name jbacked}
+        |         |     |                     | {name age}
+        |         |     | {select_from_etc}: TABLE { V: _vals }
+        |         |       | {table_or_subquery_list}: TABLE { V: _vals }
+        |         |       | | {table_or_subquery}: TABLE { V: _vals }
+        |         |       |   | {name _vals}: TABLE { V: _vals }
+        |         |       |   | {opt_as_alias}
+        |         |       |     | {name V}
+        |         |       | {select_where}
+        |         |         | {select_groupby}
+        |         |           | {select_having}
+        |         | {select_orderby}
+        |           | {select_limit}
+        |             | {select_offset}
+        | {select_expr_list}: select: { id: integer notnull, name: text, age: integer }
+          | {select_expr}: id: integer notnull
+          | | {call}: id: integer notnull
+          |   | {name cql_blob_get}
+          |   | {call_arg_list}
+          |     | {call_filter_clause}
+          |     | {arg_list}
+          |       | {name k}
+          |       | {arg_list}
+          |         | {dot}
+          |           | {name jbacked}
+          |           | {name id}
+          | {select_expr_list}
+            | {select_expr}: name: text
+            | | {call}: name: text
+            |   | {name cql_blob_get}
+            |   | {call_arg_list}
+            |     | {call_filter_clause}
+            |     | {arg_list}
+            |       | {name v}
+            |       | {arg_list}
+            |         | {dot}
+            |           | {name jbacked}
+            |           | {name name}
+            | {select_expr_list}
+              | {select_expr}: age: integer
+                | {call}: age: integer
+                  | {name cql_blob_get}
+                  | {call_arg_list}
+                    | {call_filter_clause}
+                    | {arg_list}
+                      | {name v}
+                      | {arg_list}
+                        | {dot}
+                          | {name jbacked}
+                          | {name age}
+

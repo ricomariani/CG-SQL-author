@@ -25770,3 +25770,37 @@ proc insert_returning_cursor_bogus()
 begin
   declare C cursor for insert into insert_returning_test(ix,iy) values (1,2);
 end;
+
+[[backing_table]]
+[[json]]
+create table jb_insert (
+  k blob primary key,
+  v blob
+);
+
+[[backed_by=jb_insert]]
+create table jbacked(
+  id int primary key,
+  name text,
+  age int
+);
+
+-- TEST: rewrite backed table returning
+-- verify the rewrite only
+-- + WITH
+-- +   _vals (id, name, age) AS (
+-- +     VALUES
+-- +       (1, 'x', 10),
+-- +       (2, 'y', 15)
+-- +   )
+-- + INSERT INTO jb_insert(k, v)
+-- +   SELECT cql_blob_create(jbacked, V.id, jbacked.id),
+-- = cql_blob_create(jbacked, V.name, jbacked.name, V.age, jbacked.age)
+-- +     FROM _vals AS V
+-- +   RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
+-- - error:
+proc insert_into_backed_returning()
+begin
+  insert into jbacked values (1, 'x', 10), (2, 'y', 15)
+  returning (id, name, age);
+end;

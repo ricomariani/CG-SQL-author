@@ -6191,22 +6191,22 @@ cql_noexport void sem_verify_identical_columns(
 static void sem_update_proc_type_for_select(ast_node *ast) {
   bool_t is_out = is_ast_out_stmt(ast);
   bool_t is_out_union = is_ast_out_union_stmt(ast);
-  bool_t is_rows = is_row_source(ast);
+  bool_t is_stmt_source = is_row_source(ast);
   bool_t is_calling_out_union = false;
 
   if (is_ast_call_stmt(ast)) {
      // still nothing
-      Invariant(!(is_out || is_out_union || is_rows));
+      Invariant(!(is_out || is_out_union || is_stmt_source));
 
      // the type of result is based on the call type
      sem_t sem_call = ast->sem->sem_type;
 
      is_out = !!(sem_call & SEM_TYPE_USES_OUT);
      is_calling_out_union = !!(sem_call & SEM_TYPE_USES_OUT_UNION);
-     is_rows = !(is_calling_out_union || is_out);
+     is_stmt_source = !(is_calling_out_union || is_out);
   }
 
-  Contract(is_out || is_out_union || is_rows || is_calling_out_union);
+  Contract(is_out || is_out_union || is_stmt_source || is_calling_out_union);
 
   // Ignore any row sources that try to set the procedure return code
   // in the context of an EXPLAIN statement. The result will be set
@@ -6289,11 +6289,14 @@ static void sem_update_proc_type_for_select(ast_node *ast) {
   bool_t did_out = has_out_stmt_result(current_proc);
   bool_t did_call_out_union = has_out_union_call(current_proc);
   bool_t did_out_union = has_out_union_stmt_result(current_proc) && !did_call_out_union;
-  bool_t did_select = has_result_set(current_proc) && !did_call_out_union;
+  bool_t did_make_stmt = has_result_set(current_proc) && !did_call_out_union;
 
-  Invariant(did_out + did_out_union + did_select + did_call_out_union == 1);
+  Invariant(did_out + did_out_union + did_make_stmt + did_call_out_union == 1);
 
-  if (is_out != did_out || is_out_union != did_out_union || is_rows != did_select || is_calling_out_union != did_call_out_union) {
+  if (is_out != did_out ||
+      is_out_union != did_out_union ||
+      is_stmt_source != did_make_stmt ||
+      is_calling_out_union != did_call_out_union) {
     report_error(ast, "CQL0063: can't mix and match out, out union, or select/call for return values", name);
     record_error(ast);
     return;

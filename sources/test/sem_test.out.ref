@@ -97538,7 +97538,7 @@ BEGIN
       VALUES (1, 2);
 END;
 
-test/sem_test.sql:XXXX:1: error: in insert_stmt : CQL0168: only INSERT with a RETURNING clause may be used as a source of rows
+test/sem_test.sql:XXXX:1: error: in insert_stmt : CQL0168: statement requires a RETURNING clause to be used as a source of rows
 
   {create_proc_stmt}: err
   | {name insert_returning_cursor_bogus}: err
@@ -97807,4 +97807,395 @@ END;
                         | {dot}
                           | {name jbacked}
                           | {name age}
+
+The statement ending at line XXXX
+
+PROC delete_from_backed_returning ()
+BEGIN
+  WITH
+    jbacked (rowid, id, name, age) AS (CALL _jbacked())
+  DELETE FROM jb_insert WHERE rowid IN (SELECT rowid
+    FROM jbacked
+    WHERE id = 5)
+    RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
+END;
+
+  {create_proc_stmt}: delete_from_backed_returning: { id: integer notnull, name: text, age: integer } dml_proc
+  | {name delete_from_backed_returning}: delete_from_backed_returning: { id: integer notnull, name: text, age: integer } dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {delete_returning_stmt}: select: { id: integer notnull, name: text, age: integer }
+        | {with_delete_stmt}: ok
+        | | {with}
+        | | | {cte_tables}: ok
+        | |   | {cte_table}: jbacked: { rowid: longint notnull, id: integer notnull, name: text, age: integer }
+        | |     | {cte_decl}: jbacked: { rowid: longint notnull, id: integer notnull, name: text, age: integer }
+        | |     | | {name jbacked}
+        | |     | | {name_list}
+        | |     |   | {name rowid}
+        | |     |   | {name_list}
+        | |     |     | {name id}
+        | |     |     | {name_list}
+        | |     |       | {name name}
+        | |     |       | {name_list}
+        | |     |         | {name age}
+        | |     | {shared_cte}: _jbacked: { rowid: longint notnull, id: integer notnull, name: text, age: integer } dml_proc
+        | |       | {call_stmt}: _jbacked: { rowid: longint notnull, id: integer notnull, name: text, age: integer } dml_proc
+        | |         | {name _jbacked}: _jbacked: { rowid: longint notnull, id: integer notnull, name: text, age: integer } dml_proc
+        | | {delete_stmt}: ok
+        |   | {name jb_insert}: jb_insert: { k: blob notnull primary_key, v: blob } backing
+        |   | {opt_where}: bool notnull
+        |     | {in_pred}: bool notnull
+        |       | {name rowid}: rowid: longint notnull
+        |       | {select_stmt}: rowid: longint
+        |         | {select_core_list}: select: { rowid: longint notnull }
+        |         | | {select_core}: select: { rowid: longint notnull }
+        |         |   | {select_expr_list_con}: select: { rowid: longint notnull }
+        |         |     | {select_expr_list}: select: { rowid: longint notnull }
+        |         |     | | {select_expr}: rowid: longint notnull
+        |         |     |   | {name rowid}: rowid: longint notnull
+        |         |     | {select_from_etc}: TABLE { jbacked: jbacked }
+        |         |       | {table_or_subquery_list}: TABLE { jbacked: jbacked }
+        |         |       | | {table_or_subquery}: TABLE { jbacked: jbacked }
+        |         |       |   | {name jbacked}: TABLE { jbacked: jbacked }
+        |         |       | {select_where}
+        |         |         | {opt_where}: bool notnull
+        |         |         | | {eq}: bool notnull
+        |         |         |   | {name id}: id: integer notnull
+        |         |         |   | {int 5}: integer notnull
+        |         |         | {select_groupby}
+        |         |           | {select_having}
+        |         | {select_orderby}
+        |           | {select_limit}
+        |             | {select_offset}
+        | {select_expr_list}: select: { id: integer notnull, name: text, age: integer }
+          | {select_expr}: id: integer notnull
+          | | {call}: id: integer notnull
+          |   | {name cql_blob_get}
+          |   | {call_arg_list}
+          |     | {call_filter_clause}
+          |     | {arg_list}
+          |       | {name k}
+          |       | {arg_list}
+          |         | {dot}
+          |           | {name jbacked}
+          |           | {name id}
+          | {select_expr_list}
+            | {select_expr}: name: text
+            | | {call}: name: text
+            |   | {name cql_blob_get}
+            |   | {call_arg_list}
+            |     | {call_filter_clause}
+            |     | {arg_list}
+            |       | {name v}
+            |       | {arg_list}
+            |         | {dot}
+            |           | {name jbacked}
+            |           | {name name}
+            | {select_expr_list}
+              | {select_expr}: age: integer
+                | {call}: age: integer
+                  | {name cql_blob_get}
+                  | {call_arg_list}
+                    | {call_filter_clause}
+                    | {arg_list}
+                      | {name v}
+                      | {arg_list}
+                        | {dot}
+                          | {name jbacked}
+                          | {name age}
+
+The statement ending at line XXXX
+
+PROC with_delete_from_backed_returning ()
+BEGIN
+  WITH
+    jbacked (rowid, id, name, age) AS (CALL _jbacked()),
+    a_cte (x) AS (
+      SELECT 1 AS x
+    )
+  DELETE FROM jb_insert WHERE rowid IN (SELECT rowid
+    FROM jbacked
+    WHERE id IN (SELECT *
+    FROM a_cte))
+    RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
+END;
+
+  {create_proc_stmt}: with_delete_from_backed_returning: { id: integer notnull, name: text, age: integer } dml_proc
+  | {name with_delete_from_backed_returning}: with_delete_from_backed_returning: { id: integer notnull, name: text, age: integer } dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {delete_returning_stmt}: select: { id: integer notnull, name: text, age: integer }
+        | {with_delete_stmt}: ok
+        | | {with}
+        | | | {cte_tables}: ok
+        | |   | {cte_table}: jbacked: { rowid: longint notnull, id: integer notnull, name: text, age: integer }
+        | |   | | {cte_decl}: jbacked: { rowid: longint notnull, id: integer notnull, name: text, age: integer }
+        | |   | | | {name jbacked}
+        | |   | | | {name_list}
+        | |   | |   | {name rowid}
+        | |   | |   | {name_list}
+        | |   | |     | {name id}
+        | |   | |     | {name_list}
+        | |   | |       | {name name}
+        | |   | |       | {name_list}
+        | |   | |         | {name age}
+        | |   | | {shared_cte}: _jbacked: { rowid: longint notnull, id: integer notnull, name: text, age: integer } dml_proc
+        | |   |   | {call_stmt}: _jbacked: { rowid: longint notnull, id: integer notnull, name: text, age: integer } dml_proc
+        | |   |     | {name _jbacked}: _jbacked: { rowid: longint notnull, id: integer notnull, name: text, age: integer } dml_proc
+        | |   | {cte_tables}: ok
+        | |     | {cte_table}: a_cte: { x: integer notnull }
+        | |       | {cte_decl}: a_cte: { x: integer notnull }
+        | |       | | {name a_cte}
+        | |       | | {name_list}
+        | |       |   | {name x}
+        | |       | {select_stmt}: select: { x: integer notnull }
+        | |         | {select_core_list}: select: { x: integer notnull }
+        | |         | | {select_core}: select: { x: integer notnull }
+        | |         |   | {select_expr_list_con}: select: { x: integer notnull }
+        | |         |     | {select_expr_list}: select: { x: integer notnull }
+        | |         |     | | {select_expr}: x: integer notnull
+        | |         |     |   | {int 1}: integer notnull
+        | |         |     |   | {opt_as_alias}
+        | |         |     |     | {name x}
+        | |         |     | {select_from_etc}: ok
+        | |         |       | {select_where}
+        | |         |         | {select_groupby}
+        | |         |           | {select_having}
+        | |         | {select_orderby}
+        | |           | {select_limit}
+        | |             | {select_offset}
+        | | {delete_stmt}: ok
+        |   | {name jb_insert}: jb_insert: { k: blob notnull primary_key, v: blob } backing
+        |   | {opt_where}: bool notnull
+        |     | {in_pred}: bool notnull
+        |       | {name rowid}: rowid: longint notnull
+        |       | {select_stmt}: rowid: longint
+        |         | {select_core_list}: select: { rowid: longint notnull }
+        |         | | {select_core}: select: { rowid: longint notnull }
+        |         |   | {select_expr_list_con}: select: { rowid: longint notnull }
+        |         |     | {select_expr_list}: select: { rowid: longint notnull }
+        |         |     | | {select_expr}: rowid: longint notnull
+        |         |     |   | {name rowid}: rowid: longint notnull
+        |         |     | {select_from_etc}: TABLE { jbacked: jbacked }
+        |         |       | {table_or_subquery_list}: TABLE { jbacked: jbacked }
+        |         |       | | {table_or_subquery}: TABLE { jbacked: jbacked }
+        |         |       |   | {name jbacked}: TABLE { jbacked: jbacked }
+        |         |       | {select_where}
+        |         |         | {opt_where}: bool notnull
+        |         |         | | {in_pred}: bool notnull
+        |         |         |   | {name id}: id: integer notnull
+        |         |         |   | {select_stmt}: x: integer
+        |         |         |     | {select_core_list}: select: { x: integer notnull }
+        |         |         |     | | {select_core}: select: { x: integer notnull }
+        |         |         |     |   | {select_expr_list_con}: select: { x: integer notnull }
+        |         |         |     |     | {select_expr_list}: select: { x: integer notnull }
+        |         |         |     |     | | {star}: select: { x: integer notnull }
+        |         |         |     |     | {select_from_etc}: TABLE { a_cte: a_cte }
+        |         |         |     |       | {table_or_subquery_list}: TABLE { a_cte: a_cte }
+        |         |         |     |       | | {table_or_subquery}: TABLE { a_cte: a_cte }
+        |         |         |     |       |   | {name a_cte}: TABLE { a_cte: a_cte }
+        |         |         |     |       | {select_where}
+        |         |         |     |         | {select_groupby}
+        |         |         |     |           | {select_having}
+        |         |         |     | {select_orderby}
+        |         |         |       | {select_limit}
+        |         |         |         | {select_offset}
+        |         |         | {select_groupby}
+        |         |           | {select_having}
+        |         | {select_orderby}
+        |           | {select_limit}
+        |             | {select_offset}
+        | {select_expr_list}: select: { id: integer notnull, name: text, age: integer }
+          | {select_expr}: id: integer notnull
+          | | {call}: id: integer notnull
+          |   | {name cql_blob_get}
+          |   | {call_arg_list}
+          |     | {call_filter_clause}
+          |     | {arg_list}
+          |       | {name k}
+          |       | {arg_list}
+          |         | {dot}
+          |           | {name jbacked}
+          |           | {name id}
+          | {select_expr_list}
+            | {select_expr}: name: text
+            | | {call}: name: text
+            |   | {name cql_blob_get}
+            |   | {call_arg_list}
+            |     | {call_filter_clause}
+            |     | {arg_list}
+            |       | {name v}
+            |       | {arg_list}
+            |         | {dot}
+            |           | {name jbacked}
+            |           | {name name}
+            | {select_expr_list}
+              | {select_expr}: age: integer
+                | {call}: age: integer
+                  | {name cql_blob_get}
+                  | {call_arg_list}
+                    | {call_filter_clause}
+                    | {arg_list}
+                      | {name v}
+                      | {arg_list}
+                        | {dot}
+                          | {name jbacked}
+                          | {name age}
+
+The statement ending at line XXXX
+
+PROC delete_returning_cursor ()
+BEGIN
+  CURSOR C FOR
+    DELETE FROM jbacked WHERE id = 5
+      RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
+END;
+
+  {create_proc_stmt}: ok
+  | {name delete_returning_cursor}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_cursor}: C: select: { id: integer notnull, name: text, age: integer } variable dml_proc
+        | {name C}: C: select: { id: integer notnull, name: text, age: integer } variable dml_proc
+        | {delete_returning_stmt}: select: { id: integer notnull, name: text, age: integer }
+          | {delete_stmt}: ok
+          | | {name jbacked}: jbacked: { id: integer notnull primary_key, name: text, age: integer } backed
+          | | {opt_where}: bool notnull
+          |   | {eq}: bool notnull
+          |     | {name id}: id: integer notnull
+          |     | {int 5}: integer notnull
+          | {select_expr_list}: select: { id: integer notnull, name: text, age: integer }
+            | {select_expr}: id: integer notnull
+            | | {call}: id: integer notnull
+            |   | {name cql_blob_get}
+            |   | {call_arg_list}
+            |     | {call_filter_clause}
+            |     | {arg_list}
+            |       | {name k}
+            |       | {arg_list}
+            |         | {dot}
+            |           | {name jbacked}
+            |           | {name id}
+            | {select_expr_list}
+              | {select_expr}: name: text
+              | | {call}: name: text
+              |   | {name cql_blob_get}
+              |   | {call_arg_list}
+              |     | {call_filter_clause}
+              |     | {arg_list}
+              |       | {name v}
+              |       | {arg_list}
+              |         | {dot}
+              |           | {name jbacked}
+              |           | {name name}
+              | {select_expr_list}
+                | {select_expr}: age: integer
+                  | {call}: age: integer
+                    | {name cql_blob_get}
+                    | {call_arg_list}
+                      | {call_filter_clause}
+                      | {arg_list}
+                        | {name v}
+                        | {arg_list}
+                          | {dot}
+                            | {name jbacked}
+                            | {name age}
+
+The statement ending at line XXXX
+
+PROC bogus_delete_cursor ()
+BEGIN
+  CURSOR C FOR
+    DELETE FROM jbacked;
+END;
+
+test/sem_test.sql:XXXX:1: error: in delete_stmt : CQL0168: statement requires a RETURNING clause to be used as a source of rows
+
+  {create_proc_stmt}: err
+  | {name bogus_delete_cursor}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_cursor}: err
+        | {name C}
+        | {delete_stmt}: err
+          | {name jbacked}
+
+The statement ending at line XXXX
+
+PROC delete_returning_invalid_with_delete ()
+BEGIN
+  WITH
+    foo AS (
+      SELECT NOT 'x'
+    )
+  DELETE FROM insert_returning_test
+    RETURNING (ix + iy AS xy, ix, iy);
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
+
+  {create_proc_stmt}: err
+  | {name delete_returning_invalid_with_delete}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {delete_returning_stmt}: err
+        | {with_delete_stmt}: err
+        | | {with}
+        | | | {cte_tables}: err
+        | |   | {cte_table}: err
+        | |     | {cte_decl}
+        | |     | | {name foo}
+        | |     | | {star}
+        | |     | {select_stmt}
+        | |       | {select_core_list}
+        | |       | | {select_core}: err
+        | |       |   | {select_expr_list_con}: err
+        | |       |     | {select_expr_list}: err
+        | |       |     | | {select_expr}: err
+        | |       |     |   | {not}: err
+        | |       |     |     | {strlit 'x'}: text notnull
+        | |       |     | {select_from_etc}: ok
+        | |       |       | {select_where}
+        | |       |         | {select_groupby}
+        | |       |           | {select_having}
+        | |       | {select_orderby}
+        | |         | {select_limit}
+        | |           | {select_offset}
+        | | {delete_stmt}
+        |   | {name insert_returning_test}
+        | {select_expr_list}
+          | {select_expr}
+          | | {add}
+          | | | {name ix}
+          | | | {name iy}
+          | | {opt_as_alias}
+          |   | {name xy}
+          | {select_expr_list}
+            | {select_expr}
+            | | {name ix}
+            | {select_expr_list}
+              | {select_expr}
+                | {name iy}
+
+The statement ending at line XXXX
+
+PROC delete_returning_invalid_return ()
+BEGIN
+  DELETE FROM insert_returning_test
+    RETURNING (nope);
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'nope'
+
+  {create_proc_stmt}: err
+  | {name delete_returning_invalid_return}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {delete_returning_stmt}: err
+        | {delete_stmt}: ok
+        | | {name insert_returning_test}: insert_returning_test: { ix: integer, iy: integer }
+        | {select_expr_list}: err
+          | {select_expr}: err
+            | {name nope}: err
 

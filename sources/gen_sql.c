@@ -4530,10 +4530,14 @@ static void gen_declare_cursor(ast_node *ast) {
   gen_name(name_ast);
   gen_printf(" FOR");
 
-  // we have to handle an insert statement in the AST here which might not be a row source
+  // we have to handle an insert/delete statement in the AST here which might not be a row source
   // we detect that later in semantic analysis, it's wrong but so are many other things
-  // in the ast at this point, we still echo them...
-  if (is_row_source(source) || is_ast_call_stmt(source) || is_insert_stmt(source)) {
+  // in the ast at this point, we still echo them... We could fix this in the grammar but then
+  // (a) the grammar gets more complex for no good reason and (b) the error message isn't as good.
+  if (is_row_source(source) ||
+      is_ast_call_stmt(source) ||
+      is_insert_stmt(source) ||
+      is_delete_stmt(source)) {
     // The two statement cases are unified
     gen_printf("\n");
     GEN_BEGIN_INDENT(cursor, 2);

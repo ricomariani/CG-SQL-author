@@ -299,6 +299,7 @@ static sem_node *_Nonnull new_sem_std(sem_t sem_type, ast_node *_Nonnull ast_cal
 static void sem_infer_result_blob_type(ast_node *ast, ast_node *arg_list);
 static void sem_proc_call_post_check(CSTR name, ast_node *ast, ast_node *arg_list);
 static void sem_insert_returning(ast_node *ast);
+static void sem_delete_returning(ast_node *ast);
 
 // create a new id node either qid or normal based on the bool
 cql_noexport ast_node *new_str_or_qstr(CSTR name, sem_t sem_type) {
@@ -12912,6 +12913,9 @@ cql_noexport void sem_any_row_source(ast_node *ast) {
   else if (is_ast_insert_returning_stmt(ast)) {
     sem_insert_returning(ast);
   }
+  else if (is_ast_delete_returning_stmt(ast)) {
+    sem_delete_returning(ast);
+  }
   else {
     Contract(is_ast_select_stmt(ast));
     sem_select_no_with(ast);
@@ -17382,6 +17386,76 @@ static void sem_with_delete_stmt(ast_node *stmt) {
 
 cleanup:
   sem_pop_cte_state();
+}
+
+static void sem_delete_returning(ast_node *ast) {
+  Contract(is_ast_delete_returning_stmt(ast));
+  EXTRACT_ANY_NOTNULL(delete_stmt, ast->left);
+  EXTRACT_NOTNULL(select_expr_list, ast->right);
+
+  ast_node *delete_stmt_plain = delete_stmt;
+
+  if (is_ast_with_delete_stmt(delete_stmt)) {
+    delete_stmt_plain = delete_stmt->right;
+  }
+
+  Invariant(is_ast_delete_stmt(delete_stmt_plain));
+  EXTRACT_STRING(table_name, delete_stmt_plain->left);
+
+  if (is_ast_with_delete_stmt(delete_stmt)) {
+    sem_with_delete_stmt(delete_stmt);
+  }
+  else {
+    sem_delete_stmt(delete_stmt);
+  }
+
+  if (is_error(delete_stmt)) {
+    record_error(ast);
+    return;
+  }
+
+  // note that the delete statment might have been rewritten due to backing tables
+  // and now it has a with prefix.  We don't want to get the table name here
+  // it's now the backing table name, instead we want the original table name
+  // the backed name.
+
+  ast_node *table_ast = find_table_or_view_even_deleted(table_name);
+  Invariant(table_ast);  // already verified by the above
+
+  sem_join join = *table_ast->sem->jptr;
+
+  // we record this so we can find it on the join when we do a name lookup
+  // note this jptr is especially handy because when we start an insert/delete operation
+  // we begin with a pushed join of just the original table
+  if (is_backed(table_ast->sem->sem_type)) {
+    sem_struct *sptr_new  = _ast_pool_new(sem_struct);
+    *sptr_new = *join.tables[0]; // clone existing value (shallow copy)
+    join.tables = _ast_pool_new(sem_struct *);
+    join.tables[0] = sptr_new;
+    sptr_new->is_backed = true;
+  }
+
+  PUSH_JOIN(delete_scope, &join);
+  sem_select_expr_list(select_expr_list);
+  POP_JOIN();
+
+  if (is_error(select_expr_list)) {
+     record_error(ast);
+     return;
+  }
+
+  if (is_backed(table_ast->sem->sem_type)) {
+    // we need to change any references to the tables to be the blob extractions
+    // from the key and value blobs
+    rewrite_backed_column_references_in_ast(select_expr_list, table_ast);
+  }
+
+  ast->sem = select_expr_list->sem;
+}
+
+static void sem_delete_returning_stmt(ast_node *ast) {
+  sem_delete_returning(ast);
+  sem_update_proc_type_for_select(ast);
 }
 
 // This is is the helper that computes the types in an update where
@@ -21964,8 +22038,8 @@ static void sem_declare_cursor(ast_node *ast) {
     // decided whether we can do encoding/decoding of result_set's fields.
     out_union_and_dml = SEM_TYPE_DML_PROC;
   }
-  else if (is_insert_stmt(ast->right)) {
-    report_error(ast->right, "CQL0168: only INSERT with a RETURNING clause may be used as a source of rows", NULL);
+  else if (is_insert_stmt(ast->right) || is_delete_stmt(ast->right)) {
+    report_error(ast->right, "CQL0168: statement requires a RETURNING clause to be used as a source of rows", NULL);
     record_error(ast->right);
     record_error(ast);
     return;
@@ -26539,6 +26613,7 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(select_stmt);
   STMT_INIT(select_nothing_stmt);
   STMT_INIT(with_select_stmt);
+  STMT_INIT(delete_returning_stmt);
   STMT_INIT(delete_stmt);
   STMT_INIT(with_delete_stmt);
   STMT_INIT(update_stmt);

@@ -1945,3 +1945,10 @@ insert into foo values(1) returning (a, b, c);
 
 with blah as (select 1 x)
 insert into foo values(1) returning (a, b, c);
+
+delete from jbacked where id = 5
+returning (id, name, age);
+
+with a_cte as (select 1 x)
+delete from jbacked where id in (select * from a_cte)
+returning (id, name, age);

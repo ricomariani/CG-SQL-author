@@ -19385,3 +19385,79 @@ The statement ending at line XXXX
         | {select_expr}
           | {name c}
 
+The statement ending at line XXXX
+
+  {delete_returning_stmt}
+  | {delete_stmt}
+  | | {name jbacked}
+  | | {opt_where}
+  |   | {eq}
+  |     | {name id}
+  |     | {int 5}
+  | {select_expr_list}
+    | {select_expr}
+    | | {name id}
+    | {select_expr_list}
+      | {select_expr}
+      | | {name name}
+      | {select_expr_list}
+        | {select_expr}
+          | {name age}
+
+The statement ending at line XXXX
+
+  {delete_returning_stmt}
+  | {with_delete_stmt}
+  | | {with}
+  | | | {cte_tables}
+  | |   | {cte_table}
+  | |     | {cte_decl}
+  | |     | | {name a_cte}
+  | |     | | {star}
+  | |     | {select_stmt}
+  | |       | {select_core_list}
+  | |       | | {select_core}
+  | |       |   | {select_expr_list_con}
+  | |       |     | {select_expr_list}
+  | |       |     | | {select_expr}
+  | |       |     |   | {int 1}
+  | |       |     |   | {opt_as_alias}
+  | |       |     |     | {name x}
+  | |       |     | {select_from_etc}
+  | |       |       | {select_where}
+  | |       |         | {select_groupby}
+  | |       |           | {select_having}
+  | |       | {select_orderby}
+  | |         | {select_limit}
+  | |           | {select_offset}
+  | | {delete_stmt}
+  |   | {name jbacked}
+  |   | {opt_where}
+  |     | {in_pred}
+  |       | {name id}
+  |       | {select_stmt}
+  |         | {select_core_list}
+  |         | | {select_core}
+  |         |   | {select_expr_list_con}
+  |         |     | {select_expr_list}
+  |         |     | | {star}
+  |         |     | {select_from_etc}
+  |         |       | {table_or_subquery_list}
+  |         |       | | {table_or_subquery}
+  |         |       |   | {name a_cte}
+  |         |       | {select_where}
+  |         |         | {select_groupby}
+  |         |           | {select_having}
+  |         | {select_orderby}
+  |           | {select_limit}
+  |             | {select_offset}
+  | {select_expr_list}
+    | {select_expr}
+    | | {name id}
+    | {select_expr_list}
+      | {select_expr}
+      | | {name name}
+      | {select_expr_list}
+        | {select_expr}
+          | {name age}
+

@@ -3642,6 +3642,20 @@ static void gen_with_delete_stmt(ast_node *ast) {
   gen_delete_stmt(delete_stmt);
 }
 
+static void gen_delete_returning_stmt(ast_node *ast) {
+  Contract(is_ast_delete_returning_stmt(ast));
+  EXTRACT_ANY_NOTNULL(delete_stmt, ast->left);
+  if (is_ast_with_delete_stmt(delete_stmt)) {
+    gen_with_delete_stmt(delete_stmt);
+  }
+  else {
+    gen_delete_stmt(delete_stmt);
+  }
+  gen_printf("\n  RETURNING (");
+  gen_select_expr_list(ast->right);
+  gen_printf(")");
+}
+
 static void gen_update_entry(ast_node *ast) {
   Contract(is_ast_update_entry(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->right)
@@ -5569,6 +5583,7 @@ cql_noexport void gen_init() {
   STMT_INIT(declare_select_func_stmt);
   STMT_INIT(declare_value_cursor);
   STMT_INIT(declare_vars_type);
+  STMT_INIT(delete_returning_stmt);
   STMT_INIT(delete_stmt);
   STMT_INIT(drop_index_stmt);
   STMT_INIT(drop_table_stmt);

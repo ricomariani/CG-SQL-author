@@ -317,7 +317,7 @@ static void cql_reset_globals(void);
 %type <ival> trigger_condition opt_foreachrow
 
 /* dml stuff */
-%type <aval> with_delete_stmt delete_stmt
+%type <aval> delete_stmt delete_stmt_plain
 %type <aval> insert_stmt insert_list_item insert_list insert_stmt_type returning_suffix insert_stmt_plain
 %type <aval> column_spec opt_column_spec opt_insert_dummy_spec expr_names expr_name
 %type <aval> with_prefix with_select_stmt cte_table cte_tables cte_binding_list cte_binding cte_decl shared_cte
@@ -615,7 +615,6 @@ any_stmt:
   | update_stmt
   | upsert_stmt
   | while_stmt
-  | with_delete_stmt
   | with_update_stmt
   | with_upsert_stmt
   | keep_table_name_in_aliases_stmt
@@ -633,7 +632,6 @@ opt_query_plan:
 explain_target: select_stmt
   | update_stmt
   | delete_stmt
-  | with_delete_stmt
   | with_update_stmt
   | with_upsert_stmt
   | insert_stmt
@@ -1868,13 +1866,20 @@ create_view_stmt:
     $create_view_stmt = new_ast_create_view_stmt(flags, view_and_attrs); }
   ;
 
-with_delete_stmt:
-  with_prefix delete_stmt  { $with_delete_stmt = new_ast_with_delete_stmt($with_prefix, $delete_stmt); }
-  ;
-
 delete_stmt:
+     delete_stmt_plain { $$ = $delete_stmt_plain; }
+   | delete_stmt_plain returning_suffix {
+     $$ = new_ast_delete_returning_stmt($delete_stmt_plain, $returning_suffix); }
+   | with_prefix delete_stmt_plain {
+     $$ = new_ast_with_delete_stmt($with_prefix, $delete_stmt_plain); }
+   | with_prefix delete_stmt_plain returning_suffix {
+     ast_node *tmp = new_ast_with_delete_stmt($with_prefix, $delete_stmt_plain); 
+     $$ = new_ast_delete_returning_stmt(tmp, $returning_suffix); }
+   ;
+
+delete_stmt_plain:
   DELETE FROM sql_name opt_where  {
-   $delete_stmt = new_ast_delete_stmt($sql_name, $opt_where); }
+   $$ = new_ast_delete_stmt($sql_name, $opt_where); }
   ;
 
 opt_insert_dummy_spec:

@@ -25846,7 +25846,7 @@ end;
 -- TEST: delete returning is ok in a cursor and that doesn't make the proc have a result set
 -- first verify rewrite (it's backed)
 -- + CURSOR C FOR
--- +   DELETE FROM jbacked WHERE id = 5
+-- +   DELETE FROM jbacked WHERE id = 5  WRONG!!
 -- +     RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
 -- + {create_proc_stmt}: ok
 -- + {declare_cursor}: C: select: { id: integer notnull, name: text, age: integer } variable dml_proc
@@ -25890,5 +25890,99 @@ end;
 proc delete_returning_invalid_return ()
 begin
   delete from insert_returning_test
+    returning (nope);
+end;
+
+-- TEST: update from backed with returning
+-- First verify the rewrite (it's backed)
+-- + WITH
+-- +   jbacked (rowid, id, name, age) AS (CALL _jbacked())
+-- + UPDATE jb_insert
+-- +   SET k = cql_blob_update(k, 7, jbacked.id)
+-- +   WHERE rowid IN (SELECT rowid
+-- +     FROM jbacked
+-- +     WHERE id = 5)
+-- +   RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
+-- + {create_proc_stmt}: update_from_backed_returning: { id: integer notnull, name: text, age: integer } dml_proc
+-- + {update_returning_stmt}: select: { id: integer notnull, name: text, age: integer }
+-- - error:
+proc update_from_backed_returning()
+begin
+  update jbacked set id = 7 where id = 5
+  returning (id, name, age);
+end;
+
+-- TEST: update from backed with returning and CTE
+-- verify rewrite first (it's backed)
+-- + WITH
+-- +   jbacked (rowid, id, name, age) AS (CALL _jbacked()),
+-- +   a_cte (x) AS (
+-- +     SELECT 1 AS x
+-- +   )
+-- + UPDATE jb_insert
+-- +   SET k = cql_blob_update(k, 7, jbacked.id)
+-- +   WHERE rowid IN (SELECT rowid
+-- +    FROM jbacked
+-- +     WHERE id = 5)
+-- +   RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
+-- + {create_proc_stmt}: with_update_from_backed_returning: { id: integer notnull, name: text, age: integer } dml_proc
+-- + {update_returning_stmt}: select: { id: integer notnull, name: text, age: integer }
+-- - error:
+proc with_update_from_backed_returning()
+begin
+  with a_cte as (select 1 x)
+  update jbacked set id = 7 where id = 5
+  returning (id, name, age);
+end;
+
+-- TEST: update returning is ok in a cursor and that doesn't make the proc have a result set
+-- first verify rewrite (it's backed)
+-- + CURSOR C FOR
+-- +   UPDATE jbacked   WRONG!!
+-- +     SET id = 7
+-- +     WHERE id = 5
+-- +     RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
+-- + {create_proc_stmt}: ok
+-- + {declare_cursor}: C: select: { id: integer notnull, name: text, age: integer } variable dml_proc
+-- + {update_returning_stmt}: select: { id: integer notnull, name: text, age: integer }
+-- - error:
+proc update_returning_cursor()
+begin
+  cursor C for
+    update jbacked set id = 7 where id = 5
+    returning (id, name, age);
+end;
+
+-- TEST: this is an incorrect form, this update isn't a row source
+-- + error: % statement requires a RETURNING clause to be used as a source of rows
+-- +1 error:
+-- + declare_cursor}: err
+proc bogus_update_cursor()
+begin
+  cursor C for
+    update insert_returning_test set ix = 7 where ix = 5;
+end;
+
+-- TEST: update returning error case, bogus with ... update
+-- + error: % string operand not allowed in 'NOT'
+-- + {create_proc_stmt}: err
+-- + {update_returning_stmt}: err
+-- +1 error:
+proc update_returning_invalid_with_update ()
+begin
+  with foo as (select not 'x')
+  update insert_returning_test set ix = 7 where ix = 5
+    returning (ix + iy as xy, ix, iy);
+end;
+
+-- TEST: update returning error case, bogus select list
+-- + error: % name not found 'nope'
+-- + {create_proc_stmt}: err
+-- + {update_returning_stmt}: err
+-- + {select_expr_list}: err
+-- +1 error:
+proc update_returning_invalid_return ()
+begin
+  update insert_returning_test set ix = 7 where ix = 5
     returning (nope);
 end;

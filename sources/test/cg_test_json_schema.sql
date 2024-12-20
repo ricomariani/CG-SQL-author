@@ -1944,36 +1944,67 @@ begin
   select * from `abc def`;
 end;
 
-create table insert_returning_test(ix int, iy int);
+create table returning_tests(ix int, iy int);
 
 -- TEST: proc using insert returning for a cursor
 -- verify dependencies are correct
--- + "insertTables" : [ "insert_returning_test" ],
+-- + "insertTables" : [ "returning_tests" ],
 -- + "fromTables" : [ "Foo" ],
--- + "usesTables" : [ "Foo", "insert_returning_test" ],
+-- + "usesTables" : [ "Foo", "returning_tests" ],
 -- + "usesDatabase" : 1
 proc insert_returning_cursor()
 begin
   cursor C for
   with goo as (select * from Foo)
-  insert into insert_returning_test(ix,iy) values (1,2)
+  insert into returning_tests(ix,iy) values (1,2)
   returning (ix+iy xy, ix, iy);
 end;
 
 -- TEST: proc using insert returning for a result
 -- verify projection is correct and dependencies are correct
 -- + "name" : "insert_returning_stmt",
--- + "insertTables" : [ "insert_returning_test" ],
--- + "usesTables" : [ "insert_returning_test" ],
+-- + "insertTables" : [ "returning_tests" ],
+-- + "usesTables" : [ "returning_tests" ],
 -- + "projection" : [
 -- + "name" : "xy",
 -- + "name" : "ix",
 -- + "name" : "iy",
--- + "statement" : "INSERT INTO insert_returning_test(ix, iy) VALUES (1, 2) RETURNING (ix + iy AS xy, ix, iy)",
+-- + "statement" : "INSERT INTO returning_tests(ix, iy) VALUES (1, 2) RETURNING (ix + iy AS xy, ix, iy)",
 -- + "statementArgs" : [  ]
 proc insert_returning_stmt()
 begin
-  insert into insert_returning_test(ix,iy) values (1,2)
+  insert into returning_tests(ix,iy) values (1,2)
+  returning (ix+iy xy, ix, iy);
+end;
+
+-- TEST: proc using delete returning for a cursor
+-- verify dependencies are correct
+-- + "deleteTables" : [ "returning_tests" ],
+-- + "fromTables" : [ "Foo" ],
+-- + "usesTables" : [ "Foo", "returning_tests" ],
+-- + "usesDatabase" : 1
+proc delete_returning_cursor()
+begin
+  cursor C for
+  with goo as (select * from Foo)
+  delete from returning_tests
+  returning (ix+iy xy, ix, iy);
+end;
+
+-- TEST: proc using delete returning for a result
+-- verify projection is correct and dependencies are correct
+-- + "name" : "delete_returning_stmt",
+-- + "deleteTables" : [ "returning_tests" ],
+-- + "usesTables" : [ "returning_tests" ],
+-- + "projection" : [
+-- + "name" : "xy",
+-- + "name" : "ix",
+-- + "name" : "iy",
+-- + "statement" : "DELETE FROM returning_tests RETURNING (ix + iy AS xy, ix, iy)",
+-- + "statementArgs" : [  ]
+proc delete_returning_stmt()
+begin
+  delete from returning_tests
   returning (ix+iy xy, ix, iy);
 end;
 

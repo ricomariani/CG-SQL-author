@@ -2459,15 +2459,15 @@
 
     The statement ending at line XXXX
 
-    CREATE TABLE insert_returning_test(
+    CREATE TABLE returning_tests(
       ix INT,
       iy INT
     )
 
     {
-      "name" : "insert_returning_test",
-      "schema" : "CREATE TABLE insert_returning_test(\n  ix INTEGER,\n  iy INTEGER\n)",
-      "CRC" : "-6742087499962535643",
+      "name" : "returning_tests",
+      "schema" : "CREATE TABLE returning_tests(\n  ix INTEGER,\n  iy INTEGER\n)",
+      "CRC" : "-3422067547187819652",
       "isTemp" : 0,
       "ifNotExists" : 0,
       "withoutRowid" : 0,
@@ -4170,7 +4170,7 @@
 
     PROC insert_returning_stmt ()
     BEGIN
-    INSERT INTO insert_returning_test(ix, iy)
+    INSERT INTO returning_tests(ix, iy)
       VALUES (1, 2)
       RETURNING (ix + iy AS xy, ix, iy);
     END
@@ -4181,8 +4181,8 @@
       "definedOnLine" : 1974,
       "args" : [
       ],
-      "insertTables" : [ "insert_returning_test" ],
-      "usesTables" : [ "insert_returning_test" ],
+      "insertTables" : [ "returning_tests" ],
+      "usesTables" : [ "returning_tests" ],
       "projection" : [
         {
           "name" : "xy",
@@ -4200,7 +4200,44 @@
           "isNotNull" : 0
         }
       ],
-      "statement" : "INSERT INTO insert_returning_test(ix, iy) VALUES (1, 2) RETURNING (ix + iy AS xy, ix, iy)",
+      "statement" : "INSERT INTO returning_tests(ix, iy) VALUES (1, 2) RETURNING (ix + iy AS xy, ix, iy)",
+      "statementArgs" : [  ]
+    },
+
+    The statement ending at line XXXX
+
+    PROC delete_returning_stmt ()
+    BEGIN
+    DELETE FROM returning_tests
+      RETURNING (ix + iy AS xy, ix, iy);
+    END
+
+    {
+      "name" : "delete_returning_stmt",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "definedOnLine" : 2005,
+      "args" : [
+      ],
+      "deleteTables" : [ "returning_tests" ],
+      "usesTables" : [ "returning_tests" ],
+      "projection" : [
+        {
+          "name" : "xy",
+          "type" : "integer",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "ix",
+          "type" : "integer",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "iy",
+          "type" : "integer",
+          "isNotNull" : 0
+        }
+      ],
+      "statement" : "DELETE FROM returning_tests RETURNING (ix + iy AS xy, ix, iy)",
       "statementArgs" : [  ]
     }
   ],
@@ -5154,7 +5191,7 @@
           SELECT *
             FROM Foo
         )
-      INSERT INTO insert_returning_test(ix, iy)
+      INSERT INTO returning_tests(ix, iy)
         VALUES (1, 2)
         RETURNING (ix + iy AS xy, ix, iy);
     END
@@ -5165,9 +5202,35 @@
       "definedOnLine" : 1955,
       "args" : [
       ],
-      "insertTables" : [ "insert_returning_test" ],
+      "insertTables" : [ "returning_tests" ],
       "fromTables" : [ "Foo" ],
-      "usesTables" : [ "Foo", "insert_returning_test" ],
+      "usesTables" : [ "Foo", "returning_tests" ],
+      "usesDatabase" : 1
+    },
+
+    The statement ending at line XXXX
+
+    PROC delete_returning_cursor ()
+    BEGIN
+    CURSOR C FOR
+      WITH
+        goo (id, name) AS (
+          SELECT *
+            FROM Foo
+        )
+      DELETE FROM returning_tests
+        RETURNING (ix + iy AS xy, ix, iy);
+    END
+
+    {
+      "name" : "delete_returning_cursor",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "definedOnLine" : 1986,
+      "args" : [
+      ],
+      "deleteTables" : [ "returning_tests" ],
+      "fromTables" : [ "Foo" ],
+      "usesTables" : [ "Foo", "returning_tests" ],
       "usesDatabase" : 1
     }
   ],
@@ -8716,14 +8779,14 @@
     }
   ],
   "tableUsers" : {
-    "Foo" : [ "a_query", "bigger_query", "insert_proc", "delete_proc", "delete_with_values", "update_proc", "update_with_proc", "dummy_insert_proc", "joiner", "use_view", "null_attribute", "shared_frag_user", "shared_frag_user_nested_select", "insert_returning_cursor" ],
+    "Foo" : [ "a_query", "bigger_query", "insert_proc", "delete_proc", "delete_with_values", "update_proc", "update_with_proc", "dummy_insert_proc", "joiner", "use_view", "null_attribute", "shared_frag_user", "shared_frag_user_nested_select", "insert_returning_cursor", "delete_returning_cursor" ],
     "T1" : [ "shared_frag_user", "shared_frag_user_nested_select" ],
     "T2" : [ "shared_frag_user", "shared_frag_user_nested_select", "shared_frag_user_function_style" ],
     "T3" : [ "insert_with_select", "insert_compound", "insert_multi_value", "upsert_proc", "with_upsert_proc", "with_insert_proc" ],
     "T5" : [ "typical_select", "joiner" ],
     "T6" : [ "shared_frag_user", "shared_frag_user_nested_select" ],
     "X_abcX20def" : [ "generate_quoted_items" ],
-    "insert_returning_test" : [ "insert_returning_cursor", "insert_returning_stmt" ],
-    "radioactive" : [ "radioactive_proc" ]
+    "radioactive" : [ "radioactive_proc" ],
+    "returning_tests" : [ "insert_returning_cursor", "insert_returning_stmt", "delete_returning_cursor", "delete_returning_stmt" ]
   }
 }

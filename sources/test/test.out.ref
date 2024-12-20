@@ -2543,3 +2543,14 @@ WITH
 INSERT INTO foo
   VALUES (1)
   RETURNING (a, b, c);
+
+DELETE FROM jbacked WHERE id = 5
+  RETURNING (id, name, age);
+
+WITH
+  a_cte AS (
+    SELECT 1 AS x
+  )
+DELETE FROM jbacked WHERE id IN (SELECT *
+  FROM a_cte)
+  RETURNING (id, name, age);

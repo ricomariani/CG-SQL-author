@@ -25761,10 +25761,9 @@ begin
     printf("%d %d %d", C.ix, C.iy, C.xy);
   end;
 end;
-
 -- TEST: insert statement without returns doesn't produce a result
--- + error: % only INSERT with a RETURNING clause may be used as a source of rows
--- + {declare_cursor}: err
+-- + error: % statement requires a RETURNING clause to be used as a source of rows
+-- + declare_cursor}: err
 -- +1 error:
 proc insert_returning_cursor_bogus()
 begin
@@ -25803,4 +25802,93 @@ proc insert_into_backed_returning()
 begin
   insert into jbacked values (1, 'x', 10), (2, 'y', 15)
   returning (id, name, age);
+end;
+
+-- TEST: delete from backed with returning
+-- First verify the rewrite (it's backed)
+-- + WITH
+-- +   jbacked (rowid, id, name, age) AS (CALL _jbacked())
+-- + DELETE FROM jb_insert WHERE rowid IN (SELECT rowid
+-- +   FROM jbacked
+-- +   WHERE id = 5)
+-- +   RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
+-- + {create_proc_stmt}: delete_from_backed_returning: { id: integer notnull, name: text, age: integer } dml_proc
+-- + {delete_returning_stmt}: select: { id: integer notnull, name: text, age: integer }
+-- - error:
+proc delete_from_backed_returning()
+begin
+  delete from jbacked where id = 5
+  returning (id, name, age);
+end;
+
+-- TEST: delete from backed with returning and CTE
+-- verify rewrite first (it's backed)
+-- + WITH
+-- +   jbacked (rowid, id, name, age) AS (CALL _jbacked()),
+-- +   a_cte (x) AS (
+-- +     SELECT 1 AS x
+-- +   )
+-- + DELETE FROM jb_insert WHERE rowid IN (SELECT rowid
+-- +   FROM jbacked
+-- +   WHERE id IN (SELECT *
+-- +   FROM a_cte))
+-- +   RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
+-- + {create_proc_stmt}: with_delete_from_backed_returning: { id: integer notnull, name: text, age: integer } dml_proc
+-- + {delete_returning_stmt}: select: { id: integer notnull, name: text, age: integer }
+-- - error:
+proc with_delete_from_backed_returning()
+begin
+  with a_cte as (select 1 x)
+  delete from jbacked where id in (select * from a_cte)
+  returning (id, name, age);
+end;
+
+-- TEST: delete returning is ok in a cursor and that doesn't make the proc have a result set
+-- first verify rewrite (it's backed)
+-- + CURSOR C FOR
+-- +   DELETE FROM jbacked WHERE id = 5
+-- +     RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
+-- + {create_proc_stmt}: ok
+-- + {declare_cursor}: C: select: { id: integer notnull, name: text, age: integer } variable dml_proc
+-- + {delete_returning_stmt}: select: { id: integer notnull, name: text, age: integer }
+-- - error:
+proc delete_returning_cursor()
+begin
+  cursor C for
+    delete from jbacked where id = 5
+    returning (id, name, age);
+end;
+
+-- TEST: this is an incorrect form, this delete isn't a row source
+-- + error: % statement requires a RETURNING clause to be used as a source of rows
+-- +1 error:
+-- + declare_cursor}: err
+proc bogus_delete_cursor()
+begin
+  cursor C for
+    delete from jbacked;
+end;
+
+-- TEST: delete returning error case, bogus with ... delete
+-- + error: % string operand not allowed in 'NOT'
+-- + {create_proc_stmt}: err
+-- + {delete_returning_stmt}: err
+-- +1 error:
+proc delete_returning_invalid_with_delete ()
+begin
+  with foo as (select not 'x')
+  delete from insert_returning_test
+    returning (ix + iy as xy, ix, iy);
+end;
+
+-- TEST: delete returning error case, bogus select list
+-- + error: % name not found 'nope'
+-- + {create_proc_stmt}: err
+-- + {delete_returning_stmt}: err
+-- + {select_expr_list}: err
+-- +1 error:
+proc delete_returning_invalid_return ()
+begin
+  delete from insert_returning_test
+    returning (nope);
 end;

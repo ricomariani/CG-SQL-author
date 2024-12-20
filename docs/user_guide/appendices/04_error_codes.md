@@ -1681,12 +1681,12 @@ that could be used.  You need to provide a value for the missing column.
 
 -----
 
-### CQL0168: only INSERT with a RETURNING clause may be used as a source of rows
+### CQL0168: statement requires a RETURNING clause to be used as a source of rows
 
-An insert statement lacking the RETURNING clause does not produce any result
+An insert/delete/update statement lacking the RETURNING clause does not produce any result
 therefore it is not suitable for use to fill a cursor or other such things
-that need results.  With the RETURNING clause the INSERT statement is, in
-very real way, behaving like a special SELECT.
+that need results.  With the RETURNING clause the same statement is, in
+very real way, behaving like a special SELECT.  It can therefore be used in a cursor.
 
 -----
 
@@ -3036,12 +3036,13 @@ directly on `deployable_region`
 
 -----
 
-### CQL0292: explain statement is only available in dev mode because its result set may vary between sqlite versions
+### CQL0292: explain statement is only available in `--dev` mode because its result set may vary between sqlite versions
 
-The EXPLAIN statement is intended for interactive debugging only. It helps
+The EXPLAIN statement is intended for debugging and analysis only. It helps
 engineer understand how Sqlite will execute their query and the cost attached to
-it. This is why this grammar is only available in dev mode in CQL and should
-never be used in production.
+it. SQLite can and does change the shape of the results of the explain statement and
+so it should not be used in production code. This is why this statement is only available
+in `--dev` mode in CQL indicating "not for production" output.
 
 -----
 

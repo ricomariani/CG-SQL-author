@@ -201,17 +201,19 @@ cql_noexport bool_t is_select_variant(ast_node *ast) {
 // might be a source of rows in a query in a procedure.  These can affect
 // the return type of a procedure if they are "loose" in that procedure.
 cql_noexport bool_t is_row_source(ast_node *ast) {
-  // note that only insert returning is supported at this time
+  // note that only insert and delete returning are supported at this time
   return is_ast_select_stmt(ast) ||
          is_ast_explain_stmt(ast) ||
          is_ast_select_nothing_stmt(ast) ||
          is_ast_insert_returning_stmt(ast) ||
+         is_ast_delete_returning_stmt(ast) ||
          is_ast_with_select_stmt(ast);
 }
 
 // Any of the delete forms
 cql_noexport bool_t is_delete_stmt(ast_node *ast) {
   return is_ast_delete_stmt(ast) ||
+         is_ast_delete_returning_stmt(ast) ||
          is_ast_with_delete_stmt(ast);
 }
 

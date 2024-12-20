@@ -1101,3 +1101,23 @@ begin
   insert into insert_returning_test(ix,iy) values (1,2)
   returning (ix+iy xy, ix, iy);
 end;
+
+-- TEST: verify test helpers for delete returning as a statement (the hard case)
+-- + DECLARE PROC delete_returning_stmt () (xy INT, ix INT, iy INT);
+-- + PROC test_delete_returning_stmt_create_tables()
+-- + PROC test_delete_returning_stmt_create_triggers()
+-- + PROC test_delete_returning_stmt_populate_tables()
+-- + PROC test_delete_returning_stmt_drop_tables()
+-- + PROC test_delete_returning_stmt_drop_triggers()
+-- + PROC test_delete_returning_stmt_read_insert_returning_test()
+-- + PROC open_delete_returning_stmt()
+-- + PROC close_delete_returning_stmt()
+-- + PROC insert_delete_returning_stmt(LIKE delete_returning_stmt)
+-- + PROC select_delete_returning_stmt()
+-- + PROC generate_delete_returning_stmt_row(LIKE delete_returning_stmt)
+[[autotest=(dummy_test, dummy_table, dummy_insert, dummy_select, dummy_result_set)]]
+proc delete_returning_stmt()
+begin
+  delete from insert_returning_test
+    returning (ix+iy xy, ix, iy);
+end;

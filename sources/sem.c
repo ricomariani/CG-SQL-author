@@ -12996,7 +12996,7 @@ static void sem_explain(ast_node *stmt) {
 
   // EXPLAIN [explain_op] [explain_target] is only available in dev mode
   if (!options.dev) {
-    report_error(stmt, "CQL0292: explain statement is only available in dev mode because its result set may vary between SQLite versions", NULL);
+    report_error(stmt, "CQL0292: explain statement is only available in `--dev` mode because its result set may vary between SQLite versions", NULL);
     record_error(stmt);
     goto cleanup;
   }

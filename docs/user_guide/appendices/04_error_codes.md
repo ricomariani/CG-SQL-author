@@ -3036,12 +3036,13 @@ directly on `deployable_region`
 
 -----
 
-### CQL0292: explain statement is only available in dev mode because its result set may vary between sqlite versions
+### CQL0292: explain statement is only available in `--dev` mode because its result set may vary between sqlite versions
 
-The EXPLAIN statement is intended for interactive debugging only. It helps
+The EXPLAIN statement is intended for debugging and analysis only. It helps
 engineer understand how Sqlite will execute their query and the cost attached to
-it. This is why this grammar is only available in dev mode in CQL and should
-never be used in production.
+it. SQLite can and does change the shape of the results of the explain statement and
+so it should not be used in production code. This is why this statement is only available
+in `--dev` mode in CQL indicating "not for production" output.
 
 -----
 

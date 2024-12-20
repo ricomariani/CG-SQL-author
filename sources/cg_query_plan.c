@@ -888,6 +888,7 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
   // dml
   STMT_INIT_EXPL(begin_trans_stmt);
   STMT_INIT_EXPL(commit_trans_stmt);
+  STMT_INIT_EXPL(delete_returning_stmt);
   STMT_INIT_EXPL(delete_stmt);
   STMT_INIT_EXPL(drop_index_stmt);
   STMT_INIT_EXPL(drop_table_stmt);

@@ -300,6 +300,7 @@ static void sem_infer_result_blob_type(ast_node *ast, ast_node *arg_list);
 static void sem_proc_call_post_check(CSTR name, ast_node *ast, ast_node *arg_list);
 static void sem_insert_returning(ast_node *ast);
 static void sem_delete_returning(ast_node *ast);
+static void sem_update_returning(ast_node *ast);
 
 // create a new id node either qid or normal based on the bool
 cql_noexport ast_node *new_str_or_qstr(CSTR name, sem_t sem_type) {
@@ -12917,6 +12918,9 @@ cql_noexport void sem_any_row_source(ast_node *ast) {
   else if (is_ast_delete_returning_stmt(ast)) {
     sem_delete_returning(ast);
   }
+  else if (is_ast_update_returning_stmt(ast)) {
+    sem_update_returning(ast);
+  }
   else {
     Contract(is_ast_select_stmt(ast));
     sem_select_no_with(ast);
@@ -17759,6 +17763,107 @@ cleanup:
   END_BACKING_REWRITE();
 }
 
+// Top level WITH-UPDATE form -- create the CTE context and then process
+// the update statement.
+static void sem_with_update_stmt(ast_node *stmt) {
+  Contract(is_ast_with_update_stmt(stmt));
+  EXTRACT_ANY_NOTNULL(with_prefix, stmt->left)
+  EXTRACT(cte_tables, with_prefix->left);
+  EXTRACT_NOTNULL(update_stmt, stmt->right);
+
+  Invariant(cte_cur == NULL);
+
+  sem_push_cte_state();
+
+  sem_cte_tables(cte_tables);
+  if (is_error(cte_tables)) {
+    record_error(stmt);
+    goto cleanup;
+  }
+
+  sem_update_stmt(update_stmt);
+
+  if (is_error(update_stmt)) {
+    record_error(stmt);
+    goto cleanup;
+  }
+
+  stmt->sem = update_stmt->sem;
+
+cleanup:
+  sem_pop_cte_state();
+}
+
+static void sem_update_returning(ast_node *ast) {
+  Contract(is_ast_update_returning_stmt(ast));
+  EXTRACT_ANY_NOTNULL(update_stmt, ast->left);
+  EXTRACT_NOTNULL(select_expr_list, ast->right);
+
+  ast_node *update_stmt_plain = update_stmt;
+
+  if (is_ast_with_update_stmt(update_stmt)) {
+    update_stmt_plain = update_stmt->right;
+  }
+
+  Invariant(is_ast_update_stmt(update_stmt_plain));
+  EXTRACT_STRING(table_name, update_stmt_plain->left);
+
+  if (is_ast_with_update_stmt(update_stmt)) {
+    sem_with_update_stmt(update_stmt);
+  }
+  else {
+    sem_update_stmt(update_stmt);
+  }
+
+  if (is_error(update_stmt)) {
+    record_error(ast);
+    return;
+  }
+
+  // note that the update statment might have been rewritten due to backing tables
+  // and now it has a with prefix.  We don't want to get the table name here
+  // it's now the backing table name, instead we want the original table name
+  // the backed name.
+
+  ast_node *table_ast = find_table_or_view_even_deleted(table_name);
+  Invariant(table_ast);  // already verified by the above
+
+  sem_join join = *table_ast->sem->jptr;
+
+  // we record this so we can find it on the join when we do a name lookup
+  // note this jptr is especially handy because when we start an insert/update operation
+  // we begin with a pushed join of just the original table
+  if (is_backed(table_ast->sem->sem_type)) {
+    sem_struct *sptr_new  = _ast_pool_new(sem_struct);
+    *sptr_new = *join.tables[0]; // clone existing value (shallow copy)
+    join.tables = _ast_pool_new(sem_struct *);
+    join.tables[0] = sptr_new;
+    sptr_new->is_backed = true;
+  }
+
+  PUSH_JOIN(update_scope, &join);
+  sem_select_expr_list(select_expr_list);
+  POP_JOIN();
+
+  if (is_error(select_expr_list)) {
+     record_error(ast);
+     return;
+  }
+
+  if (is_backed(table_ast->sem->sem_type)) {
+    // we need to change any references to the tables to be the blob extractions
+    // from the key and value blobs
+    rewrite_backed_column_references_in_ast(select_expr_list, table_ast);
+  }
+
+  ast->sem = select_expr_list->sem;
+}
+
+static void sem_update_returning_stmt(ast_node *ast) {
+  sem_update_returning(ast);
+  sem_update_proc_type_for_select(ast);
+}
+
 // The column list specifies the columns we will provide, they must exist and be unique.
 // The insert list specifies the values that are to be updated.
 // The type of each value must match the type of the column.
@@ -17846,37 +17951,6 @@ static void sem_update_cursor_stmt(ast_node *ast) {
   else {
     record_error(ast);
   }
-}
-
-// Top level WITH-UPDATE form -- create the CTE context and then process
-// the update statement.
-static void sem_with_update_stmt(ast_node *stmt) {
-  Contract(is_ast_with_update_stmt(stmt));
-  EXTRACT_ANY_NOTNULL(with_prefix, stmt->left)
-  EXTRACT(cte_tables, with_prefix->left);
-  EXTRACT_NOTNULL(update_stmt, stmt->right);
-
-  Invariant(cte_cur == NULL);
-
-  sem_push_cte_state();
-
-  sem_cte_tables(cte_tables);
-  if (is_error(cte_tables)) {
-    record_error(stmt);
-    goto cleanup;
-  }
-
-  sem_update_stmt(update_stmt);
-
-  if (is_error(update_stmt)) {
-    record_error(stmt);
-    goto cleanup;
-  }
-
-  stmt->sem = update_stmt->sem;
-
-cleanup:
-  sem_pop_cte_state();
 }
 
 static int32_t sem_insert_dummy_spec(ast_node *ast) {
@@ -26624,6 +26698,7 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(delete_returning_stmt);
   STMT_INIT(delete_stmt);
   STMT_INIT(with_delete_stmt);
+  STMT_INIT(update_returning_stmt);
   STMT_INIT(update_stmt);
   STMT_INIT(update_cursor_stmt);
   STMT_INIT(with_update_stmt);

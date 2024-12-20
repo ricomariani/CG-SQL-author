@@ -4835,4 +4835,54 @@ static inline BOOL CGS_insert_returning_resultset_row_equal(CGS_insert_returning
   return insert_returning_resultset_row_equal(insert_returning_resultset_from_CGS_insert_returning_resultset(resultSet1), row1, insert_returning_resultset_from_CGS_insert_returning_resultset(resultSet2), row2);
 }
 
+@class CGS_delete_returning_resultset;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGS_delete_returning_resultset
+@end
+#endif
+
+static inline CGS_delete_returning_resultset *CGS_delete_returning_resultset_from_delete_returning_resultset(delete_returning_resultset_result_set_ref resultSet)
+{
+  return (__bridge CGS_delete_returning_resultset *)resultSet;
+}
+
+static inline delete_returning_resultset_result_set_ref delete_returning_resultset_from_CGS_delete_returning_resultset(CGS_delete_returning_resultset *resultSet)
+{
+  return (__bridge delete_returning_resultset_result_set_ref)resultSet;
+}
+
+static inline NSNumber *_Nullable CGS_delete_returning_resultset_get_xy(CGS_delete_returning_resultset *resultSet, cql_int32 row)
+{
+  delete_returning_resultset_result_set_ref cResultSet = delete_returning_resultset_from_CGS_delete_returning_resultset(resultSet);
+  return delete_returning_resultset_get_xy_is_null(cResultSet, row) ? nil : @(delete_returning_resultset_get_xy_value(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGS_delete_returning_resultset_get_ix(CGS_delete_returning_resultset *resultSet, cql_int32 row)
+{
+  delete_returning_resultset_result_set_ref cResultSet = delete_returning_resultset_from_CGS_delete_returning_resultset(resultSet);
+  return delete_returning_resultset_get_ix_is_null(cResultSet, row) ? nil : @(delete_returning_resultset_get_ix_value(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGS_delete_returning_resultset_get_iy(CGS_delete_returning_resultset *resultSet, cql_int32 row)
+{
+  delete_returning_resultset_result_set_ref cResultSet = delete_returning_resultset_from_CGS_delete_returning_resultset(resultSet);
+  return delete_returning_resultset_get_iy_is_null(cResultSet, row) ? nil : @(delete_returning_resultset_get_iy_value(cResultSet, row));
+}
+
+static inline cql_int32 CGS_delete_returning_resultset_result_count(CGS_delete_returning_resultset *resultSet)
+{
+  return delete_returning_resultset_result_count(delete_returning_resultset_from_CGS_delete_returning_resultset(resultSet));
+}
+
+static inline NSUInteger CGS_delete_returning_resultset_row_hash(CGS_delete_returning_resultset *resultSet, cql_int32 row)
+{
+  return delete_returning_resultset_row_hash(delete_returning_resultset_from_CGS_delete_returning_resultset(resultSet), row);
+}
+
+static inline BOOL CGS_delete_returning_resultset_row_equal(CGS_delete_returning_resultset *resultSet1, cql_int32 row1, CGS_delete_returning_resultset *resultSet2, cql_int32 row2)
+{
+  return delete_returning_resultset_row_equal(delete_returning_resultset_from_CGS_delete_returning_resultset(resultSet1), row1, delete_returning_resultset_from_CGS_delete_returning_resultset(resultSet2), row2);
+}
+
 NS_ASSUME_NONNULL_END

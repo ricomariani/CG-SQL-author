@@ -8182,6 +8182,7 @@ static void sem_expr_exists(ast_node *ast, CSTR cstr) {
     return;
   }
 
+  // this handles more than select but that's ok
   sem_any_row_source(select_stmt);
   if (is_error(select_stmt)) {
     record_error(ast);
@@ -12929,6 +12930,7 @@ cql_noexport void sem_any_row_source(ast_node *ast) {
 static void sem_select_rewrite_backing(ast_node *ast) {
   BEGIN_BACKING_REWRITE();
 
+  // this handles more than select but that's ok
   sem_any_row_source(ast);
 
   // select doesn't have a target table like INSERT/UPDATE/DELETE just FROM tables
@@ -13914,6 +13916,7 @@ static void sem_cte_table(ast_node *ast)  {
 
     ast_node *select_stmt = cte_body;
 
+    // this handles more than select but that's ok
     sem_any_row_source(select_stmt);
     if (is_error(select_stmt)) {
       record_error(ast);
@@ -13997,6 +14000,7 @@ static void sem_with_select(ast_node *ast) {
     goto cleanup;
   }
 
+  // this handles more than select but that's ok
   sem_any_row_source(select_stmt);
   if (is_error(select_stmt)) {
     record_error(ast);
@@ -14189,6 +14193,7 @@ static void sem_create_view_stmt(ast_node *ast) {
   }
 
   // CREATE [opt_temp] VIEW [name] AS [select_stmt]
+  // this handles more than select but that's ok
   sem_any_row_source(select_stmt);
   if (is_error(select_stmt)) {
     record_error(ast);
@@ -18020,6 +18025,7 @@ static void sem_column_spec_and_values(ast_node *ast, ast_node *table_ast) {
   }
 
   if (select_stmt) {
+    // this handles more than select but that's ok
     sem_any_row_source(select_stmt);
     if (is_error(select_stmt)) {
       record_error(ast);
@@ -22037,6 +22043,7 @@ static void sem_declare_cursor(ast_node *ast) {
     // A DML source require a not null db pointer. This info is used to
     // decided whether we can do encoding/decoding of result_set's fields.
     out_union_and_dml = SEM_TYPE_DML_PROC;
+    has_dml = 1;
   }
   else if (is_insert_stmt(ast->right) || is_delete_stmt(ast->right)) {
     report_error(ast->right, "CQL0168: statement requires a RETURNING clause to be used as a source of rows", NULL);
@@ -22309,6 +22316,7 @@ static void sem_declare_cursor_like_select(ast_node *ast) {
   {
     // the select statement doesn't count as DML because we won't be running it
     bool_t has_dml_saved = has_dml;
+    // this handles more than select but that's ok
     sem_any_row_source(select_stmt);
     has_dml = has_dml_saved;
   }

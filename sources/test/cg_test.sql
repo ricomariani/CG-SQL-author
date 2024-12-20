@@ -6191,6 +6191,42 @@ begin
     returning (ix+iy xy, ix, iy);
 end;
 
+-- TEST: test codegen for a cursor that uses insert returning
+-- + DECLARE PROC delete_returning_cursor () USING TRANSACTION;
+-- + CQL_WARN_UNUSED cql_code delete_returning_cursor(sqlite3 *_Nonnull _db_) {
+-- + _rc_ = cql_prepare(_db_, &C_stmt,
+-- + "DELETE FROM insert_returning_test "
+-- + "RETURNING (ix + iy AS xy, ix, iy)");
+proc delete_returning_cursor()
+begin
+  declare C cursor for
+    delete from insert_returning_test
+      returning (ix+iy xy, ix, iy);
+end;
+
+-- TEST: test codegen for a uses delete returning
+-- prelim info
+-- + static cql_uint16 delete_returning_resultset_col_offsets[] = { 3,
+-- + cql_offsetof(delete_returning_resultset_row, xy),
+-- + cql_offsetof(delete_returning_resultset_row, ix),
+-- + cql_offsetof(delete_returning_resultset_row, iy)
+-- + };
+-- + cql_int32 delete_returning_resultset_result_count
+-- + CQL_WARN_UNUSED cql_code delete_returning_resultset_fetch_results
+--
+--  statement generator
+-- + DECLARE PROC delete_returning_resultset () (xy INT, ix INT, iy INT);
+-- + CQL_WARN_UNUSED cql_code delete_returning_resultset(sqlite3 *_Nonnull _db_, sqlite3_stmt *
+-- + *_result_stmt = NULL;
+-- + _rc_ = cql_prepare(_db_, _result_stmt,
+-- + "DELETE FROM insert_returning_test "
+-- + "RETURNING (ix + iy AS xy, ix, iy)");
+proc delete_returning_resultset()
+begin
+  delete from insert_returning_test
+    returning (ix+iy xy, ix, iy);
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

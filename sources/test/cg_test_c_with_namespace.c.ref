@@ -685,6 +685,7 @@ extern cql_int32 an_alias_func(cql_int32 x);
 #define an_alias_func some_native_func
 extern CQL_WARN_UNUSED cql_code a_backed_join(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code insert_returning_resultset(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+extern CQL_WARN_UNUSED cql_code delete_returning_resultset(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 cql_string_literal(_literal_1_text_, "text");
 cql_string_literal(_literal_2_This_is_a_test_, "This is a \" \\ test '' \n \" ");
 cql_string_literal(_literal_3_b_, "b");
@@ -18343,6 +18344,117 @@ CQL_WARN_UNUSED cql_code insert_returning_resultset(sqlite3 *_Nonnull _db_, sqli
   _rc_ = cql_prepare(_db_, _result_stmt,
     "INSERT INTO insert_returning_test(ix, iy) "
       "VALUES (1, 2) "
+      "RETURNING (ix + iy AS xy, ix, iy)");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_error_report();
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+PROC delete_returning_cursor ()
+BEGIN
+  CURSOR C FOR
+    DELETE FROM insert_returning_test
+      RETURNING (ix + iy AS xy, ix, iy);
+END;
+*/
+
+#define _PROC_ "delete_returning_cursor"
+/*
+export:
+DECLARE PROC delete_returning_cursor () USING TRANSACTION;
+*/
+CQL_WARN_UNUSED cql_code delete_returning_cursor(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
+  sqlite3_stmt *C_stmt = NULL;
+
+  _rc_ = cql_prepare(_db_, &C_stmt,
+    "DELETE FROM insert_returning_test "
+      "RETURNING (ix + iy AS xy, ix, iy)");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_error_report();
+  cql_finalize_stmt(&C_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+PROC delete_returning_resultset ()
+BEGIN
+  DELETE FROM insert_returning_test
+    RETURNING (ix + iy AS xy, ix, iy);
+END;
+*/
+
+#define _PROC_ "delete_returning_resultset"
+static int32_t delete_returning_resultset_perf_index;
+
+cql_string_proc_name(delete_returning_resultset_stored_procedure_name, "delete_returning_resultset");
+
+typedef struct delete_returning_resultset_row {
+  cql_nullable_int32 xy;
+  cql_nullable_int32 ix;
+  cql_nullable_int32 iy;
+} delete_returning_resultset_row;
+
+uint8_t delete_returning_resultset_data_types[delete_returning_resultset_data_types_count] = {
+  CQL_DATA_TYPE_INT32, // xy
+  CQL_DATA_TYPE_INT32, // ix
+  CQL_DATA_TYPE_INT32, // iy
+};
+
+static cql_uint16 delete_returning_resultset_col_offsets[] = { 3,
+  cql_offsetof(delete_returning_resultset_row, xy),
+  cql_offsetof(delete_returning_resultset_row, ix),
+  cql_offsetof(delete_returning_resultset_row, iy)
+};
+
+cql_int32 delete_returning_resultset_result_count(delete_returning_resultset_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code delete_returning_resultset_fetch_results(sqlite3 *_Nonnull _db_, delete_returning_resultset_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_delete_returning_resultset, &delete_returning_resultset_perf_index);
+  cql_code rc = delete_returning_resultset(_db_, &stmt);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = delete_returning_resultset_data_types,
+    .col_offsets = delete_returning_resultset_col_offsets,
+    .encode_context_index = -1,
+    .rowsize = sizeof(delete_returning_resultset_row),
+    .crc = CRC_delete_returning_resultset,
+    .perf_index = &delete_returning_resultset_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+/*
+export:
+DECLARE PROC delete_returning_resultset () (xy INT, ix INT, iy INT);
+*/
+CQL_WARN_UNUSED cql_code delete_returning_resultset(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  cql_error_prepare();
+
+  _rc_ = cql_prepare(_db_, _result_stmt,
+    "DELETE FROM insert_returning_test "
       "RETURNING (ix + iy AS xy, ix, iy)");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;

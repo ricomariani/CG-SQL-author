@@ -7167,30 +7167,15 @@ static void cg_any_ddl_stmt(ast_node *ast) {
 }
 
 static void cg_std_dml_exec_stmt(ast_node *ast) {
-// Straight up DML invocation.  The ast has the statement, execute it!
+  // Straight up DML invocation.  The ast has the statement, execute it!
   cg_bound_sql_statement(NULL, ast, CG_EXEC|CG_MINIFY_ALIASES);
 }
 
 // DML with PREPARE.  The ast has the statement. Note: _result_ is the output
 // variable for the sqlite3_stmt we generate this was previously added when the
 // stored proc params were generated.
-static void cg_select_stmt(ast_node *ast) {
-  Contract(is_select_variant(ast));
+static void cg_std_dml_prep_stmt(ast_node *ast) {
   cg_bound_sql_statement("_result", ast, CG_PREPARE|CG_MINIFY_ALIASES);
-}
-
-// DML with PREPARE.  The ast has the statement. Note: _result_ is the output
-// variable for the sqlite3_stmt we generate this was previously added when the
-// stored proc params were generated.
-static void cg_explain_stmt(ast_node *ast) {
-  Contract(is_ast_explain_stmt(ast));
-  cg_bound_sql_statement("_result", ast, CG_PREPARE|CG_MINIFY_ALIASES);
-}
-
-// DML with PREPARE.  The ast has the statement.
-static void cg_with_select_stmt(ast_node *ast) {
-  Contract(is_ast_with_select_stmt(ast));
-  cg_select_stmt(ast);
 }
 
 // Declares the shared _seed_ variable if needed and then loads it from the
@@ -8649,6 +8634,10 @@ cql_noexport void cg_c_main(ast_node *head) {
   cg_c_cleanup();
 }
 
+#define DDL_STMT_INIT(x) symtab_add(cg_stmts, k_ast_ ## x, (void *)cg_any_ddl_stmt)
+#define STD_DML_STMT_INIT(x) symtab_add(cg_stmts, k_ast_ ## x, (void *)cg_std_dml_exec_stmt)
+#define STD_PREP_STMT_INIT(x) symtab_add(cg_stmts, k_ast_ ## x, (void *)cg_std_dml_prep_stmt)
+
 cql_noexport void cg_c_init(void) {
   cg_c_cleanup(); // reset globals/statics
   cg_common_init();
@@ -8716,17 +8705,18 @@ cql_noexport void cg_c_init(void) {
   STD_DML_STMT_INIT(update_stmt);
   STD_DML_STMT_INIT(with_update_stmt);
 
+  // these prepare and then execute
+  STD_PREP_STMT_INIT(insert_returning_stmt);
+  STD_PREP_STMT_INIT(delete_returning_stmt);
+  STD_PREP_STMT_INIT(explain_stmt);
+  STD_PREP_STMT_INIT(select_stmt);
+  STD_PREP_STMT_INIT(with_select_stmt);
+
   // insert forms have some special processing for the 'seed' case
   STMT_INIT(insert_stmt);
-  STMT_INIT(insert_returning_stmt);
   STMT_INIT(with_insert_stmt);
   STMT_INIT(upsert_stmt);
   STMT_INIT(with_upsert_stmt);
-
-  // these DML methods need to use prepare and have other processing other than just EXEC
-  STMT_INIT(explain_stmt);
-  STMT_INIT(select_stmt);
-  STMT_INIT(with_select_stmt);
 
   STMT_INIT(expr_stmt);
   STMT_INIT(if_stmt);

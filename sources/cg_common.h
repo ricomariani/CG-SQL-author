@@ -188,9 +188,6 @@ CG_CHARBUF_OPEN_SYM_WITH_PREFIX(name, rt->symbol_prefix, ##__VA_ARGS__)
 // so we have no codegen for them.  But we do need to verify correctness.
 #define STMT_INIT(x) symtab_add(cg_stmts, k_ast_ ## x, (void *)cg_ ## x)
 #define NO_OP_STMT_INIT(x) symtab_add(cg_stmts, k_ast_ ## x, (void *)cg_no_op)
-#define DDL_STMT_INIT(x) symtab_add(cg_stmts, k_ast_ ## x, (void *)cg_any_ddl_stmt)
-#define STD_DML_STMT_INIT(x) symtab_add(cg_stmts, k_ast_ ## x, (void *)cg_std_dml_exec_stmt)
-#define COMMON_STMT_INIT(x) symtab_add(cg_stmts, k_ast_ ## x, (void *)cg_common_ ## x)
 #define FUNC_INIT(x) symtab_add(cg_funcs, # x, (void *)cg_func_ ## x)
 #define EXPR_INIT(x, func, str, pri_new) \
   static cg_expr_dispatch expr_disp_ ## x = { func, str, pri_new }; \

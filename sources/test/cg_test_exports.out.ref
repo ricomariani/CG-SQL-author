@@ -292,4 +292,6 @@ DECLARE PROC a_dml_delete () USING TRANSACTION;
 DECLARE PROC a_backed_join () (jname TEXT!, jage INT, bname TEXT);
 DECLARE PROC insert_returning_cursor () USING TRANSACTION;
 DECLARE PROC insert_returning_resultset () (xy INT, ix INT, iy INT);
+DECLARE PROC delete_returning_cursor () USING TRANSACTION;
+DECLARE PROC delete_returning_resultset () (xy INT, ix INT, iy INT);
 DECLARE PROC end_proc ();

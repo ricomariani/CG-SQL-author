@@ -98052,8 +98052,8 @@ BEGIN
       RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
 END;
 
-  {create_proc_stmt}: ok
-  | {name delete_returning_cursor}: ok
+  {create_proc_stmt}: ok dml_proc
+  | {name delete_returning_cursor}: ok dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {declare_cursor}: C: select: { id: integer notnull, name: text, age: integer } variable dml_proc

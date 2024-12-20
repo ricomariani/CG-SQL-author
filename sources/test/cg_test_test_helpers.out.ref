@@ -45,6 +45,9 @@ DECLARE PROC sample_proc25 () (id INT!, `a pk` REAL!, uid REAL, name TEXT, name2
 -- The statement ending at line XXXX
 DECLARE PROC insert_returning_stmt () (xy INT, ix INT, iy INT);
 
+-- The statement ending at line XXXX
+DECLARE PROC delete_returning_stmt () (xy INT, ix INT, iy INT);
+
 
 -- The statement ending at line XXXX
 PROC open_sample_proc1()
@@ -2985,6 +2988,71 @@ END;
 PROC generate_insert_returning_stmt_row(LIKE insert_returning_stmt)
 BEGIN
   DECLARE curs CURSOR LIKE insert_returning_stmt;
+  FETCH curs FROM ARGUMENTS;
+  OUT curs;
+END;
+
+-- The statement ending at line XXXX
+[[deterministic]]
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+
+PROC test_delete_returning_stmt_create_tables()
+BEGIN
+  CREATE TABLE IF NOT EXISTS insert_returning_test(
+    ix INT,
+    iy INT
+  );
+END;
+
+PROC test_delete_returning_stmt_create_triggers()
+BEGIN
+  IF @rc THEN END IF;
+END;
+
+PROC test_delete_returning_stmt_populate_tables()
+BEGIN
+  INSERT OR IGNORE INTO insert_returning_test() VALUES() @dummy_seed(123);
+  INSERT OR IGNORE INTO insert_returning_test() VALUES() @dummy_seed(124) @dummy_nullables @dummy_defaults;
+END;
+
+PROC test_delete_returning_stmt_drop_tables()
+BEGIN
+  DROP TABLE IF EXISTS insert_returning_test;
+END;
+
+PROC test_delete_returning_stmt_drop_triggers()
+BEGIN
+  IF @rc THEN END IF;
+END;
+
+PROC test_delete_returning_stmt_read_insert_returning_test()
+BEGIN
+  SELECT * FROM insert_returning_test;
+END;
+
+PROC open_delete_returning_stmt()
+BEGIN
+  CREATE TEMP TABLE test_delete_returning_stmt(LIKE delete_returning_stmt);
+END;
+
+PROC close_delete_returning_stmt()
+BEGIN
+  DROP TABLE test_delete_returning_stmt;
+END;
+
+PROC insert_delete_returning_stmt(LIKE delete_returning_stmt)
+BEGIN
+  INSERT INTO test_delete_returning_stmt FROM ARGUMENTS;
+END;
+
+PROC select_delete_returning_stmt()
+BEGIN
+  SELECT * FROM test_delete_returning_stmt;
+END;
+
+PROC generate_delete_returning_stmt_row(LIKE delete_returning_stmt)
+BEGIN
+  DECLARE curs CURSOR LIKE delete_returning_stmt;
   FETCH curs FROM ARGUMENTS;
   OUT curs;
 END;

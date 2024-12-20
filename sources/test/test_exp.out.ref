@@ -2577,3 +2577,22 @@ WITH
 DELETE FROM jbacked WHERE id IN (SELECT *
   FROM a_cte)
   RETURNING (id, name, age);
+
+UPDATE jbacked
+  SET id = 7
+  WHERE id = 5
+  RETURNING (id, name, age);
+
+WITH
+  a_cte AS (
+    SELECT 1 AS x
+  )
+UPDATE jbacked
+  SET id = 7
+  WHERE id = 5
+  RETURNING (id, name, age);
+
+CURSOR C FOR
+  UPDATE jbacked
+    SET id = 5
+    WHERE 1;

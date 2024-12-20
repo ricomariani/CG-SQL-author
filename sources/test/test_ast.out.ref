@@ -19461,3 +19461,97 @@ The statement ending at line XXXX
         | {select_expr}
           | {name age}
 
+The statement ending at line XXXX
+
+  {update_returning_stmt}
+  | {update_stmt}
+  | | {name jbacked}
+  | | {update_set}
+  |   | {update_list}
+  |   | | {update_entry}
+  |   |   | {name id}
+  |   |   | {int 7}
+  |   | {update_from}
+  |     | {update_where}
+  |       | {opt_where}
+  |       | | {eq}
+  |       |   | {name id}
+  |       |   | {int 5}
+  |       | {update_orderby}
+  | {select_expr_list}
+    | {select_expr}
+    | | {name id}
+    | {select_expr_list}
+      | {select_expr}
+      | | {name name}
+      | {select_expr_list}
+        | {select_expr}
+          | {name age}
+
+The statement ending at line XXXX
+
+  {update_returning_stmt}
+  | {with_update_stmt}
+  | | {with}
+  | | | {cte_tables}
+  | |   | {cte_table}
+  | |     | {cte_decl}
+  | |     | | {name a_cte}
+  | |     | | {star}
+  | |     | {select_stmt}
+  | |       | {select_core_list}
+  | |       | | {select_core}
+  | |       |   | {select_expr_list_con}
+  | |       |     | {select_expr_list}
+  | |       |     | | {select_expr}
+  | |       |     |   | {int 1}
+  | |       |     |   | {opt_as_alias}
+  | |       |     |     | {name x}
+  | |       |     | {select_from_etc}
+  | |       |       | {select_where}
+  | |       |         | {select_groupby}
+  | |       |           | {select_having}
+  | |       | {select_orderby}
+  | |         | {select_limit}
+  | |           | {select_offset}
+  | | {update_stmt}
+  |   | {name jbacked}
+  |   | {update_set}
+  |     | {update_list}
+  |     | | {update_entry}
+  |     |   | {name id}
+  |     |   | {int 7}
+  |     | {update_from}
+  |       | {update_where}
+  |         | {opt_where}
+  |         | | {eq}
+  |         |   | {name id}
+  |         |   | {int 5}
+  |         | {update_orderby}
+  | {select_expr_list}
+    | {select_expr}
+    | | {name id}
+    | {select_expr_list}
+      | {select_expr}
+      | | {name name}
+      | {select_expr_list}
+        | {select_expr}
+          | {name age}
+
+The statement ending at line XXXX
+
+  {declare_cursor}
+  | {name C}
+  | {update_stmt}
+    | {name jbacked}
+    | {update_set}
+      | {update_list}
+      | | {update_entry}
+      |   | {name id}
+      |   | {int 5}
+      | {update_from}
+        | {update_where}
+          | {opt_where}
+          | | {int 1}
+          | {update_orderby}
+

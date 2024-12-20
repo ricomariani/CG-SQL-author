@@ -22119,7 +22119,7 @@ static void sem_declare_cursor(ast_node *ast) {
     out_union_and_dml = SEM_TYPE_DML_PROC;
     has_dml = 1;
   }
-  else if (is_insert_stmt(ast->right) || is_delete_stmt(ast->right)) {
+  else if (is_insert_stmt(ast->right) || is_delete_stmt(ast->right) || is_update_stmt(ast->right)) {
     report_error(ast->right, "CQL0168: statement requires a RETURNING clause to be used as a source of rows", NULL);
     record_error(ast->right);
     record_error(ast);

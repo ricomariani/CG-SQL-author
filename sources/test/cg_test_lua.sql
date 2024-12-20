@@ -5289,7 +5289,7 @@ begin
       returning (ix+iy xy, ix, iy);
 end;
 
--- TEST: test codegen for a uses insert returning
+-- TEST: test codegen for insert returning
 -- + function insert_returning_resultset(_db_)
 -- + _rc_, _result_stmt = cql_prepare(_db_,
 -- + "INSERT INTO insert_returning_test(ix, iy) VALUES (1, 2) RETURNING (ix + iy AS xy, ix, iy)")
@@ -5299,6 +5299,30 @@ end;
 proc insert_returning_resultset()
 begin
   insert into insert_returning_test(ix,iy) values (1,2)
+    returning (ix+iy xy, ix, iy);
+end;
+
+-- TEST: test codegen for a cursor that uses insert returning
+-- + function delete_returning_cursor(_db_)
+-- +  _rc_, C_stmt = cql_prepare(_db_,
+-- + "DELETE FROM insert_returning_test RETURNING (ix + iy AS xy, ix, iy)")
+proc delete_returning_cursor()
+begin
+  declare C cursor for
+    delete from insert_returning_test
+      returning (ix+iy xy, ix, iy);
+end;
+
+-- TEST: test codegen for delete returning
+-- + function delete_returning_resultset(_db_)
+-- + _rc_, _result_stmt = cql_prepare(_db_,
+-- + "DELETE FROM insert_returning_test RETURNING (ix + iy AS xy, ix, iy)")
+-- + function delete_returning_resultset_fetch_results(_db_)
+-- + _rc_, stmt = delete_returning_resultset(_db_)
+-- + _rc_, result_set = cql_fetch_all_rows(stmt, "iii", { "xy", "ix", "iy" })
+proc delete_returning_resultset()
+begin
+  delete from insert_returning_test
     returning (ix+iy xy, ix, iy);
 end;
 

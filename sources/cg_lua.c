@@ -4672,19 +4672,8 @@ static void cg_lua_std_dml_exec_stmt(ast_node *ast) {
 // DML with PREPARE.  The ast has the statement.
 // Note: _result_ is the output variable for the sqlite3_stmt we generate
 //       this was previously added when the stored proc params were generated.
-static void cg_lua_select_stmt(ast_node *ast) {
-  Contract(is_select_variant(ast));
-  cg_lua_bound_sql_statement("_result", ast, CG_PREPARE|CG_MINIFY_ALIASES);
-}
-
-// DML with PREPARE.  The ast has the statement.
-static void cg_lua_with_select_stmt(ast_node *ast) {
-  Contract(is_ast_with_select_stmt(ast));
-  cg_lua_select_stmt(ast);
-}
-
-static void cg_lua_explain_stmt(ast_node *ast) {
-  Contract(is_ast_explain_stmt(ast));
+static void cg_lua_std_dml_prep_stmt(ast_node *ast) {
+  Contract(is_row_source(ast));
   cg_lua_bound_sql_statement("_result", ast, CG_PREPARE|CG_MINIFY_ALIASES);
 }
 
@@ -5526,17 +5515,18 @@ cql_noexport void cg_lua_init(void) {
   LUA_STD_DML_STMT_INIT(update_stmt);
   LUA_STD_DML_STMT_INIT(with_update_stmt);
 
+  // these prepare and then execute
+  LUA_STD_PREP_STMT_INIT(delete_returning_stmt);
+  LUA_STD_PREP_STMT_INIT(explain_stmt);
+  LUA_STD_PREP_STMT_INIT(select_stmt);
+  LUA_STD_PREP_STMT_INIT(with_select_stmt);
+
   // insert forms have some special processing for the 'seed' case
   LUA_STMT_INIT(insert_stmt);
-  LUA_STMT_INIT(with_insert_stmt);
   LUA_STMT_INIT(insert_returning_stmt);
+  LUA_STMT_INIT(with_insert_stmt);
   LUA_STMT_INIT(upsert_stmt);
   LUA_STMT_INIT(with_upsert_stmt);
-
-  // these DML methods need to use prepare and have other processing other than just EXEC
-  LUA_STMT_INIT(explain_stmt);
-  LUA_STMT_INIT(select_stmt);
-  LUA_STMT_INIT(with_select_stmt);
 
   LUA_STMT_INIT(expr_stmt);
   LUA_STMT_INIT(if_stmt);

@@ -6204,7 +6204,7 @@ begin
       returning (ix+iy xy, ix, iy);
 end;
 
--- TEST: test codegen for a uses delete returning
+-- TEST: test codegen for delete returning
 -- prelim info
 -- + static cql_uint16 delete_returning_resultset_col_offsets[] = { 3,
 -- + cql_offsetof(delete_returning_resultset_row, xy),

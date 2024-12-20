@@ -25,6 +25,7 @@ typedef struct cg_lua_expr_dispatch {
   int32_t pri_new;
 } cg_lua_expr_dispatch;
 
+#define LUA_STD_PREP_STMT_INIT(x) symtab_add(cg_stmts, k_ast_ ## x, (void *)cg_lua_std_dml_prep_stmt)
 #define LUA_STMT_INIT(x) symtab_add(cg_stmts, k_ast_ ## x, (void *)cg_lua_ ## x)
 #define LUA_NO_OP_STMT_INIT(x) symtab_add(cg_stmts, k_ast_ ## x, (void *)cg_lua_no_op)
 #define LUA_DDL_STMT_INIT(x) symtab_add(cg_stmts, k_ast_ ## x, (void *)cg_lua_any_ddl_stmt)
@@ -63,7 +64,6 @@ lua_stack_level++;
 CHARBUF_CLOSE(name##_value); \
 CHARBUF_CLOSE(name); \
 lua_stack_level--;
-
 
 // Make a scratch variable to hold the final result of an evaluation.
 // It may or may not be used.  It should be the first thing you put

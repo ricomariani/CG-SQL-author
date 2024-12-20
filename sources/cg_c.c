@@ -7175,6 +7175,7 @@ static void cg_std_dml_exec_stmt(ast_node *ast) {
 // variable for the sqlite3_stmt we generate this was previously added when the
 // stored proc params were generated.
 static void cg_std_dml_prep_stmt(ast_node *ast) {
+  Contract(is_row_source(ast));
   cg_bound_sql_statement("_result", ast, CG_PREPARE|CG_MINIFY_ALIASES);
 }
 
@@ -8634,10 +8635,6 @@ cql_noexport void cg_c_main(ast_node *head) {
   cg_c_cleanup();
 }
 
-#define DDL_STMT_INIT(x) symtab_add(cg_stmts, k_ast_ ## x, (void *)cg_any_ddl_stmt)
-#define STD_DML_STMT_INIT(x) symtab_add(cg_stmts, k_ast_ ## x, (void *)cg_std_dml_exec_stmt)
-#define STD_PREP_STMT_INIT(x) symtab_add(cg_stmts, k_ast_ ## x, (void *)cg_std_dml_prep_stmt)
-
 cql_noexport void cg_c_init(void) {
   cg_c_cleanup(); // reset globals/statics
   cg_common_init();
@@ -8706,13 +8703,13 @@ cql_noexport void cg_c_init(void) {
   STD_DML_STMT_INIT(with_update_stmt);
 
   // these prepare and then execute
-  STD_PREP_STMT_INIT(insert_returning_stmt);
   STD_PREP_STMT_INIT(delete_returning_stmt);
   STD_PREP_STMT_INIT(explain_stmt);
   STD_PREP_STMT_INIT(select_stmt);
   STD_PREP_STMT_INIT(with_select_stmt);
 
   // insert forms have some special processing for the 'seed' case
+  STMT_INIT(insert_returning_stmt);
   STMT_INIT(insert_stmt);
   STMT_INIT(with_insert_stmt);
   STMT_INIT(upsert_stmt);

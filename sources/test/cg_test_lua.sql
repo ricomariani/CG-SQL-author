@@ -5357,7 +5357,7 @@ create table jdata(
 PROC expand_returning_star()
 BEGIN
   cursor C for
-  insert into jdata(id, name) values (1,'foo') returning (*);
+  insert into jdata(id, name) values (1,'foo') returning (jdata.*);
 END;
 
 --------------------------------------------------------------------

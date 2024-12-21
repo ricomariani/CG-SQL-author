@@ -17438,32 +17438,10 @@ static void sem_returning_clause(
     sptr_new->is_backed = true;
   }
 
-  ast_node *first = select_expr_list->left;
-  if (is_ast_star(first)) {
-    // if we have * then we need to expand it to the full list of columns
-    // we need to do this first because it could include backed columns
-    // the usual business of delaying this until codegen time doesn't work
-    // fortunately we have a rewrite ready for this case, COLUMNS(T)
-    // so we'll swap that in for the * right here before we go any further.
-    // As it is there is an invariant that * never applies to backed tables
-    // because in the select form the backed table is instantly replaced with
-    // a CTE so the * refers to that CTE.
+  // change * and T.* to COLUMNS(T)
+  rewrite_star_and_table_star_as_columns_calc(select_expr_list, table_name);
 
-    AST_REWRITE_INFO_SET(first->lineno,first->filename);
-
-    first->type = k_ast_column_calculation;
-    ast_set_left(first,
-      new_ast_col_calcs(
-        new_ast_col_calc(
-          new_ast_str(table_name),
-          NULL
-        ),
-        NULL
-      )
-    );
-    AST_REWRITE_INFO_RESET();
-  }
-
+  // expand those (there may be some there in the source too)
   rewrite_select_expr_list(select_expr_list, &join);
 
   PUSH_JOIN(delete_scope, &join);

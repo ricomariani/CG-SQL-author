@@ -3836,4 +3836,57 @@ void rewrite_as_select_expr(ast_node *ast) {
   AST_REWRITE_INFO_RESET();
 }
 
+cql_noexport void rewrite_star_and_table_star_as_columns_calc(
+  ast_node *select_expr_list,
+  CSTR table_name)
+{
+  for (ast_node *item = select_expr_list; item; item = item->right) {
+    EXTRACT_ANY_NOTNULL(select_expr, item->left);
+
+    if (is_ast_star(select_expr)) {
+      // if we have * then we need to expand it to the full list of columns
+      // we need to do this first because it could include backed columns
+      // the usual business of delaying this until codegen time doesn't work
+      // fortunately we have a rewrite ready for this case, COLUMNS(T)
+      // so we'll swap that in for the * right here before we go any further.
+      // As it is there is an invariant that * never applies to backed tables
+      // because in the select form the backed table is instantly replaced with
+      // a CTE so the * refers to that CTE.
+
+      AST_REWRITE_INFO_SET(select_expr->lineno, select_expr->filename);
+
+      select_expr->type = k_ast_column_calculation;
+      ast_set_left(select_expr,
+        new_ast_col_calcs(
+          new_ast_col_calc(
+            new_ast_str(table_name),
+            NULL
+          ),
+          NULL
+        )
+      );
+      AST_REWRITE_INFO_RESET();
+    }
+    else if (is_ast_table_star(select_expr)) {
+      AST_REWRITE_INFO_SET(select_expr->lineno, select_expr->filename);
+
+      // the table name might be an error, no problem, it will be flagged shortly
+      // the only name that actually works is the one in the joinscope
+      EXTRACT_STRING(tname, select_expr->left);
+
+      select_expr->type = k_ast_column_calculation;
+      ast_set_left(select_expr,
+        new_ast_col_calcs(
+          new_ast_col_calc(
+            new_ast_str(tname),
+            NULL
+          ),
+          NULL
+        )
+      );
+      AST_REWRITE_INFO_RESET();
+    }
+  }
+}
+
 #endif

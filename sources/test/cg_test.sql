@@ -6142,7 +6142,8 @@ end;
 -- +       "FROM backing AS T "
 -- +       "WHERE bgetkey_type(T.k) = -5417664364642960231",
 -- + ") "
--- +   "SELECT T1.name AS jname, T1.age AS jage, T2.name AS bname "
+-- select list minifaction should be happening here
+-- +   "SELECT T1.name, T1.age, T2.name "
 -- +     "FROM jdata AS T1 "
 -- +       "INNER JOIN backed AS T2 ON T1.id = T2.id"
 proc a_backed_join()

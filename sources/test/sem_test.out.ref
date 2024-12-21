@@ -98048,7 +98048,11 @@ The statement ending at line XXXX
 PROC delete_returning_cursor ()
 BEGIN
   CURSOR C FOR
-    DELETE FROM jbacked WHERE id = 5
+    WITH
+      jbacked (rowid, id, name, age) AS (CALL _jbacked())
+    DELETE FROM jb_insert WHERE rowid IN (SELECT rowid
+      FROM jbacked
+      WHERE id = 5)
       RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
 END;
 
@@ -98059,12 +98063,49 @@ END;
       | {declare_cursor}: C: select: { id: integer notnull, name: text, age: integer } variable dml_proc
         | {name C}: C: select: { id: integer notnull, name: text, age: integer } variable dml_proc
         | {delete_returning_stmt}: select: { id: integer notnull, name: text, age: integer }
-          | {delete_stmt}: ok
-          | | {name jbacked}: jbacked: { id: integer notnull primary_key, name: text, age: integer } backed
-          | | {opt_where}: bool notnull
-          |   | {eq}: bool notnull
-          |     | {name id}: id: integer notnull
-          |     | {int 5}: integer notnull
+          | {with_delete_stmt}: ok
+          | | {with}
+          | | | {cte_tables}: ok
+          | |   | {cte_table}: jbacked: { rowid: longint notnull, id: integer notnull, name: text, age: integer }
+          | |     | {cte_decl}: jbacked: { rowid: longint notnull, id: integer notnull, name: text, age: integer }
+          | |     | | {name jbacked}
+          | |     | | {name_list}
+          | |     |   | {name rowid}
+          | |     |   | {name_list}
+          | |     |     | {name id}
+          | |     |     | {name_list}
+          | |     |       | {name name}
+          | |     |       | {name_list}
+          | |     |         | {name age}
+          | |     | {shared_cte}: _jbacked: { rowid: longint notnull, id: integer notnull, name: text, age: integer } dml_proc
+          | |       | {call_stmt}: _jbacked: { rowid: longint notnull, id: integer notnull, name: text, age: integer } dml_proc
+          | |         | {name _jbacked}: _jbacked: { rowid: longint notnull, id: integer notnull, name: text, age: integer } dml_proc
+          | | {delete_stmt}: ok
+          |   | {name jb_insert}: jb_insert: { k: blob notnull primary_key, v: blob } backing
+          |   | {opt_where}: bool notnull
+          |     | {in_pred}: bool notnull
+          |       | {name rowid}: rowid: longint notnull
+          |       | {select_stmt}: rowid: longint
+          |         | {select_core_list}: select: { rowid: longint notnull }
+          |         | | {select_core}: select: { rowid: longint notnull }
+          |         |   | {select_expr_list_con}: select: { rowid: longint notnull }
+          |         |     | {select_expr_list}: select: { rowid: longint notnull }
+          |         |     | | {select_expr}: rowid: longint notnull
+          |         |     |   | {name rowid}: rowid: longint notnull
+          |         |     | {select_from_etc}: TABLE { jbacked: jbacked }
+          |         |       | {table_or_subquery_list}: TABLE { jbacked: jbacked }
+          |         |       | | {table_or_subquery}: TABLE { jbacked: jbacked }
+          |         |       |   | {name jbacked}: TABLE { jbacked: jbacked }
+          |         |       | {select_where}
+          |         |         | {opt_where}: bool notnull
+          |         |         | | {eq}: bool notnull
+          |         |         |   | {name id}: id: integer notnull
+          |         |         |   | {int 5}: integer notnull
+          |         |         | {select_groupby}
+          |         |           | {select_having}
+          |         | {select_orderby}
+          |           | {select_limit}
+          |             | {select_offset}
           | {select_expr_list}: select: { id: integer notnull, name: text, age: integer }
             | {select_expr}: id: integer notnull
             | | {call}: id: integer notnull
@@ -98465,9 +98506,13 @@ The statement ending at line XXXX
 PROC update_returning_cursor ()
 BEGIN
   CURSOR C FOR
-    UPDATE jbacked
-      SET id = 7
-      WHERE id = 5
+    WITH
+      jbacked (rowid, id, name, age) AS (CALL _jbacked())
+    UPDATE jb_insert
+      SET k = cql_blob_update(k, 7, jbacked.id)
+      WHERE rowid IN (SELECT rowid
+        FROM jbacked
+        WHERE id = 5)
       RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
 END;
 
@@ -98478,20 +98523,68 @@ END;
       | {declare_cursor}: C: select: { id: integer notnull, name: text, age: integer } variable dml_proc
         | {name C}: C: select: { id: integer notnull, name: text, age: integer } variable dml_proc
         | {update_returning_stmt}: select: { id: integer notnull, name: text, age: integer }
-          | {update_stmt}: jbacked: { id: integer notnull primary_key, name: text, age: integer } backed
-          | | {name jbacked}: jbacked: { id: integer notnull primary_key, name: text, age: integer } backed
-          | | {update_set}
-          |   | {update_list}: ok
-          |   | | {update_entry}: id: integer notnull
-          |   |   | {name id}: id: integer notnull
-          |   |   | {int 7}: integer notnull
-          |   | {update_from}
-          |     | {update_where}
-          |       | {opt_where}: bool notnull
-          |       | | {eq}: bool notnull
-          |       |   | {name id}: id: integer notnull
-          |       |   | {int 5}: integer notnull
-          |       | {update_orderby}
+          | {with_update_stmt}: jb_insert: { k: blob notnull primary_key, v: blob } backing
+          | | {with}
+          | | | {cte_tables}: ok
+          | |   | {cte_table}: jbacked: { rowid: longint notnull, id: integer notnull, name: text, age: integer }
+          | |     | {cte_decl}: jbacked: { rowid: longint notnull, id: integer notnull, name: text, age: integer }
+          | |     | | {name jbacked}
+          | |     | | {name_list}
+          | |     |   | {name rowid}
+          | |     |   | {name_list}
+          | |     |     | {name id}
+          | |     |     | {name_list}
+          | |     |       | {name name}
+          | |     |       | {name_list}
+          | |     |         | {name age}
+          | |     | {shared_cte}: _jbacked: { rowid: longint notnull, id: integer notnull, name: text, age: integer } dml_proc
+          | |       | {call_stmt}: _jbacked: { rowid: longint notnull, id: integer notnull, name: text, age: integer } dml_proc
+          | |         | {name _jbacked}: _jbacked: { rowid: longint notnull, id: integer notnull, name: text, age: integer } dml_proc
+          | | {update_stmt}: jb_insert: { k: blob notnull primary_key, v: blob } backing
+          |   | {name jb_insert}: jb_insert: { k: blob notnull primary_key, v: blob } backing
+          |   | {update_set}
+          |     | {update_list}: ok
+          |     | | {update_entry}: k: blob notnull
+          |     |   | {name k}: k: blob notnull
+          |     |   | {call}: blob notnull
+          |     |     | {name cql_blob_update}: blob notnull
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name k}: k: blob notnull
+          |     |         | {arg_list}
+          |     |           | {int 7}: integer notnull
+          |     |           | {arg_list}
+          |     |             | {dot}: integer notnull primary_key
+          |     |               | {name jbacked}
+          |     |               | {name id}
+          |     | {update_from}
+          |       | {update_where}
+          |         | {opt_where}: bool notnull
+          |         | | {in_pred}: bool notnull
+          |         |   | {name rowid}: rowid: longint notnull
+          |         |   | {select_stmt}: rowid: longint
+          |         |     | {select_core_list}: select: { rowid: longint notnull }
+          |         |     | | {select_core}: select: { rowid: longint notnull }
+          |         |     |   | {select_expr_list_con}: select: { rowid: longint notnull }
+          |         |     |     | {select_expr_list}: select: { rowid: longint notnull }
+          |         |     |     | | {select_expr}: rowid: longint notnull
+          |         |     |     |   | {name rowid}: rowid: longint notnull
+          |         |     |     | {select_from_etc}: TABLE { jbacked: jbacked }
+          |         |     |       | {table_or_subquery_list}: TABLE { jbacked: jbacked }
+          |         |     |       | | {table_or_subquery}: TABLE { jbacked: jbacked }
+          |         |     |       |   | {name jbacked}: TABLE { jbacked: jbacked }
+          |         |     |       | {select_where}
+          |         |     |         | {opt_where}: bool notnull
+          |         |     |         | | {eq}: bool notnull
+          |         |     |         |   | {name id}: id: integer notnull
+          |         |     |         |   | {int 5}: integer notnull
+          |         |     |         | {select_groupby}
+          |         |     |           | {select_having}
+          |         |     | {select_orderby}
+          |         |       | {select_limit}
+          |         |         | {select_offset}
+          |         | {update_orderby}
           | {select_expr_list}: select: { id: integer notnull, name: text, age: integer }
             | {select_expr}: id: integer notnull
             | | {call}: id: integer notnull

@@ -25846,8 +25846,11 @@ end;
 -- TEST: delete returning is ok in a cursor and that doesn't make the proc have a result set
 -- first verify rewrite (it's backed)
 -- + CURSOR C FOR
--- +   DELETE FROM jbacked WHERE id = 5  WRONG!!
--- +     RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
+-- + WITH
+-- +   jbacked (rowid, id, name, age) AS (CALL _jbacked())
+-- +   DELETE FROM jb_insert WHERE rowid IN (SELECT rowid
+-- +   FROM jbacked
+-- +   WHERE id = 5)
 -- + {create_proc_stmt}: ok
 -- + {declare_cursor}: C: select: { id: integer notnull, name: text, age: integer } variable dml_proc
 -- + {delete_returning_stmt}: select: { id: integer notnull, name: text, age: integer }
@@ -25938,9 +25941,13 @@ end;
 -- TEST: update returning is ok in a cursor and that doesn't make the proc have a result set
 -- first verify rewrite (it's backed)
 -- + CURSOR C FOR
--- +   UPDATE jbacked   WRONG!!
--- +     SET id = 7
--- +     WHERE id = 5
+-- + WITH
+-- +   jbacked (rowid, id, name, age) AS (CALL _jbacked())
+-- + UPDATE jb_insert
+-- +   SET k = cql_blob_update(k, 7, jbacked.id)
+-- +   WHERE rowid IN (SELECT rowid
+-- +     FROM jbacked
+-- +     WHERE id = 5)
 -- +     RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
 -- + {create_proc_stmt}: ok
 -- + {declare_cursor}: C: select: { id: integer notnull, name: text, age: integer } variable dml_proc

@@ -298,6 +298,7 @@ static bool_t sem_validate_arg_pattern(CSTR _Nonnull type_string, ast_node *_Non
 static sem_node *_Nonnull new_sem_std(sem_t sem_type, ast_node *_Nonnull ast_call);
 static void sem_infer_result_blob_type(ast_node *ast, ast_node *arg_list);
 static void sem_proc_call_post_check(CSTR name, ast_node *ast, ast_node *arg_list);
+static void sem_any_select(ast_node *ast);
 static void sem_insert_returning(ast_node *ast);
 static void sem_delete_returning(ast_node *ast);
 static void sem_update_returning(ast_node *ast);
@@ -8184,7 +8185,7 @@ static void sem_expr_exists(ast_node *ast, CSTR cstr) {
   }
 
   // this handles more than select but that's ok
-  sem_any_row_source(select_stmt);
+  sem_any_select(select_stmt);
   if (is_error(select_stmt)) {
     record_error(ast);
     return;
@@ -11752,8 +11753,7 @@ static void sem_table_or_subquery(ast_node *ast) {
   }
   else if (is_select_variant(factor)) {
     // [SELECT ...]
-    sem_any_row_source(factor); // handles more than just select variants but that's ok
-
+    sem_any_select(factor);
     if (is_error(factor)) {
       record_error(ast);
       return;
@@ -12903,11 +12903,30 @@ static void sem_select_core_list(ast_node *ast) {
   ast->sem->used_symbols = select_core->sem->used_symbols;
 }
 
-// Any row source in any context (used when a select appears within another statement)
-cql_noexport void sem_any_row_source(ast_node *ast) {
+// Just like it sounds, this handles the two select variants
+// this is where we tracked nested selects for minifaction
+static void sem_any_select(ast_node *ast) {
+  Contract(is_select_variant(ast));
+
+  // alias minification on the top level select only, this tracks nested selects
   select_level++;
+
   if (is_ast_with_select_stmt(ast)) {
     sem_with_select(ast);
+  }
+  else {
+    Contract(is_ast_select_stmt(ast));
+    sem_select_no_with(ast);
+  }
+
+  select_level--;
+}
+
+// Any row source in any context (used when a select appears within another statement)
+// This is called only for the top level statements, nested selects are handled by sem_any_select
+cql_noexport void sem_any_row_source(ast_node *ast) {
+  if (is_select_variant(ast)) {
+    sem_select_rewrite_backing(ast);
   }
   else if (is_ast_explain_stmt(ast)) {
     sem_explain(ast);
@@ -12918,24 +12937,21 @@ cql_noexport void sem_any_row_source(ast_node *ast) {
   else if (is_ast_delete_returning_stmt(ast)) {
     sem_delete_returning(ast);
   }
-  else if (is_ast_update_returning_stmt(ast)) {
+  else {
+    Contract(is_ast_update_returning_stmt(ast));
     sem_update_returning(ast);
   }
-  else {
-    Contract(is_ast_select_stmt(ast));
-    sem_select_no_with(ast);
-  }
-  select_level--;
 }
 
 // Top level select statements can trigger the backing actions,
 // nested selects contribute to the tables needing backing but
 // they don't do their own rewrite.
 static void sem_select_rewrite_backing(ast_node *ast) {
+  Contract(is_select_variant(ast));
+
   BEGIN_BACKING_REWRITE();
 
-  // this handles more than select but that's ok
-  sem_any_row_source(ast);
+  sem_any_select(ast);
 
   // select doesn't have a target table like INSERT/UPDATE/DELETE just FROM tables
   ast_node *target_table = NULL;
@@ -12982,12 +12998,11 @@ error:
   record_error(ast);
 }
 
-// Top level statement list processing for select, note that a select statement
+// Top level statement list processing for select, note that a select *statement*
 // can't appear in other places (such as a nested expression).  This is only for
-// select in the context of a statement list.  Others use just 'sem_any_row_source'
+// select in the context of a statement list.  Others use just 'sem_any_select'
 static void sem_select_stmt(ast_node *stmt) {
   sem_select_rewrite_backing(stmt);
-
   sem_update_proc_type_for_select(stmt);
 }
 
@@ -13920,8 +13935,7 @@ static void sem_cte_table(ast_node *ast)  {
 
     ast_node *select_stmt = cte_body;
 
-    // this handles more than select but that's ok
-    sem_any_row_source(select_stmt);
+    sem_any_select(select_stmt);
     if (is_error(select_stmt)) {
       record_error(ast);
       return;
@@ -14004,8 +14018,7 @@ static void sem_with_select(ast_node *ast) {
     goto cleanup;
   }
 
-  // this handles more than select but that's ok
-  sem_any_row_source(select_stmt);
+  sem_select_no_with(select_stmt);
   if (is_error(select_stmt)) {
     record_error(ast);
     goto cleanup;
@@ -14020,7 +14033,8 @@ cleanup:
 // top level with-select stmt
 static void sem_with_select_stmt(ast_node *stmt) {
   Contract(is_ast_with_select_stmt(stmt));
-  Invariant(cte_cur == NULL);
+
+  Invariant(cte_cur == NULL);  
   sem_select_rewrite_backing(stmt);
   sem_update_proc_type_for_select(stmt);
   Invariant(cte_cur == NULL);
@@ -14197,8 +14211,7 @@ static void sem_create_view_stmt(ast_node *ast) {
   }
 
   // CREATE [opt_temp] VIEW [name] AS [select_stmt]
-  // this handles more than select but that's ok
-  sem_any_row_source(select_stmt);
+  sem_any_select(select_stmt);
   if (is_error(select_stmt)) {
     record_error(ast);
     return;
@@ -18100,7 +18113,7 @@ static void sem_column_spec_and_values(ast_node *ast, ast_node *table_ast) {
 
   if (select_stmt) {
     // this handles more than select but that's ok
-    sem_any_row_source(select_stmt);
+    sem_any_select(select_stmt);
     if (is_error(select_stmt)) {
       record_error(ast);
       return;
@@ -22101,14 +22114,15 @@ static void sem_declare_cursor(ast_node *ast) {
 
   sem_t out_union_and_dml = 0;
 
-  if (is_row_source(ast->right)) {
-    EXTRACT_ANY_NOTNULL(select_stmt, ast->right);
+  EXTRACT_ANY_NOTNULL(row_source, ast->right);
+
+  if (is_row_source(row_source)) {
 
     // DECLARE [name] CURSOR FOR [select_stmt]
-    // or
     // DECLARE [name] CURSOR FOR [explain_stmt]
-    sem_select_rewrite_backing(select_stmt);
-    if (is_error(select_stmt)) {
+    // etc.
+    sem_any_row_source(row_source);
+    if (is_error(row_source)) {
       record_error(ast);
       return;
     }
@@ -22119,14 +22133,14 @@ static void sem_declare_cursor(ast_node *ast) {
     out_union_and_dml = SEM_TYPE_DML_PROC;
     has_dml = 1;
   }
-  else if (is_insert_stmt(ast->right) || is_delete_stmt(ast->right) || is_update_stmt(ast->right)) {
-    report_error(ast->right, "CQL0168: statement requires a RETURNING clause to be used as a source of rows", NULL);
-    record_error(ast->right);
+  else if (is_insert_stmt(row_source) || is_delete_stmt(row_source) || is_update_stmt(row_source)) {
+    report_error(row_source, "CQL0168: statement requires a RETURNING clause to be used as a source of rows", NULL);
+    record_error(row_source);
     record_error(ast);
     return;
   }
-  else if (is_ast_call_stmt(ast->right)) {
-    EXTRACT_NOTNULL(call_stmt, ast->right);
+  else if (is_ast_call_stmt(row_source)) {
+    EXTRACT_NOTNULL(call_stmt, row_source);
 
     // DECLARE [name] CURSOR FOR [call_stmt]]
     sem_call_stmt_opt_cursor(call_stmt, name);

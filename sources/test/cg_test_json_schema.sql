@@ -2008,6 +2008,37 @@ begin
   returning (ix+iy xy, ix, iy);
 end;
 
+-- TEST: proc using update returning for a cursor
+-- verify dependencies are correct
+-- + "updateTables" : [ "returning_tests" ],
+-- + "fromTables" : [ "Foo" ],
+-- + "usesTables" : [ "Foo", "returning_tests" ],
+-- + "usesDatabase" : 1
+proc update_returning_cursor()
+begin
+  cursor C for
+  with goo as (select * from Foo)
+  update returning_tests set ix=1, iy=2
+  returning (ix+iy xy, ix, iy);
+end;
+
+-- TEST: proc using update returning for a result
+-- verify projection is correct and dependencies are correct
+-- + "name" : "update_returning_stmt",
+-- + "updateTables" : [ "returning_tests" ],
+-- + "usesTables" : [ "returning_tests" ],
+-- + "projection" : [
+-- + "name" : "xy",
+-- + "name" : "ix",
+-- + "name" : "iy",
+-- + "statement" : "UPDATE returning_tests SET ix = 1, iy = 2 RETURNING (ix + iy AS xy, ix, iy)",
+-- + "statementArgs" : [  ]
+proc update_returning_stmt()
+begin
+  update returning_tests set ix=1, iy=2
+  returning (ix+iy xy, ix, iy);
+end;
+
 -- TEST: projection from a view
 -- + "name" : "a view",
 -- + "name" : "a b",

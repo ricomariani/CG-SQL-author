@@ -4239,6 +4239,44 @@
       ],
       "statement" : "DELETE FROM returning_tests RETURNING (ix + iy AS xy, ix, iy)",
       "statementArgs" : [  ]
+    },
+
+    The statement ending at line XXXX
+
+    PROC update_returning_stmt ()
+    BEGIN
+    UPDATE returning_tests
+      SET ix = 1, iy = 2
+      RETURNING (ix + iy AS xy, ix, iy);
+    END
+
+    {
+      "name" : "update_returning_stmt",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "definedOnLine" : 2036,
+      "args" : [
+      ],
+      "updateTables" : [ "returning_tests" ],
+      "usesTables" : [ "returning_tests" ],
+      "projection" : [
+        {
+          "name" : "xy",
+          "type" : "integer",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "ix",
+          "type" : "integer",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "iy",
+          "type" : "integer",
+          "isNotNull" : 0
+        }
+      ],
+      "statement" : "UPDATE returning_tests SET ix = 1, iy = 2 RETURNING (ix + iy AS xy, ix, iy)",
+      "statementArgs" : [  ]
     }
   ],
   "inserts" : [
@@ -5229,6 +5267,33 @@
       "args" : [
       ],
       "deleteTables" : [ "returning_tests" ],
+      "fromTables" : [ "Foo" ],
+      "usesTables" : [ "Foo", "returning_tests" ],
+      "usesDatabase" : 1
+    },
+
+    The statement ending at line XXXX
+
+    PROC update_returning_cursor ()
+    BEGIN
+    CURSOR C FOR
+      WITH
+        goo (id, name) AS (
+          SELECT *
+            FROM Foo
+        )
+      UPDATE returning_tests
+        SET ix = 1, iy = 2
+        RETURNING (ix + iy AS xy, ix, iy);
+    END
+
+    {
+      "name" : "update_returning_cursor",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "definedOnLine" : 2017,
+      "args" : [
+      ],
+      "updateTables" : [ "returning_tests" ],
       "fromTables" : [ "Foo" ],
       "usesTables" : [ "Foo", "returning_tests" ],
       "usesDatabase" : 1
@@ -8779,7 +8844,7 @@
     }
   ],
   "tableUsers" : {
-    "Foo" : [ "a_query", "bigger_query", "insert_proc", "delete_proc", "delete_with_values", "update_proc", "update_with_proc", "dummy_insert_proc", "joiner", "use_view", "null_attribute", "shared_frag_user", "shared_frag_user_nested_select", "insert_returning_cursor", "delete_returning_cursor" ],
+    "Foo" : [ "a_query", "bigger_query", "insert_proc", "delete_proc", "delete_with_values", "update_proc", "update_with_proc", "dummy_insert_proc", "joiner", "use_view", "null_attribute", "shared_frag_user", "shared_frag_user_nested_select", "insert_returning_cursor", "delete_returning_cursor", "update_returning_cursor" ],
     "T1" : [ "shared_frag_user", "shared_frag_user_nested_select" ],
     "T2" : [ "shared_frag_user", "shared_frag_user_nested_select", "shared_frag_user_function_style" ],
     "T3" : [ "insert_with_select", "insert_compound", "insert_multi_value", "upsert_proc", "with_upsert_proc", "with_insert_proc" ],
@@ -8787,6 +8852,6 @@
     "T6" : [ "shared_frag_user", "shared_frag_user_nested_select" ],
     "X_abcX20def" : [ "generate_quoted_items" ],
     "radioactive" : [ "radioactive_proc" ],
-    "returning_tests" : [ "insert_returning_cursor", "insert_returning_stmt", "delete_returning_cursor", "delete_returning_stmt" ]
+    "returning_tests" : [ "insert_returning_cursor", "insert_returning_stmt", "delete_returning_cursor", "delete_returning_stmt", "update_returning_cursor", "update_returning_stmt" ]
   }
 }

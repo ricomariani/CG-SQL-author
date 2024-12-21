@@ -302,6 +302,7 @@ static void sem_any_select(ast_node *ast);
 static void sem_insert_returning(ast_node *ast);
 static void sem_delete_returning(ast_node *ast);
 static void sem_update_returning(ast_node *ast);
+static void sem_upsert_returning(ast_node *ast);
 
 // create a new id node either qid or normal based on the bool
 cql_noexport ast_node *new_str_or_qstr(CSTR name, sem_t sem_type) {
@@ -12939,6 +12940,9 @@ cql_noexport void sem_any_row_source(ast_node *ast) {
   else if (is_ast_delete_returning_stmt(ast)) {
     sem_delete_returning(ast);
   }
+  else if (is_ast_upsert_returning_stmt(ast)) {
+    sem_upsert_returning(ast);
+  }
   else {
     Contract(is_ast_update_returning_stmt(ast));
     sem_update_returning(ast);
@@ -18597,6 +18601,48 @@ cleanup:
 error:
   record_error(stmt);
   goto cleanup;
+}
+
+static void sem_upsert_returning(ast_node *ast) {
+  Contract(is_ast_upsert_returning_stmt(ast));
+  EXTRACT_ANY_NOTNULL(upsert_stmt, ast->left);
+  EXTRACT_NOTNULL(select_expr_list, ast->right);
+
+  ast_node *upsert_stmt_plain = upsert_stmt;
+
+  if (is_ast_with_upsert_stmt(upsert_stmt)) {
+    upsert_stmt_plain = upsert_stmt->right;
+  }
+
+  Invariant(is_ast_upsert_stmt(upsert_stmt_plain));
+  EXTRACT_NOTNULL(insert_stmt, upsert_stmt_plain->left);
+  EXTRACT_NOTNULL(name_columns_values, insert_stmt->right);
+  EXTRACT_STRING(table_name, name_columns_values->left)
+
+  if (is_ast_with_upsert_stmt(upsert_stmt)) {
+    sem_with_upsert_stmt(upsert_stmt);
+  }
+  else {
+    sem_upsert_stmt(upsert_stmt);
+  }
+
+  if (is_error(upsert_stmt)) {
+    record_error(ast);
+    return;
+  }
+
+  sem_returning_clause(select_expr_list, table_name);
+  if (is_error(select_expr_list)) {
+     record_error(ast);
+     return;
+  }
+
+  ast->sem = select_expr_list->sem;
+}
+
+static void sem_upsert_returning_stmt(ast_node *ast) {
+  sem_upsert_returning(ast);
+  sem_update_proc_type_for_select(ast);
 }
 
 // Top level WITH-INSERT form -- create the CTE context and then process
@@ -26699,6 +26745,7 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(update_cursor_stmt);
   STMT_INIT(update_returning_stmt);
   STMT_INIT(update_stmt);
+  STMT_INIT(upsert_returning_stmt);
   STMT_INIT(upsert_stmt);
   STMT_INIT(with_delete_stmt);
   STMT_INIT(with_insert_stmt);

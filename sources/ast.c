@@ -205,6 +205,7 @@ cql_noexport bool_t is_row_source(ast_node *ast) {
   return is_ast_select_stmt(ast) ||
          is_ast_explain_stmt(ast) ||
          is_ast_select_nothing_stmt(ast) ||
+         is_ast_upsert_returning_stmt(ast) ||
          is_ast_update_returning_stmt(ast) ||
          is_ast_insert_returning_stmt(ast) ||
          is_ast_delete_returning_stmt(ast) ||

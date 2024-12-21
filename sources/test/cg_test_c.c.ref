@@ -18465,6 +18465,60 @@ cql_cleanup:
   return _rc_;
 }
 #undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+PROC expand_returning_star ()
+BEGIN
+  CURSOR C FOR
+    WITH
+      _vals (id, name) AS (
+        VALUES (1, 'foo')
+      )
+    INSERT INTO json_backing(k, v)
+      SELECT cql_blob_create(jdata, V.name, jdata.name, V.id, jdata.id), cql_blob_create(jdata)
+        FROM _vals AS V
+      RETURNING (
+        cql_blob_get(k, jdata.id),
+        cql_blob_get(k, jdata.name),
+        cql_blob_get(v, jdata.age),
+        cql_blob_get(v, jdata.zip));
+END;
+*/
+
+#define _PROC_ "expand_returning_star"
+/*
+export:
+DECLARE PROC expand_returning_star () USING TRANSACTION;
+*/
+CQL_WARN_UNUSED cql_code expand_returning_star(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
+  sqlite3_stmt *C_stmt = NULL;
+
+  _rc_ = cql_prepare(_db_, &C_stmt,
+    "WITH "
+      "_vals (id, name) AS ( "
+        "VALUES (1, 'foo') "
+      ") "
+    "INSERT INTO json_backing(k, v) "
+      "SELECT json_array(-1916485007726025434, V.name, V.id), json_object() "
+        "FROM _vals AS V "
+      "RETURNING ( "
+        "((k)->>2), "
+        "((k)->>1), "
+        "((v)->>'$.age'), "
+        "((v)->>'$.zip'))");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_error_report();
+  cql_finalize_stmt(&C_stmt);
+  return _rc_;
+}
+#undef _PROC_
 cql_int32 this_is_the_end = 0;
 
 // The statement ending at line XXXX

@@ -1600,9 +1600,7 @@ cleanup:
 // tables/columns you requested.  SQLite, has no support for this sort of thing
 // so it, and indeed the rest of the compilation chain, will just see the result
 // of the expansion.
-cql_noexport void rewrite_select_expr_list(ast_node *ast, sem_join *jptr_from) {
-  Contract(is_ast_select_expr_list_con(ast));
-  EXTRACT_NOTNULL(select_expr_list, ast->left);
+cql_noexport void rewrite_select_expr_list(ast_node *select_expr_list, sem_join *jptr_from) {
 
   jfind_t jfind = {0};
 
@@ -1612,8 +1610,8 @@ cql_noexport void rewrite_select_expr_list(ast_node *ast, sem_join *jptr_from) {
       EXTRACT_NOTNULL(column_calculation, item->left);
 
       if (!jptr_from) {
-        report_error(ast, "CQL0053: select columns(...) cannot be used with no FROM clause", NULL);
-        record_error(ast);
+        report_error(select_expr_list, "CQL0053: select columns(...) cannot be used with no FROM clause", NULL);
+        record_error(select_expr_list);
         return;
       }
 
@@ -1628,12 +1626,12 @@ cql_noexport void rewrite_select_expr_list(ast_node *ast, sem_join *jptr_from) {
       AST_REWRITE_INFO_RESET();
 
       if (is_error(column_calculation)) {
-        record_error(ast);
+        record_error(select_expr_list);
         goto cleanup;
       }
     }
   }
-  record_ok(ast);
+  record_ok(select_expr_list);
 
 cleanup:
   jfind_cleanup(&jfind);

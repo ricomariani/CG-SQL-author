@@ -6025,7 +6025,6 @@ begin
   const const_variable := 1;
 end;
 
-
 -- backing storage using JSON (!!)
 [[backing_table]]
 [[json]]
@@ -6227,6 +6226,27 @@ begin
   delete from insert_returning_test
     returning (ix+iy xy, ix, iy);
 end;
+
+-- TEST: star should expand always in the returning position
+-- star has to be early expanded for this to work, the appearance
+-- of the backed columns ensures this is true
+-- + "WITH "
+-- +   "_vals (id, name) AS ( "
+-- +   "VALUES (1, 'foo') "
+-- + ") "
+-- + "INSERT INTO json_backing(k, v) "
+-- + "SELECT json_array(-1916485007726025434, V.name, V.id), json_object() "
+-- + "FROM _vals AS V "
+-- + "RETURNING ( "
+-- + "((k)->>2), "
+-- + "((k)->>1), "
+-- + "((v)->>'$.age'), "
+-- + "((v)->>'$.zip'))");
+PROC expand_returning_star()
+BEGIN
+  cursor C for
+  insert into jdata(id, name) values (1,'foo') returning (*);
+END;
 
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------

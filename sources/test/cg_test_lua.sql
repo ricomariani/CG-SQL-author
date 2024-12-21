@@ -5326,6 +5326,40 @@ begin
     returning (ix+iy xy, ix, iy);
 end;
 
+-- backing storage using JSON (!!)
+[[backing_table]]
+[[json]]
+create table json_backing
+(
+  k blob primary key,
+  v blob
+);
+
+[[backed_by=json_backing]]
+create table jdata(
+  id integer,
+  name text,
+  age int,
+  zip long,
+  primary key (name, id) -- reverse order to make it harder
+);
+
+-- TEST: star should expand always in the returning position
+-- star has to be early expanded for this to work, the appearance
+-- of the backed columns ensures this is true
+-- + _rc_, C_stmt = cql_prepare(_db_,
+-- + "WITH _vals (id, name) AS ( VALUES (1, 'foo') )
+-- = INSERT INTO json_backing(k, v) SELECT json_array(-1916485007726025434, V.name, V.id), json_object() FROM _vals AS V
+-- = RETURNING ( ((k)->>2), ((k)->>1), ((v)->>'$.age'), ((v)->>'$.zip'))")
+--
+-- not a result set proc, returns only rc
+-- + return _rc_
+PROC expand_returning_star()
+BEGIN
+  cursor C for
+  insert into jdata(id, name) values (1,'foo') returning (*);
+END;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

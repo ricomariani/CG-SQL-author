@@ -76043,7 +76043,7 @@ The statement ending at line XXXX
 
 SELECT @COLUMNS(LIKE foo);
 
-test/sem_test.sql:XXXX:1: error: in select_expr_list_con : CQL0053: select columns(...) cannot be used with no FROM clause
+test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0053: select columns(...) cannot be used with no FROM clause
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -98760,4 +98760,143 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'nope'
         | {select_expr_list}: err
           | {select_expr}: err
             | {name nope}: err
+
+The statement ending at line XXXX
+
+PROC expand_returning_star ()
+BEGIN
+  CURSOR C FOR
+    WITH
+      _vals (id, name) AS (
+        VALUES (1, 'foo')
+      )
+    INSERT INTO jb_insert(k, v)
+      SELECT cql_blob_create(jbacked, V.id, jbacked.id), cql_blob_create(jbacked, V.name, jbacked.name)
+        FROM _vals AS V
+      RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name expand_returning_star}: ok dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_cursor}: C: select: { id: integer notnull, name: text, age: integer } variable dml_proc
+        | {name C}: C: select: { id: integer notnull, name: text, age: integer } variable dml_proc
+        | {insert_returning_stmt}: select: { id: integer notnull, name: text, age: integer }
+          | {with_insert_stmt}: ok
+          | | {with}
+          | | | {cte_tables}: ok
+          | |   | {cte_table}: _vals: { id: integer notnull, name: text notnull }
+          | |     | {cte_decl}: _vals: { id: integer notnull, name: text notnull }
+          | |     | | {name _vals}
+          | |     | | {name_list}
+          | |     |   | {name id}: id: integer notnull
+          | |     |   | {name_list}
+          | |     |     | {name name}: name: text
+          | |     | {select_stmt}: values: { column1: integer notnull, column2: text notnull }
+          | |       | {select_core_list}: values: { column1: integer notnull, column2: text notnull }
+          | |       | | {select_core}: values: { column1: integer notnull, column2: text notnull }
+          | |       |   | {select_values}
+          | |       |   | {values}: values: { column1: integer notnull, column2: text notnull }
+          | |       |     | {insert_list}: ok
+          | |       |       | {int 1}: integer notnull
+          | |       |       | {insert_list}
+          | |       |         | {strlit 'foo'}: text notnull
+          | |       | {select_orderby}
+          | |         | {select_limit}
+          | |           | {select_offset}
+          | | {insert_stmt}: ok
+          |   | {insert_normal}
+          |   | {name_columns_values}
+          |     | {name jb_insert}: jb_insert: { k: blob notnull primary_key, v: blob } backing
+          |     | {columns_values}: ok
+          |       | {column_spec}
+          |       | | {name_list}
+          |       |   | {name k}: k: blob notnull
+          |       |   | {name_list}
+          |       |     | {name v}: v: blob
+          |       | {select_stmt}: select: { _anon: blob notnull, _anon: blob notnull }
+          |         | {select_core_list}: select: { _anon: blob notnull, _anon: blob notnull }
+          |         | | {select_core}: select: { _anon: blob notnull, _anon: blob notnull }
+          |         |   | {select_expr_list_con}: select: { _anon: blob notnull, _anon: blob notnull }
+          |         |     | {select_expr_list}: select: { _anon: blob notnull, _anon: blob notnull }
+          |         |     | | {select_expr}: blob notnull
+          |         |     | | | {call}: blob notnull
+          |         |     | |   | {name cql_blob_create}: blob notnull
+          |         |     | |   | {call_arg_list}
+          |         |     | |     | {call_filter_clause}
+          |         |     | |     | {arg_list}: ok
+          |         |     | |       | {name jbacked}
+          |         |     | |       | {arg_list}
+          |         |     | |         | {dot}: id: integer notnull
+          |         |     | |         | | {name V}
+          |         |     | |         | | {name id}
+          |         |     | |         | {arg_list}
+          |         |     | |           | {dot}: integer notnull primary_key
+          |         |     | |             | {name jbacked}
+          |         |     | |             | {name id}
+          |         |     | | {select_expr_list}
+          |         |     |   | {select_expr}: blob notnull
+          |         |     |     | {call}: blob notnull
+          |         |     |       | {name cql_blob_create}: blob notnull
+          |         |     |       | {call_arg_list}
+          |         |     |         | {call_filter_clause}
+          |         |     |         | {arg_list}: ok
+          |         |     |           | {name jbacked}
+          |         |     |           | {arg_list}
+          |         |     |             | {dot}: name: text notnull
+          |         |     |             | | {name V}
+          |         |     |             | | {name name}
+          |         |     |             | {arg_list}
+          |         |     |               | {dot}: text
+          |         |     |                 | {name jbacked}
+          |         |     |                 | {name name}
+          |         |     | {select_from_etc}: TABLE { V: _vals }
+          |         |       | {table_or_subquery_list}: TABLE { V: _vals }
+          |         |       | | {table_or_subquery}: TABLE { V: _vals }
+          |         |       |   | {name _vals}: TABLE { V: _vals }
+          |         |       |   | {opt_as_alias}
+          |         |       |     | {name V}
+          |         |       | {select_where}
+          |         |         | {select_groupby}
+          |         |           | {select_having}
+          |         | {select_orderby}
+          |           | {select_limit}
+          |             | {select_offset}
+          | {select_expr_list}: select: { id: integer notnull, name: text, age: integer }
+            | {select_expr}: id: integer notnull
+            | | {call}: id: integer notnull
+            |   | {name cql_blob_get}
+            |   | {call_arg_list}
+            |     | {call_filter_clause}
+            |     | {arg_list}
+            |       | {name k}
+            |       | {arg_list}
+            |         | {dot}
+            |           | {name jbacked}
+            |           | {name id}
+            | {select_expr_list}
+              | {select_expr}: name: text
+              | | {call}: name: text
+              |   | {name cql_blob_get}
+              |   | {call_arg_list}
+              |     | {call_filter_clause}
+              |     | {arg_list}
+              |       | {name v}
+              |       | {arg_list}
+              |         | {dot}
+              |           | {name jbacked}
+              |           | {name name}
+              | {select_expr_list}
+                | {select_expr}: age: integer
+                  | {call}: age: integer
+                    | {name cql_blob_get}
+                    | {call_arg_list}
+                      | {call_filter_clause}
+                      | {arg_list}
+                        | {name v}
+                        | {arg_list}
+                          | {dot}
+                            | {name jbacked}
+                            | {name age}
 

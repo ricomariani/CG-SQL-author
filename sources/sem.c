@@ -915,7 +915,7 @@ static void destroy_name_check(name_check *check) {
 static CSTR dup_expr_text_buffer(charbuf *tmp, ast_node *expr) {
   CSTR result = NULL;
 
-  // we want all the text, unexpanded, so NOT for Sqlite output (this is raw echo)  
+  // we want all the text, unexpanded, so NOT for Sqlite output (this is raw echo)
   gen_sql_callbacks callbacks;
   init_gen_sql_callbacks(&callbacks);
   callbacks.mode = gen_mode_echo;
@@ -1079,7 +1079,7 @@ static ast_node *find_next_unique_key(ast_node *unq_def) {
 
 // Check if a unique key ('uk') is valid. We only look at at all the unique keys
 // preceding 'uk' because they have passed all validation already. e.g.,
-// 
+//
 //   create table simple_ak_table_4 (
 //     a integer not null,
 //     b text,
@@ -1913,7 +1913,7 @@ static void init_version_attrs_info(
     .attrs_ast = attrs,
     .create_version = -1,
     .delete_version = -1,
-    // all others 0, NULL, false, etc. 
+    // all others 0, NULL, false, etc.
   };
   *vers_info = v;
 
@@ -8279,7 +8279,7 @@ static void sem_special_func_cql_blob_get_type(ast_node *ast, uint32_t arg_count
   sem_t sem_type = ref_table_ast->sem->sem_type;
 
   if (!is_backed(sem_type) && !is_backing(sem_type)) {
-    report_error(ast, 
+    report_error(ast,
       "CQL0488: the indicated table is not declared for backed or backing storage",
       table_name);
     record_error(ast);
@@ -11635,8 +11635,10 @@ static void sem_select_expr_list(ast_node *ast) {
     if (is_ast_star(node->left)) {
       // '*' is invalid in any position but the first which we already checked
       sem_expr_invalid_op(node->left, "*");
+      record_error(ast);
       return;
     }
+
     if (is_ast_table_star(node->left)) {
       EXTRACT_NOTNULL(table_star, node->left);
       count += sem_select_table_star_count(table_star);
@@ -12458,8 +12460,8 @@ static void sem_select_expr_list_con(ast_node *ast) {
     from_jptr = select_from_etc->sem->jptr;
     Invariant((from_jptr && query_parts) || (!from_jptr && !query_parts));
 
-    rewrite_select_expr_list(ast, from_jptr);
-    error = is_error(ast);
+    rewrite_select_expr_list(select_expr_list, from_jptr);
+    error = is_error(select_expr_list);
   }
 
   // Push a flow context to contain improvements made via the WHERE clause that
@@ -14034,7 +14036,7 @@ cleanup:
 static void sem_with_select_stmt(ast_node *stmt) {
   Contract(is_ast_with_select_stmt(stmt));
 
-  Invariant(cte_cur == NULL);  
+  Invariant(cte_cur == NULL);
   sem_select_rewrite_backing(stmt);
   sem_update_proc_type_for_select(stmt);
   Invariant(cte_cur == NULL);
@@ -17410,6 +17412,75 @@ cleanup:
   sem_pop_cte_state();
 }
 
+static void sem_returning_clause(
+  ast_node *select_expr_list,
+  CSTR table_name)
+ {
+  Contract(select_expr_list);
+
+  // note that the original statment might have been rewritten due to backing tables
+  // and now it has a with prefix.  We don't want to get the table name out of
+  // that, instead we want the original table name.  That's the backed name if there
+  // is one.
+
+  ast_node *table_ast = find_table_or_view_even_deleted(table_name);
+  Invariant(table_ast);  // already verified by the above
+
+  sem_join join = *table_ast->sem->jptr;
+
+  // we record this so we can find it on the join when we do a name lookup
+  // this will be the full scope for the lookup
+  if (is_backed(table_ast->sem->sem_type)) {
+    sem_struct *sptr_new  = _ast_pool_new(sem_struct);
+    *sptr_new = *join.tables[0]; // clone existing value (shallow copy)
+    join.tables = _ast_pool_new(sem_struct *);
+    join.tables[0] = sptr_new;
+    sptr_new->is_backed = true;
+  }
+
+  ast_node *first = select_expr_list->left;
+  if (is_ast_star(first)) {
+    // if we have * then we need to expand it to the full list of columns
+    // we need to do this first because it could include backed columns
+    // the usual business of delaying this until codegen time doesn't work
+    // fortunately we have a rewrite ready for this case, COLUMNS(T)
+    // so we'll swap that in for the * right here before we go any further.
+    // As it is there is an invariant that * never applies to backed tables
+    // because in the select form the backed table is instantly replaced with
+    // a CTE so the * refers to that CTE.
+
+    AST_REWRITE_INFO_SET(first->lineno,first->filename);
+
+    first->type = k_ast_column_calculation;
+    ast_set_left(first,
+      new_ast_col_calcs(
+        new_ast_col_calc(
+          new_ast_str(table_name),
+          NULL
+        ),
+        NULL
+      )
+    );
+    AST_REWRITE_INFO_RESET();
+  }
+
+  rewrite_select_expr_list(select_expr_list, &join);
+
+  PUSH_JOIN(delete_scope, &join);
+  sem_select_expr_list(select_expr_list);
+  POP_JOIN();
+
+  if (is_error(select_expr_list)) {
+    return;
+  }
+
+  if (is_backed(table_ast->sem->sem_type)) {
+    // we need to change any references to the tables to be the blob extractions
+    // from the key and value blobs
+    rewrite_backed_column_references_in_ast(select_expr_list, table_ast);
+  }
+}
+
 static void sem_delete_returning(ast_node *ast) {
   Contract(is_ast_delete_returning_stmt(ast));
   EXTRACT_ANY_NOTNULL(delete_stmt, ast->left);
@@ -17436,40 +17507,10 @@ static void sem_delete_returning(ast_node *ast) {
     return;
   }
 
-  // note that the delete statment might have been rewritten due to backing tables
-  // and now it has a with prefix.  We don't want to get the table name here
-  // it's now the backing table name, instead we want the original table name
-  // the backed name.
-
-  ast_node *table_ast = find_table_or_view_even_deleted(table_name);
-  Invariant(table_ast);  // already verified by the above
-
-  sem_join join = *table_ast->sem->jptr;
-
-  // we record this so we can find it on the join when we do a name lookup
-  // note this jptr is especially handy because when we start an insert/delete operation
-  // we begin with a pushed join of just the original table
-  if (is_backed(table_ast->sem->sem_type)) {
-    sem_struct *sptr_new  = _ast_pool_new(sem_struct);
-    *sptr_new = *join.tables[0]; // clone existing value (shallow copy)
-    join.tables = _ast_pool_new(sem_struct *);
-    join.tables[0] = sptr_new;
-    sptr_new->is_backed = true;
-  }
-
-  PUSH_JOIN(delete_scope, &join);
-  sem_select_expr_list(select_expr_list);
-  POP_JOIN();
-
+  sem_returning_clause(select_expr_list, table_name);
   if (is_error(select_expr_list)) {
      record_error(ast);
      return;
-  }
-
-  if (is_backed(table_ast->sem->sem_type)) {
-    // we need to change any references to the tables to be the blob extractions
-    // from the key and value blobs
-    rewrite_backed_column_references_in_ast(select_expr_list, table_ast);
   }
 
   ast->sem = select_expr_list->sem;
@@ -17833,40 +17874,10 @@ static void sem_update_returning(ast_node *ast) {
     return;
   }
 
-  // note that the update statment might have been rewritten due to backing tables
-  // and now it has a with prefix.  We don't want to get the table name here
-  // it's now the backing table name, instead we want the original table name
-  // the backed name.
-
-  ast_node *table_ast = find_table_or_view_even_deleted(table_name);
-  Invariant(table_ast);  // already verified by the above
-
-  sem_join join = *table_ast->sem->jptr;
-
-  // we record this so we can find it on the join when we do a name lookup
-  // note this jptr is especially handy because when we start an insert/update operation
-  // we begin with a pushed join of just the original table
-  if (is_backed(table_ast->sem->sem_type)) {
-    sem_struct *sptr_new  = _ast_pool_new(sem_struct);
-    *sptr_new = *join.tables[0]; // clone existing value (shallow copy)
-    join.tables = _ast_pool_new(sem_struct *);
-    join.tables[0] = sptr_new;
-    sptr_new->is_backed = true;
-  }
-
-  PUSH_JOIN(update_scope, &join);
-  sem_select_expr_list(select_expr_list);
-  POP_JOIN();
-
+  sem_returning_clause(select_expr_list, table_name);
   if (is_error(select_expr_list)) {
      record_error(ast);
      return;
-  }
-
-  if (is_backed(table_ast->sem->sem_type)) {
-    // we need to change any references to the tables to be the blob extractions
-    // from the key and value blobs
-    rewrite_backed_column_references_in_ast(select_expr_list, table_ast);
   }
 
   ast->sem = select_expr_list->sem;
@@ -18668,40 +18679,10 @@ static void sem_insert_returning(ast_node *ast) {
     return;
   }
 
-  // note that the insert statment might have been rewritten due to backing tables
-  // and now it has a with prefix.  We don't want to get the table name here
-  // it's now the backing table name, instead we want the original table name
-  // the backed name.
-
-  ast_node *table_ast = find_table_or_view_even_deleted(table_name);
-  Invariant(table_ast);  // already verified by the above
-
-  sem_join join = *table_ast->sem->jptr;
-
-  // we record this so we can find it on the join when we do a name lookup
-  // note this jptr is especially handy because when we start an insert/update operation
-  // we begin with a pushed join of just the original table
-  if (is_backed(table_ast->sem->sem_type)) {
-    sem_struct *sptr_new  = _ast_pool_new(sem_struct);
-    *sptr_new = *join.tables[0]; // clone existing value (shallow copy)
-    join.tables = _ast_pool_new(sem_struct *);
-    join.tables[0] = sptr_new;
-    sptr_new->is_backed = true;
-  }
-
-  PUSH_JOIN(insert_scope, &join);
-  sem_select_expr_list(select_expr_list);
-  POP_JOIN();
-
+  sem_returning_clause(select_expr_list, table_name);
   if (is_error(select_expr_list)) {
      record_error(ast);
      return;
-  }
-
-  if (is_backed(table_ast->sem->sem_type)) {
-    // we need to change any references to the tables to be the blob extractions
-    // from the key and value blobs
-    rewrite_backed_column_references_in_ast(select_expr_list, table_ast);
   }
 
   ast->sem = select_expr_list->sem;

@@ -25993,3 +25993,21 @@ begin
   update insert_returning_test set ix = 7 where ix = 5
     returning (nope);
 end;
+
+-- TEST: verify that the returning star is expanded correctly
+-- this has to happen early, the normal star expansion doesn't
+-- work here.  Behind the scenes the columns form is used and
+-- it might be good to use that universally... moving the rewrite
+-- further up the chain so that not all code gen has to deal with it.
+-- but that is for a later time.
+--
+-- this is the essential rewrite
+-- + RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
+-- + {create_proc_stmt}: ok dml_proc
+-- + {declare_cursor}: C: select: { id: integer notnull, name: text, age: integer } variable dml_proc
+-- - error:
+PROC expand_returning_star()
+BEGIN
+  cursor C for
+  insert into jbacked(id, name) values (1,'foo') returning (*);
+END;

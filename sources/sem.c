@@ -2575,7 +2575,7 @@ static void print_sem_join(sem_join *jptr) {
     if (i != 0) {
       cql_output(", ");
     }
-    cql_output("%s: %s", jptr->names[i], jptr->tables[i]->struct_name);
+    cql_output("%s: %s(%d)", jptr->names[i], jptr->tables[i]->struct_name, jptr->tables[i]->count);
   }
   cql_output(" }");
 }
@@ -11617,48 +11617,18 @@ static void sem_select_expr(ast_node *ast) {
 static void sem_select_expr_list(ast_node *ast) {
   Contract(ast);
 
-  if (is_ast_star(ast->left)) {
-    // select * from [etc]
-    if (ast->right) {
-       report_error(ast, "CQL0474: when '*' appears in an expression list there can be nothing else in the list", NULL);
-       record_error(ast);
-       return;
-    }
-    sem_select_star(ast->left);
-    ast->sem = ast->left->sem;
-    return;
-  }
-
   uint32_t count = 0;
   ast_node *node = ast;
   for (; node; node = node->right) {
-    if (is_ast_star(node->left)) {
-      // '*' is invalid in any position but the first which we already checked
-      sem_expr_invalid_op(node->left, "*");
+    EXTRACT_NOTNULL(select_expr, node->left);
+    sem_select_expr(select_expr);
+
+    if (is_error(select_expr)) {
       record_error(ast);
       return;
     }
 
-    if (is_ast_table_star(node->left)) {
-      EXTRACT_NOTNULL(table_star, node->left);
-      count += sem_select_table_star_count(table_star);
-
-      if (is_error(table_star)) {
-        record_error(ast);
-        return;
-      }
-    }
-    else {
-      EXTRACT_NOTNULL(select_expr, node->left);
-      sem_select_expr(select_expr);
-
-      if (is_error(select_expr)) {
-        record_error(ast);
-        return;
-      }
-
-      count++;
-    }
+    count++;
   }
 
   // Here we make the struct type for this select, by enumerating
@@ -17437,9 +17407,6 @@ static void sem_returning_clause(
     join.tables[0] = sptr_new;
     sptr_new->is_backed = true;
   }
-
-  // change * and T.* to COLUMNS(T)
-  rewrite_star_and_table_star_as_columns_calc(select_expr_list, table_name);
 
   // expand those (there may be some there in the source too)
   rewrite_select_expr_list(select_expr_list, &join);

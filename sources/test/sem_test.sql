@@ -24028,18 +24028,6 @@ storage[(select 'id' union all select 'id' limit 1)] += 1;
 -- +1 error:
 x = 5;
 
--- TEST: * can only appear by itself
--- + {select_stmt}: err
--- * error: % when '*' appears in an expression list there can be nothing else in the list
--- +1 error:
-select *, 1 from foo;
-
--- TEST: * can only appear by itself
--- + {select_stmt}: err
--- * error: % operator found in an invalid position '*'
--- +1 error:
-select 1, * from foo;
-
 declare proc a_target_proc(x integer, y integer);
 
 -- TEST: catch cases where * is in a bad place in the arg list
@@ -24166,7 +24154,7 @@ create table `xyz``abc`
 -- TEST: make a cursor on an exotic name and fetch from it
 -- verify that echoing is re-emitting the escaped text
 -- + CURSOR C FOR
--- +   SELECT *
+-- +   SELECT `xyz``abc`.x, `xyz``abc`.`a b`
 -- + FROM `xyz``abc`;
 -- + CALL printf("%d %d", C.x, C.`a b`);
 -- + {declare_cursor}: C: select: { x: integer notnull, `a b`: integer notnull qid } variable dml_proc
@@ -24186,12 +24174,11 @@ end;
 -- TEST: Test several expansions
 -- verify that echoing is re-emitting the escaped text
 -- + CURSOR D FOR
--- +   SELECT `xyz``abc`.*
+-- +   SELECT `xyz``abc`.x, `xyz``abc`.`a b`
 -- + FROM `xyz``abc`;
 -- + CALL printf("%d %d", D.x, D.`a b`);
 -- + {declare_cursor}: D: select: { x: integer notnull, `a b`: integer notnull qid } variable dml_proc
 -- + {select_stmt}: select: { x: integer notnull, `a b`: integer notnull qid }
--- + {table_star}: X_xyzX60abc: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull qid }
 -- - error:
 proc qid_t2()
 begin
@@ -24345,7 +24332,7 @@ insert into `xyz``abc`(x) values (2) @dummy_seed(500);
 -- TEST: create a cursor and expand it using the from form
 -- verify that echoing is re-emitting the escaped text
 -- + CURSOR C FOR
--- +   SELECT *
+-- +   SELECT `xyz``abc`.x, `xyz``abc`.`a b`
 -- + FROM `xyz``abc`;
 -- + INSERT INTO `xyz``abc`(x, `a b`)
 -- +   VALUES (C.x, C.`a b`);
@@ -25830,7 +25817,7 @@ end;
 -- +   )
 -- + DELETE FROM jb_insert WHERE rowid IN (SELECT rowid
 -- +   FROM jbacked
--- +   WHERE id IN (SELECT *
+-- +   WHERE id IN (SELECT a_cte.x
 -- +   FROM a_cte))
 -- +   RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
 -- + {create_proc_stmt}: with_delete_from_backed_returning: { id: integer notnull, name: text, age: integer } dml_proc

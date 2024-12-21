@@ -60,6 +60,6 @@ cql_noexport ast_node *_Nonnull rewrite_column_values_as_update_list(ast_node *_
 cql_noexport void rewrite_as_select_expr(ast_node *_Nonnull ast);
 cql_noexport bool_t try_rewrite_op_as_call(ast_node *_Nonnull ast, CSTR _Nonnull op);
 cql_noexport void rewrite_backed_column_references_in_ast(ast_node *_Nonnull root, ast_node *_Nonnull backed_table);
-cql_noexport void rewrite_star_and_table_star_as_columns_calc(ast_node *_Nonnull select_expr_list, CSTR _Nonnull table_name);
+cql_noexport void rewrite_star_and_table_star_as_columns_calc(ast_node *_Nullable select_expr_list, sem_join *_Nonnull jptr);
 
 #endif

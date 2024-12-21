@@ -2414,13 +2414,17 @@ static void gen_select_expr(ast_node *ast) {
 static void gen_col_calc(ast_node *ast) {
   Contract(is_ast_col_calc(ast));
   if (ast->left) {
-    EXTRACT_NAME_AND_SCOPE(ast->left);
-    if (scope) {
-      gen_printf("%s.%s", scope, name);
+    ast_node *val = ast->left;
+
+    if (is_ast_dot(val)) {
+      gen_name(val->left);
+      gen_printf(".");
+      gen_name(val->right);
     }
     else {
-      gen_printf("%s", name);
+      gen_name(val);
     }
+
     if (ast->right) {
       gen_printf(" ");
     }

@@ -1324,13 +1324,28 @@ static void add_tail(ast_node **head, ast_node **tail, ast_node *node) {
   *tail = node;
 }
 
-static void append_scoped_name(ast_node **head, ast_node **tail, CSTR scope, CSTR name) {
+static void append_scoped_name(
+  ast_node **head,
+  ast_node **tail,
+  CSTR scope,
+  CSTR name)
+{
+  sem_t sem_type_scope = 0;
+  sem_t sem_type_name = 0;
+
+  if (name[0] == 'X' && name[1] == '_' && strchr(name+2, 'X')) {
+    sem_type_name = SEM_TYPE_QID;
+  }
+  
   ast_node *expr = NULL;
   if (scope) {
-    expr = new_ast_dot(new_ast_str(scope), new_ast_str(name));
+    if (scope[0] == 'X' && scope[1] == '_' && strchr(scope+2, 'X')) {
+      sem_type_scope = SEM_TYPE_QID;
+    }
+    expr = new_ast_dot(new_str_or_qstr(scope, sem_type_scope), new_str_or_qstr(name, sem_type_name));
   }
   else {
-    expr = new_ast_str(name);
+    expr = new_str_or_qstr(name, sem_type_name);
   }
   ast_node *select_expr = new_ast_select_expr(expr, NULL);
   ast_node *select_expr_list = new_ast_select_expr_list(select_expr, NULL);
@@ -1460,6 +1475,8 @@ static void rewrite_column_calculation(ast_node *column_calculation, jfind_t *jf
   for (ast_node *item = column_calculation->left; item; item = item->right) {
     Contract(is_ast_col_calcs(item));
     EXTRACT(col_calc, item->left);
+
+// rico
 
     if (is_ast_dot(col_calc->left)) {
       // If a column is explicitly mentioned, we simply emit it
@@ -1602,15 +1619,29 @@ cleanup:
 // of the expansion.
 cql_noexport void rewrite_select_expr_list(ast_node *select_expr_list, sem_join *jptr_from) {
 
+  // change * and T.* to COLUMNS(T) or COLUMNS(A, B, C) as appropriate
+  rewrite_star_and_table_star_as_columns_calc(select_expr_list, jptr_from);
+
   jfind_t jfind = {0};
 
   for (ast_node *item = select_expr_list; item; item = item->right) {
     Contract(is_ast_select_expr_list(item));
+
+    // all star and table star will be rewritten to columns(...) by now so any left will indicate
+    // jptr_from is null like a select with no from clause.
+    if (is_ast_column_calculation(item->left) || is_ast_star(item->left) || is_ast_table_star(item->left)) {
+      if (!jptr_from) {
+        report_error(select_expr_list, "CQL0053: select *, T.*, or columns(...) cannot be used with no FROM clause", NULL);
+        record_error(select_expr_list);
+        return;
+      }
+    }
+
     if (is_ast_column_calculation(item->left)) {
       EXTRACT_NOTNULL(column_calculation, item->left);
 
       if (!jptr_from) {
-        report_error(select_expr_list, "CQL0053: select columns(...) cannot be used with no FROM clause", NULL);
+        report_error(select_expr_list, "CQL0053: select *, T.*, or columns(...) cannot be used with no FROM clause", NULL);
         record_error(select_expr_list);
         return;
       }
@@ -3838,8 +3869,30 @@ void rewrite_as_select_expr(ast_node *ast) {
 
 cql_noexport void rewrite_star_and_table_star_as_columns_calc(
   ast_node *select_expr_list,
-  CSTR table_name)
+  sem_join *jptr)
 {
+  // no expansion is possible, errors will be emitted later
+  if (!jptr) {
+    return;
+  }
+
+  // if we are in a select statement that is part of an exists expression
+  // we don't to expand the *, or T.*, the columns don't matter
+  if (is_ast_select_expr_list_con(select_expr_list->parent)) {
+    EXTRACT(select_expr_list_con, select_expr_list->parent);
+    EXTRACT(select_core, select_expr_list_con->parent);
+    EXTRACT_ANY(any_select_core, select_core->parent);
+
+    while (!is_ast_select_stmt(any_select_core)) {
+      any_select_core = any_select_core->parent;
+    }
+    EXTRACT_ANY_NOTNULL(select_context, any_select_core->parent);
+
+    if (is_ast_exists_expr(select_context)) {
+      return;
+    }
+  }
+
   for (ast_node *item = select_expr_list; item; item = item->right) {
     EXTRACT_ANY_NOTNULL(select_expr, item->left);
 
@@ -3855,16 +3908,29 @@ cql_noexport void rewrite_star_and_table_star_as_columns_calc(
 
       AST_REWRITE_INFO_SET(select_expr->lineno, select_expr->filename);
 
-      select_expr->type = k_ast_column_calculation;
-      ast_set_left(select_expr,
-        new_ast_col_calcs(
-          new_ast_col_calc(
-            new_ast_str(table_name),
-            NULL
-          ),
+      ast_node *prev = NULL;
+      ast_node *first = NULL;
+
+      for (int i = 0; i < jptr->count; i++) {
+        CSTR tname = jptr->names[i];
+
+        ast_node *calcs = new_ast_col_calcs(
+          new_ast_col_calc(new_ast_str(tname), NULL),
           NULL
-        )
-      );
+        );
+
+        if (i == 0) {
+          first = calcs;
+        }
+        else {
+          ast_set_right(prev, calcs);
+        }
+
+        prev = calcs;
+      }
+
+      select_expr->type = k_ast_column_calculation;
+      ast_set_left(select_expr, first);
       AST_REWRITE_INFO_RESET();
     }
     else if (is_ast_table_star(select_expr)) {

@@ -183,17 +183,20 @@ bool_t cg_expand_star(ast_node *_Nonnull ast, void *_Nullable context, charbuf *
 
   if (is_ast_star(ast)) {
     EXTRACT(select_expr_list, ast->parent);
-    EXTRACT(select_expr_list_con, select_expr_list->parent);
-    EXTRACT(select_core, select_expr_list_con->parent);
-    EXTRACT_ANY(any_select_core, select_core->parent);
 
-    while (!is_ast_select_stmt(any_select_core)) {
-      any_select_core = any_select_core->parent;
-    }
-    EXTRACT_ANY_NOTNULL(select_context, any_select_core->parent);
+    if (is_ast_select_expr_list_con(select_expr_list->parent)) {
+      EXTRACT(select_expr_list_con, select_expr_list->parent);
+      EXTRACT(select_core, select_expr_list_con->parent);
+      EXTRACT_ANY(any_select_core, select_core->parent);
 
-    if (is_ast_exists_expr(select_context)) {
-      return false;
+      while (!is_ast_select_stmt(any_select_core)) {
+        any_select_core = any_select_core->parent;
+      }
+      EXTRACT_ANY_NOTNULL(select_context, any_select_core->parent);
+
+      if (is_ast_exists_expr(select_context)) {
+        return false;
+      }
     }
 
     sem_struct *sptr = ast->sem->sptr;

@@ -5516,6 +5516,7 @@ cql_noexport void cg_lua_init(void) {
   LUA_STD_DML_STMT_INIT(with_update_stmt);
 
   // these prepare and then execute
+  LUA_STD_PREP_STMT_INIT(update_returning_stmt);
   LUA_STD_PREP_STMT_INIT(delete_returning_stmt);
   LUA_STD_PREP_STMT_INIT(explain_stmt);
   LUA_STD_PREP_STMT_INIT(select_stmt);

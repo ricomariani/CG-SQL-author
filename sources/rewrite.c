@@ -1600,9 +1600,7 @@ cleanup:
 // tables/columns you requested.  SQLite, has no support for this sort of thing
 // so it, and indeed the rest of the compilation chain, will just see the result
 // of the expansion.
-cql_noexport void rewrite_select_expr_list(ast_node *ast, sem_join *jptr_from) {
-  Contract(is_ast_select_expr_list_con(ast));
-  EXTRACT_NOTNULL(select_expr_list, ast->left);
+cql_noexport void rewrite_select_expr_list(ast_node *select_expr_list, sem_join *jptr_from) {
 
   jfind_t jfind = {0};
 
@@ -1612,8 +1610,8 @@ cql_noexport void rewrite_select_expr_list(ast_node *ast, sem_join *jptr_from) {
       EXTRACT_NOTNULL(column_calculation, item->left);
 
       if (!jptr_from) {
-        report_error(ast, "CQL0053: select columns(...) cannot be used with no FROM clause", NULL);
-        record_error(ast);
+        report_error(select_expr_list, "CQL0053: select columns(...) cannot be used with no FROM clause", NULL);
+        record_error(select_expr_list);
         return;
       }
 
@@ -1628,12 +1626,12 @@ cql_noexport void rewrite_select_expr_list(ast_node *ast, sem_join *jptr_from) {
       AST_REWRITE_INFO_RESET();
 
       if (is_error(column_calculation)) {
-        record_error(ast);
+        record_error(select_expr_list);
         goto cleanup;
       }
     }
   }
-  record_ok(ast);
+  record_ok(select_expr_list);
 
 cleanup:
   jfind_cleanup(&jfind);
@@ -3836,6 +3834,59 @@ void rewrite_as_select_expr(ast_node *ast) {
   // gen_stmt_list_to_stdout(new_ast_stmt_list(ast, NULL));
 
   AST_REWRITE_INFO_RESET();
+}
+
+cql_noexport void rewrite_star_and_table_star_as_columns_calc(
+  ast_node *select_expr_list,
+  CSTR table_name)
+{
+  for (ast_node *item = select_expr_list; item; item = item->right) {
+    EXTRACT_ANY_NOTNULL(select_expr, item->left);
+
+    if (is_ast_star(select_expr)) {
+      // if we have * then we need to expand it to the full list of columns
+      // we need to do this first because it could include backed columns
+      // the usual business of delaying this until codegen time doesn't work
+      // fortunately we have a rewrite ready for this case, COLUMNS(T)
+      // so we'll swap that in for the * right here before we go any further.
+      // As it is there is an invariant that * never applies to backed tables
+      // because in the select form the backed table is instantly replaced with
+      // a CTE so the * refers to that CTE.
+
+      AST_REWRITE_INFO_SET(select_expr->lineno, select_expr->filename);
+
+      select_expr->type = k_ast_column_calculation;
+      ast_set_left(select_expr,
+        new_ast_col_calcs(
+          new_ast_col_calc(
+            new_ast_str(table_name),
+            NULL
+          ),
+          NULL
+        )
+      );
+      AST_REWRITE_INFO_RESET();
+    }
+    else if (is_ast_table_star(select_expr)) {
+      AST_REWRITE_INFO_SET(select_expr->lineno, select_expr->filename);
+
+      // the table name might be an error, no problem, it will be flagged shortly
+      // the only name that actually works is the one in the joinscope
+      EXTRACT_STRING(tname, select_expr->left);
+
+      select_expr->type = k_ast_column_calculation;
+      ast_set_left(select_expr,
+        new_ast_col_calcs(
+          new_ast_col_calc(
+            new_ast_str(tname),
+            NULL
+          ),
+          NULL
+        )
+      );
+      AST_REWRITE_INFO_RESET();
+    }
+  }
 }
 
 #endif

@@ -1952,3 +1952,12 @@ returning (id, name, age);
 with a_cte as (select 1 x)
 delete from jbacked where id in (select * from a_cte)
 returning (id, name, age);
+
+update jbacked set id = 7 where id = 5
+returning (id, name, age);
+
+with a_cte as (select 1 x)
+update jbacked set id = 7 where id = 5
+returning (id, name, age);
+
+declare C cursor for update jbacked set id  = 5 where 1;

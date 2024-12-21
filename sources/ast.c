@@ -205,6 +205,7 @@ cql_noexport bool_t is_row_source(ast_node *ast) {
   return is_ast_select_stmt(ast) ||
          is_ast_explain_stmt(ast) ||
          is_ast_select_nothing_stmt(ast) ||
+         is_ast_update_returning_stmt(ast) ||
          is_ast_insert_returning_stmt(ast) ||
          is_ast_delete_returning_stmt(ast) ||
          is_ast_with_select_stmt(ast);
@@ -220,6 +221,7 @@ cql_noexport bool_t is_delete_stmt(ast_node *ast) {
 // Any of the update forms
 cql_noexport bool_t is_update_stmt(ast_node *ast) {
   return is_ast_update_stmt(ast) ||
+         is_ast_update_returning_stmt(ast) ||
          is_ast_with_update_stmt(ast);
 }
 

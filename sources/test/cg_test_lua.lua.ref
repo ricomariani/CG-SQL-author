@@ -8946,6 +8946,45 @@ function delete_returning_resultset_fetch_results(_db_)
   return _rc_, result_set
 end
 
+
+-- The statement ending at line XXXX
+
+--[[
+PROC expand_returning_star ()
+BEGIN
+  CURSOR C FOR
+    WITH
+      _vals (id, name) AS (
+        VALUES (1, 'foo')
+      )
+    INSERT INTO json_backing(k, v)
+      SELECT cql_blob_create(jdata, V.name, jdata.name, V.id, jdata.id), cql_blob_create(jdata)
+        FROM _vals AS V
+      RETURNING (
+        cql_blob_get(k, jdata.id),
+        cql_blob_get(k, jdata.name),
+        cql_blob_get(v, jdata.age),
+        cql_blob_get(v, jdata.zip));
+END;
+--]]
+
+function expand_returning_star(_db_)
+  local _rc_ = CQL_OK
+  local C_stmt = nil
+  local C = { _has_row_ = false }
+  local C_fields_ = { "id", "name", "age", "zip" }
+  local C_types_ = "ISil"
+
+  _rc_, C_stmt = cql_prepare(_db_, 
+    "WITH _vals (id, name) AS ( VALUES (1, 'foo') ) INSERT INTO json_backing(k, v) SELECT json_array(-1916485007726025434, V.name, V.id), json_object() FROM _vals AS V RETURNING ( ((k)->>2), ((k)->>1), ((v)->>'$.age'), ((v)->>'$.zip'))")
+  if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+  _rc_ = CQL_OK
+
+::cql_cleanup::
+  cql_finalize_stmt(C_stmt)
+  C_stmt = nil
+  return _rc_
+end
 local this_is_the_end = 0
 
 -- The statement ending at line XXXX

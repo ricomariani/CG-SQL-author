@@ -1514,7 +1514,7 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
 test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, table, or view 'this_is_not_a_shape'
 test/sem_test.sql:XXXX:1: error: in shape_def : CQL0069: name not found 'cost'
 test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0069: name not found 'simple_shape.cost'
-test/sem_test.sql:XXXX:1: error: in select_expr_list_con : CQL0053: select columns(...) cannot be used with no FROM clause
+test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0053: select columns(...) cannot be used with no FROM clause
 test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0012: incompatible types in expression 'two_col_v3.r'
 test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0069: name not found 'two_col_v3.t'
 test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0012: incompatible types in expression 'two_col_v3.r'
@@ -1853,6 +1853,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'nope'
 test/sem_test.sql:XXXX:1: error: in insert_stmt : CQL0168: statement requires a RETURNING clause to be used as a source of rows
 test/sem_test.sql:XXXX:1: error: in delete_stmt : CQL0168: statement requires a RETURNING clause to be used as a source of rows
+test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'nope'
+test/sem_test.sql:XXXX:1: error: in update_stmt : CQL0168: statement requires a RETURNING clause to be used as a source of rows
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'nope'
 semantic errors present; no code gen.

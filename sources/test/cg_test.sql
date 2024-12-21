@@ -6025,7 +6025,6 @@ begin
   const const_variable := 1;
 end;
 
-
 -- backing storage using JSON (!!)
 [[backing_table]]
 [[json]]
@@ -6142,7 +6141,8 @@ end;
 -- +       "FROM backing AS T "
 -- +       "WHERE bgetkey_type(T.k) = -5417664364642960231",
 -- + ") "
--- +   "SELECT T1.name AS jname, T1.age AS jage, T2.name AS bname "
+-- select list minifaction should be happening here
+-- +   "SELECT T1.name, T1.age, T2.name "
 -- +     "FROM jdata AS T1 "
 -- +       "INNER JOIN backed AS T2 ON T1.id = T2.id"
 proc a_backed_join()
@@ -6226,6 +6226,27 @@ begin
   delete from insert_returning_test
     returning (ix+iy xy, ix, iy);
 end;
+
+-- TEST: star should expand always in the returning position
+-- star has to be early expanded for this to work, the appearance
+-- of the backed columns ensures this is true
+-- + "WITH "
+-- +   "_vals (id, name) AS ( "
+-- +   "VALUES (1, 'foo') "
+-- + ") "
+-- + "INSERT INTO json_backing(k, v) "
+-- + "SELECT json_array(-1916485007726025434, V.name, V.id), json_object() "
+-- + "FROM _vals AS V "
+-- + "RETURNING ( "
+-- + "((k)->>2), "
+-- + "((k)->>1), "
+-- + "((v)->>'$.age'), "
+-- + "((v)->>'$.zip'))");
+PROC expand_returning_star()
+BEGIN
+  cursor C for
+  insert into jdata(id, name) values (1,'foo') returning (*);
+END;
 
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------

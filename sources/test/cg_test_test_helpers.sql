@@ -1121,3 +1121,24 @@ begin
   delete from insert_returning_test
     returning (ix+iy xy, ix, iy);
 end;
+
+
+-- TEST: verify test helpers for update returning as a statement (the hard case)
+-- + DECLARE PROC update_returning_stmt () (xy INT, ix INT, iy INT);
+-- + PROC test_update_returning_stmt_create_tables()
+-- + PROC test_update_returning_stmt_create_triggers()
+-- + PROC test_update_returning_stmt_populate_tables()
+-- + PROC test_update_returning_stmt_drop_tables()
+-- + PROC test_update_returning_stmt_drop_triggers()
+-- + PROC test_update_returning_stmt_read_insert_returning_test()
+-- + PROC open_update_returning_stmt()
+-- + PROC close_update_returning_stmt()
+-- + PROC insert_update_returning_stmt(LIKE update_returning_stmt)
+-- + PROC select_update_returning_stmt()
+-- + PROC generate_update_returning_stmt_row(LIKE update_returning_stmt)
+[[autotest=(dummy_test, dummy_table, dummy_insert, dummy_select, dummy_result_set)]]
+proc update_returning_stmt()
+begin
+  update insert_returning_test set ix = 5 where ix = 7
+    returning (ix+iy xy, ix, iy);
+end;

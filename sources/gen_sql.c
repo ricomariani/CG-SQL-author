@@ -3804,6 +3804,20 @@ static void gen_with_update_stmt(ast_node *ast) {
   gen_update_stmt(update_stmt);
 }
 
+static void gen_update_returning_stmt(ast_node *ast) {
+  Contract(is_ast_update_returning_stmt(ast));
+  EXTRACT_ANY_NOTNULL(update_stmt, ast->left);
+  if (is_ast_with_update_stmt(update_stmt)) {
+    gen_with_update_stmt(update_stmt);
+  }
+  else {
+    gen_update_stmt(update_stmt);
+  }
+  gen_printf("\n  RETURNING (");
+  gen_select_expr_list(ast->right);
+  gen_printf(")");
+}
+
 static void gen_insert_list(ast_node *_Nullable ast) {
   Contract(!ast || is_ast_insert_list(ast));
 
@@ -4537,6 +4551,7 @@ static void gen_declare_cursor(ast_node *ast) {
   if (is_row_source(source) ||
       is_ast_call_stmt(source) ||
       is_insert_stmt(source) ||
+      is_update_stmt(source) ||
       is_delete_stmt(source)) {
     // The two statement cases are unified
     gen_printf("\n");
@@ -5644,6 +5659,7 @@ cql_noexport void gen_init() {
   STMT_INIT(throw_stmt);
   STMT_INIT(trycatch_stmt);
   STMT_INIT(update_cursor_stmt);
+  STMT_INIT(update_returning_stmt);
   STMT_INIT(update_stmt);
   STMT_INIT(upsert_stmt);
   STMT_INIT(upsert_update);

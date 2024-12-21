@@ -329,7 +329,7 @@ static void cql_reset_globals(void);
 %type <aval> groupby_item groupby_list orderby_item orderby_list opt_asc_desc opt_nullsfirst_nullslast window_name_defn window_name_defn_list
 %type <aval> table_or_subquery table_or_subquery_list query_parts table_function opt_from_query_parts
 %type <aval> opt_join_cond join_cond join_clause join_target join_target_list
-%type <aval> basic_update_stmt with_update_stmt update_stmt update_cursor_stmt update_entry update_list upsert_stmt conflict_target
+%type <aval> basic_update_stmt update_stmt_plain update_stmt update_cursor_stmt update_entry update_list upsert_stmt conflict_target
 %type <aval> declare_schema_region_stmt declare_deployable_region_stmt call opt_distinct simple_call with_upsert_stmt
 %type <aval> begin_schema_region_stmt end_schema_region_stmt schema_ad_hoc_migration_stmt region_list region_spec
 %type <aval> schema_unsub_stmt
@@ -615,7 +615,6 @@ any_stmt:
   | update_stmt
   | upsert_stmt
   | while_stmt
-  | with_update_stmt
   | with_upsert_stmt
   | keep_table_name_in_aliases_stmt
   ;
@@ -630,18 +629,17 @@ opt_query_plan:
   ;
 
 explain_target: select_stmt
-  | update_stmt
-  | delete_stmt
-  | with_update_stmt
-  | with_upsert_stmt
-  | insert_stmt
-  | upsert_stmt
-  | drop_table_stmt
-  | drop_view_stmt
-  | drop_index_stmt
-  | drop_trigger_stmt
   | begin_trans_stmt
   | commit_trans_stmt
+  | delete_stmt
+  | drop_index_stmt
+  | drop_table_stmt
+  | drop_trigger_stmt
+  | drop_view_stmt
+  | insert_stmt
+  | update_stmt
+  | upsert_stmt
+  | with_upsert_stmt
   ;
 
 previous_schema_stmt:
@@ -1981,18 +1979,25 @@ basic_update_stmt:
     $basic_update_stmt = new_ast_update_stmt($opt_sql_name, list); }
   ;
 
-with_update_stmt:
-  with_prefix update_stmt  { $with_update_stmt = new_ast_with_update_stmt($with_prefix, $update_stmt); }
-  ;
-
 update_stmt:
+     update_stmt_plain { $$ = $update_stmt_plain; }
+   | update_stmt_plain returning_suffix {
+     $$ = new_ast_update_returning_stmt($update_stmt_plain, $returning_suffix); }
+   | with_prefix update_stmt_plain {
+     $$ = new_ast_with_update_stmt($with_prefix, $update_stmt_plain); }
+   | with_prefix update_stmt_plain returning_suffix {
+     ast_node *tmp = new_ast_with_update_stmt($with_prefix, $update_stmt_plain); 
+     $$ = new_ast_update_returning_stmt(tmp, $returning_suffix); }
+   ;
+
+update_stmt_plain:
   UPDATE sql_name SET update_list opt_from_query_parts opt_where opt_orderby opt_limit  {
     struct ast_node *limit = $opt_limit;
     struct ast_node *orderby = new_ast_update_orderby($opt_orderby, limit);
     struct ast_node *where = new_ast_update_where($opt_where, orderby);
     struct ast_node *from = new_ast_update_from($opt_from_query_parts, where);
     struct ast_node *list = new_ast_update_set($update_list, from);
-    $update_stmt = new_ast_update_stmt($sql_name, list); }
+    $$ = new_ast_update_stmt($sql_name, list); }
   | UPDATE sql_name SET column_spec '=' '(' insert_list ')' opt_from_query_parts opt_where opt_orderby opt_limit  {
     struct ast_node *limit = $opt_limit;
     struct ast_node *orderby = new_ast_update_orderby($opt_orderby, limit);
@@ -2000,7 +2005,7 @@ update_stmt:
     struct ast_node *from = new_ast_update_from($opt_from_query_parts, where);
     struct ast_node *columns_values = new_ast_columns_values($column_spec, $insert_list);
     struct ast_node *list = new_ast_update_set(columns_values, from);
-    $update_stmt = new_ast_update_stmt($sql_name, list); }
+    $$ = new_ast_update_stmt($sql_name, list); }
   ;
 
 update_entry:
@@ -2209,7 +2214,8 @@ declare_value_cursor[result]:
   | CURSOR name LIKE '(' typed_names ')' { $result = new_ast_declare_cursor_like_typed_names($name, $typed_names); }
   ;
 
-row_source: select_stmt | explain_stmt | insert_stmt | delete_stmt | call_stmt 
+row_source: select_stmt | explain_stmt | insert_stmt | delete_stmt | update_stmt | call_stmt 
+  ;
 
 declare_forward_read_cursor_stmt[result]:
   DECLARE name CURSOR FOR row_source  { $result = new_ast_declare_cursor($name, $row_source); }

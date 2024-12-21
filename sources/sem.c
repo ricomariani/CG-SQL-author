@@ -298,8 +298,10 @@ static bool_t sem_validate_arg_pattern(CSTR _Nonnull type_string, ast_node *_Non
 static sem_node *_Nonnull new_sem_std(sem_t sem_type, ast_node *_Nonnull ast_call);
 static void sem_infer_result_blob_type(ast_node *ast, ast_node *arg_list);
 static void sem_proc_call_post_check(CSTR name, ast_node *ast, ast_node *arg_list);
+static void sem_any_select(ast_node *ast);
 static void sem_insert_returning(ast_node *ast);
 static void sem_delete_returning(ast_node *ast);
+static void sem_update_returning(ast_node *ast);
 
 // create a new id node either qid or normal based on the bool
 cql_noexport ast_node *new_str_or_qstr(CSTR name, sem_t sem_type) {
@@ -913,7 +915,7 @@ static void destroy_name_check(name_check *check) {
 static CSTR dup_expr_text_buffer(charbuf *tmp, ast_node *expr) {
   CSTR result = NULL;
 
-  // we want all the text, unexpanded, so NOT for Sqlite output (this is raw echo)  
+  // we want all the text, unexpanded, so NOT for Sqlite output (this is raw echo)
   gen_sql_callbacks callbacks;
   init_gen_sql_callbacks(&callbacks);
   callbacks.mode = gen_mode_echo;
@@ -1077,7 +1079,7 @@ static ast_node *find_next_unique_key(ast_node *unq_def) {
 
 // Check if a unique key ('uk') is valid. We only look at at all the unique keys
 // preceding 'uk' because they have passed all validation already. e.g.,
-// 
+//
 //   create table simple_ak_table_4 (
 //     a integer not null,
 //     b text,
@@ -1911,7 +1913,7 @@ static void init_version_attrs_info(
     .attrs_ast = attrs,
     .create_version = -1,
     .delete_version = -1,
-    // all others 0, NULL, false, etc. 
+    // all others 0, NULL, false, etc.
   };
   *vers_info = v;
 
@@ -8183,7 +8185,7 @@ static void sem_expr_exists(ast_node *ast, CSTR cstr) {
   }
 
   // this handles more than select but that's ok
-  sem_any_row_source(select_stmt);
+  sem_any_select(select_stmt);
   if (is_error(select_stmt)) {
     record_error(ast);
     return;
@@ -8277,7 +8279,7 @@ static void sem_special_func_cql_blob_get_type(ast_node *ast, uint32_t arg_count
   sem_t sem_type = ref_table_ast->sem->sem_type;
 
   if (!is_backed(sem_type) && !is_backing(sem_type)) {
-    report_error(ast, 
+    report_error(ast,
       "CQL0488: the indicated table is not declared for backed or backing storage",
       table_name);
     record_error(ast);
@@ -11633,8 +11635,10 @@ static void sem_select_expr_list(ast_node *ast) {
     if (is_ast_star(node->left)) {
       // '*' is invalid in any position but the first which we already checked
       sem_expr_invalid_op(node->left, "*");
+      record_error(ast);
       return;
     }
+
     if (is_ast_table_star(node->left)) {
       EXTRACT_NOTNULL(table_star, node->left);
       count += sem_select_table_star_count(table_star);
@@ -11751,8 +11755,7 @@ static void sem_table_or_subquery(ast_node *ast) {
   }
   else if (is_select_variant(factor)) {
     // [SELECT ...]
-    sem_any_row_source(factor); // handles more than just select variants but that's ok
-
+    sem_any_select(factor);
     if (is_error(factor)) {
       record_error(ast);
       return;
@@ -12457,8 +12460,8 @@ static void sem_select_expr_list_con(ast_node *ast) {
     from_jptr = select_from_etc->sem->jptr;
     Invariant((from_jptr && query_parts) || (!from_jptr && !query_parts));
 
-    rewrite_select_expr_list(ast, from_jptr);
-    error = is_error(ast);
+    rewrite_select_expr_list(select_expr_list, from_jptr);
+    error = is_error(select_expr_list);
   }
 
   // Push a flow context to contain improvements made via the WHERE clause that
@@ -12902,11 +12905,30 @@ static void sem_select_core_list(ast_node *ast) {
   ast->sem->used_symbols = select_core->sem->used_symbols;
 }
 
-// Any row source in any context (used when a select appears within another statement)
-cql_noexport void sem_any_row_source(ast_node *ast) {
+// Just like it sounds, this handles the two select variants
+// this is where we tracked nested selects for minifaction
+static void sem_any_select(ast_node *ast) {
+  Contract(is_select_variant(ast));
+
+  // alias minification on the top level select only, this tracks nested selects
   select_level++;
+
   if (is_ast_with_select_stmt(ast)) {
     sem_with_select(ast);
+  }
+  else {
+    Contract(is_ast_select_stmt(ast));
+    sem_select_no_with(ast);
+  }
+
+  select_level--;
+}
+
+// Any row source in any context (used when a select appears within another statement)
+// This is called only for the top level statements, nested selects are handled by sem_any_select
+cql_noexport void sem_any_row_source(ast_node *ast) {
+  if (is_select_variant(ast)) {
+    sem_select_rewrite_backing(ast);
   }
   else if (is_ast_explain_stmt(ast)) {
     sem_explain(ast);
@@ -12918,20 +12940,20 @@ cql_noexport void sem_any_row_source(ast_node *ast) {
     sem_delete_returning(ast);
   }
   else {
-    Contract(is_ast_select_stmt(ast));
-    sem_select_no_with(ast);
+    Contract(is_ast_update_returning_stmt(ast));
+    sem_update_returning(ast);
   }
-  select_level--;
 }
 
 // Top level select statements can trigger the backing actions,
 // nested selects contribute to the tables needing backing but
 // they don't do their own rewrite.
 static void sem_select_rewrite_backing(ast_node *ast) {
+  Contract(is_select_variant(ast));
+
   BEGIN_BACKING_REWRITE();
 
-  // this handles more than select but that's ok
-  sem_any_row_source(ast);
+  sem_any_select(ast);
 
   // select doesn't have a target table like INSERT/UPDATE/DELETE just FROM tables
   ast_node *target_table = NULL;
@@ -12978,12 +13000,11 @@ error:
   record_error(ast);
 }
 
-// Top level statement list processing for select, note that a select statement
+// Top level statement list processing for select, note that a select *statement*
 // can't appear in other places (such as a nested expression).  This is only for
-// select in the context of a statement list.  Others use just 'sem_any_row_source'
+// select in the context of a statement list.  Others use just 'sem_any_select'
 static void sem_select_stmt(ast_node *stmt) {
   sem_select_rewrite_backing(stmt);
-
   sem_update_proc_type_for_select(stmt);
 }
 
@@ -13916,8 +13937,7 @@ static void sem_cte_table(ast_node *ast)  {
 
     ast_node *select_stmt = cte_body;
 
-    // this handles more than select but that's ok
-    sem_any_row_source(select_stmt);
+    sem_any_select(select_stmt);
     if (is_error(select_stmt)) {
       record_error(ast);
       return;
@@ -14000,8 +14020,7 @@ static void sem_with_select(ast_node *ast) {
     goto cleanup;
   }
 
-  // this handles more than select but that's ok
-  sem_any_row_source(select_stmt);
+  sem_select_no_with(select_stmt);
   if (is_error(select_stmt)) {
     record_error(ast);
     goto cleanup;
@@ -14016,6 +14035,7 @@ cleanup:
 // top level with-select stmt
 static void sem_with_select_stmt(ast_node *stmt) {
   Contract(is_ast_with_select_stmt(stmt));
+
   Invariant(cte_cur == NULL);
   sem_select_rewrite_backing(stmt);
   sem_update_proc_type_for_select(stmt);
@@ -14193,8 +14213,7 @@ static void sem_create_view_stmt(ast_node *ast) {
   }
 
   // CREATE [opt_temp] VIEW [name] AS [select_stmt]
-  // this handles more than select but that's ok
-  sem_any_row_source(select_stmt);
+  sem_any_select(select_stmt);
   if (is_error(select_stmt)) {
     record_error(ast);
     return;
@@ -17393,6 +17412,53 @@ cleanup:
   sem_pop_cte_state();
 }
 
+static void sem_returning_clause(
+  ast_node *select_expr_list,
+  CSTR table_name)
+ {
+  Contract(select_expr_list);
+
+  // note that the original statment might have been rewritten due to backing tables
+  // and now it has a with prefix.  We don't want to get the table name out of
+  // that, instead we want the original table name.  That's the backed name if there
+  // is one.
+
+  ast_node *table_ast = find_table_or_view_even_deleted(table_name);
+  Invariant(table_ast);  // already verified by the above
+
+  sem_join join = *table_ast->sem->jptr;
+
+  // we record this so we can find it on the join when we do a name lookup
+  // this will be the full scope for the lookup
+  if (is_backed(table_ast->sem->sem_type)) {
+    sem_struct *sptr_new  = _ast_pool_new(sem_struct);
+    *sptr_new = *join.tables[0]; // clone existing value (shallow copy)
+    join.tables = _ast_pool_new(sem_struct *);
+    join.tables[0] = sptr_new;
+    sptr_new->is_backed = true;
+  }
+
+  // change * and T.* to COLUMNS(T)
+  rewrite_star_and_table_star_as_columns_calc(select_expr_list, table_name);
+
+  // expand those (there may be some there in the source too)
+  rewrite_select_expr_list(select_expr_list, &join);
+
+  PUSH_JOIN(delete_scope, &join);
+  sem_select_expr_list(select_expr_list);
+  POP_JOIN();
+
+  if (is_error(select_expr_list)) {
+    return;
+  }
+
+  if (is_backed(table_ast->sem->sem_type)) {
+    // we need to change any references to the tables to be the blob extractions
+    // from the key and value blobs
+    rewrite_backed_column_references_in_ast(select_expr_list, table_ast);
+  }
+}
+
 static void sem_delete_returning(ast_node *ast) {
   Contract(is_ast_delete_returning_stmt(ast));
   EXTRACT_ANY_NOTNULL(delete_stmt, ast->left);
@@ -17419,40 +17485,10 @@ static void sem_delete_returning(ast_node *ast) {
     return;
   }
 
-  // note that the delete statment might have been rewritten due to backing tables
-  // and now it has a with prefix.  We don't want to get the table name here
-  // it's now the backing table name, instead we want the original table name
-  // the backed name.
-
-  ast_node *table_ast = find_table_or_view_even_deleted(table_name);
-  Invariant(table_ast);  // already verified by the above
-
-  sem_join join = *table_ast->sem->jptr;
-
-  // we record this so we can find it on the join when we do a name lookup
-  // note this jptr is especially handy because when we start an insert/delete operation
-  // we begin with a pushed join of just the original table
-  if (is_backed(table_ast->sem->sem_type)) {
-    sem_struct *sptr_new  = _ast_pool_new(sem_struct);
-    *sptr_new = *join.tables[0]; // clone existing value (shallow copy)
-    join.tables = _ast_pool_new(sem_struct *);
-    join.tables[0] = sptr_new;
-    sptr_new->is_backed = true;
-  }
-
-  PUSH_JOIN(delete_scope, &join);
-  sem_select_expr_list(select_expr_list);
-  POP_JOIN();
-
+  sem_returning_clause(select_expr_list, table_name);
   if (is_error(select_expr_list)) {
      record_error(ast);
      return;
-  }
-
-  if (is_backed(table_ast->sem->sem_type)) {
-    // we need to change any references to the tables to be the blob extractions
-    // from the key and value blobs
-    rewrite_backed_column_references_in_ast(select_expr_list, table_ast);
   }
 
   ast->sem = select_expr_list->sem;
@@ -17759,6 +17795,77 @@ cleanup:
   END_BACKING_REWRITE();
 }
 
+// Top level WITH-UPDATE form -- create the CTE context and then process
+// the update statement.
+static void sem_with_update_stmt(ast_node *stmt) {
+  Contract(is_ast_with_update_stmt(stmt));
+  EXTRACT_ANY_NOTNULL(with_prefix, stmt->left)
+  EXTRACT(cte_tables, with_prefix->left);
+  EXTRACT_NOTNULL(update_stmt, stmt->right);
+
+  Invariant(cte_cur == NULL);
+
+  sem_push_cte_state();
+
+  sem_cte_tables(cte_tables);
+  if (is_error(cte_tables)) {
+    record_error(stmt);
+    goto cleanup;
+  }
+
+  sem_update_stmt(update_stmt);
+
+  if (is_error(update_stmt)) {
+    record_error(stmt);
+    goto cleanup;
+  }
+
+  stmt->sem = update_stmt->sem;
+
+cleanup:
+  sem_pop_cte_state();
+}
+
+static void sem_update_returning(ast_node *ast) {
+  Contract(is_ast_update_returning_stmt(ast));
+  EXTRACT_ANY_NOTNULL(update_stmt, ast->left);
+  EXTRACT_NOTNULL(select_expr_list, ast->right);
+
+  ast_node *update_stmt_plain = update_stmt;
+
+  if (is_ast_with_update_stmt(update_stmt)) {
+    update_stmt_plain = update_stmt->right;
+  }
+
+  Invariant(is_ast_update_stmt(update_stmt_plain));
+  EXTRACT_STRING(table_name, update_stmt_plain->left);
+
+  if (is_ast_with_update_stmt(update_stmt)) {
+    sem_with_update_stmt(update_stmt);
+  }
+  else {
+    sem_update_stmt(update_stmt);
+  }
+
+  if (is_error(update_stmt)) {
+    record_error(ast);
+    return;
+  }
+
+  sem_returning_clause(select_expr_list, table_name);
+  if (is_error(select_expr_list)) {
+     record_error(ast);
+     return;
+  }
+
+  ast->sem = select_expr_list->sem;
+}
+
+static void sem_update_returning_stmt(ast_node *ast) {
+  sem_update_returning(ast);
+  sem_update_proc_type_for_select(ast);
+}
+
 // The column list specifies the columns we will provide, they must exist and be unique.
 // The insert list specifies the values that are to be updated.
 // The type of each value must match the type of the column.
@@ -17846,37 +17953,6 @@ static void sem_update_cursor_stmt(ast_node *ast) {
   else {
     record_error(ast);
   }
-}
-
-// Top level WITH-UPDATE form -- create the CTE context and then process
-// the update statement.
-static void sem_with_update_stmt(ast_node *stmt) {
-  Contract(is_ast_with_update_stmt(stmt));
-  EXTRACT_ANY_NOTNULL(with_prefix, stmt->left)
-  EXTRACT(cte_tables, with_prefix->left);
-  EXTRACT_NOTNULL(update_stmt, stmt->right);
-
-  Invariant(cte_cur == NULL);
-
-  sem_push_cte_state();
-
-  sem_cte_tables(cte_tables);
-  if (is_error(cte_tables)) {
-    record_error(stmt);
-    goto cleanup;
-  }
-
-  sem_update_stmt(update_stmt);
-
-  if (is_error(update_stmt)) {
-    record_error(stmt);
-    goto cleanup;
-  }
-
-  stmt->sem = update_stmt->sem;
-
-cleanup:
-  sem_pop_cte_state();
 }
 
 static int32_t sem_insert_dummy_spec(ast_node *ast) {
@@ -18026,7 +18102,7 @@ static void sem_column_spec_and_values(ast_node *ast, ast_node *table_ast) {
 
   if (select_stmt) {
     // this handles more than select but that's ok
-    sem_any_row_source(select_stmt);
+    sem_any_select(select_stmt);
     if (is_error(select_stmt)) {
       record_error(ast);
       return;
@@ -18581,40 +18657,10 @@ static void sem_insert_returning(ast_node *ast) {
     return;
   }
 
-  // note that the insert statment might have been rewritten due to backing tables
-  // and now it has a with prefix.  We don't want to get the table name here
-  // it's now the backing table name, instead we want the original table name
-  // the backed name.
-
-  ast_node *table_ast = find_table_or_view_even_deleted(table_name);
-  Invariant(table_ast);  // already verified by the above
-
-  sem_join join = *table_ast->sem->jptr;
-
-  // we record this so we can find it on the join when we do a name lookup
-  // note this jptr is especially handy because when we start an insert/update operation
-  // we begin with a pushed join of just the original table
-  if (is_backed(table_ast->sem->sem_type)) {
-    sem_struct *sptr_new  = _ast_pool_new(sem_struct);
-    *sptr_new = *join.tables[0]; // clone existing value (shallow copy)
-    join.tables = _ast_pool_new(sem_struct *);
-    join.tables[0] = sptr_new;
-    sptr_new->is_backed = true;
-  }
-
-  PUSH_JOIN(insert_scope, &join);
-  sem_select_expr_list(select_expr_list);
-  POP_JOIN();
-
+  sem_returning_clause(select_expr_list, table_name);
   if (is_error(select_expr_list)) {
      record_error(ast);
      return;
-  }
-
-  if (is_backed(table_ast->sem->sem_type)) {
-    // we need to change any references to the tables to be the blob extractions
-    // from the key and value blobs
-    rewrite_backed_column_references_in_ast(select_expr_list, table_ast);
   }
 
   ast->sem = select_expr_list->sem;
@@ -22027,14 +22073,15 @@ static void sem_declare_cursor(ast_node *ast) {
 
   sem_t out_union_and_dml = 0;
 
-  if (is_row_source(ast->right)) {
-    EXTRACT_ANY_NOTNULL(select_stmt, ast->right);
+  EXTRACT_ANY_NOTNULL(row_source, ast->right);
+
+  if (is_row_source(row_source)) {
 
     // DECLARE [name] CURSOR FOR [select_stmt]
-    // or
     // DECLARE [name] CURSOR FOR [explain_stmt]
-    sem_select_rewrite_backing(select_stmt);
-    if (is_error(select_stmt)) {
+    // etc.
+    sem_any_row_source(row_source);
+    if (is_error(row_source)) {
       record_error(ast);
       return;
     }
@@ -22045,14 +22092,14 @@ static void sem_declare_cursor(ast_node *ast) {
     out_union_and_dml = SEM_TYPE_DML_PROC;
     has_dml = 1;
   }
-  else if (is_insert_stmt(ast->right) || is_delete_stmt(ast->right)) {
-    report_error(ast->right, "CQL0168: statement requires a RETURNING clause to be used as a source of rows", NULL);
-    record_error(ast->right);
+  else if (is_insert_stmt(row_source) || is_delete_stmt(row_source) || is_update_stmt(row_source)) {
+    report_error(row_source, "CQL0168: statement requires a RETURNING clause to be used as a source of rows", NULL);
+    record_error(row_source);
     record_error(ast);
     return;
   }
-  else if (is_ast_call_stmt(ast->right)) {
-    EXTRACT_NOTNULL(call_stmt, ast->right);
+  else if (is_ast_call_stmt(row_source)) {
+    EXTRACT_NOTNULL(call_stmt, row_source);
 
     // DECLARE [name] CURSOR FOR [call_stmt]]
     sem_call_stmt_opt_cursor(call_stmt, name);
@@ -26624,6 +26671,7 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(delete_returning_stmt);
   STMT_INIT(delete_stmt);
   STMT_INIT(with_delete_stmt);
+  STMT_INIT(update_returning_stmt);
   STMT_INIT(update_stmt);
   STMT_INIT(update_cursor_stmt);
   STMT_INIT(with_update_stmt);

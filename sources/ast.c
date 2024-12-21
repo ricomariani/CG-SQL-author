@@ -225,6 +225,13 @@ cql_noexport bool_t is_update_stmt(ast_node *ast) {
          is_ast_with_update_stmt(ast);
 }
 
+// Any of the update forms
+cql_noexport bool_t is_upsert_stmt(ast_node *ast) {
+  return is_ast_upsert_stmt(ast) ||
+         is_ast_upsert_returning_stmt(ast) ||
+         is_ast_with_upsert_stmt(ast);
+}
+
 // Any of the insert forms
 cql_noexport bool_t is_insert_stmt(ast_node *ast) {
   return is_ast_insert_stmt(ast) ||

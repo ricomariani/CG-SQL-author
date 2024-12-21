@@ -4552,6 +4552,7 @@ static void gen_declare_cursor(ast_node *ast) {
       is_ast_call_stmt(source) ||
       is_insert_stmt(source) ||
       is_update_stmt(source) ||
+      is_upsert_stmt(source) ||
       is_delete_stmt(source)) {
     // The two statement cases are unified
     gen_printf("\n");
@@ -5340,6 +5341,21 @@ static void gen_with_upsert_stmt(ast_node *ast) {
   gen_upsert_stmt(upsert_stmt);
 }
 
+static void gen_upsert_returning_stmt(ast_node *ast) {
+  Contract(is_ast_upsert_returning_stmt(ast));
+  EXTRACT_ANY_NOTNULL(upsert_stmt, ast->left);
+  if (is_ast_with_upsert_stmt(upsert_stmt)) {
+    gen_with_upsert_stmt(upsert_stmt);
+  }
+  else {
+    gen_upsert_stmt(upsert_stmt);
+  }
+  gen_printf("\n  RETURNING (");
+  gen_select_expr_list(ast->right);
+  gen_printf(")");
+}
+
+
 static void gen_keep_table_name_in_aliases_stmt(ast_node *ast) {
   Contract(is_ast_keep_table_name_in_aliases_stmt(ast));
   gen_printf("@KEEP_TABLE_NAME_IN_ALIASES");
@@ -5661,6 +5677,7 @@ cql_noexport void gen_init() {
   STMT_INIT(update_cursor_stmt);
   STMT_INIT(update_returning_stmt);
   STMT_INIT(update_stmt);
+  STMT_INIT(upsert_returning_stmt);
   STMT_INIT(upsert_stmt);
   STMT_INIT(upsert_update);
   STMT_INIT(while_stmt);

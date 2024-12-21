@@ -330,7 +330,7 @@ static void cql_reset_globals(void);
 %type <aval> table_or_subquery table_or_subquery_list query_parts table_function opt_from_query_parts
 %type <aval> opt_join_cond join_cond join_clause join_target join_target_list
 %type <aval> basic_update_stmt update_stmt_plain update_stmt update_cursor_stmt update_entry update_list upsert_stmt conflict_target
-%type <aval> declare_schema_region_stmt declare_deployable_region_stmt call opt_distinct simple_call with_upsert_stmt
+%type <aval> declare_schema_region_stmt declare_deployable_region_stmt call opt_distinct simple_call upsert_stmt_plain
 %type <aval> begin_schema_region_stmt end_schema_region_stmt schema_ad_hoc_migration_stmt region_list region_spec
 %type <aval> schema_unsub_stmt
 
@@ -615,7 +615,6 @@ any_stmt:
   | update_stmt
   | upsert_stmt
   | while_stmt
-  | with_upsert_stmt
   | keep_table_name_in_aliases_stmt
   ;
 
@@ -639,7 +638,6 @@ explain_target: select_stmt
   | insert_stmt
   | update_stmt
   | upsert_stmt
-  | with_upsert_stmt
   ;
 
 previous_schema_stmt:
@@ -2017,17 +2015,23 @@ update_list[result]:
   | update_entry ',' update_list[ul]  { $result = new_ast_update_list($update_entry, $ul); }
   ;
 
-with_upsert_stmt:
-  with_prefix upsert_stmt  { $with_upsert_stmt = new_ast_with_upsert_stmt($with_prefix, $upsert_stmt); }
-  ;
-
 upsert_stmt:
+     upsert_stmt_plain { $$ = $upsert_stmt_plain; }
+   | upsert_stmt_plain returning_suffix {
+     $$ = new_ast_upsert_returning_stmt($upsert_stmt_plain, $returning_suffix); }
+   | with_prefix upsert_stmt_plain {
+     $$ = new_ast_with_upsert_stmt($with_prefix, $upsert_stmt_plain); }
+   | with_prefix upsert_stmt_plain returning_suffix {
+     ast_node *tmp = new_ast_with_upsert_stmt($with_prefix, $upsert_stmt_plain); 
+     $$ = new_ast_upsert_returning_stmt(tmp, $returning_suffix); }
+
+upsert_stmt_plain:
   insert_stmt_plain[insert] ON_CONFLICT conflict_target DO NOTHING  {
     struct ast_node *upsert_update = new_ast_upsert_update($conflict_target, NULL);
-    $upsert_stmt = new_ast_upsert_stmt($insert, upsert_update); }
+    $$ = new_ast_upsert_stmt($insert, upsert_update); }
   | insert_stmt_plain[insert] ON_CONFLICT conflict_target DO basic_update_stmt  {
     struct ast_node *upsert_update = new_ast_upsert_update($conflict_target, $basic_update_stmt);
-    $upsert_stmt = new_ast_upsert_stmt($insert, upsert_update); }
+    $$ = new_ast_upsert_stmt($insert, upsert_update); }
   ;
 
 update_cursor_stmt:
@@ -2214,7 +2218,7 @@ declare_value_cursor[result]:
   | CURSOR name LIKE '(' typed_names ')' { $result = new_ast_declare_cursor_like_typed_names($name, $typed_names); }
   ;
 
-row_source: select_stmt | explain_stmt | insert_stmt | delete_stmt | update_stmt | call_stmt 
+row_source: select_stmt | explain_stmt | insert_stmt | delete_stmt | update_stmt | upsert_stmt | call_stmt 
   ;
 
 declare_forward_read_cursor_stmt[result]:

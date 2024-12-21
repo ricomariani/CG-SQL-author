@@ -8870,6 +8870,7 @@ UPDATE foo
   SET id = 'x';
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'id'
+test/sem_test.sql:XXXX:1: error: in str : additional info: in update table 'foo' the column with the problem is 'id'
 
   {update_stmt}: err
   | {name foo}: foo: { id: integer notnull primary_key autoinc }
@@ -8889,6 +8890,7 @@ UPDATE foo
   WHERE id = 2;
 
 test/sem_test.sql:XXXX:1: error: in num : CQL0242: lossy conversion from type 'LONG' in 1L
+test/sem_test.sql:XXXX:1: error: in num : additional info: in update table 'foo' the column with the problem is 'id'
 
   {update_stmt}: err
   | {name foo}: foo: { id: integer notnull primary_key autoinc }
@@ -8911,6 +8913,7 @@ UPDATE bar
   SET name = 2;
 
 test/sem_test.sql:XXXX:1: error: in num : CQL0009: incompatible types in expression 'name'
+test/sem_test.sql:XXXX:1: error: in num : additional info: in update table 'bar' the column with the problem is 'name'
 
   {update_stmt}: err
   | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
@@ -8929,6 +8932,7 @@ UPDATE bar
   SET id = NULL;
 
 test/sem_test.sql:XXXX:1: error: in null : CQL0013: cannot assign/copy possibly null expression to not null target 'id'
+test/sem_test.sql:XXXX:1: error: in null : additional info: in update table 'bar' the column with the problem is 'id'
 
   {update_stmt}: err
   | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
@@ -35905,6 +35909,7 @@ UPDATE bar
   WHERE name = 'x';
 
 test/sem_test.sql:XXXX:1: error: in call : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 'id'
+test/sem_test.sql:XXXX:1: error: in call : additional info: in update table 'bar' the column with the problem is 'id'
 
   {update_stmt}: err
   | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
@@ -88550,6 +88555,7 @@ BEGIN
 END;
 
 test/sem_test.sql:XXXX:1: error: in dot : CQL0009: incompatible types in expression 'name'
+test/sem_test.sql:XXXX:1: error: in dot : additional info: in update table 'update_test_1' the column with the problem is 'name'
 
   {create_proc_stmt}: err
   | {name test_update_from_shape_errors0}: err

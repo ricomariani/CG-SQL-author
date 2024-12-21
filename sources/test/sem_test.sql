@@ -2654,40 +2654,44 @@ update foo set id = 1 order by not 'x' limit 2;
 update foo set non_existent_column = 1;
 
 -- TEST: update with type mismatch (number <- string)
+-- + error: % incompatible types in expression 'id'
+-- + error: % additional info: in update table 'foo' the column with the problem is 'id'
 -- + {update_stmt}: err
 -- + {update_list}: err
 -- + {update_entry}: err
 -- + {name id}: id: integer notnull
 -- + {strlit 'x'}: err
--- * error: % incompatible types in expression 'id'
--- +1 error:
+-- +2 error:
 update foo set id = 'x';
 
 -- TEST: update with loss of precision
+-- + error: % lossy conversion from type 'LONG' in 1L
+-- + error: % additional info: in update table 'foo' the column with the problem is 'id'
 -- + {update_stmt}: err
 -- + {update_list}: err
 -- + {update_entry}: err
--- * error: % lossy conversion from type 'LONG' in 1L
--- +1 error:
+-- +2 error:
 update foo set id = 1L where id = 2;
 
 -- TEST: update with string type mismatch (string <- number)
+-- + error: % incompatible types in expression 'name'
+-- + error: % additional info: in update table 'bar' the column with the problem is 'name'
 -- + {update_stmt}: err
 -- + {update_list}: err
 -- + {update_entry}: err
 -- + {name name}: name: text
 -- + {int 2}: err
--- * error: % incompatible types in expression 'name'
--- +1 error:
+-- +2 error:
 update bar set name = 2;
 
 -- TEST: update not null column to constant null
+-- + error: % cannot assign/copy possibly null expression to not null target 'id'
+-- + error: % additional info: in update table 'bar' the column with the problem is 'id'
 -- + {update_stmt}: err
 -- + {update_list}: err
 -- + {name id}: id: integer notnull
 -- + {null}: null
--- * error: % cannot assign/copy possibly null expression to not null target 'id'
--- +1 error:
+-- +2 error:
 update bar set id = null;
 
 -- TEST: try to use a variable in an update
@@ -9507,13 +9511,14 @@ begin
 end;
 
 -- TEST: try to insert sensitive data to a non-sensitive column
--- * error: % cannot assign/copy sensitive expression to non-sensitive target 'id'
+-- + error: % cannot assign/copy sensitive expression to non-sensitive target 'id'
 -- +1 error:
 insert into foo(id) values (coalesce(_sens,0));
 
 -- TEST: try to update to sensitive
--- * error: % cannot assign/copy sensitive expression to non-sensitive target 'id'
--- +1 error:
+-- + error: % cannot assign/copy sensitive expression to non-sensitive target 'id'
+-- + error: % additional info: in update table 'bar' the column with the problem is 'id'
+-- +2 error:
 update bar set id = coalesce(_sens,0) where name = 'x';
 
 -- Do various validations on this func in the following tests
@@ -23495,14 +23500,15 @@ begin
 end;
 
 -- TEST: update from_shape sugar error handling, type mismatch
+-- + error: % incompatible types in expression 'name'
+-- + error: % additional info: in update table 'update_test_1' the column with the problem is 'name'
 -- + {update_stmt}: err
 -- + {update_list}: err
 -- + {update_entry}: err
 -- + {dot}: err
 -- + {name ARGUMENTS}
 -- + {name id}
--- * error: % incompatible types in expression 'name'
--- +1 error:
+-- +2 error:
 proc test_update_from_shape_errors0(like update_test_1)
 begin
   -- Swapped ordering of columns lead to incompatible types.
@@ -24520,8 +24526,6 @@ declare @ID("foo", "bar", "2") @id("real");
 -- + | {int 23}
 -- - error:
 @enforce_strict and or not null check;
-
-
 
 -- TEST: non null improvements with logical operators
 -- + {let_stmt}: inferred_not_null1: bool notnull variable

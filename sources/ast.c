@@ -157,6 +157,10 @@ cql_noexport bool_t is_qid(ast_node *node) {
   return is_ast_str(node) && ((str_ast_node *)node)->str_type == STRING_TYPE_QUOTED_ID;
 }
 
+cql_noexport bool_t is_qname(CSTR subject) {
+  return subject[0] == 'X' && subject[1] == '_' && strchr(subject+2, 'X');
+}
+
 // Any string literal (they are alway normalized to SQL format, 'xyz')
 cql_noexport bool_t is_strlit(ast_node *node) {
   return is_ast_str(node) && ((str_ast_node *)node)->value[0] == '\'';

@@ -208,6 +208,13 @@ static void gen_name(ast_node *ast) {
   gen_name_ex(name, is_qid(ast));
 }
 
+cql_noexport void gen_name_for_msg(ast_node *name_ast, charbuf *output) {
+  charbuf *saved = gen_output;
+  gen_output = output;
+  gen_name(name_ast);
+  gen_output = saved;
+}
+
 static void gen_sptr_name(sem_struct *sptr, uint32_t i) {
   gen_name_ex(sptr->names[i], !!(sptr->semtypes[i] & SEM_TYPE_QID));
 }

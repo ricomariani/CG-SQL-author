@@ -314,6 +314,15 @@ cql_noexport ast_node *new_str_or_qstr(CSTR name, sem_t sem_type) {
   }
 }
 
+cql_noexport ast_node *new_maybe_qstr(CSTR name) {
+  if (is_qname(name)) {
+    return new_ast_qstr_escaped(name);
+  }
+  else {
+    return new_ast_str(name);
+  }
+}
+
 static void copy_nullability(ast_node *ast, sem_t nullable) {
   ast->sem->sem_type &= sem_not(SEM_TYPE_NOTNULL);
   ast->sem->sem_type |= (nullable & SEM_TYPE_NOTNULL);
@@ -17510,7 +17519,12 @@ static void sem_delete_returning_stmt(ast_node *ast) {
 // To do this we temporarily hide the variables head.  We verify that the types
 // are compatible and we also handle the special case of trying to set a
 // not-nullable type to null.
-static void sem_update_entry(ast_node *ast, symtab *update_columns, sem_join *from_jptr) {
+static void sem_update_entry(
+  ast_node *ast,
+  symtab *update_columns,
+  sem_join *from_jptr,
+  ast_node *table_name_ast)
+{
   Contract(is_ast_update_entry(ast));
   Contract(current_joinscope);
 
@@ -17571,6 +17585,12 @@ static void sem_update_entry(ast_node *ast, symtab *update_columns, sem_join *fr
   Invariant(!is_object(sem_type_right));
 
   if (!sem_verify_assignment(right, sem_type_left, sem_type_right, left->sem->name)) {
+    CHARBUF_OPEN(tmp);
+    bprintf(&tmp, "additional info: in update table '");
+    gen_name_for_msg(table_name_ast, &tmp);
+    bprintf(&tmp, "' the column with the problem is");
+    report_error(right, Strdup(tmp.ptr), left->sem->name);
+    CHARBUF_CLOSE(tmp);
     record_error(ast);
     return;
   }
@@ -17586,7 +17606,7 @@ static void sem_update_entry(ast_node *ast, symtab *update_columns, sem_join *fr
 
 // This is the list of updates we need to perform, we walk the list here and handle
 // each one, reporting errors as we go.
-static void sem_update_list(ast_node *head, sem_join *from_jptr) {
+static void sem_update_list(ast_node *head, sem_join *from_jptr, ast_node *table_name_ast) {
   Contract(is_ast_update_list(head));
 
   symtab *update_columns = symtab_new();
@@ -17595,7 +17615,7 @@ static void sem_update_list(ast_node *head, sem_join *from_jptr) {
     Contract(is_ast_update_list(ast));
     EXTRACT_NOTNULL(update_entry, ast->left);
 
-    sem_update_entry(update_entry, update_columns, from_jptr);
+    sem_update_entry(update_entry, update_columns, from_jptr, table_name_ast);
     if (is_error(update_entry)) {
       record_error(head);
       symtab_delete(update_columns);
@@ -17614,7 +17634,7 @@ static void sem_update_list(ast_node *head, sem_join *from_jptr) {
 // with those same helper methods.
 static void sem_update_stmt(ast_node *ast) {
   Contract(is_ast_update_stmt(ast));
-  EXTRACT_ANY(name_ast, ast->left);
+  EXTRACT_ANY(table_name_ast, ast->left);
   EXTRACT_NOTNULL(update_set, ast->right);
   EXTRACT_ANY_NOTNULL(update_list, update_set->left);
   EXTRACT_NOTNULL(update_from, update_set->right);
@@ -17640,28 +17660,28 @@ static void sem_update_stmt(ast_node *ast) {
 
   // update [table] SET [update_list]
 
-  if (name_ast) {
-    EXTRACT_STRING(name, name_ast);
+  if (table_name_ast) {
+    EXTRACT_STRING(name, table_name_ast);
 
     table_ast = find_usable_and_not_deleted_table_or_view(
       name,
-      name_ast,
+      table_name_ast,
       "CQL0154: table in update statement does not exist");
     if (!table_ast) {
       goto cleanup;
     }
 
-    name_ast->sem = table_ast->sem;
+    table_name_ast->sem = table_ast->sem;
 
     if (!is_ast_create_table_stmt(table_ast)) {
-      report_error(name_ast, "CQL0155: cannot update a view", name);
+      report_error(table_name_ast, "CQL0155: cannot update a view", name);
       goto cleanup;
     }
 
     // This means we're in upsert statement subtree therefore the table name
     // should not be included in the update statement
     if (in_upsert) {
-      report_error(name_ast, "CQL0281: upsert statement does not include table name in the update statement", name);
+      report_error(table_name_ast, "CQL0281: upsert statement does not include table name in the update statement", name);
       goto cleanup;
     }
   }
@@ -17679,7 +17699,8 @@ static void sem_update_stmt(ast_node *ast) {
   ast->sem = table_ast->sem;
 
   EXTRACT_NOTNULL(create_table_name_flags, table_ast->left);
-  EXTRACT_STRING(table_name, create_table_name_flags->right);
+  table_name_ast = create_table_name_flags->right;
+  EXTRACT_STRING(table_name, table_name_ast);
 
   sem_join join = *table_ast->sem->jptr;
 
@@ -17729,7 +17750,7 @@ static void sem_update_stmt(ast_node *ast) {
   // and not in the joins.  So set name = 'x'  is never ambiguous even
   // if the from clause has joins with tables with a name column.  But
   // set name = name || 'x' *can* be ambiguous
-  sem_update_list(update_list, from_jptr);
+  sem_update_list(update_list, from_jptr, table_name_ast);
   if (is_error(update_list)) {
     goto cleanup;
   }

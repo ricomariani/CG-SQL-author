@@ -43,6 +43,7 @@ cql_noexport void gen_insert_type(ast_node *_Nonnull ast);
 cql_noexport void gen_col_key_list(ast_node *_Nonnull list);
 cql_noexport void gen_typed_names(ast_node *_Nullable ast);
 cql_noexport void gen_data_type(ast_node *_Nonnull ast);
+cql_noexport void gen_name_for_msg(ast_node *_Nonnull name_ast, charbuf *_Nonnull output);
 
 // automatically sets the output buffer and printf's the results of the above
 cql_noexport void gen_to_stdout(ast_node *_Nullable ast, gen_func fn);

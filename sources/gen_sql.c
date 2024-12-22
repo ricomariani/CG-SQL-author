@@ -110,6 +110,15 @@ cql_noexport void gen_printf(const char *format, ...) {
  CHARBUF_CLOSE(tmp);
 }
 
+void bprint_maybe_qname(charbuf *output, CSTR subject) {
+  if (is_qname(subject)) {
+    cg_decode_qstr(output, subject);
+  }
+  else {
+    bprintf(output, "%s", subject);
+  }
+}
+
 static void gen_literal(CSTR literal) {
   for (int32_t i = 0; i < pending_indent; i++) bputc(gen_output, ' ');
   pending_indent = 0;

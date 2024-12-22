@@ -82108,9 +82108,9 @@ INSERT INTO simple_backing_table(k, v)
   |     | {cte_decl}: _vals: { pk1: integer notnull, x: integer notnull }
   |     | | {name _vals}
   |     | | {name_list}
-  |     |   | {name pk1}: pk1: integer notnull partial_pk
+  |     |   | {name pk1}: pk1: integer notnull partial_pk backed_table(bt_default)
   |     |   | {name_list}
-  |     |     | {name x}: x: integer
+  |     |     | {name x}: x: integer backed_table(bt_default)
   |     | {select_stmt}: values: { column1: integer notnull, column2: integer notnull }
   |       | {select_core_list}: values: { column1: integer notnull, column2: integer notnull }
   |       | | {select_core}: values: { column1: integer notnull, column2: integer notnull }
@@ -82212,9 +82212,9 @@ ON CONFLICT (k) DO NOTHING;
   |     | {cte_decl}: _vals: { id: integer notnull, name: text notnull }
   |     | | {name _vals}
   |     | | {name_list}
-  |     |   | {name id}: id: integer notnull
+  |     |   | {name id}: id: integer notnull backed_table(basic_table)
   |     |   | {name_list}
-  |     |     | {name name}: name: text<cool_text>
+  |     |     | {name name}: name: text<cool_text> backed_table(basic_table)
   |     | {select_stmt}: values: { column1: integer notnull, column2: text notnull }
   |       | {select_core_list}: values: { column1: integer notnull, column2: text notnull }
   |       | | {select_core}: values: { column1: integer notnull, column2: text notnull }
@@ -82330,9 +82330,9 @@ ON CONFLICT (k) DO UPDATE
   |       | {cte_decl}: _vals: { id: integer notnull, name: text<cool_text> }
   |       | | {name _vals}
   |       | | {name_list}
-  |       |   | {name id}: id: integer notnull
+  |       |   | {name id}: id: integer notnull backed_table(basic_table)
   |       |   | {name_list}
-  |       |     | {name name}: name: text<cool_text>
+  |       |     | {name name}: name: text<cool_text> backed_table(basic_table)
   |       | {select_stmt}: select: { _anon: integer notnull, name: text<cool_text> }
   |         | {select_core_list}: select: { _anon: integer notnull, name: text<cool_text> }
   |         | | {select_core}: select: { _anon: integer notnull, name: text<cool_text> }
@@ -82577,9 +82577,9 @@ ON CONFLICT (k) DO UPDATE
   |         | {cte_decl}: _vals: { id: integer notnull, name: text<cool_text> }
   |         | | {name _vals}
   |         | | {name_list}
-  |         |   | {name id}: id: integer notnull
+  |         |   | {name id}: id: integer notnull backed_table(basic_table)
   |         |   | {name_list}
-  |         |     | {name name}: name: text<cool_text>
+  |         |     | {name name}: name: text<cool_text> backed_table(basic_table)
   |         | {select_stmt}: select: { _anon: integer notnull, name: text<cool_text> }
   |           | {select_core_list}: select: { _anon: integer notnull, name: text<cool_text> }
   |           | | {select_core}: select: { _anon: integer notnull, name: text<cool_text> }
@@ -88032,8 +88032,8 @@ test/sem_test.sql:XXXX:1: error: in update_stmt : CQL0497: FROM clause not suppo
   | {name simple_backed_table}: simple_backed_table: { id: integer notnull primary_key, name: text<cool_text> notnull } backed
   | {update_set}
     | {update_list}: ok
-    | | {update_entry}: id: integer notnull
-    |   | {name id}: id: integer notnull
+    | | {update_entry}: id: integer notnull backed_table(simple_backed_table)
+    |   | {name id}: id: integer notnull backed_table(simple_backed_table)
     |   | {int 5}: integer notnull
     | {update_from}
       | {table_or_subquery_list}: TABLE { update_test_1: update_test_1 }
@@ -90929,7 +90929,7 @@ CREATE TABLE `xyz``abc`(
   `a b` INT! UNIQUE
 );
 
-  {create_table_stmt}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
+  {create_table_stmt}: `xyz``abc`: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
@@ -90942,7 +90942,7 @@ CREATE TABLE `xyz``abc`(
     |   | | {type_int}: integer
     |   | {col_attrs_not_null}: ok
     | {col_key_list}
-      | {col_def}: X_aX20b: integer notnull unique_key qid
+      | {col_def}: `a b`: integer notnull unique_key qid
         | {col_def_type_attrs}: ok
           | {col_def_name_type}
           | | {name `a b`}
@@ -90975,10 +90975,10 @@ END;
       |   |   | {select_expr_list_con}: select: { x: integer notnull, `a b`: integer notnull qid }
       |   |     | {select_expr_list}: select: { x: integer notnull, `a b`: integer notnull qid }
       |   |     | | {star}: select: { x: integer notnull, `a b`: integer notnull qid }
-      |   |     | {select_from_etc}: TABLE { X_xyzX60abc: X_xyzX60abc }
-      |   |       | {table_or_subquery_list}: TABLE { X_xyzX60abc: X_xyzX60abc }
-      |   |       | | {table_or_subquery}: TABLE { X_xyzX60abc: X_xyzX60abc }
-      |   |       |   | {name `xyz``abc`}: TABLE { X_xyzX60abc: X_xyzX60abc }
+      |   |     | {select_from_etc}: TABLE { `xyz``abc`: `xyz``abc` }
+      |   |       | {table_or_subquery_list}: TABLE { `xyz``abc`: `xyz``abc` }
+      |   |       | | {table_or_subquery}: TABLE { `xyz``abc`: `xyz``abc` }
+      |   |       |   | {name `xyz``abc`}: TABLE { `xyz``abc`: `xyz``abc` }
       |   |       | {select_where}
       |   |         | {select_groupby}
       |   |           | {select_having}
@@ -91026,12 +91026,12 @@ END;
       |   | | {select_core}: select: { x: integer notnull, `a b`: integer notnull qid }
       |   |   | {select_expr_list_con}: select: { x: integer notnull, `a b`: integer notnull qid }
       |   |     | {select_expr_list}: select: { x: integer notnull, `a b`: integer notnull qid }
-      |   |     | | {table_star}: X_xyzX60abc: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull qid }
+      |   |     | | {table_star}: `xyz``abc`: `xyz``abc`: { x: integer notnull, `a b`: integer notnull qid }
       |   |     |   | {name `xyz``abc`}
-      |   |     | {select_from_etc}: TABLE { X_xyzX60abc: X_xyzX60abc }
-      |   |       | {table_or_subquery_list}: TABLE { X_xyzX60abc: X_xyzX60abc }
-      |   |       | | {table_or_subquery}: TABLE { X_xyzX60abc: X_xyzX60abc }
-      |   |       |   | {name `xyz``abc`}: TABLE { X_xyzX60abc: X_xyzX60abc }
+      |   |     | {select_from_etc}: TABLE { `xyz``abc`: `xyz``abc` }
+      |   |       | {table_or_subquery_list}: TABLE { `xyz``abc`: `xyz``abc` }
+      |   |       | | {table_or_subquery}: TABLE { `xyz``abc`: `xyz``abc` }
+      |   |       |   | {name `xyz``abc`}: TABLE { `xyz``abc`: `xyz``abc` }
       |   |       | {select_where}
       |   |         | {select_groupby}
       |   |           | {select_having}
@@ -91069,19 +91069,19 @@ END;
     | {stmt_list}: ok
       | {let_stmt}: x: integer notnull variable
         | {name x}: x: integer notnull variable
-        | {select_stmt}: X_aX20b: integer notnull qid
+        | {select_stmt}: `a b`: integer notnull qid
           | {select_core_list}: select: { `a b`: integer notnull qid }
           | | {select_core}: select: { `a b`: integer notnull qid }
           |   | {select_expr_list_con}: select: { `a b`: integer notnull qid }
           |     | {select_expr_list}: select: { `a b`: integer notnull qid }
-          |     | | {select_expr}: X_aX20b: integer notnull qid
-          |     |   | {dot}: X_aX20b: integer notnull qid
+          |     | | {select_expr}: `a b`: integer notnull qid
+          |     |   | {dot}: `a b`: integer notnull qid
           |     |     | {name `xyz``abc`}
           |     |     | {name `a b`}
-          |     | {select_from_etc}: TABLE { X_xyzX60abc: X_xyzX60abc }
-          |       | {table_or_subquery_list}: TABLE { X_xyzX60abc: X_xyzX60abc }
-          |       | | {table_or_subquery}: TABLE { X_xyzX60abc: X_xyzX60abc }
-          |       |   | {name `xyz``abc`}: TABLE { X_xyzX60abc: X_xyzX60abc }
+          |     | {select_from_etc}: TABLE { `xyz``abc`: `xyz``abc` }
+          |       | {table_or_subquery_list}: TABLE { `xyz``abc`: `xyz``abc` }
+          |       | | {table_or_subquery}: TABLE { `xyz``abc`: `xyz``abc` }
+          |       |   | {name `xyz``abc`}: TABLE { `xyz``abc`: `xyz``abc` }
           |       | {select_where}
           |         | {select_groupby}
           |           | {select_having}
@@ -91112,20 +91112,20 @@ END;
       |   | {shape_exprs}
       |     | {shape_expr}
       |       | {name `a b`}
-      | {declare_cursor_like_name}: R: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } variable shape_storage value_cursor
-      | | {name R}: R: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } variable shape_storage value_cursor
-      | | {shape_def}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
+      | {declare_cursor_like_name}: R: `xyz``abc`: { x: integer notnull, `a b`: integer notnull unique_key qid } variable shape_storage value_cursor
+      | | {name R}: R: `xyz``abc`: { x: integer notnull, `a b`: integer notnull unique_key qid } variable shape_storage value_cursor
+      | | {shape_def}: `xyz``abc`: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
       |   | {like}: ok
       |     | {name `xyz``abc`}
       | {fetch_values_stmt}: ok
       | | {name_columns_values}
-      |   | {name R}: R: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } variable shape_storage value_cursor
+      |   | {name R}: R: `xyz``abc`: { x: integer notnull, `a b`: integer notnull unique_key qid } variable shape_storage value_cursor
       |   | {columns_values}: ok
       |     | {column_spec}
       |     | | {name_list}
       |     |   | {name x}: x: integer notnull
       |     |   | {name_list}
-      |     |     | {name `a b`}: X_aX20b: integer notnull qid
+      |     |     | {name `a b`}: `a b`: integer notnull qid
       |     | {insert_list}: ok
       |       | {int 1}: integer notnull
       |       | {insert_list}
@@ -91145,13 +91145,13 @@ END;
       |         | {name `a b`}
       | {fetch_values_stmt}: ok
         | {name_columns_values}
-          | {name R}: R: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } variable shape_storage value_cursor
+          | {name R}: R: `xyz``abc`: { x: integer notnull, `a b`: integer notnull unique_key qid } variable shape_storage value_cursor
           | {columns_values}: ok
             | {column_spec}
             | | {name_list}
             |   | {name x}: x: integer notnull
             |   | {name_list}
-            |     | {name `a b`}: X_aX20b: integer notnull qid
+            |     | {name `a b`}: `a b`: integer notnull qid
             | {insert_list}: ok
               | {int 3}: integer notnull
               | {insert_list}
@@ -91209,7 +91209,7 @@ CREATE INDEX `abc def` ON `xyz``abc` (`a b` ASC);
       | {index_names_and_attrs}
         | {indexed_columns}
           | {indexed_column}
-            | {name `a b`}: X_aX20b: integer notnull qid
+            | {name `a b`}: `a b`: integer notnull qid
             | {asc}
 
 The statement ending at line XXXX
@@ -91235,7 +91235,7 @@ CREATE TABLE qid_ref_1(
               | {fk_target}
               | | {name `xyz``abc`}
               | | {name_list}
-              |   | {name `a b`}: X_aX20b: integer notnull qid
+              |   | {name `a b`}: `a b`: integer notnull qid
               | {int 0}
 
 The statement ending at line XXXX
@@ -91251,7 +91251,7 @@ CREATE TABLE qid_ref_2(
   | | | {int 0}
   | | {name qid_ref_2}
   | {col_key_list}
-    | {col_def}: X_uuX20uu: integer notnull qid
+    | {col_def}: `uu uu`: integer notnull qid
     | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name `uu uu`}
@@ -91262,12 +91262,12 @@ CREATE TABLE qid_ref_2(
         | {name `c1`}
         | {fk_info}
           | {name_list}
-          | | {name `uu uu`}: X_uuX20uu: integer notnull qid
+          | | {name `uu uu`}: `uu uu`: integer notnull qid
           | {fk_target_options}
             | {fk_target}
             | | {name `xyz``abc`}
             | | {name_list}
-            |   | {name `a b`}: X_aX20b: integer notnull qid
+            |   | {name `a b`}: `a b`: integer notnull qid
             | {int 0}
 
 The statement ending at line XXXX
@@ -91283,7 +91283,7 @@ CREATE TABLE qid_ref_3(
   | | | {int 0}
   | | {name qid_ref_3}
   | {col_key_list}
-    | {col_def}: X_uuX20uu: integer notnull partial_pk qid
+    | {col_def}: `uu uu`: integer notnull partial_pk qid
     | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name `uu uu`}
@@ -91295,7 +91295,7 @@ CREATE TABLE qid_ref_3(
         | {indexed_columns_conflict_clause}
           | {indexed_columns}
             | {indexed_column}
-              | {name `uu uu`}: X_uuX20uu: integer notnull qid
+              | {name `uu uu`}: `uu uu`: integer notnull qid
 
 The statement ending at line XXXX
 
@@ -91310,7 +91310,7 @@ CREATE TABLE qid_ref_4(
   | | | {int 0}
   | | {name qid_ref_4}
   | {col_key_list}
-    | {col_def}: X_uuX20uu: integer notnull qid
+    | {col_def}: `uu uu`: integer notnull qid
     | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name `uu uu`}
@@ -91322,19 +91322,19 @@ CREATE TABLE qid_ref_4(
         | {indexed_columns_conflict_clause}
           | {indexed_columns}
             | {indexed_column}
-              | {name `uu uu`}: X_uuX20uu: integer notnull qid
+              | {name `uu uu`}: `uu uu`: integer notnull qid
 
 The statement ending at line XXXX
 
 UPDATE `xyz``abc`
   SET `a b` = 5;
 
-  {update_stmt}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
-  | {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
+  {update_stmt}: `xyz``abc`: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
+  | {name `xyz``abc`}: `xyz``abc`: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
   | {update_set}
     | {update_list}: ok
-    | | {update_entry}: X_aX20b: integer notnull qid
-    |   | {name `a b`}: X_aX20b: integer notnull qid
+    | | {update_entry}: `a b`: integer notnull qid
+    |   | {name `a b`}: `a b`: integer notnull qid
     |   | {int 5}: integer notnull
     | {update_from}
       | {update_where}
@@ -91348,13 +91348,13 @@ INSERT INTO `xyz``abc`(x, `a b`)
   {insert_stmt}: ok
   | {insert_normal}
   | {name_columns_values}
-    | {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
+    | {name `xyz``abc`}: `xyz``abc`: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
     | {columns_values}: ok
       | {column_spec}
       | | {name_list}
       |   | {name x}: x: integer notnull
       |   | {name_list}
-      |     | {name `a b`}: X_aX20b: integer notnull qid
+      |     | {name `a b`}: `a b`: integer notnull qid
       | {select_stmt}: values: { column1: integer notnull, column2: integer notnull }
         | {select_core_list}: values: { column1: integer notnull, column2: integer notnull }
         | | {select_core}: values: { column1: integer notnull, column2: integer notnull }
@@ -91375,11 +91375,11 @@ INSERT INTO `xyz``abc`(`a b`, x) VALUES (1, 2);
   {insert_stmt}: ok
   | {insert_normal}
   | {name_columns_values}
-    | {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
+    | {name `xyz``abc`}: `xyz``abc`: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
     | {columns_values}: ok
       | {column_spec}
       | | {name_list}
-      |   | {name `a b`}: X_aX20b: integer notnull qid
+      |   | {name `a b`}: `a b`: integer notnull qid
       |   | {name_list}
       |     | {name x}: x: integer notnull
       | {insert_list}
@@ -91397,13 +91397,13 @@ INSERT INTO `xyz``abc`(x, `a b`) VALUES (2, _seed_) @DUMMY_SEED(500);
   |   | {int 500}: integer notnull
   |   | {int 0}
   | {name_columns_values}
-    | {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
+    | {name `xyz``abc`}: `xyz``abc`: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
     | {columns_values}: ok
       | {column_spec}
       | | {name_list}
       |   | {name x}: x: integer notnull
       |   | {name_list}
-      |     | {name `a b`}: X_aX20b: integer notnull qid
+      |     | {name `a b`}: `a b`: integer notnull qid
       | {insert_list}
         | {int 2}: integer notnull
         | {insert_list}
@@ -91419,13 +91419,13 @@ INSERT INTO `xyz``abc`(x, `a b`) VALUES (2, _seed_) @DUMMY_SEED(500);
   |   | {int 500}: integer notnull
   |   | {int 0}
   | {name_columns_values}
-    | {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
+    | {name `xyz``abc`}: `xyz``abc`: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
     | {columns_values}: ok
       | {column_spec}
       | | {name_list}
       |   | {name x}: x: integer notnull
       |   | {name_list}
-      |     | {name `a b`}: X_aX20b: integer notnull qid
+      |     | {name `a b`}: `a b`: integer notnull qid
       | {insert_list}
         | {int 2}: integer notnull
         | {insert_list}
@@ -91455,10 +91455,10 @@ END;
       |   |   | {select_expr_list_con}: select: { x: integer notnull, `a b`: integer notnull qid }
       |   |     | {select_expr_list}: select: { x: integer notnull, `a b`: integer notnull qid }
       |   |     | | {star}: select: { x: integer notnull, `a b`: integer notnull qid }
-      |   |     | {select_from_etc}: TABLE { X_xyzX60abc: X_xyzX60abc }
-      |   |       | {table_or_subquery_list}: TABLE { X_xyzX60abc: X_xyzX60abc }
-      |   |       | | {table_or_subquery}: TABLE { X_xyzX60abc: X_xyzX60abc }
-      |   |       |   | {name `xyz``abc`}: TABLE { X_xyzX60abc: X_xyzX60abc }
+      |   |     | {select_from_etc}: TABLE { `xyz``abc`: `xyz``abc` }
+      |   |       | {table_or_subquery_list}: TABLE { `xyz``abc`: `xyz``abc` }
+      |   |       | | {table_or_subquery}: TABLE { `xyz``abc`: `xyz``abc` }
+      |   |       |   | {name `xyz``abc`}: TABLE { `xyz``abc`: `xyz``abc` }
       |   |       | {select_where}
       |   |         | {select_groupby}
       |   |           | {select_having}
@@ -91470,13 +91470,13 @@ END;
       | {insert_stmt}: ok
         | {insert_normal}
         | {name_columns_values}
-          | {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
+          | {name `xyz``abc`}: `xyz``abc`: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
           | {columns_values}: ok
             | {column_spec}
             | | {name_list}
             |   | {name x}: x: integer notnull
             |   | {name_list}
-            |     | {name `a b`}: X_aX20b: integer notnull qid
+            |     | {name `a b`}: `a b`: integer notnull qid
             | {select_stmt}: values: { column1: integer notnull variable, `column2`: integer notnull variable qid }
               | {select_core_list}: values: { column1: integer notnull variable, `column2`: integer notnull variable qid }
               | | {select_core}: values: { column1: integer notnull variable, `column2`: integer notnull variable qid }
@@ -91499,7 +91499,7 @@ The statement ending at line XXXX
 DROP TABLE `xyz``abc`;
 
   {drop_table_stmt}: ok
-  | {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
+  | {name `xyz``abc`}: `xyz``abc`: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
 
 The statement ending at line XXXX
 
@@ -91535,8 +91535,8 @@ ALTER TABLE `xyz``abc` ADD COLUMN `a b` INT;
 test/sem_test.sql:XXXX:1: error: in col_def : CQL0148: added column must already be reflected in declared schema, with @create, exact name match required '`a b`'
 
   {alter_table_add_column_stmt}: err
-  | {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
-  | {col_def}: X_aX20b: integer qid
+  | {name `xyz``abc`}: `xyz``abc`: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
+  | {col_def}: `a b`: integer qid
     | {col_def_type_attrs}: ok
       | {col_def_name_type}
         | {name `a b`}
@@ -91562,25 +91562,25 @@ END;
     | |   | {notnull}: integer notnull
     | |     | {type_int}: integer
     | | {params}
-    |   | {param}: X_aX20b_: integer notnull variable in was_set
-    |     | {param_detail}: X_aX20b_: integer notnull variable in was_set
-    |       | {name `a b_`}: X_aX20b_: integer notnull variable in was_set
+    |   | {param}: `a b_`: integer notnull variable in was_set
+    |     | {param_detail}: `a b_`: integer notnull variable in was_set
+    |       | {name `a b_`}: `a b_`: integer notnull variable in was_set
     |       | {notnull}: integer notnull
     |         | {type_int}: integer
     | {stmt_list}: ok
-      | {assign}: X_aX20b_: integer notnull variable in was_set
-      | | {name `a b_`}: X_aX20b_: integer notnull variable in was_set
+      | {assign}: `a b_`: integer notnull variable in was_set
+      | | {name `a b_`}: `a b_`: integer notnull variable in was_set
       | | {int 1}: integer notnull
-      | {assign}: X_aX20b_: integer notnull variable in was_set
-      | | {name `a b_`}: X_aX20b_: integer notnull variable in was_set
+      | {assign}: `a b_`: integer notnull variable in was_set
+      | | {name `a b_`}: `a b_`: integer notnull variable in was_set
       | | {add}: integer notnull
-      |   | {name `a b_`}: X_aX20b_: integer notnull variable in was_set
+      |   | {name `a b_`}: `a b_`: integer notnull variable in was_set
       |   | {int 1}: integer notnull
-      | {let_stmt}: X_uX20v: integer notnull variable was_set
-      | | {name `u v`}: X_uX20v: integer notnull variable was_set
+      | {let_stmt}: `u v`: integer notnull variable was_set
+      | | {name `u v`}: `u v`: integer notnull variable was_set
       | | {int 5}: integer notnull
-      | {assign}: X_uX20v: integer notnull variable was_set
-        | {name `u v`}: X_uX20v: integer notnull variable was_set
+      | {assign}: `u v`: integer notnull variable was_set
+        | {name `u v`}: `u v`: integer notnull variable was_set
         | {int 6}: integer notnull
 
 The statement ending at line XXXX
@@ -91616,12 +91616,12 @@ END;
       |     | {select_limit}
       |       | {select_offset}
       | {declare_vars_type}: object<C CURSOR>
-      | | {name_list}: X_boxX20obj: object<C CURSOR> variable
-      | | | {name `box obj`}: X_boxX20obj: object<C CURSOR> variable
+      | | {name_list}: `box obj`: object<C CURSOR> variable
+      | | | {name `box obj`}: `box obj`: object<C CURSOR> variable
       | | {type_object}: object<C CURSOR>
       |   | {name C CURSOR}
       | {set_from_cursor}: C: select: { x: integer notnull } variable dml_proc boxed
-        | {name `box obj`}: X_boxX20obj: object<C CURSOR> variable
+        | {name `box obj`}: `box obj`: object<C CURSOR> variable
         | {name C}: C: select: { x: integer notnull } variable dml_proc
 
 The statement ending at line XXXX
@@ -91644,7 +91644,7 @@ CREATE TABLE reuse_exotic_columns(
     |   | | {type_int}: integer
     |   | {col_attrs_not_null}: ok
     | {col_key_list}
-      | {col_def}: X_aX20b: integer notnull qid
+      | {col_def}: `a b`: integer notnull qid
         | {col_def_type_attrs}: ok
           | {col_def_name_type}
           | | {name `a b`}
@@ -91667,9 +91667,9 @@ END;
       |   | {notnull}: integer notnull
       |     | {type_int}: integer
       | {params}
-        | {param}: X_AAA_aX20b: integer notnull variable in
-        | | {param_detail}: X_AAA_aX20b: integer notnull variable in
-        |   | {name `AAA_a b`}: X_AAA_aX20b: integer notnull variable in
+        | {param}: `AAA_a b`: integer notnull variable in
+        | | {param_detail}: `AAA_a b`: integer notnull variable in
+        |   | {name `AAA_a b`}: `AAA_a b`: integer notnull variable in
         |   | {notnull}: integer notnull
         |     | {type_int}: integer
         | {params}
@@ -91679,9 +91679,9 @@ END;
           |   | {notnull}: integer notnull
           |     | {type_int}: integer
           | {params}
-            | {param}: X_BBB_aX20b: integer notnull variable in
-            | | {param_detail}: X_BBB_aX20b: integer notnull variable in
-            |   | {name `BBB_a b`}: X_BBB_aX20b: integer notnull variable in
+            | {param}: `BBB_a b`: integer notnull variable in
+            | | {param_detail}: `BBB_a b`: integer notnull variable in
+            |   | {name `BBB_a b`}: `BBB_a b`: integer notnull variable in
             |   | {notnull}: integer notnull
             |     | {type_int}: integer
             | {params}
@@ -91691,9 +91691,9 @@ END;
               |   | {notnull}: integer notnull
               |     | {type_int}: integer
               | {params}
-                | {param}: X_aX20b_: integer notnull variable in
-                  | {param_detail}: X_aX20b_: integer notnull variable in
-                    | {name `a b_`}: X_aX20b_: integer notnull variable in
+                | {param}: `a b_`: integer notnull variable in
+                  | {param_detail}: `a b_`: integer notnull variable in
+                    | {name `a b_`}: `a b_`: integer notnull variable in
                     | {notnull}: integer notnull
                       | {type_int}: integer
 
@@ -91710,13 +91710,13 @@ CREATE TABLE qnamed_table(
   | | | {int 0}
   | | {name qnamed_table}
   | {col_key_list}
-    | {col_def}: X_xX20y: integer qid
+    | {col_def}: `x y`: integer qid
     | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name `x y`}
     |     | {type_int}: integer
     | {col_key_list}
-      | {col_def}: X_aX20b: integer qid
+      | {col_def}: `a b`: integer qid
         | {col_def_type_attrs}: ok
           | {col_def_name_type}
             | {name `a b`}
@@ -91781,8 +91781,8 @@ END;
         | | {select_core}: select: { `x y`: integer qid }
         |   | {select_expr_list_con}: select: { `x y`: integer qid }
         |     | {select_expr_list}: select: { `x y`: integer qid }
-        |     | | {select_expr}: X_xX20y: integer qid
-        |     |   | {dot}: X_xX20y: integer qid
+        |     | | {select_expr}: `x y`: integer qid
+        |     |   | {dot}: `x y`: integer qid
         |     |     | {name T1}
         |     |     | {name `x y`}
         |     | {select_from_etc}: JOIN { T1: qnamed_table, T2: qnamed_table }
@@ -91822,7 +91822,7 @@ END;
         | | {select_core}: select: { `x y`: integer notnull qid }
         |   | {select_expr_list_con}: select: { `x y`: integer notnull qid }
         |     | {select_expr_list}: select: { `x y`: integer notnull qid }
-        |     | | {select_expr}: X_xX20y: integer notnull qid
+        |     | | {select_expr}: `x y`: integer notnull qid
         |     |   | {int 1}: integer notnull
         |     |   | {opt_as_alias}
         |     |     | {name `x y`}
@@ -97685,11 +97685,11 @@ END;
         | |     | {cte_decl}: _vals: { id: integer notnull, name: text notnull, age: integer notnull }
         | |     | | {name _vals}
         | |     | | {name_list}
-        | |     |   | {name id}: id: integer notnull
+        | |     |   | {name id}: id: integer notnull backed_table(jbacked)
         | |     |   | {name_list}
-        | |     |     | {name name}: name: text
+        | |     |     | {name name}: name: text backed_table(jbacked)
         | |     |     | {name_list}
-        | |     |       | {name age}: age: integer
+        | |     |       | {name age}: age: integer backed_table(jbacked)
         | |     | {select_stmt}: values: { column1: integer notnull, column2: text notnull, column3: integer notnull }
         | |       | {select_core_list}: values: { column1: integer notnull, column2: text notnull, column3: integer notnull }
         | |       | | {select_core}: values: { column1: integer notnull, column2: text notnull, column3: integer notnull }
@@ -97779,7 +97779,7 @@ END;
         |             | {select_offset}
         | {select_expr_list}: select: { id: integer notnull, name: text, age: integer }
           | {select_expr}: id: integer notnull
-          | | {call}: id: integer notnull
+          | | {call}: id: integer notnull backed_table(jbacked)
           |   | {name cql_blob_get}
           |   | {call_arg_list}
           |     | {call_filter_clause}
@@ -97791,7 +97791,7 @@ END;
           |           | {name id}
           | {select_expr_list}
             | {select_expr}: name: text
-            | | {call}: name: text
+            | | {call}: name: text backed_table(jbacked)
             |   | {name cql_blob_get}
             |   | {call_arg_list}
             |     | {call_filter_clause}
@@ -97803,7 +97803,7 @@ END;
             |           | {name name}
             | {select_expr_list}
               | {select_expr}: age: integer
-                | {call}: age: integer
+                | {call}: age: integer backed_table(jbacked)
                   | {name cql_blob_get}
                   | {call_arg_list}
                     | {call_filter_clause}
@@ -97876,7 +97876,7 @@ END;
         |             | {select_offset}
         | {select_expr_list}: select: { id: integer notnull, name: text, age: integer }
           | {select_expr}: id: integer notnull
-          | | {call}: id: integer notnull
+          | | {call}: id: integer notnull backed_table(jbacked)
           |   | {name cql_blob_get}
           |   | {call_arg_list}
           |     | {call_filter_clause}
@@ -97888,7 +97888,7 @@ END;
           |           | {name id}
           | {select_expr_list}
             | {select_expr}: name: text
-            | | {call}: name: text
+            | | {call}: name: text backed_table(jbacked)
             |   | {name cql_blob_get}
             |   | {call_arg_list}
             |     | {call_filter_clause}
@@ -97900,7 +97900,7 @@ END;
             |           | {name name}
             | {select_expr_list}
               | {select_expr}: age: integer
-                | {call}: age: integer
+                | {call}: age: integer backed_table(jbacked)
                   | {name cql_blob_get}
                   | {call_arg_list}
                     | {call_filter_clause}
@@ -98014,7 +98014,7 @@ END;
         |             | {select_offset}
         | {select_expr_list}: select: { id: integer notnull, name: text, age: integer }
           | {select_expr}: id: integer notnull
-          | | {call}: id: integer notnull
+          | | {call}: id: integer notnull backed_table(jbacked)
           |   | {name cql_blob_get}
           |   | {call_arg_list}
           |     | {call_filter_clause}
@@ -98026,7 +98026,7 @@ END;
           |           | {name id}
           | {select_expr_list}
             | {select_expr}: name: text
-            | | {call}: name: text
+            | | {call}: name: text backed_table(jbacked)
             |   | {name cql_blob_get}
             |   | {call_arg_list}
             |     | {call_filter_clause}
@@ -98038,7 +98038,7 @@ END;
             |           | {name name}
             | {select_expr_list}
               | {select_expr}: age: integer
-                | {call}: age: integer
+                | {call}: age: integer backed_table(jbacked)
                   | {name cql_blob_get}
                   | {call_arg_list}
                     | {call_filter_clause}
@@ -98114,7 +98114,7 @@ END;
           |             | {select_offset}
           | {select_expr_list}: select: { id: integer notnull, name: text, age: integer }
             | {select_expr}: id: integer notnull
-            | | {call}: id: integer notnull
+            | | {call}: id: integer notnull backed_table(jbacked)
             |   | {name cql_blob_get}
             |   | {call_arg_list}
             |     | {call_filter_clause}
@@ -98126,7 +98126,7 @@ END;
             |           | {name id}
             | {select_expr_list}
               | {select_expr}: name: text
-              | | {call}: name: text
+              | | {call}: name: text backed_table(jbacked)
               |   | {name cql_blob_get}
               |   | {call_arg_list}
               |     | {call_filter_clause}
@@ -98138,7 +98138,7 @@ END;
               |           | {name name}
               | {select_expr_list}
                 | {select_expr}: age: integer
-                  | {call}: age: integer
+                  | {call}: age: integer backed_table(jbacked)
                     | {name cql_blob_get}
                     | {call_arg_list}
                       | {call_filter_clause}
@@ -98329,7 +98329,7 @@ END;
         |         | {update_orderby}
         | {select_expr_list}: select: { id: integer notnull, name: text, age: integer }
           | {select_expr}: id: integer notnull
-          | | {call}: id: integer notnull
+          | | {call}: id: integer notnull backed_table(jbacked)
           |   | {name cql_blob_get}
           |   | {call_arg_list}
           |     | {call_filter_clause}
@@ -98341,7 +98341,7 @@ END;
           |           | {name id}
           | {select_expr_list}
             | {select_expr}: name: text
-            | | {call}: name: text
+            | | {call}: name: text backed_table(jbacked)
             |   | {name cql_blob_get}
             |   | {call_arg_list}
             |     | {call_filter_clause}
@@ -98353,7 +98353,7 @@ END;
             |           | {name name}
             | {select_expr_list}
               | {select_expr}: age: integer
-                | {call}: age: integer
+                | {call}: age: integer backed_table(jbacked)
                   | {name cql_blob_get}
                   | {call_arg_list}
                     | {call_filter_clause}
@@ -98472,7 +98472,7 @@ END;
         |         | {update_orderby}
         | {select_expr_list}: select: { id: integer notnull, name: text, age: integer }
           | {select_expr}: id: integer notnull
-          | | {call}: id: integer notnull
+          | | {call}: id: integer notnull backed_table(jbacked)
           |   | {name cql_blob_get}
           |   | {call_arg_list}
           |     | {call_filter_clause}
@@ -98484,7 +98484,7 @@ END;
           |           | {name id}
           | {select_expr_list}
             | {select_expr}: name: text
-            | | {call}: name: text
+            | | {call}: name: text backed_table(jbacked)
             |   | {name cql_blob_get}
             |   | {call_arg_list}
             |     | {call_filter_clause}
@@ -98496,7 +98496,7 @@ END;
             |           | {name name}
             | {select_expr_list}
               | {select_expr}: age: integer
-                | {call}: age: integer
+                | {call}: age: integer backed_table(jbacked)
                   | {name cql_blob_get}
                   | {call_arg_list}
                     | {call_filter_clause}
@@ -98593,7 +98593,7 @@ END;
           |         | {update_orderby}
           | {select_expr_list}: select: { id: integer notnull, name: text, age: integer }
             | {select_expr}: id: integer notnull
-            | | {call}: id: integer notnull
+            | | {call}: id: integer notnull backed_table(jbacked)
             |   | {name cql_blob_get}
             |   | {call_arg_list}
             |     | {call_filter_clause}
@@ -98605,7 +98605,7 @@ END;
             |           | {name id}
             | {select_expr_list}
               | {select_expr}: name: text
-              | | {call}: name: text
+              | | {call}: name: text backed_table(jbacked)
               |   | {name cql_blob_get}
               |   | {call_arg_list}
               |     | {call_filter_clause}
@@ -98617,7 +98617,7 @@ END;
               |           | {name name}
               | {select_expr_list}
                 | {select_expr}: age: integer
-                  | {call}: age: integer
+                  | {call}: age: integer backed_table(jbacked)
                     | {name cql_blob_get}
                     | {call_arg_list}
                       | {call_filter_clause}
@@ -98796,9 +98796,9 @@ END;
           | |     | {cte_decl}: _vals: { id: integer notnull, name: text notnull }
           | |     | | {name _vals}
           | |     | | {name_list}
-          | |     |   | {name id}: id: integer notnull
+          | |     |   | {name id}: id: integer notnull backed_table(jbacked)
           | |     |   | {name_list}
-          | |     |     | {name name}: name: text
+          | |     |     | {name name}: name: text backed_table(jbacked)
           | |     | {select_stmt}: values: { column1: integer notnull, column2: text notnull }
           | |       | {select_core_list}: values: { column1: integer notnull, column2: text notnull }
           | |       | | {select_core}: values: { column1: integer notnull, column2: text notnull }
@@ -98871,7 +98871,7 @@ END;
           |             | {select_offset}
           | {select_expr_list}: select: { id: integer notnull, name: text, age: integer }
             | {select_expr}: id: integer notnull
-            | | {call}: id: integer notnull
+            | | {call}: id: integer notnull backed_table(jbacked)
             |   | {name cql_blob_get}
             |   | {call_arg_list}
             |     | {call_filter_clause}
@@ -98883,7 +98883,7 @@ END;
             |           | {name id}
             | {select_expr_list}
               | {select_expr}: name: text
-              | | {call}: name: text
+              | | {call}: name: text backed_table(jbacked)
               |   | {name cql_blob_get}
               |   | {call_arg_list}
               |     | {call_filter_clause}
@@ -98895,7 +98895,7 @@ END;
               |           | {name name}
               | {select_expr_list}
                 | {select_expr}: age: integer
-                  | {call}: age: integer
+                  | {call}: age: integer backed_table(jbacked)
                     | {name cql_blob_get}
                     | {call_arg_list}
                       | {call_filter_clause}
@@ -98905,4 +98905,79 @@ END;
                           | {dot}
                             | {name jbacked}
                             | {name age}
+
+The statement ending at line XXXX
+
+[[backing_table]]
+[[jsonb]]
+CREATE TABLE `a backing table`(
+  k BLOB PRIMARY KEY,
+  b BLOB
+);
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  | | | {dot}
+  | |   | {name cql}
+  | |   | {name backing_table}
+  | | {misc_attrs}
+  |   | {misc_attr}
+  |     | {dot}
+  |       | {name cql}
+  |       | {name jsonb}
+  | {create_table_stmt}: `a backing table`: { k: blob notnull primary_key, b: blob } backing qid
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name `a backing table`}
+    | {col_key_list}
+      | {col_def}: k: blob notnull primary_key
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name k}
+      |   | | {type_blob}: blob
+      |   | {col_attrs_pk}: ok
+      |     | {autoinc_and_conflict_clause}
+      | {col_key_list}
+        | {col_def}: b: blob
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name b}
+              | {type_blob}: blob
+
+The statement ending at line XXXX
+
+[[backed_by=`a backing table`]]
+CREATE TABLE `a table`(
+  `col 1` INT PRIMARY KEY,
+  `col 2` INT
+);
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name backed_by}
+  |   | {name `a backing table`}: ok
+  | {create_table_stmt}: `a table`: { `col 1`: integer notnull primary_key qid, `col 2`: integer qid } backed qid
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name `a table`}
+    | {col_key_list}
+      | {col_def}: `col 1`: integer notnull primary_key qid
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name `col 1`}
+      |   | | {type_int}: integer
+      |   | {col_attrs_pk}: ok
+      |     | {autoinc_and_conflict_clause}
+      | {col_key_list}
+        | {col_def}: `col 2`: integer qid
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name `col 2`}
+              | {type_int}: integer
 

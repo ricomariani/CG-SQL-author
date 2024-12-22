@@ -2541,31 +2541,35 @@ static void get_sem_flags(sem_t sem_type, charbuf *out) {
 
 // For debug/test output, prettyprint a structure type
 static void print_sem_struct(sem_struct *sptr) {
-  cql_output("%s: { ", sptr->struct_name);
+  CHARBUF_OPEN(temp);
+  bprint_maybe_qname(&temp, sptr->struct_name);
+  cql_output("%s: { ", temp.ptr);
+
   for (uint32_t i = 0; i < sptr->count; i++) {
+    bclear(&temp);
+
     if (i != 0) {
-      cql_output(", ");
-    }
-    CHARBUF_OPEN(temp);
-    get_sem_core(sptr->semtypes[i], &temp);
-    if (sptr->kinds[i]) {
-     bprintf(&temp, "<%s>", sptr->kinds[i]);
-    }
-    get_sem_flags(sptr->semtypes[i], &temp);
-    if (sptr->semtypes[i] & SEM_TYPE_QID) {
-      CHARBUF_OPEN(tmp);
-      cg_decode_qstr(&tmp, sptr->names[i]);
-      cql_output("%s", tmp.ptr);
-      CHARBUF_CLOSE(tmp);
-    }
-    else {
-      cql_output("%s", sptr->names[i]);
+      bprintf(&temp, ", ");
     }
 
-    cql_output(": %s", temp.ptr);
-    CHARBUF_CLOSE(temp);
+    if (sptr->semtypes[i] & SEM_TYPE_QID) {
+      cg_decode_qstr(&temp, sptr->names[i]);
+    }
+    else {
+      bprintf(&temp, "%s", sptr->names[i]);
+    }
+    bprintf(&temp, ": ");
+
+    get_sem_core(sptr->semtypes[i], &temp);
+    if (sptr->kinds[i]) {
+      bprintf(&temp, "<%s>", sptr->kinds[i]);
+    }
+    get_sem_flags(sptr->semtypes[i], &temp);
+
+    cql_output("%s", temp.ptr);
   }
   cql_output(" }");
+  CHARBUF_CLOSE(temp);
 }
 
 // For debug/test output, prettyprint a join type
@@ -2585,7 +2589,12 @@ static void print_sem_join(sem_join *jptr) {
     if (i != 0) {
       cql_output(", ");
     }
-    cql_output("%s: %s", jptr->names[i], jptr->tables[i]->struct_name);
+    CHARBUF_OPEN(temp);
+    bprint_maybe_qname(&temp, jptr->names[i]);
+    bprintf(&temp, ": ");
+    bprint_maybe_qname(&temp, jptr->tables[i]->struct_name);
+    cql_output("%s", temp.ptr);
+    CHARBUF_CLOSE(temp);
   }
   cql_output(" }");
 }
@@ -2603,7 +2612,11 @@ cql_noexport void print_sem_type(sem_node *sem) {
   }
 
   if (sem->name) {
-    cql_output("%s: ", sem->name);
+    CHARBUF_OPEN(temp);
+    bprint_maybe_qname(&temp, sem->name);
+    bprintf(&temp, ": ");
+    cql_output("%s", temp.ptr);
+    CHARBUF_CLOSE(temp);
   }
 
   sem_t sem_type = sem->sem_type;
@@ -2635,8 +2648,12 @@ cql_noexport void print_sem_type(sem_node *sem) {
   CHARBUF_OPEN(temp);
   get_sem_flags(sem_type, &temp);
   cql_output("%s", temp.ptr);
-  CHARBUF_CLOSE(temp);
 
+  if (sem->backed_table) {
+    bclear(&temp);
+    bprint_maybe_qname(&temp, sem->backed_table);
+    cql_output(" backed_table(%s)", temp.ptr);
+  }
   if (sem->create_version > 0) {
     cql_output(" @create(%d)", sem->create_version);
   }
@@ -2651,6 +2668,7 @@ cql_noexport void print_sem_type(sem_node *sem) {
   if (sem->recreate_group_name) {
     cql_output("(%s)", sem->recreate_group_name);
   }
+  CHARBUF_CLOSE(temp);
 }
 
 // The standard error reporter, the ast node is used to get the line number the
@@ -2663,10 +2681,9 @@ cql_noexport void report_error(ast_node *ast, CSTR msg, CSTR subject) {
 
   if (subject) {
 
-    if (subject[0] == 'X' && subject[1] == '_' && strchr(subject+2, 'X')) {
-       // this is almost certainly a QID, decode it
+    if (is_qname(subject)) {
        CHARBUF_OPEN(tmp);
-       cg_decode_qstr(&tmp, subject);
+       bprint_maybe_qname(&tmp, subject);
        subject = Strdup(tmp.ptr);
        CHARBUF_CLOSE(tmp);
     }
@@ -7110,6 +7127,9 @@ static void sem_resolve_id_with_type(ast_node *ast, CSTR name, CSTR scope, sem_t
   }
 
   if (scope) {
+    // this name is what we can use as the variable name in code gen
+    // so we don't escape it for qnames or anything, it has to be the
+    // unescaped names, e.g. C.XaX20b for C.`a b`
     name = dup_printf("%s.%s", scope, name);
   }
 
@@ -16483,6 +16503,7 @@ static void sem_create_table_stmt(ast_node *ast) {
       if (is_backed(ast->sem->sem_type)) {
         clone_backing_table_functions(ast, name);
         rewrite_shared_fragment_from_backed_table(ast);
+        ast->sem->jptr->tables[0]->is_backed = true;
       }
     }
   }
@@ -18580,10 +18601,22 @@ static void sem_upsert_stmt(ast_node *stmt) {
   }
 
   if (opt_where) {
+    sem_join join = *current_upsert_table_ast->sem->jptr;
+
+    // we record this so we can find it on the join when we do a name lookup
+    // this will be the full scope for the lookup
+    if (is_backed(current_upsert_table_ast->sem->sem_type)) {
+      sem_struct *sptr_new  = _ast_pool_new(sem_struct);
+      *sptr_new = *join.tables[0]; // clone existing value (shallow copy)
+      join.tables = _ast_pool_new(sem_struct *);
+      join.tables[0] = sptr_new;
+      sptr_new->is_backed = true;
+    }
+
     // The opt_where node is in the upsert context therefore we need to make sure
     // we register a join context for search
     PUSH_JOIN_BLOCK()
-    PUSH_JOIN(upsert_scope, current_upsert_table_ast->sem->jptr)
+    PUSH_JOIN(upsert_scope, &join);
     sem_opt_where(opt_where);
     POP_JOIN()
     POP_JOIN()

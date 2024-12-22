@@ -3400,8 +3400,21 @@ cql_noexport void rewrite_upsert_statement_for_backed_table(
 
   rewrite_insert_statement_for_backed_table(insert_stmt, backed_tables_list);
 
+  EXTRACT_NOTNULL(name_columns_values, insert_stmt->right);
+  EXTRACT_STRING(main_table_name, name_columns_values->left);
+
+  // table has already been checked, it exists, it's legal
+  // but it might not be backed, in which case we have less work to do
+  ast_node *main_table = find_table_or_view_even_deleted(main_table_name);
+
   if (update_stmt) {
     rewrite_update_statement_for_backed_table(update_stmt, backed_tables_list);
+  }
+
+  // we need to change any references to the tables to be the blob extractions
+  // from the key and value blobs
+  if (is_backed(main_table->sem->sem_type)) {
+    rewrite_backed_column_references_in_ast(conflict_target, main_table);
   }
 
   AST_REWRITE_INFO_SET(stmt->lineno, stmt->filename);

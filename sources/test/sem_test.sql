@@ -24157,10 +24157,10 @@ declare select func select_func_with_out_arg2(out out_param int!) int;
 -- + CREATE TABLE `xyz``abc`(
 -- + x INT!,
 -- + `a b` INT!
--- + {create_table_stmt}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
+-- + {create_table_stmt}: `xyz``abc`: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
 -- + {name `xyz``abc`}
 -- + {col_def}: x: integer notnull
--- + {col_def}: X_aX20b: integer notnull unique_key qid
+-- + {col_def}: `a b`: integer notnull unique_key qid
 -- + {name `a b`}
 -- - error:
 create table `xyz``abc`
@@ -24197,7 +24197,7 @@ end;
 -- + CALL printf("%d %d", D.x, D.`a b`);
 -- + {declare_cursor}: D: select: { x: integer notnull, `a b`: integer notnull qid } variable dml_proc
 -- + {select_stmt}: select: { x: integer notnull, `a b`: integer notnull qid }
--- + {table_star}: X_xyzX60abc: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull qid }
+-- + {table_star}: `xyz``abc`: `xyz``abc`: { x: integer notnull, `a b`: integer notnull qid }
 -- - error:
 proc qid_t2()
 begin
@@ -24213,11 +24213,11 @@ end;
 -- + LET x := ( SELECT `xyz``abc`.`a b`
 -- + FROM `xyz``abc` );
 -- + {let_stmt}: x: integer notnull variable
--- + {select_stmt}: X_aX20b: integer notnull qid
--- + {dot}: X_aX20b: integer notnull qid
+-- + {select_stmt}: `a b`: integer notnull qid
+-- + {dot}: `a b`: integer notnull qid
 -- + {name `xyz``abc`}
 -- + {name `a b`}
--- + {select_from_etc}: TABLE { X_xyzX60abc: X_xyzX60abc }
+-- + {select_from_etc}: TABLE { `xyz``abc`: `xyz``abc` }
 -- - error:
 proc qid_t3()
 begin
@@ -24232,7 +24232,7 @@ end;
 -- + CALL printf("%d %d\n", R.x, R.`a b`);
 -- + FETCH R(x, `a b`) FROM VALUES (3, 4);
 -- + {declare_cursor_like_name}: Q: select: { x: integer notnull } variable shape_storage value_cursor
--- + {declare_cursor_like_name}: R: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } variable shape_storage value_cursor
+-- + {declare_cursor_like_name}: R: `xyz``abc`: { x: integer notnull, `a b`: integer notnull unique_key qid } variable shape_storage value_cursor
 proc qid_t4()
 begin
   cursor Q like `xyz``abc`(-`a b`);
@@ -24260,7 +24260,7 @@ create view `view` as select 1 x;
 -- + CREATE INDEX `abc def` ON `xyz``abc` (`a b` ASC);
 -- + {name `abc def`}
 -- + {name `xyz``abc`}
--- + {name `a b`}: X_aX20b: integer notnull qid
+-- + {name `a b`}: `a b`: integer notnull qid
 -- - error:
 create index `abc def` on `xyz``abc` (`a b` asc);
 
@@ -24268,7 +24268,7 @@ create index `abc def` on `xyz``abc` (`a b` asc);
 -- verify that echoing is re-emitting the escaped text
 -- + x INT! REFERENCES `xyz``abc` (`a b`)
 -- + {create_table_stmt}: qid_ref_1: { x: integer notnull foreign_key }
--- + {name `a b`}: X_aX20b: integer notnull qid
+-- + {name `a b`}: `a b`: integer notnull qid
 -- - error:
 create table qid_ref_1 (
   x int! references `xyz``abc`(`a b`)
@@ -24278,8 +24278,8 @@ create table qid_ref_1 (
 -- verify that echoing is re-emitting the escaped text
 -- + CONSTRAINT `c1` FOREIGN KEY (`uu uu`) REFERENCES `xyz``abc` (`a b`)
 -- +  {name `c1`}
--- + {name `uu uu`}: X_uuX20uu: integer notnull qid
--- + {name `a b`}: X_aX20b: integer notnull qid
+-- + {name `uu uu`}: `uu uu`: integer notnull qid
+-- + {name `a b`}: `a b`: integer notnull qid
 -- - error:
 create table qid_ref_2 (
   `uu uu` int!,
@@ -24291,7 +24291,7 @@ create table qid_ref_2 (
 -- + CONSTRAINT `c1` PRIMARY KEY (`uu uu`)
 -- + {create_table_stmt}: qid_ref_3: { `uu uu`: integer notnull partial_pk qid }
 -- + {name `c1`}
--- + {name `uu uu`}: X_uuX20uu: integer notnull qid
+-- + {name `uu uu`}: `uu uu`: integer notnull qid
 -- - error:
 create table qid_ref_3 (
   `uu uu` int!,
@@ -24303,7 +24303,7 @@ create table qid_ref_3 (
 -- + CONSTRAINT `c1` UNIQUE (`uu uu`)
 -- + {create_table_stmt}: qid_ref_4: { `uu uu`: integer notnull qid }
 -- + {name `c1`}
--- + {name `uu uu`}: X_uuX20uu: integer notnull qid
+-- + {name `uu uu`}: `uu uu`: integer notnull qid
 -- - error:
 create table qid_ref_4 (
   `uu uu` int!,
@@ -24314,8 +24314,8 @@ create table qid_ref_4 (
 -- verify that echoing is re-emitting the escaped text
 -- + UPDATE `xyz``abc`
 -- + SET `a b` = 5;
--- + {update_stmt}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
--- + {name `a b`}: X_aX20b: integer notnull qid
+-- + {update_stmt}: `xyz``abc`: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
+-- + {name `a b`}: `a b`: integer notnull qid
 -- - error:
 update `xyz``abc` set `a b` = 5;
 
@@ -24323,28 +24323,28 @@ update `xyz``abc` set `a b` = 5;
 -- verify that echoing is re-emitting the escaped text
 -- + INSERT INTO `xyz``abc`(x, `a b`)
 -- +   VALUES (1, 5);
--- + {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
+-- + {name `xyz``abc`}: `xyz``abc`: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
 -- - error:
 insert into `xyz``abc` values (1, 5);
 
 -- TEST: insert statement using syntaxwith quoted names
 -- verify that echoing is re-emitting the escaped text
 -- + INSERT INTO `xyz``abc`(`a b`, x) VALUES (1, 2);
--- + {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
+-- + {name `xyz``abc`}: `xyz``abc`: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
 -- - error:
 insert into `xyz``abc` using 1 `a b`, 2 x;
 
 -- TEST: insert statement dummy seed using form
 -- verify that echoing is re-emitting the escaped text
 -- + INSERT INTO `xyz``abc`(x, `a b`) VALUES (2, _seed_) @DUMMY_SEED(500);
--- + {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
+-- + {name `xyz``abc`}: `xyz``abc`: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
 -- - error:
 insert into `xyz``abc` using 2 x @dummy_seed(500);
 
 -- TEST: insert statement dummy seed values form
 -- verify that echoing is re-emitting the escaped text
 -- + INSERT INTO `xyz``abc`(x, `a b`) VALUES (2, _seed_) @DUMMY_SEED(500);
--- + {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
+-- + {name `xyz``abc`}: `xyz``abc`: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
 -- - error:
 insert into `xyz``abc`(x) values (2) @dummy_seed(500);
 
@@ -24355,7 +24355,7 @@ insert into `xyz``abc`(x) values (2) @dummy_seed(500);
 -- + FROM `xyz``abc`;
 -- + INSERT INTO `xyz``abc`(x, `a b`)
 -- +   VALUES (C.x, C.`a b`);
--- + {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
+-- + {name `xyz``abc`}: `xyz``abc`: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
 -- + {name `a b`}
 -- - error:
 proc quoted_from_forms()
@@ -24397,14 +24397,14 @@ alter table `xyz``abc` add column `a b` int;
 -- + SET `a b_` := `a b_` + 1;
 -- + LET `u v` := 5;
 -- + SET `u v` := 6;
--- + {param}: X_aX20b_: integer notnull variable in was_set
--- + {assign}: X_aX20b_: integer notnull variable in was_set
--- + {name `a b_`}: X_aX20b_: integer notnull variable in was_set
+-- + {param}: `a b_`: integer notnull variable in was_set
+-- + {assign}: `a b_`: integer notnull variable in was_set
+-- + {name `a b_`}: `a b_`: integer notnull variable in was_set
 -- + {add}: integer notnull
--- + {name `a b_`}: X_aX20b_: integer notnull variable in was_set
--- + {let_stmt}: X_uX20v: integer notnull variable was_set
--- + {name `u v`}: X_uX20v: integer notnull variable was_set
--- + {assign}: X_uX20v: integer notnull variable was_set
+-- + {name `a b_`}: `a b_`: integer notnull variable in was_set
+-- + {let_stmt}: `u v`: integer notnull variable was_set
+-- + {name `u v`}: `u v`: integer notnull variable was_set
+-- + {assign}: `u v`: integer notnull variable was_set
 -- - error:
 proc args_defined_by_exotics(like `xyz``abc`)
 begin
@@ -24420,7 +24420,7 @@ end;
 -- +  SELECT 1 AS x;
 -- + DECLARE `box obj` OBJECT<C CURSOR>;
 -- + SET `box obj` FROM CURSOR C;
--- + {name `box obj`}: X_boxX20obj: object<C CURSOR> variable
+-- + {name `box obj`}: `box obj`: object<C CURSOR> variable
 -- + {set_from_cursor}: C: select: { x: integer notnull } variable dml_proc boxed
 -- - error:
 proc cursor_boxing_with_qid()
@@ -24446,11 +24446,11 @@ create table reuse_exotic_columns (
 -- + PROC qid_shape_args (AAA_x INT!, `AAA_a b` INT!, BBB_x INT!, `BBB_a b` INT!, x_ INT!, `a b_` INT!)
 -- + {create_proc_stmt}: ok
 -- + {name AAA_x}: AAA_x: integer notnull variable in
--- + {name `AAA_a b`}: X_AAA_aX20b: integer notnull variable in
+-- + {name `AAA_a b`}: `AAA_a b`: integer notnull variable in
 -- + {name BBB_x}: BBB_x: integer notnull variable in
--- + {name `BBB_a b`}: X_BBB_aX20b: integer notnull variable in
+-- + {name `BBB_a b`}: `BBB_a b`: integer notnull variable in
 -- + {name x_}: x_: integer notnull variable in
--- + {name `a b_`}: X_aX20b_: integer notnull variable in
+-- + {name `a b_`}: `a b_`: integer notnull variable in
 -- - error:
 proc qid_shape_args(AAA like `xyz``abc`, BBB like `xyz``abc`, like `xyz``abc`)
 begin
@@ -26015,3 +26015,46 @@ BEGIN
   cursor C for
   insert into jbacked(id, name) values (1,'foo') returning (*);
 END;
+
+-- stress test for backing tables with funky names
+-- verify correct parse and echo of qid names
+-- + [[backing_table]]
+-- + [[jsonb]]
+-- + CREATE TABLE `a backing table`(
+-- +   k BLOB PRIMARY KEY,
+-- +   b BLOB
+-- + );
+-- - error:
+[[backing_table]]
+[[jsonb]]
+create table `a backing table`(k blob primary key, b blob);
+
+-- stress test for backed tables with funky names
+-- verify correct parse and echo of qid names
+-- + [[backed_by=`a backing table`]]
+-- + CREATE TABLE `a table`(
+-- +   `col 1` INT PRIMARY KEY,
+-- +   `col 2` INT
+-- + );
+-- - error:
+[[backed_by=`a backing table`]]
+create table `a table`( `col 1` int primary key, `col 2` int);
+
+/*
+  -- TEST: upsert into a backed table with weird names... All the pains.
+  -- + xxx
+insert into `a table`
+  values (1, 2)
+on conflict (`col 1`)
+where `col 2` = 1 do update
+  set `col 1` = `col 2`:ifnull(0)
+  returning (`col 1`, `col 2`);
+
+cursor C  for
+insert into `a table`
+  values (1, 2)
+on conflict (`col 1`)
+where `col 2` = 1 do update
+  set `col 1` = `col 2`:ifnull(0)
+  returning (`col 1`, `col 2`);
+*/

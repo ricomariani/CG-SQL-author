@@ -3467,7 +3467,8 @@ BEGIN
     SELECT id
       FROM bar
       WHERE 1
-  ON CONFLICT (id) DO UPDATE
+  ON CONFLICT (id)
+  DO UPDATE
     SET id = 10
     WHERE id <> 10;
 END;
@@ -3501,7 +3502,8 @@ BEGIN
     SELECT id
       FROM names
       WHERE 1
-  ON CONFLICT (id) DO UPDATE
+  ON CONFLICT (id)
+  DO UPDATE
     SET id = 10
     WHERE id <> 10;
 END;
@@ -3525,7 +3527,8 @@ PROC upsert_do_nothing (id_ INT!)
 BEGIN
   INSERT INTO foo(id)
     VALUES (id_)
-  ON CONFLICT DO NOTHING;
+  ON CONFLICT
+  DO NOTHING;
 END;
 --]]
 
@@ -10615,7 +10618,8 @@ function cql_startup(_db_)
 
   --[[
   INSERT INTO bar(id) VALUES (1) @DUMMY_SEED(1338)
-  ON CONFLICT (id) DO UPDATE
+  ON CONFLICT (id)
+  DO UPDATE
     SET id = 10;
   --]]
   _seed_ = 1338

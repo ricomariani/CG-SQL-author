@@ -6455,7 +6455,8 @@ BEGIN
     SELECT id
       FROM bar
       WHERE 1
-  ON CONFLICT (id) DO UPDATE
+  ON CONFLICT (id)
+  DO UPDATE
     SET id = 10
     WHERE id <> 10;
 END;
@@ -6475,7 +6476,8 @@ CQL_WARN_UNUSED cql_code upsert_do_something(sqlite3 *_Nonnull _db_) {
       "SELECT id "
         "FROM bar "
         "WHERE 1 "
-    "ON CONFLICT (id) DO UPDATE "
+    "ON CONFLICT (id) "
+    "DO UPDATE "
       "SET id = 10 "
       "WHERE id <> 10");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -6504,7 +6506,8 @@ BEGIN
     SELECT id
       FROM names
       WHERE 1
-  ON CONFLICT (id) DO UPDATE
+  ON CONFLICT (id)
+  DO UPDATE
     SET id = 10
     WHERE id <> 10;
 END;
@@ -6532,7 +6535,8 @@ CQL_WARN_UNUSED cql_code with_upsert_form(sqlite3 *_Nonnull _db_) {
       "SELECT id "
         "FROM names "
         "WHERE 1 "
-    "ON CONFLICT (id) DO UPDATE "
+    "ON CONFLICT (id) "
+    "DO UPDATE "
       "SET id = 10 "
       "WHERE id <> 10");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -6551,7 +6555,8 @@ PROC upsert_do_nothing (id_ INT!)
 BEGIN
   INSERT INTO foo(id)
     VALUES (id_)
-  ON CONFLICT DO NOTHING;
+  ON CONFLICT
+  DO NOTHING;
 END;
 */
 
@@ -6568,7 +6573,8 @@ CQL_WARN_UNUSED cql_code upsert_do_nothing(sqlite3 *_Nonnull _db_, cql_int32 id_
   _rc_ = cql_prepare(_db_, &_temp_stmt,
     "INSERT INTO foo(id) "
       "VALUES (?) "
-    "ON CONFLICT DO NOTHING");
+    "ON CONFLICT "
+    "DO NOTHING");
   cql_multibind(&_rc_, _db_, &_temp_stmt, 1,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, id_);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -20425,13 +20431,15 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
 
   /*
   INSERT INTO bar(id) VALUES (1) @DUMMY_SEED(1338)
-  ON CONFLICT (id) DO UPDATE
+  ON CONFLICT (id)
+  DO UPDATE
     SET id = 10;
   */
   _seed_ = 1338;
   _rc_ = cql_exec(_db_,
     "INSERT INTO bar(id) VALUES (1) "
-    "ON CONFLICT (id) DO UPDATE "
+    "ON CONFLICT (id) "
+    "DO UPDATE "
       "SET id = 10");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
 

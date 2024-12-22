@@ -2485,7 +2485,8 @@ end;
 -- +   "SELECT id "
 -- +     "FROM bar "
 -- +     "WHERE 1 "
--- + "ON CONFLICT (id) DO UPDATE "
+-- + "ON CONFLICT (id) "
+-- + "DO UPDATE "
 -- +   "SET id = 10 "
 -- +     "WHERE id <> 10");
 proc upsert_do_something()
@@ -2507,7 +2508,8 @@ END;
 -- +   "SELECT id "
 -- +     "FROM names "
 -- +     "WHERE 1 "
--- + "ON CONFLICT (id) DO UPDATE "
+-- + "ON CONFLICT (id) "
+-- + "DO UPDATE "
 -- +   "SET id = 10 "
 -- +     "WHERE id <> 10");
 proc with_upsert_form()
@@ -2520,7 +2522,8 @@ END;
 -- + cql_code upsert_do_nothing(sqlite3 *_Nonnull _db_, cql_int32 id_) {
 -- + "INSERT INTO foo(id) "
 -- +   "VALUES (?) "
--- +  "ON CONFLICT DO NOTHING");
+-- +  "ON CONFLICT "
+-- +  "DO NOTHING");
 proc upsert_do_nothing(id_ int!)
 BEGIN
  insert into foo(id) values (id_) on conflict do nothing;
@@ -2545,7 +2548,8 @@ values (ifnull((select id from some_cte), 0))
 -- + _seed_ = 1338;
 -- + _rc_ = cql_exec(_db_,
 -- + "INSERT INTO bar(id) VALUES (1) "
--- + "ON CONFLICT (id) DO UPDATE "
+-- + "ON CONFLICT (id) "
+-- + "DO UPDATE "
 -- + "SET id = 10");
 -- + if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
 insert into bar(id) values (1) @dummy_seed(1338)

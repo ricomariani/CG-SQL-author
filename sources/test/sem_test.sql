@@ -21880,7 +21880,8 @@ insert into bt_default(pk1,x) values (1, 2);
 -- + INSERT INTO simple_backing_table(k, v)
 -- + SELECT cql_blob_create(basic_table, V.id, basic_table.id), cql_blob_create(basic_table, V.name, basic_table.name)
 -- + FROM _vals AS V
--- + ON CONFLICT (k) DO NOTHING;
+-- + ON CONFLICT (k)
+-- + DO NOTHING;
 -- + {with_upsert_stmt}: ok
 -- - error:
 INSERT INTO basic_table(id, name) values (1, 'foo')
@@ -21891,7 +21892,8 @@ INSERT INTO basic_table(id, name) values (1, 'foo')
 -- + INSERT INTO simple_backing_table(k, v)
 -- + SELECT cql_blob_create(basic_table, V.id, basic_table.id), cql_blob_create(basic_table, V.name, basic_table.name)
 -- +  FROM _vals AS V
--- + ON CONFLICT (k) DO UPDATE
+-- + ON CONFLICT (k)
+-- + DO UPDATE
 -- + SET k = cql_blob_update(k, cql_blob_get(k, basic_table.id) + 1, basic_table.id)
 -- + {shared_cte}: _basic_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> } dml_proc
 -- + {update_stmt}: simple_backing_table: { k: blob notnull primary_key, v: blob notnull } backing
@@ -21922,7 +21924,8 @@ INSERT INTO bogus_table_not_present VALUES (1,2) on conflict(id) do nothing;
 -- + INSERT INTO simple_backing_table(k, v)
 -- + SELECT cql_blob_create(basic_table, V.id, basic_table.id), cql_blob_create(basic_table, V.name, basic_table.name)
 -- + FROM _vals AS V
--- + ON CONFLICT (k) DO UPDATE
+-- + ON CONFLICT (k)
+-- + DO UPDATE
 -- + SET k = cql_blob_update(k, cql_blob_get(k, basic_table.id) + 1, basic_table.id)
 -- + WHERE rowid IN (SELECT rowid
 -- + FROM basic_table
@@ -26052,7 +26055,8 @@ create table `a table`( `col 1` int primary key, `col 2` int);
 -- + SELECT cql_blob_create(`a table`, V.`col 1`, `a table`.`col 1`), cql_blob_create(`a table`, V.`col 2`, `a table`.`col 2`)
 -- +   FROM _vals AS V
 -- + ON CONFLICT (`the key`)
--- + WHERE cql_blob_get(`the value`, `a table`.`col 2`) = 1 DO UPDATE
+-- + WHERE cql_blob_get(`the value`, `a table`.`col 2`) = 1
+-- + DO UPDATE
 -- +   SET `the key` = cql_blob_update(`the key`, ifnull(cql_blob_get(`the value`, `a table`.`col 2`), 0), `a table`.`col 1`)
 -- +   WHERE rowid IN (SELECT rowid
 -- +     FROM `a table`)
@@ -26083,7 +26087,8 @@ end;
 -- +     SELECT cql_blob_create(`a table`, V.`col 1`, `a table`.`col 1`), cql_blob_create(`a table`, V.`col 2`, `a table`.`col 2`)
 -- +       FROM _vals AS V
 -- +   ON CONFLICT (`the key`)
--- +   WHERE cql_blob_get(`the value`, `a table`.`col 2`) = 1 DO UPDATE
+-- +   WHERE cql_blob_get(`the value`, `a table`.`col 2`) = 1
+-- +   DO UPDATE
 -- +     SET `the key` = cql_blob_update(`the key`, ifnull(cql_blob_get(`the value`, `a table`.`col 2`), 0), `a table`.`col 1`)
 -- +     WHERE rowid IN (SELECT rowid
 -- +       FROM `a table`)
@@ -26102,6 +26107,39 @@ begin
     values (1, 2)
   on conflict (`col 1`)
   where `col 2` = 1 do update
+    set `col 1` = `col 2`:ifnull(0)
+    returning (`col 1`, `col 2`);
+end;
+
+-- TEST: apply with clause
+-- verify the rewrite, that's really all of it
+-- + CURSOR C FOR
+-- +   WITH
+-- +     a_cte (x) AS (
+-- +       VALUES
+-- +         (1),
+-- +         (2),
+-- +         (3)
+-- +     )
+-- +   INSERT INTO `a backing table`(`the key`, `the value`)
+-- +     SELECT cql_blob_create(`a table`, V.`col 1`, `a table`.`col 1`), cql_blob_create(`a table`, V.`col 2`, `a table`.`col 2`)
+-- +       FROM _vals AS V
+-- +   ON CONFLICT (`the key`)
+-- +   WHERE cql_blob_get(`the value`, `a table`.`col 2`) IN (SELECT *
+-- +     FROM a_cte)
+-- +   DO UPDATE
+-- +     SET `the key` = cql_blob_update(`the key`, ifnull(cql_blob_get(`the value`, `a table`.`col 2`), 0), `a table`.`col 1`)
+-- +     RETURNING (cql_blob_get(`the key`, `a table`.`col 1`), cql_blob_get(`the value`, `a table`.`col 2`));
+-- - backed(
+-- - error:
+proc with_upsert_returning()
+begin
+  cursor C  for 
+  with a_cte(x) as (values (1), (2), (3))
+  insert into `a table`
+    values (1, 2)
+  on conflict (`col 1`) 
+  where `col 2` in (select * from a_cte) do update
     set `col 1` = `col 2`:ifnull(0)
     returning (`col 1`, `col 2`);
 end;

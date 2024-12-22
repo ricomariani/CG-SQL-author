@@ -5310,11 +5310,11 @@ static void gen_conflict_target(ast_node *ast) {
   EXTRACT(indexed_columns, ast->left);
   EXTRACT(opt_where, ast->right);
 
-  gen_printf("\nON CONFLICT ");
+  gen_printf("\nON CONFLICT");
   if (indexed_columns) {
-    gen_printf("(");
+    gen_printf(" (");
     gen_indexed_columns(indexed_columns);
-    gen_printf(") ");
+    gen_printf(")");
   }
   if (opt_where) {
     gen_printf("\n");
@@ -5329,7 +5329,7 @@ static void gen_upsert_update(ast_node *ast) {
   EXTRACT(update_stmt, ast->right);
 
   gen_conflict_target(conflict_target);
-  gen_printf("DO ");
+  gen_printf("\nDO ");
   if (update_stmt) {
     gen_update_stmt(update_stmt);
   }

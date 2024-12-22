@@ -1549,18 +1549,21 @@ INSERT INTO foo
   SELECT C11
     FROM T1
     WHERE 1
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id)
+DO NOTHING;
 
 INSERT INTO foo(id)
   VALUES (1)
-ON CONFLICT (id) 
-WHERE id = 10 DO UPDATE
+ON CONFLICT (id)
+WHERE id = 10 
+DO UPDATE
   SET id = id + 1
   WHERE id = 20;
 
 INSERT INTO foo(id)
   VALUES (1)
-ON CONFLICT DO NOTHING;
+ON CONFLICT
+DO NOTHING;
 
 SELECT 10 * a AS T
   WHERE T = 1;
@@ -2581,22 +2584,25 @@ CREATE TABLE `a table`(
 
 INSERT INTO `a table`(id)
   VALUES (1, 2)
-ON CONFLICT (`col 1`) 
-WHERE `col 2` = 1 DO UPDATE
+ON CONFLICT (`col 1`)
+WHERE `col 2` = 1 
+DO UPDATE
   SET `col 1` = `col 2`
   RETURNING (`col 1`, `col 2`);
 
 CURSOR C FOR
   INSERT INTO `a table`(id)
     VALUES (1, 2)
-  ON CONFLICT (`col 1`) 
-  WHERE `col 2` = 1 DO UPDATE
+  ON CONFLICT (`col 1`)
+  WHERE `col 2` = 1 
+  DO UPDATE
     SET `col 1` = `col 2`
     RETURNING (`col 1`, `col 2`);
 
 CURSOR C FOR
   INSERT INTO `a table`(id)
     VALUES (1, 2)
-  ON CONFLICT (`col 1`) 
-  WHERE `col 2` = 1 DO UPDATE
+  ON CONFLICT (`col 1`)
+  WHERE `col 2` = 1 
+  DO UPDATE
     SET `col 1` = `col 2`;

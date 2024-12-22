@@ -99667,3 +99667,190 @@ END;
                           | {name `a table`}
                           | {name `col 2`}
 
+The statement ending at line XXXX
+
+PROC with_upsert_returning_error_cte ()
+BEGIN
+  CURSOR C FOR
+    WITH
+      a_cte (x) AS (
+        VALUES (NOT 'x')
+      )
+    INSERT INTO `a table`
+      VALUES (1, 2)
+    ON CONFLICT
+    DO NOTHING
+      RETURNING (`col 1`, `col 2`);
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
+
+  {create_proc_stmt}: err
+  | {name with_upsert_returning_error_cte}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_cursor}: err
+        | {name C}
+        | {upsert_returning_stmt}: err
+          | {with_upsert_stmt}: err
+          | | {with}
+          | | | {cte_tables}: err
+          | |   | {cte_table}: err
+          | |     | {cte_decl}
+          | |     | | {name a_cte}
+          | |     | | {name_list}
+          | |     |   | {name x}
+          | |     | {select_stmt}
+          | |       | {select_core_list}
+          | |       | | {select_core}: err
+          | |       |   | {select_values}
+          | |       |   | {values}: err
+          | |       |     | {insert_list}: ok
+          | |       |       | {not}: err
+          | |       |         | {strlit 'x'}: text notnull
+          | |       | {select_orderby}
+          | |         | {select_limit}
+          | |           | {select_offset}
+          | | {upsert_stmt}
+          |   | {insert_stmt}
+          |   | | {insert_normal}
+          |   | | {name_columns_values}
+          |   |   | {name `a table`}
+          |   |   | {columns_values}
+          |   |     | {select_stmt}
+          |   |       | {select_core_list}
+          |   |       | | {select_core}
+          |   |       |   | {select_values}
+          |   |       |   | {values}
+          |   |       |     | {insert_list}
+          |   |       |       | {int 1}
+          |   |       |       | {insert_list}
+          |   |       |         | {int 2}
+          |   |       | {select_orderby}
+          |   |         | {select_limit}
+          |   |           | {select_offset}
+          |   | {upsert_update}
+          |     | {conflict_target}
+          | {select_expr_list}
+            | {select_expr}
+            | | {name `col 1`}
+            | {select_expr_list}
+              | {select_expr}
+                | {name `col 2`}
+
+The statement ending at line XXXX
+
+PROC with_upsert_returning_error_in_returning ()
+BEGIN
+  CURSOR C FOR
+    WITH
+      _vals (`col 1`, `col 2`) AS (
+        VALUES (1, 2)
+      )
+    INSERT INTO `a backing table`(`the key`, `the value`)
+      SELECT cql_blob_create(`a table`, V.`col 1`, `a table`.`col 1`), cql_blob_create(`a table`, V.`col 2`, `a table`.`col 2`)
+        FROM _vals AS V
+    ON CONFLICT (`the key`)
+    DO NOTHING
+      RETURNING (nope);
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'nope'
+
+  {create_proc_stmt}: err
+  | {name with_upsert_returning_error_in_returning}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_cursor}: err
+        | {name C}
+        | {upsert_returning_stmt}: err
+          | {with_upsert_stmt}: ok
+          | | {with}
+          | | | {cte_tables}: ok
+          | |   | {cte_table}: _vals: { `col 1`: integer notnull qid, `col 2`: integer notnull qid }
+          | |     | {cte_decl}: _vals: { `col 1`: integer notnull qid, `col 2`: integer notnull qid }
+          | |     | | {name _vals}
+          | |     | | {name_list}
+          | |     |   | {name `col 1`}: `col 1`: integer notnull qid backed_table(`a table`)
+          | |     |   | {name_list}
+          | |     |     | {name `col 2`}: `col 2`: integer qid backed_table(`a table`)
+          | |     | {select_stmt}: values: { `column1`: integer notnull qid, `column2`: integer notnull qid }
+          | |       | {select_core_list}: values: { `column1`: integer notnull qid, `column2`: integer notnull qid }
+          | |       | | {select_core}: values: { `column1`: integer notnull qid, `column2`: integer notnull qid }
+          | |       |   | {select_values}
+          | |       |   | {values}: values: { `column1`: integer notnull qid, `column2`: integer notnull qid }
+          | |       |     | {insert_list}: ok
+          | |       |       | {int 1}: integer notnull
+          | |       |       | {insert_list}
+          | |       |         | {int 2}: integer notnull
+          | |       | {select_orderby}
+          | |         | {select_limit}
+          | |           | {select_offset}
+          | | {upsert_stmt}: ok
+          |   | {insert_stmt}: ok
+          |   | | {insert_normal}
+          |   | | {name_columns_values}
+          |   |   | {name `a backing table`}: `a backing table`: { `the key`: blob notnull primary_key qid, `the value`: blob qid } backing qid
+          |   |   | {columns_values}: ok
+          |   |     | {column_spec}
+          |   |     | | {name_list}
+          |   |     |   | {name `the key`}: `the key`: blob notnull qid
+          |   |     |   | {name_list}
+          |   |     |     | {name `the value`}: `the value`: blob qid
+          |   |     | {select_stmt}: select: { _anon: blob notnull, _anon: blob notnull }
+          |   |       | {select_core_list}: select: { _anon: blob notnull, _anon: blob notnull }
+          |   |       | | {select_core}: select: { _anon: blob notnull, _anon: blob notnull }
+          |   |       |   | {select_expr_list_con}: select: { _anon: blob notnull, _anon: blob notnull }
+          |   |       |     | {select_expr_list}: select: { _anon: blob notnull, _anon: blob notnull }
+          |   |       |     | | {select_expr}: blob notnull
+          |   |       |     | | | {call}: blob notnull
+          |   |       |     | |   | {name cql_blob_create}: blob notnull
+          |   |       |     | |   | {call_arg_list}
+          |   |       |     | |     | {call_filter_clause}
+          |   |       |     | |     | {arg_list}: ok
+          |   |       |     | |       | {name `a table`}
+          |   |       |     | |       | {arg_list}
+          |   |       |     | |         | {dot}: `col 1`: integer notnull qid
+          |   |       |     | |         | | {name V}
+          |   |       |     | |         | | {name `col 1`}
+          |   |       |     | |         | {arg_list}
+          |   |       |     | |           | {dot}: integer notnull primary_key qid
+          |   |       |     | |             | {name `a table`}
+          |   |       |     | |             | {name `col 1`}
+          |   |       |     | | {select_expr_list}
+          |   |       |     |   | {select_expr}: blob notnull
+          |   |       |     |     | {call}: blob notnull
+          |   |       |     |       | {name cql_blob_create}: blob notnull
+          |   |       |     |       | {call_arg_list}
+          |   |       |     |         | {call_filter_clause}
+          |   |       |     |         | {arg_list}: ok
+          |   |       |     |           | {name `a table`}
+          |   |       |     |           | {arg_list}
+          |   |       |     |             | {dot}: `col 2`: integer notnull qid
+          |   |       |     |             | | {name V}
+          |   |       |     |             | | {name `col 2`}
+          |   |       |     |             | {arg_list}
+          |   |       |     |               | {dot}: integer qid
+          |   |       |     |                 | {name `a table`}
+          |   |       |     |                 | {name `col 2`}
+          |   |       |     | {select_from_etc}: TABLE { V: _vals }
+          |   |       |       | {table_or_subquery_list}: TABLE { V: _vals }
+          |   |       |       | | {table_or_subquery}: TABLE { V: _vals }
+          |   |       |       |   | {name _vals}: TABLE { V: _vals }
+          |   |       |       |   | {opt_as_alias}
+          |   |       |       |     | {name V}
+          |   |       |       | {select_where}
+          |   |       |         | {select_groupby}
+          |   |       |           | {select_having}
+          |   |       | {select_orderby}
+          |   |         | {select_limit}
+          |   |           | {select_offset}
+          |   | {upsert_update}: ok
+          |     | {conflict_target}: excluded: { `the key`: blob notnull qid, `the value`: blob qid }
+          |       | {indexed_columns}
+          |         | {indexed_column}
+          |           | {name `the key`}: `the key`: blob notnull qid
+          | {select_expr_list}: err
+            | {select_expr}: err
+              | {name nope}: err
+

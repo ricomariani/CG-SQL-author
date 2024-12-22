@@ -26143,3 +26143,32 @@ begin
     set `col 1` = `col 2`:ifnull(0)
     returning (`col 1`, `col 2`);
 end;
+
+-- TEST: bogus CTE
+-- + error: % string operand not allowed in 'NOT'
+-- + {create_proc_stmt}: err
+-- + {upsert_returning_stmt}: err
+-- +1 error:
+proc with_upsert_returning_error_cte()
+begin
+  cursor C  for 
+  with a_cte(x) as (values (not 'x'))
+  insert into `a table`
+    values (1, 2)
+  on conflict do nothing
+  returning (`col 1`, `col 2`);
+end;
+
+-- TEST: bogus returning clause
+-- + error: % name not found 'nope'
+-- + {create_proc_stmt}: err
+-- + {upsert_returning_stmt}: err
+-- +1 error:
+proc with_upsert_returning_error_in_returning()
+begin
+  cursor C  for 
+  insert into `a table`
+    values (1, 2)
+  on conflict do nothing
+  returning (nope);
+end;

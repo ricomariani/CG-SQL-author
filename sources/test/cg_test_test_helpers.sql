@@ -1122,7 +1122,6 @@ begin
     returning (ix+iy xy, ix, iy);
 end;
 
-
 -- TEST: verify test helpers for update returning as a statement (the hard case)
 -- + DECLARE PROC update_returning_stmt () (xy INT, ix INT, iy INT);
 -- + PROC test_update_returning_stmt_create_tables()
@@ -1142,3 +1141,43 @@ begin
   update insert_returning_test set ix = 5 where ix = 7
     returning (ix+iy xy, ix, iy);
 end;
+
+[[backing_table]]
+[[jsonb]]
+create table `a backing table`(
+  `the key` blob primary key,
+  `the value` blob
+);
+
+[[backed_by=`a backing table`]]
+create table `a table`(
+  `col 1` int primary key,
+  `col 2` int
+);
+
+-- TEST: upsert returning with backing expansion
+-- complex test case with lots of weirdness...
+-- + PROC test_upsert_returning_stmt_create_tables()
+-- + PROC test_upsert_returning_stmt_create_triggers()
+-- + PROC test_upsert_returning_stmt_populate_tables()
+-- + PROC test_upsert_returning_stmt_drop_tables()
+-- + PROC test_upsert_returning_stmt_drop_triggers()
+-- note table name is weird and has to be escaped, this is normal/correct
+-- + PROC test_upsert_returning_stmt_read_X_aX20table
+-- + PROC open_upsert_returning_stmt()
+-- + PROC close_upsert_returning_stmt()
+-- + PROC insert_upsert_returning_stmt(LIKE upsert_returning_stmt)
+-- + PROC select_upsert_returning_stmt()
+-- + PROC generate_upsert_returning_stmt_row(LIKE upsert_returning_stmt)
+[[autotest=(dummy_test, dummy_table, dummy_insert, dummy_select, dummy_result_set)]]
+proc upsert_returning_stmt()
+begin
+  with a_cte(x) as (values (1), (2), (3))
+  insert into `a table`
+    values (1, 2)
+  on conflict (`col 1`)
+  where `col 2` in (select * from a_cte) do update
+    set `col 1` = `col 2`:ifnull(0)
+    returning (`col 1`, `col 2`);
+end;
+

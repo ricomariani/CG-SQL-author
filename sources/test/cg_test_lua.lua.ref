@@ -8988,6 +8988,54 @@ function expand_returning_star(_db_)
   C_stmt = nil
   return _rc_
 end
+
+-- The statement ending at line XXXX
+
+--[[
+PROC upsert_returning_with_backing ()
+BEGIN
+  CURSOR C FOR
+    WITH
+      a_cte (x) AS (
+        VALUES
+          (1),
+          (2),
+          (3)
+      ),
+      _vals (`col 1`, `col 2`) AS (
+        VALUES (1, 2)
+      )
+    INSERT INTO `a backing table`(`the key`, `the value`)
+      SELECT cql_blob_create(`a table`, V.`col 1`, `a table`.`col 1`), cql_blob_create(`a table`, V.`col 2`, `a table`.`col 2`)
+        FROM _vals AS V
+    ON CONFLICT (`the key`)
+    WHERE cql_blob_get(`the value`, `a table`.`col 2`) IN (SELECT *
+      FROM a_cte) 
+    DO UPDATE
+      SET `the key` = cql_blob_update(`the key`, ifnull(cql_blob_get(`the value`, `a table`.`col 2`), 0), `a table`.`col 1`)
+      WHERE rowid IN (SELECT rowid
+        FROM `a table`)
+      RETURNING (cql_blob_get(`the key`, `a table`.`col 1`), cql_blob_get(`the value`, `a table`.`col 2`));
+END;
+--]]
+
+function upsert_returning_with_backing(_db_)
+  local _rc_ = CQL_OK
+  local C_stmt = nil
+  local C = { _has_row_ = false }
+  local C_fields_ = { "X_colX201", "X_colX202" }
+  local C_types_ = "Ii"
+
+  _rc_, C_stmt = cql_prepare(_db_, 
+    "WITH a_cte (x) AS ( VALUES (1), (2), (3) ), _vals ([col 1], [col 2]) AS ( VALUES (1, 2) ) INSERT INTO [a backing table]([the key], [the value]) SELECT jsonb_array(-3079349931095810044, V.[col 1]), jsonb_object('X_colX202', V.[col 2]) FROM _vals AS V ON CONFLICT ([the key]) WHERE (([the value])->>'$.X_colX202') IN (SELECT x FROM a_cte)  DO UPDATE SET [the key] = jsonb_set([the key],  '$[1]', ifnull((([the value])->>'$.X_colX202'), 0)) WHERE rowid IN (SELECT rowid FROM [a table]) RETURNING ((([the key])->>1), (([the value])->>'$.X_colX202'))")
+  if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+  _rc_ = CQL_OK
+
+::cql_cleanup::
+  cql_finalize_stmt(C_stmt)
+  C_stmt = nil
+  return _rc_
+end
 local this_is_the_end = 0
 
 -- The statement ending at line XXXX

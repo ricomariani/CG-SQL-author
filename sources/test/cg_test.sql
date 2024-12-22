@@ -6252,6 +6252,58 @@ BEGIN
   insert into jdata(id, name) values (1,'foo') returning (*);
 END;
 
+[[backing_table]]
+[[jsonb]]
+create table `a backing table`(
+  `the key` blob primary key,
+  `the value` blob
+);
+
+[[backed_by=`a backing table`]]
+create table `a table`(
+  `col 1` int primary key,
+  `col 2` int
+);
+
+-- TEST: upsert returning with backing expansion
+-- note that JSON maps cannot hold arbitary QIDs as keys therefore they must
+-- stay escaped.  This kind of sucks but it's the most flexible and normal
+-- names look fine. If you get weird, CQL gets weird.  Sorry :D
+--
+-- + _rc_ = cql_prepare(_db_, &C_stmt,
+-- + "WITH "
+-- +   "a_cte (x) AS ( "
+-- +     "VALUES "
+-- +       "(1), "
+-- +       "(2), "
+-- +       "(3) "
+-- +   "), "
+-- +   "_vals ([col 1], [col 2]) AS ( "
+-- +     "VALUES (1, 2) "
+-- +   ") "
+-- + "INSERT INTO [a backing table]([the key], [the value]) "
+-- +   "SELECT jsonb_array(-3079349931095810044, V.[col 1]), jsonb_object('X_colX202', V.[col 2]) "
+-- +     "FROM _vals AS V "
+-- + "ON CONFLICT ([the key]) "
+-- + "WHERE (([the value])->>'$.X_colX202') IN (SELECT x "
+-- +   "FROM a_cte)  "
+-- + "DO UPDATE "
+-- +   "SET [the key] = jsonb_set([the key],  '$[1]', ifnull((([the value])->>'$.X_colX202'), 0)) "
+-- +   "WHERE rowid IN (SELECT rowid "
+-- +     "FROM [a table]) "
+-- +   "RETURNING ((([the key])->>1), (([the value])->>'$.X_colX202'))");
+proc upsert_returning_with_backing()
+begin
+  cursor C  for
+  with a_cte(x) as (values (1), (2), (3))
+  insert into `a table`
+    values (1, 2)
+  on conflict (`col 1`)
+  where `col 2` in (select * from a_cte) do update
+    set `col 1` = `col 2`:ifnull(0)
+    returning (`col 1`, `col 2`);
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

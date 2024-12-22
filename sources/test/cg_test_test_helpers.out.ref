@@ -51,6 +51,9 @@ DECLARE PROC delete_returning_stmt () (xy INT, ix INT, iy INT);
 -- The statement ending at line XXXX
 DECLARE PROC update_returning_stmt () (xy INT, ix INT, iy INT);
 
+-- The statement ending at line XXXX
+DECLARE PROC upsert_returning_stmt () (`col 1` INT!, `col 2` INT);
+
 
 -- The statement ending at line XXXX
 PROC open_sample_proc1()
@@ -3121,6 +3124,83 @@ END;
 PROC generate_update_returning_stmt_row(LIKE update_returning_stmt)
 BEGIN
   DECLARE curs CURSOR LIKE update_returning_stmt;
+  FETCH curs FROM ARGUMENTS;
+  OUT curs;
+END;
+
+-- The statement ending at line XXXX
+[[deterministic]]
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+
+PROC test_upsert_returning_stmt_create_tables()
+BEGIN
+  [[backing_table]]
+  CREATE TABLE IF NOT EXISTS `a backing table`(
+    `the key` BLOB PRIMARY KEY,
+    `the value` BLOB
+  );
+END;
+
+[[backed_by=X_aX20backingX20table]]
+CREATE TABLE IF NOT EXISTS `a table`(
+  `col 1` INT PRIMARY KEY,
+  `col 2` INT
+);
+
+PROC test_upsert_returning_stmt_create_triggers()
+BEGIN
+  IF @rc THEN END IF;
+END;
+
+PROC test_upsert_returning_stmt_populate_tables()
+BEGIN
+  INSERT OR IGNORE INTO `a table`(`col 1`) VALUES(1) @dummy_seed(123);
+  INSERT OR IGNORE INTO `a table`(`col 1`) VALUES(2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+END;
+
+PROC test_upsert_returning_stmt_drop_tables()
+BEGIN
+  DROP TABLE IF EXISTS `a backing table`;
+END;
+
+PROC test_upsert_returning_stmt_drop_triggers()
+BEGIN
+  IF @rc THEN END IF;
+END;
+
+PROC test_upsert_returning_stmt_read_X_aX20backingX20table()
+BEGIN
+  SELECT * FROM `a backing table`;
+END;
+
+PROC test_upsert_returning_stmt_read_X_aX20table()
+BEGIN
+  SELECT * FROM `a table`;
+END;
+
+PROC open_upsert_returning_stmt()
+BEGIN
+  CREATE TEMP TABLE test_upsert_returning_stmt(LIKE upsert_returning_stmt);
+END;
+
+PROC close_upsert_returning_stmt()
+BEGIN
+  DROP TABLE test_upsert_returning_stmt;
+END;
+
+PROC insert_upsert_returning_stmt(LIKE upsert_returning_stmt)
+BEGIN
+  INSERT INTO test_upsert_returning_stmt FROM ARGUMENTS;
+END;
+
+PROC select_upsert_returning_stmt()
+BEGIN
+  SELECT * FROM test_upsert_returning_stmt;
+END;
+
+PROC generate_upsert_returning_stmt_row(LIKE upsert_returning_stmt)
+BEGIN
+  DECLARE curs CURSOR LIKE upsert_returning_stmt;
   FETCH curs FROM ARGUMENTS;
   OUT curs;
 END;

@@ -1961,3 +1961,31 @@ update jbacked set id = 7 where id = 5
 returning (id, name, age);
 
 declare C cursor for update jbacked set id  = 5 where 1;
+
+create table `a table`(
+  `col 1` int,
+  `col 2` int
+);
+
+insert into `a table`(id)
+  values (1, 2)
+on conflict (`col 1`) 
+where `col 2` = 1 do update
+  set `col 1` = `col 2`
+  returning (`col 1`, `col 2`);
+
+cursor C  for 
+insert into `a table`(id)
+  values (1, 2)
+on conflict (`col 1`) 
+where `col 2` = 1 do update
+  set `col 1` = `col 2`
+  returning (`col 1`, `col 2`);
+
+cursor C  for 
+insert into `a table`(id)
+  values (1, 2)
+on conflict (`col 1`) 
+where `col 2` = 1 do update
+  set `col 1` = `col 2`;
+

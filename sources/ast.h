@@ -280,12 +280,14 @@ cql_noexport bool_t is_row_source(ast_node *_Nullable ast);
 cql_noexport bool_t is_delete_stmt(ast_node *_Nullable ast);
 cql_noexport bool_t is_insert_stmt(ast_node *_Nullable ast);
 cql_noexport bool_t is_update_stmt(ast_node *_Nullable ast);
+cql_noexport bool_t is_upsert_stmt(ast_node *_Nullable ast);
 
 cql_noexport bool_t is_select_func(ast_node *_Nonnull ast);
 cql_noexport bool_t is_non_select_func(ast_node *_Nonnull ast);
 
 cql_noexport bool_t is_strlit(ast_node *_Nullable node);
 cql_noexport bool_t is_id(ast_node *_Nullable node);
+cql_noexport bool_t is_qname(CSTR _Nonnull subject);
 cql_noexport bool_t is_qid(ast_node *_Nullable node);
 cql_noexport bool_t is_id_or_dot(ast_node *_Nullable node);
 cql_noexport bool_t is_primitive(ast_node *_Nullable  node);
@@ -910,6 +912,7 @@ AST(update_set)
 AST(update_returning_stmt)
 AST(update_stmt)
 AST(update_where)
+AST(upsert_returning_stmt)
 AST(upsert_stmt)
 AST(upsert_update)
 AST(values)

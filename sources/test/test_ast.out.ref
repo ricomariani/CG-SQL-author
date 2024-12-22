@@ -19555,3 +19555,167 @@ The statement ending at line XXXX
           | | {int 1}
           | {update_orderby}
 
+The statement ending at line XXXX
+
+  {create_table_stmt}
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name `a table`}
+  | {col_key_list}
+    | {col_def}
+    | | {col_def_type_attrs}
+    |   | {col_def_name_type}
+    |     | {name `col 1`}
+    |     | {type_int}
+    | {col_key_list}
+      | {col_def}
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+            | {name `col 2`}
+            | {type_int}
+
+The statement ending at line XXXX
+
+  {upsert_returning_stmt}
+  | {upsert_stmt}
+  | | {insert_stmt}
+  | | | {insert_normal}
+  | | | {name_columns_values}
+  | |   | {name `a table`}
+  | |   | {columns_values}
+  | |     | {column_spec}
+  | |     | | {name_list}
+  | |     |   | {name id}
+  | |     | {select_stmt}
+  | |       | {select_core_list}
+  | |       | | {select_core}
+  | |       |   | {select_values}
+  | |       |   | {values}
+  | |       |     | {insert_list}
+  | |       |       | {int 1}
+  | |       |       | {insert_list}
+  | |       |         | {int 2}
+  | |       | {select_orderby}
+  | |         | {select_limit}
+  | |           | {select_offset}
+  | | {upsert_update}
+  |   | {conflict_target}
+  |   | | {indexed_columns}
+  |   | | | {indexed_column}
+  |   | |   | {name `col 1`}
+  |   | | {opt_where}
+  |   |   | {eq}
+  |   |     | {name `col 2`}
+  |   |     | {int 1}
+  |   | {update_stmt}
+  |     | {update_set}
+  |       | {update_list}
+  |       | | {update_entry}
+  |       |   | {name `col 1`}
+  |       |   | {name `col 2`}
+  |       | {update_from}
+  |         | {update_where}
+  |           | {update_orderby}
+  | {select_expr_list}
+    | {select_expr}
+    | | {name `col 1`}
+    | {select_expr_list}
+      | {select_expr}
+        | {name `col 2`}
+
+The statement ending at line XXXX
+
+  {declare_cursor}
+  | {name C}
+  | {upsert_returning_stmt}
+    | {upsert_stmt}
+    | | {insert_stmt}
+    | | | {insert_normal}
+    | | | {name_columns_values}
+    | |   | {name `a table`}
+    | |   | {columns_values}
+    | |     | {column_spec}
+    | |     | | {name_list}
+    | |     |   | {name id}
+    | |     | {select_stmt}
+    | |       | {select_core_list}
+    | |       | | {select_core}
+    | |       |   | {select_values}
+    | |       |   | {values}
+    | |       |     | {insert_list}
+    | |       |       | {int 1}
+    | |       |       | {insert_list}
+    | |       |         | {int 2}
+    | |       | {select_orderby}
+    | |         | {select_limit}
+    | |           | {select_offset}
+    | | {upsert_update}
+    |   | {conflict_target}
+    |   | | {indexed_columns}
+    |   | | | {indexed_column}
+    |   | |   | {name `col 1`}
+    |   | | {opt_where}
+    |   |   | {eq}
+    |   |     | {name `col 2`}
+    |   |     | {int 1}
+    |   | {update_stmt}
+    |     | {update_set}
+    |       | {update_list}
+    |       | | {update_entry}
+    |       |   | {name `col 1`}
+    |       |   | {name `col 2`}
+    |       | {update_from}
+    |         | {update_where}
+    |           | {update_orderby}
+    | {select_expr_list}
+      | {select_expr}
+      | | {name `col 1`}
+      | {select_expr_list}
+        | {select_expr}
+          | {name `col 2`}
+
+The statement ending at line XXXX
+
+  {declare_cursor}
+  | {name C}
+  | {upsert_stmt}
+    | {insert_stmt}
+    | | {insert_normal}
+    | | {name_columns_values}
+    |   | {name `a table`}
+    |   | {columns_values}
+    |     | {column_spec}
+    |     | | {name_list}
+    |     |   | {name id}
+    |     | {select_stmt}
+    |       | {select_core_list}
+    |       | | {select_core}
+    |       |   | {select_values}
+    |       |   | {values}
+    |       |     | {insert_list}
+    |       |       | {int 1}
+    |       |       | {insert_list}
+    |       |         | {int 2}
+    |       | {select_orderby}
+    |         | {select_limit}
+    |           | {select_offset}
+    | {upsert_update}
+      | {conflict_target}
+      | | {indexed_columns}
+      | | | {indexed_column}
+      | |   | {name `col 1`}
+      | | {opt_where}
+      |   | {eq}
+      |     | {name `col 2`}
+      |     | {int 1}
+      | {update_stmt}
+        | {update_set}
+          | {update_list}
+          | | {update_entry}
+          |   | {name `col 1`}
+          |   | {name `col 2`}
+          | {update_from}
+            | {update_where}
+              | {update_orderby}
+

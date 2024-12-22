@@ -4446,7 +4446,8 @@
     BEGIN
     INSERT INTO T3(id)
       VALUES (1)
-    ON CONFLICT DO UPDATE
+    ON CONFLICT
+    DO UPDATE
       SET id = 1
       WHERE id = 9;
     END
@@ -4481,7 +4482,8 @@
       SELECT id
         FROM data
         WHERE 1
-    ON CONFLICT DO UPDATE
+    ON CONFLICT
+    DO UPDATE
       SET id = 1
       WHERE id = 9;
     END

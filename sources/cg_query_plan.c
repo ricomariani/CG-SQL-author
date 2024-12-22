@@ -898,6 +898,7 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
   STMT_INIT_EXPL(select_stmt);
   STMT_INIT_EXPL(update_returning_stmt);
   STMT_INIT_EXPL(update_stmt);
+  STMT_INIT_EXPL(upsert_returning_stmt);
   STMT_INIT_EXPL(upsert_stmt);
   STMT_INIT_EXPL(with_delete_stmt);
   STMT_INIT_EXPL(with_insert_stmt);

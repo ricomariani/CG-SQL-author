@@ -354,12 +354,13 @@ BEGIN
   LET query_plan_trivial_blob := trivial_blob();
 
   DECLARE stmt TEXT!;
-  SET stmt := "INSERT INTO `table one`(id, name)\\n  VALUES (1, 'Irene')\\nON CONFLICT (id) DO UPDATE\\n  SET name = excluded.name || 'replace' || ' \\u00e2\\u0080\\u00a2 ' || '\\\\x01\\\\x02\\\\xA1\\\\x1b\\\\x00\\\\xg' || 'it''s high noon\\\\r\\\\n\\\\f\\\\b\\\\t\\\\v' || \\\"it's\\\" || name";
+  SET stmt := "INSERT INTO `table one`(id, name)\\n  VALUES (1, 'Irene')\\nON CONFLICT (id)\\nDO UPDATE\\n  SET name = excluded.name || 'replace' || ' \\u00e2\\u0080\\u00a2 ' || '\\\\x01\\\\x02\\\\xA1\\\\x1b\\\\x00\\\\xg' || 'it''s high noon\\\\r\\\\n\\\\f\\\\b\\\\t\\\\v' || \\\"it's\\\" || name";
   INSERT INTO sql_temp(id, sql) VALUES(10, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
   INSERT INTO `table one`(id, name)
     VALUES (1, 'Irene')
-  ON CONFLICT (id) DO UPDATE
+  ON CONFLICT (id)
+  DO UPDATE
     SET name = excluded.name || 'replace' || ' • ' || '\x01\x02\xA1\x1b\x00\xg' || 'it''s high noon\r\n\f\b\t\v' || "it's" || name;
   LOOP FETCH C
   BEGIN
@@ -373,7 +374,7 @@ BEGIN
   LET query_plan_trivial_blob := trivial_blob();
 
   DECLARE stmt TEXT!;
-  SET stmt := "WITH\\n  some_cte (id, name) AS (\\n    SELECT 1, 'Irene'\\n  )\\nINSERT INTO `table one`(id, name)\\n  SELECT *\\n    FROM some_cte\\n    WHERE id = 1\\nON CONFLICT (id) DO UPDATE\\n  SET name = excluded.name || 'replace' || ' \\u00e2\\u0080\\u00a2 ' || '\\\\x01\\\\x02\\\\xA1\\\\x1b\\\\x00\\\\xg' || 'it''s high noon\\\\r\\\\n\\\\f\\\\b\\\\t\\\\v' || \\\"it's\\\" || name";
+  SET stmt := "WITH\\n  some_cte (id, name) AS (\\n    SELECT 1, 'Irene'\\n  )\\nINSERT INTO `table one`(id, name)\\n  SELECT *\\n    FROM some_cte\\n    WHERE id = 1\\nON CONFLICT (id)\\nDO UPDATE\\n  SET name = excluded.name || 'replace' || ' \\u00e2\\u0080\\u00a2 ' || '\\\\x01\\\\x02\\\\xA1\\\\x1b\\\\x00\\\\xg' || 'it''s high noon\\\\r\\\\n\\\\f\\\\b\\\\t\\\\v' || \\\"it's\\\" || name";
   INSERT INTO sql_temp(id, sql) VALUES(11, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
   WITH
@@ -384,7 +385,8 @@ BEGIN
     SELECT *
       FROM some_cte
       WHERE id = 1
-  ON CONFLICT (id) DO UPDATE
+  ON CONFLICT (id)
+  DO UPDATE
     SET name = excluded.name || 'replace' || ' • ' || '\x01\x02\xA1\x1b\x00\xg' || 'it''s high noon\r\n\f\b\t\v' || "it's" || name;
   LOOP FETCH C
   BEGIN

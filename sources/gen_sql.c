@@ -110,6 +110,15 @@ cql_noexport void gen_printf(const char *format, ...) {
  CHARBUF_CLOSE(tmp);
 }
 
+void bprint_maybe_qname(charbuf *output, CSTR subject) {
+  if (is_qname(subject)) {
+    cg_decode_qstr(output, subject);
+  }
+  else {
+    bprintf(output, "%s", subject);
+  }
+}
+
 static void gen_literal(CSTR literal) {
   for (int32_t i = 0; i < pending_indent; i++) bputc(gen_output, ' ');
   pending_indent = 0;
@@ -206,6 +215,13 @@ static void gen_name(ast_node *ast) {
 
   EXTRACT_STRING(name, ast);
   gen_name_ex(name, is_qid(ast));
+}
+
+cql_noexport void gen_name_for_msg(ast_node *name_ast, charbuf *output) {
+  charbuf *saved = gen_output;
+  gen_output = output;
+  gen_name(name_ast);
+  gen_output = saved;
 }
 
 static void gen_sptr_name(sem_struct *sptr, uint32_t i) {
@@ -4552,6 +4568,7 @@ static void gen_declare_cursor(ast_node *ast) {
       is_ast_call_stmt(source) ||
       is_insert_stmt(source) ||
       is_update_stmt(source) ||
+      is_upsert_stmt(source) ||
       is_delete_stmt(source)) {
     // The two statement cases are unified
     gen_printf("\n");
@@ -5293,11 +5310,11 @@ static void gen_conflict_target(ast_node *ast) {
   EXTRACT(indexed_columns, ast->left);
   EXTRACT(opt_where, ast->right);
 
-  gen_printf("\nON CONFLICT ");
+  gen_printf("\nON CONFLICT");
   if (indexed_columns) {
-    gen_printf("(");
+    gen_printf(" (");
     gen_indexed_columns(indexed_columns);
-    gen_printf(") ");
+    gen_printf(")");
   }
   if (opt_where) {
     gen_printf("\n");
@@ -5312,7 +5329,7 @@ static void gen_upsert_update(ast_node *ast) {
   EXTRACT(update_stmt, ast->right);
 
   gen_conflict_target(conflict_target);
-  gen_printf("DO ");
+  gen_printf("\nDO ");
   if (update_stmt) {
     gen_update_stmt(update_stmt);
   }
@@ -5339,6 +5356,21 @@ static void gen_with_upsert_stmt(ast_node *ast) {
   gen_with_prefix(with_prefix);
   gen_upsert_stmt(upsert_stmt);
 }
+
+static void gen_upsert_returning_stmt(ast_node *ast) {
+  Contract(is_ast_upsert_returning_stmt(ast));
+  EXTRACT_ANY_NOTNULL(upsert_stmt, ast->left);
+  if (is_ast_with_upsert_stmt(upsert_stmt)) {
+    gen_with_upsert_stmt(upsert_stmt);
+  }
+  else {
+    gen_upsert_stmt(upsert_stmt);
+  }
+  gen_printf("\n  RETURNING (");
+  gen_select_expr_list(ast->right);
+  gen_printf(")");
+}
+
 
 static void gen_keep_table_name_in_aliases_stmt(ast_node *ast) {
   Contract(is_ast_keep_table_name_in_aliases_stmt(ast));
@@ -5661,6 +5693,7 @@ cql_noexport void gen_init() {
   STMT_INIT(update_cursor_stmt);
   STMT_INIT(update_returning_stmt);
   STMT_INIT(update_stmt);
+  STMT_INIT(upsert_returning_stmt);
   STMT_INIT(upsert_stmt);
   STMT_INIT(upsert_update);
   STMT_INIT(while_stmt);

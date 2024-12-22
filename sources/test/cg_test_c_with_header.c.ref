@@ -6455,7 +6455,8 @@ BEGIN
     SELECT id
       FROM bar
       WHERE 1
-  ON CONFLICT (id) DO UPDATE
+  ON CONFLICT (id)
+  DO UPDATE
     SET id = 10
     WHERE id <> 10;
 END;
@@ -6475,7 +6476,8 @@ CQL_WARN_UNUSED cql_code upsert_do_something(sqlite3 *_Nonnull _db_) {
       "SELECT id "
         "FROM bar "
         "WHERE 1 "
-    "ON CONFLICT (id) DO UPDATE "
+    "ON CONFLICT (id) "
+    "DO UPDATE "
       "SET id = 10 "
       "WHERE id <> 10");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -6504,7 +6506,8 @@ BEGIN
     SELECT id
       FROM names
       WHERE 1
-  ON CONFLICT (id) DO UPDATE
+  ON CONFLICT (id)
+  DO UPDATE
     SET id = 10
     WHERE id <> 10;
 END;
@@ -6532,7 +6535,8 @@ CQL_WARN_UNUSED cql_code with_upsert_form(sqlite3 *_Nonnull _db_) {
       "SELECT id "
         "FROM names "
         "WHERE 1 "
-    "ON CONFLICT (id) DO UPDATE "
+    "ON CONFLICT (id) "
+    "DO UPDATE "
       "SET id = 10 "
       "WHERE id <> 10");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -6551,7 +6555,8 @@ PROC upsert_do_nothing (id_ INT!)
 BEGIN
   INSERT INTO foo(id)
     VALUES (id_)
-  ON CONFLICT DO NOTHING;
+  ON CONFLICT
+  DO NOTHING;
 END;
 */
 
@@ -6568,7 +6573,8 @@ CQL_WARN_UNUSED cql_code upsert_do_nothing(sqlite3 *_Nonnull _db_, cql_int32 id_
   _rc_ = cql_prepare(_db_, &_temp_stmt,
     "INSERT INTO foo(id) "
       "VALUES (?) "
-    "ON CONFLICT DO NOTHING");
+    "ON CONFLICT "
+    "DO NOTHING");
   cql_multibind(&_rc_, _db_, &_temp_stmt, 1,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, id_);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -18519,6 +18525,78 @@ cql_cleanup:
   return _rc_;
 }
 #undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+PROC upsert_returning_with_backing ()
+BEGIN
+  CURSOR C FOR
+    WITH
+      a_cte (x) AS (
+        VALUES
+          (1),
+          (2),
+          (3)
+      ),
+      _vals (`col 1`, `col 2`) AS (
+        VALUES (1, 2)
+      )
+    INSERT INTO `a backing table`(`the key`, `the value`)
+      SELECT cql_blob_create(`a table`, V.`col 1`, `a table`.`col 1`), cql_blob_create(`a table`, V.`col 2`, `a table`.`col 2`)
+        FROM _vals AS V
+    ON CONFLICT (`the key`)
+    WHERE cql_blob_get(`the value`, `a table`.`col 2`) IN (SELECT *
+      FROM a_cte) 
+    DO UPDATE
+      SET `the key` = cql_blob_update(`the key`, ifnull(cql_blob_get(`the value`, `a table`.`col 2`), 0), `a table`.`col 1`)
+      WHERE rowid IN (SELECT rowid
+        FROM `a table`)
+      RETURNING (cql_blob_get(`the key`, `a table`.`col 1`), cql_blob_get(`the value`, `a table`.`col 2`));
+END;
+*/
+
+#define _PROC_ "upsert_returning_with_backing"
+/*
+export:
+DECLARE PROC upsert_returning_with_backing () USING TRANSACTION;
+*/
+CQL_WARN_UNUSED cql_code upsert_returning_with_backing(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
+  sqlite3_stmt *C_stmt = NULL;
+
+  _rc_ = cql_prepare(_db_, &C_stmt,
+    "WITH "
+      "a_cte (x) AS ( "
+        "VALUES "
+          "(1), "
+          "(2), "
+          "(3) "
+      "), "
+      "_vals ([col 1], [col 2]) AS ( "
+        "VALUES (1, 2) "
+      ") "
+    "INSERT INTO [a backing table]([the key], [the value]) "
+      "SELECT jsonb_array(-3079349931095810044, V.[col 1]), jsonb_object('X_colX202', V.[col 2]) "
+        "FROM _vals AS V "
+    "ON CONFLICT ([the key]) "
+    "WHERE (([the value])->>'$.X_colX202') IN (SELECT x "
+      "FROM a_cte)  "
+    "DO UPDATE "
+      "SET [the key] = jsonb_set([the key],  '$[1]', ifnull((([the value])->>'$.X_colX202'), 0)) "
+      "WHERE rowid IN (SELECT rowid "
+        "FROM [a table]) "
+      "RETURNING ((([the key])->>1), (([the value])->>'$.X_colX202'))");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_error_report();
+  cql_finalize_stmt(&C_stmt);
+  return _rc_;
+}
+#undef _PROC_
 cql_int32 this_is_the_end = 0;
 
 // The statement ending at line XXXX
@@ -20425,13 +20503,15 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
 
   /*
   INSERT INTO bar(id) VALUES (1) @DUMMY_SEED(1338)
-  ON CONFLICT (id) DO UPDATE
+  ON CONFLICT (id)
+  DO UPDATE
     SET id = 10;
   */
   _seed_ = 1338;
   _rc_ = cql_exec(_db_,
     "INSERT INTO bar(id) VALUES (1) "
-    "ON CONFLICT (id) DO UPDATE "
+    "ON CONFLICT (id) "
+    "DO UPDATE "
       "SET id = 10");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
 

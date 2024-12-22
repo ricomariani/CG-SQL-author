@@ -157,6 +157,10 @@ cql_noexport bool_t is_qid(ast_node *node) {
   return is_ast_str(node) && ((str_ast_node *)node)->str_type == STRING_TYPE_QUOTED_ID;
 }
 
+cql_noexport bool_t is_qname(CSTR subject) {
+  return subject[0] == 'X' && subject[1] == '_' && strchr(subject+2, 'X');
+}
+
 // Any string literal (they are alway normalized to SQL format, 'xyz')
 cql_noexport bool_t is_strlit(ast_node *node) {
   return is_ast_str(node) && ((str_ast_node *)node)->value[0] == '\'';
@@ -205,6 +209,7 @@ cql_noexport bool_t is_row_source(ast_node *ast) {
   return is_ast_select_stmt(ast) ||
          is_ast_explain_stmt(ast) ||
          is_ast_select_nothing_stmt(ast) ||
+         is_ast_upsert_returning_stmt(ast) ||
          is_ast_update_returning_stmt(ast) ||
          is_ast_insert_returning_stmt(ast) ||
          is_ast_delete_returning_stmt(ast) ||
@@ -223,6 +228,13 @@ cql_noexport bool_t is_update_stmt(ast_node *ast) {
   return is_ast_update_stmt(ast) ||
          is_ast_update_returning_stmt(ast) ||
          is_ast_with_update_stmt(ast);
+}
+
+// Any of the update forms
+cql_noexport bool_t is_upsert_stmt(ast_node *ast) {
+  return is_ast_upsert_stmt(ast) ||
+         is_ast_upsert_returning_stmt(ast) ||
+         is_ast_with_upsert_stmt(ast);
 }
 
 // Any of the insert forms

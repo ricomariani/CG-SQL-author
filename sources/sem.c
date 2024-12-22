@@ -302,10 +302,20 @@ static void sem_any_select(ast_node *ast);
 static void sem_insert_returning(ast_node *ast);
 static void sem_delete_returning(ast_node *ast);
 static void sem_update_returning(ast_node *ast);
+static void sem_upsert_returning(ast_node *ast);
 
 // create a new id node either qid or normal based on the bool
 cql_noexport ast_node *new_str_or_qstr(CSTR name, sem_t sem_type) {
   if (sem_type & SEM_TYPE_QID) {
+    return new_ast_qstr_escaped(name);
+  }
+  else {
+    return new_ast_str(name);
+  }
+}
+
+cql_noexport ast_node *new_maybe_qstr(CSTR name) {
+  if (is_qname(name)) {
     return new_ast_qstr_escaped(name);
   }
   else {
@@ -2531,31 +2541,35 @@ static void get_sem_flags(sem_t sem_type, charbuf *out) {
 
 // For debug/test output, prettyprint a structure type
 static void print_sem_struct(sem_struct *sptr) {
-  cql_output("%s: { ", sptr->struct_name);
+  CHARBUF_OPEN(temp);
+  bprint_maybe_qname(&temp, sptr->struct_name);
+  cql_output("%s: { ", temp.ptr);
+
   for (uint32_t i = 0; i < sptr->count; i++) {
+    bclear(&temp);
+
     if (i != 0) {
-      cql_output(", ");
-    }
-    CHARBUF_OPEN(temp);
-    get_sem_core(sptr->semtypes[i], &temp);
-    if (sptr->kinds[i]) {
-     bprintf(&temp, "<%s>", sptr->kinds[i]);
-    }
-    get_sem_flags(sptr->semtypes[i], &temp);
-    if (sptr->semtypes[i] & SEM_TYPE_QID) {
-      CHARBUF_OPEN(tmp);
-      cg_decode_qstr(&tmp, sptr->names[i]);
-      cql_output("%s", tmp.ptr);
-      CHARBUF_CLOSE(tmp);
-    }
-    else {
-      cql_output("%s", sptr->names[i]);
+      bprintf(&temp, ", ");
     }
 
-    cql_output(": %s", temp.ptr);
-    CHARBUF_CLOSE(temp);
+    if (sptr->semtypes[i] & SEM_TYPE_QID) {
+      cg_decode_qstr(&temp, sptr->names[i]);
+    }
+    else {
+      bprintf(&temp, "%s", sptr->names[i]);
+    }
+    bprintf(&temp, ": ");
+
+    get_sem_core(sptr->semtypes[i], &temp);
+    if (sptr->kinds[i]) {
+      bprintf(&temp, "<%s>", sptr->kinds[i]);
+    }
+    get_sem_flags(sptr->semtypes[i], &temp);
+
+    cql_output("%s", temp.ptr);
   }
   cql_output(" }");
+  CHARBUF_CLOSE(temp);
 }
 
 // For debug/test output, prettyprint a join type
@@ -2575,7 +2589,12 @@ static void print_sem_join(sem_join *jptr) {
     if (i != 0) {
       cql_output(", ");
     }
-    cql_output("%s: %s", jptr->names[i], jptr->tables[i]->struct_name);
+    CHARBUF_OPEN(temp);
+    bprint_maybe_qname(&temp, jptr->names[i]);
+    bprintf(&temp, ": ");
+    bprint_maybe_qname(&temp, jptr->tables[i]->struct_name);
+    cql_output("%s", temp.ptr);
+    CHARBUF_CLOSE(temp);
   }
   cql_output(" }");
 }
@@ -2593,7 +2612,11 @@ cql_noexport void print_sem_type(sem_node *sem) {
   }
 
   if (sem->name) {
-    cql_output("%s: ", sem->name);
+    CHARBUF_OPEN(temp);
+    bprint_maybe_qname(&temp, sem->name);
+    bprintf(&temp, ": ");
+    cql_output("%s", temp.ptr);
+    CHARBUF_CLOSE(temp);
   }
 
   sem_t sem_type = sem->sem_type;
@@ -2625,8 +2648,12 @@ cql_noexport void print_sem_type(sem_node *sem) {
   CHARBUF_OPEN(temp);
   get_sem_flags(sem_type, &temp);
   cql_output("%s", temp.ptr);
-  CHARBUF_CLOSE(temp);
 
+  if (sem->backed_table) {
+    bclear(&temp);
+    bprint_maybe_qname(&temp, sem->backed_table);
+    cql_output(" backed_table(%s)", temp.ptr);
+  }
   if (sem->create_version > 0) {
     cql_output(" @create(%d)", sem->create_version);
   }
@@ -2641,6 +2668,7 @@ cql_noexport void print_sem_type(sem_node *sem) {
   if (sem->recreate_group_name) {
     cql_output("(%s)", sem->recreate_group_name);
   }
+  CHARBUF_CLOSE(temp);
 }
 
 // The standard error reporter, the ast node is used to get the line number the
@@ -2653,10 +2681,9 @@ cql_noexport void report_error(ast_node *ast, CSTR msg, CSTR subject) {
 
   if (subject) {
 
-    if (subject[0] == 'X' && subject[1] == '_' && strchr(subject+2, 'X')) {
-       // this is almost certainly a QID, decode it
+    if (is_qname(subject)) {
        CHARBUF_OPEN(tmp);
-       cg_decode_qstr(&tmp, subject);
+       bprint_maybe_qname(&tmp, subject);
        subject = Strdup(tmp.ptr);
        CHARBUF_CLOSE(tmp);
     }
@@ -7100,6 +7127,9 @@ static void sem_resolve_id_with_type(ast_node *ast, CSTR name, CSTR scope, sem_t
   }
 
   if (scope) {
+    // this name is what we can use as the variable name in code gen
+    // so we don't escape it for qnames or anything, it has to be the
+    // unescaped names, e.g. C.XaX20b for C.`a b`
     name = dup_printf("%s.%s", scope, name);
   }
 
@@ -12939,6 +12969,9 @@ cql_noexport void sem_any_row_source(ast_node *ast) {
   else if (is_ast_delete_returning_stmt(ast)) {
     sem_delete_returning(ast);
   }
+  else if (is_ast_upsert_returning_stmt(ast)) {
+    sem_upsert_returning(ast);
+  }
   else {
     Contract(is_ast_update_returning_stmt(ast));
     sem_update_returning(ast);
@@ -16470,6 +16503,7 @@ static void sem_create_table_stmt(ast_node *ast) {
       if (is_backed(ast->sem->sem_type)) {
         clone_backing_table_functions(ast, name);
         rewrite_shared_fragment_from_backed_table(ast);
+        ast->sem->jptr->tables[0]->is_backed = true;
       }
     }
   }
@@ -17428,16 +17462,6 @@ static void sem_returning_clause(
 
   sem_join join = *table_ast->sem->jptr;
 
-  // we record this so we can find it on the join when we do a name lookup
-  // this will be the full scope for the lookup
-  if (is_backed(table_ast->sem->sem_type)) {
-    sem_struct *sptr_new  = _ast_pool_new(sem_struct);
-    *sptr_new = *join.tables[0]; // clone existing value (shallow copy)
-    join.tables = _ast_pool_new(sem_struct *);
-    join.tables[0] = sptr_new;
-    sptr_new->is_backed = true;
-  }
-
   // change * and T.* to COLUMNS(T)
   rewrite_star_and_table_star_as_columns_calc(select_expr_list, table_name);
 
@@ -17506,7 +17530,12 @@ static void sem_delete_returning_stmt(ast_node *ast) {
 // To do this we temporarily hide the variables head.  We verify that the types
 // are compatible and we also handle the special case of trying to set a
 // not-nullable type to null.
-static void sem_update_entry(ast_node *ast, symtab *update_columns, sem_join *from_jptr) {
+static void sem_update_entry(
+  ast_node *ast,
+  symtab *update_columns,
+  sem_join *from_jptr,
+  ast_node *table_name_ast)
+{
   Contract(is_ast_update_entry(ast));
   Contract(current_joinscope);
 
@@ -17567,6 +17596,12 @@ static void sem_update_entry(ast_node *ast, symtab *update_columns, sem_join *fr
   Invariant(!is_object(sem_type_right));
 
   if (!sem_verify_assignment(right, sem_type_left, sem_type_right, left->sem->name)) {
+    CHARBUF_OPEN(tmp);
+    bprintf(&tmp, "additional info: in update table '");
+    gen_name_for_msg(table_name_ast, &tmp);
+    bprintf(&tmp, "' the column with the problem is");
+    report_error(right, Strdup(tmp.ptr), left->sem->name);
+    CHARBUF_CLOSE(tmp);
     record_error(ast);
     return;
   }
@@ -17582,7 +17617,7 @@ static void sem_update_entry(ast_node *ast, symtab *update_columns, sem_join *fr
 
 // This is the list of updates we need to perform, we walk the list here and handle
 // each one, reporting errors as we go.
-static void sem_update_list(ast_node *head, sem_join *from_jptr) {
+static void sem_update_list(ast_node *head, sem_join *from_jptr, ast_node *table_name_ast) {
   Contract(is_ast_update_list(head));
 
   symtab *update_columns = symtab_new();
@@ -17591,7 +17626,7 @@ static void sem_update_list(ast_node *head, sem_join *from_jptr) {
     Contract(is_ast_update_list(ast));
     EXTRACT_NOTNULL(update_entry, ast->left);
 
-    sem_update_entry(update_entry, update_columns, from_jptr);
+    sem_update_entry(update_entry, update_columns, from_jptr, table_name_ast);
     if (is_error(update_entry)) {
       record_error(head);
       symtab_delete(update_columns);
@@ -17610,7 +17645,7 @@ static void sem_update_list(ast_node *head, sem_join *from_jptr) {
 // with those same helper methods.
 static void sem_update_stmt(ast_node *ast) {
   Contract(is_ast_update_stmt(ast));
-  EXTRACT_ANY(name_ast, ast->left);
+  EXTRACT_ANY(table_name_ast, ast->left);
   EXTRACT_NOTNULL(update_set, ast->right);
   EXTRACT_ANY_NOTNULL(update_list, update_set->left);
   EXTRACT_NOTNULL(update_from, update_set->right);
@@ -17636,28 +17671,28 @@ static void sem_update_stmt(ast_node *ast) {
 
   // update [table] SET [update_list]
 
-  if (name_ast) {
-    EXTRACT_STRING(name, name_ast);
+  if (table_name_ast) {
+    EXTRACT_STRING(name, table_name_ast);
 
     table_ast = find_usable_and_not_deleted_table_or_view(
       name,
-      name_ast,
+      table_name_ast,
       "CQL0154: table in update statement does not exist");
     if (!table_ast) {
       goto cleanup;
     }
 
-    name_ast->sem = table_ast->sem;
+    table_name_ast->sem = table_ast->sem;
 
     if (!is_ast_create_table_stmt(table_ast)) {
-      report_error(name_ast, "CQL0155: cannot update a view", name);
+      report_error(table_name_ast, "CQL0155: cannot update a view", name);
       goto cleanup;
     }
 
     // This means we're in upsert statement subtree therefore the table name
     // should not be included in the update statement
     if (in_upsert) {
-      report_error(name_ast, "CQL0281: upsert statement does not include table name in the update statement", name);
+      report_error(table_name_ast, "CQL0281: upsert statement does not include table name in the update statement", name);
       goto cleanup;
     }
   }
@@ -17675,20 +17710,10 @@ static void sem_update_stmt(ast_node *ast) {
   ast->sem = table_ast->sem;
 
   EXTRACT_NOTNULL(create_table_name_flags, table_ast->left);
-  EXTRACT_STRING(table_name, create_table_name_flags->right);
+  table_name_ast = create_table_name_flags->right;
+  EXTRACT_STRING(table_name, table_name_ast);
 
   sem_join join = *table_ast->sem->jptr;
-
-  // we record this so we can find it on the join when we do a name lookup
-  // note this jptr is especially handy because when we start an insert/update operation
-  // we begin with a pushed join of just the original table
-  if (is_backed(table_ast->sem->sem_type)) {
-    sem_struct *sptr_new  = _ast_pool_new(sem_struct);
-    *sptr_new = *join.tables[0]; // clone existing value (shallow copy)
-    join.tables = _ast_pool_new(sem_struct *);
-    join.tables[0] = sptr_new;
-    sptr_new->is_backed = true;
-  }
 
   PUSH_JOIN(update_scope, &join);
   join_pushed = 1;
@@ -17725,7 +17750,7 @@ static void sem_update_stmt(ast_node *ast) {
   // and not in the joins.  So set name = 'x'  is never ambiguous even
   // if the from clause has joins with tables with a name column.  But
   // set name = name || 'x' *can* be ambiguous
-  sem_update_list(update_list, from_jptr);
+  sem_update_list(update_list, from_jptr, table_name_ast);
   if (is_error(update_list)) {
     goto cleanup;
   }
@@ -18555,10 +18580,12 @@ static void sem_upsert_stmt(ast_node *stmt) {
   }
 
   if (opt_where) {
+    sem_join join = *current_upsert_table_ast->sem->jptr;
+
     // The opt_where node is in the upsert context therefore we need to make sure
     // we register a join context for search
     PUSH_JOIN_BLOCK()
-    PUSH_JOIN(upsert_scope, current_upsert_table_ast->sem->jptr)
+    PUSH_JOIN(upsert_scope, &join);
     sem_opt_where(opt_where);
     POP_JOIN()
     POP_JOIN()
@@ -18597,6 +18624,48 @@ cleanup:
 error:
   record_error(stmt);
   goto cleanup;
+}
+
+static void sem_upsert_returning(ast_node *ast) {
+  Contract(is_ast_upsert_returning_stmt(ast));
+  EXTRACT_ANY_NOTNULL(upsert_stmt, ast->left);
+  EXTRACT_NOTNULL(select_expr_list, ast->right);
+
+  ast_node *upsert_stmt_plain = upsert_stmt;
+
+  if (is_ast_with_upsert_stmt(upsert_stmt)) {
+    upsert_stmt_plain = upsert_stmt->right;
+  }
+
+  Invariant(is_ast_upsert_stmt(upsert_stmt_plain));
+  EXTRACT_NOTNULL(insert_stmt, upsert_stmt_plain->left);
+  EXTRACT_NOTNULL(name_columns_values, insert_stmt->right);
+  EXTRACT_STRING(table_name, name_columns_values->left)
+
+  if (is_ast_with_upsert_stmt(upsert_stmt)) {
+    sem_with_upsert_stmt(upsert_stmt);
+  }
+  else {
+    sem_upsert_stmt(upsert_stmt);
+  }
+
+  if (is_error(upsert_stmt)) {
+    record_error(ast);
+    return;
+  }
+
+  sem_returning_clause(select_expr_list, table_name);
+  if (is_error(select_expr_list)) {
+     record_error(ast);
+     return;
+  }
+
+  ast->sem = select_expr_list->sem;
+}
+
+static void sem_upsert_returning_stmt(ast_node *ast) {
+  sem_upsert_returning(ast);
+  sem_update_proc_type_for_select(ast);
 }
 
 // Top level WITH-INSERT form -- create the CTE context and then process
@@ -26699,6 +26768,7 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(update_cursor_stmt);
   STMT_INIT(update_returning_stmt);
   STMT_INIT(update_stmt);
+  STMT_INIT(upsert_returning_stmt);
   STMT_INIT(upsert_stmt);
   STMT_INIT(with_delete_stmt);
   STMT_INIT(with_insert_stmt);

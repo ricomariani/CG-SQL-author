@@ -8703,6 +8703,7 @@ cql_noexport void cg_c_init(void) {
   STD_DML_STMT_INIT(with_update_stmt);
 
   // these prepare and then execute
+  STD_PREP_STMT_INIT(upsert_returning_stmt);
   STD_PREP_STMT_INIT(update_returning_stmt);
   STD_PREP_STMT_INIT(delete_returning_stmt);
   STD_PREP_STMT_INIT(explain_stmt);

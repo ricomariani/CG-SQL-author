@@ -2654,40 +2654,44 @@ update foo set id = 1 order by not 'x' limit 2;
 update foo set non_existent_column = 1;
 
 -- TEST: update with type mismatch (number <- string)
+-- + error: % incompatible types in expression 'id'
+-- + error: % additional info: in update table 'foo' the column with the problem is 'id'
 -- + {update_stmt}: err
 -- + {update_list}: err
 -- + {update_entry}: err
 -- + {name id}: id: integer notnull
 -- + {strlit 'x'}: err
--- * error: % incompatible types in expression 'id'
--- +1 error:
+-- +2 error:
 update foo set id = 'x';
 
 -- TEST: update with loss of precision
+-- + error: % lossy conversion from type 'LONG' in 1L
+-- + error: % additional info: in update table 'foo' the column with the problem is 'id'
 -- + {update_stmt}: err
 -- + {update_list}: err
 -- + {update_entry}: err
--- * error: % lossy conversion from type 'LONG' in 1L
--- +1 error:
+-- +2 error:
 update foo set id = 1L where id = 2;
 
 -- TEST: update with string type mismatch (string <- number)
+-- + error: % incompatible types in expression 'name'
+-- + error: % additional info: in update table 'bar' the column with the problem is 'name'
 -- + {update_stmt}: err
 -- + {update_list}: err
 -- + {update_entry}: err
 -- + {name name}: name: text
 -- + {int 2}: err
--- * error: % incompatible types in expression 'name'
--- +1 error:
+-- +2 error:
 update bar set name = 2;
 
 -- TEST: update not null column to constant null
+-- + error: % cannot assign/copy possibly null expression to not null target 'id'
+-- + error: % additional info: in update table 'bar' the column with the problem is 'id'
 -- + {update_stmt}: err
 -- + {update_list}: err
 -- + {name id}: id: integer notnull
 -- + {null}: null
--- * error: % cannot assign/copy possibly null expression to not null target 'id'
--- +1 error:
+-- +2 error:
 update bar set id = null;
 
 -- TEST: try to use a variable in an update
@@ -9507,13 +9511,14 @@ begin
 end;
 
 -- TEST: try to insert sensitive data to a non-sensitive column
--- * error: % cannot assign/copy sensitive expression to non-sensitive target 'id'
+-- + error: % cannot assign/copy sensitive expression to non-sensitive target 'id'
 -- +1 error:
 insert into foo(id) values (coalesce(_sens,0));
 
 -- TEST: try to update to sensitive
--- * error: % cannot assign/copy sensitive expression to non-sensitive target 'id'
--- +1 error:
+-- + error: % cannot assign/copy sensitive expression to non-sensitive target 'id'
+-- + error: % additional info: in update table 'bar' the column with the problem is 'id'
+-- +2 error:
 update bar set id = coalesce(_sens,0) where name = 'x';
 
 -- Do various validations on this func in the following tests
@@ -21875,7 +21880,8 @@ insert into bt_default(pk1,x) values (1, 2);
 -- + INSERT INTO simple_backing_table(k, v)
 -- + SELECT cql_blob_create(basic_table, V.id, basic_table.id), cql_blob_create(basic_table, V.name, basic_table.name)
 -- + FROM _vals AS V
--- + ON CONFLICT (k) DO NOTHING;
+-- + ON CONFLICT (k)
+-- + DO NOTHING;
 -- + {with_upsert_stmt}: ok
 -- - error:
 INSERT INTO basic_table(id, name) values (1, 'foo')
@@ -21886,7 +21892,8 @@ INSERT INTO basic_table(id, name) values (1, 'foo')
 -- + INSERT INTO simple_backing_table(k, v)
 -- + SELECT cql_blob_create(basic_table, V.id, basic_table.id), cql_blob_create(basic_table, V.name, basic_table.name)
 -- +  FROM _vals AS V
--- + ON CONFLICT (k) DO UPDATE
+-- + ON CONFLICT (k)
+-- + DO UPDATE
 -- + SET k = cql_blob_update(k, cql_blob_get(k, basic_table.id) + 1, basic_table.id)
 -- + {shared_cte}: _basic_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> } dml_proc
 -- + {update_stmt}: simple_backing_table: { k: blob notnull primary_key, v: blob notnull } backing
@@ -21917,7 +21924,8 @@ INSERT INTO bogus_table_not_present VALUES (1,2) on conflict(id) do nothing;
 -- + INSERT INTO simple_backing_table(k, v)
 -- + SELECT cql_blob_create(basic_table, V.id, basic_table.id), cql_blob_create(basic_table, V.name, basic_table.name)
 -- + FROM _vals AS V
--- + ON CONFLICT (k) DO UPDATE
+-- + ON CONFLICT (k)
+-- + DO UPDATE
 -- + SET k = cql_blob_update(k, cql_blob_get(k, basic_table.id) + 1, basic_table.id)
 -- + WHERE rowid IN (SELECT rowid
 -- + FROM basic_table
@@ -23495,14 +23503,15 @@ begin
 end;
 
 -- TEST: update from_shape sugar error handling, type mismatch
+-- + error: % incompatible types in expression 'name'
+-- + error: % additional info: in update table 'update_test_1' the column with the problem is 'name'
 -- + {update_stmt}: err
 -- + {update_list}: err
 -- + {update_entry}: err
 -- + {dot}: err
 -- + {name ARGUMENTS}
 -- + {name id}
--- * error: % incompatible types in expression 'name'
--- +1 error:
+-- +2 error:
 proc test_update_from_shape_errors0(like update_test_1)
 begin
   -- Swapped ordering of columns lead to incompatible types.
@@ -24151,10 +24160,10 @@ declare select func select_func_with_out_arg2(out out_param int!) int;
 -- + CREATE TABLE `xyz``abc`(
 -- + x INT!,
 -- + `a b` INT!
--- + {create_table_stmt}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
+-- + {create_table_stmt}: `xyz``abc`: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
 -- + {name `xyz``abc`}
 -- + {col_def}: x: integer notnull
--- + {col_def}: X_aX20b: integer notnull unique_key qid
+-- + {col_def}: `a b`: integer notnull unique_key qid
 -- + {name `a b`}
 -- - error:
 create table `xyz``abc`
@@ -24191,7 +24200,7 @@ end;
 -- + CALL printf("%d %d", D.x, D.`a b`);
 -- + {declare_cursor}: D: select: { x: integer notnull, `a b`: integer notnull qid } variable dml_proc
 -- + {select_stmt}: select: { x: integer notnull, `a b`: integer notnull qid }
--- + {table_star}: X_xyzX60abc: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull qid }
+-- + {table_star}: `xyz``abc`: `xyz``abc`: { x: integer notnull, `a b`: integer notnull qid }
 -- - error:
 proc qid_t2()
 begin
@@ -24207,11 +24216,11 @@ end;
 -- + LET x := ( SELECT `xyz``abc`.`a b`
 -- + FROM `xyz``abc` );
 -- + {let_stmt}: x: integer notnull variable
--- + {select_stmt}: X_aX20b: integer notnull qid
--- + {dot}: X_aX20b: integer notnull qid
+-- + {select_stmt}: `a b`: integer notnull qid
+-- + {dot}: `a b`: integer notnull qid
 -- + {name `xyz``abc`}
 -- + {name `a b`}
--- + {select_from_etc}: TABLE { X_xyzX60abc: X_xyzX60abc }
+-- + {select_from_etc}: TABLE { `xyz``abc`: `xyz``abc` }
 -- - error:
 proc qid_t3()
 begin
@@ -24226,7 +24235,7 @@ end;
 -- + CALL printf("%d %d\n", R.x, R.`a b`);
 -- + FETCH R(x, `a b`) FROM VALUES (3, 4);
 -- + {declare_cursor_like_name}: Q: select: { x: integer notnull } variable shape_storage value_cursor
--- + {declare_cursor_like_name}: R: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } variable shape_storage value_cursor
+-- + {declare_cursor_like_name}: R: `xyz``abc`: { x: integer notnull, `a b`: integer notnull unique_key qid } variable shape_storage value_cursor
 proc qid_t4()
 begin
   cursor Q like `xyz``abc`(-`a b`);
@@ -24254,7 +24263,7 @@ create view `view` as select 1 x;
 -- + CREATE INDEX `abc def` ON `xyz``abc` (`a b` ASC);
 -- + {name `abc def`}
 -- + {name `xyz``abc`}
--- + {name `a b`}: X_aX20b: integer notnull qid
+-- + {name `a b`}: `a b`: integer notnull qid
 -- - error:
 create index `abc def` on `xyz``abc` (`a b` asc);
 
@@ -24262,7 +24271,7 @@ create index `abc def` on `xyz``abc` (`a b` asc);
 -- verify that echoing is re-emitting the escaped text
 -- + x INT! REFERENCES `xyz``abc` (`a b`)
 -- + {create_table_stmt}: qid_ref_1: { x: integer notnull foreign_key }
--- + {name `a b`}: X_aX20b: integer notnull qid
+-- + {name `a b`}: `a b`: integer notnull qid
 -- - error:
 create table qid_ref_1 (
   x int! references `xyz``abc`(`a b`)
@@ -24272,8 +24281,8 @@ create table qid_ref_1 (
 -- verify that echoing is re-emitting the escaped text
 -- + CONSTRAINT `c1` FOREIGN KEY (`uu uu`) REFERENCES `xyz``abc` (`a b`)
 -- +  {name `c1`}
--- + {name `uu uu`}: X_uuX20uu: integer notnull qid
--- + {name `a b`}: X_aX20b: integer notnull qid
+-- + {name `uu uu`}: `uu uu`: integer notnull qid
+-- + {name `a b`}: `a b`: integer notnull qid
 -- - error:
 create table qid_ref_2 (
   `uu uu` int!,
@@ -24285,7 +24294,7 @@ create table qid_ref_2 (
 -- + CONSTRAINT `c1` PRIMARY KEY (`uu uu`)
 -- + {create_table_stmt}: qid_ref_3: { `uu uu`: integer notnull partial_pk qid }
 -- + {name `c1`}
--- + {name `uu uu`}: X_uuX20uu: integer notnull qid
+-- + {name `uu uu`}: `uu uu`: integer notnull qid
 -- - error:
 create table qid_ref_3 (
   `uu uu` int!,
@@ -24297,7 +24306,7 @@ create table qid_ref_3 (
 -- + CONSTRAINT `c1` UNIQUE (`uu uu`)
 -- + {create_table_stmt}: qid_ref_4: { `uu uu`: integer notnull qid }
 -- + {name `c1`}
--- + {name `uu uu`}: X_uuX20uu: integer notnull qid
+-- + {name `uu uu`}: `uu uu`: integer notnull qid
 -- - error:
 create table qid_ref_4 (
   `uu uu` int!,
@@ -24308,8 +24317,8 @@ create table qid_ref_4 (
 -- verify that echoing is re-emitting the escaped text
 -- + UPDATE `xyz``abc`
 -- + SET `a b` = 5;
--- + {update_stmt}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
--- + {name `a b`}: X_aX20b: integer notnull qid
+-- + {update_stmt}: `xyz``abc`: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
+-- + {name `a b`}: `a b`: integer notnull qid
 -- - error:
 update `xyz``abc` set `a b` = 5;
 
@@ -24317,28 +24326,28 @@ update `xyz``abc` set `a b` = 5;
 -- verify that echoing is re-emitting the escaped text
 -- + INSERT INTO `xyz``abc`(x, `a b`)
 -- +   VALUES (1, 5);
--- + {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
+-- + {name `xyz``abc`}: `xyz``abc`: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
 -- - error:
 insert into `xyz``abc` values (1, 5);
 
 -- TEST: insert statement using syntaxwith quoted names
 -- verify that echoing is re-emitting the escaped text
 -- + INSERT INTO `xyz``abc`(`a b`, x) VALUES (1, 2);
--- + {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
+-- + {name `xyz``abc`}: `xyz``abc`: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
 -- - error:
 insert into `xyz``abc` using 1 `a b`, 2 x;
 
 -- TEST: insert statement dummy seed using form
 -- verify that echoing is re-emitting the escaped text
 -- + INSERT INTO `xyz``abc`(x, `a b`) VALUES (2, _seed_) @DUMMY_SEED(500);
--- + {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
+-- + {name `xyz``abc`}: `xyz``abc`: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
 -- - error:
 insert into `xyz``abc` using 2 x @dummy_seed(500);
 
 -- TEST: insert statement dummy seed values form
 -- verify that echoing is re-emitting the escaped text
 -- + INSERT INTO `xyz``abc`(x, `a b`) VALUES (2, _seed_) @DUMMY_SEED(500);
--- + {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
+-- + {name `xyz``abc`}: `xyz``abc`: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
 -- - error:
 insert into `xyz``abc`(x) values (2) @dummy_seed(500);
 
@@ -24349,7 +24358,7 @@ insert into `xyz``abc`(x) values (2) @dummy_seed(500);
 -- + FROM `xyz``abc`;
 -- + INSERT INTO `xyz``abc`(x, `a b`)
 -- +   VALUES (C.x, C.`a b`);
--- + {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
+-- + {name `xyz``abc`}: `xyz``abc`: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
 -- + {name `a b`}
 -- - error:
 proc quoted_from_forms()
@@ -24391,14 +24400,14 @@ alter table `xyz``abc` add column `a b` int;
 -- + SET `a b_` := `a b_` + 1;
 -- + LET `u v` := 5;
 -- + SET `u v` := 6;
--- + {param}: X_aX20b_: integer notnull variable in was_set
--- + {assign}: X_aX20b_: integer notnull variable in was_set
--- + {name `a b_`}: X_aX20b_: integer notnull variable in was_set
+-- + {param}: `a b_`: integer notnull variable in was_set
+-- + {assign}: `a b_`: integer notnull variable in was_set
+-- + {name `a b_`}: `a b_`: integer notnull variable in was_set
 -- + {add}: integer notnull
--- + {name `a b_`}: X_aX20b_: integer notnull variable in was_set
--- + {let_stmt}: X_uX20v: integer notnull variable was_set
--- + {name `u v`}: X_uX20v: integer notnull variable was_set
--- + {assign}: X_uX20v: integer notnull variable was_set
+-- + {name `a b_`}: `a b_`: integer notnull variable in was_set
+-- + {let_stmt}: `u v`: integer notnull variable was_set
+-- + {name `u v`}: `u v`: integer notnull variable was_set
+-- + {assign}: `u v`: integer notnull variable was_set
 -- - error:
 proc args_defined_by_exotics(like `xyz``abc`)
 begin
@@ -24414,7 +24423,7 @@ end;
 -- +  SELECT 1 AS x;
 -- + DECLARE `box obj` OBJECT<C CURSOR>;
 -- + SET `box obj` FROM CURSOR C;
--- + {name `box obj`}: X_boxX20obj: object<C CURSOR> variable
+-- + {name `box obj`}: `box obj`: object<C CURSOR> variable
 -- + {set_from_cursor}: C: select: { x: integer notnull } variable dml_proc boxed
 -- - error:
 proc cursor_boxing_with_qid()
@@ -24440,11 +24449,11 @@ create table reuse_exotic_columns (
 -- + PROC qid_shape_args (AAA_x INT!, `AAA_a b` INT!, BBB_x INT!, `BBB_a b` INT!, x_ INT!, `a b_` INT!)
 -- + {create_proc_stmt}: ok
 -- + {name AAA_x}: AAA_x: integer notnull variable in
--- + {name `AAA_a b`}: X_AAA_aX20b: integer notnull variable in
+-- + {name `AAA_a b`}: `AAA_a b`: integer notnull variable in
 -- + {name BBB_x}: BBB_x: integer notnull variable in
--- + {name `BBB_a b`}: X_BBB_aX20b: integer notnull variable in
+-- + {name `BBB_a b`}: `BBB_a b`: integer notnull variable in
 -- + {name x_}: x_: integer notnull variable in
--- + {name `a b_`}: X_aX20b_: integer notnull variable in
+-- + {name `a b_`}: `a b_`: integer notnull variable in
 -- - error:
 proc qid_shape_args(AAA like `xyz``abc`, BBB like `xyz``abc`, like `xyz``abc`)
 begin
@@ -24520,8 +24529,6 @@ declare @ID("foo", "bar", "2") @id("real");
 -- + | {int 23}
 -- - error:
 @enforce_strict and or not null check;
-
-
 
 -- TEST: non null improvements with logical operators
 -- + {let_stmt}: inferred_not_null1: bool notnull variable
@@ -26011,3 +26018,157 @@ BEGIN
   cursor C for
   insert into jbacked(id, name) values (1,'foo') returning (*);
 END;
+
+-- stress test for backing tables with funky names
+-- verify correct parse and echo of qid names
+-- + [[backing_table]]
+-- + [[jsonb]]
+-- + CREATE TABLE `a backing table`(
+-- +   `the key` BLOB PRIMARY KEY,
+-- +   `the value` BLOB
+-- + );
+-- - error:
+[[backing_table]]
+[[jsonb]]
+create table `a backing table`(`the key` blob primary key, `the value` blob);
+
+-- stress test for backed tables with funky names
+-- verify correct parse and echo of qid names
+-- + [[backed_by=`a backing table`]]
+-- + CREATE TABLE `a table`(
+-- +   `col 1` INT PRIMARY KEY,
+-- +   `col 2` INT
+-- + );
+-- - error:
+[[backed_by=`a backing table`]]
+create table `a table`( `col 1` int primary key, `col 2` int);
+
+-- TEST: upsert into a backed table with weird names... All the pains.
+-- first verify the rewrite, this is complex with all the weird names
+-- and many clauses.  We found many bugs when we first added this test,
+-- do not delete it lightly.
+-- + WITH
+-- +   _vals (`col 1`, `col 2`) AS (
+-- +     VALUES (1, 2)
+-- +   )
+-- + INSERT INTO `a backing table`(`the key`, `the value`)
+-- + SELECT cql_blob_create(`a table`, V.`col 1`, `a table`.`col 1`), cql_blob_create(`a table`, V.`col 2`, `a table`.`col 2`)
+-- +   FROM _vals AS V
+-- + ON CONFLICT (`the key`)
+-- + WHERE cql_blob_get(`the value`, `a table`.`col 2`) = 1
+-- + DO UPDATE
+-- +   SET `the key` = cql_blob_update(`the key`, ifnull(cql_blob_get(`the value`, `a table`.`col 2`), 0), `a table`.`col 1`)
+-- +   WHERE rowid IN (SELECT rowid
+-- +     FROM `a table`)
+-- +   RETURNING (cql_blob_get(`the key`, `a table`.`col 1`), cql_blob_get(`the value`, `a table`.`col 2`));
+-- + {create_proc_stmt}: upsert_into_backed_returning: { `col 1`: integer notnull qid, `col 2`: integer qid } dml_proc
+-- + {upsert_returning_stmt}: select: { `col 1`: integer notnull qid, `col 2`: integer qid }
+-- + {update_stmt}: `a backing table`: { `the key`: blob notnull primary_key qid, `the value`: blob qid } backing qid
+-- + {select_expr_list}: select: { `col 1`: integer notnull qid, `col 2`: integer qid }
+-- - error:
+proc upsert_into_backed_returning()
+begin
+  insert into `a table`
+    values (1, 2)
+  on conflict (`col 1`)
+  where `col 2` = 1 do update
+    set `col 1` = `col 2`:ifnull(0)
+    returning (`col 1`, `col 2`);
+end;
+
+-- TEST: cursor form of update returning this should not affect the procedure
+-- first verify the rewrite, this is quite tricky and found many bugs
+-- + CURSOR C FOR
+-- +   WITH
+-- +     _vals (`col 1`, `col 2`) AS (
+-- +       VALUES (1, 2)
+-- +     )
+-- +   INSERT INTO `a backing table`(`the key`, `the value`)
+-- +     SELECT cql_blob_create(`a table`, V.`col 1`, `a table`.`col 1`), cql_blob_create(`a table`, V.`col 2`, `a table`.`col 2`)
+-- +       FROM _vals AS V
+-- +   ON CONFLICT (`the key`)
+-- +   WHERE cql_blob_get(`the value`, `a table`.`col 2`) = 1
+-- +   DO UPDATE
+-- +     SET `the key` = cql_blob_update(`the key`, ifnull(cql_blob_get(`the value`, `a table`.`col 2`), 0), `a table`.`col 1`)
+-- +     WHERE rowid IN (SELECT rowid
+-- +       FROM `a table`)
+-- +     RETURNING (cql_blob_get(`the key`, `a table`.`col 1`), cql_blob_get(`the value`, `a table`.`col 2`));
+-- now essential AST shape
+-- + {create_proc_stmt}: ok dml_proc
+-- + {declare_cursor}: C: select: { `col 1`: integer notnull qid, `col 2`: integer qid } variable dml_proc
+-- + {upsert_returning_stmt}: select: { `col 1`: integer notnull qid, `col 2`: integer qid }
+-- + {name `a backing table`}: `a backing table`: { `the key`: blob notnull primary_key qid, `the value`: blob qid } backing qid
+-- + {conflict_target}: excluded: { `the key`: blob notnull qid, `the value`: blob qid }
+-- - error:
+proc upsert_into_backed_cursor()
+begin
+  cursor C for
+  insert into `a table`
+    values (1, 2)
+  on conflict (`col 1`)
+  where `col 2` = 1 do update
+    set `col 1` = `col 2`:ifnull(0)
+    returning (`col 1`, `col 2`);
+end;
+
+-- TEST: apply with clause
+-- verify the rewrite, that's really all of it
+-- + CURSOR C FOR
+-- +   WITH
+-- +     a_cte (x) AS (
+-- +       VALUES
+-- +         (1),
+-- +         (2),
+-- +         (3)
+-- +     )
+-- +   INSERT INTO `a backing table`(`the key`, `the value`)
+-- +     SELECT cql_blob_create(`a table`, V.`col 1`, `a table`.`col 1`), cql_blob_create(`a table`, V.`col 2`, `a table`.`col 2`)
+-- +       FROM _vals AS V
+-- +   ON CONFLICT (`the key`)
+-- +   WHERE cql_blob_get(`the value`, `a table`.`col 2`) IN (SELECT *
+-- +     FROM a_cte)
+-- +   DO UPDATE
+-- +     SET `the key` = cql_blob_update(`the key`, ifnull(cql_blob_get(`the value`, `a table`.`col 2`), 0), `a table`.`col 1`)
+-- +     RETURNING (cql_blob_get(`the key`, `a table`.`col 1`), cql_blob_get(`the value`, `a table`.`col 2`));
+-- - backed(
+-- - error:
+proc with_upsert_returning()
+begin
+  cursor C  for 
+  with a_cte(x) as (values (1), (2), (3))
+  insert into `a table`
+    values (1, 2)
+  on conflict (`col 1`) 
+  where `col 2` in (select * from a_cte) do update
+    set `col 1` = `col 2`:ifnull(0)
+    returning (`col 1`, `col 2`);
+end;
+
+-- TEST: bogus CTE
+-- + error: % string operand not allowed in 'NOT'
+-- + {create_proc_stmt}: err
+-- + {upsert_returning_stmt}: err
+-- +1 error:
+proc with_upsert_returning_error_cte()
+begin
+  cursor C  for 
+  with a_cte(x) as (values (not 'x'))
+  insert into `a table`
+    values (1, 2)
+  on conflict do nothing
+  returning (`col 1`, `col 2`);
+end;
+
+-- TEST: bogus returning clause
+-- + error: % name not found 'nope'
+-- + {create_proc_stmt}: err
+-- + {upsert_returning_stmt}: err
+-- +1 error:
+proc with_upsert_returning_error_in_returning()
+begin
+  cursor C  for 
+  insert into `a table`
+    values (1, 2)
+  on conflict do nothing
+  returning (nope);
+end;

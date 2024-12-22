@@ -17462,16 +17462,6 @@ static void sem_returning_clause(
 
   sem_join join = *table_ast->sem->jptr;
 
-  // we record this so we can find it on the join when we do a name lookup
-  // this will be the full scope for the lookup
-  if (is_backed(table_ast->sem->sem_type)) {
-    sem_struct *sptr_new  = _ast_pool_new(sem_struct);
-    *sptr_new = *join.tables[0]; // clone existing value (shallow copy)
-    join.tables = _ast_pool_new(sem_struct *);
-    join.tables[0] = sptr_new;
-    sptr_new->is_backed = true;
-  }
-
   // change * and T.* to COLUMNS(T)
   rewrite_star_and_table_star_as_columns_calc(select_expr_list, table_name);
 
@@ -17724,17 +17714,6 @@ static void sem_update_stmt(ast_node *ast) {
   EXTRACT_STRING(table_name, table_name_ast);
 
   sem_join join = *table_ast->sem->jptr;
-
-  // we record this so we can find it on the join when we do a name lookup
-  // note this jptr is especially handy because when we start an insert/update operation
-  // we begin with a pushed join of just the original table
-  if (is_backed(table_ast->sem->sem_type)) {
-    sem_struct *sptr_new  = _ast_pool_new(sem_struct);
-    *sptr_new = *join.tables[0]; // clone existing value (shallow copy)
-    join.tables = _ast_pool_new(sem_struct *);
-    join.tables[0] = sptr_new;
-    sptr_new->is_backed = true;
-  }
 
   PUSH_JOIN(update_scope, &join);
   join_pushed = 1;
@@ -18602,16 +18581,6 @@ static void sem_upsert_stmt(ast_node *stmt) {
 
   if (opt_where) {
     sem_join join = *current_upsert_table_ast->sem->jptr;
-
-    // we record this so we can find it on the join when we do a name lookup
-    // this will be the full scope for the lookup
-    if (is_backed(current_upsert_table_ast->sem->sem_type)) {
-      sem_struct *sptr_new  = _ast_pool_new(sem_struct);
-      *sptr_new = *join.tables[0]; // clone existing value (shallow copy)
-      join.tables = _ast_pool_new(sem_struct *);
-      join.tables[0] = sptr_new;
-      sptr_new->is_backed = true;
-    }
 
     // The opt_where node is in the upsert context therefore we need to make sure
     // we register a join context for search

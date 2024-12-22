@@ -3398,14 +3398,11 @@ cql_noexport void rewrite_upsert_statement_for_backed_table(
   EXTRACT(update_stmt, upsert_update->right);
   EXTRACT(indexed_columns, conflict_target->left);
 
+  Invariant(current_upsert_table_ast);
+  ast_node *table_ast = current_upsert_table_ast;
+  bool_t backed = is_backed(table_ast->sem->sem_type);
+
   rewrite_insert_statement_for_backed_table(insert_stmt, backed_tables_list);
-
-  EXTRACT_NOTNULL(name_columns_values, insert_stmt->right);
-  EXTRACT_STRING(main_table_name, name_columns_values->left);
-
-  // table has already been checked, it exists, it's legal
-  // but it might not be backed, in which case we have less work to do
-  ast_node *main_table = find_table_or_view_even_deleted(main_table_name);
 
   if (update_stmt) {
     rewrite_update_statement_for_backed_table(update_stmt, backed_tables_list);
@@ -3413,8 +3410,8 @@ cql_noexport void rewrite_upsert_statement_for_backed_table(
 
   // we need to change any references to the tables to be the blob extractions
   // from the key and value blobs
-  if (is_backed(main_table->sem->sem_type)) {
-    rewrite_backed_column_references_in_ast(conflict_target, main_table);
+  if (backed) {
+    rewrite_backed_column_references_in_ast(conflict_target, table_ast);
   }
 
   AST_REWRITE_INFO_SET(stmt->lineno, stmt->filename);
@@ -3423,11 +3420,7 @@ cql_noexport void rewrite_upsert_statement_for_backed_table(
     rewrite_statement_backed_table_ctes(ast, backed_tables_list);
   }
 
-  Invariant(current_upsert_table_ast);
-
-  ast_node *table_ast = current_upsert_table_ast;
-
-  if (is_backed(table_ast->sem->sem_type)) {
+  if (backed) {
     EXTRACT_NOTNULL(create_table_name_flags, table_ast->left);
     EXTRACT_STRING(backed_table_name, create_table_name_flags->right);
     EXTRACT_MISC_ATTRS(table_ast, misc_attrs);

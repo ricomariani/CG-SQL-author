@@ -98911,8 +98911,8 @@ The statement ending at line XXXX
 [[backing_table]]
 [[jsonb]]
 CREATE TABLE `a backing table`(
-  k BLOB PRIMARY KEY,
-  b BLOB
+  `the key` BLOB PRIMARY KEY,
+  `the value` BLOB
 );
 
   {stmt_and_attr}: ok
@@ -98926,24 +98926,24 @@ CREATE TABLE `a backing table`(
   |     | {dot}
   |       | {name cql}
   |       | {name jsonb}
-  | {create_table_stmt}: `a backing table`: { k: blob notnull primary_key, b: blob } backing qid
+  | {create_table_stmt}: `a backing table`: { `the key`: blob notnull primary_key qid, `the value`: blob qid } backing qid
     | {create_table_name_flags}
     | | {table_flags_attrs}
     | | | {int 0}
     | | {name `a backing table`}
     | {col_key_list}
-      | {col_def}: k: blob notnull primary_key
+      | {col_def}: `the key`: blob notnull primary_key qid
       | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
-      |   | | {name k}
+      |   | | {name `the key`}
       |   | | {type_blob}: blob
       |   | {col_attrs_pk}: ok
       |     | {autoinc_and_conflict_clause}
       | {col_key_list}
-        | {col_def}: b: blob
+        | {col_def}: `the value`: blob qid
           | {col_def_type_attrs}: ok
             | {col_def_name_type}
-              | {name b}
+              | {name `the value`}
               | {type_blob}: blob
 
 The statement ending at line XXXX
@@ -98980,4 +98980,415 @@ CREATE TABLE `a table`(
             | {col_def_name_type}
               | {name `col 2`}
               | {type_int}: integer
+
+The statement ending at line XXXX
+
+PROC upsert_into_backed_returning ()
+BEGIN
+  WITH
+    _vals (`col 1`, `col 2`) AS (
+      VALUES (1, 2)
+    )
+  INSERT INTO `a backing table`(`the key`, `the value`)
+    SELECT cql_blob_create(`a table`, V.`col 1`, `a table`.`col 1`), cql_blob_create(`a table`, V.`col 2`, `a table`.`col 2`)
+      FROM _vals AS V
+  ON CONFLICT (`the key`) 
+  WHERE cql_blob_get(`the value`, `a table`.`col 2`) = 1 DO UPDATE
+    SET `the key` = cql_blob_update(`the key`, ifnull(cql_blob_get(`the value`, `a table`.`col 2`), 0), `a table`.`col 1`)
+    WHERE rowid IN (SELECT rowid
+      FROM `a table`)
+    RETURNING (cql_blob_get(`the key`, `a table`.`col 1`), cql_blob_get(`the value`, `a table`.`col 2`));
+END;
+
+  {create_proc_stmt}: upsert_into_backed_returning: { `col 1`: integer notnull qid, `col 2`: integer qid } dml_proc
+  | {name upsert_into_backed_returning}: upsert_into_backed_returning: { `col 1`: integer notnull qid, `col 2`: integer qid } dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {upsert_returning_stmt}: select: { `col 1`: integer notnull qid, `col 2`: integer qid }
+        | {with_upsert_stmt}: ok
+        | | {with}
+        | | | {cte_tables}: ok
+        | |   | {cte_table}: _vals: { `col 1`: integer notnull qid, `col 2`: integer notnull qid }
+        | |     | {cte_decl}: _vals: { `col 1`: integer notnull qid, `col 2`: integer notnull qid }
+        | |     | | {name _vals}
+        | |     | | {name_list}
+        | |     |   | {name `col 1`}: `col 1`: integer notnull qid backed_table(`a table`)
+        | |     |   | {name_list}
+        | |     |     | {name `col 2`}: `col 2`: integer qid backed_table(`a table`)
+        | |     | {select_stmt}: values: { `column1`: integer notnull qid, `column2`: integer notnull qid }
+        | |       | {select_core_list}: values: { `column1`: integer notnull qid, `column2`: integer notnull qid }
+        | |       | | {select_core}: values: { `column1`: integer notnull qid, `column2`: integer notnull qid }
+        | |       |   | {select_values}
+        | |       |   | {values}: values: { `column1`: integer notnull qid, `column2`: integer notnull qid }
+        | |       |     | {insert_list}: ok
+        | |       |       | {int 1}: integer notnull
+        | |       |       | {insert_list}
+        | |       |         | {int 2}: integer notnull
+        | |       | {select_orderby}
+        | |         | {select_limit}
+        | |           | {select_offset}
+        | | {upsert_stmt}: ok
+        |   | {insert_stmt}: ok
+        |   | | {insert_normal}
+        |   | | {name_columns_values}
+        |   |   | {name `a backing table`}: `a backing table`: { `the key`: blob notnull primary_key qid, `the value`: blob qid } backing qid
+        |   |   | {columns_values}: ok
+        |   |     | {column_spec}
+        |   |     | | {name_list}
+        |   |     |   | {name `the key`}: `the key`: blob notnull qid
+        |   |     |   | {name_list}
+        |   |     |     | {name `the value`}: `the value`: blob qid
+        |   |     | {select_stmt}: select: { _anon: blob notnull, _anon: blob notnull }
+        |   |       | {select_core_list}: select: { _anon: blob notnull, _anon: blob notnull }
+        |   |       | | {select_core}: select: { _anon: blob notnull, _anon: blob notnull }
+        |   |       |   | {select_expr_list_con}: select: { _anon: blob notnull, _anon: blob notnull }
+        |   |       |     | {select_expr_list}: select: { _anon: blob notnull, _anon: blob notnull }
+        |   |       |     | | {select_expr}: blob notnull
+        |   |       |     | | | {call}: blob notnull
+        |   |       |     | |   | {name cql_blob_create}: blob notnull
+        |   |       |     | |   | {call_arg_list}
+        |   |       |     | |     | {call_filter_clause}
+        |   |       |     | |     | {arg_list}: ok
+        |   |       |     | |       | {name `a table`}
+        |   |       |     | |       | {arg_list}
+        |   |       |     | |         | {dot}: `col 1`: integer notnull qid
+        |   |       |     | |         | | {name V}
+        |   |       |     | |         | | {name `col 1`}
+        |   |       |     | |         | {arg_list}
+        |   |       |     | |           | {dot}: integer notnull primary_key qid
+        |   |       |     | |             | {name `a table`}
+        |   |       |     | |             | {name `col 1`}
+        |   |       |     | | {select_expr_list}
+        |   |       |     |   | {select_expr}: blob notnull
+        |   |       |     |     | {call}: blob notnull
+        |   |       |     |       | {name cql_blob_create}: blob notnull
+        |   |       |     |       | {call_arg_list}
+        |   |       |     |         | {call_filter_clause}
+        |   |       |     |         | {arg_list}: ok
+        |   |       |     |           | {name `a table`}
+        |   |       |     |           | {arg_list}
+        |   |       |     |             | {dot}: `col 2`: integer notnull qid
+        |   |       |     |             | | {name V}
+        |   |       |     |             | | {name `col 2`}
+        |   |       |     |             | {arg_list}
+        |   |       |     |               | {dot}: integer qid
+        |   |       |     |                 | {name `a table`}
+        |   |       |     |                 | {name `col 2`}
+        |   |       |     | {select_from_etc}: TABLE { V: _vals }
+        |   |       |       | {table_or_subquery_list}: TABLE { V: _vals }
+        |   |       |       | | {table_or_subquery}: TABLE { V: _vals }
+        |   |       |       |   | {name _vals}: TABLE { V: _vals }
+        |   |       |       |   | {opt_as_alias}
+        |   |       |       |     | {name V}
+        |   |       |       | {select_where}
+        |   |       |         | {select_groupby}
+        |   |       |           | {select_having}
+        |   |       | {select_orderby}
+        |   |         | {select_limit}
+        |   |           | {select_offset}
+        |   | {upsert_update}: ok
+        |     | {conflict_target}: excluded: { `the key`: blob notnull qid, `the value`: blob qid }
+        |     | | {indexed_columns}
+        |     | | | {indexed_column}
+        |     | |   | {name `the key`}: `the key`: blob notnull qid
+        |     | | {opt_where}: bool
+        |     |   | {eq}: bool
+        |     |     | {call}: integer qid
+        |     |     | | {name cql_blob_get}: integer qid
+        |     |     | | {call_arg_list}
+        |     |     |   | {call_filter_clause}
+        |     |     |   | {arg_list}: ok
+        |     |     |     | {name `the value`}: `the value`: blob qid
+        |     |     |     | {arg_list}
+        |     |     |       | {dot}: integer qid
+        |     |     |         | {name `a table`}
+        |     |     |         | {name `col 2`}
+        |     |     | {int 1}: integer notnull
+        |     | {update_stmt}: `a backing table`: { `the key`: blob notnull primary_key qid, `the value`: blob qid } backing qid
+        |       | {update_set}
+        |         | {update_list}: ok
+        |         | | {update_entry}: `the key`: blob notnull qid
+        |         |   | {name `the key`}: `the key`: blob notnull qid
+        |         |   | {call}: blob notnull
+        |         |     | {name cql_blob_update}: blob notnull
+        |         |     | {call_arg_list}
+        |         |       | {call_filter_clause}
+        |         |       | {arg_list}: ok
+        |         |         | {name `the key`}: `the key`: blob notnull qid
+        |         |         | {arg_list}
+        |         |           | {call}: integer notnull
+        |         |           | | {name ifnull}
+        |         |           | | {call_arg_list}
+        |         |           |   | {call_filter_clause}
+        |         |           |   | {arg_list}: ok
+        |         |           |     | {call}: integer qid
+        |         |           |     | | {name cql_blob_get}: integer qid
+        |         |           |     | | {call_arg_list}
+        |         |           |     |   | {call_filter_clause}
+        |         |           |     |   | {arg_list}: ok
+        |         |           |     |     | {name `the value`}: `the value`: blob qid
+        |         |           |     |     | {arg_list}
+        |         |           |     |       | {dot}: integer qid
+        |         |           |     |         | {name `a table`}
+        |         |           |     |         | {name `col 2`}
+        |         |           |     | {arg_list}
+        |         |           |       | {int 0}: integer notnull
+        |         |           | {arg_list}
+        |         |             | {dot}: integer notnull primary_key qid
+        |         |               | {name `a table`}
+        |         |               | {name `col 1`}
+        |         | {update_from}
+        |           | {update_where}
+        |             | {opt_where}: bool notnull
+        |             | | {in_pred}: bool notnull
+        |             |   | {name rowid}: rowid: longint notnull
+        |             |   | {select_stmt}: rowid: longint
+        |             |     | {select_core_list}: select: { rowid: longint notnull }
+        |             |     | | {select_core}: select: { rowid: longint notnull }
+        |             |     |   | {select_expr_list_con}: select: { rowid: longint notnull }
+        |             |     |     | {select_expr_list}: select: { rowid: longint notnull }
+        |             |     |     | | {select_expr}: rowid: longint notnull
+        |             |     |     |   | {name rowid}: rowid: longint notnull
+        |             |     |     | {select_from_etc}: TABLE { `a table`: `a table` }
+        |             |     |       | {table_or_subquery_list}: TABLE { `a table`: `a table` }
+        |             |     |       | | {table_or_subquery}: TABLE { `a table`: `a table` }
+        |             |     |       |   | {name `a table`}: TABLE { `a table`: `a table` }
+        |             |     |       | {select_where}
+        |             |     |         | {select_groupby}
+        |             |     |           | {select_having}
+        |             |     | {select_orderby}
+        |             |       | {select_limit}
+        |             |         | {select_offset}
+        |             | {update_orderby}
+        | {select_expr_list}: select: { `col 1`: integer notnull qid, `col 2`: integer qid }
+          | {select_expr}: `col 1`: integer notnull qid
+          | | {call}: `col 1`: integer notnull qid backed_table(`a table`)
+          |   | {name cql_blob_get}
+          |   | {call_arg_list}
+          |     | {call_filter_clause}
+          |     | {arg_list}
+          |       | {name `the key`}
+          |       | {arg_list}
+          |         | {dot}
+          |           | {name `a table`}
+          |           | {name `col 1`}
+          | {select_expr_list}
+            | {select_expr}: `col 2`: integer qid
+              | {call}: `col 2`: integer qid backed_table(`a table`)
+                | {name cql_blob_get}
+                | {call_arg_list}
+                  | {call_filter_clause}
+                  | {arg_list}
+                    | {name `the value`}
+                    | {arg_list}
+                      | {dot}
+                        | {name `a table`}
+                        | {name `col 2`}
+
+The statement ending at line XXXX
+
+PROC upsert_into_backed_cursor ()
+BEGIN
+  CURSOR C FOR
+    WITH
+      _vals (`col 1`, `col 2`) AS (
+        VALUES (1, 2)
+      )
+    INSERT INTO `a backing table`(`the key`, `the value`)
+      SELECT cql_blob_create(`a table`, V.`col 1`, `a table`.`col 1`), cql_blob_create(`a table`, V.`col 2`, `a table`.`col 2`)
+        FROM _vals AS V
+    ON CONFLICT (`the key`) 
+    WHERE cql_blob_get(`the value`, `a table`.`col 2`) = 1 DO UPDATE
+      SET `the key` = cql_blob_update(`the key`, ifnull(cql_blob_get(`the value`, `a table`.`col 2`), 0), `a table`.`col 1`)
+      WHERE rowid IN (SELECT rowid
+        FROM `a table`)
+      RETURNING (cql_blob_get(`the key`, `a table`.`col 1`), cql_blob_get(`the value`, `a table`.`col 2`));
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name upsert_into_backed_cursor}: ok dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_cursor}: C: select: { `col 1`: integer notnull qid, `col 2`: integer qid } variable dml_proc
+        | {name C}: C: select: { `col 1`: integer notnull qid, `col 2`: integer qid } variable dml_proc
+        | {upsert_returning_stmt}: select: { `col 1`: integer notnull qid, `col 2`: integer qid }
+          | {with_upsert_stmt}: ok
+          | | {with}
+          | | | {cte_tables}: ok
+          | |   | {cte_table}: _vals: { `col 1`: integer notnull qid, `col 2`: integer notnull qid }
+          | |     | {cte_decl}: _vals: { `col 1`: integer notnull qid, `col 2`: integer notnull qid }
+          | |     | | {name _vals}
+          | |     | | {name_list}
+          | |     |   | {name `col 1`}: `col 1`: integer notnull qid backed_table(`a table`)
+          | |     |   | {name_list}
+          | |     |     | {name `col 2`}: `col 2`: integer qid backed_table(`a table`)
+          | |     | {select_stmt}: values: { `column1`: integer notnull qid, `column2`: integer notnull qid }
+          | |       | {select_core_list}: values: { `column1`: integer notnull qid, `column2`: integer notnull qid }
+          | |       | | {select_core}: values: { `column1`: integer notnull qid, `column2`: integer notnull qid }
+          | |       |   | {select_values}
+          | |       |   | {values}: values: { `column1`: integer notnull qid, `column2`: integer notnull qid }
+          | |       |     | {insert_list}: ok
+          | |       |       | {int 1}: integer notnull
+          | |       |       | {insert_list}
+          | |       |         | {int 2}: integer notnull
+          | |       | {select_orderby}
+          | |         | {select_limit}
+          | |           | {select_offset}
+          | | {upsert_stmt}: ok
+          |   | {insert_stmt}: ok
+          |   | | {insert_normal}
+          |   | | {name_columns_values}
+          |   |   | {name `a backing table`}: `a backing table`: { `the key`: blob notnull primary_key qid, `the value`: blob qid } backing qid
+          |   |   | {columns_values}: ok
+          |   |     | {column_spec}
+          |   |     | | {name_list}
+          |   |     |   | {name `the key`}: `the key`: blob notnull qid
+          |   |     |   | {name_list}
+          |   |     |     | {name `the value`}: `the value`: blob qid
+          |   |     | {select_stmt}: select: { _anon: blob notnull, _anon: blob notnull }
+          |   |       | {select_core_list}: select: { _anon: blob notnull, _anon: blob notnull }
+          |   |       | | {select_core}: select: { _anon: blob notnull, _anon: blob notnull }
+          |   |       |   | {select_expr_list_con}: select: { _anon: blob notnull, _anon: blob notnull }
+          |   |       |     | {select_expr_list}: select: { _anon: blob notnull, _anon: blob notnull }
+          |   |       |     | | {select_expr}: blob notnull
+          |   |       |     | | | {call}: blob notnull
+          |   |       |     | |   | {name cql_blob_create}: blob notnull
+          |   |       |     | |   | {call_arg_list}
+          |   |       |     | |     | {call_filter_clause}
+          |   |       |     | |     | {arg_list}: ok
+          |   |       |     | |       | {name `a table`}
+          |   |       |     | |       | {arg_list}
+          |   |       |     | |         | {dot}: `col 1`: integer notnull qid
+          |   |       |     | |         | | {name V}
+          |   |       |     | |         | | {name `col 1`}
+          |   |       |     | |         | {arg_list}
+          |   |       |     | |           | {dot}: integer notnull primary_key qid
+          |   |       |     | |             | {name `a table`}
+          |   |       |     | |             | {name `col 1`}
+          |   |       |     | | {select_expr_list}
+          |   |       |     |   | {select_expr}: blob notnull
+          |   |       |     |     | {call}: blob notnull
+          |   |       |     |       | {name cql_blob_create}: blob notnull
+          |   |       |     |       | {call_arg_list}
+          |   |       |     |         | {call_filter_clause}
+          |   |       |     |         | {arg_list}: ok
+          |   |       |     |           | {name `a table`}
+          |   |       |     |           | {arg_list}
+          |   |       |     |             | {dot}: `col 2`: integer notnull qid
+          |   |       |     |             | | {name V}
+          |   |       |     |             | | {name `col 2`}
+          |   |       |     |             | {arg_list}
+          |   |       |     |               | {dot}: integer qid
+          |   |       |     |                 | {name `a table`}
+          |   |       |     |                 | {name `col 2`}
+          |   |       |     | {select_from_etc}: TABLE { V: _vals }
+          |   |       |       | {table_or_subquery_list}: TABLE { V: _vals }
+          |   |       |       | | {table_or_subquery}: TABLE { V: _vals }
+          |   |       |       |   | {name _vals}: TABLE { V: _vals }
+          |   |       |       |   | {opt_as_alias}
+          |   |       |       |     | {name V}
+          |   |       |       | {select_where}
+          |   |       |         | {select_groupby}
+          |   |       |           | {select_having}
+          |   |       | {select_orderby}
+          |   |         | {select_limit}
+          |   |           | {select_offset}
+          |   | {upsert_update}: ok
+          |     | {conflict_target}: excluded: { `the key`: blob notnull qid, `the value`: blob qid }
+          |     | | {indexed_columns}
+          |     | | | {indexed_column}
+          |     | |   | {name `the key`}: `the key`: blob notnull qid
+          |     | | {opt_where}: bool
+          |     |   | {eq}: bool
+          |     |     | {call}: integer qid
+          |     |     | | {name cql_blob_get}: integer qid
+          |     |     | | {call_arg_list}
+          |     |     |   | {call_filter_clause}
+          |     |     |   | {arg_list}: ok
+          |     |     |     | {name `the value`}: `the value`: blob qid
+          |     |     |     | {arg_list}
+          |     |     |       | {dot}: integer qid
+          |     |     |         | {name `a table`}
+          |     |     |         | {name `col 2`}
+          |     |     | {int 1}: integer notnull
+          |     | {update_stmt}: `a backing table`: { `the key`: blob notnull primary_key qid, `the value`: blob qid } backing qid
+          |       | {update_set}
+          |         | {update_list}: ok
+          |         | | {update_entry}: `the key`: blob notnull qid
+          |         |   | {name `the key`}: `the key`: blob notnull qid
+          |         |   | {call}: blob notnull
+          |         |     | {name cql_blob_update}: blob notnull
+          |         |     | {call_arg_list}
+          |         |       | {call_filter_clause}
+          |         |       | {arg_list}: ok
+          |         |         | {name `the key`}: `the key`: blob notnull qid
+          |         |         | {arg_list}
+          |         |           | {call}: integer notnull
+          |         |           | | {name ifnull}
+          |         |           | | {call_arg_list}
+          |         |           |   | {call_filter_clause}
+          |         |           |   | {arg_list}: ok
+          |         |           |     | {call}: integer qid
+          |         |           |     | | {name cql_blob_get}: integer qid
+          |         |           |     | | {call_arg_list}
+          |         |           |     |   | {call_filter_clause}
+          |         |           |     |   | {arg_list}: ok
+          |         |           |     |     | {name `the value`}: `the value`: blob qid
+          |         |           |     |     | {arg_list}
+          |         |           |     |       | {dot}: integer qid
+          |         |           |     |         | {name `a table`}
+          |         |           |     |         | {name `col 2`}
+          |         |           |     | {arg_list}
+          |         |           |       | {int 0}: integer notnull
+          |         |           | {arg_list}
+          |         |             | {dot}: integer notnull primary_key qid
+          |         |               | {name `a table`}
+          |         |               | {name `col 1`}
+          |         | {update_from}
+          |           | {update_where}
+          |             | {opt_where}: bool notnull
+          |             | | {in_pred}: bool notnull
+          |             |   | {name rowid}: rowid: longint notnull
+          |             |   | {select_stmt}: rowid: longint
+          |             |     | {select_core_list}: select: { rowid: longint notnull }
+          |             |     | | {select_core}: select: { rowid: longint notnull }
+          |             |     |   | {select_expr_list_con}: select: { rowid: longint notnull }
+          |             |     |     | {select_expr_list}: select: { rowid: longint notnull }
+          |             |     |     | | {select_expr}: rowid: longint notnull
+          |             |     |     |   | {name rowid}: rowid: longint notnull
+          |             |     |     | {select_from_etc}: TABLE { `a table`: `a table` }
+          |             |     |       | {table_or_subquery_list}: TABLE { `a table`: `a table` }
+          |             |     |       | | {table_or_subquery}: TABLE { `a table`: `a table` }
+          |             |     |       |   | {name `a table`}: TABLE { `a table`: `a table` }
+          |             |     |       | {select_where}
+          |             |     |         | {select_groupby}
+          |             |     |           | {select_having}
+          |             |     | {select_orderby}
+          |             |       | {select_limit}
+          |             |         | {select_offset}
+          |             | {update_orderby}
+          | {select_expr_list}: select: { `col 1`: integer notnull qid, `col 2`: integer qid }
+            | {select_expr}: `col 1`: integer notnull qid
+            | | {call}: `col 1`: integer notnull qid backed_table(`a table`)
+            |   | {name cql_blob_get}
+            |   | {call_arg_list}
+            |     | {call_filter_clause}
+            |     | {arg_list}
+            |       | {name `the key`}
+            |       | {arg_list}
+            |         | {dot}
+            |           | {name `a table`}
+            |           | {name `col 1`}
+            | {select_expr_list}
+              | {select_expr}: `col 2`: integer qid
+                | {call}: `col 2`: integer qid backed_table(`a table`)
+                  | {name cql_blob_get}
+                  | {call_arg_list}
+                    | {call_filter_clause}
+                    | {arg_list}
+                      | {name `the value`}
+                      | {arg_list}
+                        | {dot}
+                          | {name `a table`}
+                          | {name `col 2`}
 

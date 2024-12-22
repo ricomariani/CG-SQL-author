@@ -26021,13 +26021,13 @@ END;
 -- + [[backing_table]]
 -- + [[jsonb]]
 -- + CREATE TABLE `a backing table`(
--- +   k BLOB PRIMARY KEY,
--- +   b BLOB
+-- +   `the key` BLOB PRIMARY KEY,
+-- +   `the value` BLOB
 -- + );
 -- - error:
 [[backing_table]]
 [[jsonb]]
-create table `a backing table`(k blob primary key, b blob);
+create table `a backing table`(`the key` blob primary key, `the value` blob);
 
 -- stress test for backed tables with funky names
 -- verify correct parse and echo of qid names
@@ -26040,21 +26040,68 @@ create table `a backing table`(k blob primary key, b blob);
 [[backed_by=`a backing table`]]
 create table `a table`( `col 1` int primary key, `col 2` int);
 
-/*
-  -- TEST: upsert into a backed table with weird names... All the pains.
-  -- + xxx
-insert into `a table`
-  values (1, 2)
-on conflict (`col 1`)
-where `col 2` = 1 do update
-  set `col 1` = `col 2`:ifnull(0)
-  returning (`col 1`, `col 2`);
+-- TEST: upsert into a backed table with weird names... All the pains.
+-- first verify the rewrite, this is complex with all the weird names
+-- and many clauses.  We found many bugs when we first added this test,
+-- do not delete it lightly.
+-- + WITH
+-- +   _vals (`col 1`, `col 2`) AS (
+-- +     VALUES (1, 2)
+-- +   )
+-- + INSERT INTO `a backing table`(`the key`, `the value`)
+-- + SELECT cql_blob_create(`a table`, V.`col 1`, `a table`.`col 1`), cql_blob_create(`a table`, V.`col 2`, `a table`.`col 2`)
+-- +   FROM _vals AS V
+-- + ON CONFLICT (`the key`)
+-- + WHERE cql_blob_get(`the value`, `a table`.`col 2`) = 1 DO UPDATE
+-- +   SET `the key` = cql_blob_update(`the key`, ifnull(cql_blob_get(`the value`, `a table`.`col 2`), 0), `a table`.`col 1`)
+-- +   WHERE rowid IN (SELECT rowid
+-- +     FROM `a table`)
+-- +   RETURNING (cql_blob_get(`the key`, `a table`.`col 1`), cql_blob_get(`the value`, `a table`.`col 2`));
+-- + {create_proc_stmt}: upsert_into_backed_returning: { `col 1`: integer notnull qid, `col 2`: integer qid } dml_proc
+-- + {upsert_returning_stmt}: select: { `col 1`: integer notnull qid, `col 2`: integer qid }
+-- + {update_stmt}: `a backing table`: { `the key`: blob notnull primary_key qid, `the value`: blob qid } backing qid
+-- + {select_expr_list}: select: { `col 1`: integer notnull qid, `col 2`: integer qid }
+-- - error:
+proc upsert_into_backed_returning()
+begin
+  insert into `a table`
+    values (1, 2)
+  on conflict (`col 1`)
+  where `col 2` = 1 do update
+    set `col 1` = `col 2`:ifnull(0)
+    returning (`col 1`, `col 2`);
+end;
 
-cursor C  for
-insert into `a table`
-  values (1, 2)
-on conflict (`col 1`)
-where `col 2` = 1 do update
-  set `col 1` = `col 2`:ifnull(0)
-  returning (`col 1`, `col 2`);
-*/
+-- TEST: cursor form of update returning this should not affect the procedure
+-- first verify the rewrite, this is quite tricky and found many bugs
+-- + CURSOR C FOR
+-- +   WITH
+-- +     _vals (`col 1`, `col 2`) AS (
+-- +       VALUES (1, 2)
+-- +     )
+-- +   INSERT INTO `a backing table`(`the key`, `the value`)
+-- +     SELECT cql_blob_create(`a table`, V.`col 1`, `a table`.`col 1`), cql_blob_create(`a table`, V.`col 2`, `a table`.`col 2`)
+-- +       FROM _vals AS V
+-- +   ON CONFLICT (`the key`)
+-- +   WHERE cql_blob_get(`the value`, `a table`.`col 2`) = 1 DO UPDATE
+-- +     SET `the key` = cql_blob_update(`the key`, ifnull(cql_blob_get(`the value`, `a table`.`col 2`), 0), `a table`.`col 1`)
+-- +     WHERE rowid IN (SELECT rowid
+-- +       FROM `a table`)
+-- +     RETURNING (cql_blob_get(`the key`, `a table`.`col 1`), cql_blob_get(`the value`, `a table`.`col 2`));
+-- now essential AST shape
+-- + {create_proc_stmt}: ok dml_proc
+-- + {declare_cursor}: C: select: { `col 1`: integer notnull qid, `col 2`: integer qid } variable dml_proc
+-- + {upsert_returning_stmt}: select: { `col 1`: integer notnull qid, `col 2`: integer qid }
+-- + {name `a backing table`}: `a backing table`: { `the key`: blob notnull primary_key qid, `the value`: blob qid } backing qid
+-- + {conflict_target}: excluded: { `the key`: blob notnull qid, `the value`: blob qid }
+-- - error:
+proc upsert_into_backed_cursor()
+begin
+  cursor C for
+  insert into `a table`
+    values (1, 2)
+  on conflict (`col 1`)
+  where `col 2` = 1 do update
+    set `col 1` = `col 2`:ifnull(0)
+    returning (`col 1`, `col 2`);
+end;

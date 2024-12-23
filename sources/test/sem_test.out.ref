@@ -101446,3 +101446,52 @@ test/sem_test.sql:XXXX:1: error: in dot : additional info: more than one anonymo
           | {select_limit}
             | {select_offset}
 
+The statement ending at line XXXX
+
+PROC select_exists_failure ()
+BEGIN
+  LET b := ( SELECT EXISTS (SELECT NOT 'x'
+      FROM no_such_table) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in table_or_subquery : CQL0095: table/view not defined 'no_such_table'
+
+  {create_proc_stmt}: err
+  | {name select_exists_failure}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {let_stmt}: err
+        | {name b}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {exists_expr}: err
+          |     |     | {select_stmt}: err
+          |     |       | {select_core_list}: err
+          |     |       | | {select_core}: err
+          |     |       |   | {select_expr_list_con}: err
+          |     |       |     | {select_expr_list}: err
+          |     |       |     | | {select_expr}
+          |     |       |     |   | {not}
+          |     |       |     |     | {strlit 'x'}
+          |     |       |     | {select_from_etc}: err
+          |     |       |       | {table_or_subquery_list}: err
+          |     |       |       | | {table_or_subquery}: err
+          |     |       |       |   | {name no_such_table}
+          |     |       |       | {select_where}
+          |     |       |         | {select_groupby}
+          |     |       |           | {select_having}
+          |     |       | {select_orderby}
+          |     |         | {select_limit}
+          |     |           | {select_offset}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+

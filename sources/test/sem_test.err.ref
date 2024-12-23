@@ -1862,4 +1862,5 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'nope'
 test/sem_test.sql:XXXX:1: error: in dot : CQL0065: identifier is ambiguous '_anon'
 test/sem_test.sql:XXXX:1: error: in dot : additional info: more than one anonymous column in a result, likely all columsn need a name
+test/sem_test.sql:XXXX:1: error: in table_or_subquery : CQL0095: table/view not defined 'no_such_table'
 semantic errors present; no code gen.

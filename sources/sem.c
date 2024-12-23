@@ -5823,19 +5823,6 @@ cql_noexport ast_node *third_arg(ast_node *arg_list) {
   return arg;
 }
 
-// Given `type`, return a new `sem_t` where `SEM_TYPE_NOTNULL_INFERRED` has been
-// replaced with `SEM_TYPE_NOTNULL` if the former was present.
-static sem_t type_with_finalized_nullability_improvement(sem_t type) {
-  if (type & SEM_TYPE_INFERRED_NOTNULL) {
-    // Upgrade the inferred nonnull type so it has a proper NOT NULL type.
-    type |= SEM_TYPE_NOTNULL;
-    // Prevent this from propagating needlessly to keep --ast clean.
-    type &= u64_not(SEM_TYPE_INFERRED_NOTNULL);
-  }
-
-  return type;
-}
-
 // This verifies all the columns have a name.
 // This check is important for a variety of cases, but the main ones are:
 //  - select * or select T.*  -> we can't expand the start if there aren't names
@@ -25108,12 +25095,8 @@ static bool_t sem_select_expr_must_return_a_row(ast_node *ast) {
 
   EXTRACT_ANY_NOTNULL(select_expr_list, select_expr_list_con->left);
 
-  // might be select * or T.* or some such, has to be a simple expression.
-  if (!is_ast_select_expr(select_expr_list->left)) {
-    return false;
-  }
-
-  // ok it's not *, so we have a shot at this, it could be one of the safe ones
+  // select * or T.* or some such have been rewritten away so we know this is a
+  // select expression. We have a shot at this, it could be one of the safe ones
   EXTRACT_NOTNULL(select_expr, select_expr_list->left);
 
   // remember only 1 arg cases are allowed in this func, this is the (select expr..) node

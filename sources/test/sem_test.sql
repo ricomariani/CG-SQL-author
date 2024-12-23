@@ -26154,3 +26154,13 @@ proc anon_columns()
 begin
   select * from (select 1, 2) as T;
 end;
+
+-- TEST: we can still force a failure in the exists logic, just not in the select list
+-- the select list is rewritten to 1 regardless of what you put there
+-- + error: % table/view not defined 'no_such_table'
+-- + {create_proc_stmt}: err
+-- +1 error:
+proc select_exists_failure()
+begin
+  let b := (select exists(select not 'x' from no_such_table));
+end;

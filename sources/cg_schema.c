@@ -1400,7 +1400,6 @@ static void cg_schema_manage_recreate_tables(
     if (!deleted) {
       callbacks.mode = gen_mode_sql;
       callbacks.long_to_int_conv = true;
-      callbacks.star_callback = cg_expand_star;
       gen_set_output_buffer(&make_table);
       gen_statement_with_callbacks(ast_output, &callbacks);
       bprintf(&make_table, "; ");
@@ -1427,7 +1426,6 @@ static void cg_schema_manage_recreate_tables(
         }
         callbacks.mode = gen_mode_sql;
         callbacks.long_to_int_conv = true;
-        callbacks.star_callback = cg_expand_star;
         if (strlen(update_indices.ptr) != 0) bprintf(&update_indices, "\n");
         gen_set_output_buffer(&update_indices);
         gen_statement_with_callbacks(index, &callbacks);

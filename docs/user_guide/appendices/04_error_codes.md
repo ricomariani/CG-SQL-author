@@ -392,21 +392,16 @@ It is not a valid function argument in any other context.
 
 -----
 
-### CQL0052: select * cannot be used with no FROM clause
+### CQL0052: select *, T.*, or columns(...) cannot be used with no FROM clause
 
 Select statements of the form `select 1, 'foo';` are `valid but select '*';` is
 not. The `*` shortcut for columns only makes sense if there is something to
-select from. e.g. `select * from some_table;` is valid.
+select from. e.g. `select * from some_table;` is valid.  Similarly `T.*` makes
+no sense without a from clause and the @columns(...) construction requires columns.
 
 -----
 
-### CQL0053: select [table].* cannot be used with no FROM clause
-
-Select statements of the form `select 1, 'foo';` are `valid but select 'T.*';`
-is not. The `T.*` shortcut for all the columns from table T only makes sense if
-there is something to select form.
-
-e.g. `select T.* from some_table T;` is valid.
+### CQL0053 available for re-use
 
 -----
 

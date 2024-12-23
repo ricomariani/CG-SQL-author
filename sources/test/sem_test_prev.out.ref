@@ -5418,11 +5418,11 @@ END;
               | {int 0}
               | {trigger_when_stmts}
                 | {stmt_list}: ok
-                  | {select_stmt}: select: { id: integer notnull }
-                    | {select_core_list}: select: { id: integer notnull }
-                    | | {select_core}: select: { id: integer notnull }
-                    |   | {select_expr_list_con}: select: { id: integer notnull }
-                    |     | {select_expr_list}: select: { id: integer notnull }
+                  | {select_stmt}: _select_: { id: integer notnull }
+                    | {select_core_list}: _select_: { id: integer notnull }
+                    | | {select_core}: _select_: { id: integer notnull }
+                    |   | {select_expr_list_con}: _select_: { id: integer notnull }
+                    |     | {select_expr_list}: _select_: { id: integer notnull }
                     |     | | {select_expr}: id: integer notnull
                     |     |   | {dot}: id: integer notnull
                     |     |     | {name old}
@@ -5459,11 +5459,11 @@ END @DELETE(2);
     |         | {int 0}
     |         | {trigger_when_stmts}
     |           | {stmt_list}: ok
-    |             | {select_stmt}: select: { id: integer notnull }
-    |               | {select_core_list}: select: { id: integer notnull }
-    |               | | {select_core}: select: { id: integer notnull }
-    |               |   | {select_expr_list_con}: select: { id: integer notnull }
-    |               |     | {select_expr_list}: select: { id: integer notnull }
+    |             | {select_stmt}: _select_: { id: integer notnull }
+    |               | {select_core_list}: _select_: { id: integer notnull }
+    |               | | {select_core}: _select_: { id: integer notnull }
+    |               |   | {select_expr_list_con}: _select_: { id: integer notnull }
+    |               |     | {select_expr_list}: _select_: { id: integer notnull }
     |               |     | | {select_expr}: id: integer notnull
     |               |     |   | {dot}: id: integer notnull
     |               |     |     | {name old}
@@ -5647,7 +5647,7 @@ test/sem_test_prev.sql:XXXX:1: error: in create_index_stmt : CQL0311: object's d
 The statement ending at line XXXX
 
 CREATE VIEW VChanging AS
-  SELECT *
+  SELECT TChanging.id
     FROM TChanging;
 
 test/sem_test_prev.sql:XXXX:1: error: in create_view_stmt : CQL0311: object's deployment region changed from 'different_region' to 'base' 'VChanging'
@@ -5663,7 +5663,10 @@ test/sem_test_prev.sql:XXXX:1: error: in create_view_stmt : CQL0311: object's de
         | | {select_core}: VChanging: { id: integer }
         |   | {select_expr_list_con}: VChanging: { id: integer }
         |     | {select_expr_list}: VChanging: { id: integer }
-        |     | | {star}: VChanging: { id: integer }
+        |     | | {select_expr}: id: integer
+        |     |   | {dot}: id: integer
+        |     |     | {name TChanging}
+        |     |     | {name id}
         |     | {select_from_etc}: TABLE { TChanging: TChanging }
         |       | {table_or_subquery_list}: TABLE { TChanging: TChanging }
         |       | | {table_or_subquery}: TABLE { TChanging: TChanging }
@@ -5701,11 +5704,11 @@ test/sem_test_prev.sql:XXXX:1: error: in create_trigger_stmt : CQL0311: object's
               | {int 0}
               | {trigger_when_stmts}
                 | {stmt_list}: ok
-                  | {select_stmt}: select: { id: integer notnull }
-                    | {select_core_list}: select: { id: integer notnull }
-                    | | {select_core}: select: { id: integer notnull }
-                    |   | {select_expr_list_con}: select: { id: integer notnull }
-                    |     | {select_expr_list}: select: { id: integer notnull }
+                  | {select_stmt}: _select_: { id: integer notnull }
+                    | {select_core_list}: _select_: { id: integer notnull }
+                    | | {select_core}: _select_: { id: integer notnull }
+                    |   | {select_expr_list_con}: _select_: { id: integer notnull }
+                    |     | {select_expr_list}: _select_: { id: integer notnull }
                     |     | | {select_expr}: id: integer notnull
                     |     |   | {dot}: id: integer notnull
                     |     |     | {name old}

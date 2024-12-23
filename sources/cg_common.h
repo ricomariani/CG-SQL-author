@@ -145,9 +145,6 @@ cql_noexport void exit_on_no_global_proc(void);
 // For the common case of "semantic-only" nodes
 cql_noexport void cg_no_op(ast_node *_Nonnull ast);
 
-// For expanding select *
-cql_noexport bool_t cg_expand_star(ast_node *_Nonnull ast, void *_Nullable context, charbuf *_Nonnull buffer);
-
 cql_noexport int32_t cg_find_first_line(ast_node *_Nonnull ast);
 
 typedef struct cg_blob_mappings_struct {

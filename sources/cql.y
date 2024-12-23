@@ -1421,10 +1421,10 @@ col_calcs[result]:
   ;
 
 col_calc:
-  name { $col_calc = new_ast_col_calc($name, NULL); }
+  sql_name { $col_calc = new_ast_col_calc($sql_name, NULL); }
   | shape_def { $col_calc = new_ast_col_calc(NULL, $shape_def); }
-  | name shape_def { $col_calc = new_ast_col_calc($name, $shape_def); }
-  | name[n1] '.' name[n2] { $col_calc = new_ast_col_calc(new_ast_dot($n1, $n2), NULL); }
+  | sql_name shape_def { $col_calc = new_ast_col_calc($sql_name, $shape_def); }
+  | sql_name[n1] '.' sql_name[n2] { $col_calc = new_ast_col_calc(new_ast_dot($n1, $n2), NULL); }
   ;
 
 cte_tables[result]:

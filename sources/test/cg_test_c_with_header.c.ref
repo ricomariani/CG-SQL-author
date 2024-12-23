@@ -1049,7 +1049,12 @@ cql_string_ref _between_13_ = NULL;
 /*
 PROC with_result_set ()
 BEGIN
-  SELECT *
+  SELECT
+      bar.id,
+      bar.name,
+      bar.rate,
+      bar.type,
+      bar.size
     FROM bar;
 END;
 */
@@ -1119,7 +1124,12 @@ CQL_WARN_UNUSED cql_code with_result_set(sqlite3 *_Nonnull _db_, sqlite3_stmt *_
   cql_error_prepare();
 
   _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT id, name, rate, type, size "
+    "SELECT "
+        "bar.id, "
+        "bar.name, "
+        "bar.rate, "
+        "bar.type, "
+        "bar.size "
       "FROM bar");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
@@ -1270,7 +1280,12 @@ cql_cleanup:
 /*
 PROC get_data (name_ TEXT!, id_ INT!)
 BEGIN
-  SELECT *
+  SELECT
+      bar.id,
+      bar.name,
+      bar.rate,
+      bar.type,
+      bar.size
     FROM bar
     WHERE id = id_ AND name = name_;
 END;
@@ -1343,7 +1358,12 @@ CQL_WARN_UNUSED cql_code get_data(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullabl
   cql_error_prepare();
 
   _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT id, name, rate, type, size "
+    "SELECT "
+        "bar.id, "
+        "bar.name, "
+        "bar.rate, "
+        "bar.type, "
+        "bar.size "
       "FROM bar "
       "WHERE id = ? AND name = ?");
   cql_multibind(&_rc_, _db_, _result_stmt, 2,
@@ -1366,12 +1386,22 @@ cql_cleanup:
 PROC easy_fetch ()
 BEGIN
   CURSOR C FOR
-    SELECT *
+    SELECT
+        bar.id,
+        bar.name,
+        bar.rate,
+        bar.type,
+        bar.size
       FROM bar;
   FETCH C;
   CALL printf("%d %s\n", C.id, C.name);
   CURSOR C2 FOR
-    SELECT *
+    SELECT
+        bar.id,
+        bar.name,
+        bar.rate,
+        bar.type,
+        bar.size
       FROM bar
       WHERE C AND id = C.id;
 END;
@@ -1403,7 +1433,12 @@ CQL_WARN_UNUSED cql_code easy_fetch(sqlite3 *_Nonnull _db_) {
   sqlite3_stmt *C2_stmt = NULL;
 
   _rc_ = cql_prepare(_db_, &C_stmt,
-    "SELECT id, name, rate, type, size "
+    "SELECT "
+        "bar.id, "
+        "bar.name, "
+        "bar.rate, "
+        "bar.type, "
+        "bar.size "
       "FROM bar");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = sqlite3_step(C_stmt);
@@ -1419,7 +1454,12 @@ CQL_WARN_UNUSED cql_code easy_fetch(sqlite3 *_Nonnull _db_) {
   printf("%d %s\n", C.id, _cstr_1);
   cql_free_cstr(_cstr_1, C.name);
   _rc_ = cql_prepare(_db_, &C2_stmt,
-    "SELECT id, name, rate, type, size "
+    "SELECT "
+        "bar.id, "
+        "bar.name, "
+        "bar.rate, "
+        "bar.type, "
+        "bar.size "
       "FROM bar "
       "WHERE ? AND id = ?");
   cql_multibind(&_rc_, _db_, &C2_stmt, 2,
@@ -1673,7 +1713,7 @@ cql_cleanup:
 /*
 PROC hierarchical_query (rate_ LONG!, limit_ INT!, offset_ INT!)
 BEGIN
-  SELECT *
+  SELECT foo.id
     FROM foo
     WHERE id IN (SELECT id
     FROM bar
@@ -1734,7 +1774,7 @@ CQL_WARN_UNUSED cql_code hierarchical_query(sqlite3 *_Nonnull _db_, sqlite3_stmt
   cql_error_prepare();
 
   _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT id "
+    "SELECT foo.id "
       "FROM foo "
       "WHERE id IN (SELECT id "
       "FROM bar "
@@ -1762,7 +1802,7 @@ cql_cleanup:
 /*
 PROC hierarchical_unmatched_query (rate_ LONG!, limit_ INT!, offset_ INT!)
 BEGIN
-  SELECT *
+  SELECT foo.id
     FROM foo
     WHERE id NOT IN (SELECT id
     FROM bar
@@ -1823,7 +1863,7 @@ CQL_WARN_UNUSED cql_code hierarchical_unmatched_query(sqlite3 *_Nonnull _db_, sq
   cql_error_prepare();
 
   _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT id "
+    "SELECT foo.id "
       "FROM foo "
       "WHERE id NOT IN (SELECT id "
       "FROM bar "
@@ -2081,7 +2121,7 @@ BEGIN
       X (a, b, c) AS (
         SELECT 1, 2, 3
       )
-    SELECT *
+    SELECT X.a, X.b, X.c
       FROM X;
   FETCH C;
 END;
@@ -2112,7 +2152,7 @@ CQL_WARN_UNUSED cql_code with_stmt_using_cursor(sqlite3 *_Nonnull _db_) {
       "X (a, b, c) AS ( "
         "SELECT 1, 2, 3 "
       ") "
-    "SELECT a, b, c "
+    "SELECT X.a, X.b, X.c "
       "FROM X");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = sqlite3_step(C_stmt);
@@ -2140,7 +2180,7 @@ BEGIN
     X (a, b, c) AS (
       SELECT 1, 2, 3
     )
-  SELECT *
+  SELECT X.a, X.b, X.c
     FROM X;
 END;
 */
@@ -2204,7 +2244,7 @@ CQL_WARN_UNUSED cql_code with_stmt(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullab
       "X (a, b, c) AS ( "
         "SELECT 1, 2, 3 "
       ") "
-    "SELECT a, b, c "
+    "SELECT X.a, X.b, X.c "
       "FROM X");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
@@ -2227,7 +2267,7 @@ BEGIN
       UNION ALL
       SELECT 4, 5, 6
     )
-  SELECT *
+  SELECT X.a, X.b, X.c
     FROM X;
 END;
 */
@@ -2293,7 +2333,7 @@ CQL_WARN_UNUSED cql_code with_recursive_stmt(sqlite3 *_Nonnull _db_, sqlite3_stm
         "UNION ALL "
         "SELECT 4, 5, 6 "
       ") "
-    "SELECT a, b, c "
+    "SELECT X.a, X.b, X.c "
       "FROM X");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
@@ -3151,7 +3191,7 @@ cql_blob_ref blob_var_notnull = NULL;
 /*
 PROC blob_returner ()
 BEGIN
-  SELECT *
+  SELECT blob_table.blob_id, blob_table.b_notnull, blob_table.b_nullable
     FROM blob_table;
 END;
 */
@@ -3215,7 +3255,7 @@ CQL_WARN_UNUSED cql_code blob_returner(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nu
   cql_error_prepare();
 
   _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT blob_id, b_notnull, b_nullable "
+    "SELECT blob_table.blob_id, blob_table.b_notnull, blob_table.b_nullable "
       "FROM blob_table");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
@@ -3254,7 +3294,14 @@ void voidproc(void) {
 PROC out_cursor_proc ()
 BEGIN
   CURSOR C FOR
-    SELECT bar.*, 'xyzzy' AS extra1, 'plugh' AS extra2
+    SELECT
+        bar.id,
+        bar.name,
+        bar.rate,
+        bar.type,
+        bar.size,
+        'xyzzy' AS extra1,
+        'plugh' AS extra2
       FROM bar;
   FETCH C;
   OUT C;
@@ -3339,7 +3386,14 @@ CQL_WARN_UNUSED cql_code out_cursor_proc(sqlite3 *_Nonnull _db_, out_cursor_proc
   out_cursor_proc_C_row C = { ._refs_count_ = 3, ._refs_offset_ = out_cursor_proc_C_refs_offset };
 
   _rc_ = cql_prepare(_db_, &C_stmt,
-    "SELECT bar.id, bar.name, bar.rate, bar.type, bar.size, 'xyzzy', 'plugh' "
+    "SELECT "
+        "bar.id, "
+        "bar.name, "
+        "bar.rate, "
+        "bar.type, "
+        "bar.size, "
+        "'xyzzy', "
+        "'plugh' "
       "FROM bar");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = sqlite3_step(C_stmt);
@@ -3526,7 +3580,7 @@ cql_cleanup:
 /*
 PROC thread_theme_info_list (thread_key_ LONG!)
 BEGIN
-  SELECT *
+  SELECT T.thread_key
     FROM (SELECT thread_key
           FROM threads) AS T;
 END;
@@ -3581,7 +3635,7 @@ CQL_WARN_UNUSED cql_code thread_theme_info_list(sqlite3 *_Nonnull _db_, sqlite3_
   cql_error_prepare();
 
   _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT thread_key "
+    "SELECT T.thread_key "
       "FROM (SELECT thread_key "
             "FROM threads) AS T");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -3599,7 +3653,12 @@ cql_cleanup:
 /*
 PROC fetch_values_dummy ()
 BEGIN
-  CURSOR C LIKE SELECT *
+  CURSOR C LIKE SELECT
+      bar.id,
+      bar.name,
+      bar.rate,
+      bar.type,
+      bar.size
     FROM bar;
   FETCH C(id, name, rate, type, size) FROM VALUES (_seed_, printf('name_%d', _seed_), _seed_, _seed_, _seed_) @DUMMY_SEED(123) @DUMMY_NULLABLES;
 END;
@@ -4410,7 +4469,7 @@ BEGIN
       SELECT 111
     )
   INSERT INTO foo(id)
-    SELECT *
+    SELECT x.a
       FROM x;
 END;
 */
@@ -4430,7 +4489,7 @@ CQL_WARN_UNUSED cql_code with_inserter(sqlite3 *_Nonnull _db_) {
         "SELECT 111 "
       ") "
     "INSERT INTO foo(id) "
-      "SELECT a "
+      "SELECT x.a "
         "FROM x");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
@@ -5753,7 +5812,7 @@ cql_cleanup:
 [[vault_sensitive]]
 PROC radioactive_proc ()
 BEGIN
-  SELECT *
+  SELECT radioactive.id, radioactive.data
     FROM radioactive;
 END;
 */
@@ -5818,7 +5877,7 @@ CQL_WARN_UNUSED cql_code radioactive_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *
   cql_error_prepare();
 
   _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT id, data "
+    "SELECT radioactive.id, radioactive.data "
       "FROM radioactive");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
@@ -5839,7 +5898,7 @@ BEGIN
     x (a) AS (
       SELECT 111
     )
-  DELETE FROM foo WHERE id IN (SELECT *
+  DELETE FROM foo WHERE id IN (SELECT x.a
     FROM x);
 END;
 */
@@ -5858,7 +5917,7 @@ CQL_WARN_UNUSED cql_code with_deleter(sqlite3 *_Nonnull _db_) {
       "x (a) AS ( "
         "SELECT 111 "
       ") "
-    "DELETE FROM foo WHERE id IN (SELECT a "
+    "DELETE FROM foo WHERE id IN (SELECT x.a "
       "FROM x)");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
@@ -5880,7 +5939,7 @@ BEGIN
     )
   UPDATE bar
     SET name = 'xyzzy'
-    WHERE id IN (SELECT *
+    WHERE id IN (SELECT x.a
       FROM x);
 END;
 */
@@ -5901,7 +5960,7 @@ CQL_WARN_UNUSED cql_code with_updater(sqlite3 *_Nonnull _db_) {
       ") "
     "UPDATE bar "
       "SET name = 'xyzzy' "
-      "WHERE id IN (SELECT a "
+      "WHERE id IN (SELECT x.a "
         "FROM x)");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
@@ -6416,7 +6475,7 @@ cql_cleanup:
 PROC rowset_object_reader (rowset OBJECT<rowset>)
 BEGIN
   CURSOR C FOR
-    SELECT *
+    SELECT ReadFromRowset.id
       FROM ReadFromRowset(rowset);
 END;
 */
@@ -6432,7 +6491,7 @@ CQL_WARN_UNUSED cql_code rowset_object_reader(sqlite3 *_Nonnull _db_, cql_object
   sqlite3_stmt *C_stmt = NULL;
 
   _rc_ = cql_prepare(_db_, &C_stmt,
-    "SELECT id "
+    "SELECT ReadFromRowset.id "
       "FROM ReadFromRowset(?)");
   cql_multibind(&_rc_, _db_, &C_stmt, 1,
                 CQL_DATA_TYPE_OBJECT, rowset);
@@ -7142,7 +7201,7 @@ CQL_WARN_UNUSED cql_code read_out_union_values(sqlite3 *_Nonnull _db_, cql_int32
 PROC out_union_dml ()
 BEGIN
   CURSOR x FOR
-    SELECT *
+    SELECT radioactive.id, radioactive.data
       FROM radioactive;
   FETCH x;
   OUT UNION x;
@@ -7211,7 +7270,7 @@ CQL_WARN_UNUSED cql_code out_union_dml_fetch_results(sqlite3 *_Nonnull _db_, out
 
   cql_profile_start(CRC_out_union_dml, &out_union_dml_perf_index);
   _rc_ = cql_prepare(_db_, &x_stmt,
-    "SELECT id, data "
+    "SELECT radioactive.id, radioactive.data "
       "FROM radioactive");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = sqlite3_step(x_stmt);
@@ -7790,7 +7849,12 @@ cql_cleanup:
 [[suppress_getters]]
 PROC lotsa_columns_no_getters ()
 BEGIN
-  SELECT *
+  SELECT
+      bar.id,
+      bar.name,
+      bar.rate,
+      bar.type,
+      bar.size
     FROM bar;
 END;
 */
@@ -7860,7 +7924,12 @@ CQL_WARN_UNUSED cql_code lotsa_columns_no_getters(sqlite3 *_Nonnull _db_, sqlite
   cql_error_prepare();
 
   _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT id, name, rate, type, size "
+    "SELECT "
+        "bar.id, "
+        "bar.name, "
+        "bar.rate, "
+        "bar.type, "
+        "bar.size "
       "FROM bar");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
@@ -7878,7 +7947,12 @@ cql_cleanup:
 [[generate_copy]]
 PROC sproc_with_copy ()
 BEGIN
-  SELECT *
+  SELECT
+      bar.id,
+      bar.name,
+      bar.rate,
+      bar.type,
+      bar.size
     FROM bar;
 END;
 */
@@ -7948,7 +8022,12 @@ CQL_WARN_UNUSED cql_code sproc_with_copy(sqlite3 *_Nonnull _db_, sqlite3_stmt *_
   cql_error_prepare();
 
   _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT id, name, rate, type, size "
+    "SELECT "
+        "bar.id, "
+        "bar.name, "
+        "bar.rate, "
+        "bar.type, "
+        "bar.size "
       "FROM bar");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
@@ -8197,7 +8276,12 @@ void emit_setters_with_nullables(cql_object_ref _Nullable o, cql_object_ref _Nul
 [[emit_setters]]
 PROC no_out_with_setters ()
 BEGIN
-  SELECT *
+  SELECT
+      bar.id,
+      bar.name,
+      bar.rate,
+      bar.type,
+      bar.size
     FROM bar;
 END;
 */
@@ -8267,7 +8351,12 @@ CQL_WARN_UNUSED cql_code no_out_with_setters(sqlite3 *_Nonnull _db_, sqlite3_stm
   cql_error_prepare();
 
   _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT id, name, rate, type, size "
+    "SELECT "
+        "bar.id, "
+        "bar.name, "
+        "bar.rate, "
+        "bar.type, "
+        "bar.size "
       "FROM bar");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
@@ -8285,7 +8374,12 @@ cql_cleanup:
 [[suppress_result_set]]
 PROC lotsa_columns_no_result_set ()
 BEGIN
-  SELECT *
+  SELECT
+      bar.id,
+      bar.name,
+      bar.rate,
+      bar.type,
+      bar.size
     FROM bar;
 END;
 */
@@ -8301,7 +8395,12 @@ CQL_WARN_UNUSED cql_code lotsa_columns_no_result_set(sqlite3 *_Nonnull _db_, sql
   cql_error_prepare();
 
   _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT id, name, rate, type, size "
+    "SELECT "
+        "bar.id, "
+        "bar.name, "
+        "bar.rate, "
+        "bar.type, "
+        "bar.size "
       "FROM bar");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
@@ -8376,7 +8475,11 @@ cql_cleanup:
 [[custom_type_for_encoded_column]]
 PROC vault_sensitive_with_values_proc ()
 BEGIN
-  SELECT *
+  SELECT
+      vault_mixed_sensitive.id,
+      vault_mixed_sensitive.name,
+      vault_mixed_sensitive.title,
+      vault_mixed_sensitive.type
     FROM vault_mixed_sensitive;
 END;
 */
@@ -8447,7 +8550,11 @@ CQL_WARN_UNUSED cql_code vault_sensitive_with_values_proc(sqlite3 *_Nonnull _db_
   cql_error_prepare();
 
   _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT id, name, title, type "
+    "SELECT "
+        "vault_mixed_sensitive.id, "
+        "vault_mixed_sensitive.name, "
+        "vault_mixed_sensitive.title, "
+        "vault_mixed_sensitive.type "
       "FROM vault_mixed_sensitive");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
@@ -8466,7 +8573,11 @@ cql_cleanup:
 [[custom_type_for_encoded_column]]
 PROC vault_not_nullable_sensitive_with_values_proc ()
 BEGIN
-  SELECT *
+  SELECT
+      vault_mixed_not_nullable_sensitive.id,
+      vault_mixed_not_nullable_sensitive.name,
+      vault_mixed_not_nullable_sensitive.title,
+      vault_mixed_not_nullable_sensitive.type
     FROM vault_mixed_not_nullable_sensitive;
 END;
 */
@@ -8537,7 +8648,11 @@ CQL_WARN_UNUSED cql_code vault_not_nullable_sensitive_with_values_proc(sqlite3 *
   cql_error_prepare();
 
   _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT id, name, title, type "
+    "SELECT "
+        "vault_mixed_not_nullable_sensitive.id, "
+        "vault_mixed_not_nullable_sensitive.name, "
+        "vault_mixed_not_nullable_sensitive.title, "
+        "vault_mixed_not_nullable_sensitive.type "
       "FROM vault_mixed_not_nullable_sensitive");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
@@ -8555,7 +8670,11 @@ cql_cleanup:
 [[vault_sensitive]]
 PROC vault_sensitive_with_no_values_proc ()
 BEGIN
-  SELECT *
+  SELECT
+      vault_mixed_sensitive.id,
+      vault_mixed_sensitive.name,
+      vault_mixed_sensitive.title,
+      vault_mixed_sensitive.type
     FROM vault_mixed_sensitive;
 END;
 */
@@ -8626,7 +8745,11 @@ CQL_WARN_UNUSED cql_code vault_sensitive_with_no_values_proc(sqlite3 *_Nonnull _
   cql_error_prepare();
 
   _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT id, name, title, type "
+    "SELECT "
+        "vault_mixed_sensitive.id, "
+        "vault_mixed_sensitive.name, "
+        "vault_mixed_sensitive.title, "
+        "vault_mixed_sensitive.type "
       "FROM vault_mixed_sensitive");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
@@ -8644,10 +8767,18 @@ cql_cleanup:
 [[vault_sensitive]]
 PROC vault_union_all_table_proc ()
 BEGIN
-  SELECT *
+  SELECT
+      vault_mixed_sensitive.id,
+      vault_mixed_sensitive.name,
+      vault_mixed_sensitive.title,
+      vault_mixed_sensitive.type
     FROM vault_mixed_sensitive
   UNION ALL
-  SELECT *
+  SELECT
+      vault_non_sensitive.id,
+      vault_non_sensitive.name,
+      vault_non_sensitive.title,
+      vault_non_sensitive.type
     FROM vault_non_sensitive;
 END;
 */
@@ -8718,10 +8849,18 @@ CQL_WARN_UNUSED cql_code vault_union_all_table_proc(sqlite3 *_Nonnull _db_, sqli
   cql_error_prepare();
 
   _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT id, name, title, type "
+    "SELECT "
+        "vault_mixed_sensitive.id, "
+        "vault_mixed_sensitive.name, "
+        "vault_mixed_sensitive.title, "
+        "vault_mixed_sensitive.type "
       "FROM vault_mixed_sensitive "
     "UNION ALL "
-    "SELECT id, name, title, type "
+    "SELECT "
+        "vault_non_sensitive.id, "
+        "vault_non_sensitive.name, "
+        "vault_non_sensitive.title, "
+        "vault_non_sensitive.type "
       "FROM vault_non_sensitive");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
@@ -8951,7 +9090,11 @@ cql_cleanup:
 [[vault_sensitive=(title, (id, name))]]
 PROC vault_sensitive_with_context_and_sensitive_columns_proc ()
 BEGIN
-  SELECT *
+  SELECT
+      vault_mixed_sensitive.id,
+      vault_mixed_sensitive.name,
+      vault_mixed_sensitive.title,
+      vault_mixed_sensitive.type
     FROM vault_mixed_sensitive;
 END;
 */
@@ -9022,7 +9165,11 @@ CQL_WARN_UNUSED cql_code vault_sensitive_with_context_and_sensitive_columns_proc
   cql_error_prepare();
 
   _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT id, name, title, type "
+    "SELECT "
+        "vault_mixed_sensitive.id, "
+        "vault_mixed_sensitive.name, "
+        "vault_mixed_sensitive.title, "
+        "vault_mixed_sensitive.type "
       "FROM vault_mixed_sensitive");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
@@ -9040,7 +9187,11 @@ cql_cleanup:
 [[vault_sensitive=((id, name))]]
 PROC vault_sensitive_with_no_context_and_sensitive_columns_proc ()
 BEGIN
-  SELECT *
+  SELECT
+      vault_mixed_sensitive.id,
+      vault_mixed_sensitive.name,
+      vault_mixed_sensitive.title,
+      vault_mixed_sensitive.type
     FROM vault_mixed_sensitive;
 END;
 */
@@ -9111,7 +9262,11 @@ CQL_WARN_UNUSED cql_code vault_sensitive_with_no_context_and_sensitive_columns_p
   cql_error_prepare();
 
   _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT id, name, title, type "
+    "SELECT "
+        "vault_mixed_sensitive.id, "
+        "vault_mixed_sensitive.name, "
+        "vault_mixed_sensitive.title, "
+        "vault_mixed_sensitive.type "
       "FROM vault_mixed_sensitive");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
@@ -9129,7 +9284,11 @@ cql_cleanup:
 [[vault_sensitive=(title, (id, name))]]
 PROC vault_sensitive_with_context_and_no_sensitive_columns_proc ()
 BEGIN
-  SELECT *
+  SELECT
+      vault_non_sensitive.id,
+      vault_non_sensitive.name,
+      vault_non_sensitive.title,
+      vault_non_sensitive.type
     FROM vault_non_sensitive;
 END;
 */
@@ -9200,7 +9359,11 @@ CQL_WARN_UNUSED cql_code vault_sensitive_with_context_and_no_sensitive_columns_p
   cql_error_prepare();
 
   _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT id, name, title, type "
+    "SELECT "
+        "vault_non_sensitive.id, "
+        "vault_non_sensitive.name, "
+        "vault_non_sensitive.title, "
+        "vault_non_sensitive.type "
       "FROM vault_non_sensitive");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
@@ -9218,7 +9381,12 @@ cql_cleanup:
 PROC try_boxing (OUT result OBJECT<bar CURSOR>)
 BEGIN
   CURSOR C FOR
-    SELECT *
+    SELECT
+        bar.id,
+        bar.name,
+        bar.rate,
+        bar.type,
+        bar.size
       FROM bar;
   SET result FROM CURSOR C;
 END;
@@ -9240,7 +9408,12 @@ CQL_WARN_UNUSED cql_code try_boxing(sqlite3 *_Nonnull _db_, cql_object_ref _Null
   *(void **)result = NULL; // set out arg to non-garbage
   C_stmt = NULL;
   _rc_ = cql_prepare(_db_, &C_stmt,
-    "SELECT id, name, rate, type, size "
+    "SELECT "
+        "bar.id, "
+        "bar.name, "
+        "bar.rate, "
+        "bar.type, "
+        "bar.size "
       "FROM bar");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   cql_set_created_object_ref(&C_object_, cql_box_stmt(C_stmt));
@@ -11450,7 +11623,7 @@ cql_cleanup:
 /*
 PROC virtual1 ()
 BEGIN
-  SELECT *
+  SELECT virtual_with_hidden.vy
     FROM virtual_with_hidden;
 END;
 */
@@ -11461,21 +11634,15 @@ static int32_t virtual1_perf_index;
 cql_string_proc_name(virtual1_stored_procedure_name, "virtual1");
 
 typedef struct virtual1_row {
-  cql_int32 vx;
   cql_nullable_int32 vy;
-  cql_int32 vz;
 } virtual1_row;
 
 uint8_t virtual1_data_types[virtual1_data_types_count] = {
-  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // vx
   CQL_DATA_TYPE_INT32, // vy
-  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // vz
 };
 
-static cql_uint16 virtual1_col_offsets[] = { 3,
-  cql_offsetof(virtual1_row, vx),
-  cql_offsetof(virtual1_row, vy),
-  cql_offsetof(virtual1_row, vz)
+static cql_uint16 virtual1_col_offsets[] = { 1,
+  cql_offsetof(virtual1_row, vy)
 };
 
 cql_int32 virtual1_result_count(virtual1_result_set_ref _Nonnull result_set) {
@@ -11502,7 +11669,7 @@ CQL_WARN_UNUSED cql_code virtual1_fetch_results(sqlite3 *_Nonnull _db_, virtual1
 
 /*
 export:
-DECLARE PROC virtual1 () (vx INT!, vy INT, vz INT!);
+DECLARE PROC virtual1 () (vy INT);
 */
 CQL_WARN_UNUSED cql_code virtual1(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
@@ -11510,7 +11677,7 @@ CQL_WARN_UNUSED cql_code virtual1(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullabl
   cql_error_prepare();
 
   _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT vy "
+    "SELECT virtual_with_hidden.vy "
       "FROM virtual_with_hidden");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
@@ -12643,7 +12810,12 @@ static void private_proc_without_a_contract(cql_string_ref _Nonnull t) {
 /*
 PROC result_set_proc_with_contract_in_fetch_results (t TEXT!)
 BEGIN
-  SELECT *
+  SELECT
+      bar.id,
+      bar.name,
+      bar.rate,
+      bar.type,
+      bar.size
     FROM bar;
 END;
 */
@@ -12715,7 +12887,12 @@ CQL_WARN_UNUSED cql_code result_set_proc_with_contract_in_fetch_results(sqlite3 
   cql_error_prepare();
 
   _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT id, name, rate, type, size "
+    "SELECT "
+        "bar.id, "
+        "bar.name, "
+        "bar.rate, "
+        "bar.type, "
+        "bar.size "
       "FROM bar");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
@@ -12934,7 +13111,81 @@ cql_bool false_test = 0;
 PROC BigFormat ()
 BEGIN
   CURSOR C FOR
-    SELECT *
+    SELECT
+        big_data.f1,
+        big_data.f2,
+        big_data.f3,
+        big_data.f4,
+        big_data.f5,
+        big_data.f6,
+        big_data.f7,
+        big_data.f8,
+        big_data.f9,
+        big_data.f10,
+        big_data.f11,
+        big_data.f12,
+        big_data.f13,
+        big_data.f14,
+        big_data.f15,
+        big_data.f16,
+        big_data.f17,
+        big_data.f18,
+        big_data.f19,
+        big_data.f20,
+        big_data.f21,
+        big_data.f22,
+        big_data.f23,
+        big_data.f24,
+        big_data.f25,
+        big_data.f26,
+        big_data.f27,
+        big_data.f28,
+        big_data.f29,
+        big_data.f30,
+        big_data.f31,
+        big_data.f32,
+        big_data.f33,
+        big_data.f34,
+        big_data.f35,
+        big_data.f36,
+        big_data.f38,
+        big_data.f39,
+        big_data.f40,
+        big_data.f41,
+        big_data.f42,
+        big_data.f43,
+        big_data.f44,
+        big_data.f45,
+        big_data.f46,
+        big_data.f47,
+        big_data.f48,
+        big_data.f49,
+        big_data.f50,
+        big_data.f51,
+        big_data.f52,
+        big_data.f53,
+        big_data.f54,
+        big_data.f55,
+        big_data.f56,
+        big_data.f57,
+        big_data.f58,
+        big_data.f59,
+        big_data.f60,
+        big_data.f61,
+        big_data.f62,
+        big_data.f63,
+        big_data.f64,
+        big_data.f65,
+        big_data.f66,
+        big_data.f67,
+        big_data.f68,
+        big_data.f69,
+        big_data.f70,
+        big_data.f71,
+        big_data.f72,
+        big_data.f73,
+        big_data.f74,
+        big_data.f75
       FROM big_data;
   LOOP FETCH C
   BEGIN
@@ -13278,7 +13529,81 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
   cql_string_ref s = NULL;
 
   _rc_ = cql_prepare(_db_, &C_stmt,
-    "SELECT f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26, f27, f28, f29, f30, f31, f32, f33, f34, f35, f36, f38, f39, f40, f41, f42, f43, f44, f45, f46, f47, f48, f49, f50, f51, f52, f53, f54, f55, f56, f57, f58, f59, f60, f61, f62, f63, f64, f65, f66, f67, f68, f69, f70, f71, f72, f73, f74, f75 "
+    "SELECT "
+        "big_data.f1, "
+        "big_data.f2, "
+        "big_data.f3, "
+        "big_data.f4, "
+        "big_data.f5, "
+        "big_data.f6, "
+        "big_data.f7, "
+        "big_data.f8, "
+        "big_data.f9, "
+        "big_data.f10, "
+        "big_data.f11, "
+        "big_data.f12, "
+        "big_data.f13, "
+        "big_data.f14, "
+        "big_data.f15, "
+        "big_data.f16, "
+        "big_data.f17, "
+        "big_data.f18, "
+        "big_data.f19, "
+        "big_data.f20, "
+        "big_data.f21, "
+        "big_data.f22, "
+        "big_data.f23, "
+        "big_data.f24, "
+        "big_data.f25, "
+        "big_data.f26, "
+        "big_data.f27, "
+        "big_data.f28, "
+        "big_data.f29, "
+        "big_data.f30, "
+        "big_data.f31, "
+        "big_data.f32, "
+        "big_data.f33, "
+        "big_data.f34, "
+        "big_data.f35, "
+        "big_data.f36, "
+        "big_data.f38, "
+        "big_data.f39, "
+        "big_data.f40, "
+        "big_data.f41, "
+        "big_data.f42, "
+        "big_data.f43, "
+        "big_data.f44, "
+        "big_data.f45, "
+        "big_data.f46, "
+        "big_data.f47, "
+        "big_data.f48, "
+        "big_data.f49, "
+        "big_data.f50, "
+        "big_data.f51, "
+        "big_data.f52, "
+        "big_data.f53, "
+        "big_data.f54, "
+        "big_data.f55, "
+        "big_data.f56, "
+        "big_data.f57, "
+        "big_data.f58, "
+        "big_data.f59, "
+        "big_data.f60, "
+        "big_data.f61, "
+        "big_data.f62, "
+        "big_data.f63, "
+        "big_data.f64, "
+        "big_data.f65, "
+        "big_data.f66, "
+        "big_data.f67, "
+        "big_data.f68, "
+        "big_data.f69, "
+        "big_data.f70, "
+        "big_data.f71, "
+        "big_data.f72, "
+        "big_data.f73, "
+        "big_data.f74, "
+        "big_data.f75 "
       "FROM big_data");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   for (;;) {
@@ -13879,7 +14204,7 @@ PROC foo ()
 BEGIN
   WITH
     shared_frag (shared_something) AS (CALL shared_frag())
-  SELECT *
+  SELECT shared_frag.shared_something
     FROM shared_frag;
 END;
 */
@@ -13938,7 +14263,7 @@ CQL_WARN_UNUSED cql_code foo(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_N
       "shared_frag (shared_something) AS (",
   "SELECT 1234",
   ") "
-    "SELECT shared_something "
+    "SELECT shared_frag.shared_something "
       "FROM shared_frag"
   );
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -13977,7 +14302,12 @@ BEGIN
       SELECT x
     ),
     shared_conditional (x) AS (CALL shared_conditional(1))
-  SELECT bar.*
+  SELECT
+      bar.id,
+      bar.name,
+      bar.rate,
+      bar.type,
+      bar.size
     FROM bar
       INNER JOIN some_cte ON x = 5;
 END;
@@ -14085,7 +14415,12 @@ CQL_WARN_UNUSED cql_code shared_conditional_user(sqlite3 *_Nonnull _db_, sqlite3
   "SELECT ? + ?",
   "SELECT ? + ? + ?",
   ") "
-    "SELECT bar.id, bar.name, bar.rate, bar.type, bar.size "
+    "SELECT "
+        "bar.id, "
+        "bar.name, "
+        "bar.rate, "
+        "bar.type, "
+        "bar.size "
       "FROM bar "
         "INNER JOIN some_cte ON ? = 5"
   );
@@ -14117,7 +14452,7 @@ BEGIN
   IF x_ <= 5 THEN
     WITH
       shared_conditional (x) AS (CALL shared_conditional(1))
-    SELECT *
+    SELECT shared_conditional.x
       FROM shared_conditional
       WHERE x_ = 5;
   ELSE
@@ -14133,7 +14468,7 @@ PROC nested_shared_stuff ()
 BEGIN
   WITH
     nested_shared_proc (x) AS (CALL nested_shared_proc(1))
-  SELECT *
+  SELECT nested_shared_proc.x
     FROM nested_shared_proc;
 END;
 */
@@ -14232,12 +14567,12 @@ CQL_WARN_UNUSED cql_code nested_shared_stuff(sqlite3 *_Nonnull _db_, sqlite3_stm
   "SELECT ? + ?",
   "SELECT ? + ? + ?",
   ") "
-      "SELECT x "
+      "SELECT shared_conditional.x "
         "FROM shared_conditional "
         "WHERE ? = 5",
   "SELECT ?",
   ") "
-    "SELECT x "
+    "SELECT nested_shared_proc.x "
       "FROM nested_shared_proc"
   );
   cql_multibind_var(&_rc_, _db_, _result_stmt, 8, _vpreds_1,
@@ -14264,7 +14599,7 @@ cql_cleanup:
 /*
 PROC use_nested_select_shared_frag_form ()
 BEGIN
-  SELECT *
+  SELECT _select_.x
     FROM (CALL nested_shared_proc(1));
 END;
 */
@@ -14366,7 +14701,7 @@ CQL_WARN_UNUSED cql_code use_nested_select_shared_frag_form(sqlite3 *_Nonnull _d
   "SELECT ? + ?",
   "SELECT ? + ? + ?",
   ") "
-        "SELECT x "
+        "SELECT shared_conditional.x "
           "FROM shared_conditional "
           "WHERE ? = 5",
   "SELECT ? AS x",
@@ -14398,7 +14733,7 @@ cql_cleanup:
 [[private]]
 PROC simple_shared_frag ()
 BEGIN
-  SELECT *
+  SELECT _select_.shared_something
     FROM (CALL shared_frag());
 END;
 */
@@ -14453,7 +14788,7 @@ PROC shared_frag_else_nothing_test ()
 BEGIN
   WITH
     shared_frag_else_nothing (id1, text1) AS (CALL shared_frag_else_nothing(5))
-  SELECT *
+  SELECT foo.id
     FROM foo;
 END;
 */
@@ -14530,7 +14865,7 @@ CQL_WARN_UNUSED cql_code shared_frag_else_nothing_test(sqlite3 *_Nonnull _db_, s
   "SELECT ?, 'x'",
   "SELECT 0,0 WHERE 0",
   ") "
-    "SELECT id "
+    "SELECT foo.id "
       "FROM foo"
   );
   cql_multibind_var(&_rc_, _db_, _result_stmt, 1, _vpreds_1,
@@ -14550,7 +14885,7 @@ cql_cleanup:
 /*
 PROC shared_frag_else_nothing_in_from_clause_test ()
 BEGIN
-  SELECT *
+  SELECT _select_.id1, _select_.text1
     FROM (CALL shared_frag_else_nothing(5));
 END;
 */
@@ -15871,7 +16206,13 @@ PROC use_generated_fragment ()
 BEGIN
   WITH
     _backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
-  SELECT *
+  SELECT
+      _backed.flag,
+      _backed.id,
+      _backed.name,
+      _backed.age,
+      _backed.storage,
+      _backed.pk
     FROM _backed;
 END;
 */
@@ -15882,7 +16223,6 @@ static int32_t use_generated_fragment_perf_index;
 cql_string_proc_name(use_generated_fragment_stored_procedure_name, "use_generated_fragment");
 
 typedef struct use_generated_fragment_row {
-  cql_int64 rowid;
   cql_bool flag;
   cql_nullable_int64 id;
   cql_nullable_double age;
@@ -15892,7 +16232,6 @@ typedef struct use_generated_fragment_row {
 } use_generated_fragment_row;
 
 uint8_t use_generated_fragment_data_types[use_generated_fragment_data_types_count] = {
-  CQL_DATA_TYPE_INT64 | CQL_DATA_TYPE_NOT_NULL, // rowid
   CQL_DATA_TYPE_BOOL | CQL_DATA_TYPE_NOT_NULL, // flag
   CQL_DATA_TYPE_INT64, // id
   CQL_DATA_TYPE_STRING, // name
@@ -15903,8 +16242,7 @@ uint8_t use_generated_fragment_data_types[use_generated_fragment_data_types_coun
 
 #define use_generated_fragment_refs_offset cql_offsetof(use_generated_fragment_row, name) // count = 2
 
-static cql_uint16 use_generated_fragment_col_offsets[] = { 7,
-  cql_offsetof(use_generated_fragment_row, rowid),
+static cql_uint16 use_generated_fragment_col_offsets[] = { 6,
   cql_offsetof(use_generated_fragment_row, flag),
   cql_offsetof(use_generated_fragment_row, id),
   cql_offsetof(use_generated_fragment_row, name),
@@ -15939,7 +16277,7 @@ CQL_WARN_UNUSED cql_code use_generated_fragment_fetch_results(sqlite3 *_Nonnull 
 
 /*
 export:
-DECLARE PROC use_generated_fragment () (rowid LONG!, flag BOOL!, id LONG, name TEXT, age REAL, storage BLOB, pk INT!);
+DECLARE PROC use_generated_fragment () (flag BOOL!, id LONG, name TEXT, age REAL, storage BLOB, pk INT!);
 */
 CQL_WARN_UNUSED cql_code use_generated_fragment(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
@@ -15961,7 +16299,13 @@ CQL_WARN_UNUSED cql_code use_generated_fragment(sqlite3 *_Nonnull _db_, sqlite3_
         "FROM backing AS T "
         "WHERE bgetkey_type(T.k) = -5417664364642960231",
   ") "
-    "SELECT rowid, flag, id, name, age, storage, pk "
+    "SELECT "
+        "_backed.flag, "
+        "_backed.id, "
+        "_backed.name, "
+        "_backed.age, "
+        "_backed.storage, "
+        "_backed.pk "
       "FROM _backed"
   );
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -15981,7 +16325,13 @@ PROC use_backed_table_directly ()
 BEGIN
   WITH
     backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
-  SELECT *
+  SELECT
+      backed.flag,
+      backed.id,
+      backed.name,
+      backed.age,
+      backed.storage,
+      backed.pk
     FROM backed;
 END;
 */
@@ -15992,7 +16342,6 @@ static int32_t use_backed_table_directly_perf_index;
 cql_string_proc_name(use_backed_table_directly_stored_procedure_name, "use_backed_table_directly");
 
 typedef struct use_backed_table_directly_row {
-  cql_int64 rowid;
   cql_bool flag;
   cql_nullable_int64 id;
   cql_nullable_double age;
@@ -16002,7 +16351,6 @@ typedef struct use_backed_table_directly_row {
 } use_backed_table_directly_row;
 
 uint8_t use_backed_table_directly_data_types[use_backed_table_directly_data_types_count] = {
-  CQL_DATA_TYPE_INT64 | CQL_DATA_TYPE_NOT_NULL, // rowid
   CQL_DATA_TYPE_BOOL | CQL_DATA_TYPE_NOT_NULL, // flag
   CQL_DATA_TYPE_INT64, // id
   CQL_DATA_TYPE_STRING, // name
@@ -16013,8 +16361,7 @@ uint8_t use_backed_table_directly_data_types[use_backed_table_directly_data_type
 
 #define use_backed_table_directly_refs_offset cql_offsetof(use_backed_table_directly_row, name) // count = 2
 
-static cql_uint16 use_backed_table_directly_col_offsets[] = { 7,
-  cql_offsetof(use_backed_table_directly_row, rowid),
+static cql_uint16 use_backed_table_directly_col_offsets[] = { 6,
   cql_offsetof(use_backed_table_directly_row, flag),
   cql_offsetof(use_backed_table_directly_row, id),
   cql_offsetof(use_backed_table_directly_row, name),
@@ -16049,7 +16396,7 @@ CQL_WARN_UNUSED cql_code use_backed_table_directly_fetch_results(sqlite3 *_Nonnu
 
 /*
 export:
-DECLARE PROC use_backed_table_directly () (rowid LONG!, flag BOOL!, id LONG, name TEXT, age REAL, storage BLOB, pk INT!);
+DECLARE PROC use_backed_table_directly () (flag BOOL!, id LONG, name TEXT, age REAL, storage BLOB, pk INT!);
 */
 CQL_WARN_UNUSED cql_code use_backed_table_directly(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
@@ -16071,7 +16418,13 @@ CQL_WARN_UNUSED cql_code use_backed_table_directly(sqlite3 *_Nonnull _db_, sqlit
         "FROM backing AS T "
         "WHERE bgetkey_type(T.k) = -5417664364642960231",
   ") "
-    "SELECT rowid, flag, id, name, age, storage, pk "
+    "SELECT "
+        "backed.flag, "
+        "backed.id, "
+        "backed.name, "
+        "backed.age, "
+        "backed.storage, "
+        "backed.pk "
       "FROM backed"
   );
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -16092,7 +16445,13 @@ BEGIN
   CURSOR C FOR
     WITH
       backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
-    SELECT *
+    SELECT
+        backed.flag,
+        backed.id,
+        backed.name,
+        backed.age,
+        backed.storage,
+        backed.pk
       FROM backed;
 END;
 */
@@ -16122,7 +16481,13 @@ CQL_WARN_UNUSED cql_code use_backed_table_with_cursor(sqlite3 *_Nonnull _db_) {
         "FROM backing AS T "
         "WHERE bgetkey_type(T.k) = -5417664364642960231",
   ") "
-    "SELECT rowid, flag, id, name, age, storage, pk "
+    "SELECT "
+        "backed.flag, "
+        "backed.id, "
+        "backed.name, "
+        "backed.age, "
+        "backed.storage, "
+        "backed.pk "
       "FROM backed"
   );
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -16148,7 +16513,13 @@ BEGIN
     two (x) AS (
       SELECT 2 AS x
     )
-  SELECT *
+  SELECT
+      backed.flag,
+      backed.id,
+      backed.name,
+      backed.age,
+      backed.storage,
+      backed.pk
     FROM backed;
 END;
 */
@@ -16159,7 +16530,6 @@ static int32_t use_backed_table_directly_in_with_select_perf_index;
 cql_string_proc_name(use_backed_table_directly_in_with_select_stored_procedure_name, "use_backed_table_directly_in_with_select");
 
 typedef struct use_backed_table_directly_in_with_select_row {
-  cql_int64 rowid;
   cql_bool flag;
   cql_nullable_int64 id;
   cql_nullable_double age;
@@ -16169,7 +16539,6 @@ typedef struct use_backed_table_directly_in_with_select_row {
 } use_backed_table_directly_in_with_select_row;
 
 uint8_t use_backed_table_directly_in_with_select_data_types[use_backed_table_directly_in_with_select_data_types_count] = {
-  CQL_DATA_TYPE_INT64 | CQL_DATA_TYPE_NOT_NULL, // rowid
   CQL_DATA_TYPE_BOOL | CQL_DATA_TYPE_NOT_NULL, // flag
   CQL_DATA_TYPE_INT64, // id
   CQL_DATA_TYPE_STRING, // name
@@ -16180,8 +16549,7 @@ uint8_t use_backed_table_directly_in_with_select_data_types[use_backed_table_dir
 
 #define use_backed_table_directly_in_with_select_refs_offset cql_offsetof(use_backed_table_directly_in_with_select_row, name) // count = 2
 
-static cql_uint16 use_backed_table_directly_in_with_select_col_offsets[] = { 7,
-  cql_offsetof(use_backed_table_directly_in_with_select_row, rowid),
+static cql_uint16 use_backed_table_directly_in_with_select_col_offsets[] = { 6,
   cql_offsetof(use_backed_table_directly_in_with_select_row, flag),
   cql_offsetof(use_backed_table_directly_in_with_select_row, id),
   cql_offsetof(use_backed_table_directly_in_with_select_row, name),
@@ -16216,7 +16584,7 @@ CQL_WARN_UNUSED cql_code use_backed_table_directly_in_with_select_fetch_results(
 
 /*
 export:
-DECLARE PROC use_backed_table_directly_in_with_select () (rowid LONG!, flag BOOL!, id LONG, name TEXT, age REAL, storage BLOB, pk INT!);
+DECLARE PROC use_backed_table_directly_in_with_select () (flag BOOL!, id LONG, name TEXT, age REAL, storage BLOB, pk INT!);
 */
 CQL_WARN_UNUSED cql_code use_backed_table_directly_in_with_select(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
@@ -16244,7 +16612,13 @@ CQL_WARN_UNUSED cql_code use_backed_table_directly_in_with_select(sqlite3 *_Nonn
       "two (x) AS ( "
         "SELECT 2 "
       ") "
-    "SELECT rowid, flag, id, name, age, storage, pk "
+    "SELECT "
+        "backed.flag, "
+        "backed.id, "
+        "backed.name, "
+        "backed.age, "
+        "backed.storage, "
+        "backed.pk "
       "FROM backed"
   );
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -16271,7 +16645,13 @@ BEGIN
       two (x) AS (
         SELECT 2 AS x
       )
-    SELECT *
+    SELECT
+        backed.flag,
+        backed.id,
+        backed.name,
+        backed.age,
+        backed.storage,
+        backed.pk
       FROM backed;
 END;
 */
@@ -16307,7 +16687,13 @@ CQL_WARN_UNUSED cql_code use_backed_table_with_select_and_cursor(sqlite3 *_Nonnu
       "two (x) AS ( "
         "SELECT 2 "
       ") "
-    "SELECT rowid, flag, id, name, age, storage, pk "
+    "SELECT "
+        "backed.flag, "
+        "backed.id, "
+        "backed.name, "
+        "backed.age, "
+        "backed.storage, "
+        "backed.pk "
       "FROM backed"
   );
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -16386,7 +16772,13 @@ BEGIN
   EXPLAIN QUERY PLAN
   WITH
     backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
-  SELECT *
+  SELECT
+      backed.flag,
+      backed.id,
+      backed.name,
+      backed.age,
+      backed.storage,
+      backed.pk
     FROM backed;
 END;
 */
@@ -16418,7 +16810,13 @@ static CQL_WARN_UNUSED cql_code explain_query_plan_backed(sqlite3 *_Nonnull _db_
         "FROM backing AS T "
         "WHERE bgetkey_type(T.k) = -5417664364642960231",
   ") "
-    "SELECT rowid, flag, id, name, age, storage, pk "
+    "SELECT "
+        "backed.flag, "
+        "backed.id, "
+        "backed.name, "
+        "backed.age, "
+        "backed.storage, "
+        "backed.pk "
       "FROM backed"
   );
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -16548,7 +16946,7 @@ BEGIN
       VALUES (1, "2", 3.14)
     ),
     _vals (pk, x, y) AS (
-      SELECT *
+      SELECT V.x, V.y, V.z
         FROM V
     )
   INSERT INTO backing(k, v)
@@ -16575,7 +16973,7 @@ CQL_WARN_UNUSED cql_code insert_backed_values_using_with(sqlite3 *_Nonnull _db_)
         "VALUES (1, '2', 3.14) "
       "), "
       "_vals (pk, x, y) AS ( "
-        "SELECT x, y, z "
+        "SELECT V.x, V.y, V.z "
           "FROM V "
       ") "
     "INSERT INTO backing(k, v) "
@@ -16853,7 +17251,7 @@ BEGIN
   CURSOR C FOR
     WITH
       backed3 (rowid, pk1, pk2, name) AS (CALL _backed3())
-    SELECT *
+    SELECT backed3.pk1, backed3.pk2, backed3.name
       FROM backed3;
 END;
 */
@@ -16889,7 +17287,7 @@ CQL_WARN_UNUSED cql_code test_blob_insert_key_codes(sqlite3 *_Nonnull _db_) {
         "FROM backing_key_codes AS T "
         "WHERE bgetkey_type(T.k) = -4381524886612374514",
   ") "
-    "SELECT rowid, pk1, pk2, name "
+    "SELECT backed3.pk1, backed3.pk2, backed3.name "
       "FROM backed3"
   );
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -16917,7 +17315,7 @@ BEGIN
   CURSOR C FOR
     WITH
       backed3 (rowid, pk1, pk2, name) AS (CALL _backed3())
-    SELECT *
+    SELECT backed3.pk1, backed3.pk2, backed3.name
       FROM backed3;
 END;
 */
@@ -16953,7 +17351,7 @@ CQL_WARN_UNUSED cql_code test_blob_insert_val_offsets(sqlite3 *_Nonnull _db_) {
         "FROM backing_key_codes AS T "
         "WHERE bgetkey_type(T.k) = -4381524886612374514",
   ") "
-    "SELECT rowid, pk1, pk2, name "
+    "SELECT backed3.pk1, backed3.pk2, backed3.name "
       "FROM backed3"
   );
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -17266,7 +17664,7 @@ BEGIN
   WHILE i < 10
   BEGIN
     CURSOR C FOR
-      SELECT *
+      SELECT foo.id
         FROM foo
         WHERE id = i;
     FETCH C;
@@ -17303,7 +17701,7 @@ CQL_WARN_UNUSED cql_code cursor_in_loop(sqlite3 *_Nonnull _db_) {
     if (!(i < 10)) break;
     cql_finalize_stmt(&C_stmt);
     _rc_ = cql_prepare(_db_, &C_stmt,
-      "SELECT id "
+      "SELECT foo.id "
         "FROM foo "
         "WHERE id = ?");
     cql_multibind(&_rc_, _db_, &C_stmt, 1,
@@ -17650,7 +18048,7 @@ cql_cleanup:
 PROC qid_t1 ()
 BEGIN
   CURSOR C FOR
-    SELECT *
+    SELECT `xyz``abc`.x, `xyz``abc`.`a b`
       FROM `xyz``abc`;
   LOOP FETCH C
   BEGIN
@@ -17679,7 +18077,7 @@ CQL_WARN_UNUSED cql_code qid_t1(sqlite3 *_Nonnull _db_) {
   qid_t1_C_row C = { 0 };
 
   _rc_ = cql_prepare(_db_, &C_stmt,
-    "SELECT x, [a b] "
+    "SELECT [xyz`abc].x, [xyz`abc].[a b] "
       "FROM [xyz`abc]");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   for (;;) {
@@ -17707,7 +18105,7 @@ cql_cleanup:
 PROC qid_t2 ()
 BEGIN
   CURSOR D FOR
-    SELECT `xyz``abc`.*
+    SELECT `xyz``abc`.x, `xyz``abc`.`a b`
       FROM `xyz``abc`;
   LOOP FETCH D
   BEGIN
@@ -17953,7 +18351,11 @@ BEGIN
   CURSOR C FOR
     WITH
       jdata (rowid, id, name, age, zip) AS (CALL _jdata())
-    SELECT *
+    SELECT
+        jdata.id,
+        jdata.name,
+        jdata.age,
+        jdata.zip
       FROM jdata;
 END;
 */
@@ -17981,7 +18383,11 @@ CQL_WARN_UNUSED cql_code jdata_dml_select(sqlite3 *_Nonnull _db_) {
         "FROM json_backing AS T "
         "WHERE ((T.k)->>0) = -1916485007726025434",
   ") "
-    "SELECT rowid, id, name, age, zip "
+    "SELECT "
+        "jdata.id, "
+        "jdata.name, "
+        "jdata.age, "
+        "jdata.zip "
       "FROM jdata"
   );
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -18546,7 +18952,7 @@ BEGIN
       SELECT cql_blob_create(`a table`, V.`col 1`, `a table`.`col 1`), cql_blob_create(`a table`, V.`col 2`, `a table`.`col 2`)
         FROM _vals AS V
     ON CONFLICT (`the key`)
-    WHERE cql_blob_get(`the value`, `a table`.`col 2`) IN (SELECT *
+    WHERE cql_blob_get(`the value`, `a table`.`col 2`) IN (SELECT a_cte.x
       FROM a_cte) 
     DO UPDATE
       SET `the key` = cql_blob_update(`the key`, ifnull(cql_blob_get(`the value`, `a table`.`col 2`), 0), `a table`.`col 1`)
@@ -18581,7 +18987,7 @@ CQL_WARN_UNUSED cql_code upsert_returning_with_backing(sqlite3 *_Nonnull _db_) {
       "SELECT jsonb_array(-3079349931095810044, V.[col 1]), jsonb_object('X_colX202', V.[col 2]) "
         "FROM _vals AS V "
     "ON CONFLICT ([the key]) "
-    "WHERE (([the value])->>'$.X_colX202') IN (SELECT x "
+    "WHERE (([the value])->>'$.X_colX202') IN (SELECT a_cte.x "
       "FROM a_cte)  "
     "DO UPDATE "
       "SET [the key] = jsonb_set([the key],  '$[1]', ifnull((([the value])->>'$.X_colX202'), 0)) "
@@ -19992,11 +20398,11 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   // The statement ending at line XXXX
 
   /*
-  SET b2 := ( SELECT EXISTS (SELECT *
+  SET b2 := ( SELECT EXISTS (SELECT 1
       FROM bar) );
   */
   _rc_ = cql_prepare(_db_, &_temp_stmt,
-    "SELECT EXISTS (SELECT * "
+    "SELECT EXISTS (SELECT 1 "
         "FROM bar)");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = sqlite3_step(_temp_stmt);
@@ -20008,11 +20414,21 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
 
   /*
   CURSOR expanded_select FOR
-    SELECT *
+    SELECT
+        bar.id,
+        bar.name,
+        bar.rate,
+        bar.type,
+        bar.size
       FROM bar;
   */
   _rc_ = cql_prepare(_db_, &expanded_select_stmt,
-    "SELECT id, name, rate, type, size "
+    "SELECT "
+        "bar.id, "
+        "bar.name, "
+        "bar.rate, "
+        "bar.type, "
+        "bar.size "
       "FROM bar");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
 
@@ -20020,11 +20436,21 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
 
   /*
   CURSOR table_expanded_select FOR
-    SELECT bar.*
+    SELECT
+        bar.id,
+        bar.name,
+        bar.rate,
+        bar.type,
+        bar.size
       FROM bar;
   */
   _rc_ = cql_prepare(_db_, &table_expanded_select_stmt,
-    "SELECT bar.id, bar.name, bar.rate, bar.type, bar.size "
+    "SELECT "
+        "bar.id, "
+        "bar.name, "
+        "bar.rate, "
+        "bar.type, "
+        "bar.size "
       "FROM bar");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
 

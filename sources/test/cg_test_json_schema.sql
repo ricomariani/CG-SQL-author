@@ -51,7 +51,7 @@ create table Foo
 -- + "isTemp" : 0,
 -- + "isDeleted" : 0,
 -- + "region" : "region0",
--- + "select" : "SELECT id, name FROM Foo",
+-- + "select" : "SELECT Foo.id, Foo.name FROM Foo",
 create view region_0_view as select * from Foo;
 
 -- TEST: ensure this index is in the right region
@@ -386,7 +386,7 @@ end;
 -- + "type" : "integer",
 -- + "kind" : "ident",
 -- + "name" : "name",
--- + "statement" : "SELECT DISTINCT id, name FROM Foo WHERE name LIKE ? AND name <> ? GROUP BY name HAVING name > ? ORDER BY ? LIMIT 1 OFFSET 3",
+-- + "statement" : "SELECT DISTINCT Foo.id, Foo.name FROM Foo WHERE name LIKE ? AND name <> ? GROUP BY name HAVING name > ? ORDER BY ? LIMIT 1 OFFSET 3",
 -- + "statementArgs" : [ "pattern", "reject", "reject", "pattern" ]
 proc bigger_query(pattern text!, reject text)
 begin
@@ -507,7 +507,7 @@ end;
 -- TEST: an update statement and with clause
 -- + "name" : "update_with_proc",
 -- + "table" : "Foo",
--- + "statement" : "WITH names (n) AS ( VALUES ('this'), ('that') ) UPDATE foO SET name = ? WHERE name IN (SELECT n FROM names)",
+-- + "statement" : "WITH names (n) AS ( VALUES ('this'), ('that') ) UPDATE foO SET name = ? WHERE name IN (SELECT names.n FROM names)",
 -- + "statementArgs" : [ "name_" ]
 proc update_with_proc(id_ integer!, name_ text)
 begin
@@ -586,7 +586,7 @@ create index MyIndexWithAttributes on Foo(id);
 -- + "name" : "name",
 -- + "type" : "text",
 -- + "isNotNull" : 0
--- + "select" : "SELECT id, name FROM Foo",
+-- + "select" : "SELECT Foo.id, Foo.name FROM Foo",
 -- + "selectArgs" : [  ],
 -- + "fromTables" : [ "Foo" ],
 -- + "usesTables" : [ "Foo" ]
@@ -636,7 +636,7 @@ create view ADeletedView as select * from Foo @delete(1);
 create view ADeletedViewWithMigrationProc as select * from Foo @delete(1, view_delete);
 
 -- TEST: join tables, create new dependencies
--- + "statement" : "SELECT id, name, r, bl, b, l FROM Foo AS T1 INNER JOIN T5 ON T1.id = ? AND T1.id = T5.l",
+-- + "statement" : "SELECT T1.id, T1.name, T5.r, T5.bl, T5.b, T5.l FROM Foo AS T1 INNER JOIN T5 ON T1.id = ? AND T1.id = T5.l",
 @attribute(my_attribute = 'This is a string attribute')
 proc joiner(id_ integer!)
 begin
@@ -828,7 +828,7 @@ end;
 -- + "insertTables" : [ "T3" ],
 -- + "usesTables" : [ "T3" ],
 -- + "table" : "T3",
--- + "statement" : "WITH data (id) AS ( VALUES (1), (2), (?) ) INSERT INTO T3(id) SELECT id FROM data",
+-- + "statement" : "WITH data (id) AS ( VALUES (1), (2), (?) ) INSERT INTO T3(id) SELECT data.id FROM data",
 -- + "statementArgs" : [ "x" ],
 -- + "statementType" : "INSERT",
 -- + "columns" : [ "id" ]
@@ -1086,7 +1086,7 @@ end;
 -- +         "name" : "v",
 -- +         "type" : "integer",
 -- +         "isNotNull" : 1
--- +   "statement" : "WITH nums (i) AS ( SELECT 0 UNION ALL SELECT i + 1 FROM nums LIMIT 1 ), vals (v) AS ( SELECT i FROM nums ) SELECT v FROM vals",
+-- +   "statement" : "WITH nums (i) AS ( SELECT 0 UNION ALL SELECT i + 1 FROM nums LIMIT 1 ), vals (v) AS ( SELECT i FROM nums ) SELECT vals.v FROM vals",
 -- +   "statementArgs" : [  ]
 procedure with_select_proc()
 begin
@@ -1937,7 +1937,7 @@ create table `abc def` (
 -- + "usesTables" : [ "abc def" ],
 -- + "name" : "a b",
 -- + "name" : "x y",
--- + "statement" : "SELECT [a b], [x y] FROM [abc def]",
+-- + "statement" : "SELECT [abc def].[a b], [abc def].[x y] FROM [abc def]",
 -- + "statementArgs" : [  ]
 proc generate_quoted_items()
 begin
@@ -2043,7 +2043,7 @@ end;
 -- + "name" : "a view",
 -- + "name" : "a b",
 -- + "name" : "x y",
--- + "select" : "SELECT [a b], [x y] FROM [abc def]",
+-- + "select" : "SELECT [abc def].[a b], [abc def].[x y] FROM [abc def]",
 -- + "selectArgs" : [  ],
 -- + "fromTables" : [ "abc def" ],
 -- + "usesTables" : [ "abc def" ]

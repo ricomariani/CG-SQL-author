@@ -3,7 +3,7 @@
 -- DDL in procs will not count as declarations
 @SCHEMA_UPGRADE_SCRIPT;
 
--- schema crc 7129290251650815803
+-- schema crc -8913652680819700114
 
 -- declare facet helpers-- 
 DECLARE facet_data TYPE OBJECT<facet_data>;
@@ -255,37 +255,54 @@ CREATE TABLE some_table(
 
 @begin_schema_region shared;
 CREATE VIEW shared_view AS
-  SELECT *
+  SELECT
+      `quoted foo`.`an id`,
+      `quoted foo`.`id 2`,
+      `quoted foo`.name,
+      `quoted foo`.name_2
     FROM `quoted foo`;
 @end_schema_region;
 
 @begin_schema_region shared;
 CREATE VIEW live_view AS
-  SELECT *
+  SELECT
+      `quoted foo`.`an id`,
+      `quoted foo`.`id 2`,
+      `quoted foo`.name,
+      `quoted foo`.name_2
     FROM `quoted foo`;
 @end_schema_region;
 
 @begin_schema_region shared;
 CREATE VIEW dead_view AS
-  SELECT *
+  SELECT
+      `quoted foo`.`an id`,
+      `quoted foo`.`id 2`,
+      `quoted foo`.name,
+      `quoted foo`.name_2
     FROM `quoted foo` @DELETE(2, DeadViewMigration);
 @end_schema_region;
 
 @begin_schema_region extra;
 CREATE VIEW another_live_view AS
-  SELECT *
+  SELECT
+      table2.`an id`,
+      table2.name1,
+      table2.name2,
+      table2.name3,
+      table2.name4
     FROM table2;
 @end_schema_region;
 
 @begin_schema_region other;
 CREATE VIEW `foo view unsubscribed` AS
-  SELECT *
+  SELECT some_table.`an id`
     FROM some_table;
 @end_schema_region;
 
 @begin_schema_region other;
 CREATE VIEW `foo view normal` AS
-  SELECT *
+  SELECT some_table.`an id`
     FROM some_table;
 @end_schema_region;
 
@@ -680,16 +697,29 @@ END;
 PROC test_cql_create_all_views()
 BEGIN
   CREATE VIEW shared_view AS
-    SELECT *
+    SELECT
+        `quoted foo`.`an id`,
+        `quoted foo`.`id 2`,
+        `quoted foo`.name,
+        `quoted foo`.name_2
       FROM `quoted foo`;
   CREATE VIEW live_view AS
-    SELECT *
+    SELECT
+        `quoted foo`.`an id`,
+        `quoted foo`.`id 2`,
+        `quoted foo`.name,
+        `quoted foo`.name_2
       FROM `quoted foo`;
   CREATE VIEW another_live_view AS
-    SELECT *
+    SELECT
+        table2.`an id`,
+        table2.name1,
+        table2.name2,
+        table2.name3,
+        table2.name4
       FROM table2;
   CREATE VIEW `foo view normal` AS
-    SELECT *
+    SELECT some_table.`an id`
       FROM some_table;
 END;
 
@@ -929,7 +959,11 @@ BEGIN
   );
 
   CREATE TEMP VIEW temp_view_in_temp_section AS
-    SELECT *
+    SELECT
+        `quoted foo`.`an id`,
+        `quoted foo`.`id 2`,
+        `quoted foo`.name,
+        `quoted foo`.name_2
       FROM `quoted foo`;
 
   CREATE TEMP TRIGGER temp_trigger_in_temp_section
@@ -989,7 +1023,7 @@ END;
 PROC test_perform_upgrade_steps(include_virtual_tables BOOL NOT NULL)
 BEGIN
   LET facet := cql_compressed('cql_schema_crc_no_virtual');
-  IF cql_facet_find(test_facets, facet) <> -8396293601562644096 THEN
+  IF cql_facet_find(test_facets, facet) <> -500442630697164374 THEN
     DECLARE schema_version LONG INTEGER NOT NULL;
     -- dropping all views --
     CALL test_cql_drop_all_views();
@@ -1168,11 +1202,11 @@ BEGIN
     CALL test_cql_create_all_triggers();
 
     CALL test_cql_set_facet_version('cql_schema_version', 7);
-    CALL test_cql_set_facet_version('cql_schema_crc_no_virtual', -8396293601562644096);
+    CALL test_cql_set_facet_version('cql_schema_crc_no_virtual', -500442630697164374);
   END IF;
   IF include_virtual_tables THEN
     CALL test_cql_recreate_virtual_tables();
-    CALL test_cql_set_facet_version('cql_schema_crc', 7129290251650815803);
+    CALL test_cql_set_facet_version('cql_schema_crc', -8913652680819700114);
   END IF;
 END;
 
@@ -1229,7 +1263,7 @@ BEGIN
   -- fetch the last known schema crc, if it's different do the upgrade --
   CALL test_cql_get_facet_version('cql_schema_crc', schema_crc);
 
-  IF schema_crc <> 7129290251650815803 THEN
+  IF schema_crc <> -8913652680819700114 THEN
     TRY
       CALL test_setup_facets();
       CALL test_perform_needed_upgrades(include_virtual_tables);

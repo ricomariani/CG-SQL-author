@@ -4,8 +4,8 @@ reference results for version 0
 
 type: view
 tbl_name: [extra view]
-CREATE VIEW [extra view] AS  SELECT id,
-name   FROM g1
+CREATE VIEW [extra view] AS  SELECT g1.id,
+g1.name   FROM g1
 
 ----- [extra_index] -----
 
@@ -71,8 +71,8 @@ CREATE TRIGGER staying_trigger  BEFORE DELETE ON g1 BEGIN SELECT 1; END
 
 type: view
 tbl_name: [staying_view]
-CREATE VIEW staying_view AS  SELECT id,
-name   FROM g1
+CREATE VIEW staying_view AS  SELECT g1.id,
+g1.name   FROM g1
 
 ----- [test for unsub] -----
 

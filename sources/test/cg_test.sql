@@ -1291,18 +1291,28 @@ end;
 declare function voidfunc() int;
 
 -- TEST: use a select exists clause
--- + "SELECT EXISTS (SELECT * "
+-- + "SELECT EXISTS (SELECT 1 "
 -- + "FROM bar)"
 set b2 := (select exists(select * from bar));
 
 -- TEST: for expand of select * columns from whole result
 -- + _rc_ = cql_prepare(_db_, &expanded_select_stmt,
--- + "SELECT id, name, rate, type, size "
+-- + "SELECT "
+-- +   "bar.id, "
+-- +   "bar.name, "
+-- +   "bar.rate, "
+-- +   "bar.type, "
+-- +   "bar.size "
 -- + "FROM bar"
 declare expanded_select cursor for select * from bar;
 
 -- TEST: for expand of select * columns from table
--- + "SELECT bar.id, bar.name, bar.rate, bar.type, bar.size "
+-- + "SELECT "
+-- +   "bar.id, "
+-- +   "bar.name, "
+-- +   "bar.rate, "
+-- +   "bar.type, "
+-- +   "bar.size "
 -- + "FROM bar"
 declare table_expanded_select cursor for select bar.* from bar;
 
@@ -1616,7 +1626,7 @@ create table threads (
 -- TEST: nested subquery in a proc
 -- this forces the json_schema runtime to run over an atypical table_factor
 -- + _rc_ = cql_prepare(_db_, _result_stmt,
--- + "SELECT thread_key "
+-- + "SELECT T.thread_key "
 -- + "FROM (SELECT thread_key "
 -- + "FROM threads) AS T"
 procedure thread_theme_info_list(thread_key_ LONG INT NOT NULL)
@@ -1881,7 +1891,7 @@ insert into foo values ( ifnull((select a from x), 0));
 -- +     "SELECT 111 "
 -- +   ") "
 -- + "INSERT INTO foo(id) "
--- +   "SELECT a "
+-- +   "SELECT x.a "
 -- +     "FROM x");
 proc with_inserter()
 begin
@@ -2311,7 +2321,7 @@ end;
 -- +   "x (a) AS ( "
 -- +     "SELECT 111 "
 -- +   ") "
--- + "DELETE FROM foo WHERE id IN (SELECT a "
+-- + "DELETE FROM foo WHERE id IN (SELECT x.a "
 -- +   "FROM x)");
 proc with_deleter()
 begin
@@ -2327,7 +2337,7 @@ end;
 -- +   ") "
 -- + "UPDATE bar "
 -- +   "SET name = 'xyzzy' "
--- +     "WHERE id IN (SELECT a "
+-- +     "WHERE id IN (SELECT x.a "
 -- +     "FROM x)");
 proc with_updater()
 begin
@@ -3736,7 +3746,7 @@ create virtual table virtual_with_hidden using module_name as (
 );
 
 -- TEST: hidden applied on virtual tables
--- + "SELECT vy "
+-- + "SELECT virtual_with_hidden.vy "
 -- + "FROM virtual_with_hidden");
 proc virtual1()
 begin
@@ -4719,7 +4729,7 @@ end;
 -- +  "SELECT 1234",
 -- ---- then we see what came after the shared fragment
 -- +  ") "
--- +    "SELECT shared_something "
+-- +    "SELECT shared_frag.shared_something "
 -- +      "FROM shared_frag"
 -- +  );
 proc foo()
@@ -4796,7 +4806,12 @@ end;
 --
 -- pop to root, fragment 4 condition same as fragment 0
 -- + ") "
--- +   "SELECT bar.id, bar.name, bar.rate, bar.type, bar.size "
+-- +   "SELECT "
+-- +       "bar.id, "
+-- +       "bar.name, "
+-- +       "bar.rate, "
+-- +       "bar.type, "
+-- +       "bar.size "
 -- +     "FROM bar "
 -- +     "INNER JOIN some_cte ON ? = 5"
 --
@@ -4934,7 +4949,7 @@ end;
 -- fragment 6 the tail of fragment 2, present if x <= 5
 -- fourth variable binding v[6] = pred[6] = pred[2]
 -- +  ") "
--- +    "SELECT x "
+-- +    "SELECT shared_conditional.x "
 -- +      "FROM shared_conditional "
 -- +      "WHERE ? = 5",
 --
@@ -5404,6 +5419,8 @@ begin
 end;
 
 -- TEST: we should have created a shared fragment called _backed
+-- this is a reference to the internally generated CTE, normally
+-- you don't refer to this yourself, but we can test it
 -- + _backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
 -- + SELECT
 -- + rowid,
@@ -5415,7 +5432,13 @@ end;
 -- + bgetkey(T.k, 0)
 -- + FROM backing AS T
 -- + WHERE bgetkey_type(T.k) = -5417664364642960231
--- + SELECT rowid, flag, id, name, age, storage, pk
+-- + "SELECT "
+-- +   "_backed.flag, "
+-- +   "_backed.id, "
+-- +   "_backed.name, "
+-- +   "_backed.age, "
+-- +   "_backed.storage, "
+-- +   "_backed.pk "
 -- + FROM _backed
 proc use_generated_fragment()
 begin
@@ -5435,7 +5458,13 @@ end;
 -- + bgetkey(T.k, 0)
 -- + FROM backing AS T
 -- + WHERE bgetkey_type(T.k) = -5417664364642960231
--- + SELECT rowid, flag, id, name, age, storage, pk
+-- + "SELECT "
+-- +   "backed.flag, "
+-- +   "backed.id, "
+-- +   "backed.name, "
+-- +   "backed.age, "
+-- +   "backed.storage, "
+-- +   "backed.pk "
 -- + FROM backed
 proc use_backed_table_directly()
 begin
@@ -5454,7 +5483,13 @@ end;
 -- + bgetkey(T.k, 0)
 -- + FROM backing AS T
 -- + WHERE bgetkey_type(T.k) = -5417664364642960231
--- + SELECT rowid, flag, id, name, age, storage, pk
+-- + "SELECT "
+-- +   "backed.flag, "
+-- +   "backed.id, "
+-- +   "backed.name, "
+-- +   "backed.age, "
+-- +   "backed.storage, "
+-- +   "backed.pk "
 -- + FROM backed
 -- verify this is a NOT result set proc
 -- - sqlite3_stmt *_Nullable *_Nonnull _result_stmt
@@ -5483,7 +5518,13 @@ end;
 -- + bgetkey(T.k, 0)
 -- + FROM backing AS T
 -- + WHERE bgetkey_type(T.k) = -5417664364642960231
--- + SELECT rowid, flag, id, name, age, storage, pk
+-- + "SELECT "
+-- +   "backed.flag, "
+-- +   "backed.id, "
+-- +   "backed.name, "
+-- +   "backed.age, "
+-- +   "backed.storage, "
+-- +   "backed.pk "
 -- + FROM backed
 proc use_backed_table_directly_in_with_select()
 begin
@@ -5510,7 +5551,13 @@ end;
 -- + bgetkey(T.k, 0)
 -- + FROM backing AS T
 -- + WHERE bgetkey_type(T.k) = -5417664364642960231
--- + SELECT rowid, flag, id, name, age, storage, pk
+-- + "SELECT "
+-- +   "backed.flag, "
+-- +   "backed.id, "
+-- +   "backed.name, "
+-- +   "backed.age, "
+-- +   "backed.storage, "
+-- +   "backed.pk "
 -- + FROM backed
 -- verify this is NOT a result set proc
 -- - sqlite3_stmt *_Nullable *_Nonnull _result_stmt
@@ -5557,7 +5604,13 @@ end;
 -- + bgetkey(T.k, 0)
 -- + FROM backing AS T
 -- + WHERE bgetkey_type(T.k) = -5417664364642960231
--- + SELECT rowid, flag, id, name, age, storage, pk
+-- + "SELECT "
+-- +   "backed.flag, "
+-- +   "backed.id, "
+-- +   "backed.name, "
+-- +   "backed.age, "
+-- +   "backed.storage, "
+-- +   "backed.pk "
 -- + FROM backed
 [[private]]
 proc explain_query_plan_backed(out x bool!)
@@ -5609,7 +5662,7 @@ end;
 -- + VALUES (1, '2', 3.14)
 -- + )
 -- + _vals (pk, x, y) AS (
--- + SELECT x, y, z
+-- + SELECT V.x, V.y, V.z
 -- + FROM V
 -- + )
 -- + "INSERT INTO backing(k, v) "
@@ -5925,7 +5978,7 @@ end;
 -- +   cql_int32 X_aX20b;
 -- + } qid_t1_C_row;
 -- + _rc_ = cql_prepare(_db_, &C_stmt,
--- + "SELECT x, [a b] "
+-- + "SELECT [xyz`abc].x, [xyz`abc].[a b] "
 -- + "FROM [xyz`abc]");
 -- +  printf("%d %d", C.x, C.X_aX20b);
 proc qid_t1()
@@ -6059,8 +6112,12 @@ create table jdata(
 -- +   "FROM json_backing AS T "
 -- +   "WHERE ((T.k)->>0) = -1916485007726025434",
 -- + ") "
--- +   "SELECT rowid, id, name, age, zip "
--- +     "FROM jdata"
+-- + "SELECT "
+-- +   "jdata.id, "
+-- +   "jdata.name, "
+-- +   "jdata.age, "
+-- +   "jdata.zip "
+-- +   "FROM jdata"
 proc jdata_dml_select()
 begin
   declare C cursor for select * from jdata;
@@ -6285,7 +6342,7 @@ create table `a table`(
 -- +   "SELECT jsonb_array(-3079349931095810044, V.[col 1]), jsonb_object('X_colX202', V.[col 2]) "
 -- +     "FROM _vals AS V "
 -- + "ON CONFLICT ([the key]) "
--- + "WHERE (([the value])->>'$.X_colX202') IN (SELECT x "
+-- + "WHERE (([the value])->>'$.X_colX202') IN (SELECT a_cte.x "
 -- +   "FROM a_cte)  "
 -- + "DO UPDATE "
 -- +   "SET [the key] = jsonb_set([the key],  '$[1]', ifnull((([the value])->>'$.X_colX202'), 0)) "

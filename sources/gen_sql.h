@@ -76,10 +76,6 @@ typedef struct gen_sql_callbacks {
   gen_sql_callback _Nullable col_def_callback;
   void *_Nullable col_def_context;
 
-  // This callback is used to explain the * in select * or select T.*
-  gen_sql_callback _Nullable star_callback;
-  void *_Nullable star_context;
-
   // This callback is used to force the "IF NOT EXISTS" form of DDL statements when generating
   // schema upgrade steps.  e.g. a "CREATE TABLE Foo declarations get "IF NOT EXISTS" added
   // to them in upgrade steps.
@@ -192,6 +188,5 @@ cql_noexport void gen_statement_with_callbacks(ast_node *_Nonnull ast, gen_sql_c
 cql_noexport void gen_statement_and_attributes_with_callbacks(ast_node *_Nonnull ast, gen_sql_callbacks *_Nullable _callbacks);
 cql_noexport void gen_any_text_arg(ast_node *_Nonnull ast);
 
-cql_noexport bool_t eval_star_callback(ast_node *_Nonnull ast);
 cql_noexport bool_t eval_variables_callback(ast_node *_Nonnull ast);
 cql_noexport bool_t eval_column_callback(ast_node *_Nonnull ast);

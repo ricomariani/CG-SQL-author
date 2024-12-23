@@ -3720,22 +3720,10 @@ static inline virtual1_result_set_ref virtual1_from_CGS_virtual1(CGS_virtual1 *r
   return (__bridge virtual1_result_set_ref)resultSet;
 }
 
-static inline cql_int32 CGS_virtual1_get_vx(CGS_virtual1 *resultSet, cql_int32 row)
-{
-  virtual1_result_set_ref cResultSet = virtual1_from_CGS_virtual1(resultSet);
-  return virtual1_get_vx(cResultSet, row);
-}
-
 static inline NSNumber *_Nullable CGS_virtual1_get_vy(CGS_virtual1 *resultSet, cql_int32 row)
 {
   virtual1_result_set_ref cResultSet = virtual1_from_CGS_virtual1(resultSet);
   return virtual1_get_vy_is_null(cResultSet, row) ? nil : @(virtual1_get_vy_value(cResultSet, row));
-}
-
-static inline cql_int32 CGS_virtual1_get_vz(CGS_virtual1 *resultSet, cql_int32 row)
-{
-  virtual1_result_set_ref cResultSet = virtual1_from_CGS_virtual1(resultSet);
-  return virtual1_get_vz(cResultSet, row);
 }
 
 static inline cql_int32 CGS_virtual1_result_count(CGS_virtual1 *resultSet)
@@ -4530,12 +4518,6 @@ static inline use_generated_fragment_result_set_ref use_generated_fragment_from_
   return (__bridge use_generated_fragment_result_set_ref)resultSet;
 }
 
-static inline cql_int64 CGS_use_generated_fragment_get_rowid(CGS_use_generated_fragment *resultSet, cql_int32 row)
-{
-  use_generated_fragment_result_set_ref cResultSet = use_generated_fragment_from_CGS_use_generated_fragment(resultSet);
-  return use_generated_fragment_get_rowid(cResultSet, row);
-}
-
 static inline cql_bool CGS_use_generated_fragment_get_flag(CGS_use_generated_fragment *resultSet, cql_int32 row)
 {
   use_generated_fragment_result_set_ref cResultSet = use_generated_fragment_from_CGS_use_generated_fragment(resultSet);
@@ -4604,12 +4586,6 @@ static inline use_backed_table_directly_result_set_ref use_backed_table_directly
   return (__bridge use_backed_table_directly_result_set_ref)resultSet;
 }
 
-static inline cql_int64 CGS_use_backed_table_directly_get_rowid(CGS_use_backed_table_directly *resultSet, cql_int32 row)
-{
-  use_backed_table_directly_result_set_ref cResultSet = use_backed_table_directly_from_CGS_use_backed_table_directly(resultSet);
-  return use_backed_table_directly_get_rowid(cResultSet, row);
-}
-
 static inline cql_bool CGS_use_backed_table_directly_get_flag(CGS_use_backed_table_directly *resultSet, cql_int32 row)
 {
   use_backed_table_directly_result_set_ref cResultSet = use_backed_table_directly_from_CGS_use_backed_table_directly(resultSet);
@@ -4676,12 +4652,6 @@ static inline CGS_use_backed_table_directly_in_with_select *CGS_use_backed_table
 static inline use_backed_table_directly_in_with_select_result_set_ref use_backed_table_directly_in_with_select_from_CGS_use_backed_table_directly_in_with_select(CGS_use_backed_table_directly_in_with_select *resultSet)
 {
   return (__bridge use_backed_table_directly_in_with_select_result_set_ref)resultSet;
-}
-
-static inline cql_int64 CGS_use_backed_table_directly_in_with_select_get_rowid(CGS_use_backed_table_directly_in_with_select *resultSet, cql_int32 row)
-{
-  use_backed_table_directly_in_with_select_result_set_ref cResultSet = use_backed_table_directly_in_with_select_from_CGS_use_backed_table_directly_in_with_select(resultSet);
-  return use_backed_table_directly_in_with_select_get_rowid(cResultSet, row);
 }
 
 static inline cql_bool CGS_use_backed_table_directly_in_with_select_get_flag(CGS_use_backed_table_directly_in_with_select *resultSet, cql_int32 row)

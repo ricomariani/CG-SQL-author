@@ -2811,12 +2811,12 @@
     The statement ending at line XXXX
 
     CREATE VIEW region_0_view AS
-      SELECT *
+      SELECT Foo.id, Foo.name
         FROM Foo
 
     {
       "name" : "region_0_view",
-      "CRC" : "-671179869019290295",
+      "CRC" : "-5249868087081889182",
       "isTemp" : 0,
       "isDeleted" : 0,
       "region" : "region0",
@@ -2834,7 +2834,7 @@
           "isNotNull" : 0
         }
       ],
-      "select" : "SELECT id, name FROM Foo",
+      "select" : "SELECT Foo.id, Foo.name FROM Foo",
       "selectArgs" : [  ],
       "fromTables" : [ "Foo" ],
       "usesTables" : [ "Foo" ]
@@ -2843,13 +2843,13 @@
     The statement ending at line XXXX
 
     CREATE VIEW MyView AS
-      SELECT *
+      SELECT Foo.id, Foo.name
         FROM Foo
 
     ,
     {
       "name" : "MyView",
-      "CRC" : "1603543019513087516",
+      "CRC" : "2623946765759244787",
       "isTemp" : 0,
       "isDeleted" : 0,
       "projection" : [
@@ -2865,7 +2865,7 @@
           "isNotNull" : 0
         }
       ],
-      "select" : "SELECT id, name FROM Foo",
+      "select" : "SELECT Foo.id, Foo.name FROM Foo",
       "selectArgs" : [  ],
       "fromTables" : [ "Foo" ],
       "usesTables" : [ "Foo" ]
@@ -2874,13 +2874,13 @@
     The statement ending at line XXXX
 
     CREATE VIEW MyOtherView AS
-      SELECT *
+      SELECT MyView.id, MyView.name
         FROM MyView
 
     ,
     {
       "name" : "MyOtherView",
-      "CRC" : "-4030706286080909447",
+      "CRC" : "7527793111836729326",
       "isTemp" : 0,
       "isDeleted" : 0,
       "projection" : [
@@ -2896,7 +2896,7 @@
           "isNotNull" : 0
         }
       ],
-      "select" : "SELECT id, name FROM MyView",
+      "select" : "SELECT MyView.id, MyView.name FROM MyView",
       "selectArgs" : [  ],
       "fromTables" : [ "Foo" ],
       "usesViews" : [ "MyView" ],
@@ -2908,13 +2908,13 @@
     @ATTRIBUTE(my_attribute=('any', ('tree', 'of'), 'values'))
     @ATTRIBUTE(my_single_attribute='other_value')
     CREATE VIEW MyViewWithAttributes AS
-      SELECT *
+      SELECT Foo.id, Foo.name
         FROM Foo
 
     ,
     {
       "name" : "MyViewWithAttributes",
-      "CRC" : "-2882156276960008654",
+      "CRC" : "3881224207353096287",
       "isTemp" : 0,
       "isDeleted" : 0,
       "attributes" : [
@@ -2940,7 +2940,7 @@
           "isNotNull" : 0
         }
       ],
-      "select" : "SELECT id, name FROM Foo",
+      "select" : "SELECT Foo.id, Foo.name FROM Foo",
       "selectArgs" : [  ],
       "fromTables" : [ "Foo" ],
       "usesTables" : [ "Foo" ]
@@ -2949,13 +2949,13 @@
     The statement ending at line XXXX
 
     CREATE VIEW ADeletedView AS
-      SELECT *
+      SELECT Foo.id, Foo.name
         FROM Foo @DELETE(1)
 
     ,
     {
       "name" : "ADeletedView",
-      "CRC" : "-4577997065803697620",
+      "CRC" : "-4292442832732679070",
       "isTemp" : 0,
       "isDeleted" : 1,
       "deletedVersion" : 1,
@@ -2972,7 +2972,7 @@
           "isNotNull" : 0
         }
       ],
-      "select" : "SELECT id, name FROM Foo",
+      "select" : "SELECT Foo.id, Foo.name FROM Foo",
       "selectArgs" : [  ],
       "fromTables" : [ "Foo" ],
       "usesTables" : [ "Foo" ]
@@ -2981,13 +2981,13 @@
     The statement ending at line XXXX
 
     CREATE VIEW ADeletedViewWithMigrationProc AS
-      SELECT *
+      SELECT Foo.id, Foo.name
         FROM Foo @DELETE(1, view_delete)
 
     ,
     {
       "name" : "ADeletedViewWithMigrationProc",
-      "CRC" : "-2367085062760299014",
+      "CRC" : "-7552881036108473115",
       "isTemp" : 0,
       "isDeleted" : 1,
       "deletedVersion" : 1,
@@ -3005,7 +3005,7 @@
           "isNotNull" : 0
         }
       ],
-      "select" : "SELECT id, name FROM Foo",
+      "select" : "SELECT Foo.id, Foo.name FROM Foo",
       "selectArgs" : [  ],
       "fromTables" : [ "Foo" ],
       "usesTables" : [ "Foo" ]
@@ -3014,13 +3014,13 @@
     The statement ending at line XXXX
 
     CREATE VIEW my_view AS
-      SELECT 1 AS foo, T1.*
+      SELECT 1 AS foo, T1.id, T1.name
         FROM T1
 
     ,
     {
       "name" : "my_view",
-      "CRC" : "7265233238016895804",
+      "CRC" : "5388213990380526881",
       "isTemp" : 0,
       "isDeleted" : 0,
       "projection" : [
@@ -3073,13 +3073,13 @@
     The statement ending at line XXXX
 
     CREATE VIEW `a view` AS
-      SELECT *
+      SELECT `abc def`.`a b`, `abc def`.`x y`
         FROM `abc def`
 
     ,
     {
       "name" : "a view",
-      "CRC" : "-3967341778028795069",
+      "CRC" : "-2113103244105577674",
       "isTemp" : 0,
       "isDeleted" : 0,
       "projection" : [
@@ -3094,7 +3094,7 @@
           "isNotNull" : 1
         }
       ],
-      "select" : "SELECT [a b], [x y] FROM [abc def]",
+      "select" : "SELECT [abc def].[a b], [abc def].[x y] FROM [abc def]",
       "selectArgs" : [  ],
       "fromTables" : [ "abc def" ],
       "usesTables" : [ "abc def" ]
@@ -3606,7 +3606,7 @@
 
     PROC bigger_query (pattern TEXT!, reject TEXT)
     BEGIN
-    SELECT DISTINCT *
+    SELECT DISTINCT Foo.id, Foo.name
       FROM Foo
       WHERE name LIKE pattern AND name <> reject
       GROUP BY name
@@ -3649,7 +3649,7 @@
           "isNotNull" : 0
         }
       ],
-      "statement" : "SELECT DISTINCT id, name FROM Foo WHERE name LIKE ? AND name <> ? GROUP BY name HAVING name > ? ORDER BY ? LIMIT 1 OFFSET 3",
+      "statement" : "SELECT DISTINCT Foo.id, Foo.name FROM Foo WHERE name LIKE ? AND name <> ? GROUP BY name HAVING name > ? ORDER BY ? LIMIT 1 OFFSET 3",
       "statementArgs" : [ "pattern", "reject", "reject", "pattern" ]
     },
 
@@ -3658,7 +3658,13 @@
     @ATTRIBUTE(my_attribute='This is a string attribute')
     PROC joiner (id_ INT!)
     BEGIN
-    SELECT *
+    SELECT
+        T1.id,
+        T1.name,
+        T5.r,
+        T5.bl,
+        T5.b,
+        T5.l
       FROM Foo AS T1
         INNER JOIN T5 ON T1.id = id_ AND T1.id = T5.l;
     END
@@ -3716,7 +3722,7 @@
           "isNotNull" : 0
         }
       ],
-      "statement" : "SELECT id, name, r, bl, b, l FROM Foo AS T1 INNER JOIN T5 ON T1.id = ? AND T1.id = T5.l",
+      "statement" : "SELECT T1.id, T1.name, T5.r, T5.bl, T5.b, T5.l FROM Foo AS T1 INNER JOIN T5 ON T1.id = ? AND T1.id = T5.l",
       "statementArgs" : [ "id_" ]
     },
 
@@ -3724,7 +3730,7 @@
 
     PROC radioactive_proc ()
     BEGIN
-    SELECT *
+    SELECT radioactive.id, radioactive.danger
       FROM radioactive;
     END
 
@@ -3749,7 +3755,7 @@
           "isNotNull" : 0
         }
       ],
-      "statement" : "SELECT id, danger FROM radioactive",
+      "statement" : "SELECT radioactive.id, radioactive.danger FROM radioactive",
       "statementArgs" : [  ]
     },
 
@@ -3827,7 +3833,7 @@
         SELECT i
           FROM nums
       )
-    SELECT *
+    SELECT vals.v
       FROM vals;
     END
 
@@ -3845,7 +3851,7 @@
           "isNotNull" : 1
         }
       ],
-      "statement" : "WITH nums (i) AS ( SELECT 0 UNION ALL SELECT i + 1 FROM nums LIMIT 1 ), vals (v) AS ( SELECT i FROM nums ) SELECT v FROM vals",
+      "statement" : "WITH nums (i) AS ( SELECT 0 UNION ALL SELECT i + 1 FROM nums LIMIT 1 ), vals (v) AS ( SELECT i FROM nums ) SELECT vals.v FROM vals",
       "statementArgs" : [  ]
     },
 
@@ -3878,7 +3884,7 @@
 
     PROC use_view ()
     BEGIN
-    SELECT *
+    SELECT MyView.id, MyView.name
       FROM MyView;
     END
 
@@ -3904,7 +3910,7 @@
           "isNotNull" : 0
         }
       ],
-      "statement" : "SELECT id, name FROM MyView",
+      "statement" : "SELECT MyView.id, MyView.name FROM MyView",
       "statementArgs" : [  ]
     },
 
@@ -3913,7 +3919,7 @@
     [[autotest=((dummy_test, (Foo, (id, name), (1, NULL), (2, "hi"))))]]
     PROC null_attribute ()
     BEGIN
-    SELECT *
+    SELECT Foo.id, Foo.name
       FROM Foo;
     END
 
@@ -3944,7 +3950,7 @@
           "isNotNull" : 0
         }
       ],
-      "statement" : "SELECT id, name FROM Foo",
+      "statement" : "SELECT Foo.id, Foo.name FROM Foo",
       "statementArgs" : [  ]
     },
 
@@ -4058,7 +4064,7 @@
       deleted_view (x, y) AS (
         SELECT 1 AS x, 2 AS y
       )
-    SELECT *
+    SELECT deleted_view.x, deleted_view.y
       FROM deleted_view;
     END
 
@@ -4081,7 +4087,7 @@
           "isNotNull" : 1
         }
       ],
-      "statement" : "WITH deleted_view (x, y) AS ( SELECT 1 AS x, 2 AS y ) SELECT x, y FROM deleted_view",
+      "statement" : "WITH deleted_view (x, y) AS ( SELECT 1 AS x, 2 AS y ) SELECT deleted_view.x, deleted_view.y FROM deleted_view",
       "statementArgs" : [  ]
     },
 
@@ -4138,7 +4144,7 @@
 
     PROC generate_quoted_items ()
     BEGIN
-    SELECT *
+    SELECT `abc def`.`a b`, `abc def`.`x y`
       FROM `abc def`;
     END
 
@@ -4162,7 +4168,7 @@
           "isNotNull" : 1
         }
       ],
-      "statement" : "SELECT [a b], [x y] FROM [abc def]",
+      "statement" : "SELECT [abc def].[a b], [abc def].[x y] FROM [abc def]",
       "statementArgs" : [  ]
     },
 
@@ -4515,7 +4521,7 @@
           (x)
       )
     INSERT INTO T3(id)
-      SELECT *
+      SELECT data.id
         FROM data;
     END
 
@@ -4534,7 +4540,7 @@
       "insertTables" : [ "T3" ],
       "usesTables" : [ "T3" ],
       "table" : "T3",
-      "statement" : "WITH data (id) AS ( VALUES (1), (2), (?) ) INSERT INTO T3(id) SELECT id FROM data",
+      "statement" : "WITH data (id) AS ( VALUES (1), (2), (?) ) INSERT INTO T3(id) SELECT data.id FROM data",
       "statementArgs" : [ "x" ],
       "statementType" : "INSERT",
       "columns" : [ "id" ]
@@ -4590,7 +4596,7 @@
       )
     UPDATE foO
       SET name = name_
-      WHERE name IN (SELECT *
+      WHERE name IN (SELECT names.n
         FROM names);
     END
 
@@ -4615,7 +4621,7 @@
       "updateTables" : [ "Foo" ],
       "usesTables" : [ "Foo" ],
       "table" : "Foo",
-      "statement" : "WITH names (n) AS ( VALUES ('this'), ('that') ) UPDATE foO SET name = ? WHERE name IN (SELECT n FROM names)",
+      "statement" : "WITH names (n) AS ( VALUES ('this'), ('that') ) UPDATE foO SET name = ? WHERE name IN (SELECT names.n FROM names)",
       "statementArgs" : [ "name_" ]
     }
   ],
@@ -4657,7 +4663,7 @@
           ("this"),
           ("that")
       )
-    DELETE FROM foO WHERE name IN (SELECT *
+    DELETE FROM foO WHERE name IN (SELECT names.n
       FROM names);
     END
 
@@ -4676,7 +4682,7 @@
       "deleteTables" : [ "Foo" ],
       "usesTables" : [ "Foo" ],
       "table" : "Foo",
-      "statement" : "WITH names (n) AS ( VALUES ('this'), ('that') ) DELETE FROM foO WHERE name IN (SELECT n FROM names)",
+      "statement" : "WITH names (n) AS ( VALUES ('this'), ('that') ) DELETE FROM foO WHERE name IN (SELECT names.n FROM names)",
       "statementArgs" : [  ]
     }
   ],
@@ -4806,7 +4812,11 @@
     BEGIN
     DECLARE x INT;
 
-    SELECT *
+    SELECT
+        T5.r,
+        T5.bl,
+        T5.b,
+        T5.l
       FROM T5;
     END
 
@@ -5140,7 +5150,7 @@
     BEGIN
     WITH
       shared (id) AS (CALL shared_frag_proc() USING T1 AS source, T2 AS control)
-    SELECT *
+    SELECT shared.id
       FROM shared
     UNION ALL
     SELECT id
@@ -5171,7 +5181,7 @@
 
     PROC shared_frag_user_nested_select ()
     BEGIN
-    SELECT *
+    SELECT _select_.id
       FROM (CALL shared_frag_proc() USING T1 AS source, T2 AS control)
     UNION ALL
     SELECT id
@@ -5228,7 +5238,7 @@
     CURSOR C FOR
       WITH
         goo (id, name) AS (
-          SELECT *
+          SELECT Foo.id, Foo.name
             FROM Foo
         )
       INSERT INTO returning_tests(ix, iy)
@@ -5255,7 +5265,7 @@
     CURSOR C FOR
       WITH
         goo (id, name) AS (
-          SELECT *
+          SELECT Foo.id, Foo.name
             FROM Foo
         )
       DELETE FROM returning_tests
@@ -5281,7 +5291,7 @@
     CURSOR C FOR
       WITH
         goo (id, name) AS (
-          SELECT *
+          SELECT Foo.id, Foo.name
             FROM Foo
         )
       UPDATE returning_tests

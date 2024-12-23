@@ -77,11 +77,19 @@
 -- +   CREATE INDEX `table one index` ON `table one` (name, id);
 -- +   CREATE INDEX it4 ON t4 (data, id);
 -- +   CREATE VIEW my_view AS
--- +   SELECT *
+-- +   SELECT
+-- +       `table one`.id,
+-- +       `table one`.name,
+-- +       t2.id,
+-- +       t2.name
 -- +     FROM `table one`
 -- +       INNER JOIN t2 USING (id);
 -- +   CREATE VIEW my_view_using_table_alias AS
--- +   SELECT foo.*, bar.id AS id2, bar.rowid AS rowid
+-- +   SELECT
+-- +       foo.id,
+-- +       foo.name,
+-- +       bar.id AS id2,
+-- +       bar.rowid AS rowid
 -- +     FROM `table one` AS foo
 -- +       INNER JOIN t2 AS bar USING (id);
 -- +   CREATE TRIGGER my_trigger
@@ -160,10 +168,10 @@
 -- +   LET query_plan_trivial_blob := trivial_blob();
 --
 -- +   DECLARE stmt TEXT!;
--- +   SET stmt := "SELECT *\\n  FROM `table one`\\n  WHERE name = 'Nelly' AND id IN (SELECT id\\n  FROM t2\\n  WHERE id = 1\\nUNION\\nSELECT id\\n  FROM t3)\\n  ORDER BY name ASC";
+-- +   SET stmt := "SELECT %\\n  FROM `table one`\\n  WHERE name = 'Nelly' AND id IN (SELECT id\\n  FROM t2\\n  WHERE id = 1\\nUNION\\nSELECT id\\n  FROM t3)\\n  ORDER BY name ASC";
 -- +   INSERT INTO sql_temp(id, sql) VALUES(1, stmt);
 -- +   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
--- +   SELECT *
+-- +   SELECT %
 -- +     FROM `table one`
 -- +     WHERE name = 'Nelly' AND id IN (SELECT id
 -- +     FROM t2
@@ -212,16 +220,16 @@
 -- +   LET query_plan_trivial_blob := trivial_blob();
 --
 -- +   DECLARE stmt TEXT!;
--- +   SET stmt := "WITH\\n  I (id) AS (CALL ids_from_string('1')),\\n  E (id) AS (CALL ids_from_string('1'))\\nSELECT C.*\\n  FROM C\\n  WHERE C.id IN (SELECT *\\n  FROM I) AND C.id NOT IN (SELECT *\\n  FROM E)";
+-- +   SET stmt := "WITH\\n  I (id) AS (CALL ids_from_string('1')),\\n  E (id) AS (CALL ids_from_string('1'))\\nSELECT %\\n  FROM C\\n  WHERE C.id IN (SELECT %\\n  FROM I) AND C.id NOT IN (SELECT %\\n  FROM E)";
 -- +   INSERT INTO sql_temp(id, sql) VALUES(21, stmt);
 -- +   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
 -- +   WITH
 -- +     I (id) AS (CALL ids_from_string('1')),
 -- +     E (id) AS (CALL ids_from_string('1'))
--- +   SELECT C.*
+-- +   SELECT %
 -- +     FROM C
--- +     WHERE C.id IN (SELECT *
--- +     FROM I) AND C.id NOT IN (SELECT *
+-- +     WHERE C.id IN (SELECT %
+-- +     FROM I) AND C.id NOT IN (SELECT %
 -- +     FROM E);
 -- +   LOOP FETCH C
 -- +   BEGIN
@@ -256,7 +264,7 @@
 -- +   cte (a) AS (
 -- +     SELECT 1 AS a
 -- +   )
--- + SELECT *
+-- + SELECT cte.a
 -- +   FROM cte;
 -- + END;
 --
@@ -751,7 +759,7 @@ end;
 
 -- + LET query_plan_trivial_object := trivial_object();
 -- + LET query_plan_trivial_blob := trivial_blob();
--- + SET stmt := "SELECT *\\n  FROM (CALL simple_blob_fragment(nullable(trivial_blob())))";
+-- + SET stmt := "SELECT %\\n  FROM (CALL simple_blob_fragment(nullable(trivial_blob())))";
 proc blob_frag_user()
 BEGIN
   select * from (call simple_blob_fragment(external_blob_func()));
@@ -765,7 +773,7 @@ begin
   select 1 xx;
 end;
 
--- + SET stmt := "SELECT *\\n  FROM (CALL simple_object_fragment(nullable(trivial_object())))";
+-- + SET stmt := "SELECT %\\n  FROM (CALL simple_object_fragment(nullable(trivial_object())))";
 proc object_frag_user()
 BEGIN
   select * from (call simple_object_fragment(external_object_func()));

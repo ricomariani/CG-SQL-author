@@ -163,27 +163,44 @@ CREATE TABLE some_table(
 );
 
 CREATE VIEW shared_view AS
-  SELECT *
+  SELECT
+      [quoted foo].[an id],
+      [quoted foo].[id 2],
+      [quoted foo].name,
+      [quoted foo].name_2
     FROM [quoted foo];
 
 CREATE VIEW live_view AS
-  SELECT *
+  SELECT
+      [quoted foo].[an id],
+      [quoted foo].[id 2],
+      [quoted foo].name,
+      [quoted foo].name_2
     FROM [quoted foo];
 
 CREATE VIEW dead_view AS
-  SELECT *
+  SELECT
+      [quoted foo].[an id],
+      [quoted foo].[id 2],
+      [quoted foo].name,
+      [quoted foo].name_2
     FROM [quoted foo];
 
 CREATE VIEW another_live_view AS
-  SELECT *
+  SELECT
+      table2.[an id],
+      table2.name1,
+      table2.name2,
+      table2.name3,
+      table2.name4
     FROM table2;
 
 CREATE VIEW [foo view unsubscribed] AS
-  SELECT *
+  SELECT some_table.[an id]
     FROM some_table;
 
 CREATE VIEW [foo view normal] AS
-  SELECT *
+  SELECT some_table.[an id]
     FROM some_table;
 
 CREATE INDEX shared_index ON [quoted foo] (name, name_2);
@@ -262,7 +279,11 @@ CREATE TEMP TABLE this_table_appears_in_temp_section(
 );
 
 CREATE TEMP VIEW temp_view_in_temp_section AS
-  SELECT *
+  SELECT
+      [quoted foo].[an id],
+      [quoted foo].[id 2],
+      [quoted foo].name,
+      [quoted foo].name_2
     FROM [quoted foo];
 
 CREATE TEMP TRIGGER temp_trigger_in_temp_section

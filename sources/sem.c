@@ -5836,140 +5836,6 @@ static sem_t type_with_finalized_nullability_improvement(sem_t type) {
   return type;
 }
 
-// Select * is special in that it creates its own struct type by assembling all
-// the columns of all the tables in the selects join result.  This does the work
-// of assembling that struct.  Note the result of a select is a struct type.
-// This means that join types only appear in the FROM part of DML
-static void sem_select_star(ast_node *ast) {
-  if (!current_joinscope || !current_joinscope->jptr) {
-    report_error(ast, "CQL0052: select * cannot be used with no FROM clause", NULL);
-    record_error(ast);
-    return;
-  }
-
-  sem_join *jptr = current_joinscope->jptr;
-
-  // First figure out how many fields there will be by visiting
-  // every table in the join and summing the counts.
-  uint32_t count = 0;
-  for (uint32_t i = 0; i < jptr->count; i++) {
-    sem_struct *table = jptr->tables[i];
-    count += table->count;
-  }
-
-  Invariant(count > 0);
-
-  // Now collapse all the fields in all the tables into one table.
-  sem_struct *sptr = new_sem_struct("select", count);
-  int32_t field = 0;
-
-  for (uint32_t i = 0; i < jptr->count; i++) {
-    sem_struct *table = jptr->tables[i];
-    for (uint32_t j = 0; j < table->count; j++, field++) {
-      sptr->names[field] = table->names[j];
-      // If we inferred a column in `table` to be nonnull, make it a proper
-      // nonnull type in the result.
-      sptr->semtypes[field] = type_with_finalized_nullability_improvement(table->semtypes[j]);
-      sptr->kinds[field] = table->kinds[j];
-    }
-  }
-
-  Invariant(field == count);
-
-  ast->sem = new_sem(SEM_TYPE_STRUCT);
-  ast->sem->sptr = sptr;
-
-  // If the result has any un-named columns we can't use it.
-  sem_verify_no_anon_columns(ast);
-}
-
-// When expanding select T.* we need to do two passes.  Our ultimate goal is to
-// make a struct type for the select list of the select statement that has the
-// T.*  but there could be any number of these expansions in it.  So in pass one
-// we go through each item and count the room we will need for the expansions
-// and the normal columns this will give us the total space required.  In pass
-// two we will those in (see sem_select_table_star_add).  In pass 1 we do all
-// the error checking so that by the time we're running pass 2 nothing can go
-// wrong.
-static uint32_t sem_select_table_star_count(ast_node *ast) {
-  Contract(is_ast_table_star(ast));
-  EXTRACT_STRING(name, ast->left);
-
-  if (!current_joinscope || !current_joinscope->jptr) {
-    report_error(ast, "CQL0053: select [table].* cannot be used with no FROM clause", NULL);
-    record_error(ast);
-    return false;
-  }
-
-  sem_join *jptr = current_joinscope->jptr;
-
-  for (uint32_t i = 0; i < jptr->count; i++) {
-    if (!StrCaseCmp(jptr->names[i], name)) {
-      ast->sem = new_sem(SEM_TYPE_STRUCT);
-      ast->sem->name = jptr->names[i];
-      ast->sem->sptr = jptr->tables[i];
-
-      // If the result has any un-named columns we can't use it.
-      // We need a valid name for each column to expand it correctly.
-      sem_verify_no_anon_columns(ast);
-      if (is_error(ast)) {
-        return 0;
-      }
-
-      // Insert table alias name override if enabled.
-      if (keep_table_name_in_aliases && !in_trigger && !in_trigger_when_expr) {
-        insert_table_alias_string_overide(ast->left, jptr->tables[i]->struct_name);
-      }
-
-      return jptr->tables[i]->count;
-    }
-  }
-
-  report_error(ast, "CQL0054: table not found", name);
-  record_error(ast);
-  return 0;
-}
-
-// Using the T in T.* from the ast, find the table in the current join that
-// matches T then fill in the types and names from that table into the indicated
-// result struct the result struct has already been allocated with enough room
-// those the table at the indicated index.  We do this operation in two passes
-// so we know how much to allocate and this is pass 2 where we fill in the
-// values
-static int32_t sem_select_table_star_add(
-  ast_node *ast,
-  sem_struct *sptr,
-  int32_t index)
-{
-  Contract(is_ast_table_star(ast));
-  EXTRACT_STRING(name, ast->left);
-  Invariant(current_joinscope);
-  Invariant(current_joinscope->jptr);
-
-  sem_join *jptr = current_joinscope->jptr;
-
-  uint32_t i = 0;
-  while (StrCaseCmp(jptr->names[i], name)) {
-    i++;
-  }
-
-  // we found it once when we got the count, it's still there.
-  Invariant(i < jptr->count);
-
-  // we know there's room here, fill it in...
-  sem_struct *table = jptr->tables[i];
-  for (uint32_t j = 0; j < table->count; j++) {
-    sptr->names[index] = table->names[j];
-    // If we inferred a column in `table` to be nonnull, make it a proper
-    // nonnull type in the result.
-    sptr->semtypes[index] = type_with_finalized_nullability_improvement(table->semtypes[j]);
-    sptr->kinds[index] = table->kinds[j];
-    index++;
-  }
-
-  return index;
-}
-
 // This verifies all the columns have a name.
 // This check is important for a variety of cases, but the main ones are:
 //  - select * or select T.*  -> we can't expand the start if there aren't names
@@ -6696,6 +6562,9 @@ static sem_resolve sem_try_resolve_column(
               // join-scopes anyway.
               report_resolve_error(ast, "CQL0065: identifier is ambiguous", name);
               record_resolve_error(ast);
+              if (!strcmp(name, "_anon")) {
+                 report_error(ast, "additional info: more than one anonymous column in a result, likely all columsn need a name", NULL);
+              }
               return SEM_RESOLVE_STOP;
             }
             if (table->semtypes[j] & SEM_TYPE_ALIAS) {
@@ -11647,79 +11516,47 @@ static void sem_select_expr(ast_node *ast) {
 static void sem_select_expr_list(ast_node *ast) {
   Contract(ast);
 
-  if (is_ast_star(ast->left)) {
-    // select * from [etc]
-    if (ast->right) {
-       report_error(ast, "CQL0474: when '*' appears in an expression list there can be nothing else in the list", NULL);
-       record_error(ast);
-       return;
-    }
-    sem_select_star(ast->left);
-    ast->sem = ast->left->sem;
-    return;
-  }
-
   uint32_t count = 0;
   ast_node *node = ast;
   for (; node; node = node->right) {
-    if (is_ast_star(node->left)) {
-      // '*' is invalid in any position but the first which we already checked
-      sem_expr_invalid_op(node->left, "*");
+    EXTRACT_NOTNULL(select_expr, node->left);
+    sem_select_expr(select_expr);
+
+    if (is_error(select_expr)) {
       record_error(ast);
       return;
     }
 
-    if (is_ast_table_star(node->left)) {
-      EXTRACT_NOTNULL(table_star, node->left);
-      count += sem_select_table_star_count(table_star);
-
-      if (is_error(table_star)) {
-        record_error(ast);
-        return;
-      }
-    }
-    else {
-      EXTRACT_NOTNULL(select_expr, node->left);
-      sem_select_expr(select_expr);
-
-      if (is_error(select_expr)) {
-        record_error(ast);
-        return;
-      }
-
-      count++;
-    }
+    count++;
   }
 
   // Here we make the struct type for this select, by enumerating
   // the types of all the columns and using the aliased name if any.
-  sem_struct *sptr = new_sem_struct("select", count);
+  sem_struct *sptr = new_sem_struct("_select_", count);
   ast->sem = new_sem(SEM_TYPE_STRUCT);
   ast->sem->sptr = sptr;
 
   int32_t i = 0;
   for (ast_node *snode = ast; snode; snode = snode->right) {
-    if (is_ast_table_star(snode->left)) {
-      EXTRACT_NOTNULL(table_star, snode->left);
-      i = sem_select_table_star_add(table_star, sptr, i);
+    // these have already been rewritten away
+    Invariant(!is_ast_table_star(snode->left));
+    Invariant(!is_ast_star(snode->left));
+
+    EXTRACT_NOTNULL(select_expr, snode->left);
+
+    if (select_expr->sem->name) {
+      sptr->names[i] = select_expr->sem->name;
     }
     else {
-      EXTRACT_NOTNULL(select_expr, snode->left);
-
-      if (select_expr->sem->name) {
-        sptr->names[i] = select_expr->sem->name;
-      }
-      else {
-        // If you do "select 1" it has no name.
-        sptr->names[i] = "_anon";
-      }
-
-      // get the kind if there is one (null is ok) as that means the type has no kind
-      sptr->kinds[i] = select_expr->sem->kind;
-
-      sptr->semtypes[i] = select_expr->sem->sem_type;
-      i++;
+      // If you do "select 1" it has no name.
+      sptr->names[i] = "_anon";
     }
+
+    // get the kind if there is one (null is ok) as that means the type has no kind
+    sptr->kinds[i] = select_expr->sem->kind;
+
+    sptr->semtypes[i] = select_expr->sem->sem_type;
+    i++;
   }
 
   Invariant(count == i);
@@ -11809,7 +11646,7 @@ static void sem_table_or_subquery(ast_node *ast) {
 
     // shared fragment within a subquery doesn't have an alias unless
     // explicitly declared with opt_as_alias.
-    ast->sem->jptr->names[0] = "select";
+    ast->sem->jptr->names[0] = "_select_";
     alias_target = &ast->sem->jptr->names[0];
   }
   else if (is_ast_table_function(factor)) {
@@ -12441,9 +12278,11 @@ static sem_struct *select_expr_list_alias_sptr(ast_node *select_expr_list) {
   uint32_t alias_count = 0;
   for (ast_node *item = select_expr_list; item; item = item->right) {
     Invariant(is_ast_select_expr_list(item));
-    if (is_ast_star(item->left) || is_ast_table_star(item->left)) {
-      continue;
-    }
+
+    // These have been rewritten away by the time we ever get here
+    Invariant(!is_ast_star(item->left));
+    Invariant(!is_ast_table_star(item->left));
+
     EXTRACT_NOTNULL(select_expr, item->left);
     EXTRACT(opt_as_alias, select_expr->right);
     if (opt_as_alias) {
@@ -17463,7 +17302,7 @@ static void sem_returning_clause(
   sem_join join = *table_ast->sem->jptr;
 
   // change * and T.* to COLUMNS(T)
-  rewrite_star_and_table_star_as_columns_calc(select_expr_list, table_name);
+  rewrite_star_and_table_star_as_columns_calc(select_expr_list, &join);
 
   // expand those (there may be some there in the source too)
   rewrite_select_expr_list(select_expr_list, &join);
@@ -19858,7 +19697,7 @@ cql_noexport ast_node *sem_find_shape_def(ast_node *shape_def, int32_t likeable_
       goto error;
     }
 
-    sem_struct *sptr_new = new_sem_struct("select", count);
+    sem_struct *sptr_new = new_sem_struct("_select_", count);
 
     int32_t inew = 0;
 
@@ -21248,7 +21087,7 @@ static void sem_typed_names(ast_node *head) {
   symtab_delete(names);
 
   head->sem = new_sem(SEM_TYPE_STRUCT);
-  sem_struct *sptr = new_sem_struct("select", count);
+  sem_struct *sptr = new_sem_struct("_select_", count);
   head->sem->sptr = sptr;
 
   int32_t i = 0;

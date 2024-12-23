@@ -6349,7 +6349,7 @@ extern CQL_WARN_UNUSED cql_code make_virt_table(sqlite3 *_Nonnull _db_);
 
 extern cql_string_ref _Nonnull virtual1_stored_procedure_name;
 
-#define virtual1_data_types_count 3
+#define virtual1_data_types_count 1
 
 extern uint8_t virtual1_data_types[virtual1_data_types_count];
 
@@ -6357,22 +6357,12 @@ extern uint8_t virtual1_data_types[virtual1_data_types_count];
 #define result_set_type_decl_virtual1_result_set 1
 cql_result_set_type_decl(virtual1_result_set, virtual1_result_set_ref);
 #endif
-#ifndef _virtual1_get_vx_inline_
-#define _virtual1_get_vx_inline_
-
-
-static inline cql_int32 virtual1_get_vx(virtual1_result_set_ref _Nonnull result_set, cql_int32 row) {
-  return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 0);
-}
-
-#endif
-
 #ifndef _virtual1_get_vy_is_null_inline_
 #define _virtual1_get_vy_is_null_inline_
 
 
 static inline cql_bool virtual1_get_vy_is_null(virtual1_result_set_ref _Nonnull result_set, cql_int32 row) {
-  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 1);
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 0);
 }
 
 #endif
@@ -6382,17 +6372,7 @@ static inline cql_bool virtual1_get_vy_is_null(virtual1_result_set_ref _Nonnull 
 
 
 static inline cql_int32 virtual1_get_vy_value(virtual1_result_set_ref _Nonnull result_set, cql_int32 row) {
-  return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 1);
-}
-
-#endif
-
-#ifndef _virtual1_get_vz_inline_
-#define _virtual1_get_vz_inline_
-
-
-static inline cql_int32 virtual1_get_vz(virtual1_result_set_ref _Nonnull result_set, cql_int32 row) {
-  return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 2);
+  return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 0);
 }
 
 #endif
@@ -7770,7 +7750,7 @@ extern CQL_WARN_UNUSED cql_code update_backed2(sqlite3 *_Nonnull _db_);
 
 extern cql_string_ref _Nonnull use_generated_fragment_stored_procedure_name;
 
-#define use_generated_fragment_data_types_count 7
+#define use_generated_fragment_data_types_count 6
 
 extern uint8_t use_generated_fragment_data_types[use_generated_fragment_data_types_count];
 
@@ -7778,22 +7758,12 @@ extern uint8_t use_generated_fragment_data_types[use_generated_fragment_data_typ
 #define result_set_type_decl_use_generated_fragment_result_set 1
 cql_result_set_type_decl(use_generated_fragment_result_set, use_generated_fragment_result_set_ref);
 #endif
-#ifndef _use_generated_fragment_get_rowid_inline_
-#define _use_generated_fragment_get_rowid_inline_
-
-
-static inline cql_int64 use_generated_fragment_get_rowid(use_generated_fragment_result_set_ref _Nonnull result_set, cql_int32 row) {
-  return cql_result_set_get_int64_col((cql_result_set_ref)result_set, row, 0);
-}
-
-#endif
-
 #ifndef _use_generated_fragment_get_flag_inline_
 #define _use_generated_fragment_get_flag_inline_
 
 
 static inline cql_bool use_generated_fragment_get_flag(use_generated_fragment_result_set_ref _Nonnull result_set, cql_int32 row) {
-  return cql_result_set_get_bool_col((cql_result_set_ref)result_set, row, 1);
+  return cql_result_set_get_bool_col((cql_result_set_ref)result_set, row, 0);
 }
 
 #endif
@@ -7803,7 +7773,7 @@ static inline cql_bool use_generated_fragment_get_flag(use_generated_fragment_re
 
 
 static inline cql_bool use_generated_fragment_get_id_is_null(use_generated_fragment_result_set_ref _Nonnull result_set, cql_int32 row) {
-  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 2);
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 1);
 }
 
 #endif
@@ -7813,7 +7783,7 @@ static inline cql_bool use_generated_fragment_get_id_is_null(use_generated_fragm
 
 
 static inline cql_int64 use_generated_fragment_get_id_value(use_generated_fragment_result_set_ref _Nonnull result_set, cql_int32 row) {
-  return cql_result_set_get_int64_col((cql_result_set_ref)result_set, row, 2);
+  return cql_result_set_get_int64_col((cql_result_set_ref)result_set, row, 1);
 }
 
 #endif
@@ -7823,7 +7793,7 @@ static inline cql_int64 use_generated_fragment_get_id_value(use_generated_fragme
 
 
 static inline cql_string_ref _Nullable use_generated_fragment_get_name(use_generated_fragment_result_set_ref _Nonnull result_set, cql_int32 row) {
-  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 3) ? NULL : cql_result_set_get_string_col((cql_result_set_ref)result_set, row, 3);
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 2) ? NULL : cql_result_set_get_string_col((cql_result_set_ref)result_set, row, 2);
 }
 
 #endif
@@ -7833,7 +7803,7 @@ static inline cql_string_ref _Nullable use_generated_fragment_get_name(use_gener
 
 
 static inline cql_bool use_generated_fragment_get_age_is_null(use_generated_fragment_result_set_ref _Nonnull result_set, cql_int32 row) {
-  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 4);
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 3);
 }
 
 #endif
@@ -7843,7 +7813,7 @@ static inline cql_bool use_generated_fragment_get_age_is_null(use_generated_frag
 
 
 static inline cql_double use_generated_fragment_get_age_value(use_generated_fragment_result_set_ref _Nonnull result_set, cql_int32 row) {
-  return cql_result_set_get_double_col((cql_result_set_ref)result_set, row, 4);
+  return cql_result_set_get_double_col((cql_result_set_ref)result_set, row, 3);
 }
 
 #endif
@@ -7853,7 +7823,7 @@ static inline cql_double use_generated_fragment_get_age_value(use_generated_frag
 
 
 static inline cql_blob_ref _Nullable use_generated_fragment_get_storage(use_generated_fragment_result_set_ref _Nonnull result_set, cql_int32 row) {
-  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 5) ? NULL : cql_result_set_get_blob_col((cql_result_set_ref)result_set, row, 5);
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 4) ? NULL : cql_result_set_get_blob_col((cql_result_set_ref)result_set, row, 4);
 }
 
 #endif
@@ -7863,7 +7833,7 @@ static inline cql_blob_ref _Nullable use_generated_fragment_get_storage(use_gene
 
 
 static inline cql_int32 use_generated_fragment_get_pk(use_generated_fragment_result_set_ref _Nonnull result_set, cql_int32 row) {
-  return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 6);
+  return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 5);
 }
 
 #endif
@@ -7884,7 +7854,7 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
 
 extern cql_string_ref _Nonnull use_backed_table_directly_stored_procedure_name;
 
-#define use_backed_table_directly_data_types_count 7
+#define use_backed_table_directly_data_types_count 6
 
 extern uint8_t use_backed_table_directly_data_types[use_backed_table_directly_data_types_count];
 
@@ -7892,22 +7862,12 @@ extern uint8_t use_backed_table_directly_data_types[use_backed_table_directly_da
 #define result_set_type_decl_use_backed_table_directly_result_set 1
 cql_result_set_type_decl(use_backed_table_directly_result_set, use_backed_table_directly_result_set_ref);
 #endif
-#ifndef _use_backed_table_directly_get_rowid_inline_
-#define _use_backed_table_directly_get_rowid_inline_
-
-
-static inline cql_int64 use_backed_table_directly_get_rowid(use_backed_table_directly_result_set_ref _Nonnull result_set, cql_int32 row) {
-  return cql_result_set_get_int64_col((cql_result_set_ref)result_set, row, 0);
-}
-
-#endif
-
 #ifndef _use_backed_table_directly_get_flag_inline_
 #define _use_backed_table_directly_get_flag_inline_
 
 
 static inline cql_bool use_backed_table_directly_get_flag(use_backed_table_directly_result_set_ref _Nonnull result_set, cql_int32 row) {
-  return cql_result_set_get_bool_col((cql_result_set_ref)result_set, row, 1);
+  return cql_result_set_get_bool_col((cql_result_set_ref)result_set, row, 0);
 }
 
 #endif
@@ -7917,7 +7877,7 @@ static inline cql_bool use_backed_table_directly_get_flag(use_backed_table_direc
 
 
 static inline cql_bool use_backed_table_directly_get_id_is_null(use_backed_table_directly_result_set_ref _Nonnull result_set, cql_int32 row) {
-  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 2);
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 1);
 }
 
 #endif
@@ -7927,7 +7887,7 @@ static inline cql_bool use_backed_table_directly_get_id_is_null(use_backed_table
 
 
 static inline cql_int64 use_backed_table_directly_get_id_value(use_backed_table_directly_result_set_ref _Nonnull result_set, cql_int32 row) {
-  return cql_result_set_get_int64_col((cql_result_set_ref)result_set, row, 2);
+  return cql_result_set_get_int64_col((cql_result_set_ref)result_set, row, 1);
 }
 
 #endif
@@ -7937,7 +7897,7 @@ static inline cql_int64 use_backed_table_directly_get_id_value(use_backed_table_
 
 
 static inline cql_string_ref _Nullable use_backed_table_directly_get_name(use_backed_table_directly_result_set_ref _Nonnull result_set, cql_int32 row) {
-  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 3) ? NULL : cql_result_set_get_string_col((cql_result_set_ref)result_set, row, 3);
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 2) ? NULL : cql_result_set_get_string_col((cql_result_set_ref)result_set, row, 2);
 }
 
 #endif
@@ -7947,7 +7907,7 @@ static inline cql_string_ref _Nullable use_backed_table_directly_get_name(use_ba
 
 
 static inline cql_bool use_backed_table_directly_get_age_is_null(use_backed_table_directly_result_set_ref _Nonnull result_set, cql_int32 row) {
-  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 4);
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 3);
 }
 
 #endif
@@ -7957,7 +7917,7 @@ static inline cql_bool use_backed_table_directly_get_age_is_null(use_backed_tabl
 
 
 static inline cql_double use_backed_table_directly_get_age_value(use_backed_table_directly_result_set_ref _Nonnull result_set, cql_int32 row) {
-  return cql_result_set_get_double_col((cql_result_set_ref)result_set, row, 4);
+  return cql_result_set_get_double_col((cql_result_set_ref)result_set, row, 3);
 }
 
 #endif
@@ -7967,7 +7927,7 @@ static inline cql_double use_backed_table_directly_get_age_value(use_backed_tabl
 
 
 static inline cql_blob_ref _Nullable use_backed_table_directly_get_storage(use_backed_table_directly_result_set_ref _Nonnull result_set, cql_int32 row) {
-  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 5) ? NULL : cql_result_set_get_blob_col((cql_result_set_ref)result_set, row, 5);
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 4) ? NULL : cql_result_set_get_blob_col((cql_result_set_ref)result_set, row, 4);
 }
 
 #endif
@@ -7977,7 +7937,7 @@ static inline cql_blob_ref _Nullable use_backed_table_directly_get_storage(use_b
 
 
 static inline cql_int32 use_backed_table_directly_get_pk(use_backed_table_directly_result_set_ref _Nonnull result_set, cql_int32 row) {
-  return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 6);
+  return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 5);
 }
 
 #endif
@@ -8001,7 +7961,7 @@ extern CQL_WARN_UNUSED cql_code use_backed_table_with_cursor(sqlite3 *_Nonnull _
 
 extern cql_string_ref _Nonnull use_backed_table_directly_in_with_select_stored_procedure_name;
 
-#define use_backed_table_directly_in_with_select_data_types_count 7
+#define use_backed_table_directly_in_with_select_data_types_count 6
 
 extern uint8_t use_backed_table_directly_in_with_select_data_types[use_backed_table_directly_in_with_select_data_types_count];
 
@@ -8009,22 +7969,12 @@ extern uint8_t use_backed_table_directly_in_with_select_data_types[use_backed_ta
 #define result_set_type_decl_use_backed_table_directly_in_with_select_result_set 1
 cql_result_set_type_decl(use_backed_table_directly_in_with_select_result_set, use_backed_table_directly_in_with_select_result_set_ref);
 #endif
-#ifndef _use_backed_table_directly_in_with_select_get_rowid_inline_
-#define _use_backed_table_directly_in_with_select_get_rowid_inline_
-
-
-static inline cql_int64 use_backed_table_directly_in_with_select_get_rowid(use_backed_table_directly_in_with_select_result_set_ref _Nonnull result_set, cql_int32 row) {
-  return cql_result_set_get_int64_col((cql_result_set_ref)result_set, row, 0);
-}
-
-#endif
-
 #ifndef _use_backed_table_directly_in_with_select_get_flag_inline_
 #define _use_backed_table_directly_in_with_select_get_flag_inline_
 
 
 static inline cql_bool use_backed_table_directly_in_with_select_get_flag(use_backed_table_directly_in_with_select_result_set_ref _Nonnull result_set, cql_int32 row) {
-  return cql_result_set_get_bool_col((cql_result_set_ref)result_set, row, 1);
+  return cql_result_set_get_bool_col((cql_result_set_ref)result_set, row, 0);
 }
 
 #endif
@@ -8034,7 +7984,7 @@ static inline cql_bool use_backed_table_directly_in_with_select_get_flag(use_bac
 
 
 static inline cql_bool use_backed_table_directly_in_with_select_get_id_is_null(use_backed_table_directly_in_with_select_result_set_ref _Nonnull result_set, cql_int32 row) {
-  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 2);
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 1);
 }
 
 #endif
@@ -8044,7 +7994,7 @@ static inline cql_bool use_backed_table_directly_in_with_select_get_id_is_null(u
 
 
 static inline cql_int64 use_backed_table_directly_in_with_select_get_id_value(use_backed_table_directly_in_with_select_result_set_ref _Nonnull result_set, cql_int32 row) {
-  return cql_result_set_get_int64_col((cql_result_set_ref)result_set, row, 2);
+  return cql_result_set_get_int64_col((cql_result_set_ref)result_set, row, 1);
 }
 
 #endif
@@ -8054,7 +8004,7 @@ static inline cql_int64 use_backed_table_directly_in_with_select_get_id_value(us
 
 
 static inline cql_string_ref _Nullable use_backed_table_directly_in_with_select_get_name(use_backed_table_directly_in_with_select_result_set_ref _Nonnull result_set, cql_int32 row) {
-  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 3) ? NULL : cql_result_set_get_string_col((cql_result_set_ref)result_set, row, 3);
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 2) ? NULL : cql_result_set_get_string_col((cql_result_set_ref)result_set, row, 2);
 }
 
 #endif
@@ -8064,7 +8014,7 @@ static inline cql_string_ref _Nullable use_backed_table_directly_in_with_select_
 
 
 static inline cql_bool use_backed_table_directly_in_with_select_get_age_is_null(use_backed_table_directly_in_with_select_result_set_ref _Nonnull result_set, cql_int32 row) {
-  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 4);
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 3);
 }
 
 #endif
@@ -8074,7 +8024,7 @@ static inline cql_bool use_backed_table_directly_in_with_select_get_age_is_null(
 
 
 static inline cql_double use_backed_table_directly_in_with_select_get_age_value(use_backed_table_directly_in_with_select_result_set_ref _Nonnull result_set, cql_int32 row) {
-  return cql_result_set_get_double_col((cql_result_set_ref)result_set, row, 4);
+  return cql_result_set_get_double_col((cql_result_set_ref)result_set, row, 3);
 }
 
 #endif
@@ -8084,7 +8034,7 @@ static inline cql_double use_backed_table_directly_in_with_select_get_age_value(
 
 
 static inline cql_blob_ref _Nullable use_backed_table_directly_in_with_select_get_storage(use_backed_table_directly_in_with_select_result_set_ref _Nonnull result_set, cql_int32 row) {
-  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 5) ? NULL : cql_result_set_get_blob_col((cql_result_set_ref)result_set, row, 5);
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 4) ? NULL : cql_result_set_get_blob_col((cql_result_set_ref)result_set, row, 4);
 }
 
 #endif
@@ -8094,7 +8044,7 @@ static inline cql_blob_ref _Nullable use_backed_table_directly_in_with_select_ge
 
 
 static inline cql_int32 use_backed_table_directly_in_with_select_get_pk(use_backed_table_directly_in_with_select_result_set_ref _Nonnull result_set, cql_int32 row) {
-  return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 6);
+  return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 5);
 }
 
 #endif

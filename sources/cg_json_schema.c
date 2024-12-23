@@ -1849,7 +1849,6 @@ static void cg_fragment_with_params_raw(charbuf *output, CSTR frag, ast_node *as
   init_gen_sql_callbacks(&callbacks);
   callbacks.variables_callback = cg_json_record_var;
   callbacks.variables_context = &vars;
-  callbacks.star_callback = cg_expand_star;
   callbacks.cte_proc_callback = cg_json_call_in_cte;
 
   found_shared_fragment = false;
@@ -1881,7 +1880,6 @@ static void cg_fragment(charbuf *output, CSTR frag, ast_node *ast, gen_func fn) 
   init_gen_sql_callbacks(&callbacks);
   callbacks.variables_callback = cg_json_record_var;
   callbacks.variables_context = NULL;  // forces invariant violation if any variables
-  callbacks.star_callback = cg_expand_star;
 
   bprintf(output, ",\n\"%s\" : ", frag);
   gen_with_callbacks(ast, fn, &callbacks);

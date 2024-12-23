@@ -311,7 +311,12 @@ local _between_13_
 --[[
 PROC with_result_set ()
 BEGIN
-  SELECT *
+  SELECT
+      bar.id,
+      bar.name,
+      bar.rate,
+      bar.type,
+      bar.size
     FROM bar;
 END;
 --]]
@@ -320,7 +325,7 @@ function with_result_set(_db_)
   local _rc_ = CQL_OK
   local _result_stmt = nil
   _rc_, _result_stmt = cql_prepare(_db_, 
-    "SELECT id, name, rate, type, size FROM bar")
+    "SELECT bar.id, bar.name, bar.rate, bar.type, bar.size FROM bar")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -426,7 +431,12 @@ end
 --[[
 PROC get_data (name_ TEXT!, id_ INT!)
 BEGIN
-  SELECT *
+  SELECT
+      bar.id,
+      bar.name,
+      bar.rate,
+      bar.type,
+      bar.size
     FROM bar
     WHERE id = id_ AND name = name_;
 END;
@@ -439,7 +449,7 @@ function get_data(_db_, name_, id_)
   local _rc_ = CQL_OK
   local _result_stmt = nil
   _rc_, _result_stmt = cql_prepare(_db_, 
-    "SELECT id, name, rate, type, size FROM bar WHERE id = ? AND name = ?")
+    "SELECT bar.id, bar.name, bar.rate, bar.type, bar.size FROM bar WHERE id = ? AND name = ?")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = cql_multibind(_db_, _result_stmt, "IS", id_, name_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -471,12 +481,22 @@ end
 PROC easy_fetch ()
 BEGIN
   CURSOR C FOR
-    SELECT *
+    SELECT
+        bar.id,
+        bar.name,
+        bar.rate,
+        bar.type,
+        bar.size
       FROM bar;
   FETCH C;
   CALL printf("%d %s\n", C.id, C.name);
   CURSOR C2 FOR
-    SELECT *
+    SELECT
+        bar.id,
+        bar.name,
+        bar.rate,
+        bar.type,
+        bar.size
       FROM bar
       WHERE C AND id = C.id;
 END;
@@ -494,14 +514,14 @@ function easy_fetch(_db_)
   local C2_types_ = "Islid"
 
   _rc_, C_stmt = cql_prepare(_db_, 
-    "SELECT id, name, rate, type, size FROM bar")
+    "SELECT bar.id, bar.name, bar.rate, bar.type, bar.size FROM bar")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   -- step and fetch
   _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
   if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   printf("%d %s\n", C.id, C.name)
   _rc_, C2_stmt = cql_prepare(_db_, 
-    "SELECT id, name, rate, type, size FROM bar WHERE ? AND id = ?")
+    "SELECT bar.id, bar.name, bar.rate, bar.type, bar.size FROM bar WHERE ? AND id = ?")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = cql_multibind(_db_, C2_stmt, "FI", C._has_row_, C.id)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -665,7 +685,7 @@ end
 --[[
 PROC hierarchical_query (rate_ LONG!, limit_ INT!, offset_ INT!)
 BEGIN
-  SELECT *
+  SELECT foo.id
     FROM foo
     WHERE id IN (SELECT id
     FROM bar
@@ -685,7 +705,7 @@ function hierarchical_query(_db_, rate_, limit_, offset_)
   local _rc_ = CQL_OK
   local _result_stmt = nil
   _rc_, _result_stmt = cql_prepare(_db_, 
-    "SELECT id FROM foo WHERE id IN (SELECT id FROM bar WHERE rate = ? ORDER BY name LIMIT ? OFFSET ?) ORDER BY id")
+    "SELECT foo.id FROM foo WHERE id IN (SELECT id FROM bar WHERE rate = ? ORDER BY name LIMIT ? OFFSET ?) ORDER BY id")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = cql_multibind(_db_, _result_stmt, "LII", rate_, limit_, offset_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -715,7 +735,7 @@ end
 --[[
 PROC hierarchical_unmatched_query (rate_ LONG!, limit_ INT!, offset_ INT!)
 BEGIN
-  SELECT *
+  SELECT foo.id
     FROM foo
     WHERE id NOT IN (SELECT id
     FROM bar
@@ -735,7 +755,7 @@ function hierarchical_unmatched_query(_db_, rate_, limit_, offset_)
   local _rc_ = CQL_OK
   local _result_stmt = nil
   _rc_, _result_stmt = cql_prepare(_db_, 
-    "SELECT id FROM foo WHERE id NOT IN (SELECT id FROM bar WHERE rate = ? ORDER BY name LIMIT ? OFFSET ?) ORDER BY id")
+    "SELECT foo.id FROM foo WHERE id NOT IN (SELECT id FROM bar WHERE rate = ? ORDER BY name LIMIT ? OFFSET ?) ORDER BY id")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = cql_multibind(_db_, _result_stmt, "LII", rate_, limit_, offset_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -885,7 +905,7 @@ BEGIN
       X (a, b, c) AS (
         SELECT 1, 2, 3
       )
-    SELECT *
+    SELECT X.a, X.b, X.c
       FROM X;
   FETCH C;
 END;
@@ -899,7 +919,7 @@ function with_stmt_using_cursor(_db_)
   local C_types_ = "III"
 
   _rc_, C_stmt = cql_prepare(_db_, 
-    "WITH X (a, b, c) AS ( SELECT 1, 2, 3 ) SELECT a, b, c FROM X")
+    "WITH X (a, b, c) AS ( SELECT 1, 2, 3 ) SELECT X.a, X.b, X.c FROM X")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   -- step and fetch
   _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
@@ -921,7 +941,7 @@ BEGIN
     X (a, b, c) AS (
       SELECT 1, 2, 3
     )
-  SELECT *
+  SELECT X.a, X.b, X.c
     FROM X;
 END;
 --]]
@@ -930,7 +950,7 @@ function with_stmt(_db_)
   local _rc_ = CQL_OK
   local _result_stmt = nil
   _rc_, _result_stmt = cql_prepare(_db_, 
-    "WITH X (a, b, c) AS ( SELECT 1, 2, 3 ) SELECT a, b, c FROM X")
+    "WITH X (a, b, c) AS ( SELECT 1, 2, 3 ) SELECT X.a, X.b, X.c FROM X")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -964,7 +984,7 @@ BEGIN
       UNION ALL
       SELECT 4, 5, 6
     )
-  SELECT *
+  SELECT X.a, X.b, X.c
     FROM X;
 END;
 --]]
@@ -973,7 +993,7 @@ function with_recursive_stmt(_db_)
   local _rc_ = CQL_OK
   local _result_stmt = nil
   _rc_, _result_stmt = cql_prepare(_db_, 
-    "WITH RECURSIVE X (a, b, c) AS ( SELECT 1, 2, 3 UNION ALL SELECT 4, 5, 6 ) SELECT a, b, c FROM X")
+    "WITH RECURSIVE X (a, b, c) AS ( SELECT 1, 2, 3 UNION ALL SELECT 4, 5, 6 ) SELECT X.a, X.b, X.c FROM X")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -1562,7 +1582,7 @@ local blob_var_notnull
 --[[
 PROC blob_returner ()
 BEGIN
-  SELECT *
+  SELECT blob_table.blob_id, blob_table.b_notnull, blob_table.b_nullable
     FROM blob_table;
 END;
 --]]
@@ -1571,7 +1591,7 @@ function blob_returner(_db_)
   local _rc_ = CQL_OK
   local _result_stmt = nil
   _rc_, _result_stmt = cql_prepare(_db_, 
-    "SELECT blob_id, b_notnull, b_nullable FROM blob_table")
+    "SELECT blob_table.blob_id, blob_table.b_notnull, blob_table.b_nullable FROM blob_table")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -1615,7 +1635,14 @@ end
 PROC out_cursor_proc ()
 BEGIN
   CURSOR C FOR
-    SELECT bar.*, 'xyzzy' AS extra1, 'plugh' AS extra2
+    SELECT
+        bar.id,
+        bar.name,
+        bar.rate,
+        bar.type,
+        bar.size,
+        'xyzzy' AS extra1,
+        'plugh' AS extra2
       FROM bar;
   FETCH C;
   OUT C;
@@ -1754,7 +1781,7 @@ end
 --[[
 PROC thread_theme_info_list (thread_key_ LONG!)
 BEGIN
-  SELECT *
+  SELECT T.thread_key
     FROM (SELECT thread_key
           FROM threads) AS T;
 END;
@@ -1766,7 +1793,7 @@ function thread_theme_info_list(_db_, thread_key_)
   local _rc_ = CQL_OK
   local _result_stmt = nil
   _rc_, _result_stmt = cql_prepare(_db_, 
-    "SELECT thread_key FROM (SELECT thread_key FROM threads) AS T")
+    "SELECT T.thread_key FROM (SELECT thread_key FROM threads) AS T")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -1794,7 +1821,12 @@ end
 --[[
 PROC fetch_values_dummy ()
 BEGIN
-  CURSOR C LIKE SELECT *
+  CURSOR C LIKE SELECT
+      bar.id,
+      bar.name,
+      bar.rate,
+      bar.type,
+      bar.size
     FROM bar;
   FETCH C(id, name, rate, type, size) FROM VALUES (_seed_, printf('name_%d', _seed_), _seed_, _seed_, _seed_) @DUMMY_SEED(123) @DUMMY_NULLABLES;
 END;
@@ -2249,7 +2281,7 @@ BEGIN
       SELECT 111
     )
   INSERT INTO foo(id)
-    SELECT *
+    SELECT x.a
       FROM x;
 END;
 --]]
@@ -2257,7 +2289,7 @@ END;
 function with_inserter(_db_)
   local _rc_ = CQL_OK
   _rc_ = cql_exec(_db_,
-    "WITH x (a) AS ( SELECT 111 ) INSERT INTO foo(id) SELECT a FROM x")
+    "WITH x (a) AS ( SELECT 111 ) INSERT INTO foo(id) SELECT x.a FROM x")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -3063,7 +3095,7 @@ end
 [ [ vault_sensitive ] ]
 PROC radioactive_proc ()
 BEGIN
-  SELECT *
+  SELECT radioactive.id, radioactive.data
     FROM radioactive;
 END;
 --]]
@@ -3072,7 +3104,7 @@ function radioactive_proc(_db_)
   local _rc_ = CQL_OK
   local _result_stmt = nil
   _rc_, _result_stmt = cql_prepare(_db_, 
-    "SELECT id, data FROM radioactive")
+    "SELECT radioactive.id, radioactive.data FROM radioactive")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -3104,7 +3136,7 @@ BEGIN
     x (a) AS (
       SELECT 111
     )
-  DELETE FROM foo WHERE id IN (SELECT *
+  DELETE FROM foo WHERE id IN (SELECT x.a
     FROM x);
 END;
 --]]
@@ -3112,7 +3144,7 @@ END;
 function with_deleter(_db_)
   local _rc_ = CQL_OK
   _rc_ = cql_exec(_db_,
-    "WITH x (a) AS ( SELECT 111 ) DELETE FROM foo WHERE id IN (SELECT a FROM x)")
+    "WITH x (a) AS ( SELECT 111 ) DELETE FROM foo WHERE id IN (SELECT x.a FROM x)")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -3131,7 +3163,7 @@ BEGIN
     )
   UPDATE bar
     SET name = 'xyzzy'
-    WHERE id IN (SELECT *
+    WHERE id IN (SELECT x.a
       FROM x);
 END;
 --]]
@@ -3139,7 +3171,7 @@ END;
 function with_updater(_db_)
   local _rc_ = CQL_OK
   _rc_ = cql_exec(_db_,
-    "WITH x (a) AS ( SELECT 111 ) UPDATE bar SET name = 'xyzzy' WHERE id IN (SELECT a FROM x)")
+    "WITH x (a) AS ( SELECT 111 ) UPDATE bar SET name = 'xyzzy' WHERE id IN (SELECT x.a FROM x)")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -3433,7 +3465,7 @@ end
 PROC rowset_object_reader (rowset OBJECT<rowset>)
 BEGIN
   CURSOR C FOR
-    SELECT *
+    SELECT ReadFromRowset.id
       FROM ReadFromRowset(rowset);
 END;
 --]]
@@ -3446,7 +3478,7 @@ function rowset_object_reader(_db_, rowset)
   local C_types_ = "i"
 
   _rc_, C_stmt = cql_prepare(_db_, 
-    "SELECT id FROM ReadFromRowset(?)")
+    "SELECT ReadFromRowset.id FROM ReadFromRowset(?)")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = cql_multibind(_db_, C_stmt, "o", rowset)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -3871,7 +3903,7 @@ end
 PROC out_union_dml ()
 BEGIN
   CURSOR x FOR
-    SELECT *
+    SELECT radioactive.id, radioactive.data
       FROM radioactive;
   FETCH x;
   OUT UNION x;
@@ -3887,7 +3919,7 @@ function out_union_dml_fetch_results(_db_)
   local x_types_ = "Is"
 
   _rc_, x_stmt = cql_prepare(_db_, 
-    "SELECT id, data FROM radioactive")
+    "SELECT radioactive.id, radioactive.data FROM radioactive")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   -- step and fetch
   _rc_ = cql_multifetch(x_stmt, x, x_types_, x_fields_)
@@ -4297,7 +4329,12 @@ end
 [ [ suppress_getters ] ]
 PROC lotsa_columns_no_getters ()
 BEGIN
-  SELECT *
+  SELECT
+      bar.id,
+      bar.name,
+      bar.rate,
+      bar.type,
+      bar.size
     FROM bar;
 END;
 --]]
@@ -4306,7 +4343,7 @@ function lotsa_columns_no_getters(_db_)
   local _rc_ = CQL_OK
   local _result_stmt = nil
   _rc_, _result_stmt = cql_prepare(_db_, 
-    "SELECT id, name, rate, type, size FROM bar")
+    "SELECT bar.id, bar.name, bar.rate, bar.type, bar.size FROM bar")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -4335,7 +4372,12 @@ end
 [ [ generate_copy ] ]
 PROC sproc_with_copy ()
 BEGIN
-  SELECT *
+  SELECT
+      bar.id,
+      bar.name,
+      bar.rate,
+      bar.type,
+      bar.size
     FROM bar;
 END;
 --]]
@@ -4344,7 +4386,7 @@ function sproc_with_copy(_db_)
   local _rc_ = CQL_OK
   local _result_stmt = nil
   _rc_, _result_stmt = cql_prepare(_db_, 
-    "SELECT id, name, rate, type, size FROM bar")
+    "SELECT bar.id, bar.name, bar.rate, bar.type, bar.size FROM bar")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -4466,7 +4508,12 @@ end
 [ [ emit_setters ] ]
 PROC no_out_with_setters ()
 BEGIN
-  SELECT *
+  SELECT
+      bar.id,
+      bar.name,
+      bar.rate,
+      bar.type,
+      bar.size
     FROM bar;
 END;
 --]]
@@ -4475,7 +4522,7 @@ function no_out_with_setters(_db_)
   local _rc_ = CQL_OK
   local _result_stmt = nil
   _rc_, _result_stmt = cql_prepare(_db_, 
-    "SELECT id, name, rate, type, size FROM bar")
+    "SELECT bar.id, bar.name, bar.rate, bar.type, bar.size FROM bar")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -4504,7 +4551,12 @@ end
 [ [ suppress_result_set ] ]
 PROC lotsa_columns_no_result_set ()
 BEGIN
-  SELECT *
+  SELECT
+      bar.id,
+      bar.name,
+      bar.rate,
+      bar.type,
+      bar.size
     FROM bar;
 END;
 --]]
@@ -4513,7 +4565,7 @@ function lotsa_columns_no_result_set(_db_)
   local _rc_ = CQL_OK
   local _result_stmt = nil
   _rc_, _result_stmt = cql_prepare(_db_, 
-    "SELECT id, name, rate, type, size FROM bar")
+    "SELECT bar.id, bar.name, bar.rate, bar.type, bar.size FROM bar")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -4569,7 +4621,11 @@ end
 [ [ custom_type_for_encoded_column ] ]
 PROC vault_sensitive_with_values_proc ()
 BEGIN
-  SELECT *
+  SELECT
+      vault_mixed_sensitive.id,
+      vault_mixed_sensitive.name,
+      vault_mixed_sensitive.title,
+      vault_mixed_sensitive.type
     FROM vault_mixed_sensitive;
 END;
 --]]
@@ -4578,7 +4634,7 @@ function vault_sensitive_with_values_proc(_db_)
   local _rc_ = CQL_OK
   local _result_stmt = nil
   _rc_, _result_stmt = cql_prepare(_db_, 
-    "SELECT id, name, title, type FROM vault_mixed_sensitive")
+    "SELECT vault_mixed_sensitive.id, vault_mixed_sensitive.name, vault_mixed_sensitive.title, vault_mixed_sensitive.type FROM vault_mixed_sensitive")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -4608,7 +4664,11 @@ end
 [ [ custom_type_for_encoded_column ] ]
 PROC vault_not_nullable_sensitive_with_values_proc ()
 BEGIN
-  SELECT *
+  SELECT
+      vault_mixed_not_nullable_sensitive.id,
+      vault_mixed_not_nullable_sensitive.name,
+      vault_mixed_not_nullable_sensitive.title,
+      vault_mixed_not_nullable_sensitive.type
     FROM vault_mixed_not_nullable_sensitive;
 END;
 --]]
@@ -4617,7 +4677,7 @@ function vault_not_nullable_sensitive_with_values_proc(_db_)
   local _rc_ = CQL_OK
   local _result_stmt = nil
   _rc_, _result_stmt = cql_prepare(_db_, 
-    "SELECT id, name, title, type FROM vault_mixed_not_nullable_sensitive")
+    "SELECT vault_mixed_not_nullable_sensitive.id, vault_mixed_not_nullable_sensitive.name, vault_mixed_not_nullable_sensitive.title, vault_mixed_not_nullable_sensitive.type FROM vault_mixed_not_nullable_sensitive")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -4646,7 +4706,11 @@ end
 [ [ vault_sensitive ] ]
 PROC vault_sensitive_mixed_proc ()
 BEGIN
-  SELECT *
+  SELECT
+      vault_mixed_sensitive.id,
+      vault_mixed_sensitive.name,
+      vault_mixed_sensitive.title,
+      vault_mixed_sensitive.type
     FROM vault_mixed_sensitive;
 END;
 --]]
@@ -4655,7 +4719,7 @@ function vault_sensitive_mixed_proc(_db_)
   local _rc_ = CQL_OK
   local _result_stmt = nil
   _rc_, _result_stmt = cql_prepare(_db_, 
-    "SELECT id, name, title, type FROM vault_mixed_sensitive")
+    "SELECT vault_mixed_sensitive.id, vault_mixed_sensitive.name, vault_mixed_sensitive.title, vault_mixed_sensitive.type FROM vault_mixed_sensitive")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -4684,10 +4748,18 @@ end
 [ [ vault_sensitive ] ]
 PROC vault_union_all_table_proc ()
 BEGIN
-  SELECT *
+  SELECT
+      vault_mixed_sensitive.id,
+      vault_mixed_sensitive.name,
+      vault_mixed_sensitive.title,
+      vault_mixed_sensitive.type
     FROM vault_mixed_sensitive
   UNION ALL
-  SELECT *
+  SELECT
+      vault_non_sensitive.id,
+      vault_non_sensitive.name,
+      vault_non_sensitive.title,
+      vault_non_sensitive.type
     FROM vault_non_sensitive;
 END;
 --]]
@@ -4696,7 +4768,7 @@ function vault_union_all_table_proc(_db_)
   local _rc_ = CQL_OK
   local _result_stmt = nil
   _rc_, _result_stmt = cql_prepare(_db_, 
-    "SELECT id, name, title, type FROM vault_mixed_sensitive UNION ALL SELECT id, name, title, type FROM vault_non_sensitive")
+    "SELECT vault_mixed_sensitive.id, vault_mixed_sensitive.name, vault_mixed_sensitive.title, vault_mixed_sensitive.type FROM vault_mixed_sensitive UNION ALL SELECT vault_non_sensitive.id, vault_non_sensitive.name, vault_non_sensitive.title, vault_non_sensitive.type FROM vault_non_sensitive")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -4835,7 +4907,11 @@ end
 [ [ vault_sensitive=(title, (id, name)) ] ]
 PROC vault_sensitive_with_context_and_sensitive_columns_proc ()
 BEGIN
-  SELECT *
+  SELECT
+      vault_mixed_sensitive.id,
+      vault_mixed_sensitive.name,
+      vault_mixed_sensitive.title,
+      vault_mixed_sensitive.type
     FROM vault_mixed_sensitive;
 END;
 --]]
@@ -4844,7 +4920,7 @@ function vault_sensitive_with_context_and_sensitive_columns_proc(_db_)
   local _rc_ = CQL_OK
   local _result_stmt = nil
   _rc_, _result_stmt = cql_prepare(_db_, 
-    "SELECT id, name, title, type FROM vault_mixed_sensitive")
+    "SELECT vault_mixed_sensitive.id, vault_mixed_sensitive.name, vault_mixed_sensitive.title, vault_mixed_sensitive.type FROM vault_mixed_sensitive")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -4873,7 +4949,11 @@ end
 [ [ vault_sensitive=((id, name)) ] ]
 PROC vault_sensitive_with_no_context_and_sensitive_columns_proc ()
 BEGIN
-  SELECT *
+  SELECT
+      vault_mixed_sensitive.id,
+      vault_mixed_sensitive.name,
+      vault_mixed_sensitive.title,
+      vault_mixed_sensitive.type
     FROM vault_mixed_sensitive;
 END;
 --]]
@@ -4882,7 +4962,7 @@ function vault_sensitive_with_no_context_and_sensitive_columns_proc(_db_)
   local _rc_ = CQL_OK
   local _result_stmt = nil
   _rc_, _result_stmt = cql_prepare(_db_, 
-    "SELECT id, name, title, type FROM vault_mixed_sensitive")
+    "SELECT vault_mixed_sensitive.id, vault_mixed_sensitive.name, vault_mixed_sensitive.title, vault_mixed_sensitive.type FROM vault_mixed_sensitive")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -4911,7 +4991,11 @@ end
 [ [ vault_sensitive=(title, (id, name)) ] ]
 PROC vault_sensitive_with_context_and_no_sensitive_columns_proc ()
 BEGIN
-  SELECT *
+  SELECT
+      vault_non_sensitive.id,
+      vault_non_sensitive.name,
+      vault_non_sensitive.title,
+      vault_non_sensitive.type
     FROM vault_non_sensitive;
 END;
 --]]
@@ -4920,7 +5004,7 @@ function vault_sensitive_with_context_and_no_sensitive_columns_proc(_db_)
   local _rc_ = CQL_OK
   local _result_stmt = nil
   _rc_, _result_stmt = cql_prepare(_db_, 
-    "SELECT id, name, title, type FROM vault_non_sensitive")
+    "SELECT vault_non_sensitive.id, vault_non_sensitive.name, vault_non_sensitive.title, vault_non_sensitive.type FROM vault_non_sensitive")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -4949,7 +5033,12 @@ end
 PROC try_boxing (OUT result OBJECT<bar CURSOR>)
 BEGIN
   CURSOR C FOR
-    SELECT *
+    SELECT
+        bar.id,
+        bar.name,
+        bar.rate,
+        bar.type,
+        bar.size
       FROM bar;
   SET result FROM CURSOR C;
 END;
@@ -4965,7 +5054,7 @@ function try_boxing(_db_)
 
   C_stmt = nil
   _rc_, C_stmt = cql_prepare(_db_, 
-    "SELECT id, name, rate, type, size FROM bar")
+    "SELECT bar.id, bar.name, bar.rate, bar.type, bar.size FROM bar")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   result = C_stmt
   _rc_ = CQL_OK
@@ -6332,7 +6421,7 @@ end
 --[[
 PROC virtual1 ()
 BEGIN
-  SELECT *
+  SELECT virtual_with_hidden.vy
     FROM virtual_with_hidden;
 END;
 --]]
@@ -6341,7 +6430,7 @@ function virtual1(_db_)
   local _rc_ = CQL_OK
   local _result_stmt = nil
   _rc_, _result_stmt = cql_prepare(_db_, 
-    "SELECT vy FROM virtual_with_hidden")
+    "SELECT virtual_with_hidden.vy FROM virtual_with_hidden")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -6355,7 +6444,7 @@ function virtual1_fetch_results(_db_)
   local _rc_
   _rc_, stmt = virtual1(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "Ii", { "vx", "vy" })
+  _rc_, result_set = cql_fetch_all_rows(stmt, "i", { "vy" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -7116,7 +7205,12 @@ end
 --[[
 PROC result_set_proc_with_contract_in_fetch_results (t TEXT!)
 BEGIN
-  SELECT *
+  SELECT
+      bar.id,
+      bar.name,
+      bar.rate,
+      bar.type,
+      bar.size
     FROM bar;
 END;
 --]]
@@ -7127,7 +7221,7 @@ function result_set_proc_with_contract_in_fetch_results(_db_, t)
   local _rc_ = CQL_OK
   local _result_stmt = nil
   _rc_, _result_stmt = cql_prepare(_db_, 
-    "SELECT id, name, rate, type, size FROM bar")
+    "SELECT bar.id, bar.name, bar.rate, bar.type, bar.size FROM bar")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -7260,7 +7354,81 @@ local false_test = false
 PROC BigFormat ()
 BEGIN
   CURSOR C FOR
-    SELECT *
+    SELECT
+        big_data.f1,
+        big_data.f2,
+        big_data.f3,
+        big_data.f4,
+        big_data.f5,
+        big_data.f6,
+        big_data.f7,
+        big_data.f8,
+        big_data.f9,
+        big_data.f10,
+        big_data.f11,
+        big_data.f12,
+        big_data.f13,
+        big_data.f14,
+        big_data.f15,
+        big_data.f16,
+        big_data.f17,
+        big_data.f18,
+        big_data.f19,
+        big_data.f20,
+        big_data.f21,
+        big_data.f22,
+        big_data.f23,
+        big_data.f24,
+        big_data.f25,
+        big_data.f26,
+        big_data.f27,
+        big_data.f28,
+        big_data.f29,
+        big_data.f30,
+        big_data.f31,
+        big_data.f32,
+        big_data.f33,
+        big_data.f34,
+        big_data.f35,
+        big_data.f36,
+        big_data.f38,
+        big_data.f39,
+        big_data.f40,
+        big_data.f41,
+        big_data.f42,
+        big_data.f43,
+        big_data.f44,
+        big_data.f45,
+        big_data.f46,
+        big_data.f47,
+        big_data.f48,
+        big_data.f49,
+        big_data.f50,
+        big_data.f51,
+        big_data.f52,
+        big_data.f53,
+        big_data.f54,
+        big_data.f55,
+        big_data.f56,
+        big_data.f57,
+        big_data.f58,
+        big_data.f59,
+        big_data.f60,
+        big_data.f61,
+        big_data.f62,
+        big_data.f63,
+        big_data.f64,
+        big_data.f65,
+        big_data.f66,
+        big_data.f67,
+        big_data.f68,
+        big_data.f69,
+        big_data.f70,
+        big_data.f71,
+        big_data.f72,
+        big_data.f73,
+        big_data.f74,
+        big_data.f75
       FROM big_data;
   LOOP FETCH C
   BEGIN
@@ -7278,7 +7446,7 @@ function BigFormat(_db_)
   local s
 
   _rc_, C_stmt = cql_prepare(_db_, 
-    "SELECT f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26, f27, f28, f29, f30, f31, f32, f33, f34, f35, f36, f38, f39, f40, f41, f42, f43, f44, f45, f46, f47, f48, f49, f50, f51, f52, f53, f54, f55, f56, f57, f58, f59, f60, f61, f62, f63, f64, f65, f66, f67, f68, f69, f70, f71, f72, f73, f74, f75 FROM big_data")
+    "SELECT big_data.f1, big_data.f2, big_data.f3, big_data.f4, big_data.f5, big_data.f6, big_data.f7, big_data.f8, big_data.f9, big_data.f10, big_data.f11, big_data.f12, big_data.f13, big_data.f14, big_data.f15, big_data.f16, big_data.f17, big_data.f18, big_data.f19, big_data.f20, big_data.f21, big_data.f22, big_data.f23, big_data.f24, big_data.f25, big_data.f26, big_data.f27, big_data.f28, big_data.f29, big_data.f30, big_data.f31, big_data.f32, big_data.f33, big_data.f34, big_data.f35, big_data.f36, big_data.f38, big_data.f39, big_data.f40, big_data.f41, big_data.f42, big_data.f43, big_data.f44, big_data.f45, big_data.f46, big_data.f47, big_data.f48, big_data.f49, big_data.f50, big_data.f51, big_data.f52, big_data.f53, big_data.f54, big_data.f55, big_data.f56, big_data.f57, big_data.f58, big_data.f59, big_data.f60, big_data.f61, big_data.f62, big_data.f63, big_data.f64, big_data.f65, big_data.f66, big_data.f67, big_data.f68, big_data.f69, big_data.f70, big_data.f71, big_data.f72, big_data.f73, big_data.f74, big_data.f75 FROM big_data")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   while true
   do
@@ -7602,7 +7770,7 @@ PROC foo ()
 BEGIN
   WITH
     shared_frag (shared_something) AS (CALL shared_frag())
-  SELECT *
+  SELECT shared_frag.shared_something
     FROM shared_frag;
 END;
 --]]
@@ -7615,7 +7783,7 @@ function foo(_db_)
     {
     "WITH shared_frag (shared_something) AS (",
     "SELECT 1234",
-    ") SELECT shared_something FROM shared_frag"
+    ") SELECT shared_frag.shared_something FROM shared_frag"
     }
   )
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -7650,7 +7818,12 @@ BEGIN
       SELECT x
     ),
     shared_conditional (x) AS (CALL shared_conditional(1))
-  SELECT bar.*
+  SELECT
+      bar.id,
+      bar.name,
+      bar.rate,
+      bar.type,
+      bar.size
     FROM bar
       INNER JOIN some_cte ON x = 5;
 END;
@@ -7728,7 +7901,7 @@ PROC nested_shared_stuff ()
 BEGIN
   WITH
     nested_shared_proc (x) AS (CALL nested_shared_proc(1))
-  SELECT *
+  SELECT nested_shared_proc.x
     FROM nested_shared_proc;
 END;
 --]]
@@ -7778,9 +7951,9 @@ function nested_shared_stuff(_db_)
     "SELECT ?",
     "SELECT ? + ?",
     "SELECT ? + ? + ?",
-    ") SELECT x FROM shared_conditional WHERE ? = 5",
+    ") SELECT shared_conditional.x FROM shared_conditional WHERE ? = 5",
     "SELECT ?",
-    ") SELECT x FROM nested_shared_proc"
+    ") SELECT nested_shared_proc.x FROM nested_shared_proc"
     }
   )
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -7812,7 +7985,7 @@ end
 --[[
 PROC use_nested_select_shared_frag_form ()
 BEGIN
-  SELECT *
+  SELECT _select_.x
     FROM (CALL nested_shared_proc(1));
 END;
 --]]
@@ -7865,7 +8038,7 @@ function use_nested_select_shared_frag_form(_db_)
     "SELECT ?",
     "SELECT ? + ?",
     "SELECT ? + ? + ?",
-    ") SELECT x FROM shared_conditional WHERE ? = 5",
+    ") SELECT shared_conditional.x FROM shared_conditional WHERE ? = 5",
     "SELECT ? AS x",
     ")",
     ")"
@@ -7901,7 +8074,7 @@ end
 [ [ private ] ]
 PROC simple_shared_frag ()
 BEGIN
-  SELECT *
+  SELECT _select_.shared_something
     FROM (CALL shared_frag());
 END;
 --]]
@@ -8463,7 +8636,13 @@ BEGIN
   EXPLAIN QUERY PLAN
   WITH
     backed (rowid, pk, flag, id, name, age, storage) AS (CALL _backed())
-  SELECT *
+  SELECT
+      backed.pk,
+      backed.flag,
+      backed.id,
+      backed.name,
+      backed.age,
+      backed.storage
     FROM backed;
 END;
 --]]
@@ -8478,7 +8657,7 @@ function explain_equery_plan_backed(_db_)
     {
     "EXPLAIN QUERY PLAN WITH backed (rowid, pk, flag, id, name, age, storage) AS (",
     "SELECT rowid, bgetkey(T.k, 0), bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -3683705396192132539), bgetval(T.v, -7635294210585028660) FROM backing AS T WHERE bgetkey_type(T.k) = -5417664364642960231",
-    ") SELECT rowid, pk, flag, id, name, age, storage FROM backed"
+    ") SELECT backed.pk, backed.flag, backed.id, backed.name, backed.age, backed.storage FROM backed"
     }
   )
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -8555,7 +8734,7 @@ BEGIN
   WHILE i < 10
   BEGIN
     CURSOR C FOR
-      SELECT *
+      SELECT foo.id
         FROM foo
         WHERE id = i;
     FETCH C;
@@ -8582,7 +8761,7 @@ function cursor_in_loop(_db_)
     if not(i < 10) then break end
     cql_finalize_stmt(C_stmt)
     _rc_, C_stmt = cql_prepare(_db_, 
-      "SELECT id FROM foo WHERE id = ?")
+      "SELECT foo.id FROM foo WHERE id = ?")
     if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
     _rc_ = cql_multibind(_db_, C_stmt, "I", i)
     if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -9009,7 +9188,7 @@ BEGIN
       SELECT cql_blob_create(`a table`, V.`col 1`, `a table`.`col 1`), cql_blob_create(`a table`, V.`col 2`, `a table`.`col 2`)
         FROM _vals AS V
     ON CONFLICT (`the key`)
-    WHERE cql_blob_get(`the value`, `a table`.`col 2`) IN (SELECT *
+    WHERE cql_blob_get(`the value`, `a table`.`col 2`) IN (SELECT a_cte.x
       FROM a_cte) 
     DO UPDATE
       SET `the key` = cql_blob_update(`the key`, ifnull(cql_blob_get(`the value`, `a table`.`col 2`), 0), `a table`.`col 1`)
@@ -9027,7 +9206,7 @@ function upsert_returning_with_backing(_db_)
   local C_types_ = "Ii"
 
   _rc_, C_stmt = cql_prepare(_db_, 
-    "WITH a_cte (x) AS ( VALUES (1), (2), (3) ), _vals ([col 1], [col 2]) AS ( VALUES (1, 2) ) INSERT INTO [a backing table]([the key], [the value]) SELECT jsonb_array(-3079349931095810044, V.[col 1]), jsonb_object('X_colX202', V.[col 2]) FROM _vals AS V ON CONFLICT ([the key]) WHERE (([the value])->>'$.X_colX202') IN (SELECT x FROM a_cte)  DO UPDATE SET [the key] = jsonb_set([the key],  '$[1]', ifnull((([the value])->>'$.X_colX202'), 0)) WHERE rowid IN (SELECT rowid FROM [a table]) RETURNING ((([the key])->>1), (([the value])->>'$.X_colX202'))")
+    "WITH a_cte (x) AS ( VALUES (1), (2), (3) ), _vals ([col 1], [col 2]) AS ( VALUES (1, 2) ) INSERT INTO [a backing table]([the key], [the value]) SELECT jsonb_array(-3079349931095810044, V.[col 1]), jsonb_object('X_colX202', V.[col 2]) FROM _vals AS V ON CONFLICT ([the key]) WHERE (([the value])->>'$.X_colX202') IN (SELECT a_cte.x FROM a_cte)  DO UPDATE SET [the key] = jsonb_set([the key],  '$[1]', ifnull((([the value])->>'$.X_colX202'), 0)) WHERE rowid IN (SELECT rowid FROM [a table]) RETURNING ((([the key])->>1), (([the value])->>'$.X_colX202'))")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -10169,11 +10348,11 @@ function cql_startup(_db_)
   -- The statement ending at line XXXX
 
   --[[
-  SET b2 := ( SELECT EXISTS (SELECT *
+  SET b2 := ( SELECT EXISTS (SELECT 1
       FROM bar) );
   --]]
   _rc_, _temp_stmt = cql_prepare(_db_, 
-    "SELECT EXISTS (SELECT * FROM bar)")
+    "SELECT EXISTS (SELECT 1 FROM bar)")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = cql_step(_temp_stmt)
   if _rc_ ~= CQL_ROW then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -10185,18 +10364,28 @@ function cql_startup(_db_)
 
   --[[
   CURSOR expanded_select FOR
-    SELECT *
+    SELECT
+        bar.id,
+        bar.name,
+        bar.rate,
+        bar.type,
+        bar.size
       FROM bar;
   --]]
   _rc_, expanded_select_stmt = cql_prepare(_db_, 
-    "SELECT id, name, rate, type, size FROM bar")
+    "SELECT bar.id, bar.name, bar.rate, bar.type, bar.size FROM bar")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
 
   -- The statement ending at line XXXX
 
   --[[
   CURSOR table_expanded_select FOR
-    SELECT bar.*
+    SELECT
+        bar.id,
+        bar.name,
+        bar.rate,
+        bar.type,
+        bar.size
       FROM bar;
   --]]
   _rc_, table_expanded_select_stmt = cql_prepare(_db_, 

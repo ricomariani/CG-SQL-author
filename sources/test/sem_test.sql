@@ -72,17 +72,17 @@ create table baz(
 );
 
 -- TEST: ok to get ID from foo, unique
--- + select: { id: integer notnull }
+-- + _select_: { id: integer notnull }
 -- - error:
 select ID from foo;
 
 -- TEST: make sure the type includes the kinds
--- + {select_stmt}: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> }
+-- + {select_stmt}: _select_: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> }
 -- - error:
 select * from with_kind;
 
 -- TEST: classic join
--- + select: { id: integer notnull, name: text }
+-- + _select_: { id: integer notnull, name: text }
 -- + JOIN { T1: foo, T2: bar }
 -- - error:
 select T1.id, name
@@ -92,18 +92,18 @@ where rate > 0;
 
 -- TEST: left join still creates new nullable columns with no join condition
 -- this is necessary because "T2" might be empty
--- + {select_stmt}: select: { id: integer notnull, id: integer }
+-- + {select_stmt}: _select_: { id: integer notnull, id: integer }
 -- - error:
 select * from foo T1 left join foo T2;
 
 -- TEST: cross join does not create new nullable columns with join condition
 -- cross is the same as inner in SQLite, only reordering optimization is suppressed
--- + {select_stmt}: select: { id: integer notnull, id: integer notnull }
+-- + {select_stmt}: _select_: { id: integer notnull, id: integer notnull }
 -- - error:
 select * from foo T1 cross join foo T2 on T1.id = T2.id;
 
 -- TEST: alternate join syntax
--- + select: { name: text }
+-- + _select_: { name: text }
 -- + {select_from_etc}: JOIN { foo: foo, bar: bar }
 -- - error:
 select name from foo, bar;
@@ -125,7 +125,7 @@ select id from foo, bar;
 select not_found from foo, bar;
 
 -- TEST: simple string select, string literals
--- + select: { _anon: text notnull }
+-- + _select_: { _anon: text notnull }
 -- - error:
 select 'foo';
 
@@ -136,13 +136,13 @@ select 'foo';
 select 'foo' + 'bar' + 3;
 
 -- TEST: correct like expression
--- + {select_stmt}: select: { _anon: bool notnull }
+-- + {select_stmt}: _select_: { _anon: bool notnull }
 -- + {like}: bool notnull
 -- - error:
 select 'foo' like 'baz';
 
 -- TEST: correct not like expression
--- + {select_stmt}: select: { _anon: bool notnull }
+-- + {select_stmt}: _select_: { _anon: bool notnull }
 -- + {not_like}: bool notnull
 -- - error:
 select 'foo' not like 'baz';
@@ -166,25 +166,25 @@ select 1 not like 'baz';
 select 'foo' like 2;
 
 -- TEST: correct concat strings
--- + {select_stmt}: select: { _anon: text notnull }
+-- + {select_stmt}: _select_: { _anon: text notnull }
 -- + {concat}: text notnull
 -- - error:
 select 'foo' || 'baz';
 
 -- TEST: correct concat string or number case one
--- + {select_stmt}: select: { _anon: text notnull }
+-- + {select_stmt}: _select_: { _anon: text notnull }
 -- + {concat}: text notnull
 -- - error:
 select 'foo' || 1;
 
 -- TEST: correct concat string or number case two
--- + select_stmt}: select: { _anon: text notnull }
+-- + select_stmt}: _select_: { _anon: text notnull }
 -- + {concat}: text notnull
 -- - error:
 select 1.0 || 'baz';
 
 -- TEST: converts to REAL
--- + {select_stmt}: select: { _anon: real notnull }
+-- + {select_stmt}: _select_: { _anon: real notnull }
 -- + {add}: real notnull
 -- + {int 1}: integer notnull
 -- + {dbl 2.0%}: real notnull
@@ -192,7 +192,7 @@ select 1.0 || 'baz';
 select 1 + 2.0;
 
 -- TEST: stays integer
--- + {select_stmt}: select: { _anon: integer notnull }
+-- + {select_stmt}: _select_: { _anon: integer notnull }
 -- + {add}: integer notnull
 -- + {int 3}: integer notnull
 -- + {int 4}: integer notnull
@@ -448,39 +448,27 @@ select 2 = 2;
 
 -- TEST: select * produces correct tables joining foo and bar
 -- - error:
--- + {select_stmt}: select: { id: integer notnull, id: integer notnull, name: text, rate: longint }
+-- + {select_stmt}: _select_: { id: integer notnull, id: integer notnull, name: text, rate: longint }
 -- + {select_from_etc}: JOIN { foo: foo, bar: bar }
 select * from foo, bar;
 
 -- TEST: select expression alias to one, two works
 -- - error:
--- + {select_stmt}: select: { one: integer notnull, two: integer notnull }
+-- + {select_stmt}: _select_: { one: integer notnull, two: integer notnull }
 select 1 as one, 2 as two;
 
 -- TEST: select * with no from is an error
--- * error: % select * cannot be used with no FROM clause
+-- * error: % select *, T.*, or columns(...) cannot be used with no FROM clause
 -- +1 error:
 -- + {select_stmt}: err
 -- + {star}: err
 select *;
 
--- TEST: anonymous columns produce an error
--- + {insert_stmt}: err
--- * error: % all columns in the select must have a name
--- +1 error:
-insert into foo(id) select * from (select 1);
-
--- TEST: anonymous columns produce an error (with T.* syntax too)
--- + {insert_stmt}: err
--- * error: % all columns in the select must have a name
--- +1 error:
-insert into foo(id) select T.* from (select 1) as T;
-
 -- TEST: select where statement
--- + {select_stmt}: select: { T: integer notnull }
--- + {select_core}: select: { T: integer notnull }
--- + {select_expr_list_con}: select: { T: integer notnull }
--- + {select_expr_list}: select: { T: integer notnull }
+-- + {select_stmt}: _select_: { T: integer notnull }
+-- + {select_core}: _select_: { T: integer notnull }
+-- + {select_expr_list_con}: _select_: { T: integer notnull }
+-- + {select_expr_list}: _select_: { T: integer notnull }
 -- + {select_from_etc}: ok
 -- + {select_where}
 -- - error:
@@ -495,7 +483,7 @@ select 10 as T where 1;
 select c where 1;
 
 -- TEST: a WHERE clause can refer to the FROM
--- + {select_stmt}: select: { id: integer notnull }
+-- + {select_stmt}: _select_: { id: integer notnull }
 -- + {opt_where}: bool notnull
 -- - error:
 select * from foo where id > 1000;
@@ -539,7 +527,7 @@ window w as (order by y);
 select * from foo group by count(id);
 
 -- TEST: ORDER BY should be able to have aggregate functions
--- + {select_stmt}: select: { id: integer notnull }
+-- + {select_stmt}: _select_: { id: integer notnull }
 -- + {opt_orderby}: ok
 -- + {orderby_list}: ok
 -- - error:
@@ -554,7 +542,7 @@ select * from foo order by count(id);
 select id as name from bar where name like "%foo%";
 
 -- TEST: using a qualified reference avoids the error above
--- + {select_stmt}: select: { name: integer notnull }
+-- + {select_stmt}: _select_: { name: integer notnull }
 -- + {opt_where}: bool
 -- - error:
 select id as name from bar where bar.name like "%foo%";
@@ -570,7 +558,7 @@ from bar
 where id > (select count(rate) from bar where name like "%foo%");
 
 -- TEST: again, using a qualified reference avoids the error above
--- + {select_stmt}: select: { name: integer notnull }
+-- + {select_stmt}: _select_: { name: integer notnull }
 -- + {opt_where}: bool
 -- - error:
 select id as name
@@ -621,24 +609,24 @@ create table big (
 );
 
 -- TEST: create a long int
--- + {select_stmt}: select: { l: longint }
+-- + {select_stmt}: _select_: { l: longint }
 -- - error:
 select l from big;
 
 -- TEST: long * int -> long
--- + {select_stmt}: select: { _anon: longint }
+-- + {select_stmt}: _select_: { _anon: longint }
 -- + {select_from_etc}: TABLE { big: big }
 -- - error:
 select l * 1 from big;
 
 -- TEST: long * bool -> long (nullables)
--- + {select_stmt}: select: { _anon: longint }
+-- + {select_stmt}: _select_: { _anon: longint }
 -- + {select_from_etc}: TABLE { big: big }
 -- - error:
 select l * (1==1) from big;
 
 -- TEST: long * real -> real (nullables)
--- + {select_stmt}: select: { _anon: real }
+-- + {select_stmt}: _select_: { _anon: real }
 -- + {select_from_etc}: TABLE { big: big }
 -- - error:
 select l * 2.0 from big;
@@ -660,7 +648,7 @@ end;
 
 -- TEST: ok to have two different strings
 -- note there was no else case, so nullable result
--- + {select_stmt}: select: { _anon: text }
+-- + {select_stmt}: _select_: { _anon: text }
 -- + {case_list}: text
 -- + {when}: text notnull
 -- + {when}: text notnull
@@ -717,7 +705,7 @@ end;
 
 -- TEST: ok to compare strings to each other
 -- note the result type is nullable, there was no else case!
--- + {select_stmt}: select: { _anon: integer }
+-- + {select_stmt}: _select_: { _anon: integer }
 -- + {case_expr}: integer
 -- - error:
 select case 'x'
@@ -727,7 +715,7 @@ end;
 
 -- TEST: ok to compare a real to an int
 -- note the result type is nullable, there was no else case!
--- + {select_stmt}: select: { _anon: integer }
+-- + {select_stmt}: _select_: { _anon: integer }
 -- + {case_expr}: integer
 -- - error:
 select case 2
@@ -746,7 +734,7 @@ select case 3
 end;
 
 -- TEST: int combines with real to give real
--- {select_stmt}: select: { _anon: real notnull }
+-- {select_stmt}: _select_: { _anon: real notnull }
 -- {case_expr}: real notnull
 -- - error:
 select case 4
@@ -755,7 +743,7 @@ select case 4
 end;
 
 -- TEST: null combines with int to give nullable int
--- + {select_stmt}: select: { _anon: integer }
+-- + {select_stmt}: _select_: { _anon: integer }
 -- + {case_expr}: integer
 -- - {case_expr}: integer notnull
 -- - error:
@@ -765,7 +753,7 @@ select case 5
 end;
 
 -- TEST: real combines with real to give real
--- + {select_stmt}: select: { _anon: real notnull }
+-- + {select_stmt}: _select_: { _anon: real notnull }
 -- + {case_expr}: real notnull
 -- - error:
 select case 6
@@ -775,7 +763,7 @@ end;
 
 
 -- TEST: bool combines with null to give nullable bool
--- + {select_stmt}: select: { _anon: bool }
+-- + {select_stmt}: _select_: { _anon: bool }
 -- + {case_expr}: bool
 -- - {case_expr}: bool notnull
 -- - error:
@@ -806,13 +794,13 @@ when 1 then 0
 end;
 
 -- TEST: ranges ok as integer
--- + {select_stmt}: select: { _anon: bool notnull }
+-- + {select_stmt}: _select_: { _anon: bool notnull }
 -- + {between}: bool notnull
 -- - error:
 select 1 between 0 and 2;
 
 -- TEST: ranges ok as string
--- + {select_stmt}: select: { _anon: bool notnull }
+-- + {select_stmt}: _select_: { _anon: bool notnull }
 -- + {between}: bool notnull
 -- - error:
 select 'x' between 'a' and 'z';
@@ -833,7 +821,7 @@ select 'x' between null and 3;
 
 -- TEST: null can be compared to anything
 -- note nullable result
--- + {select_stmt}: select: { _anon: bool }
+-- + {select_stmt}: _select_: { _anon: bool }
 -- + {between}: bool
 -- - error:
 select null between 1 and 2;
@@ -855,13 +843,13 @@ select null between 1 and 'x';
 select (NOT 'x') between 1122 and 3344;
 
 -- TEST: ranges ok as integer (NOT BETWEEN)
--- + {select_stmt}: select: { _anon: bool notnull }
+-- + {select_stmt}: _select_: { _anon: bool notnull }
 -- + {not_between}: bool notnull
 -- - error:
 select 1 not between 0 and 2;
 
 -- TEST: ranges ok as string
--- + {select_stmt}: select: { _anon: bool notnull }
+-- + {select_stmt}: _select_: { _anon: bool notnull }
 -- + {not_between}: bool notnull
 -- - error:
 select 'x' not between 'a' and 'z';
@@ -882,7 +870,7 @@ select 'x' not between null and 3;
 
 -- TEST: null can be compared to anything
 -- note nullable result
--- + {select_stmt}: select: { _anon: bool }
+-- + {select_stmt}: _select_: { _anon: bool }
 -- + {not_between}: bool
 -- - error:
 select null not between 1 and 2;
@@ -904,17 +892,17 @@ select null not between 1 and 'x';
 select (NOT 'x') not between 1122 and 3344;
 
 -- TEST: nested select statement in the from clause
--- + {select_stmt}: select: { id: integer notnull, name: text notnull }
--- + {select_from_etc}: TABLE { Item: select }
--- + {select_stmt}: select: { id: integer notnull, name: text notnull }
+-- + {select_stmt}: _select_: { id: integer notnull, name: text notnull }
+-- + {select_from_etc}: TABLE { Item: _select_ }
+-- + {select_stmt}: _select_: { id: integer notnull, name: text notnull }
 -- - error:
 select * from ( select 1 as id, 'x' as name ) as Item;
 
 -- TEST: nested select statement with join
--- + {select_stmt}: select: { id1: integer notnull, name: text notnull, id2: integer notnull, brand: text notnull }
--- + {select_stmt}: select: { id1: integer notnull, name: text notnull }
--- + {select_stmt}: select: { id2: integer notnull, brand: text notnull }
--- + {join_cond}: JOIN { Item: select, ItemBrand: select }
+-- + {select_stmt}: _select_: { id1: integer notnull, name: text notnull, id2: integer notnull, brand: text notnull }
+-- + {select_stmt}: _select_: { id1: integer notnull, name: text notnull }
+-- + {select_stmt}: _select_: { id2: integer notnull, brand: text notnull }
+-- + {join_cond}: JOIN { Item: _select_, ItemBrand: _select_ }
 -- - error:
 select * from
 ( select 1 as id1, 'x' as name ) as Item
@@ -922,7 +910,7 @@ inner join (select 1 as id2, 'b' as brand) as ItemBrand
 on ItemBrand.id2 = Item.id1;
 
 -- TEST: nested select expression
--- + {select_stmt}: select: { result: integer notnull }
+-- + {select_stmt}: _select_: { result: integer notnull }
 -- + {select_expr}: result: integer notnull
 -- + {select_stmt}: unused: integer notnull
 -- - error:
@@ -931,25 +919,25 @@ select (select 1 as unused) as result;
 -- TEST: nested select expression with wrong # of items
 -- + {select_stmt}: err
 -- + {select_expr}: err
--- + {select_expr_list_con}: select: { _anon: integer notnull, _anon: integer notnull }
+-- + {select_expr_list_con}: _select_: { _anon: integer notnull, _anon: integer notnull }
 -- * error: % nested select expression must return exactly one column
 -- +1 error:
 select (select 1, 2);
 
 -- TEST: nested select used for simple math
--- + {select_stmt}: select: { _anon: integer notnull }
+-- + {select_stmt}: _select_: { _anon: integer notnull }
 -- + {select_expr}: integer notnull
 -- - error:
 select 1 * (select 1);
 
 -- TEST: nested select used for string concat
--- + {select_stmt}: select: { _anon: text notnull }
+-- + {select_stmt}: _select_: { _anon: text notnull }
 -- + {select_expr}: integer notnull
 -- - error:
 select (select 1) || (select 2);
 
 -- TEST: multiple table refs
--- + {select_stmt}: select: { id: integer notnull, id: integer notnull, name: text, rate: longint }
+-- + {select_stmt}: _select_: { id: integer notnull, id: integer notnull, name: text, rate: longint }
 -- + {select_from_etc}: JOIN { foo: foo, bar: bar }
 -- - error:
 select * from (foo, bar);
@@ -964,7 +952,7 @@ select * from (foo, bar);
 select * from (foo, foo);
 
 -- TEST: full join with all expression options (except offset which was added later)
--- + {select_stmt}: select: { id: integer notnull, id: integer notnull, name: text, rate: longint }
+-- + {select_stmt}: _select_: { id: integer notnull, id: integer notnull, name: text, rate: longint }
 -- + {opt_where}: bool notnull
 -- + {opt_groupby}: ok
 -- + {opt_having}: bool
@@ -1020,7 +1008,7 @@ order by bogus limit 'y';
 select (select not 'x');
 
 -- TEST: basic IN statement -- null is ok anywhere
--- + {select_stmt}: select: { _anon: bool notnull }
+-- + {select_stmt}: _select_: { _anon: bool notnull }
 -- + {in_pred}: bool notnull
 -- +2 {int 1}: integer notnull
 -- +1 {int 2}: integer notnull
@@ -1036,7 +1024,7 @@ select 1 in (1, 2, null);
 select 1 in ('x', 2);
 
 -- TEST: simple string works
--- + {select_stmt}: select: { _anon: bool notnull }
+-- + {select_stmt}: _select_: { _anon: bool notnull }
 -- note null in the list changes nothing
 -- + {in_pred}: bool notnull
 -- +2 {strlit 'x'}: text notnull
@@ -1054,14 +1042,14 @@ select 'x' in ('x', 1);
 
 -- TEST: null can match against numbers
 -- nullable result! CG will make the answer null
--- + {select_stmt}: select: { _anon: bool }
+-- + {select_stmt}: _select_: { _anon: bool }
 -- + {expr_list}: integer notnull
 -- - error:
 select null in (1, 2);
 
 -- TEST: null can match against strings
 -- nullable result! CG will make the answer null
--- + {select_stmt}: select: { _anon: bool }
+-- + {select_stmt}: _select_: { _anon: bool }
 -- + {expr_list}: text notnull
 -- - error:
 select null in ('x', 'y', null);
@@ -1092,7 +1080,7 @@ select (not 'x') in (1, 'x');
 select distinct 1 in (1, not 'x', 'y');
 
 -- TEST: basic NOT IN statement -- null is ok anywhere
--- + {select_stmt}: select: { _anon: bool notnull }
+-- + {select_stmt}: _select_: { _anon: bool notnull }
 -- + {not_in}: bool notnull
 -- + {int 1}: integer notnull
 -- + {int 1}: integer notnull
@@ -1109,7 +1097,7 @@ select 1 not in (1, 2, null);
 select 1 not in ('x', 2);
 
 -- TEST: simple string works
--- + {select_stmt}: select: { _anon: bool notnull }
+-- + {select_stmt}: _select_: { _anon: bool notnull }
 -- note null in the list changes nothing
 -- + {not_in}: bool notnull
 -- + {strlit 'x'}: text notnull
@@ -1128,14 +1116,14 @@ select 'x' not in ('x', 1);
 
 -- TEST: null can match against numbers
 -- nullable result! CG will make the answer null
--- + {select_stmt}: select: { _anon: bool }
+-- + {select_stmt}: _select_: { _anon: bool }
 -- + {expr_list}: integer notnull
 -- - error:
 select null not in (1, 2);
 
 -- TEST: null can match against strings
 -- nullable result! CG will make the answer null
--- + {select_stmt}: select: { _anon: bool }
+-- + {select_stmt}: _select_: { _anon: bool }
 -- + {expr_list}: text notnull
 -- - error:
 select null not in ('x', 'y', null);
@@ -1191,7 +1179,7 @@ create view AViewWithColSpec3(x) as select NULL;
 create view MyView as select 1 as f1, 2 as f2, 3 as f3;
 
 -- TEST: try to use the view
--- + {select_stmt}: select: { f1: integer notnull, f2: integer notnull, f3: integer notnull }
+-- + {select_stmt}: _select_: { f1: integer notnull, f2: integer notnull, f3: integer notnull }
 -- + select_from_etc}: TABLE { ViewAlias: MyView }
 -- - error:
 select f1, f2, ViewAlias.f3 from MyView as ViewAlias;
@@ -1915,7 +1903,7 @@ LET fal := false;
 SET fal := const(FALSE AND TRUE);
 
 -- TEST: verify the correct types are extracted, also cover the final select option
--- + {select_stmt}: select: { id: integer, flag: bool }
+-- + {select_stmt}: _select_: { id: integer, flag: bool }
 -- + {select_opts}
 -- + {distinctrow}
 -- - error:
@@ -1954,32 +1942,32 @@ set X := @RC;
 declare foo integer;
 
 -- TEST: try to access a variable
--- + {select_stmt}: select: { Y: integer variable }
+-- + {select_stmt}: _select_: { Y: integer variable }
 -- + {name Y}: Y: integer variable
 -- - error:
 select Y;
 
 -- TEST: create a cursor with select statement
--- + {declare_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable
+-- + {declare_cursor}: my_cursor: _select_: { one: integer notnull, two: integer notnull } variable
 -- - error:
 cursor my_cursor for select 1 as one, 2 as two;
 
 -- TEST: create a cursor with primitive kinds
--- + {declare_cursor}: kind_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> } variable
+-- + {declare_cursor}: kind_cursor: _select_: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> } variable
 -- - error:
 cursor kind_cursor for select * from with_kind;
 
 -- TEST: make a value cursor of the same shape
--- + {declare_cursor_like_name}: kind_value_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> } variable shape_storage value_cursor
+-- + {declare_cursor_like_name}: kind_value_cursor: _select_: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> } variable shape_storage value_cursor
 -- - error:
 cursor kind_value_cursor like kind_cursor;
 
 -- TEST: make a value cursor extending the above using typed names syntax
 -- verify the rewrite also
 -- + CURSOR extended_cursor LIKE (id INT<some_key>, cost REAL<dollars>, value REAL<dollars>, xx REAL, yy TEXT);
--- + {declare_cursor_like_typed_names}: extended_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars>, xx: real, yy: text } variable shape_storage value_cursor
--- + {name extended_cursor}: extended_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars>, xx: real, yy: text } variable shape_storage value_cursor
--- + {typed_names}: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars>, xx: real, yy: text }
+-- + {declare_cursor_like_typed_names}: extended_cursor: _select_: { id: integer<some_key>, cost: real<dollars>, value: real<dollars>, xx: real, yy: text } variable shape_storage value_cursor
+-- + {name extended_cursor}: extended_cursor: _select_: { id: integer<some_key>, cost: real<dollars>, value: real<dollars>, xx: real, yy: text } variable shape_storage value_cursor
+-- + {typed_names}: _select_: { id: integer<some_key>, cost: real<dollars>, value: real<dollars>, xx: real, yy: text }
 -- - error:
 cursor extended_cursor like ( like kind_value_cursor, xx real, yy text);
 
@@ -1996,9 +1984,9 @@ cursor reduced_cursor like extended_cursor(id, id);
 cursor reduced_cursor like extended_cursor(id, not_a_valid_name);
 
 -- TEST: now use the restriction syntax to get a smaller cursor
--- + {declare_cursor_like_name}: reduced_cursor: select: { id: integer<some_key>, cost: real<dollars> } variable shape_storage value_cursor
--- + {name reduced_cursor}: reduced_cursor: select: { id: integer<some_key>, cost: real<dollars> } variable shape_storage value_cursor
--- + {shape_def}: select: { id: integer<some_key>, cost: real<dollars> }
+-- + {declare_cursor_like_name}: reduced_cursor: _select_: { id: integer<some_key>, cost: real<dollars> } variable shape_storage value_cursor
+-- + {name reduced_cursor}: reduced_cursor: _select_: { id: integer<some_key>, cost: real<dollars> } variable shape_storage value_cursor
+-- + {shape_def}: _select_: { id: integer<some_key>, cost: real<dollars> }
 -- - error:
 cursor reduced_cursor like extended_cursor(id, cost);
 
@@ -2010,7 +1998,7 @@ cursor reduced_cursor like extended_cursor(id, cost);
 cursor reduced_cursor2 like extended_cursor(-id, cost);
 
 -- TEST: try to make a cursor by removing columns
--- + {shape_def}: select: { cost: real<dollars>, value: real<dollars>, xx: real, yy: text }
+-- + {shape_def}: _select_: { cost: real<dollars>, value: real<dollars>, xx: real, yy: text }
 -- - error:
 cursor reduced_cursor3 like extended_cursor(-id);
 
@@ -2208,7 +2196,7 @@ begin
 end;
 
 -- TEST: close a valid cursor
--- + {close_stmt}: my_cursor: select: { one: integer notnull, two: integer notnull } variable
+-- + {close_stmt}: my_cursor: _select_: { one: integer notnull, two: integer notnull } variable
 -- - error:
 close my_cursor;
 
@@ -2424,7 +2412,7 @@ set XX := 1;
 
 -- TEST: try to assign a cursor
 -- + {assign}: err
--- + {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable
+-- + {name my_cursor}: my_cursor: _select_: { one: integer notnull, two: integer notnull } variable
 -- * error: % cannot set a cursor 'my_cursor'
 -- +1 error:
 set my_cursor := 1;
@@ -2450,7 +2438,7 @@ set X := null;
 set X := not 'x';
 
 -- TEST: simple cursor and fetch test
--- + {declare_cursor}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable
+-- + {declare_cursor}: fetch_cursor: _select_: { _anon: integer notnull, _anon: text notnull, _anon: null } variable
 -- - error:
 cursor fetch_cursor for select 1, 'foo', null;
 
@@ -2463,7 +2451,7 @@ declare a_nullable text;
 declare an_long long integer;
 
 -- TEST: ok to fetch_stmt
--- + {fetch_stmt}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable
+-- + {fetch_stmt}: fetch_cursor: _select_: { _anon: integer notnull, _anon: text notnull, _anon: null } variable
 -- + {name an_int}: an_int: integer variable
 -- + {name a_string}: a_string: text variable
 -- + {name a_nullable}: a_nullable: text variable
@@ -2852,22 +2840,22 @@ select T from bar as T;
 
 -- TEST: goofy nested select to verify name reachability
 -- the nested table matches the outer table
--- + {select_stmt}: select: { id: integer notnull, rate: longint }
--- + {select_stmt}: select: { id: integer notnull, rate: longint }
+-- + {select_stmt}: _select_: { id: integer notnull, rate: longint }
+-- + {select_stmt}: _select_: { id: integer notnull, rate: longint }
 -- + {select_from_etc}: TABLE { bar: bar }
 -- - error:
 select id, rate from (select id, rate from bar);
 
 -- TEST: slighly less goofy nested select to verify name reachability
--- + {select_stmt}: select: { id: integer notnull, rate: longint }
+-- + {select_stmt}: _select_: { id: integer notnull, rate: longint }
 -- the nested select had more columns
--- + {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
+-- + {select_stmt}: _select_: { id: integer notnull, name: text, rate: longint }
 -- + {select_from_etc}: TABLE { bar: bar }
 -- - error:
 select id, rate from (select * from bar);
 
 -- TEST: use the table name as its scope
--- + {select_stmt}: select: { id: integer notnull }
+-- + {select_stmt}: _select_: { id: integer notnull }
 -- + {dot}: id: integer notnull
 -- + {select_from_etc}: TABLE { foo: foo }
 -- - error:
@@ -3056,7 +3044,7 @@ end;
 
 -- TEST: try count function
 -- - error:
--- + {select_stmt}: select: { _anon: integer notnull }
+-- + {select_stmt}: _select_: { _anon: integer notnull }
 -- + {name count}: integer notnull
 -- + {star}: integer
 select count(*) from foo;
@@ -3071,7 +3059,7 @@ select count(this_does_not_exist) from foo;
 
 -- TEST: try count distinct function
 -- - error:
--- + {select_stmt}: select: { c: integer notnull }
+-- + {select_stmt}: _select_: { c: integer notnull }
 -- + {name count}: integer notnull
 -- + {distinct}
 -- + {arg_list}: ok
@@ -3079,7 +3067,7 @@ select count(this_does_not_exist) from foo;
 select count(distinct id) c from foo;
 
 -- TEST: try count distinct function with filter clause
--- + {select_stmt}: select: { c: integer notnull }
+-- + {select_stmt}: _select_: { c: integer notnull }
 -- + {name count}: integer notnull
 -- + {distinct}
 -- + {arg_list}: ok
@@ -3096,13 +3084,13 @@ select count(distinct id) filter (where id = 0) as c from foo;
 select count(distinct *) from foo;
 
 -- TEST: try sum functions
--- + {select_stmt}: select: { s: integer }
+-- + {select_stmt}: _select_: { s: integer }
 -- + {name sum}: integer
 -- - error:
 select sum(id) s from foo;
 
 -- TEST: try total functions
--- + {select_stmt}: select: { t: real notnull }
+-- + {select_stmt}: _select_: { t: real notnull }
 -- + {name total}: real notnull
 -- - error:
 select total(id) t from foo;
@@ -3122,13 +3110,13 @@ select total(id, rate) from bar;
 select sum(*) from foo;
 
 -- TEST: try average, this should give a real
--- + {select_stmt}: select: { a: real }
+-- + {select_stmt}: _select_: { a: real }
 -- + {name avg}: real
 -- - error:
 select avg(id) a from foo;
 
 -- TEST: try min, this should give an integer
--- + {select_stmt}: select: { m: integer }
+-- + {select_stmt}: _select_: { m: integer }
 -- + {name min}: integer
 -- - error:
 select min(id) m from foo;
@@ -3377,7 +3365,7 @@ end;
 -- TEST: this procedure will have a structured semantic type
 -- + {create_proc_stmt}: with_result_set: { id: integer notnull, name: text, rate: longint } dml_proc
 -- - error:
--- +1 {select_expr_list}: select: { id: integer notnull, name: text, rate: longint }
+-- +1 {select_expr_list}: _select_: { id: integer notnull, name: text, rate: longint }
 procedure with_result_set()
 begin
   select * from bar;
@@ -3386,7 +3374,7 @@ end;
 -- TEST: this procedure will have a structured semantic type
 -- + {create_proc_stmt}: with_matching_result: { A: integer notnull, B: real notnull } dml_proc
 -- - error:
--- +2 {select_stmt}: select: { A: integer notnull, B: real notnull }
+-- +2 {select_stmt}: _select_: { A: integer notnull, B: real notnull }
 procedure with_matching_result(i integer)
 begin
   if i then
@@ -3398,8 +3386,8 @@ end;
 
 -- TEST: this procedure will have have not matching arg types
 -- * error: % in multiple select/out statements, all columns must be an exact type match (expected real notnull; found integer notnull) 'B'
--- + {select_expr_list}: select: { A: integer notnull, B: real notnull }
--- + {select_expr_list}: select: { A: integer notnull, B: integer notnull }
+-- + {select_expr_list}: _select_: { A: integer notnull, B: real notnull }
+-- + {select_expr_list}: _select_: { A: integer notnull, B: integer notnull }
 procedure with_wrong_types(i integer)
 begin
   if i then
@@ -3411,8 +3399,8 @@ end;
 
 -- TEST: this procedure will have have not matching arg counts
 -- * error: % in multiple select/out statements, all must have the same column count
--- + {select_expr_list}: select: { A: integer notnull, B: real notnull }
--- + {select_expr_list}: select: { A: integer notnull }
+-- + {select_expr_list}: _select_: { A: integer notnull, B: real notnull }
+-- + {select_expr_list}: _select_: { A: integer notnull }
 procedure with_wrong_count(i integer)
 begin
   if i then
@@ -3425,8 +3413,8 @@ end;
 -- TEST: this procedure will have nullability mismatch
 -- * error: % in multiple select/out statements, all columns must be an exact type match (including nullability) (expected integer notnull; found integer) 'A'
 -- + {create_proc_stmt}: err
--- + {select_stmt}: select: { A: integer notnull variable in }
--- + {select_expr_list_con}: select: { A: integer variable was_set }
+-- + {select_stmt}: _select_: { A: integer notnull variable in }
+-- + {select_expr_list_con}: _select_: { A: integer variable was_set }
 procedure with_wrong_flags(i int!)
 begin
   if i then
@@ -3439,7 +3427,7 @@ end;
 -- TEST: this procedure will match variables
 -- + {create_proc_stmt}: with_ok_flags: { A: integer notnull }
 -- use the important fragment for the match, one is a variable so the tree is slightly different
--- +2 {select_expr_list}: select: { A: integer notnull
+-- +2 {select_expr_list}: _select_: { A: integer notnull
 -- - error:
 procedure with_ok_flags(i int!)
 begin
@@ -3453,8 +3441,8 @@ end;
 -- TEST: this procedure will not match column names
 -- * error: % in multiple select/out statements, all column names must be identical so they have unambiguous names; error in column 1: 'A' vs. 'B'
 -- + {create_proc_stmt}: err
--- + {select_stmt}: select: { A: integer notnull }
--- + {select_expr_list_con}: select: { B: integer notnull }
+-- + {select_stmt}: _select_: { A: integer notnull }
+-- + {select_expr_list_con}: _select_: { B: integer notnull }
 procedure with_bad_names(i int!)
 begin
   if i then
@@ -3468,7 +3456,7 @@ end;
 -- * error: % all columns in the select must have a name
 -- + {create_proc_stmt}: err
 -- + {stmt_list}: err
--- + {select_expr_list_con}: select: { _anon: integer notnull }
+-- + {select_expr_list_con}: _select_: { _anon: integer notnull }
 procedure with_no_names(i int!)
 begin
   select 1;
@@ -3498,7 +3486,7 @@ call with_result_set();
 cursor curs for call proc1();
 
 -- TEST: full join with all expression options, including offset
--- + {select_stmt}: select: { id: integer notnull, id: integer notnull, name: text, rate: longint }
+-- + {select_stmt}: _select_: { id: integer notnull, id: integer notnull, name: text, rate: longint }
 -- + {opt_where}: bool notnull
 -- + {groupby_list}: ok
 -- + {opt_having}: bool
@@ -3588,28 +3576,28 @@ declare my_real real;
 call out_proc(my_real);
 
 -- TEST: try an exists clause
--- + {select_stmt}: select: { id: integer notnull }
+-- + {select_stmt}: _select_: { id: integer notnull }
 -- + {exists_expr}: bool notnull
 -- - error:
 select * from foo where exists (select * from foo);
 
 -- TEST: try a not exists clause
--- + {select_stmt}: select: { id: integer notnull }
+-- + {select_stmt}: _select_: { id: integer notnull }
 -- + {not}: bool notnull
 -- + {exists_expr}: bool notnull
 -- - error:
 select * from foo where not exists (select * from foo);
 
--- TEST: try an exists clause with an error
--- + {exists_expr}: err
--- * error: % string operand not allowed in 'NOT'
--- +1 error:
+-- TEST: try an exists clause with an error, exists is always rewritten as select 1
+-- so it doesn't matter how wrong what you put there is, it's ignored
+-- + WHERE EXISTS (SELECT 1
+-- - error:
 select * from foo where exists (select not 'x' from foo);
 
--- TEST: try a not exists clause with an error
--- + {exists_expr}: err
--- * error: % string operand not allowed in 'NOT'
--- +1 error:
+-- TEST: try a not exists clause with an error, exists is always rewritten as select 1
+-- so it doesn't matter how wrong what you put there is, it's ignored
+-- + WHERE NOT EXISTS (SELECT 1
+-- - error:
 select * from foo where not exists (select not 'x' from foo);
 
 -- TEST: try to use exists in a bogus place
@@ -3639,19 +3627,19 @@ rollback transaction to savepoint another_garbonzo;
 
 -- TEST: Test the shorthand syntax for cursors. The shape_storage flag for the
 -- cursor itself comes from the following fetch statement.
--- + {declare_cursor}: shape_storage: select: { one: integer notnull, two: integer notnull } variable dml_proc
--- + {name shape_storage}: shape_storage: select: { one: integer notnull, two: integer notnull } variable dml_proc shape_storage
+-- + {declare_cursor}: shape_storage: _select_: { one: integer notnull, two: integer notnull } variable dml_proc
+-- + {name shape_storage}: shape_storage: _select_: { one: integer notnull, two: integer notnull } variable dml_proc shape_storage
 -- - error:
 cursor shape_storage for select 1 as one, 2 as two;
 
 -- TEST: Fetch the auto cursor
--- + {fetch_stmt}: shape_storage: select: { one: integer notnull, two: integer notnull } variable dml_proc
--- + {name shape_storage}: shape_storage: select: { one: integer notnull, two: integer notnull } variable dml_proc shape_storage
+-- + {fetch_stmt}: shape_storage: _select_: { one: integer notnull, two: integer notnull } variable dml_proc
+-- + {name shape_storage}: shape_storage: _select_: { one: integer notnull, two: integer notnull } variable dml_proc shape_storage
 -- - error:
 fetch shape_storage;
 
 -- TEST: Now access the cursor
--- + {select_stmt}: select: { shape_storage.one: integer notnull variable }
+-- + {select_stmt}: _select_: { shape_storage.one: integer notnull variable }
 -- + {dot}: shape_storage.one: integer notnull variable
 -- + {name shape_storage}
 -- + {name one}
@@ -3673,7 +3661,7 @@ select shape_storage.three;
 select my_cursor.one;
 
 -- TEST: test the join using syntax
--- + {select_stmt}: select: { id: integer notnull, id: integer notnull }
+-- + {select_stmt}: _select_: { id: integer notnull, id: integer notnull }
 -- + {select_from_etc}: JOIN { T1: foo, T2: foo }
 -- + {using}
 -- + {name id}
@@ -3706,27 +3694,27 @@ create table payload1 (id int!, data1 int!);
 create table payload2 (id int!, data2 int!);
 
 -- TEST: all not null
--- {select_stmt}: select: { id: integer notnull, data1: integer notnull, id: integer notnull, data2: integer notnull }
+-- {select_stmt}: _select_: { id: integer notnull, data1: integer notnull, id: integer notnull, data2: integer notnull }
 -- - error:
 select * from payload1 inner join payload2 using (id);
 
 -- TEST: right part nullable
--- + {select_stmt}: select: { id: integer notnull, data1: integer notnull, id: integer, data2: integer }
+-- + {select_stmt}: _select_: { id: integer notnull, data1: integer notnull, id: integer, data2: integer }
 -- - error:
 select * from payload1 left outer join payload2 using (id);
 
 -- TEST: left part nullable
--- + {select_stmt}: select: { id: integer, data1: integer, id: integer notnull, data2: integer notnull }
+-- + {select_stmt}: _select_: { id: integer, data1: integer, id: integer notnull, data2: integer notnull }
 -- - error:
 select * from payload1 right outer join payload2 using (id);
 
 -- TEST: both parts nullable due to cross join
--- + select: { id: integer notnull, data1: integer notnull, id: integer notnull, data2: integer notnull }
+-- + _select_: { id: integer notnull, data1: integer notnull, id: integer notnull, data2: integer notnull }
 -- - error:
 select * from payload1 cross join payload2 using (id);
 
 -- TEST: compound select
--- + {select_stmt}: select: { id: integer notnull, id: integer notnull, id: integer notnull, id: integer notnull }
+-- + {select_stmt}: _select_: { id: integer notnull, id: integer notnull, id: integer notnull, id: integer notnull }
 -- + {select_from_etc}: JOIN { A: foo, B: foo, C: foo, D: foo }
 -- - error:
 select * from (foo A, foo B) inner join (foo C, foo D);
@@ -3743,13 +3731,13 @@ select * from (foo A, foo B) inner join (foo C, foo D);
 select id from (foo inner join bar on not 'x') inner join foo on 1;
 
 -- TEST: simple ifnull : note X is nullable
--- + {select_stmt}: select: { _anon: integer notnull }
+-- + {select_stmt}: _select_: { _anon: integer notnull }
 -- + {name X}: X: integer variable
 -- - error:
 select ifnull(X, 0);
 
 -- TEST: simple coalesce with not null result, note X,Y are nullable
--- + {select_stmt}: select: { _anon: real notnull }
+-- + {select_stmt}: _select_: { _anon: real notnull }
 -- + {call}: real notnull
 -- + {name coalesce}
 -- + {name X}: X: integer variable
@@ -3846,7 +3834,7 @@ create table join_clause_2 (
 select * from join_clause_1 inner join join_clause_2 using(id);
 
 -- TEST: use last insert rowid, validate it's ok
--- + {select_stmt}: select: { _anon: longint notnull }
+-- + {select_stmt}: _select_: { _anon: longint notnull }
 -- + {name last_insert_rowid}: longint notnull
 -- - error:
 select last_insert_rowid();
@@ -3877,7 +3865,7 @@ declare rowid_result long int!;
 set rowid_result := last_insert_rowid();
 
 -- TEST: use changes, validate it's ok
--- + {select_stmt}: select: { _anon: integer notnull }
+-- + {select_stmt}: _select_: { _anon: integer notnull }
 -- + {name changes}: integer notnull
 -- - error:
 select changes();
@@ -3908,7 +3896,7 @@ declare changes_result int!;
 set changes_result := changes();
 
 -- TEST: printf is ok in a select
--- + {select_stmt}: select: { _anon: text notnull }
+-- + {select_stmt}: _select_: { _anon: text notnull }
 -- + {select_expr}: text notnull
 -- + {name printf}: text notnull
 -- - error:
@@ -3966,13 +3954,13 @@ left outer join C1 as T3 on T2.foo = t3.foo;
 
 -- TEST: group_concat basic correct case
 -- - error:
--- + {select_stmt}: select: { id: integer notnull, grp: text }
+-- + {select_stmt}: _select_: { id: integer notnull, grp: text }
 -- +  {name group_concat}: text
 select id, group_concat(name) grp from bar group by id;
 
 -- TEST: group_concat with second arg
 -- - error:
--- + {select_stmt}: select: { id: integer notnull, grp: text }
+-- + {select_stmt}: _select_: { id: integer notnull, grp: text }
 -- +  {name group_concat}: text
 select id, group_concat(name, 'x') grp from bar group by id;
 
@@ -4002,19 +3990,19 @@ select id from bar where group_concat(name) = 'foo';
 
 -- TEST: strftime basic correct case
 -- - error:
--- + {select_stmt}: select: { _anon: text notnull }
+-- + {select_stmt}: _select_: { _anon: text notnull }
 -- + {name strftime}: text notnull
 select strftime('%s', 'now');
 
 -- TEST: strftime with a modifier
 -- - error:
--- + {select_stmt}: select: { _anon: text }
+-- + {select_stmt}: _select_: { _anon: text }
 -- + {name strftime}: text
 select strftime('%YYYY-%mm-%DDT%HH:%MM:%SS.SSS', 'now', '+1 month');
 
 -- TEST: strftime with multiple modifiers
 -- - error:
--- + {select_stmt}: select: { _anon: text }
+-- + {select_stmt}: _select_: { _anon: text }
 -- + {name strftime}: text
 select strftime('%W', 'now', '+1 month', 'start of month', '-3 minutes', 'weekday 4');
 
@@ -4049,19 +4037,19 @@ set a_string := strftime('%s', 'now');
 select strftime('now');
 
 -- TEST: date basic correct case
--- + {select_stmt}: select: { _anon: text notnull }
+-- + {select_stmt}: _select_: { _anon: text notnull }
 -- + {name date}: text notnull
 -- - error:
 select date('now');
 
 -- TEST: date with a modifier
--- + {select_stmt}: select: { _anon: text }
+-- + {select_stmt}: _select_: { _anon: text }
 -- + {name date}: text
 -- - error:
 select date('now', '+1 month');
 
 -- TEST: date with multiple modifiers
--- + {select_stmt}: select: { _anon: text }
+-- + {select_stmt}: _select_: { _anon: text }
 -- + {name date}: text
 -- - error:
 select date('now', '+1 month', 'start of month', '-3 minutes', 'weekday 4');
@@ -4091,19 +4079,19 @@ set a_string := date('now');
 select date();
 
 -- TEST: time basic correct case
--- + {select_stmt}: select: { _anon: text notnull }
+-- + {select_stmt}: _select_: { _anon: text notnull }
 -- + {name time}: text notnull
 -- - error:
 select time('now');
 
 -- TEST: time with a modifier
--- + {select_stmt}: select: { _anon: text }
+-- + {select_stmt}: _select_: { _anon: text }
 -- + {name time}: text
 -- - error:
 select time('now', '+1 month');
 
 -- TEST: time with multiple modifiers
--- + {select_stmt}: select: { _anon: text }
+-- + {select_stmt}: _select_: { _anon: text }
 -- + {name time}: text
 -- - error:
 select time('now', '+1 month', 'start of month', '-3 minutes', 'weekday 4');
@@ -4134,19 +4122,19 @@ set a_string := time('now');
 select time();
 
 -- TEST: datetime basic correct case
--- + {select_stmt}: select: { _anon: text notnull }
+-- + {select_stmt}: _select_: { _anon: text notnull }
 -- + {name datetime}: text notnull
 -- - error:
 select datetime('now');
 
 -- TEST: datetime with a modifier
--- + {select_stmt}: select: { _anon: text }
+-- + {select_stmt}: _select_: { _anon: text }
 -- + {name datetime}: text
 -- - error:
 select datetime('now', '+1 month');
 
 -- TEST: datetime with multiple modifiers
--- + {select_stmt}: select: { _anon: text }
+-- + {select_stmt}: _select_: { _anon: text }
 -- + {name datetime}: text
 -- - error:
 select datetime('now', '+1 month', 'start of month', '-3 minutes', 'weekday 4');
@@ -4179,19 +4167,19 @@ select datetime();
 
 -- TEST: julianday basic correct case
 -- - error:
--- + {select_stmt}: select: { _anon: real notnull }
+-- + {select_stmt}: _select_: { _anon: real notnull }
 -- + {name julianday}: real notnull
 select julianday('now');
 
 -- TEST: julianday with a modifier
 -- - error:
--- + {select_stmt}: select: { _anon: real }
+-- + {select_stmt}: _select_: { _anon: real }
 -- + {name julianday}: real
 select julianday('now', '+1 month');
 
 -- TEST: julianday with multiple modifiers
 -- - error:
--- + {select_stmt}: select: { _anon: real }
+-- + {select_stmt}: _select_: { _anon: real }
 -- + {name julianday}: real
 select julianday('now', '+1 month', 'start of month', '-3 minutes', 'weekday 4');
 
@@ -4221,7 +4209,7 @@ select julianday();
 
 -- TEST: simple cast expression
 -- - error:
--- + {select_stmt}: select: { _anon: text notnull }
+-- + {select_stmt}: _select_: { _anon: text notnull }
 -- + {cast_expr}: text notnull
 select cast(1 as text);
 
@@ -4366,7 +4354,7 @@ create table BB2(id2 int!);
 create table CC3(id3 int!);
 
 -- - error:
--- + {select_stmt}: select: { id1: integer notnull, id2: integer notnull, id3: integer }
+-- + {select_stmt}: _select_: { id1: integer notnull, id2: integer notnull, id3: integer }
 SELECT *
 FROM (AA1 A, BB2 B)
 LEFT OUTER JOIN CC3 C ON C.id3 == A.id1;
@@ -4547,7 +4535,7 @@ except
 select 3 as A, 4 as B;
 
 -- TEST: use nullable in a select
--- + {select_stmt}: select: { x: integer }
+-- + {select_stmt}: _select_: { x: integer }
 -- - error:
 select nullable(1) x;
 
@@ -4557,7 +4545,7 @@ select nullable(1) x;
 let nullable_one := nullable(1);
 
 -- TEST: use sensitive in a select
--- + {select_stmt}: select: { x: integer notnull sensitive }
+-- + {select_stmt}: _select_: { x: integer notnull sensitive }
 -- - error:
 select sensitive(1) x;
 
@@ -4571,13 +4559,13 @@ let sens_notnull := sensitive("some text");
 
 -- TEST: ensure nullable() doesn't strip the sensitive bit
 -- notnull is gone, sensitive stays
--- + {select_stmt}: select: { sens_notnull: text variable sensitive }
+-- + {select_stmt}: _select_: { sens_notnull: text variable sensitive }
 -- + {name sens_notnull}: sens_notnull: text notnull variable sensitive
 -- - error:
 select nullable(sens_notnull);
 
 -- TEST: ensure kind is preserved in nullable
--- + {select_stmt}: select: { price_e: real<euros> variable }
+-- + {select_stmt}: _select_: { price_e: real<euros> variable }
 -- + {name nullable}: price_e: real<euros> variable
 -- - error:
 select nullable(price_e);
@@ -4736,19 +4724,19 @@ select const(0 + x);
 
 -- TEST: null handling for +
 -- + SELECT NULL;
--- + {select_stmt}: select: { _anon: null }
+-- + {select_stmt}: _select_: { _anon: null }
 -- - error:
 select const(null + 0);
 
 -- TEST: null handling for +
 -- + SELECT NULL;
--- + {select_stmt}: select: { _anon: null }
+-- + {select_stmt}: _select_: { _anon: null }
 -- - error:
 select const(0 + null);
 
 -- TEST: bool handling for +
 -- + SELECT TRUE;
--- + {select_stmt}: select: { _anon: bool notnull }
+-- + {select_stmt}: _select_: { _anon: bool notnull }
 -- - error:
 select const(true + false);
 
@@ -4766,19 +4754,19 @@ select const(0 - x);
 
 -- TEST: null handling for -
 -- + SELECT NULL;
--- + {select_stmt}: select: { _anon: null }
+-- + {select_stmt}: _select_: { _anon: null }
 -- - error:
 select const(null - 0);
 
 -- TEST: null handling for -
 -- + SELECT NULL;
--- + {select_stmt}: select: { _anon: null }
+-- + {select_stmt}: _select_: { _anon: null }
 -- - error:
 select const(0 - null);
 
 -- TEST: bool handling for -
 -- + SELECT TRUE;
--- + {select_stmt}: select: { _anon: bool notnull }
+-- + {select_stmt}: _select_: { _anon: bool notnull }
 -- - error:
 select const(true - false);
 
@@ -4796,19 +4784,19 @@ select const(0 * x);
 
 -- TEST: null handling for *
 -- + SELECT NULL;
--- + {select_stmt}: select: { _anon: null }
+-- + {select_stmt}: _select_: { _anon: null }
 -- - error:
 select const(null * 0);
 
 -- TEST: null handling for *
 -- + SELECT NULL;
--- + {select_stmt}: select: { _anon: null }
+-- + {select_stmt}: _select_: { _anon: null }
 -- - error:
 select const(0 * null);
 
 -- TEST: bool handling for *
 -- + SELECT FALSE;
--- + {select_stmt}: select: { _anon: bool notnull }
+-- + {select_stmt}: _select_: { _anon: bool notnull }
 -- - error:
 select const(true * false);
 
@@ -4826,19 +4814,19 @@ select const(1 / x);
 
 -- TEST: null handling for /
 -- + SELECT NULL;
--- + {select_stmt}: select: { _anon: null }
+-- + {select_stmt}: _select_: { _anon: null }
 -- - error:
 select const(null / 1);
 
 -- TEST: null handling for /
 -- + SELECT NULL;
--- + {select_stmt}: select: { _anon: null }
+-- + {select_stmt}: _select_: { _anon: null }
 -- - error:
 select const(1 / null);
 
 -- TEST: bool handling for /
 -- + SELECT FALSE;
--- + {select_stmt}: select: { _anon: bool notnull }
+-- + {select_stmt}: _select_: { _anon: bool notnull }
 -- - error:
 select const(false / true);
 
@@ -4856,19 +4844,19 @@ select const(1 % x);
 
 -- TEST: null handling for %
 -- + SELECT NULL;
--- + {select_stmt}: select: { _anon: null }
+-- + {select_stmt}: _select_: { _anon: null }
 -- - error:
 select const(null % 1);
 
 -- TEST: null handling for %
 -- + SELECT NULL;
--- + {select_stmt}: select: { _anon: null }
+-- + {select_stmt}: _select_: { _anon: null }
 -- - error:
 select const(1 % null);
 
 -- TEST: bool handling for %
 -- + SELECT FALSE;
--- + {select_stmt}: select: { _anon: bool notnull }
+-- + {select_stmt}: _select_: { _anon: bool notnull }
 -- - error:
 select const(false % true);
 
@@ -4886,25 +4874,25 @@ select const(1 == x);
 
 -- TEST: null handling for == (don't use a literal null)
 -- + SELECT NULL;
--- + {select_stmt}: select: { _anon: null }
+-- + {select_stmt}: _select_: { _anon: null }
 -- - error:
 select const((not null) == 0);
 
 -- TEST: null handling for == (don't use a literal null)
 -- + SELECT NULL;
--- + {select_stmt}: select: { _anon: null }
+-- + {select_stmt}: _select_: { _anon: null }
 -- - error:
 select const(0 == not null);
 
 -- TEST: null handling for +
 -- + SELECT NULL;
--- + {select_stmt}: select: { _anon: null }
+-- + {select_stmt}: _select_: { _anon: null }
 -- - error:
 select const(0 + null);
 
 -- TEST: bool handling for ==
 -- + SELECT FALSE;
--- + {select_stmt}: select: { _anon: bool notnull }
+-- + {select_stmt}: _select_: { _anon: bool notnull }
 -- - error:
 select const(false == true);
 
@@ -4922,19 +4910,19 @@ select const(1 != x);
 
 -- TEST: null handling for == (don't use a literal null)
 -- + SELECT NULL;
--- + {select_stmt}: select: { _anon: null }
+-- + {select_stmt}: _select_: { _anon: null }
 -- - error:
 select const((not null) != 0);
 
 -- TEST: null handling for != (don't use a literal null)
 -- + SELECT NULL;
--- + {select_stmt}: select: { _anon: null }
+-- + {select_stmt}: _select_: { _anon: null }
 -- - error:
 select const(0 != not null);
 
 -- TEST: bool handling for !=
 -- + SELECT TRUE;
--- + {select_stmt}: select: { _anon: bool notnull }
+-- + {select_stmt}: _select_: { _anon: bool notnull }
 -- - error:
 select const(false != true);
 
@@ -4952,19 +4940,19 @@ select const(1 <= x);
 
 -- TEST: null handling for <= (don't use a literal null)
 -- + SELECT NULL;
--- + {select_stmt}: select: { _anon: null }
+-- + {select_stmt}: _select_: { _anon: null }
 -- - error:
 select const((not null) <= 0);
 
 -- TEST: null handling for <= (don't use a literal null)
 -- + SELECT NULL;
--- + {select_stmt}: select: { _anon: null }
+-- + {select_stmt}: _select_: { _anon: null }
 -- - error:
 select const(0 <= not null);
 
 -- TEST: bool handling for <=
 -- + SELECT TRUE;
--- + {select_stmt}: select: { _anon: bool notnull }
+-- + {select_stmt}: _select_: { _anon: bool notnull }
 -- - error:
 select const(false <= true);
 
@@ -4982,19 +4970,19 @@ select const(1 >= x);
 
 -- TEST: null handling for >= (don't use a literal null)
 -- + SELECT NULL;
--- + {select_stmt}: select: { _anon: null }
+-- + {select_stmt}: _select_: { _anon: null }
 -- - error:
 select const((not null) >= 0);
 
 -- TEST: null handling for >= (don't use a literal null)
 -- + SELECT NULL;
--- + {select_stmt}: select: { _anon: null }
+-- + {select_stmt}: _select_: { _anon: null }
 -- - error:
 select const(0 >= not null);
 
 -- TEST: bool handling for >=
 -- + SELECT FALSE;
--- + {select_stmt}: select: { _anon: bool notnull }
+-- + {select_stmt}: _select_: { _anon: bool notnull }
 -- - error:
 select const(false >= true);
 
@@ -5012,19 +5000,19 @@ select const(1 > x);
 
 -- TEST: null handling for >
 -- + SELECT NULL;
--- + {select_stmt}: select: { _anon: null }
+-- + {select_stmt}: _select_: { _anon: null }
 -- - error:
 select const(null > 1);
 
 -- TEST: null handling for >
 -- + SELECT NULL;
--- + {select_stmt}: select: { _anon: null }
+-- + {select_stmt}: _select_: { _anon: null }
 -- - error:
 select const(1 > null);
 
 -- TEST: bool handling for >
 -- + SELECT FALSE;
--- + {select_stmt}: select: { _anon: bool notnull }
+-- + {select_stmt}: _select_: { _anon: bool notnull }
 -- - error:
 select const(false > true);
 
@@ -5042,19 +5030,19 @@ select const(1 < x);
 
 -- TEST: null handling for <
 -- + SELECT NULL;
--- + {select_stmt}: select: { _anon: null }
+-- + {select_stmt}: _select_: { _anon: null }
 -- - error:
 select const(null < 1);
 
 -- TEST: null handling for <
 -- + SELECT NULL;
--- + {select_stmt}: select: { _anon: null }
+-- + {select_stmt}: _select_: { _anon: null }
 -- - error:
 select const(1 < null);
 
 -- TEST: bool handling for <
 -- + SELECT TRUE;
--- + {select_stmt}: select: { _anon: bool notnull }
+-- + {select_stmt}: _select_: { _anon: bool notnull }
 -- - error:
 select const(false < true);
 
@@ -5072,19 +5060,19 @@ select const(1 << x);
 
 -- TEST: null handling for <<
 -- + SELECT NULL;
--- + {select_stmt}: select: { _anon: null }
+-- + {select_stmt}: _select_: { _anon: null }
 -- - error:
 select const(null << 0);
 
 -- TEST: null handling for <<
 -- + SELECT NULL;
--- + {select_stmt}: select: { _anon: null }
+-- + {select_stmt}: _select_: { _anon: null }
 -- - error:
 select const(0 << null);
 
 -- TEST: bool handling for <<
 -- + SELECT FALSE;
--- + {select_stmt}: select: { _anon: bool notnull }
+-- + {select_stmt}: _select_: { _anon: bool notnull }
 -- - error:
 select const(false << true);
 
@@ -5102,19 +5090,19 @@ select const(1 >> x);
 
 -- TEST: null handling for >>
 -- + SELECT NULL;
--- + {select_stmt}: select: { _anon: null }
+-- + {select_stmt}: _select_: { _anon: null }
 -- - error:
 select const(null >> 0);
 
 -- TEST: null handling for >>
 -- + SELECT NULL;
--- + {select_stmt}: select: { _anon: null }
+-- + {select_stmt}: _select_: { _anon: null }
 -- - error:
 select const(0 >> null);
 
 -- TEST: bool handling for >>
 -- + SELECT FALSE;
--- + {select_stmt}: select: { _anon: bool notnull }
+-- + {select_stmt}: _select_: { _anon: bool notnull }
 -- - error:
 select const(false >> true);
 
@@ -5132,19 +5120,19 @@ select const(1 | x);
 
 -- TEST: null handling for |
 -- + SELECT NULL;
--- + {select_stmt}: select: { _anon: null }
+-- + {select_stmt}: _select_: { _anon: null }
 -- - error:
 select const(null | 0);
 
 -- TEST: null handling for |
 -- + SELECT NULL;
--- + {select_stmt}: select: { _anon: null }
+-- + {select_stmt}: _select_: { _anon: null }
 -- - error:
 select const(0 | null);
 
 -- TEST: bool handling for |
 -- + SELECT TRUE;
--- + {select_stmt}: select: { _anon: bool notnull }
+-- + {select_stmt}: _select_: { _anon: bool notnull }
 -- - error:
 select const(false | true);
 
@@ -5162,19 +5150,19 @@ select const(1 & x);
 
 -- TEST: null handling for &
 -- + SELECT NULL;
--- + {select_stmt}: select: { _anon: null }
+-- + {select_stmt}: _select_: { _anon: null }
 -- - error:
 select const(null & 0);
 
 -- TEST: null handling for &
 -- + SELECT NULL;
--- + {select_stmt}: select: { _anon: null }
+-- + {select_stmt}: _select_: { _anon: null }
 -- - error:
 select const(0 & null);
 
 -- TEST: bool handling for &
 -- + SELECT FALSE;
--- + {select_stmt}: select: { _anon: bool notnull }
+-- + {select_stmt}: _select_: { _anon: bool notnull }
 -- - error:
 select const(false & true);
 
@@ -5289,13 +5277,13 @@ select a, b from some_cte;
 -- WARNING easily broken do not change this test especially not nullability
 -- WARNING easily broken do not change this test especially not nullability
 -- WARNING easily broken do not change this test especially not nullability
--- + {with_select_stmt}: select: { a: integer }
+-- + {with_select_stmt}: _select_: { a: integer }
 -- + {cte_tables}: ok
 -- + {cte_table}: some_cte: { a: integer }
 -- + {cte_decl}: some_cte: { a: integer }
 -- + {select_stmt}: union_all: { x: integer }
--- + {select_core}: select: { x: integer notnull }
--- + {select_core}: select: { x: null }
+-- + {select_core}: _select_: { x: integer notnull }
+-- + {select_core}: _select_: { x: null }
 -- - error:
 -- WARNING easily broken do not change this test especially not nullability
 -- WARNING easily broken do not change this test especially not nullability
@@ -5319,7 +5307,7 @@ on X.a = Z.a;
 
 -- TEST: with recursive
 -- - error:
--- + {with_select_stmt}: select: { current: integer notnull }
+-- + {with_select_stmt}: _select_: { current: integer notnull }
 -- + {with_recursive}
 -- + {cte_decl}: cnt: { current: integer notnull }
 with recursive
@@ -5332,8 +5320,8 @@ with recursive
 select current from cnt;
 
 -- TEST: CTE body that uses with_select
--- + {with_select_stmt}: select: { x: real notnull, y: real notnull, u: integer notnull, v: integer notnull }
--- + {with_select_stmt}: select: { x: real notnull, y: real notnull }
+-- + {with_select_stmt}: _select_: { x: real notnull, y: real notnull, u: integer notnull, v: integer notnull }
+-- + {with_select_stmt}: _select_: { x: real notnull, y: real notnull }
 -- - error:
 with
   some_cte(*) as (select 1 u, 2 v),
@@ -5412,7 +5400,7 @@ create table table_not_yet_defined(y text);
 
 -- TEST: a shared fragment containing a CTE of the same name as a now-defined
 -- table is okay to use
--- + {with_select_stmt}: select: { x: integer notnull }
+-- + {with_select_stmt}: _select_: { x: integer notnull }
 -- - error:
 with
   (call does_not_shadow_an_existing_table())
@@ -5480,7 +5468,7 @@ begin
 end;
 
 -- TEST: select nothing expands to whatever is needed to give no rows
--- + {select_nothing_stmt}: select: { x: integer notnull }
+-- + {select_nothing_stmt}: _select_: { x: integer notnull }
 -- - error
 [[shared_fragment]]
 proc conditional_else_nothing()
@@ -5634,7 +5622,7 @@ create table jobstuff(id integer<job>, name text);
 create table bad_jobstuff(id integer<meters>, name text);
 
 -- TEST: try to use fragment with correct type kind
--- + {with_select_stmt}: select: { id: integer<job>, name: text }
+-- + {with_select_stmt}: _select_: { id: integer<job>, name: text }
 -- - error:
 with
   data(*) as (call shared_frag3() using jobstuff as source)
@@ -5817,7 +5805,7 @@ with some_cte(goo, goo) as (
 select * from some_cte;
 
 -- TEST: use the shared fragment, simple correct case
--- + {with_select_stmt}: select: { x: integer notnull, y: integer notnull, z: real notnull }
+-- + {with_select_stmt}: _select_: { x: integer notnull, y: integer notnull, z: real notnull }
 -- + {cte_tables}: ok
 -- + {cte_table}: some_cte: { x: integer notnull, y: integer notnull, z: real notnull }
 -- + {call_stmt}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
@@ -5972,25 +5960,38 @@ select * from goo;
 select 1 in (select 1 union all select 2 union all select 3) as A;
 
 -- TEST: use table.* syntax to get one table
--- + {select_stmt}: select: { _first: integer notnull, A: integer notnull, B: integer notnull, _last: integer notnull }
--- + {table_star}: T: select: { A: integer notnull, B: integer notnull }
+-- verify rewrite
+-- + SELECT
+-- + 0 AS _first,
+-- + T.A,
+-- + T.B,
+-- + 3 AS _last
+-- + FROM 
+-- + {select_stmt}: _select_: { _first: integer notnull, A: integer notnull, B: integer notnull, _last: integer notnull }
 -- - error:
 select 0 as _first, T.*, 3 as _last from (select 1 as A, 2 as B) as T;
 
--- TEST: use table.* syntax to get two tables
--- + {select_stmt}: select: { _first: integer notnull, A: integer notnull, B: integer notnull, C: integer notnull, _last: integer notnull }
--- + {table_star}: T: select: { A: integer notnull, B: integer notnull }
+-- TEST: use table.* syntax to get two tablesSELECT
+-- verify rewrite
+-- + SELECT
+-- + 0 AS _first,
+-- + T.A,
+-- + T.B,
+-- + S.C,
+-- + 3 AS _last
+-- + FROM
+-- + {select_stmt}: _select_: { _first: integer notnull, A: integer notnull, B: integer notnull, C: integer notnull, _last: integer notnull }
 -- - error:
 select 0 as _first, T.*, S.*, 3 as _last from (select 1 as A, 2 as B) as T, (select 1 as C) as S;
 
 -- TEST: try to use T.* with no from clause
--- * error: % select [table].* cannot be used with no FROM clause
+-- * error: % select *, T.*, or columns(...) cannot be used with no FROM clause
 -- + {table_star}: err
 select T.*;
 
 -- TEST: try to use T.* where T does not exist
 -- * error: % table not found 'T'
--- + {table_star}: err
+-- + {column_calculation}: err
 select T.* from (select 1) as U;
 
 -- TEST: simple test for declare function
@@ -6587,7 +6588,7 @@ create table hides_id_not_name(
 select id from hides_id_not_name;
 
 -- TEST: try to use name from the above
--- + {select_stmt}: select: { name: text }
+-- + {select_stmt}: _select_: { name: text }
 -- - error:
 select name from hides_id_not_name;
 
@@ -6855,12 +6856,12 @@ create table table_with_text_as_name(
 );
 
 -- TEST: use text as a column
--- + {select_stmt}: select: { text: text, text2: text }
+-- + {select_stmt}: _select_: { text: text, text2: text }
 -- - error:
 select text, text2 from table_with_text_as_name;
 
 -- TEST: extract a column named text -- brutal renames
--- + {select_stmt}: select: { text: text, other_text: text }
+-- + {select_stmt}: _select_: { text: text, other_text: text }
 -- + {name text2}: text2: text
 -- + {name text}: text: text
 -- + {select_from_etc}: TABLE { table_with_text_as_name: table_with_text_as_name }
@@ -7120,7 +7121,7 @@ create table blob_table_test(
 );
 
 -- TEST: try to use a blob variable in a select statement
--- + {select_stmt}: select: { blob_var: blob variable was_set }
+-- + {select_stmt}: _select_: { blob_var: blob variable was_set }
 -- - error:
 select blob_var;
 
@@ -7373,7 +7374,7 @@ end;
 
 -- TEST: calling out union for pass through not compatible with regular out union
 -- + {create_proc_stmt}: err
--- + {out_union_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
+-- + {out_union_stmt}: C: _select_: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
 -- * error: % can't mix and match out, out union, or select/call for return values 'out_union_call_and_out_union'
 -- +1 error:
 proc out_union_call_and_out_union()
@@ -7918,7 +7919,7 @@ end;
 -- + PROC declare_cursor_like_select ()
 -- + CURSOR C LIKE SELECT 1 AS A, 2.5 AS B, 'x' AS C;
 -- + FETCH C(A, B, C) FROM VALUES (_seed_, _seed_, printf('C_%d', _seed_)) @DUMMY_SEED(123);
--- + {declare_cursor_like_select}: C: select: { A: integer notnull, B: real notnull, C: text notnull } variable shape_storage value_cursor
+-- + {declare_cursor_like_select}: C: _select_: { A: integer notnull, B: real notnull, C: text notnull } variable shape_storage value_cursor
 -- + {fetch_values_stmt}: ok
 -- - dml_proc
 -- - error:
@@ -7942,13 +7943,13 @@ cursor some_cursor like select 1 A, 2.5 B, not 'x' C;
 cursor X like select 1 A, 2.5 B, 'x' C;
 
 -- TEST: pull the rowid out of a table
--- + {select_stmt}: select: { rowid: longint notnull }
+-- + {select_stmt}: _select_: { rowid: longint notnull }
 -- - error:
 select rowid from foo;
 
 -- TEST: pull a rowid from a particular table
 -- + SELECT T1.rowid
--- + {select_stmt}: select: { rowid: longint notnull }
+-- + {select_stmt}: _select_: { rowid: longint notnull }
 -- - error:
 select T1.rowid from foo T1, bar T2;
 
@@ -8174,14 +8175,14 @@ end;
 -- TEST: insert from select (this couldn't possibly run but it makes sense semantically)
 -- + {insert_stmt}: ok
 -- + {name bar}: bar: { id: integer notnull, name: text, rate: longint }
--- + {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
+-- + {select_stmt}: _select_: { id: integer notnull, name: text, rate: longint }
 insert into bar select * from bar where id > 5;
 
 
 -- TEST: insert from select, wrong number of columns
 -- + {insert_stmt}: err
 -- + {name bar}: bar: { id: integer notnull, name: text, rate: longint }
--- + {select_stmt}: select: { id: integer notnull }
+-- + {select_stmt}: _select_: { id: integer notnull }
 -- * error: % count of columns differs from count of values
 -- +1 error:
 insert into bar select id from bar;
@@ -8189,7 +8190,7 @@ insert into bar select id from bar;
 -- TEST: insert from select, type mismatch in args
 -- + {insert_stmt}: err
 -- + {name bar}: bar: { id: integer notnull, name: text, rate: longint }
--- + {select_stmt}: select: { name: text, id: integer notnull, rate: longint }
+-- + {select_stmt}: _select_: { name: text, id: integer notnull, rate: longint }
 -- * error: % incompatible types in expression 'id'
 -- +1 error:
 insert into bar select name, id, rate from bar;
@@ -8210,7 +8211,7 @@ declare select func SqlUserFunc(id integer) real!;
 
 -- TEST: now try to use the user function in a select statement
 -- + SELECT SqlUserFunc(1);
--- + {select_stmt}: select: { _anon: real notnull }
+-- + {select_stmt}: _select_: { _anon: real notnull }
 -- + {call}: real notnull
 -- + {name SqlUserFunc}
 -- - error:
@@ -8218,7 +8219,7 @@ select SqlUserFunc(1);
 
 -- TEST: now try to use the user function with distinct keyword
 -- + SELECT SqlUserFunc(DISTINCT id)
--- + {select_stmt}: select: { _anon: real notnull }
+-- + {select_stmt}: _select_: { _anon: real notnull }
 -- + {call}: real notnull
 -- + {name SqlUserFunc}
 -- + {distinct}
@@ -8228,7 +8229,7 @@ select SqlUserFunc(distinct id) from foo;
 
 -- TEST: now try to use the user function with filter clause
 -- + SELECT SqlUserFunc(DISTINCT id)
--- + {select_stmt}: select: { _anon: real notnull }
+-- + {select_stmt}: _select_: { _anon: real notnull }
 -- + {call}: real notnull
 -- + {name SqlUserFunc}
 -- + {call_filter_clause}
@@ -8271,7 +8272,7 @@ declare select func foo(x integer, x integer) integer;
 -- + FETCH curs(A, B, C) FROM VALUES (arg1, arg2, arg3);
 -- + {fetch_values_stmt}: ok
 -- + {name_columns_values}
--- + {name curs}: curs: select: { A: text notnull, B: integer notnull, C: real notnull } variable shape_storage value_cursor
+-- + {name curs}: curs: _select_: { A: text notnull, B: integer notnull, C: real notnull } variable shape_storage value_cursor
 -- + {columns_values}: ok
 -- + {column_spec}
 -- + {name_list}
@@ -8496,7 +8497,7 @@ end;
 create view ViewShape as select TRUE a, 2.5 b, 'xyz' c;
 
 -- + PROC like_a_view (a_ BOOL!, b_ REAL!, c_ TEXT!)
--- +   SELECT *
+-- +   SELECT v.a, v.b, v.c
 -- +     FROM ViewShape AS v
 -- +   WHERE v.a = a_ AND v.b = b_ AND v.c > c_;
 -- +   {create_proc_stmt}: like_a_view: { a: bool notnull, b: real notnull, c: text notnull } dml_proc
@@ -9020,10 +9021,10 @@ select 'x' as A, 4 as B;
 
 -- TEST: try to select union with different compatible types (null checks)
 -- + {select_core_list}: union_all: { A: integer, B: integer }
--- + {select_core}: select: { A: integer notnull, B: integer }
+-- + {select_core}: _select_: { A: integer notnull, B: integer }
 -- + {select_core_compound}
 -- + {int 2}
--- + {select_core}: select: { A: null, B: integer notnull }
+-- + {select_core}: _select_: { A: null, B: integer notnull }
 -- - error:
 select 1 as A, nullable(2) as B
 union all
@@ -9034,7 +9035,7 @@ select NULL as A, 4 as B;
 -- + {select_core_compound}
 -- +7 {int 2}
 -- +3 {select_core_list}: union_all: { A: integer notnull, B: integer notnull }
--- +4 {select_core}: select: { A: integer notnull, B: integer notnull }
+-- +4 {select_core}: _select_: { A: integer notnull, B: integer notnull }
 -- - error:
 select 1 as A, 2 as B
 union all
@@ -9104,26 +9105,26 @@ end;
 declare _sens integer @sensitive;
 
 -- TEST: using sensitive in the LIMIT clause
--- + {select_stmt}: select: { safe: integer notnull sensitive }
+-- + {select_stmt}: _select_: { safe: integer notnull sensitive }
 -- - error:
 select 1 as safe
 limit _sens;
 
 -- TEST: using sensitive in the LIMIT clause (control case)
--- + {select_stmt}: select: { safe: integer notnull }
+-- + {select_stmt}: _select_: { safe: integer notnull }
 -- - error:
 select 1 as safe
 limit 1;
 
 -- TEST: using sensitive in the OFFSET clause (control case)
--- + {select_stmt}: select: { safe: integer notnull sensitive }
+-- + {select_stmt}: _select_: { safe: integer notnull sensitive }
 -- - error:
 select 1 as safe
 limit 1
 offset _sens;
 
 -- TEST: using sensitive in the OFFSET clause (control case)
--- + {select_stmt}: select: { safe: integer notnull }
+-- + {select_stmt}: _select_: { safe: integer notnull }
 -- - error:
 select 1 as safe
 limit 1
@@ -9309,22 +9310,6 @@ set _sens := _sens is not 0;
 -- - error:
 set _sens := 0 is not 0;
 
--- TEST: sensitive with EXISTS(select *)
--- + {exists_expr}: bool notnull sensitive
--- - error:
-set _sens := (select exists(select * from with_sensitive));
-
--- TEST: sensitive with EXISTS(select sensitive)
--- + {exists_expr}: bool notnull sensitive
--- - error:
-set _sens := (select exists(select info from with_sensitive));
-
--- TEST: sensitive with EXISTS(select not sensitive)
--- - {exists_expr}: bool notnull sensitive
--- + {exists_expr}: bool notnull
--- - error:
-set _sens := (select exists(select id from with_sensitive));
-
 -- TEST: sensitive implicit due to where clause
 -- + {select_stmt}: id: integer sensitive
 -- + {opt_where}: bool sensitive
@@ -9431,25 +9416,25 @@ select b.key_, b.sort_key
 order by b.a_key_;
 
 -- TEST: join columns become  because ON condition is SENSITIVE
--- + {select_stmt}: select: { id: integer notnull sensitive }
+-- + {select_stmt}: _select_: { id: integer notnull sensitive }
 -- - error:
 select T1.id from bar T1 inner join with_sensitive T2 on T1.id = T2.id and T2.info = 1;
 
 -- TEST: join columns  flag ON condition (control case)
--- + {select_stmt}: select: { id: integer notnull }
--- - {select_stmt}: select: { id: % sensitive }
+-- + {select_stmt}: _select_: { id: integer notnull }
+-- - {select_stmt}: _select_: { id: % sensitive }
 -- - error:
 select T1.id from bar T1 inner join with_sensitive T2 on T1.id = T2.id;
 
 -- TEST: join columns become  because USING condition has SENSITIVE columns
--- + {select_stmt}: select: { id: integer sensitive }
+-- + {select_stmt}: _select_: { id: integer sensitive }
 -- + {name_list}: info: integer sensitive
 -- - error:
 select T1.id from with_sensitive T1 inner join with_sensitive T2 using(info);
 
 -- TEST: join columns do not become  because USING condition has no SENSITIVE columns
--- + {select_stmt}: select: { id: integer }
--- - {select_stmt}: select: { id: % sensitive }
+-- + {select_stmt}: _select_: { id: integer }
+-- - {select_stmt}: _select_: { id: % sensitive }
 -- + {name_list}: id: integer
 -- - error:
 select T1.id from with_sensitive T1 inner join with_sensitive T2 using(id);
@@ -9569,8 +9554,8 @@ end;
 -- + {create_proc_stmt}: err
 -- + {with_delete_stmt}: err
 -- + {cte_tables}: err
--- + {select_expr_list_con}: select: { _anon: integer notnull }
--- + {select_expr_list_con}: select: { _anon: text notnull }
+-- + {select_expr_list_con}: _select_: { _anon: integer notnull }
+-- + {select_expr_list_con}: _select_: { _anon: text notnull }
 -- * error: % incompatible types in expression '_anon'
 -- +1 error:
 proc with_delete_form_bogus_cte()
@@ -9604,8 +9589,8 @@ end;
 -- + {create_proc_stmt}: err
 -- + {with_update_stmt}: err
 -- + {cte_tables}: err
--- + {select_expr_list_con}: select: { _anon: integer notnull }
--- + {select_expr_list_con}: select: { _anon: text notnull }
+-- + {select_expr_list_con}: _select_: { _anon: integer notnull }
+-- + {select_expr_list_con}: _select_: { _anon: text notnull }
 -- * error: % incompatible types in expression '_anon'
 -- +1 error:
 proc with_update_form_bogus_cte()
@@ -10584,8 +10569,8 @@ create index invalid_wrong_group_index on diamond_region_table(id);
 SET x := (WITH threads2 (count) AS (SELECT 1 foo) SELECT COUNT(*) FROM threads2);
 
 -- TEST: declare a table valued function
--- + {declare_select_func_stmt}: select: { foo: text } select_func
--- + {name tvf}: select: { foo: text }
+-- + {declare_select_func_stmt}: _select_: { foo: text } select_func
+-- + {name tvf}: _select_: { foo: text }
 -- - error:
 declare select function tvf(id integer) (foo text);
 
@@ -10598,7 +10583,7 @@ select 1 where tvf(5) = 1;
 -- TEST: use a table valued function, test expansion of from clause too
 -- + FROM tvf(LOCALS.v);
 -- + {create_proc_stmt}: using_tvf: { foo: text } dml_proc
--- + {select_stmt}: select: { foo: text }
+-- + {select_stmt}: _select_: { foo: text }
 -- rewrite to use locals
 -- - error:
 proc using_tvf()
@@ -10642,7 +10627,7 @@ end;
 
 -- TEST: use a table valued function
 -- + {create_proc_stmt}: using_tvf_unaliased: { foo: text } dml_proc
--- + {select_stmt}: select: { foo: text }
+-- + {select_stmt}: _select_: { foo: text }
 -- + {dot}: foo: text
 -- - error:
 proc using_tvf_unaliased()
@@ -10652,7 +10637,7 @@ end;
 
 -- TEST: use a table valued function aliased
 -- + {create_proc_stmt}: using_tvf_aliased: { foo: text } dml_proc
--- + {select_stmt}: select: { foo: text }
+-- + {select_stmt}: _select_: { foo: text }
 -- + {dot}: foo: text
 -- - error:
 proc using_tvf_aliased()
@@ -10681,7 +10666,7 @@ begin
 end;
 
 -- TEST: declare table valued function that consumes an object
--- +  {declare_select_func_stmt}: select: { id: integer } select_func
+-- +  {declare_select_func_stmt}: _select_: { id: integer } select_func
 -- + {params}: ok
 -- + {param}: rowset: object<rowset> variable in
 -- - error:
@@ -10689,8 +10674,8 @@ declare select function ReadFromRowset(rowset Object<rowset>) (id integer);
 
 -- TEST: use a table valued function that consumes an object
 -- + {create_proc_stmt}: rowset_object_reader: { id: integer } dml_proc
--- + {table_function}: TABLE { ReadFromRowset: select }
--- + {name ReadFromRowset}: TABLE { ReadFromRowset: select }
+-- + {table_function}: TABLE { ReadFromRowset: _select_ }
+-- + {name ReadFromRowset}: TABLE { ReadFromRowset: _select_ }
 -- + {name rowset}: rowset: object<rowset> variable in
 -- - error:
 proc rowset_object_reader(rowset Object<rowset>)
@@ -10748,12 +10733,12 @@ begin
 end;
 
 -- TEST: group concat has to preserve sensitivity
--- + {select_stmt}: select: { gc: text sensitive }
+-- + {select_stmt}: _select_: { gc: text sensitive }
 -- - error:
 select group_concat(name) gc from with_sensitive;
 
 -- TEST: group concat must always return nullable
--- + {select_stmt}: select: { gc: text }
+-- + {select_stmt}: _select_: { gc: text }
 -- + {strlit 'not-null'}: text notnull
 -- - error:
 select group_concat('not-null') gc from foo;
@@ -10771,23 +10756,23 @@ end;
 -- TEST: non aggregate version basic test
 -- this version of min is still allowed to return not null, it isn't an aggregate
 -- it also doesn't need a from clause
--- + {select_expr_list_con}: select: { min_stuff: real notnull }
+-- + {select_expr_list_con}: _select_: { min_stuff: real notnull }
 -- - error:
 set my_real := (select min(1.2, 2, 3) as min_stuff);
 
 -- TEST: create a sum using a bool
--- + {select_stmt}: select: { _anon: integer }
+-- + {select_stmt}: _select_: { _anon: integer }
 -- + {and}: bool notnull
 -- - error:
 select sum(1 and 1) from foo;
 
 -- TEST: create a sum using a long integer
--- + {select_stmt}: select: { _anon: longint }
+-- + {select_stmt}: _select_: { _anon: longint }
 -- - error:
 select sum(1L) from foo;
 
 -- TEST: create a sum using a real
--- + {select_stmt}: select: { _anon: real }
+-- + {select_stmt}: _select_: { _anon: real }
 -- - error:
 select sum(1.2) from foo;
 
@@ -10810,17 +10795,17 @@ select min(NULL, 'x');
 select min('x', NULL, 'y');
 
 -- TEST: min on strings
--- + {select_stmt}: select: { _anon: text notnull }
+-- + {select_stmt}: _select_: { _anon: text notnull }
 -- - error:
 select min('x', 'y');
 
 -- TEST: min on numerics (upgraded to real in this case)
--- + {select_stmt}: select: { _anon: real notnull }
+-- + {select_stmt}: _select_: { _anon: real notnull }
 -- - error:
 select min(1, 1.2);
 
 -- TEST: min on numerics (checks sensitivy and nullable)
--- + {select_stmt}: select: { _anon: longint sensitive }
+-- + {select_stmt}: _select_: { _anon: longint sensitive }
 -- - error:
 select min(_sens, 1L);
 
@@ -11414,7 +11399,7 @@ select replace('a', 'b', 0);
 
 -- TEST: The replace function has a TEXT! result type if ALL of its
 -- arguments are nonnull.
--- + {select_stmt}: select: { _anon: text notnull }
+-- + {select_stmt}: _select_: { _anon: text notnull }
 -- + {call}: text notnull
 -- + {name replace}: text notnull
 -- - error:
@@ -11422,7 +11407,7 @@ select replace('a', 'b', 'c');
 
 -- TEST: The replace function has a nullable TEXT result type if its first
 -- argument is nullable.
--- + {select_stmt}: select: { _anon: text }
+-- + {select_stmt}: _select_: { _anon: text }
 -- + {call}: text
 -- + {name replace}: text
 -- - error:
@@ -11430,7 +11415,7 @@ select replace(nullable('a'), 'b', 'c');
 
 -- TEST: The replace function has a nullable TEXT result type if its second
 -- argument is nullable.
--- + {select_stmt}: select: { _anon: text }
+-- + {select_stmt}: _select_: { _anon: text }
 -- + {call}: text
 -- + {name replace}: text
 -- - error:
@@ -11438,7 +11423,7 @@ select replace('a', nullable('b'), 'c');
 
 -- TEST: The replace function has a nullable TEXT result type if its third
 -- argument is nullable.
--- + {select_stmt}: select: { _anon: text }
+-- + {select_stmt}: _select_: { _anon: text }
 -- + {call}: text
 -- + {name replace}: text
 -- - error:
@@ -11466,21 +11451,21 @@ select replace('a', 1, 'c');
 select replace('a', 'b', null);
 
 -- TEST: The result of replace is sensitive if its first argument is sensitive.
--- + {select_stmt}: select: { _anon: text notnull sensitive }
+-- + {select_stmt}: _select_: { _anon: text notnull sensitive }
 -- + {call}: text notnull sensitive
 -- + {name replace}: text notnull sensitive
 -- - error:
 select replace(sensitive('a'), 'b', 'c');
 
 -- TEST: The result of replace is sensitive if its second argument is sensitive.
--- + {select_stmt}: select: { _anon: text notnull sensitive }
+-- + {select_stmt}: _select_: { _anon: text notnull sensitive }
 -- + {call}: text notnull sensitive
 -- + {name replace}: text notnull sensitive
 -- - error:
 select replace('a', sensitive('b'), 'c');
 
 -- TEST: The result of replace is sensitive if its third argument is sensitive.
--- + {select_stmt}: select: { _anon: text notnull sensitive }
+-- + {select_stmt}: _select_: { _anon: text notnull sensitive }
 -- + {call}: text notnull sensitive
 -- + {name replace}: text notnull sensitive
 -- - error:
@@ -11756,7 +11741,7 @@ explain select 1;
 -- TEST: explain query plan with select
 -- + {explain_stmt}: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull }
 -- + {int 2}
--- + {select_stmt}: select: { id: integer notnull, id: integer notnull, name: text, rate: longint }
+-- + {select_stmt}: _select_: { id: integer notnull, id: integer notnull, name: text, rate: longint }
 -- - error:
 explain query plan select * from foo inner join bar where foo.id = 1;
 
@@ -11811,9 +11796,9 @@ end;
 -- TEST: test nullability result on column X in a union select
 -- + {select_stmt}: union_all: { X: text }
 -- + {select_core_list}: union_all: { X: text }
--- + {select_core}: select: { X: text notnull }
--- + {select_core_list}: select: { X: null }
--- + {select_core}: select: { X: null }
+-- + {select_core}: _select_: { X: text notnull }
+-- + {select_core_list}: _select_: { X: null }
+-- + {select_core}: _select_: { X: null }
 select "x" as X
 union all
 select null as X;
@@ -11823,9 +11808,9 @@ select null as X;
 -- + {name mixed_union}: mixed_union: { X: text } dml_proc
 -- + {select_stmt}: union_all: { X: text }
 -- + {select_core_list}: union_all: { X: text }
--- + {select_core}: select: { X: text notnull }
--- + {select_core_list}: select: { X: null }
--- + {select_core}: select: { X: null }
+-- + {select_core}: _select_: { X: text notnull }
+-- + {select_core_list}: _select_: { X: null }
+-- + {select_core}: _select_: { X: null }
 proc mixed_union()
 begin
   select "x" X
@@ -11836,14 +11821,14 @@ end;
 -- TEST: test nullability result on column X in a union select without alias
 -- + {create_proc_stmt}: mixed_union_cte: { X: text } dml_proc
 -- + {name mixed_union_cte}: mixed_union_cte: { x: text } dml_proc
--- + {with_select_stmt}: select: { X: text }
+-- + {with_select_stmt}: _select_: { X: text }
 -- + {select_stmt}: union_all: { X: text }
 -- + {select_core_list}: union_all: { X: text }
--- + {select_core}: select: { X: text notnull }
--- + {select_core_list}: select: { X: null }
--- + {select_core}: select: { X: null }
--- + {select_stmt}: select: { x: text }
--- + {select_core_list}: select: { x: text }
+-- + {select_core}: _select_: { X: text notnull }
+-- + {select_core_list}: _select_: { X: null }
+-- + {select_core}: _select_: { X: null }
+-- + {select_stmt}: _select_: { x: text }
+-- + {select_core_list}: _select_: { x: text }
 proc mixed_union_cte()
 begin
   with core(x) as (
@@ -11855,8 +11840,8 @@ begin
 end;
 
 -- TEST: select with a basic window function invocation
--- + {select_stmt}: select: { id: integer notnull, row_num: integer notnull }
--- + {select_core_list}: select: { id: integer notnull, row_num: integer notnull }
+-- + {select_stmt}: _select_: { id: integer notnull, row_num: integer notnull }
+-- + {select_core_list}: _select_: { id: integer notnull, row_num: integer notnull }
 -- + {select_expr}: id: integer notnull
 -- + {name id}: id: integer notnull
 -- + {select_expr}: row_num: integer notnull
@@ -11900,7 +11885,7 @@ select 1 where row_number() over ();
 select id, row_number(1) over () as row_num from foo;
 
 -- TEST: window function invocation with a window clause
--- + {select_stmt}: select: { id: integer notnull, _anon: integer notnull, _anon: integer notnull }
+-- + {select_stmt}: _select_: { id: integer notnull, _anon: integer notnull, _anon: integer notnull }
 -- + {select_expr}: integer notnull
 -- +2 {window_func_inv}: integer notnull
 -- +2 {call}: integer notnull
@@ -11962,7 +11947,7 @@ select id
     win as ();
 
 -- TEST: test filter clause in window function invocation
--- + {select_stmt}: select: { id: integer notnull, row_num: text }
+-- + {select_stmt}: _select_: { id: integer notnull, row_num: text }
 -- + {select_expr}: id: integer notnull
 -- + {name id}: id: integer notnull
 -- + {select_expr}: row_num: text
@@ -12028,7 +12013,7 @@ select 1, row_number() filter (where 1) over ();
 select 1, row_number(distinct 1);
 
 -- TEST: test partition by grammar
--- + {select_stmt}: select: { id: integer notnull, _anon: integer notnull }
+-- + {select_stmt}: _select_: { id: integer notnull, _anon: integer notnull }
 -- + {window_func_inv}: integer notnull
 -- + {call_filter_clause}
 -- + {window_defn}: ok
@@ -12039,7 +12024,7 @@ select 1, row_number(distinct 1);
 select id, row_number() over (partition by id) from foo;
 
 -- TEST: test order by grammar
--- + {select_stmt}: select: { id: integer notnull, _anon: integer notnull }
+-- + {select_stmt}: _select_: { id: integer notnull, _anon: integer notnull }
 -- + {window_func_inv}: integer notnull
 -- + {call_filter_clause}
 -- + {window_defn}: ok
@@ -12062,7 +12047,7 @@ select id, row_number() over (order by id asc) from foo;
 select id, row_number() over (order by bogus asc) from foo;
 
 -- TEST: test frame spec grammar combination
--- + {select_stmt}: select: { id: integer notnull, avg: real, _anon: integer notnull }
+-- + {select_stmt}: _select_: { id: integer notnull, avg: real, _anon: integer notnull }
 -- + {select_expr}: id: integer notnull
 -- + {select_expr}: avg: real
 -- + {window_func_inv}: real
@@ -12079,7 +12064,7 @@ select id,
   from foo;
 
 -- TEST: test frame spec grammar combination
--- + {select_stmt}: select: { id: integer notnull, _anon: integer notnull }
+-- + {select_stmt}: _select_: { id: integer notnull, _anon: integer notnull }
 -- + {select_expr}: id: integer notnull
 -- + {select_expr}: integer notnull
 -- + {window_func_inv}: integer notnull
@@ -12090,7 +12075,7 @@ select id,
   from foo;
 
 -- TEST: test frame spec grammar combination
--- + {select_stmt}: select: { id: integer notnull, _anon: integer notnull }
+-- + {select_stmt}: _select_: { id: integer notnull, _anon: integer notnull }
 -- + {select_expr}: id: integer notnull
 -- + {select_expr}: integer notnull
 -- + {window_func_inv}: integer notnull
@@ -12113,7 +12098,7 @@ select id,
   from foo;
 
 -- TEST: test rank() window function
--- + {select_stmt}: select: { id: integer notnull, _anon: integer notnull }
+-- + {select_stmt}: _select_: { id: integer notnull, _anon: integer notnull }
 -- + {select_expr}: integer notnull
 -- + {window_func_inv}: integer notnull
 -- + {call}: integer notnull
@@ -12122,7 +12107,7 @@ select id,
 select id, rank() over () from foo;
 
 -- TEST: test dense_rank() window function
--- + {select_stmt}: select: { id: integer notnull, _anon: integer notnull }
+-- + {select_stmt}: _select_: { id: integer notnull, _anon: integer notnull }
 -- + {select_expr}: integer notnull
 -- + {window_func_inv}: integer notnull
 -- + {call}: integer notnull
@@ -12131,7 +12116,7 @@ select id, rank() over () from foo;
 select id, dense_rank() over () from foo;
 
 -- TEST: test percent_rank() window function
--- + {select_stmt}: select: { id: integer notnull, _anon: real notnull }
+-- + {select_stmt}: _select_: { id: integer notnull, _anon: real notnull }
 -- + {select_expr}: real notnull
 -- + {window_func_inv}: real notnull
 -- + {call}: real notnull
@@ -12140,7 +12125,7 @@ select id, dense_rank() over () from foo;
 select id, percent_rank() over () from foo;
 
 -- TEST: test cume_dist() window function
--- + {select_stmt}: select: { id: integer notnull, _anon: real notnull }
+-- + {select_stmt}: _select_: { id: integer notnull, _anon: real notnull }
 -- + {select_expr}: real notnull
 -- + {window_func_inv}: real notnull
 -- + {call}: real notnull
@@ -12149,7 +12134,7 @@ select id, percent_rank() over () from foo;
 select id, cume_dist() over () from foo;
 
 -- TEST: test ntile() window function
--- + {select_stmt}: select: { id: integer notnull, _anon: integer notnull }
+-- + {select_stmt}: _select_: { id: integer notnull, _anon: integer notnull }
 -- + {select_expr}: integer notnull
 -- + {window_func_inv}: integer notnull
 -- + {call}: integer notnull
@@ -12206,7 +12191,7 @@ select id, ntile(1, 2) over () from foo;
 select id from foo where ntile(7);
 
 -- TEST: test lag() window function
--- + {select_stmt}: select: { id: integer notnull, id: integer notnull }
+-- + {select_stmt}: _select_: { id: integer notnull, id: integer notnull }
 -- + {select_expr}: id: integer notnull
 -- + {window_func_inv}: id: integer notnull
 -- + {call}: id: integer notnull
@@ -12232,12 +12217,12 @@ select lag(cost, 1, id) over () from with_kind;
 select id, lag(id, 1.3, 0) over () from foo;
 
 -- TEST: test lag() window function with non constant index (this is ok)
--- + {select_stmt}: select: { id: integer notnull, id: integer notnull }
+-- + {select_stmt}: _select_: { id: integer notnull, id: integer notnull }
 -- - error:
 select id, lag(id, X, 0) over () from foo;
 
 -- TEST: test lag() window function with lag() nullable even though id is not nullable
--- + {select_stmt}: select: { id: integer notnull, id: integer }
+-- + {select_stmt}: _select_: { id: integer notnull, id: integer }
 -- + {select_expr}: id: integer
 -- + {window_func_inv}: id: integer
 -- + {call}: id: integer
@@ -12249,7 +12234,7 @@ select id, lag(id, X, 0) over () from foo;
 select id, lag(id, 1) over () from foo;
 
 -- TEST: test lag() window function with first param sensitive
--- + {select_stmt}: select: { id: integer, info: integer sensitive }
+-- + {select_stmt}: _select_: { id: integer, info: integer sensitive }
 -- + {select_expr}: info: integer sensitive
 -- + {window_func_inv}: info: integer sensitive
 -- + {call}: info: integer sensitive
@@ -12261,7 +12246,7 @@ select id, lag(id, 1) over () from foo;
 select id, lag(info, 1) over () from with_sensitive;
 
 -- TEST: test lag() window function with third param sensitive
--- + {select_stmt}: select: { id: integer, _anon: integer sensitive }
+-- + {select_stmt}: _select_: { id: integer, _anon: integer sensitive }
 -- + {select_expr}: integer
 -- + {window_func_inv}: integer sensitive
 -- + {call}: integer sensitive
@@ -12316,7 +12301,7 @@ select id, lag(id, 0, 0.7) over () from foo;
 select id, lag() over () from foo;
 
 -- TEST: test lead() window function
--- + {select_stmt}: select: { id: integer notnull, id: integer notnull }
+-- + {select_stmt}: _select_: { id: integer notnull, id: integer notnull }
 -- + {select_expr}: id: integer notnull
 -- + {window_func_inv}: id: integer notnull
 -- + {call}: id: integer notnull
@@ -12329,7 +12314,7 @@ select id, lag() over () from foo;
 select id, lead(id, 1, id * 3) over () from foo;
 
 -- TEST: test first_value() window function
--- + {select_stmt}: select: { id: integer notnull, first: integer notnull }
+-- + {select_stmt}: _select_: { id: integer notnull, first: integer notnull }
 -- + {select_expr}: id: integer notnull
 -- + {window_func_inv}: integer notnull
 -- + {call}: integer notnull
@@ -12340,19 +12325,19 @@ select id, lead(id, 1, id * 3) over () from foo;
 select id, first_value(id) over () as first from foo;
 
 -- TEST: ensure the kind of the first_value is preserved
--- + {select_stmt}: select: { first: integer<some_key> }
+-- + {select_stmt}: _select_: { first: integer<some_key> }
 -- + {window_func_inv}: integer<some_key>
 -- - error:
 select first_value(id) over () as first from with_kind;
 
 -- TEST: ensure the kind of the first_value is preserved
--- + {select_stmt}: select: { last: integer<some_key> }
+-- + {select_stmt}: _select_: { last: integer<some_key> }
 -- + {window_func_inv}: integer<some_key>
 -- - error:
 select last_value(id) over () as last from with_kind;
 
 -- TEST: ensure the kind of the nth_value is preserved
--- + {select_stmt}: select: { nth: integer<some_key> }
+-- + {select_stmt}: _select_: { nth: integer<some_key> }
 -- + {window_func_inv}: integer<some_key>
 -- - error:
 select nth_value(id, 5) over () as nth from with_kind;
@@ -12369,7 +12354,7 @@ select nth_value(id, 5) over () as nth from with_kind;
 select id from foo where first_value(7);
 
 -- TEST: test last_value() window function
--- + {select_stmt}: select: { id: integer notnull, last: integer notnull }
+-- + {select_stmt}: _select_: { id: integer notnull, last: integer notnull }
 -- + {select_expr}: id: integer notnull
 -- + {window_func_inv}: integer notnull
 -- + {call}: integer notnull
@@ -12380,7 +12365,7 @@ select id from foo where first_value(7);
 select id, last_value(id) over () as last from foo;
 
 -- TEST: test nth_value() window function
--- + {select_stmt}: select: { id: integer notnull, nth: integer }
+-- + {select_stmt}: _select_: { id: integer notnull, nth: integer }
 -- + {select_expr}: id: integer
 -- + {window_func_inv}: integer
 -- + {call}: integer
@@ -12424,7 +12409,7 @@ select id, nth_value(id) over () from foo;
 select id, nth_value(id, 0) over () as nth from foo;
 
 -- TEST: try total functions with sensitive param
--- + {select_stmt}: select: { t: real notnull sensitive }
+-- + {select_stmt}: _select_: { t: real notnull sensitive }
 -- + {name total}: real notnull sensitive
 -- + {name info}: info: integer sensitive
 -- - error:
@@ -12500,7 +12485,7 @@ insert into referenceable from cursor X;
 
 -- TEST -- simple use of update cursor statement
 -- + {update_cursor_stmt}: ok
--- + | {name small_cursor}: small_cursor: select: { x: integer notnull } variable shape_storage value_cursor
+-- + | {name small_cursor}: small_cursor: _select_: { x: integer notnull } variable shape_storage value_cursor
 -- + | {columns_values}
 -- +   | {column_spec}
 -- +   | | {name_list}
@@ -12551,7 +12536,7 @@ update cursor X(one) from values (2);
 -- + some_cte (a, b, c) AS (
 -- +   SELECT 1 AS a, 'b' AS b, 3.0 AS c
 -- + )
--- + {with_select_stmt}: select: { a: integer notnull, b: text notnull, c: real notnull }
+-- + {with_select_stmt}: _select_: { a: integer notnull, b: text notnull, c: real notnull }
 -- - error:
 with some_cte(*) as (select 1 a, 'b' b, 3.0 c)
   select * from some_cte;
@@ -12759,7 +12744,7 @@ end;
 create index if not exists index_1 on foo(id);
 
 -- TEST: verify blob literal semantic type
--- + {select_stmt}: select: { _anon: blob notnull }
+-- + {select_stmt}: _select_: { _anon: blob notnull }
 -- + {blob x'FAB1'}: blob notnull
 -- - error:
 select x'FAB1';
@@ -12783,7 +12768,7 @@ end;
 select nullif(id) from bar;
 
 -- TEST: test nullif with non null integer column table
--- + {select_stmt}: select: { n: integer }
+-- + {select_stmt}: _select_: { n: integer }
 -- + {call}: integer
 -- + {name nullif}: integer
 -- + {name id}: id: integer notnull
@@ -12791,7 +12776,7 @@ select nullif(id) from bar;
 select nullif(id, 1) as n from bar;
 
 -- TEST: kind preserved and matches
--- + {select_stmt}: select: { p: real<dollars> variable was_set }
+-- + {select_stmt}: _select_: { p: real<dollars> variable was_set }
 -- + {call}: real<dollars> variable
 -- - error:
 select nullif(price_d, price_d) as p;
@@ -12815,7 +12800,7 @@ select id, nullif(name, 1) from bar;
 set a_string := nullif('x', 1);
 
 -- TEST: test nullif with sensitive value
--- + {select_stmt}: select: { n: text sensitive }
+-- + {select_stmt}: _select_: { n: text sensitive }
 -- + {call}: text sensitive
 -- + {name nullif}: text sensitive
 -- + {name name}: name: text sensitive
@@ -12829,7 +12814,7 @@ select nullif(name, 'a') as n from with_sensitive;
 declare select function nullif(value INT, defaultValue int!) int;
 
 -- TEST: test upper with sensitive value
--- + {select_stmt}: select: { _anon: text sensitive }
+-- + {select_stmt}: _select_: { _anon: text sensitive }
 -- + {call}: text sensitive
 -- + {name upper}: text sensitive
 -- + {name name}: name: text sensitive
@@ -12859,7 +12844,7 @@ select upper(name, 1) from bar;
 set a_string := upper('x');
 
 -- TEST: test char with sensitive value
--- + {select_stmt}: select: { c: text sensitive }
+-- + {select_stmt}: _select_: { c: text sensitive }
 -- + {call}: text sensitive
 -- + {name char}: text sensitive
 -- + {name id}: id: integer
@@ -12888,7 +12873,7 @@ select char() from bar;
 set a_string := char(1);
 
 -- TEST: test abs with sensitive value
--- + {select_stmt}: select: { _anon: integer sensitive }
+-- + {select_stmt}: _select_: { _anon: integer sensitive }
 -- + {call}: integer sensitive
 -- + {name abs}: integer sensitive
 -- + {name info}: info: integer sensitive
@@ -12937,14 +12922,14 @@ set an_int := instr("x", "y");
 select instr();
 
 -- TEST: test instr with sensitive value
--- + {select_stmt}: select: { x: integer sensitive }
+-- + {select_stmt}: _select_: { x: integer sensitive }
 -- + {call}: integer sensitive
 -- + {name name}: name: text sensitive
 -- - error:
 select instr(name, 'a') as x from with_sensitive;
 
 -- TEST: test instr with all param not null
--- + {select_stmt}: select: { _anon: integer notnull }
+-- + {select_stmt}: _select_: { _anon: integer notnull }
 -- + {call}: integer notnull
 -- +2 {strlit 'a'}: text notnull
 -- - error:
@@ -13324,7 +13309,7 @@ insert into foo with T(x) as (values (1), (2), (3)) select * from T @dummy_seed(
 
 -- TEST: test values from a with statement, no seed, this is fine.
 -- + {insert_stmt}: ok
--- + {with_select_stmt}: select: { x: integer notnull }
+-- + {with_select_stmt}: _select_: { x: integer notnull }
 insert into foo with T(x) as (values (1), (2), (3)) select * from T;
 
 -- TEST: test values from simple select statement, and seed, this not a supported form
@@ -13372,7 +13357,7 @@ values (l);
 -- + {insert_stmt}: ok
 -- + {select_stmt}: UNION ALL: { column1: integer notnull }
 -- + {select_core}: values: { column1: integer notnull }
--- + {select_core}: select: { column1: integer notnull }
+-- + {select_core}: _select_: { column1: integer notnull }
 -- - error:
 insert into foo values (1) union all select 2 column1;
 
@@ -13754,7 +13739,7 @@ end;
 -- we get to the if statement.  The error indicates the
 -- most probable mistake.
 -- + {create_proc_stmt}: err
--- + {declare_cursor}: C: select: { x: integer notnull } variable dml_proc
+-- + {declare_cursor}: C: _select_: { x: integer notnull } variable dml_proc
 -- + {if_stmt}: err
 -- +  {name C}: err
 -- * error: % cursor was not used with 'fetch [cursor]' 'C'
@@ -14091,8 +14076,8 @@ set an_int := (select length("x"));
 set _sens := (select unicode(name) from with_sensitive);
 
 -- TEST: box a cursor (success path)
--- + {name C}: C: select: { id: integer notnull, name: text, rate: longint } variable dml_proc
--- + {set_from_cursor}: C: select: { id: integer notnull, name: text, rate: longint } variable dml_proc boxed
+-- + {name C}: C: _select_: { id: integer notnull, name: text, rate: longint } variable dml_proc
+-- + {set_from_cursor}: C: _select_: { id: integer notnull, name: text, rate: longint } variable dml_proc boxed
 -- - error:
 proc cursor_box(out B object<bar cursor>)
 begin
@@ -14414,7 +14399,7 @@ end;
 -- + WHEN an_int IS NULL THEN 3
 -- + ELSE 2
 -- + END;
--- + {select_stmt}: select: { _anon: integer notnull }
+-- + {select_stmt}: _select_: { _anon: integer notnull }
 -- - error:
 select iif(an_int is null, 3, 2);
 
@@ -15079,13 +15064,13 @@ create table with_check_expr_udf(
 select random(5);
 
 -- TEST: random success case
--- + {select_stmt}: select: { _anon: longint notnull }
+-- + {select_stmt}: _select_: { _anon: longint notnull }
 -- + {name random}: longint notnull
 -- - error:
 select random();
 
 -- TEST: sqlite_offset takes exactly one argument successfully
--- + {select_stmt}: select: { _anon: longint }
+-- + {select_stmt}: _select_: { _anon: longint }
 -- + {name sqlite_offset}: longint
 -- - error:
 select sqlite_offset(true);
@@ -15103,19 +15088,19 @@ sqlite_offset(1);
 select sqlite_offset(null);
 
 -- TEST: likely takes exactly one argument successfully
--- + {select_stmt}: select: { _anon: bool notnull }
+-- + {select_stmt}: _select_: { _anon: bool notnull }
 -- + {name likely}: bool notnull
 -- - error:
 select likely(true);
 
 -- TEST: the return type of likely is the type of its argument
--- + {select_stmt}: select: { _anon: integer notnull }
+-- + {select_stmt}: _select_: { _anon: integer notnull }
 -- + {name likely}: integer notnull
 -- - error:
 select likely(42);
 
 -- TEST: the return type of unlikely is the type of its argument
--- + {select_stmt}: select: { _anon: integer notnull }
+-- + {select_stmt}: _select_: { _anon: integer notnull }
 -- + {name unlikely}: integer notnull
 -- - error:
 select unlikely(42);
@@ -15133,7 +15118,7 @@ select likely();
 select likely(null);
 
 -- TEST: normal use of likelihood
--- + {select_stmt}: select: { _anon: text notnull }
+-- + {select_stmt}: _select_: { _anon: text notnull }
 -- - error:
 select likelihood('x', 0.2);
 
@@ -15380,7 +15365,7 @@ create table t(id bogus_type);
 
 -- TEST: declared type in cast expr
 -- + SELECT CAST(1 AS TEXT);
--- + {select_stmt}: select: { _anon: text notnull }
+-- + {select_stmt}: _select_: { _anon: text notnull }
 -- - error:
 select cast(1 as my_type);
 
@@ -15787,7 +15772,7 @@ set b0 := (select x1 in (select x2));
 -- + {assign}: err
 -- + {in_pred}: err
 -- + {select_stmt}: err
--- + {select_core_list}: select: { y1: integer<y_coord> variable }
+-- + {select_core_list}: _select_: { y1: integer<y_coord> variable }
 -- * error: % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 -- +1 error:
 set b0 := (select x1 in (select y1));
@@ -16385,7 +16370,7 @@ set price_d := (select id from foo);
 
 -- TEST: nested select in SQL (e.g. correlated subquery) is ok even in strict select if nothing then mode
 -- + SELECT ( SELECT 1 );
--- + {select_stmt}: select: { _anon: integer notnull }
+-- + {select_stmt}: _select_: { _anon: integer notnull }
 -- - error:
 select (select 1);
 
@@ -16582,32 +16567,32 @@ select (select 0 if nothing then -1);
 delete from foo where id = (select 33 if nothing then 0);
 
 -- TEST: nested select with count will be not null because count must return a row
--- + {select_stmt}: select: { _anon: integer notnull }
+-- + {select_stmt}: _select_: { _anon: integer notnull }
 -- - error:
 select (select count(*) from foo where 0);
 
 -- TEST: nested select with select * is not examined for not nullness, but no crashes or anything
--- +  {select_stmt}: select: { x: integer }
+-- +  {select_stmt}: _select_: { x: integer }
 -- - error:
 select (select * from (select 1 x) T);
 
 -- TEST: sum can return null, that's not a special case (sum(id) is weird but whatever)
--- + {select_stmt}: select: { _anon: integer }
+-- + {select_stmt}: _select_: { _anon: integer }
 -- - error:
 select (select sum(id) from foo where 0);
 
 -- TEST: any non aggregate with a where clause might be null
--- + {select_stmt}: select: { _anon: integer }
+-- + {select_stmt}: _select_: { _anon: integer }
 -- - error:
 select (select 1+3 where 0);
 
 -- TEST: with form is not simple, it doesn't get the treatment
--- + {select_stmt}: select: { x: integer }
+-- + {select_stmt}: _select_: { x: integer }
 -- - error:
 select (with y(*) as (select 1 x) select * from y);
 
 -- TEST: compound form is not simple, it doesn't get the treatment
--- + {select_stmt}: select: { x: integer }
+-- + {select_stmt}: _select_: { x: integer }
 -- - error:
 select (select 1 union all select 2) as x;
 
@@ -16652,7 +16637,7 @@ insert into foo(id)
 @enforce_strict table function;
 
 -- TEST: TVF in inner join is ok
--- + {select_stmt}: select: { id: integer notnull, foo: text }
+-- + {select_stmt}: _select_: { id: integer notnull, foo: text }
 -- - error:
 select * from foo inner join tvf(1);
 
@@ -16670,7 +16655,7 @@ select * from foo left join tvf(1);
 select * from tvf(1) right join foo;
 
 -- TEST: non TVF cross join is ok
--- + {select_stmt}: select: { id: integer notnull, id: integer notnull }
+-- + {select_stmt}: _select_: { id: integer notnull, id: integer notnull }
 -- - error:
 select * from foo T1 cross join foo T2;
 
@@ -17212,9 +17197,9 @@ begin
 end;
 
 -- TEST: Conditionals only improve along the spine of ANDs.
--- + {declare_cursor}: c0: select: { a0: text notnull variable, b0: text variable, c0: text variable }
--- + {declare_cursor}: c1: select: { a1: text notnull variable, b1: text variable, c1: text notnull variable } variable dml_proc
--- + {declare_cursor}: c2: select: { a2: text notnull variable, b2: text notnull variable, c2: text notnull variable } variable dml_proc
+-- + {declare_cursor}: c0: _select_: { a0: text notnull variable, b0: text variable, c0: text variable }
+-- + {declare_cursor}: c1: _select_: { a1: text notnull variable, b1: text variable, c1: text notnull variable } variable dml_proc
+-- + {declare_cursor}: c2: _select_: { a2: text notnull variable, b2: text notnull variable, c2: text notnull variable } variable dml_proc
 -- - error:
 proc conditionals_only_improve_through_ands()
 begin
@@ -20318,7 +20303,7 @@ with possible_conflict(*) as (select 1 x)
   select * from (call fragtest_0_2() using possible_conflict as source);
 
 -- TEST: using the same fragment with a different name is fine, even if the name matches the formal name
--- + {with_select_stmt}: select: { x: integer notnull }
+-- + {with_select_stmt}: _select_: { x: integer notnull }
 -- - error:
 with source(*) as (select 1 x)
   select * from (call fragtest_0_2() using source as source);
@@ -20376,14 +20361,14 @@ end;
 -- TEST: now we create a nested call chain, this will bring in fragtest2_0 but
 -- it will not do so in a way that creates a conflict.  possible_conflict will
 -- stop in fragtest_2_1 and that one is not ambiguous with the one in fragtest2_0
--- + {with_select_stmt}: select: { x: integer notnull }
+-- + {with_select_stmt}: _select_: { x: integer notnull }
 -- - error:
 with possible_conflict(*) as (select 1 x)
   select * from (call fragtest_2_1() using possible_conflict as source);
 
 -- TEST: use fragtest2_0 in such a way that the formal parameter name would conflict
 -- but it doesn't count as a conflict because it's just the formal name
--- + {with_select_stmt}: select: { x: integer notnull }
+-- + {with_select_stmt}: _select_: { x: integer notnull }
 -- - error:
 [[shared_fragment]]
 proc frag_not_really_a_conflict()
@@ -20472,7 +20457,7 @@ select @columns(distinct T1, T2) from simple_shape2 T1 join simple_shape2 T2;
 -- TEST: attempt to extract a bogus table from the join
 -- + {select_stmt}: err
 -- + {select_expr_list_con}: err
--- * error: % name not found 'not_correct'
+-- * error: % table not found 'not_correct'
 -- +1 error:
 select @columns(not_correct) from simple_shape;
 
@@ -20511,7 +20496,7 @@ select @columns(simple_shape like with_kind) from simple_shape;
 -- TEST: can't use the columns construct if there is no from clause
 -- + {select_stmt}: err
 -- + {select_expr_list_con}: err
--- * error: % select columns(...) cannot be used with no FROM clause
+-- * error: % select *, T.*, or columns(...) cannot be used with no FROM clause
 -- +1 error:
 select @columns(like foo);
 
@@ -20885,7 +20870,7 @@ let sign_of_some_value := sign(-42);
 @enforce_normal sign function;
 
 -- TEST: sign can be used in SQL normally
--- + {select_stmt}: select: { _anon: integer notnull }
+-- + {select_stmt}: _select_: { _anon: integer notnull }
 -- - error:
 select sign(-1);
 
@@ -21455,9 +21440,9 @@ create table structured_storage(
 );
 
 -- TEST: verify basic analysis of structure storage, correct case
--- + {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage serialize
+-- + {name C}: C: _select_: { id: integer notnull, name: text notnull } variable dml_proc shape_storage serialize
 -- + {name a_blob}: a_blob: blob<structured_storage> notnull variable init_required was_set
--- + {name D}: D: select: { id: integer notnull, name: text notnull } variable shape_storage value_cursor serialize
+-- + {name D}: D: _select_: { id: integer notnull, name: text notnull } variable shape_storage value_cursor serialize
 -- + {name a_blob}: a_blob: blob<structured_storage> notnull variable was_set
 -- - error:
 proc blob_serialization_test()
@@ -21485,7 +21470,7 @@ begin
 end;
 
 -- TEST: ok to store the blob if blob and type specified and they match
--- + {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage serialize
+-- + {name C}: C: _select_: { id: integer notnull, name: text notnull } variable dml_proc shape_storage serialize
 -- + {name a_blob}: a_blob: blob<structured_storage> notnull variable init_required was_set
 -- + {call_stmt}: ok dml_proc
 -- + {name cql_cursor_to_blob}: ok dml_proc
@@ -22495,7 +22480,7 @@ end;
 -- + {declare_group_stmt}: ok
 -- + {declare_vars_type}: integer
 -- + {declare_cursor_like_name}: var_group_var2: foo: { id: integer notnull primary_key autoinc } variable shape_storage value_cursor
--- + {declare_cursor_like_select}: var_group_var3: select: { x: integer notnull, y: text notnull } variable shape_storage value_cursor
+-- + {declare_cursor_like_select}: var_group_var3: _select_: { x: integer notnull, y: text notnull } variable shape_storage value_cursor
 -- - error:
 declare group var_group
 begin
@@ -22577,7 +22562,7 @@ create table unsub_test_table_late_create(id integer) @create(7);
 @unsub(not_a_table);
 
 -- TEST: table is visible
--- + {select_stmt}: select: { id: integer notnull }
+-- + {select_stmt}: _select_: { id: integer notnull }
 -- - error:
 select * from unsub_test_table;
 
@@ -22869,7 +22854,7 @@ declare function external_cursor_func(x cursor) integer;
 -- + {name result}: result: integer variable
 -- + {name external_cursor_func}
 -- + {arg_list}: ok
--- + {name shape_storage}: shape_storage: select: { one: integer notnull, two: integer notnull } variable dml_proc shape_storage
+-- + {name shape_storage}: shape_storage: _select_: { one: integer notnull, two: integer notnull } variable dml_proc shape_storage
 let result := external_cursor_func(shape_storage);
 
 -- TEST: bogus arg to cursor func
@@ -23123,10 +23108,10 @@ select no_check_select_fun(0, "hello");
 select no_check_select_fun(*);
 
 -- TEST: declaring unchecked table valued select function
--- + {declare_select_func_no_check_stmt}: select: { t: text, i: integer } select_func
--- + {name no_check_select_table_valued_fun}: select: { t: text, i: integer }
+-- + {declare_select_func_no_check_stmt}: _select_: { t: text, i: integer } select_func
+-- + {name no_check_select_table_valued_fun}: _select_: { t: text, i: integer }
 -- + {func_params_return}
--- + {typed_names}: select: { t: text, i: integer }
+-- + {typed_names}: _select_: { t: text, i: integer }
 -- + {typed_name}: t: text
 -- + {name t}
 -- + {type_text}: t: text
@@ -23138,11 +23123,11 @@ select no_check_select_fun(*);
 declare select function no_check_select_table_valued_fun no check (t text, i int);
 
 -- TEST: calling unchecked table valued select function
--- + {select_from_etc}: TABLE { no_check_select_table_valued_fun: select } table_valued_function
--- + {table_or_subquery_list}: TABLE { no_check_select_table_valued_fun: select } table_valued_function
--- + {table_or_subquery}: TABLE { no_check_select_table_valued_fun: select } table_valued_function
--- + {table_function}: TABLE { no_check_select_table_valued_fun: select } table_valued_function
--- + {name no_check_select_table_valued_fun}: TABLE { no_check_select_table_valued_fun: select } table_valued_function
+-- + {select_from_etc}: TABLE { no_check_select_table_valued_fun: _select_ } table_valued_function
+-- + {table_or_subquery_list}: TABLE { no_check_select_table_valued_fun: _select_ } table_valued_function
+-- + {table_or_subquery}: TABLE { no_check_select_table_valued_fun: _select_ } table_valued_function
+-- + {table_function}: TABLE { no_check_select_table_valued_fun: _select_ } table_valued_function
+-- + {name no_check_select_table_valued_fun}: TABLE { no_check_select_table_valued_fun: _select_ } table_valued_function
 -- + {arg_list}: ok
 -- + {int 0}: integer notnull
 -- + {arg_list}
@@ -23261,7 +23246,7 @@ create table dummy_table_for_backed_test(id integer);
 
 -- TEST: extract columns from backed table
 -- ensure kind "cool_text" is preserved
--- + {declare_cursor}: backed_cursor: select: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull } variable dml_proc
+-- + {declare_cursor}: backed_cursor: _select_: { id: integer notnull, name: text<cool_text> notnull } variable dml_proc
 -- + {cte_table}: simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull }
 cursor backed_cursor for select * from simple_backed_table;
 
@@ -24037,18 +24022,6 @@ storage[(select 'id' union all select 'id' limit 1)] += 1;
 -- +1 error:
 x = 5;
 
--- TEST: * can only appear by itself
--- + {select_stmt}: err
--- * error: % when '*' appears in an expression list there can be nothing else in the list
--- +1 error:
-select *, 1 from foo;
-
--- TEST: * can only appear by itself
--- + {select_stmt}: err
--- * error: % operator found in an invalid position '*'
--- +1 error:
-select 1, * from foo;
-
 declare proc a_target_proc(x integer, y integer);
 
 -- TEST: catch cases where * is in a bad place in the arg list
@@ -24175,11 +24148,11 @@ create table `xyz``abc`
 -- TEST: make a cursor on an exotic name and fetch from it
 -- verify that echoing is re-emitting the escaped text
 -- + CURSOR C FOR
--- +   SELECT *
+-- +   SELECT `xyz``abc`.x, `xyz``abc`.`a b`
 -- + FROM `xyz``abc`;
 -- + CALL printf("%d %d", C.x, C.`a b`);
--- + {declare_cursor}: C: select: { x: integer notnull, `a b`: integer notnull qid } variable dml_proc
--- + {fetch_stmt}: C: select: { x: integer notnull, `a b`: integer notnull qid } variable dml_proc shape_storage
+-- + {declare_cursor}: C: _select_: { x: integer notnull, `a b`: integer notnull qid } variable dml_proc
+-- + {fetch_stmt}: C: _select_: { x: integer notnull, `a b`: integer notnull qid } variable dml_proc shape_storage
 -- + {dot}: C.x: integer notnull variable
 -- + {dot}: C.X_aX20b: integer notnull variable qid
 -- - error:
@@ -24195,12 +24168,11 @@ end;
 -- TEST: Test several expansions
 -- verify that echoing is re-emitting the escaped text
 -- + CURSOR D FOR
--- +   SELECT `xyz``abc`.*
+-- +   SELECT `xyz``abc`.x, `xyz``abc`.`a b`
 -- + FROM `xyz``abc`;
 -- + CALL printf("%d %d", D.x, D.`a b`);
--- + {declare_cursor}: D: select: { x: integer notnull, `a b`: integer notnull qid } variable dml_proc
--- + {select_stmt}: select: { x: integer notnull, `a b`: integer notnull qid }
--- + {table_star}: `xyz``abc`: `xyz``abc`: { x: integer notnull, `a b`: integer notnull qid }
+-- + {declare_cursor}: D: _select_: { x: integer notnull, `a b`: integer notnull qid } variable dml_proc
+-- + {select_stmt}: _select_: { x: integer notnull, `a b`: integer notnull qid }
 -- - error:
 proc qid_t2()
 begin
@@ -24234,7 +24206,7 @@ end;
 -- + FETCH R(x, `a b`) FROM VALUES (1, 2);
 -- + CALL printf("%d %d\n", R.x, R.`a b`);
 -- + FETCH R(x, `a b`) FROM VALUES (3, 4);
--- + {declare_cursor_like_name}: Q: select: { x: integer notnull } variable shape_storage value_cursor
+-- + {declare_cursor_like_name}: Q: _select_: { x: integer notnull } variable shape_storage value_cursor
 -- + {declare_cursor_like_name}: R: `xyz``abc`: { x: integer notnull, `a b`: integer notnull unique_key qid } variable shape_storage value_cursor
 proc qid_t4()
 begin
@@ -24354,7 +24326,7 @@ insert into `xyz``abc`(x) values (2) @dummy_seed(500);
 -- TEST: create a cursor and expand it using the from form
 -- verify that echoing is re-emitting the escaped text
 -- + CURSOR C FOR
--- +   SELECT *
+-- +   SELECT `xyz``abc`.x, `xyz``abc`.`a b`
 -- + FROM `xyz``abc`;
 -- + INSERT INTO `xyz``abc`(x, `a b`)
 -- +   VALUES (C.x, C.`a b`);
@@ -24424,7 +24396,7 @@ end;
 -- + DECLARE `box obj` OBJECT<C CURSOR>;
 -- + SET `box obj` FROM CURSOR C;
 -- + {name `box obj`}: `box obj`: object<C CURSOR> variable
--- + {set_from_cursor}: C: select: { x: integer notnull } variable dml_proc boxed
+-- + {set_from_cursor}: C: _select_: { x: integer notnull } variable dml_proc boxed
 -- - error:
 proc cursor_boxing_with_qid()
 begin
@@ -24562,7 +24534,7 @@ proc nullability_improvement_with_logical_operators() begin
 end;
 
 -- TEST: cursor improvement with logical operators
--- + {declare_cursor}: c: select: { a: text notnull, b: text } variable dml_proc
+-- + {declare_cursor}: c: _select_: { a: text notnull, b: text } variable dml_proc
 -- - error:
 proc cursor_nullability_improvement_with_logical_operators() begin
   cursor c for select * from has_row_check_table;
@@ -24613,7 +24585,7 @@ begin
 end;
 
 -- TEST: empty join scope is not a block for the select list
--- + {select_stmt}: select: { a_col: integer notnull }
+-- + {select_stmt}: _select_: { a_col: integer notnull }
 -- + {orderby_item}
 -- + {name a_col}: a_col: integer notnull
 -- - error:
@@ -24731,14 +24703,14 @@ blob_var := jsonb('[1]');
 select jsonb(1);
 
 -- TEST json function for JSON array creation
--- + {select_stmt}: select: { _anon: text }
+-- + {select_stmt}: _select_: { _anon: text }
 -- + {call}: text
 -- + {name json_array}: text
 -- - error:
 select json_array(1,2);
 
 -- TEST json function for JSON array creation empty args
--- + {select_stmt}: select: { _anon: text }
+-- + {select_stmt}: _select_: { _anon: text }
 -- + {call}: text
 -- + {name json_array}: text
 -- - error:
@@ -24756,21 +24728,21 @@ a_string := json_array();
 select json_array(1, blob_var, 3);
 
 -- TEST json function for JSON array creation
--- + {select_stmt}: select: { _anon: blob }
+-- + {select_stmt}: _select_: { _anon: blob }
 -- + {call}: blob
 -- + {name jsonb_array}: blob
 -- - error:
 select jsonb_array(1,2);
 
 -- TEST json function for JSON array_length
--- + {select_stmt}: select: { _anon: integer notnull }
+-- + {select_stmt}: _select_: { _anon: integer notnull }
 -- + {call}: integer notnull
 -- + {name json_array_length}: integer notnull
 -- - error:
 select json_array_length('');
 
 -- TEST json function for JSON array_length with 2 args
--- + {select_stmt}: select: { _anon: integer }
+-- + {select_stmt}: _select_: { _anon: integer }
 -- + {call}: integer
 -- - {call}: integer notnull
 -- + {name json_array_length}: integer
@@ -24799,7 +24771,7 @@ select json_array_length(1);
 select json_array_length('x', 1);
 
 -- TEST json function for JSON error_position with 1 args
--- + {select_stmt}: select: { _anon: integer notnull }
+-- + {select_stmt}: _select_: { _anon: integer notnull }
 -- + {call}: integer notnull
 -- + {name json_error_position}: integer notnull
 -- - error:
@@ -24823,7 +24795,7 @@ select json_error_position(1);
 an_int := json_error_position('x');
 
 -- TEST json function for JSON extraction
--- + {select_stmt}: select: { _anon: text }
+-- + {select_stmt}: _select_: { _anon: text }
 -- + {call}: text
 -- + {name json_extract}: text
 -- - error:
@@ -24872,14 +24844,14 @@ select json_remove();
 select jsonb_remove();
 
 -- TEST json function for JSON insert
--- + {select_stmt}: select: { _anon: text notnull }
+-- + {select_stmt}: _select_: { _anon: text notnull }
 -- + {call}: text notnull
 -- + {name json_insert}: text notnull
 -- - error:
 select json_insert('{"x":0}', '$.x', 1, '$.y', 2);
 
 -- TEST json function for JSON insert nullable value
--- + {select_stmt}: select: { _anon: text }
+-- + {select_stmt}: _select_: { _anon: text }
 -- + {call}: text
 -- + {name json_insert}: text
 -- - error:
@@ -24952,21 +24924,21 @@ select json_set();
 select jsonb_set();
 
 -- TEST json function for JSON object
--- + {select_stmt}: select: { _anon: text notnull }
+-- + {select_stmt}: _select_: { _anon: text notnull }
 -- + {call}: text notnull
 -- + {name json_object}: text notnull
 -- - error:
 select json_object('x', 1, 'y', 2);
 
 -- TEST json function for JSON object, no args
--- + {select_stmt}: select: { _anon: text notnull }
+-- + {select_stmt}: _select_: { _anon: text notnull }
 -- + {call}: text notnull
 -- + {name json_object}: text notnull
 -- - error:
 select json_object();
 
 -- TEST json function for JSON object nullable value
--- + {select_stmt}: select: { _anon: text notnull }
+-- + {select_stmt}: _select_: { _anon: text notnull }
 -- + {call}: text
 -- + {name json_object}: text
 -- - error:
@@ -25002,14 +24974,14 @@ select json_object(1);
 select jsonb_object(1);
 
 -- TEST json function for JSON object
--- + {select_stmt}: select: { _anon: text notnull }
+-- + {select_stmt}: _select_: { _anon: text notnull }
 -- + {call}: text notnull
 -- + {name json_patch}: text notnull
 -- - error:
 select json_patch('{ "name" : "John" }', '{ "age" : 22 }');
 
 -- TEST json function for JSON object nullable value
--- + {select_stmt}: select: { _anon: text }
+-- + {select_stmt}: _select_: { _anon: text }
 -- + {call}: text
 -- + {name json_patch}: text
 -- - error:
@@ -25052,14 +25024,14 @@ select json_pretty('[1]');
 select json_pretty('[1]', 5);
 
 -- TEST json function for JSON json_type
--- + {select_stmt}: select: { _anon: text notnull }
+-- + {select_stmt}: _select_: { _anon: text notnull }
 -- + {call}: text notnull
 -- + {name json_type}: text notnull
 -- - error:
 select json_type('[]');
 
 -- TEST json function for JSON array_length with 2 args
--- + {select_stmt}: select: { _anon: text }
+-- + {select_stmt}: _select_: { _anon: text }
 -- + {call}: text
 -- - {call}: text notnull
 -- + {name json_type}: text
@@ -25067,14 +25039,14 @@ select json_type('[]');
 select json_type('[]', '$.x');
 
 -- TEST json function for json_valid()
--- + {select_stmt}: select: { _anon: bool notnull }
+-- + {select_stmt}: _select_: { _anon: bool notnull }
 -- + {call}: bool notnull
 -- + {name json_valid}: bool notnull
 -- - error:
 select json_valid('{ "name" : "John" }', 6);
 
 -- TEST json function for json_valid()
--- + {select_stmt}: select: { _anon: bool }
+-- + {select_stmt}: _select_: { _anon: bool }
 -- + {call}: bool
 -- + {name json_valid}: bool
 -- - error:
@@ -25103,13 +25075,13 @@ select json_valid('[]', '2');
 -- - error:
 bb := json_valid('[]', 6);
 
--- + {select_stmt}: select: { _anon: text notnull }
+-- + {select_stmt}: _select_: { _anon: text notnull }
 -- + {call}: text notnull
 -- + {name json_quote}: text notnull
 -- - error:
 select json_quote(1);
 
--- + {select_stmt}: select: { _anon: text }
+-- + {select_stmt}: _select_: { _anon: text }
 -- + {call}: text
 -- + {name json_quote}: text
 -- - error:
@@ -25128,7 +25100,7 @@ select json_quote();
 a_string := json_quote(1);
 
 -- TEST json_group_array
--- + {select_stmt}: select: { _anon: text notnull }
+-- + {select_stmt}: _select_: { _anon: text notnull }
 -- + {name json_group_array}: text notnull
 -- - error:
 select json_group_array(foo.id) from foo;
@@ -25152,7 +25124,7 @@ select json_group_array();
 select jsonb_group_array();
 
 -- TEST json_group_object
--- + {select_stmt}: select: { _anon: text notnull }
+-- + {select_stmt}: _select_: { _anon: text notnull }
 -- + {name json_group_object}: text notnull
 -- - error:
 select json_group_object(foo.id, foo.id) from foo;
@@ -25689,7 +25661,7 @@ create table insert_returning_test(
 
 -- TEST: insert returning normal case -- no with clause
 -- + {create_proc_stmt}: insert_returning1: { xy: integer, ix: integer, iy: integer } dml_proc
--- + {insert_returning_stmt}: select: { xy: integer, ix: integer, iy: integer }
+-- + {insert_returning_stmt}: _select_: { xy: integer, ix: integer, iy: integer }
 -- - error:
 proc insert_returning1 ()
 begin
@@ -25700,7 +25672,7 @@ end;
 
 -- TEST: insert returning normal case -- and with clause
 -- + {create_proc_stmt}: insert_returning2: { xy: integer, ix: integer, iy: integer } dml_proc
--- + {insert_returning_stmt}: select: { xy: integer, ix: integer, iy: integer }
+-- + {insert_returning_stmt}: _select_: { xy: integer, ix: integer, iy: integer }
 -- - error:
 proc insert_returning2 ()
 begin
@@ -25757,7 +25729,7 @@ end;
 -- TEST: insert returning in a cursor
 -- The procedure did not get the type of the cursor! That only happens if the insert is "loose"
 -- + {create_proc_stmt}: ok dml_proc
--- + {declare_cursor}: C: select: { xy: integer, ix: integer, iy: integer } variable dml_proc
+-- + {declare_cursor}: C: _select_: { xy: integer, ix: integer, iy: integer } variable dml_proc
 -- - error:
 proc insert_returning_cursor()
 begin
@@ -25820,7 +25792,7 @@ end;
 -- +   WHERE id = 5)
 -- +   RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
 -- + {create_proc_stmt}: delete_from_backed_returning: { id: integer notnull, name: text, age: integer } dml_proc
--- + {delete_returning_stmt}: select: { id: integer notnull, name: text, age: integer }
+-- + {delete_returning_stmt}: _select_: { id: integer notnull, name: text, age: integer }
 -- - error:
 proc delete_from_backed_returning()
 begin
@@ -25837,11 +25809,11 @@ end;
 -- +   )
 -- + DELETE FROM jb_insert WHERE rowid IN (SELECT rowid
 -- +   FROM jbacked
--- +   WHERE id IN (SELECT *
+-- +   WHERE id IN (SELECT a_cte.x
 -- +   FROM a_cte))
 -- +   RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
 -- + {create_proc_stmt}: with_delete_from_backed_returning: { id: integer notnull, name: text, age: integer } dml_proc
--- + {delete_returning_stmt}: select: { id: integer notnull, name: text, age: integer }
+-- + {delete_returning_stmt}: _select_: { id: integer notnull, name: text, age: integer }
 -- - error:
 proc with_delete_from_backed_returning()
 begin
@@ -25859,8 +25831,8 @@ end;
 -- +   FROM jbacked
 -- +   WHERE id = 5)
 -- + {create_proc_stmt}: ok
--- + {declare_cursor}: C: select: { id: integer notnull, name: text, age: integer } variable dml_proc
--- + {delete_returning_stmt}: select: { id: integer notnull, name: text, age: integer }
+-- + {declare_cursor}: C: _select_: { id: integer notnull, name: text, age: integer } variable dml_proc
+-- + {delete_returning_stmt}: _select_: { id: integer notnull, name: text, age: integer }
 -- - error:
 proc delete_returning_cursor()
 begin
@@ -25914,7 +25886,7 @@ end;
 -- +     WHERE id = 5)
 -- +   RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
 -- + {create_proc_stmt}: update_from_backed_returning: { id: integer notnull, name: text, age: integer } dml_proc
--- + {update_returning_stmt}: select: { id: integer notnull, name: text, age: integer }
+-- + {update_returning_stmt}: _select_: { id: integer notnull, name: text, age: integer }
 -- - error:
 proc update_from_backed_returning()
 begin
@@ -25936,7 +25908,7 @@ end;
 -- +     WHERE id = 5)
 -- +   RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
 -- + {create_proc_stmt}: with_update_from_backed_returning: { id: integer notnull, name: text, age: integer } dml_proc
--- + {update_returning_stmt}: select: { id: integer notnull, name: text, age: integer }
+-- + {update_returning_stmt}: _select_: { id: integer notnull, name: text, age: integer }
 -- - error:
 proc with_update_from_backed_returning()
 begin
@@ -25957,8 +25929,8 @@ end;
 -- +     WHERE id = 5)
 -- +     RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
 -- + {create_proc_stmt}: ok
--- + {declare_cursor}: C: select: { id: integer notnull, name: text, age: integer } variable dml_proc
--- + {update_returning_stmt}: select: { id: integer notnull, name: text, age: integer }
+-- + {declare_cursor}: C: _select_: { id: integer notnull, name: text, age: integer } variable dml_proc
+-- + {update_returning_stmt}: _select_: { id: integer notnull, name: text, age: integer }
 -- - error:
 proc update_returning_cursor()
 begin
@@ -26011,7 +25983,7 @@ end;
 -- this is the essential rewrite
 -- + RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
 -- + {create_proc_stmt}: ok dml_proc
--- + {declare_cursor}: C: select: { id: integer notnull, name: text, age: integer } variable dml_proc
+-- + {declare_cursor}: C: _select_: { id: integer notnull, name: text, age: integer } variable dml_proc
 -- - error:
 PROC expand_returning_star()
 BEGIN
@@ -26062,9 +26034,9 @@ create table `a table`( `col 1` int primary key, `col 2` int);
 -- +     FROM `a table`)
 -- +   RETURNING (cql_blob_get(`the key`, `a table`.`col 1`), cql_blob_get(`the value`, `a table`.`col 2`));
 -- + {create_proc_stmt}: upsert_into_backed_returning: { `col 1`: integer notnull qid, `col 2`: integer qid } dml_proc
--- + {upsert_returning_stmt}: select: { `col 1`: integer notnull qid, `col 2`: integer qid }
+-- + {upsert_returning_stmt}: _select_: { `col 1`: integer notnull qid, `col 2`: integer qid }
 -- + {update_stmt}: `a backing table`: { `the key`: blob notnull primary_key qid, `the value`: blob qid } backing qid
--- + {select_expr_list}: select: { `col 1`: integer notnull qid, `col 2`: integer qid }
+-- + {select_expr_list}: _select_: { `col 1`: integer notnull qid, `col 2`: integer qid }
 -- - error:
 proc upsert_into_backed_returning()
 begin
@@ -26095,8 +26067,8 @@ end;
 -- +     RETURNING (cql_blob_get(`the key`, `a table`.`col 1`), cql_blob_get(`the value`, `a table`.`col 2`));
 -- now essential AST shape
 -- + {create_proc_stmt}: ok dml_proc
--- + {declare_cursor}: C: select: { `col 1`: integer notnull qid, `col 2`: integer qid } variable dml_proc
--- + {upsert_returning_stmt}: select: { `col 1`: integer notnull qid, `col 2`: integer qid }
+-- + {declare_cursor}: C: _select_: { `col 1`: integer notnull qid, `col 2`: integer qid } variable dml_proc
+-- + {upsert_returning_stmt}: _select_: { `col 1`: integer notnull qid, `col 2`: integer qid }
 -- + {name `a backing table`}: `a backing table`: { `the key`: blob notnull primary_key qid, `the value`: blob qid } backing qid
 -- + {conflict_target}: excluded: { `the key`: blob notnull qid, `the value`: blob qid }
 -- - error:
@@ -26125,7 +26097,7 @@ end;
 -- +     SELECT cql_blob_create(`a table`, V.`col 1`, `a table`.`col 1`), cql_blob_create(`a table`, V.`col 2`, `a table`.`col 2`)
 -- +       FROM _vals AS V
 -- +   ON CONFLICT (`the key`)
--- +   WHERE cql_blob_get(`the value`, `a table`.`col 2`) IN (SELECT *
+-- +   WHERE cql_blob_get(`the value`, `a table`.`col 2`) IN (SELECT a_cte.x
 -- +     FROM a_cte)
 -- +   DO UPDATE
 -- +     SET `the key` = cql_blob_update(`the key`, ifnull(cql_blob_get(`the value`, `a table`.`col 2`), 0), `a table`.`col 1`)
@@ -26171,4 +26143,24 @@ begin
     values (1, 2)
   on conflict do nothing
   returning (nope);
+end;
+
+-- TEST: anonymous columns in the return
+-- + error: % identifier is ambiguous '_anon'
+-- + error: % additional info: more than one anonymous column in a result, likely all columsn need a name
+-- +2 error:
+-- + {create_proc_stmt}: err
+proc anon_columns()
+begin
+  select * from (select 1, 2) as T;
+end;
+
+-- TEST: we can still force a failure in the exists logic, just not in the select list
+-- the select list is rewritten to 1 regardless of what you put there
+-- + error: % table/view not defined 'no_such_table'
+-- + {create_proc_stmt}: err
+-- +1 error:
+proc select_exists_failure()
+begin
+  let b := (select exists(select not 'x' from no_such_table));
 end;

@@ -204,7 +204,13 @@ BEGIN
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
   );
   CREATE VIEW IF NOT EXISTS `Foo View` AS
-    SELECT *
+    SELECT
+        `table C`.id,
+        `table C`.`a pk`,
+        `table C`.uid,
+        `table C`.name,
+        `table C`.name2,
+        `table C`.num
       FROM `table C`;
 END;
 
@@ -337,7 +343,13 @@ BEGIN
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
   );
   CREATE VIEW IF NOT EXISTS `Foo View` AS
-    SELECT *
+    SELECT
+        `table C`.id,
+        `table C`.`a pk`,
+        `table C`.uid,
+        `table C`.name,
+        `table C`.name2,
+        `table C`.num
       FROM `table C`;
 END;
 
@@ -473,7 +485,13 @@ BEGIN
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
   );
   CREATE VIEW IF NOT EXISTS `Foo View` AS
-    SELECT *
+    SELECT
+        `table C`.id,
+        `table C`.`a pk`,
+        `table C`.uid,
+        `table C`.name,
+        `table C`.name2,
+        `table C`.num
       FROM `table C`;
 END;
 
@@ -589,7 +607,13 @@ BEGIN
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
   );
   CREATE VIEW IF NOT EXISTS `Foo View` AS
-    SELECT *
+    SELECT
+        `table C`.id,
+        `table C`.`a pk`,
+        `table C`.uid,
+        `table C`.name,
+        `table C`.name2,
+        `table C`.num
       FROM `table C`;
 END;
 
@@ -814,7 +838,13 @@ BEGIN
   );
   CREATE INDEX IF NOT EXISTS p_id ON primary_as_column (id_);
   CREATE VIEW IF NOT EXISTS `Foo View` AS
-    SELECT *
+    SELECT
+        `table C`.id,
+        `table C`.`a pk`,
+        `table C`.uid,
+        `table C`.name,
+        `table C`.name2,
+        `table C`.num
       FROM `table C`;
 END;
 
@@ -1184,7 +1214,13 @@ BEGIN
   );
   CREATE INDEX IF NOT EXISTS p_id ON primary_as_column (id_);
   CREATE VIEW IF NOT EXISTS Complex_view AS
-    SELECT *
+    SELECT
+        `table C`.id,
+        `table C`.`a pk`,
+        `table C`.uid,
+        `table C`.name,
+        `table C`.name2,
+        `table C`.num
       FROM `table C`
       WHERE name IN (SELECT id_
       FROM primary_as_column);
@@ -1322,7 +1358,13 @@ BEGIN
   );
   CREATE INDEX IF NOT EXISTS p_id ON primary_as_column (id_);
   CREATE VIEW IF NOT EXISTS Complex_view AS
-    SELECT *
+    SELECT
+        `table C`.id,
+        `table C`.`a pk`,
+        `table C`.uid,
+        `table C`.name,
+        `table C`.name2,
+        `table C`.num
       FROM `table C`
       WHERE name IN (SELECT id_
       FROM primary_as_column);
@@ -1459,7 +1501,13 @@ BEGIN
   );
   CREATE INDEX IF NOT EXISTS p_id ON primary_as_column (id_);
   CREATE VIEW IF NOT EXISTS Complex_view AS
-    SELECT *
+    SELECT
+        `table C`.id,
+        `table C`.`a pk`,
+        `table C`.uid,
+        `table C`.name,
+        `table C`.name2,
+        `table C`.num
       FROM `table C`
       WHERE name IN (SELECT id_
       FROM primary_as_column);

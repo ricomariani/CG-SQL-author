@@ -229,37 +229,54 @@ CREATE TABLE some_table(
 
 @begin_schema_region shared;
 CREATE VIEW shared_view AS
-  SELECT *
+  SELECT
+      `quoted foo`.`an id`,
+      `quoted foo`.`id 2`,
+      `quoted foo`.name,
+      `quoted foo`.name_2
     FROM `quoted foo`;
 @end_schema_region;
 
 @begin_schema_region shared;
 CREATE VIEW live_view AS
-  SELECT *
+  SELECT
+      `quoted foo`.`an id`,
+      `quoted foo`.`id 2`,
+      `quoted foo`.name,
+      `quoted foo`.name_2
     FROM `quoted foo`;
 @end_schema_region;
 
 @begin_schema_region shared;
 CREATE VIEW dead_view AS
-  SELECT *
+  SELECT
+      `quoted foo`.`an id`,
+      `quoted foo`.`id 2`,
+      `quoted foo`.name,
+      `quoted foo`.name_2
     FROM `quoted foo` @DELETE(2, DeadViewMigration);
 @end_schema_region;
 
 @begin_schema_region extra;
 CREATE VIEW another_live_view AS
-  SELECT *
+  SELECT
+      table2.`an id`,
+      table2.name1,
+      table2.name2,
+      table2.name3,
+      table2.name4
     FROM table2;
 @end_schema_region;
 
 @begin_schema_region other;
 CREATE VIEW `foo view unsubscribed` AS
-  SELECT *
+  SELECT some_table.`an id`
     FROM some_table;
 @end_schema_region;
 
 @begin_schema_region other;
 CREATE VIEW `foo view normal` AS
-  SELECT *
+  SELECT some_table.`an id`
     FROM some_table;
 @end_schema_region;
 

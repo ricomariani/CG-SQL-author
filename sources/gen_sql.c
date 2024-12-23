@@ -828,20 +828,6 @@ static void gen_col_def(ast_node *def) {
   gen_col_attrs(attrs);
 }
 
-cql_export bool_t eval_star_callback(ast_node *ast) {
-  Contract(is_ast_star(ast) || is_ast_table_star(ast));
-  bool_t suppress = 0;
-
-  if (gen_callbacks && gen_callbacks->star_callback && ast->sem) {
-    CHARBUF_OPEN(buf);
-    suppress = gen_callbacks->star_callback(ast, gen_callbacks->star_context, &buf);
-    gen_printf("%s", buf.ptr);
-    CHARBUF_CLOSE(buf);
-  }
-
-  return suppress;
-}
-
 cql_noexport bool_t eval_column_callback(ast_node *ast) {
   Contract(is_ast_col_def(ast));
   bool_t suppress = 0;
@@ -1333,6 +1319,18 @@ static void gen_expr_dot(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   // to use these callbacks anyway.
   if (!is_id(ast->left) || !is_id(ast->right)) {
     gen_binary_no_spaces(ast, op, pri, pri_new);
+    return;
+  }
+
+  // the "_select_" scope is special name of a nested select table
+  // expression that was not aliased.  This name is useless. Either
+  // the columns will be unambiguous without it or it's an error
+  // in any case. No point in emitting it.  It's included in the semantic
+  // expansion to disambiguate any column name that matches from the same
+  // local name, but it's not needed in the SQLite output.
+  EXTRACT_STRING(left_name, ast->left);
+  if (!strcmp("_select_", left_name) && for_sqlite()) {
+    gen_name(ast->right);
     return;
   }
 
@@ -2430,13 +2428,17 @@ static void gen_select_expr(ast_node *ast) {
 static void gen_col_calc(ast_node *ast) {
   Contract(is_ast_col_calc(ast));
   if (ast->left) {
-    EXTRACT_NAME_AND_SCOPE(ast->left);
-    if (scope) {
-      gen_printf("%s.%s", scope, name);
+    ast_node *val = ast->left;
+
+    if (is_ast_dot(val)) {
+      gen_name(val->left);
+      gen_printf(".");
+      gen_name(val->right);
     }
     else {
-      gen_printf("%s", name);
+      gen_name(val);
     }
+
     if (ast->right) {
       gen_printf(" ");
     }
@@ -2502,16 +2504,12 @@ static void gen_select_expr_list(ast_node *ast) {
       gen_any_macro_ref(expr);
     }
     else if (is_ast_star(expr)) {
-      if (!eval_star_callback(expr)) {
-        gen_printf("*");
-      }
+      gen_printf("*");
     }
     else if (is_ast_table_star(expr)) {
-      if (!eval_star_callback(expr)) {
-        EXTRACT_NOTNULL(table_star, expr);
-        gen_name(table_star->left);
-        gen_printf(".*");
-      }
+      EXTRACT_NOTNULL(table_star, expr);
+      gen_name(table_star->left);
+      gen_printf(".*");
     }
     else if (is_ast_column_calculation(expr)) {
       gen_column_calculation(expr);

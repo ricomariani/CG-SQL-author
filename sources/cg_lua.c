@@ -3320,7 +3320,6 @@ static int32_t cg_lua_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_
   init_gen_sql_callbacks(&callbacks);
   callbacks.variables_callback = cg_lua_capture_variables;
   callbacks.variables_context = &vars;
-  callbacks.star_callback = cg_expand_star;
   callbacks.minify_casts = true;
   callbacks.minify_aliases = minify_aliases;
   callbacks.long_to_int_conv = true;

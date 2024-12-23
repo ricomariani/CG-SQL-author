@@ -381,14 +381,14 @@ CSTR static best_shape_type_name(ast_node *shape) {
   CSTR struct_name = shape->sem->sptr->struct_name;
   CSTR obj_name = shape->sem->name;
 
-  // "select" is the generic name used for structs that are otherwise unnamed.
+  // "_select_" is the generic name used for structs that are otherwise unnamed.
   // e.g.  "declare C cursor like select 1 x, 2 y"
-  if (struct_name && strcmp("select", struct_name)) {
+  if (struct_name && strcmp("_select_", struct_name)) {
     return struct_name;
   }
   else {
-    // use "select" only as a last recourse, it means some anonymous shape
-    return obj_name ? obj_name : "select";
+    // use "_select_" only as a last recourse, it means some anonymous shape
+    return obj_name ? obj_name : "_select_";
   }
 }
 
@@ -1324,7 +1324,12 @@ static void add_tail(ast_node **head, ast_node **tail, ast_node *node) {
   *tail = node;
 }
 
-static void append_scoped_name(ast_node **head, ast_node **tail, CSTR scope, CSTR name) {
+static void append_scoped_name(
+  ast_node **head,
+  ast_node **tail,
+  CSTR scope,
+  CSTR name)
+{
   ast_node *expr = NULL;
   if (scope) {
     expr = new_ast_dot(new_maybe_qstr(scope), new_maybe_qstr(name));
@@ -1484,7 +1489,7 @@ static void rewrite_column_calculation(ast_node *column_calculation, jfind_t *jf
       sem_struct *sptr_table = jfind_table(jfind, scope);
 
       if (!sptr_table) {
-        report_error(col_calc->left, "CQL0069: name not found", scope);
+        report_error(col_calc->left, "CQL0054: table not found", scope);
         record_error(column_calculation);
         goto cleanup;
       }
@@ -1509,6 +1514,28 @@ static void rewrite_column_calculation(ast_node *column_calculation, jfind_t *jf
 
       for (uint32_t j = 0; j < sptr->count; j++) {
         CSTR col = sptr->names[j];
+
+        if (!strcmp(col, "rowid") || (sptr->semtypes[j] & SEM_TYPE_HIDDEN_COL)) {
+          // `rowid` is a special case, it's not a real column it's a virtual
+          // column from the base table. we don't want to emit it in the select
+          // list unless it is explictly mentioned
+
+          // This business is much more important that it might look. When
+          // considering backed table the backed table does not mention rowid
+          // but it is known to be there.  The CTE for the backed table include
+          // rowid from the underlying table, it's important for doing say
+          // delete and stuff like that.  However we do not want rowid to appear
+          // in results unless it is explicitly mentioned. The way we do that is
+          // to make * not include rowid.  This is exactly what SQLite itself
+          // does.  Rowid is "there" but it doesn't count.
+          //
+          // we might want to alias the rowid column in backed tables to make
+          // this less likely to conflict with a user named table... but that's
+          // a different issue. As it is, you'll get an error if you name a
+          // backed column rowid and that's fine I guess.  It seems like a
+          // terrible terrible idea to name your own column rowid.
+          continue;
+        }
 
         if (used_names && !symtab_add(used_names, col, NULL)) {
           continue;
@@ -1602,18 +1629,28 @@ cleanup:
 // of the expansion.
 cql_noexport void rewrite_select_expr_list(ast_node *select_expr_list, sem_join *jptr_from) {
 
+  // change * and T.* to COLUMNS(T) or COLUMNS(A, B, C) as appropriate
+  rewrite_star_and_table_star_as_columns_calc(select_expr_list, jptr_from);
+
   jfind_t jfind = {0};
 
   for (ast_node *item = select_expr_list; item; item = item->right) {
     Contract(is_ast_select_expr_list(item));
-    if (is_ast_column_calculation(item->left)) {
-      EXTRACT_NOTNULL(column_calculation, item->left);
 
+    // all star and table star will be rewritten to columns(...) by now so any left will indicate
+    // jptr_from is null like a select with no from clause.
+    if (is_ast_column_calculation(item->left) || is_ast_star(item->left) || is_ast_table_star(item->left)) {
       if (!jptr_from) {
-        report_error(select_expr_list, "CQL0053: select columns(...) cannot be used with no FROM clause", NULL);
+        report_error(select_expr_list, "CQL0052: select *, T.*, or columns(...) cannot be used with no FROM clause", NULL);
+        record_error(item->left);
         record_error(select_expr_list);
         return;
       }
+    }
+
+    if (is_ast_column_calculation(item->left)) {
+      EXTRACT_NOTNULL(column_calculation, item->left);
+      Invariant(jptr_from);
 
       if (!jfind.jptr) {
         jfind_init(&jfind, jptr_from);
@@ -3846,8 +3883,35 @@ void rewrite_as_select_expr(ast_node *ast) {
 
 cql_noexport void rewrite_star_and_table_star_as_columns_calc(
   ast_node *select_expr_list,
-  CSTR table_name)
+  sem_join *jptr)
 {
+  // no expansion is possible, errors will be emitted later
+  if (!jptr) {
+    return;
+  }
+
+  // if we are in a select statement that is part of an exists expression
+  // we don't to expand the *, or T.*, the columns don't matter
+  if (is_ast_select_expr_list_con(select_expr_list->parent)) {
+    EXTRACT(select_expr_list_con, select_expr_list->parent);
+    EXTRACT(select_core, select_expr_list_con->parent);
+    EXTRACT_ANY(any_select_core, select_core->parent);
+
+    while (!is_ast_select_stmt(any_select_core)) {
+      any_select_core = any_select_core->parent;
+    }
+    EXTRACT_ANY_NOTNULL(select_context, any_select_core->parent);
+
+    if (is_ast_exists_expr(select_context)) {
+      select_expr_list->right = NULL;
+      AST_REWRITE_INFO_SET(select_expr_list->lineno, select_expr_list->filename);
+      ast_set_left(select_expr_list, new_ast_select_expr(new_ast_num(NUM_INT, "1"), NULL));
+      AST_REWRITE_INFO_RESET();
+
+      return;
+    }
+  }
+
   for (ast_node *item = select_expr_list; item; item = item->right) {
     EXTRACT_ANY_NOTNULL(select_expr, item->left);
 
@@ -3863,16 +3927,29 @@ cql_noexport void rewrite_star_and_table_star_as_columns_calc(
 
       AST_REWRITE_INFO_SET(select_expr->lineno, select_expr->filename);
 
-      select_expr->type = k_ast_column_calculation;
-      ast_set_left(select_expr,
-        new_ast_col_calcs(
-          new_ast_col_calc(
-            new_maybe_qstr(table_name),
-            NULL
-          ),
+      ast_node *prev = NULL;
+      ast_node *first = NULL;
+
+      for (int i = 0; i < jptr->count; i++) {
+        CSTR tname = jptr->names[i];
+
+        ast_node *calcs = new_ast_col_calcs(
+          new_ast_col_calc(new_maybe_qstr(tname), NULL),
           NULL
-        )
-      );
+        );
+
+        if (i == 0) {
+          first = calcs;
+        }
+        else {
+          ast_set_right(prev, calcs);
+        }
+
+        prev = calcs;
+      }
+
+      select_expr->type = k_ast_column_calculation;
+      ast_set_left(select_expr, first);
       AST_REWRITE_INFO_RESET();
     }
     else if (is_ast_table_star(select_expr)) {

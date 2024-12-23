@@ -279,7 +279,7 @@ set i0_nullable := i0_nullable or NULL;
 set i2 := null is null;
 
 -- TEST: is null test general case
--- +i2 = cql_to_num(cql_add(i0_nullable, i1_nullable) == nil))
+-- + i2 = cql_to_num(cql_add(i0_nullable, i1_nullable) == nil)
 set i2 := (i0_nullable + i1_nullable) is null;
 
 -- TEST: is not null basic test
@@ -653,7 +653,7 @@ set b0_nullable := 'b' not between null and 'c';
 -- TEST: this procedure will have a structured semantic type
 -- + function with_result_set(_db_)
 -- + _rc_, _result_stmt = cql_prepare(_db_,
--- + "SELECT id, name, rate, type, size FROM bar")
+-- + "SELECT bar.id, bar.name, bar.rate, bar.type, bar.size FROM bar"
 -- + if _rc_ == CQL_OK and _result_stmt == nil then _rc_, _result_stmt = cql_no_rows_stmt(_db_) end
 -- + function with_result_set_fetch_results(_db_)
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
@@ -712,11 +712,11 @@ end;
 -- +   local C2_fields_ = { "id", "name", "rate", "type", "size" }
 -- +   local C2_types_ = "Islid"
 -- +   _rc_, C_stmt = cql_prepare(_db_,
--- +   "SELECT id, name, rate, type, size FROM bar")
+-- +   "SELECT bar.id, bar.name, bar.rate, bar.type, bar.size FROM bar")
 -- +   _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
 -- +   printf("%d %s\n", C.id, C.name)
 -- +   _rc_, C2_stmt = cql_prepare(_db_,
--- +     "SELECT id, name, rate, type, size FROM bar WHERE ? AND id = ?")
+-- +     "SELECT bar.id, bar.name, bar.rate, bar.type, bar.size FROM bar WHERE ? AND id = ?")
 -- +   _rc_ = cql_multibind(_db_, C2_stmt, "FI", C._has_row_, C.id)
 -- +   cql_finalize_stmt(C_stmt)
 -- +   cql_finalize_stmt(C2_stmt)
@@ -838,7 +838,7 @@ end;
 
 -- TEST: create a proc with a nested select within an in statement for hierarchical queries
 proc hierarchical_query(rate_ long integer not null, limit_ integer not null, offset_ integer not null)
--- + "SELECT id FROM foo WHERE id IN (SELECT id FROM bar WHERE rate = ? ORDER BY name LIMIT ? OFFSET ?) ORDER BY id")
+-- + "SELECT foo.id FROM foo WHERE id IN (SELECT id FROM bar WHERE rate = ? ORDER BY name LIMIT ? OFFSET ?) ORDER BY id")
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "id" })
 begin
   select *
@@ -855,7 +855,7 @@ begin
 end;
 
 -- TEST: create a proc with a nested select within a not in statement for hierarchical queries
--- + "SELECT id FROM foo WHERE id NOT IN (SELECT id FROM bar WHERE rate = ? ORDER BY name LIMIT ? OFFSET ?) ORDER BY id")
+-- + "SELECT foo.id FROM foo WHERE id NOT IN (SELECT id FROM bar WHERE rate = ? ORDER BY name LIMIT ? OFFSET ?) ORDER BY id")
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "id" })
 proc hierarchical_unmatched_query(rate_ long integer not null, limit_ integer not null, offset_ integer not null)
 begin
@@ -901,7 +901,7 @@ end;
 -- TEST: create a simple with statement
 -- + local C_fields_ = { "a", "b", "c" }
 -- + local C_types_ = "III"
--- + "WITH X (a, b, c) AS ( SELECT 1, 2, 3 ) SELECT a, b, c FROM X")
+-- + "WITH X (a, b, c) AS ( SELECT 1, 2, 3 ) SELECT X.a, X.b, X.c FROM X")
 -- +  _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
 -- - fetch_results
 proc with_stmt_using_cursor()
@@ -913,7 +913,7 @@ begin
 end;
 
 -- TEST: with statement top level
--- + "WITH X (a, b, c) AS ( SELECT 1, 2, 3 ) SELECT a, b, c FROM X")
+-- + "WITH X (a, b, c) AS ( SELECT 1, 2, 3 ) SELECT X.a, X.b, X.c FROM X")
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "III", { "a", "b", "c" })
 proc with_stmt()
 begin
@@ -921,7 +921,7 @@ begin
 end;
 
 -- TEST: with recursive statement top level
--- + "WITH RECURSIVE X (a, b, c) AS ( SELECT 1, 2, 3 UNION ALL SELECT 4, 5, 6 ) SELECT a, b, c FROM X"
+-- + "WITH RECURSIVE X (a, b, c) AS ( SELECT 1, 2, 3 UNION ALL SELECT 4, 5, 6 ) SELECT X.a, X.b, X.c FROM X"
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "III", { "a", "b", "c" })
 proc with_recursive_stmt()
 begin
@@ -1221,12 +1221,12 @@ end;
 declare function voidfunc() integer;
 
 -- TEST: use a select exists clause
--- + "SELECT EXISTS (SELECT * FROM bar)"
+-- + "SELECT EXISTS (SELECT 1 FROM bar)"
 set b2 := (select exists(select * from bar));
 
 -- TEST: for expand of select * columns from whole result
 -- + _rc_, expanded_select_stmt = cql_prepare(_db_,
--- + "SELECT id, name, rate, type, size FROM bar"
+-- + "SELECT bar.id, bar.name, bar.rate, bar.type, bar.size FROM bar"
 declare expanded_select cursor for select * from bar;
 
 -- TEST: for expand of select * columns from table
@@ -1431,7 +1431,7 @@ set blob_var_notnull := blob_notnull_func();
 insert into blob_table(blob_id, b_nullable, b_notnull) values (0, blob_var, blob_var_notnull);
 
 -- TEST: a result set that includes blobs
--- +  "SELECT blob_id, b_notnull, b_nullable FROM blob_table
+-- +  "SELECT blob_table.blob_id, blob_table.b_notnull, blob_table.b_nullable FROM blob_table
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "IBb", { "blob_id", "b_notnull", "b_nullable" })
 proc blob_returner()
 begin
@@ -1543,7 +1543,7 @@ create table threads (
 
 -- TEST: nested subquery in a proc
 -- + function thread_theme_info_list(_db_, thread_key_)
--- + "SELECT thread_key FROM (SELECT thread_key FROM threads) AS T")
+-- + "SELECT T.thread_key FROM (SELECT thread_key FROM threads) AS T")
 -- +  if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
 -- +  return _rc_, _result_stmt
 -- + function thread_theme_info_list_fetch_results(_db_, thread_key_)
@@ -1781,7 +1781,7 @@ with x(a) as (select 111)
 insert into foo values ( ifnull((select a from x), 0));
 
 -- TEST: use insert from select (put this in a proc to force the schema utils to walk it)
--- + "WITH x (a) AS ( SELECT 111 ) INSERT INTO foo(id) SELECT a FROM x")
+-- + "WITH x (a) AS ( SELECT 111 ) INSERT INTO foo(id) SELECT x.a FROM x")
 proc with_inserter()
 begin
   with x(a) as (select 111)
@@ -2234,10 +2234,9 @@ create table radioactive(
 
 -- TEST: create a proc that reducts some sensitive data
 -- + function radioactive_proc(_db_)
--- + "SELECT id, data FROM radioactive")
+-- + "SELECT radioactive.id, radioactive.data FROM radioactive"
 -- + function radioactive_proc_fetch_results(_db_)
 -- +  _rc_, result_set = cql_fetch_all_rows(stmt, "Is", { "id", "data" })
--- TODO vault_sensitive is not yet supported, we'll have to figure out some kind of plan for what this means
 [[vault_sensitive]]
 proc radioactive_proc()
 begin
@@ -2245,7 +2244,7 @@ begin
 end;
 
 -- TEST: with delete form
--- +  "WITH x (a) AS ( SELECT 111 ) DELETE FROM foo WHERE id IN (SELECT a FROM x)")
+-- +  "WITH x (a) AS ( SELECT 111 ) DELETE FROM foo WHERE id IN (SELECT x.a FROM x)")
 proc with_deleter()
 begin
   with x(a) as (select 111)
@@ -2253,7 +2252,7 @@ begin
 end;
 
 -- TEST: with update form
--- +  "WITH x (a) AS ( SELECT 111 ) UPDATE bar SET name = 'xyzzy' WHERE id IN (SELECT a FROM x)"
+-- +  "WITH x (a) AS ( SELECT 111 ) UPDATE bar SET name = 'xyzzy' WHERE id IN (SELECT x.a FROM x)"
 proc with_updater()
 begin
   with x(a) as (select 111)
@@ -2390,7 +2389,7 @@ declare select function ReadFromRowset(rowset Object<rowset>) (id integer);
 
 -- TEST: use a table valued function that consumes an object
 -- + function rowset_object_reader(_db_, rowset)
--- + "SELECT id FROM ReadFromRowset(?)")
+-- + "SELECT ReadFromRowset.id FROM ReadFromRowset(?)")
 -- + _rc_ = cql_multibind(_db_, C_stmt, "o", rowset)
 proc rowset_object_reader(rowset Object<rowset>)
 begin
@@ -2572,12 +2571,11 @@ end;
 -- + local _rows_ = {}
 -- + local x_fields_ = { "id", "data" }
 -- + local x_types_ = "Is"
--- + "SELECT id, data FROM radioactive")
+-- + "SELECT radioactive.id, radioactive.data FROM radioactive")
 -- + _rc_ = cql_multifetch(x_stmt, x, x_types_, x_fields_)
 -- + if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
 -- + table.insert(_rows_, cql_clone_row(x))
 -- + return _rc_, _rows_
--- TODO whatever vault sensitive means here needs to be explored
 [[vault_sensitive]]
 proc out_union_dml()
 begin
@@ -2590,7 +2588,6 @@ end;
 -- + _rc_, C_result_set_ = out_union_dml_fetch_results(_db_)
 -- + C_row_count_ = #(C_result_set_)
 -- + C = C_result_set_[C_row_num_]
--- TODO whatever vault sensitive means here needs to be explored
 [[vault_sensitive]]
 proc out_union_dml_for_call()
 begin
@@ -2748,7 +2745,7 @@ end;
 -- TEST: a copy function will be generated
 -- LUA does not have or need a copy function, verify it is ignored
 -- + function sproc_with_copy(_db_)
--- + "SELECT id, name, rate, type, size FROM bar"
+-- + "SELECT bar.id, bar.name, bar.rate, bar.type, bar.size FROM bar"
 -- + function sproc_with_copy_fetch_results(_db_)
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
 [[generate_copy]]
@@ -2780,7 +2777,7 @@ end;
 -- + C.t = t
 -- + C.bl = bl
 -- + _result_ = cql_clone_row(C)
--- +function emit_object_with_setters_fetch_results(o, x, i, l, b, d, t, bl)
+-- + function emit_object_with_setters_fetch_results(o, x, i, l, b, d, t, bl)
 -- +  _result_ = emit_object_with_setters(o, x, i, l, b, d, t, bl)
 -- +  result_set = { _result_ }
 [[emit_setters]]
@@ -2833,7 +2830,7 @@ end;
 -- TEST: emit an object result set not out and setters
 -- lua has no getters or setters, not needed, we just verify that this is ignored
 -- + function no_out_with_setters(_db_)
--- + "SELECT id, name, rate, type, size FROM bar"
+-- + "SELECT bar.id, bar.name, bar.rate, bar.type, bar.size FROM bar"
 -- + return _rc_, _result_stmt
 -- + function no_out_with_setters_fetch_results(_db_)
 -- + _rc_, stmt = no_out_with_setters(_db_)
@@ -2845,7 +2842,7 @@ end;
 
 -- TEST: no result set items should be generated at all
 -- + function lotsa_columns_no_result_set(_db_)
--- + "SELECT id, name, rate, type, size FROM bar")
+-- + "SELECT bar.id, bar.name, bar.rate, bar.type, bar.size FROM bar"
 -- + return _rc_, _result_stmt
 -- - function lotsa_columns_no_result_set_fetch_results(_db_)
 [[suppress_result_set]]
@@ -2893,9 +2890,8 @@ create table vault_non_sensitive(
 );
 
 -- TEST: vault_sensitive attribute includes sensitive column (name) and non sensitive column (id)
--- TODO figure out what vaulting means to lua if anything
 -- + function vault_sensitive_with_values_proc(_db_)
--- +    "SELECT id, name, title, type FROM vault_mixed_sensitive"
+-- +    "SELECT vault_mixed_sensitive.id, vault_mixed_sensitive.name, vault_mixed_sensitive.title, vault_mixed_sensitive.type FROM vault_mixed_sensitive"
 -- +  return _rc_, _result_stmt
 -- + function vault_sensitive_with_values_proc_fetch_results(_db_)
 -- +  _rc_, stmt = vault_sensitive_with_values_proc(_db_)
@@ -2909,11 +2905,10 @@ begin
 end;
 
 -- TEST: vault_sensitive attribute includes sensitive column (name) and non sensitive column (id)
--- TODO figure out what vaulting means to lua if anything
--- +function vault_not_nullable_sensitive_with_values_proc(_db_)
--- +    "SELECT id, name, title, type FROM vault_mixed_not_nullable_sensitive")
+-- + function vault_not_nullable_sensitive_with_values_proc(_db_)
+-- +  "SELECT vault_mixed_not_nullable_sensitive.id, vault_mixed_not_nullable_sensitive.name, vault_mixed_not_nullable_sensitive.title, vault_mixed_not_nullable_sensitive.type FROM vault_mixed_not_nullable_sensitive"
 -- +  return _rc_, _result_stmt
--- +function vault_not_nullable_sensitive_with_values_proc_fetch_results(_db_)
+-- + function vault_not_nullable_sensitive_with_values_proc_fetch_results(_db_)
 -- +  _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
 -- +  return _rc_, result_set
 [[vault_sensitive=(id, name)]]
@@ -2924,9 +2919,8 @@ begin
 end;
 
 -- TEST: vault_sensitive attribute includes sensitive column (data) and non sensitive column (id)
--- TODO figure out what vaulting means to lua if anything
--- +function vault_sensitive_mixed_proc(_db_)
--- +    "SELECT id, name, title, type FROM vault_mixed_sensitive")
+-- + function vault_sensitive_mixed_proc(_db_)
+-- +    "SELECT vault_mixed_sensitive.id, vault_mixed_sensitive.name, vault_mixed_sensitive.title, vault_mixed_sensitive.type FROM vault_mixed_sensitive"
 -- +  return _rc_, _result_stmt
 -- + function vault_sensitive_mixed_proc_fetch_results(_db_)
 -- +  _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
@@ -2938,9 +2932,8 @@ begin
 end;
 
 -- TEST: vault union all a sensitive and non sensitive table
--- TODO figure out what vaulting means to lua if anything
 -- + function vault_union_all_table_proc(_db_)
--- + "SELECT id, name, title, type FROM vault_mixed_sensitive UNION ALL SELECT id, name, title, type FROM vault_non_sensitive")
+-- + "SELECT vault_mixed_sensitive.id, vault_mixed_sensitive.name, vault_mixed_sensitive.title, vault_mixed_sensitive.type FROM vault_mixed_sensitive UNION ALL SELECT vault_non_sensitive.id, vault_non_sensitive.name, vault_non_sensitive.title, vault_non_sensitive.type FROM vault_non_sensitive"
 -- + return _rc_, _result_stmt
 -- + function vault_union_all_table_proc_fetch_results(_db_)
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
@@ -2954,7 +2947,6 @@ begin
 end;
 
 -- TEST: vault on alias column name
--- TODO figure out what vaulting means to lua if anything
 -- + function vault_alias_column_proc(_db_)
 -- + "SELECT name FROM vault_mixed_sensitive"
 -- + return _rc_, _result_stmt
@@ -2969,7 +2961,6 @@ begin
 end;
 
 -- TEST: vault on alias column name
--- TODO figure out what vaulting means to lua if anything
 -- + function vault_alias_column_name_proc(_db_)
 -- + "SELECT name FROM vault_mixed_sensitive")
 -- + function vault_alias_column_name_proc_fetch_results(_db_)
@@ -2983,7 +2974,6 @@ begin
 end;
 
 -- TEST: vault a column in cursor result
--- TODO figure out what vaulting means to lua if anything
 -- + function vault_cursor_proc(_db_)
 -- + local C_fields_ = { "name" }
 -- + local C_types_ = "s"
@@ -2998,9 +2988,8 @@ begin
 end;
 
 -- TEST: vault_sensitive attribute includes encode context column (title) and sensitive column (id, name)
--- TODO figure out what vaulting means to lua if anything
 -- + function vault_sensitive_with_context_and_sensitive_columns_proc(_db_)
--- + "SELECT id, name, title, type FROM vault_mixed_sensitive")
+-- + "SELECT vault_mixed_sensitive.id, vault_mixed_sensitive.name, vault_mixed_sensitive.title, vault_mixed_sensitive.type FROM vault_mixed_sensitive"
 -- + function vault_sensitive_with_context_and_sensitive_columns_proc_fetch_results(_db_)
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
 [[vault_sensitive=(title, (id, name))]]
@@ -3010,9 +2999,8 @@ begin
 end;
 
 -- TEST: vault_sensitive attribute includes no encode context column and sensitive column (id, name)
--- TODO figure out what vaulting means to lua if anything
 -- + function vault_sensitive_with_no_context_and_sensitive_columns_proc(_db_)
--- + "SELECT id, name, title, type FROM vault_mixed_sensitive"
+-- + "SELECT vault_mixed_sensitive.id, vault_mixed_sensitive.name, vault_mixed_sensitive.title, vault_mixed_sensitive.type FROM vault_mixed_sensitive"
 -- + function vault_sensitive_with_no_context_and_sensitive_columns_proc_fetch_results(_db_)
 -- + _rc_, stmt = vault_sensitive_with_no_context_and_sensitive_columns_proc(_db_)
 [[vault_sensitive=((id, name))]]
@@ -3022,7 +3010,6 @@ begin
 end;
 
 -- TEST: vault_sensitive attribute includes encode context column (title) and no sensitive column
--- TODO figure out what vaulting means to lua if anything
 -- + function vault_sensitive_with_context_and_no_sensitive_columns_proc_fetch_results(_db_)
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
 [[vault_sensitive=(title, (id, name))]]
@@ -3034,7 +3021,7 @@ end;
 -- TEST: simple box operation
 -- + function try_boxing(_db_)
 -- + _rc_, C_stmt = cql_prepare(_db_,
--- + "SELECT id, name, rate, type, size FROM bar"
+-- + "SELECT bar.id, bar.name, bar.rate, bar.type, bar.size FROM bar"
 -- + result = C_stmt
 -- + return _rc_, result
 -- boxed object controlsl lifetime now
@@ -3615,7 +3602,7 @@ declare enum some_longs long (
 
 -- TEST: emit a bunch of enums
 -- note it is safe to do this more than once
--- +cql_emit_constants("enum", "some_ints", {
+-- + cql_emit_constants("enum", "some_ints", {
 -- + foo = 12,
 -- + bar = 3
 -- + cql_emit_constants("enum", "some_reals", {
@@ -3671,7 +3658,7 @@ create virtual table virtual_with_hidden using module_name as (
 );
 
 -- TEST: hidden applied on virtual tables
--- +  "SELECT vy FROM virtual_with_hidden"
+-- +  "SELECT virtual_with_hidden.vy FROM virtual_with_hidden"
 proc virtual1()
 begin
   select * from virtual_with_hidden;
@@ -4381,7 +4368,7 @@ CREATE TABLE big_data(
 -- this is really a stress test for the stack and temporary management
 -- the codegen is very simple. The compiler shouldn't crash on this stuff
 -- it has in the past.
--- + "SELECT f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26, f27, f28, f29, f30, f31, f32, f33, f34, f35, f36, f38, f39, f40, f41, f42, f43, f44, f45, f46, f47, f48, f49, f50, f51, f52, f53, f54, f55, f56, f57, f58, f59, f60, f61, f62, f63, f64, f65, f66, f67, f68, f69, f70, f71, f72, f73, f74, f75 FROM big_data"
+-- + "SELECT % FROM big_data"
 -- + _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
 PROC BigFormat ()
 BEGIN
@@ -4566,14 +4553,13 @@ end;
 -- ---- then we see the shared fragment-- note the name can be elided and it is!
 -- + "SELECT 1234",
 -- ---- then we see what came after the shared fragment
--- + ") SELECT shared_something FROM shared_frag"
+-- + ") SELECT shared_frag.shared_something FROM shared_frag"
 proc foo()
 begin
   with
     (call shared_frag())
   select * from shared_frag;
 end;
-
 
 -- used in the following test
 [[shared_fragment]]
@@ -4768,7 +4754,7 @@ end;
 --
 -- fragment 6 the tail of fragment 2, present if x <= 5
 -- fourth variable binding v[6] = pred[6] = pred[2]
--- +  ") SELECT x FROM shared_conditional WHERE ? = 5",
+-- +  ") SELECT shared_conditional.x FROM shared_conditional WHERE ? = 5",
 --
 -- fragment 7 present if x > 5
 -- fifth variable binding v[7] = pred[7] = !pred[2]
@@ -5127,7 +5113,13 @@ create table backed(
 -- + EXPLAIN QUERY PLAN
 -- + WITH
 -- + backed (rowid, pk, flag, id, name, age, storage) AS (CALL _backed())
--- + SELECT *
+-- + SELECT
+-- +     backed.pk,
+-- +     backed.flag,
+-- +     backed.id,
+-- +     backed.name,
+-- +     backed.age,
+-- +     backed.storage
 -- +   FROM backed;
 -- + "EXPLAIN QUERY PLAN WITH backed (rowid, pk, flag, id, name, age, storage) AS (",
 -- + "SELECT rowid, bgetkey(T.k, 0),
@@ -5138,7 +5130,7 @@ create table backed(
 -- = bgetval(T.v, -7635294210585028660
 -- = FROM backing AS T
 -- = WHERE bgetkey_type(T.k) = -5417664364642960231
--- + ") SELECT rowid, pk, flag, id, name, age, storage FROM backed"
+-- + ") SELECT backed.pk, backed.flag, backed.id, backed.name, backed.age, backed.storage FROM backed"
 [[private]]
 proc explain_equery_plan_backed(out x bool not null)
 begin
@@ -5378,7 +5370,7 @@ create table `a table`(
 -- stay escaped.  This kind of sucks but it's the most flexible and normal
 -- names look fine. If you get weird, CQL gets weird.  Sorry :D
 -- +  _rc_, C_stmt = cql_prepare(_db_,
--- + "WITH a_cte (x) AS ( VALUES (1), (2), (3) ), _vals ([col 1], [col 2]) AS ( VALUES (1, 2) ) INSERT INTO [a backing table]([the key], [the value]) SELECT jsonb_array(-3079349931095810044, V.[col 1]), jsonb_object('X_colX202', V.[col 2]) FROM _vals AS V ON CONFLICT ([the key]) WHERE (([the value])->>'$.X_colX202') IN (SELECT x FROM a_cte)  DO UPDATE SET [the key] = jsonb_set([the key],  '$[1]', ifnull((([the value])->>'$.X_colX202'), 0)) WHERE rowid IN (SELECT rowid FROM [a table]) RETURNING ((([the key])->>1), (([the value])->>'$.X_colX202'))")
+-- + "WITH a_cte (x) AS ( VALUES (1), (2), (3) ), _vals ([col 1], [col 2]) AS ( VALUES (1, 2) ) INSERT INTO [a backing table]([the key], [the value]) SELECT jsonb_array(-3079349931095810044, V.[col 1]), jsonb_object('X_colX202', V.[col 2]) FROM _vals AS V ON CONFLICT ([the key]) WHERE (([the value])->>'$.X_colX202') IN (SELECT a_cte.x FROM a_cte)  DO UPDATE SET [the key] = jsonb_set([the key],  '$[1]', ifnull((([the value])->>'$.X_colX202'), 0)) WHERE rowid IN (SELECT rowid FROM [a table]) RETURNING ((([the key])->>1), (([the value])->>'$.X_colX202'))")
 proc upsert_returning_with_backing()
 begin
   cursor C  for

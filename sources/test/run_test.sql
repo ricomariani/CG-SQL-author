@@ -102,16 +102,34 @@ end;
 @ifdef __rt__lua
   -- This test case is suppressed in Lua, this is done
   -- because the Lua runtime is missing some blob features
-  @macro(stmt_list) TEST_C!(name! expr, body! stmt_list)
+  @macro(stmt_list) TEST_C_ONLY!(name! expr, body! stmt_list)
   begin
     printf("Skipping test %s in Lua\n", @text(name!));
   end;
 
 @else
 
-  @macro(stmt_list) TEST_C!(name! expr, body! stmt_list)
+  @macro(stmt_list) TEST_C_ONLY!(name! expr, body! stmt_list)
   begin
     TEST!(name!, body!);
+  end;
+
+@endif
+
+-- this isn't used anymore but it still makes a good compile-time test
+@ifdef modern_test
+  -- This test case is suppressed in Lua, this is done
+  -- because the Lua runtime is missing some blob features
+  @macro(stmt_list) TEST_MODERN_ONLY!(name! expr, body! stmt_list)
+  begin
+    TEST!(name!, body!);
+  end;
+
+@else
+
+  @macro(stmt_list) TEST_MODERN_ONLY!(name! expr, body! stmt_list)
+  begin
+    if 0 then end;
   end;
 
 @endif
@@ -3150,23 +3168,6 @@ begin
   insert into temp_table_three values(3);
 end;
 
--- The run test client verifies that we can call this proc twice
--- having read the rowset out of it and it still succeeds because
--- the tables are dropped. Note simply calling the proc from CQL
--- will not do the job -- you have to use the result set helper
--- to get the auto-cleanup.  If you are using the statement
--- as with a direct CQL call, you are out of luck
-[[autodrop=(temp_table_one, temp_table_two, temp_table_three)]]
-proc read_three_tables_and_autodrop()
-begin
-  init_temp_tables();
-
-  select * from temp_table_one
-  union all
-  select * from temp_table_two
-  union all
-  select * from temp_table_three;
-end;
 
 -- This helper proc will be called by the client producing its one-row result
 -- it has no DB pointer and that exercises and important case in the autodrop logic
@@ -7437,7 +7438,38 @@ begin
   EXPECT_EQ!(o1, null);
 end);
 
-@ifdef modern_test
+-- autodrop test case, ensure we fetch using the result set helper
+[[autodrop=(temp_table_one, temp_table_two, temp_table_three)]]
+proc read_three_tables_and_autodrop()
+begin
+  init_temp_tables();
+
+  select * from temp_table_one
+  union all
+  select * from temp_table_two
+  union all
+  select * from temp_table_three;
+end;
+
+TEST!(verify_autodrops,
+begin
+  -- note we do not use for CALL -- we want to materialize the result set
+  -- autodrop happens after fetch results, in the bad old days there was
+  -- no way to do this from inside CQL
+  declare C cursor for read_three_tables_and_autodrop();
+  declare D cursor for read_three_tables_and_autodrop();
+  fetch C;
+  fetch D;
+  while C and D
+  begin
+    EXPECT_EQ!(C.id, D.id);
+    fetch C;
+    fetch D;
+  end;
+  EXPECT!(not C);
+  EXPECT!(not D);
+end);
+
 
 proc make_json_backed_schema()
 begin
@@ -7472,7 +7504,7 @@ begin
 end;
 
 -- verify that we can cast anything to null
-TEST!(verify_json_backing,
+TEST_MODERN_ONLY!(verify_json_backing,
 begin
   insert_data_into_json();
 
@@ -7502,7 +7534,7 @@ begin
   EXPECT_EQ!(i, 15);
 end);
 
-TEST!(verify_backing_store,
+TEST_MODERN_ONLY!(verify_backing_store,
 begin
   cursor C for select k ~text~ k, v ~text~ v from json_backing order by rowid;
   let i := 0;
@@ -7526,8 +7558,6 @@ begin
   -- we should be at the last row and done
   EXPECT_EQ!(i, 15);
 end);
-
-@endif
 
 END_SUITE();
 

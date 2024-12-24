@@ -21,7 +21,6 @@ cql_code test_c_one_row_result(sqlite3 *db);
 cql_code test_ref_comparisons(sqlite3 *db);
 cql_code test_all_column_fetchers(sqlite3 *db);
 cql_code test_error_case_rowset(sqlite3 *db);
-cql_code test_autodrop_rowset(sqlite3 *db);
 cql_code test_one_row_result(sqlite3 *db);
 cql_code test_cql_bytebuf_open(sqlite3 *db);
 cql_code test_cql_bytebuf_format(sqlite3 *db);
@@ -165,12 +164,6 @@ cql_code run_client(sqlite3 *db) {
 
   SQL_E(test_error_case_rowset(db));
   E(!cql_outstanding_refs, "outstanding refs in test_error_case_rowset: %d\n", cql_outstanding_refs);
-
-  SQL_E(test_autodrop_rowset(db));
-  E(!cql_outstanding_refs, "outstanding refs in test_autodrop_rowset (run 1): %d\n", cql_outstanding_refs);
-
-  SQL_E(test_autodrop_rowset(db));
-  E(!cql_outstanding_refs, "outstanding refs in test_autodrop_rowset (run 2): %d\n", cql_outstanding_refs);
 
   SQL_E(test_one_row_result(db));
   E(!cql_outstanding_refs, "outstanding refs in one_row_result: %d\n", cql_outstanding_refs);
@@ -1518,32 +1511,7 @@ cql_code test_error_case_rowset(sqlite3 *db) {
   return SQLITE_OK;
 }
 
-int32_t autodrop_count = 1;
-
-cql_code test_autodrop_rowset(sqlite3 *db) {
-  // this test runs twice to ensure it cleans up after itself including the tables being dropped
-  printf("Running autodrop rowset test (pass %d)\n", autodrop_count++);
-  tests++;
-
-  read_three_tables_and_autodrop_result_set_ref result_set;
-
-  SQL_E(SQLITE_OK != read_three_tables_and_autodrop_fetch_results(db, &result_set));
-
-  for (cql_int32 i = 0; i < 3; i++) {
-    int32_t id = read_three_tables_and_autodrop_get_id(result_set, i);
-
-    E(i+1 == id, "id %d did not match %d\n", id, i+1);
-  }
-
-  cql_result_set_release(result_set);
-
-  tests_passed++;
-  return SQLITE_OK;
-}
-
 cql_code test_one_row_result(sqlite3 *db) {
-  // this test runs twice to ensure it cleans up after itself including the tables being dropped
-  printf("Running autodrop rowset test (pass %d)\n", autodrop_count++);
   tests++;
 
   simple_cursor_proc_result_set_ref result_set;

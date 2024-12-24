@@ -3212,6 +3212,7 @@ function autodropper_fetch_results(_db_)
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
   stmt = nil
+  cql_autodrop(_db_, {"table1", "table2"})
   return _rc_, result_set
 end
 

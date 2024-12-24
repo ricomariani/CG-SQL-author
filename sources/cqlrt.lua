@@ -640,6 +640,16 @@ function cql_multifetch(stmt, result, types, columns)
   return rc
 end
 
+function cql_autodrop(db, autodrops)
+  -- best effort, return codes are ignored
+  for i = 1, #autodrops
+  do
+    tab = autodrops[i]
+    cql_exec_internal(db, "drop table if exists "..tab)
+  end
+end
+
+
 function cql_fetch_all_rows(stmt, types, columns)
   local rc
   local result_set = {}
@@ -656,6 +666,7 @@ function cql_fetch_all_rows(stmt, types, columns)
   else
      rc = sqlite3.OK
   end
+
   return rc, result_set
 end
 

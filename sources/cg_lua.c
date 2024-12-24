@@ -5212,6 +5212,30 @@ typedef struct lua_function_info {
   bool_t is_private;
 } lua_function_info;
 
+// Write out the autodrop info into the stream.
+static void cg_lua_one_autodrop(CSTR _Nonnull name, ast_node *_Nonnull misc_attr_value, void *_Nullable context) {
+  Invariant(context);
+  charbuf *output = (charbuf *)context;
+  if (output->used > 1) {
+    bprintf(output, ", ");
+  }
+  bprintf(output, "\"%s\"", name);
+}
+
+// If a stored proc is marked with the autodrop annotation when we automatically
+// drop the indicated tables when the proc is finished running.  The attributes
+// should look like this:
+// [[autodrop=(table1, table2, ,...)]]
+static void cg_lua_emit_autodrops(charbuf *output, ast_node *misc_attrs) {
+  if (misc_attrs) {
+    CHARBUF_OPEN(temp);
+      find_autodrops(misc_attrs, cg_lua_one_autodrop, &temp);
+      if (temp.used > 1) {
+        bprintf(output, "  cql_autodrop(_db_, {%s})\n", temp.ptr);
+      }
+    CHARBUF_CLOSE(temp);
+  }
+}
 
 // If a stored procedure generates a result set then we need to do some extra work
 // to create the C friendly rowset creating and accessing helpers.  If stored
@@ -5231,6 +5255,7 @@ static void cg_lua_proc_result_set(ast_node *ast) {
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
   EXTRACT(params, proc_params_stmts->left);
   EXTRACT_STRING(name, ast->left);
+  EXTRACT_MISC_ATTRS(ast, misc_attrs);
 
   bool_t suppress_result_set = is_proc_suppress_result_set(ast);
   bool_t is_private = is_proc_private(ast);
@@ -5369,6 +5394,9 @@ static void cg_lua_proc_result_set(ast_node *ast) {
       bprintf(d, "\n::cql_cleanup::\n");
       bprintf(d, "  cql_finalize_stmt(stmt)\n");
       bprintf(d, "  stmt = nil\n");
+
+      cg_lua_emit_autodrops(d, misc_attrs);
+
       bprintf(d, "  return %s\n", returns.ptr);
       bprintf(d, "end\n\n");
 
@@ -5668,4 +5696,7 @@ cql_noexport void cg_lua_cleanup() {
   lua_continue_label_next = 0;
 }
 
+
 #endif
+
+

@@ -2262,9 +2262,9 @@ end;
 create temp table table1( id integer);
 create temp table table2( id integer);
 
--- TEST: autodrop attribute
+-- TEST: autodrop attribute -- invoke the helper
 -- + function autodropper(_db_)
--- TODO -- this attribute is not yet supported but it's also really unpopular...
+-- + cql_autodrop(_db_, {"table1", "table2"})
 [[autodrop=(table1, table2)]]
 proc autodropper()
 begin

@@ -2571,13 +2571,6 @@ enforcement_options:
   | SELECT IF NOTHING { $enforcement_options = new_ast_option(ENFORCE_SELECT_IF_NOTHING); }
   | INSERT SELECT { $enforcement_options = new_ast_option(ENFORCE_INSERT_SELECT); }
   | TABLE FUNCTION { $enforcement_options = new_ast_option(ENFORCE_TABLE_FUNCTION); }
-  | ENCODE CONTEXT_COLUMN { $enforcement_options = new_ast_option(ENFORCE_ENCODE_CONTEXT_COLUMN); }
-  | ENCODE CONTEXT_TYPE INTEGER { $enforcement_options = new_ast_option(ENFORCE_ENCODE_CONTEXT_TYPE_INTEGER); }
-  | ENCODE CONTEXT_TYPE LONG_INTEGER { $enforcement_options = new_ast_option(ENFORCE_ENCODE_CONTEXT_TYPE_LONG_INTEGER); }
-  | ENCODE CONTEXT_TYPE REAL { $enforcement_options = new_ast_option(ENFORCE_ENCODE_CONTEXT_TYPE_REAL); }
-  | ENCODE CONTEXT_TYPE BOOL_ { $enforcement_options = new_ast_option(ENFORCE_ENCODE_CONTEXT_TYPE_BOOL); }
-  | ENCODE CONTEXT_TYPE TEXT { $enforcement_options = new_ast_option(ENFORCE_ENCODE_CONTEXT_TYPE_TEXT); }
-  | ENCODE CONTEXT_TYPE BLOB { $enforcement_options = new_ast_option(ENFORCE_ENCODE_CONTEXT_TYPE_BLOB); }
   | IS_TRUE { $enforcement_options = new_ast_option(ENFORCE_IS_TRUE); }
   | CAST { $enforcement_options = new_ast_option(ENFORCE_CAST); }
   | SIGN_FUNCTION { $enforcement_options = new_ast_option(ENFORCE_SIGN_FUNCTION); }

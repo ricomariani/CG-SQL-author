@@ -36,35 +36,6 @@ public class CQLDb {
   public static extern void closeDb(long db);
 }
 
-/*
- * CQLEncodedString hides the string fields in the result set that were marked as vaulted.
- *
- * It has no getter so you can't directly extract the string at all.
- *
- * The way you use this class is you add helper methods to it that directly put the string
- * to where it needs to go, such as logging, or into a text view, or whatever you might need.
- *
- * The idea is that the pieces of code that flow the string to its final destination cannot see
- * its value so they can't do "the wrong thing" with it.  When you are finally ready to do
- * whatever actually needs to be done, that final code calls a helper to do the job.
- *
- * By using this pattern you can easily spot the pieces of code that actually extract the
- * string and restrict them in whatever way you want with simple tools.
- */
-public class CQLEncodedString {
-  public String mValue;
-
-  public CQLEncodedString(String value) {
-    mValue = value;
-  }
-
-  public override String ToString() {
-    return "[secret]";
-  }
-
-  // you add your methods for dealing with encoded strings here
-}
-
 /**
  * CQLResultSet is a simple utility class that holds a native cql_result_set_ref
  *
@@ -131,10 +102,6 @@ public sealed class CQLResultSet {
     return getString(result_set_ref, row, column);
   }
 
-  public CQLEncodedString getEncodedString(int row, int column) {
-    return new CQLEncodedString(getString(row, column));
-  }
-
   public double getDouble(int row, int column) {
     return getDouble(result_set_ref, row, column);
   }
@@ -176,10 +143,6 @@ public sealed class CQLResultSet {
 
   public CQLResultSet copy(int row, int count) {
     return new CQLResultSet(copy(result_set_ref, row, count));
-  }
-
-  public bool getIsEncoded(int column) {
-    return getIsEncoded(result_set_ref, column);
   }
 
   [DllImport(@"cql_interop.dll")]
@@ -226,9 +189,6 @@ public sealed class CQLResultSet {
 
   [DllImport(@"cql_interop.dll")]
   public static extern long copy(long result_set_ref, int row, int count);
-
-  [DllImport(@"cql_interop.dll")]
-  public static extern bool getIsEncoded(long result_set_ref, int column);
 }
 
 /**

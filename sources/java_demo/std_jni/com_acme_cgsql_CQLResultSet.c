@@ -195,14 +195,3 @@ JNIEXPORT jlong JNICALL Java_com_acme_cgsql_CQLResultSet_copy
   cql_rowset_copy(ref, &refNew, row, count);
   return (jlong)refNew;
 }
-
-/*
- * Class:     com_acme_cgsql_CQLResultSet
- * Method:    getIsEncoded
- * Signature: (JI)Z
- */
-JNIEXPORT jboolean JNICALL Java_com_acme_cgsql_CQLResultSet_getIsEncoded
-  (JNIEnv *env, jobject thiz, jlong rs, jint col) {
-  cql_result_set_ref ref = (cql_result_set_ref)(rs);
-  return cql_result_set_get_is_encoded_col(ref, col);
-}

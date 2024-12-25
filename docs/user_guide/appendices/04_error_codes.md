@@ -3658,19 +3658,11 @@ enforces this.
 
 ----
 
-### CQL0363: all arguments must be names 'vault_sensitive'
-
-vault_sensitive attribution only allow names. Integer, string literal, c string
-or blob are not allowed, only IDs should be provided.
+### CQL0363 available for re-use
 
 ----
 
-### CQL0364: vault_sensitive annotation can only go on a procedure that uses the database
-
-The named procedure has the `vault_sensitive` annotation to automatically encode
-sensitive value in the result set. Encoding value require the database, but the
-procedure in question doesn't even use the database at all.  This annotation is
-therefore useless.
+### CQL0364 available for re-use
 
 ----
 
@@ -4142,24 +4134,15 @@ number in this error message
 
 ----
 
-### CQL0400: encode context column can't be sensitive
-
-The encode context column will be used to encode sensitive fields, it can't be
-exposed to encode functions
+### CQL0400 available for re-use
 
 ----
 
-### CQL0401: encode context column must be specified if strict encode context column mode is enabled
-
-encode context column must be specified in vault_sensitive attribute with
-format: [[vault_sensitive=(encode_context_col, (col1, col2, ...)]]
+### CQL0401 available for re-use
 
 ----
 
-### CQL0402: encode context column in vault_sensitive attribute must match the specified type in strict mode
-
-encode context column must match the specified type in vault_sensitive attribute
-with format: [[vault_sensitive=(encode_context_col, (col1, col2, ...)]]
+### CQL0402 available for re-use
 
 ----
 
@@ -4224,10 +4207,7 @@ CQL 0407 available for re-use
 
 ----
 
-### CQL0408: encode context column can be only specified once
-
-The encode context column can be only specified once in @vault_sensitive
-attribute
+### CQL0408 available for re-use
 
 ----
 

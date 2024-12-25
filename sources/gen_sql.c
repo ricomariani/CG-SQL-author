@@ -5102,34 +5102,6 @@ static void gen_enforcement_options(ast_node *ast) {
       gen_printf("TABLE FUNCTION");
       break;
 
-    case ENFORCE_ENCODE_CONTEXT_COLUMN:
-      gen_printf("ENCODE CONTEXT COLUMN");
-      break;
-
-    case ENFORCE_ENCODE_CONTEXT_TYPE_INTEGER:
-      gen_printf("ENCODE CONTEXT TYPE INTEGER");
-      break;
-
-    case ENFORCE_ENCODE_CONTEXT_TYPE_LONG_INTEGER:
-      gen_printf("ENCODE CONTEXT TYPE LONG_INTEGER");
-      break;
-
-    case ENFORCE_ENCODE_CONTEXT_TYPE_REAL:
-      gen_printf("ENCODE CONTEXT TYPE REAL");
-      break;
-
-    case ENFORCE_ENCODE_CONTEXT_TYPE_BOOL:
-      gen_printf("ENCODE CONTEXT TYPE BOOL");
-      break;
-
-    case ENFORCE_ENCODE_CONTEXT_TYPE_TEXT:
-      gen_printf("ENCODE CONTEXT TYPE TEXT");
-      break;
-
-    case ENFORCE_ENCODE_CONTEXT_TYPE_BLOB:
-      gen_printf("ENCODE CONTEXT TYPE BLOB");
-      break;
-
     case ENFORCE_IS_TRUE:
       gen_printf("IS TRUE");
       break;

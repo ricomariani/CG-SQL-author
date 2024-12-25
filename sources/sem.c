@@ -359,8 +359,6 @@ struct enforcement_options {
   bool_t strict_if_nothing;           // (select ..) expressions must include the if nothing form
   bool_t strict_insert_select;        // insert with select may not include joins
   bool_t strict_table_function;       // table valued functions cannot be used on left/right joins (avoiding SQLite bug)
-  bool_t strict_encode_context;       // encode context must be specified in @vault_sensitive
-  bool_t strict_encode_context_type;  // the specified vault context column must be the specified data type
   bool_t strict_is_true;              // IS TRUE, IS FALSE, etc. may not be used because of downlevel issues
   bool_t strict_cast;                 // NO-OP casts result in errors
   bool_t strict_sign_function;        // the SQLite sign function may not be used (as it is absent in <3.35.0)
@@ -370,8 +368,6 @@ struct enforcement_options {
 };
 
 static struct enforcement_options enforcement;
-
-static sem_t encode_context_type;
 
 typedef struct enforcement_stack_record {
   struct enforcement_stack_record *next;
@@ -1568,21 +1564,6 @@ cql_noexport bool_t is_proc_shared_fragment(ast_node *_Nonnull proc_stmt) {
   return misc_attrs && exists_attribute_str(misc_attrs, "shared_fragment");
 }
 
-// Detect if column name is sensitive in result set
-bool_t is_sensitive_column_in_result_set(CSTR name) {
-  sem_struct *sptr = current_proc->sem->sptr;
-  uint32_t count = sptr->count;
-  for (uint32_t i = 0; i < count; i++) {
-    CSTR col = sptr->names[i];
-    if (!strcmp(name, col)) {
-      if (sptr->semtypes[i] & SEM_TYPE_SENSITIVE) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
 // This is used to ensure column name (param 'name') is part of the proc return
 // struct
 static void sem_column_name_exist_in_result_set(
@@ -1608,272 +1589,6 @@ static void sem_column_name_exist_in_result_set(
   }
 
   record_ok(misc_attr_value);
-}
-
-// This is used to ensure column type matches the specified encode context column type
-static void sem_column_name_match_encode_context_column_type(
-  CSTR name,
-  ast_node *misc_attrs)
-{
-  if (!enforcement.strict_encode_context_type) {
-    return;
-  }
-  Contract(misc_attrs);
-  Contract(current_proc);
-  sem_struct *sptr = current_proc->sem->sptr;
-  uint32_t count = sptr->count;
-  for (uint32_t i = 0; i < count; i++) {
-    CSTR col = sptr->names[i];
-    if (!strcmp(name, col)) {
-      if (core_type_of(sptr->semtypes[i]) != encode_context_type) {
-        report_error(misc_attrs, "CQL0402: vault context column in vault_senstive attribute must match the specified type in strict mode", "vault_sensitive");
-        record_error(misc_attrs);
-      }
-    }
-  }
-}
-
-// The helper checks whether or not a column should be encoded. A column is
-// encoded if and only if it's marked and is also sensitive. The eligibility
-// infos are extract from vault_sensitive attribution on create_proc_stmt node
-// and stored in encode_columns symtab. Eligible columns are encoded if they are
-// sensitive as soon as they're fetched from db (see cql_multifetch(...)).
-bool_t should_encode_col(
-  CSTR col,
-  sem_t sem_type,
-  bool_t use_encode_arg,
-  symtab *encode_columns_arg)
-{
-  // objects can't be encoded
-  if (core_type_of(sem_type) == SEM_TYPE_OBJECT) {
-    return false;
-  }
-
-  bool_t is_col_eligible = false;
-  if (encode_columns_arg && encode_columns_arg->count > 0 ) {
-    is_col_eligible = symtab_find(encode_columns_arg, col) != NULL;
-  }
-  else {
-    // otherwise all column are always eligible if use_encode is TRUE.
-    is_col_eligible = use_encode_arg;
-  }
-  return is_col_eligible && sensitive_flag(sem_type);
-}
-
-// encode context column in vault_sensitive attribute must not be sensitive
-static void enforce_non_sensitive_context_column(CSTR name, ast_node *misc_attrs)
-{
-  if (is_sensitive_column_in_result_set(name)) {
-    report_error(misc_attrs, "CQL0400: encode context column can't be sensitive", name);
-    record_error(misc_attrs);
-  }
-  else {
-    record_ok(misc_attrs);
-  }
-}
-
-// report error if encode context column mode is on and no encode context column
-// is provided
-static void enforce_encode_context_column_with_strict_mode(ast_node *misc_attrs)
-{
-  if (enforcement.strict_encode_context) {
-    report_error(misc_attrs, "CQL0401: context column must be specified if strict encode context column mode is enabled", "vault_sensitive");
-    record_error(misc_attrs);
-  }
-}
-
-// Enforce the specified column name must be valid string.
-// Return false if column is not valid string.
-static bool_t vault_sensitive_encode_column_valid_string(
-  ast_node *misc_attr_value,
-  ast_node *misc_attrs)
-{
-  if (!is_id(misc_attr_value)) {
-    report_error(misc_attr_value, "CQL0363: all arguments must be names", "vault_sensitive");
-    record_error(misc_attr_value);
-    if (misc_attrs) {
-      record_error(misc_attrs);
-    }
-    return false;
-  }
-  return true;
-}
-
-// This is the place we add all the to-be-encoded columns to a list.
-// The passed in ast_misc_attrs may contain non string values (like list),
-// which are considered to be error cases and skipped here.
-static void vault_sensitive_encode_columns(
-  ast_node *ast_misc_attrs,
-  symtab *vault_column_list,
-  ast_node *misc_attrs)
-{
-  for (ast_node *list = ast_misc_attrs; list; list = list->right) {
-    // any non-string values are error cases
-    if (is_ast_str(list->left)) {
-      EXTRACT_STRING(name, list->left);
-      if (misc_attrs && current_proc) {
-        sem_column_name_exist_in_result_set(name, list->left, misc_attrs);
-      }
-      if (vault_column_list) {
-        symtab_add(vault_column_list, name, NULL);
-      }
-    }
-    else {
-      report_error(list->left, "CQL0363: all arguments must be names", "vault_sensitive");
-      record_error(list->left);
-      if (misc_attrs) {
-        record_error(misc_attrs);
-      }
-    }
-  }
-}
-
-// Information about the vault_sensitive parsing result:
-//  * encode_context_column is the column used as encode context
-//  * encode_columns is a list of columns to be encoded.
-//  * misc_attrs is used to report parsing errors.
-//
-// This is used in the find_misc_attrs callback to save parsing result.
-typedef struct encode_info {
-  CSTR *encode_context_column;
-  symtab *encode_columns;
-  ast_node *misc_attrs;
-} encode_info;
-
-// This is the core part of the parsing logic for vault_sensitive it does two
-// things:
-//   1. extract encode_info struct from the net info.
-//   2. report error case if invalid format is detected.
-//
-// There are two types of formats for vault_sensitive a.
-//   [[vault_sensitive=(<col1>, <col2>, ...)]] b.
-//   [[vault_sensitive=(<context_col>, (<col1>, <col2>, ...))]]
-//
-// format (b) has extra encode context column specified. both encode context
-// column and encode columns need to be present in resultSet
-static void sem_find_ast_misc_attr_vault_sensitive_callback(
-  CSTR misc_attr_prefix,
-  CSTR misc_attr_name,
-  ast_node *ast_misc_attr_value_list,
-  void *context)
-{
-  Contract(context);
-
-  // If missing any part of the attribute or the attribute isn't what is
-  // expected then it's not our attribute.
-  if (!misc_attr_prefix ||
-      !misc_attr_name ||
-      StrCaseCmp(misc_attr_prefix, "cql") ||
-      StrCaseCmp(misc_attr_name, "vault_sensitive")) {
-    return;
-  }
-
-  encode_info *info = (encode_info *)context;
-  ast_node *misc_attrs = info->misc_attrs;
-
-  // case [[vault_sensitive]]
-  // all sensitive columns in the result set will be encoded without context column.
-  if (ast_misc_attr_value_list == NULL) {
-    // report error if strict mode is on for encode context column
-    enforce_encode_context_column_with_strict_mode(misc_attrs);
-    return;
-  }
-
-  // case [[vault_sensitive=col]]
-  // only col is encoded without context column
-  if (!is_ast_misc_attr_value_list(ast_misc_attr_value_list)) {
-    // detect invalid string column
-    if (!vault_sensitive_encode_column_valid_string(ast_misc_attr_value_list, misc_attrs)) {
-      return;
-    }
-    // ensure column exists in result set
-    EXTRACT_STRING(name, ast_misc_attr_value_list);
-    if (misc_attrs && current_proc) {
-      sem_column_name_exist_in_result_set(name, ast_misc_attr_value_list, misc_attrs);
-    }
-    // extract the single to-be-encoded column
-    if (info->encode_columns) {
-      symtab_add(info->encode_columns, name, NULL);
-    }
-    // report error if strict mode is on for encode context column
-    enforce_encode_context_column_with_strict_mode(misc_attrs);
-    return;
-  }
-
-  // find out if we are dealing with format (a) or format (b)
-  //  a) [[vault_sensitive=(<col1>, <col2>, ...)]]
-  //  b) [[vault_sensitive=(<context_col>, (<col1>, <col2>, ...))]]
-  //
-  // if we see nested column list, it's format (b) with context column, otherwise format (a).
-  bool_t has_nested_columns = false;
-  for (ast_node *list = ast_misc_attr_value_list; list; list = list->right) {
-    ast_node *misc_attr_value = list->left;
-    if (is_ast_misc_attr_value_list(misc_attr_value)) {
-      has_nested_columns = true;
-    }
-  }
-
-  // format (a) without context column
-  // case [[vault_sensitive=(col1, col2, ...)]]
-  if (!has_nested_columns) {
-    vault_sensitive_encode_columns(ast_misc_attr_value_list, info->encode_columns, misc_attrs);
-    // report error if strict mode is on for encode context column
-    enforce_encode_context_column_with_strict_mode(misc_attrs);
-    return;
-  }
-
-  // format (b) with context column
-  // case [[vault_sensitive=(context_col, (col1, col2, ...))]]
-  uint32_t context_col_count = 0;
-  for (ast_node *list = ast_misc_attr_value_list; list; list = list->right) {
-    ast_node *misc_attr_value = list->left;
-    // we found the column list to be encoded
-    if (is_ast_misc_attr_value_list(misc_attr_value)) {
-      vault_sensitive_encode_columns(misc_attr_value, info->encode_columns, misc_attrs);
-    }
-    else {
-      // we found encode context column and ensure it is valid string
-      if (!vault_sensitive_encode_column_valid_string(misc_attr_value, misc_attrs)) {
-        return;
-      }
-      EXTRACT_STRING(context_col, misc_attr_value);
-      if (misc_attrs && current_proc) {
-        enforce_non_sensitive_context_column(context_col, misc_attrs);
-        sem_column_name_exist_in_result_set(context_col, misc_attr_value, misc_attrs);
-        sem_column_name_match_encode_context_column_type(context_col, misc_attrs);
-      }
-      // extract context column
-      if (info->encode_context_column) {
-        *(info->encode_context_column) = context_col;
-      }
-      // enforce that we only specify context column once
-      context_col_count++;
-      if (context_col_count > 1 && misc_attrs) {
-        report_error(misc_attrs, "CQL0408: encode context column can be only specified once", context_col);
-        record_error(misc_attrs);
-      }
-    }
-  }
-}
-
-// get the encoding information out of the "vault_sensitive" attribute, if there is any.
-// The encode context column is the column used as encode context. The encode
-// columns are the columns to be encoded.
-cql_noexport void init_encode_info(
-  ast_node *misc_attrs,
-  bool_t *use_encode_arg,
-  CSTR *encode_context_column_arg,
-  symtab *encode_columns_arg)
-{
-  *use_encode_arg = misc_attrs && exists_attribute_str(misc_attrs, "vault_sensitive");
-  if (*use_encode_arg) {
-    encode_info info;
-    info.encode_context_column = encode_context_column_arg;
-    info.encode_columns = encode_columns_arg;
-    info.misc_attrs = NULL;
-    find_misc_attrs(misc_attrs, sem_find_ast_misc_attr_vault_sensitive_callback, &info);
-    record_ok(misc_attrs);
-  }
 }
 
 // subscription directives have the same kind of payload and need the same basic info
@@ -20684,41 +20399,6 @@ static void sem_misc_attrs_no_table_scan(
   }
 }
 
-// This function validate the semantic of vault_sensitive attribute. The attribute does not take a value
-// and can only be used in create proc statement.
-// The vault_sensitive attribution should look like this:
-// [[vault_sensitive=(<column_name1>, <column_name2>, ...)]] or
-// [[vault_sensitive=(<context_column_name>, (<column_name1>, <column_name2>, ...))]]
-// <context_column_name> can be any column name in the resultset, and will be passed in as encoding context param
-// <column_name1>, <column_name2>, ... are the column names to be encoded if eligible.
-static void sem_misc_attrs_vault_sensitive(
-    CSTR misc_attr_prefix,
-    CSTR misc_attr_name,
-    ast_node *ast_misc_attr_values,
-    ast_node *misc_attrs,
-    ast_node *any_stmt) {
-   Contract(misc_attr_name);
-  Contract(any_stmt);
-  Contract(misc_attrs);
-
-  if (is_ast_stmt_and_attr(misc_attrs->parent)) {
-    ast_node *stmt = misc_attrs->parent->right;
-    if (!is_ast_create_proc_stmt(stmt)) {
-      report_error(misc_attrs, "CQL0328: vault_sensitive attribute may only be added to a create procedure statement", NULL);
-      record_error(misc_attrs);
-      return;
-    }
-  }
-
-  if (exists_attribute_str(misc_attrs, "vault_sensitive")) {
-    encode_info info;
-    info.encode_columns = NULL;
-    info.encode_context_column = NULL;
-    info.misc_attrs = misc_attrs;
-    find_misc_attrs(misc_attrs, sem_find_ast_misc_attr_vault_sensitive_callback, &info);
-  }
-}
-
 // Validates cql:alias_of attribute.
 // The attribute can only be used in a declare func statement.
 // It also must have a non-empty string argument.
@@ -20919,38 +20599,17 @@ static void sem_create_proc_stmt(ast_node *ast) {
     }
   }
 
-  // Check for valid autodrops, identity column, vault_sensitive or fragment annotations
+  // Check for valid autodrops, identity column, or fragment annotations
   // Note: these attribute are ignored on empty procs because they are meaningless.
   if (misc_attrs && stmt_list) {
     bool_t result_set_proc = has_result_set(ast);
     bool_t out_stmt_proc = has_out_stmt_result(ast);
     bool_t out_union_proc = has_out_union_stmt_result(current_proc);
 
-    // If a stored proc is marked with the vault_sensitive annotation then we validate
-    // both the encode context and encode columns.  The attributes should look like this:
-    // [[vault_sensitve=(col1, col2, ,...)]] or
-    // [[vault_sensitve=(context_col, (col1, col2, ,...))]]
-    annotation_target = "vault_sensitive";
-    if (exists_attribute_str(misc_attrs, annotation_target)) {
-      encode_info info;
-      info.encode_columns = NULL;
-      info.encode_context_column = NULL;
-      info.misc_attrs = misc_attrs;
-      find_misc_attrs(misc_attrs, sem_find_ast_misc_attr_vault_sensitive_callback, &info);
-    }
-    if (is_error(misc_attrs)) {
-      goto cleanup;
-    }
+    // no errors at this point
+    Invariant(!is_error(misc_attrs));
+   
     annotation_target = NULL;
-
-    // Vault required db pointer to encode/decode column values. Because of that the proc with vault
-    // attribution should have access to the db pointer. Only dml proc has a db pointer, therefore
-    // vault annotation can only be available to dml proc.
-    if (exists_attribute_str(misc_attrs, "vault_sensitive") && !has_dml) {
-      report_error(misc_attrs, "CQL0364: vault_sensitive annotation can only go on a procedure that uses the database", NULL);
-      record_error(misc_attrs);
-      goto cleanup;
-    }
 
     // If a stored proc is marked with the identity annotation then we generate the
     // "sameness" helper method that checks those columns.  The attributes should look like this:
@@ -25476,40 +25135,6 @@ static void sem_enforcement_options(ast_node *ast, bool_t strict) {
       enforcement.strict_table_function = strict;
       break;
 
-    case ENFORCE_ENCODE_CONTEXT_COLUMN:
-      enforcement.strict_encode_context = strict;
-      break;
-
-    case ENFORCE_ENCODE_CONTEXT_TYPE_INTEGER:
-      enforcement.strict_encode_context_type = strict;
-      encode_context_type = SEM_TYPE_INTEGER;
-      break;
-
-    case ENFORCE_ENCODE_CONTEXT_TYPE_LONG_INTEGER:
-      enforcement.strict_encode_context_type = strict;
-      encode_context_type = SEM_TYPE_LONG_INTEGER;
-      break;
-
-    case ENFORCE_ENCODE_CONTEXT_TYPE_REAL:
-      enforcement.strict_encode_context_type = strict;
-      encode_context_type = SEM_TYPE_REAL;
-      break;
-
-    case ENFORCE_ENCODE_CONTEXT_TYPE_BOOL:
-      enforcement.strict_encode_context_type = strict;
-      encode_context_type = SEM_TYPE_BOOL;
-      break;
-
-    case ENFORCE_ENCODE_CONTEXT_TYPE_TEXT:
-      enforcement.strict_encode_context_type = strict;
-      encode_context_type = SEM_TYPE_TEXT;
-      break;
-
-    case ENFORCE_ENCODE_CONTEXT_TYPE_BLOB:
-      enforcement.strict_encode_context_type = strict;
-      encode_context_type = SEM_TYPE_BLOB;
-      break;
-
     case ENFORCE_IS_TRUE:
       enforcement.strict_is_true = strict;
       break;
@@ -26805,7 +26430,6 @@ cql_noexport void sem_main(ast_node *ast) {
   MISC_ATTR_INIT(alias_of);
   MISC_ATTR_INIT(no_table_scan);
   MISC_ATTR_INIT(ok_table_scan);
-  MISC_ATTR_INIT(vault_sensitive);
 
   if (ast) {
     sem_stmt_list(ast);
@@ -27162,9 +26786,6 @@ cql_data_defn( list_item *all_ad_hoc_list );
 cql_data_defn( list_item *all_select_functions_list );
 cql_data_defn( list_item *all_enums_list );
 cql_data_defn( list_item *all_constant_groups_list );
-cql_data_defn( bool_t use_encode );
-cql_data_defn( CSTR _Nullable encode_context_column );
-cql_data_defn( symtab *encode_columns );
 cql_data_defn( cte_state *cte_cur );
 cql_data_defn( symtab *ref_sources_for_target_table );
 cql_data_defn( symtab *ref_targets_for_source_table );

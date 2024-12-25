@@ -210,8 +210,6 @@ begin
 end;
 
 /* this is a demo procedure, it's rather silly... */
-[[vault_sensitive]]
-[[custom_type_for_encoded_column]]
 create proc JavaDemo()
 begin
   /* add the table we will be using */

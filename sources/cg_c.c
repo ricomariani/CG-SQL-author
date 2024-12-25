@@ -49,7 +49,7 @@ static void cg_release_out_arg_before_call(sem_t sem_type_arg, sem_t sem_type_pa
 static void cg_refs_offset(charbuf *output, sem_struct *sptr, CSTR offset_sym_name, CSTR struct_name);
 static void cg_col_offsets(charbuf *output, sem_struct *sptr, CSTR sym_name, CSTR struct_name);
 static void cg_declare_simple_var(sem_t sem_type, CSTR name);
-static void cg_data_type(charbuf *output, bool_t encode, sem_t sem_type);
+static void cg_data_type(charbuf *output, sem_t sem_type);
 cql_noexport uint32_t cg_statement_pieces(CSTR in, charbuf *output);
 
 cql_noexport void cg_c_init(void);
@@ -3489,7 +3489,7 @@ static void cg_data_types(charbuf *output, sem_struct *sptr, CSTR sym_name) {
       bprintf(output, ",\n");
     }
     bprintf(output, "  ");
-    cg_data_type(output, false, sptr->semtypes[i]);
+    cg_data_type(output, sptr->semtypes[i]);
   }
 
   bprintf(output, "\n};\n");
@@ -3902,12 +3902,6 @@ static void cg_create_proc_stmt(ast_node *ast) {
   charbuf *saved_cleanup = cg_cleanup_output;
   charbuf *saved_fwd_ref = cg_fwd_ref_output;
   cg_scratch_masks *saved_masks = cg_current_masks;
-
-  Invariant(!use_encode);
-  Invariant(!encode_context_column);
-  Invariant(!encode_columns);
-  encode_columns = symtab_new();
-
   cg_scratch_masks masks;
   cg_current_masks = &masks;
   cg_zero_masks(cg_current_masks);
@@ -3915,8 +3909,6 @@ static void cg_create_proc_stmt(ast_node *ast) {
   in_proc = true;
   current_proc = ast;
   seed_declared = false;
-
-  init_encode_info(misc_attrs, &use_encode, &encode_context_column, encode_columns);
 
   bprintf(cg_declarations_output, "\n");
 
@@ -4141,12 +4133,8 @@ static void cg_create_proc_stmt(ast_node *ast) {
   in_var_group_decl = false;
   in_var_group_emit = false;
   in_proc = false;
-  use_encode = false;
   current_proc = NULL;
 
-  symtab_delete(encode_columns);
-  encode_context_column = NULL;
-  encode_columns = NULL;
   error_target_used = saved_error_target_used;
   rcthrown_index = saved_rcthrown_index;
   rcthrown_used = saved_rcthrown_used;
@@ -7578,7 +7566,7 @@ static void cg_stmt_list(ast_node *head) {
 // type (the null type is reserved for the literal NULL, it's not a storage
 // class) and certainly nothing that is a struct or sentinel type.  Likewise
 // objects cannot be the result of a select, so that's out too.
-static void cg_data_type(charbuf *output, bool_t encode, sem_t sem_type) {
+static void cg_data_type(charbuf *output, sem_t sem_type) {
   Contract(is_unitary(sem_type));
   Contract(!is_null_type(sem_type));
 
@@ -7609,9 +7597,6 @@ static void cg_data_type(charbuf *output, bool_t encode, sem_t sem_type) {
   }
   if (is_not_nullable(sem_type)) {
     bprintf(output, " | CQL_DATA_TYPE_NOT_NULL");
-  }
-  if (encode) {
-    bprintf(output, " | CQL_DATA_TYPE_ENCODED");
   }
 }
 
@@ -7902,7 +7887,6 @@ typedef struct fetch_result_info {
   bool_t use_stmt;
   int32_t indent;
   CSTR prefix;
-  int16_t encode_context_index;
 } fetch_result_info;
 
 // This generates the cql_fetch_info structure for the various output flavors
@@ -7950,7 +7934,6 @@ static void cg_fetch_info(fetch_result_info *info, charbuf *output)
     if (info->has_identity_columns) {
       bprintf(&tmp, "  .identity_columns = %s,\n", info->identity_columns_sym);
     }
-    bprintf(&tmp, "  .encode_context_index = %d,\n", info->encode_context_index);
     bprintf(&tmp, "  .rowsize = sizeof(%s),\n", info->row_sym);
     bprintf(&tmp, "  .crc = CRC_%s,\n", info->proc_sym);
     bprintf(&tmp, "  .perf_index = &%s,\n", info->perf_index);
@@ -8028,7 +8011,6 @@ static void cg_proc_result_set(ast_node *ast) {
   CG_CHARBUF_OPEN_SYM(fetch_results_sym, name, "_fetch_results");
   CG_CHARBUF_OPEN_SYM(copy_sym, name, "_copy");
   CG_CHARBUF_OPEN_SYM(perf_index, name, "_perf_index");
-  CG_CHARBUF_OPEN_SYM(set_encoding_sym, name, "_set_encoding");
 
   sem_struct *sptr = ast->sem->sptr;
   uint32_t count = sptr->count;
@@ -8076,9 +8058,6 @@ static void cg_proc_result_set(ast_node *ast) {
   //  * suppress result set implies suppress getters
   bool_t suppress_getters = is_proc_suppress_getters(ast) || is_private || suppress_result_set;
 
-  // the index of the encode context column, -1 represents not found
-  int16_t encode_context_index = -1;
-
   // we may want the setters.
   bool_t emit_setters = is_proc_emit_setters(ast);
 
@@ -8089,13 +8068,8 @@ static void cg_proc_result_set(ast_node *ast) {
     CSTR kind = sptr->kinds[i];
 
     bprintf(&data_types, "  ");
-    bool_t encode = should_encode_col(col, sem_type, use_encode, encode_columns);
-    cg_data_type(&data_types, encode, sem_type);
+    cg_data_type(&data_types, sem_type);
     bprintf(&data_types, ", // %s\n", col);
-
-    if (encode_context_column != NULL && !strcmp(col, encode_context_column)) {
-      encode_context_index = (int16_t)i;
-    }
 
     if (suppress_getters) {
       continue;
@@ -8144,24 +8118,6 @@ static void cg_proc_result_set(ast_node *ast) {
       if (emit_setters) {
         cg_proc_result_set_setter(&info, DONT_EMIT_SET_NULL);
       }
-    }
-
-    if (use_encode && sensitive_flag(sem_type)) {
-      CG_CHARBUF_OPEN_SYM_WITH_PREFIX(
-        col_getter_sym,
-        rt->symbol_prefix,
-        info.name,
-        "_get_",
-        info.col,
-        "_is_encoded");
-
-      bprintf(
-          info.headers,
-          "\n#define %s(rs) \\\n"
-          "  cql_result_set_get_is_encoded_col((cql_result_set_ref)rs, %d)\n",
-          col_getter_sym.ptr,
-          i);
-      CHARBUF_CLOSE(col_getter_sym);
     }
   }
 
@@ -8261,7 +8217,6 @@ static void cg_proc_result_set(ast_node *ast) {
         .perf_index = perf_index.ptr,
         .misc_attrs = misc_attrs,
         .indent = 2,
-        .encode_context_index = encode_context_index,
     };
 
     cg_fetch_info(&info, d);
@@ -8315,7 +8270,6 @@ static void cg_proc_result_set(ast_node *ast) {
         .perf_index = perf_index.ptr,
         .misc_attrs = misc_attrs,
         .indent = 2,
-        .encode_context_index = encode_context_index,
     };
 
     cg_fetch_info(&info, d);
@@ -8341,7 +8295,6 @@ static void cg_proc_result_set(ast_node *ast) {
         .misc_attrs = misc_attrs,
         .indent = 0,
         .prefix = proc_sym.ptr,
-        .encode_context_index = encode_context_index,
     };
 
     cg_fetch_info(&info, d);
@@ -8410,17 +8363,6 @@ static void cg_proc_result_set(ast_node *ast) {
     }
   }
 
-  // Add a helper function that overrides CQL_DATA_TYPE_ENCODED bit of a
-  // resultset. It's a debugging function that allow you to turn ON/OFF
-  // encoding/decoding when your app is running.
-  if (use_encode) {
-    bprintf(h, "\nextern void %s(cql_int32 col, cql_bool encode);\n", set_encoding_sym.ptr);
-    bprintf(d, "void %s(cql_int32 col, cql_bool encode) {\n", set_encoding_sym.ptr);
-    bprintf(d, "  return cql_set_encoding(%s, %s, col, encode);\n", data_types_sym.ptr, data_types_count_sym.ptr);
-    bprintf(d, "}\n\n");
-  }
-
-  CHARBUF_CLOSE(set_encoding_sym);
   CHARBUF_CLOSE(perf_index);
   CHARBUF_CLOSE(copy_sym);
   CHARBUF_CLOSE(fetch_results_sym);

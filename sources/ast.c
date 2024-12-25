@@ -799,12 +799,6 @@ cql_noexport uint32_t exists_attribute_str(
   ast_node *_Nullable misc_attr_list,
   CSTR attribute_name)
 {
-  if (!misc_attr_list) {
-    return 0;
-  }
-
-  Contract(is_ast_misc_attrs(misc_attr_list));
-
   misc_attrs_type misc = {
     .str_node_callback = NULL,
     .context = NULL,
@@ -812,7 +806,11 @@ cql_noexport uint32_t exists_attribute_str(
     .count = 0,
   };
 
-  find_misc_attrs(misc_attr_list, ast_exists_ast_misc_attr_callback, &misc);
+  if (misc_attr_list) {
+    Contract(is_ast_misc_attrs(misc_attr_list));
+    find_misc_attrs(misc_attr_list, ast_exists_ast_misc_attr_callback, &misc);
+  }
+
   return misc.count;
 }
 

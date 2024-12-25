@@ -101424,3 +101424,432 @@ test/sem_test.sql:XXXX:1: error: in table_or_subquery : CQL0095: table/view not 
             | {select_limit}
               | {select_offset}
 
+The statement ending at line XXXX
+
+PROC make_jsonb_backed_schema ()
+BEGIN
+  [[backing_table]]
+  [[jsonb]]
+  CREATE TABLE backtab(
+    kk BLOB PRIMARY KEY,
+    vv BLOB
+  );
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name make_jsonb_backed_schema}: ok dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {stmt_and_attr}: ok
+        | {misc_attrs}: ok
+        | | {misc_attr}
+        | | | {dot}
+        | |   | {name cql}
+        | |   | {name backing_table}
+        | | {misc_attrs}
+        |   | {misc_attr}
+        |     | {dot}
+        |       | {name cql}
+        |       | {name jsonb}
+        | {create_table_stmt}: backtab: { kk: blob notnull primary_key, vv: blob } backing
+          | {create_table_name_flags}
+          | | {table_flags_attrs}
+          | | | {int 0}
+          | | {name backtab}
+          | {col_key_list}
+            | {col_def}: kk: blob notnull primary_key
+            | | {col_def_type_attrs}: ok
+            |   | {col_def_name_type}
+            |   | | {name kk}
+            |   | | {type_blob}: blob
+            |   | {col_attrs_pk}: ok
+            |     | {autoinc_and_conflict_clause}
+            | {col_key_list}
+              | {col_def}: vv: blob
+                | {col_def_type_attrs}: ok
+                  | {col_def_name_type}
+                    | {name vv}
+                    | {type_blob}: blob
+
+The statement ending at line XXXX
+
+[[backed_by=`a backing table`]]
+CREATE TABLE a_table(
+  col1 INT PRIMARY KEY,
+  col2 INT
+);
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name backed_by}
+  |   | {name `a backing table`}: ok
+  | {create_table_stmt}: a_table: { col1: integer notnull primary_key, col2: integer } backed
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name a_table}
+    | {col_key_list}
+      | {col_def}: col1: integer notnull primary_key
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name col1}
+      |   | | {type_int}: integer
+      |   | {col_attrs_pk}: ok
+      |     | {autoinc_and_conflict_clause}
+      | {col_key_list}
+        | {col_def}: col2: integer
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name col2}
+              | {type_int}: integer
+
+The statement ending at line XXXX
+
+[[backed_by=`a backing table`]]
+CREATE TABLE b_table(
+  col1 INT PRIMARY KEY,
+  col2 INT
+);
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name backed_by}
+  |   | {name `a backing table`}: ok
+  | {create_table_stmt}: b_table: { col1: integer notnull primary_key, col2: integer } backed
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name b_table}
+    | {col_key_list}
+      | {col_def}: col1: integer notnull primary_key
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name col1}
+      |   | | {type_int}: integer
+      |   | {col_attrs_pk}: ok
+      |     | {autoinc_and_conflict_clause}
+      | {col_key_list}
+        | {col_def}: col2: integer
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name col2}
+              | {type_int}: integer
+
+The statement ending at line XXXX
+
+[[backed_by=`a backing table`]]
+CREATE TABLE c_table(
+  col1 INT PRIMARY KEY,
+  col2 INT
+);
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name backed_by}
+  |   | {name `a backing table`}: ok
+  | {create_table_stmt}: c_table: { col1: integer notnull primary_key, col2: integer } backed
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name c_table}
+    | {col_key_list}
+      | {col_def}: col1: integer notnull primary_key
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name col1}
+      |   | | {type_int}: integer
+      |   | {col_attrs_pk}: ok
+      |     | {autoinc_and_conflict_clause}
+      | {col_key_list}
+        | {col_def}: col2: integer
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name col2}
+              | {type_int}: integer
+
+The statement ending at line XXXX
+
+PROC backed_table_implied_refs ()
+BEGIN
+  CURSOR c FOR
+    WITH
+      a_table (rowid, col1, col2) AS (CALL _a_table()),
+      b_table (rowid, col1, col2) AS (CALL _b_table()),
+      c_table (rowid, col1, col2) AS (CALL _c_table()),
+      _vals (col1, col2) AS (
+        VALUES
+          (1, 1),
+          (5, 25)
+      )
+    INSERT INTO `a backing table`(`the key`, `the value`)
+      SELECT cql_blob_create(a_table, V.col1, a_table.col1), cql_blob_create(a_table, V.col2, a_table.col2)
+        FROM _vals AS V
+        WHERE 1
+    ON CONFLICT (`the key`)
+    DO UPDATE
+      SET `the value` = cql_blob_update(`the value`, 1000, a_table.col2)
+      WHERE cql_blob_get(excluded.`the key`, a_table.col1) NOT IN (SELECT col1
+        FROM a_table
+      UNION
+      SELECT col1
+        FROM b_table
+      UNION
+      SELECT col1
+        FROM c_table)
+      RETURNING cql_blob_get(`the key`, a_table.col1), cql_blob_get(`the value`, a_table.col2);
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name backed_table_implied_refs}: ok dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_cursor}: c: _select_: { col1: integer notnull, col2: integer } variable dml_proc
+        | {name c}: c: _select_: { col1: integer notnull, col2: integer } variable dml_proc
+        | {upsert_returning_stmt}: _select_: { col1: integer notnull, col2: integer }
+          | {with_upsert_stmt}: ok
+          | | {with}
+          | | | {cte_tables}: ok
+          | |   | {cte_table}: a_table: { rowid: longint notnull, col1: integer notnull, col2: integer }
+          | |   | | {cte_decl}: a_table: { rowid: longint notnull, col1: integer notnull, col2: integer }
+          | |   | | | {name a_table}
+          | |   | | | {name_list}
+          | |   | |   | {name rowid}
+          | |   | |   | {name_list}
+          | |   | |     | {name col1}
+          | |   | |     | {name_list}
+          | |   | |       | {name col2}
+          | |   | | {shared_cte}: _a_table: { rowid: longint notnull, col1: integer notnull, col2: integer } dml_proc
+          | |   |   | {call_stmt}: _a_table: { rowid: longint notnull, col1: integer notnull, col2: integer } dml_proc
+          | |   |     | {name _a_table}: _a_table: { rowid: longint notnull, col1: integer notnull, col2: integer } dml_proc
+          | |   | {cte_tables}
+          | |     | {cte_table}: b_table: { rowid: longint notnull, col1: integer notnull, col2: integer }
+          | |     | | {cte_decl}: b_table: { rowid: longint notnull, col1: integer notnull, col2: integer }
+          | |     | | | {name b_table}
+          | |     | | | {name_list}
+          | |     | |   | {name rowid}
+          | |     | |   | {name_list}
+          | |     | |     | {name col1}
+          | |     | |     | {name_list}
+          | |     | |       | {name col2}
+          | |     | | {shared_cte}: _b_table: { rowid: longint notnull, col1: integer notnull, col2: integer } dml_proc
+          | |     |   | {call_stmt}: _b_table: { rowid: longint notnull, col1: integer notnull, col2: integer } dml_proc
+          | |     |     | {name _b_table}: _b_table: { rowid: longint notnull, col1: integer notnull, col2: integer } dml_proc
+          | |     | {cte_tables}
+          | |       | {cte_table}: c_table: { rowid: longint notnull, col1: integer notnull, col2: integer }
+          | |       | | {cte_decl}: c_table: { rowid: longint notnull, col1: integer notnull, col2: integer }
+          | |       | | | {name c_table}
+          | |       | | | {name_list}
+          | |       | |   | {name rowid}
+          | |       | |   | {name_list}
+          | |       | |     | {name col1}
+          | |       | |     | {name_list}
+          | |       | |       | {name col2}
+          | |       | | {shared_cte}: _c_table: { rowid: longint notnull, col1: integer notnull, col2: integer } dml_proc
+          | |       |   | {call_stmt}: _c_table: { rowid: longint notnull, col1: integer notnull, col2: integer } dml_proc
+          | |       |     | {name _c_table}: _c_table: { rowid: longint notnull, col1: integer notnull, col2: integer } dml_proc
+          | |       | {cte_tables}
+          | |         | {cte_table}: _vals: { col1: integer notnull, col2: integer notnull }
+          | |           | {cte_decl}: _vals: { col1: integer notnull, col2: integer notnull }
+          | |           | | {name _vals}
+          | |           | | {name_list}
+          | |           |   | {name col1}: col1: integer notnull backed_table(a_table)
+          | |           |   | {name_list}
+          | |           |     | {name col2}: col2: integer backed_table(a_table)
+          | |           | {select_stmt}: values: { column1: integer notnull, column2: integer notnull }
+          | |             | {select_core_list}: values: { column1: integer notnull, column2: integer notnull }
+          | |             | | {select_core}: values: { column1: integer notnull, column2: integer notnull }
+          | |             |   | {select_values}
+          | |             |   | {values}: values: { column1: integer notnull, column2: integer notnull }
+          | |             |     | {insert_list}: ok
+          | |             |     | | {int 1}: integer notnull
+          | |             |     | | {insert_list}
+          | |             |     |   | {int 1}: integer notnull
+          | |             |     | {values}
+          | |             |       | {insert_list}: ok
+          | |             |         | {int 5}: integer notnull
+          | |             |         | {insert_list}
+          | |             |           | {int 25}: integer notnull
+          | |             | {select_orderby}
+          | |               | {select_limit}
+          | |                 | {select_offset}
+          | | {upsert_stmt}: ok
+          |   | {insert_stmt}: ok
+          |   | | {insert_normal}
+          |   | | {name_columns_values}
+          |   |   | {name `a backing table`}: `a backing table`: { `the key`: blob notnull primary_key qid, `the value`: blob qid } backing qid
+          |   |   | {columns_values}: ok
+          |   |     | {column_spec}
+          |   |     | | {name_list}
+          |   |     |   | {name `the key`}: `the key`: blob notnull qid
+          |   |     |   | {name_list}
+          |   |     |     | {name `the value`}: `the value`: blob qid
+          |   |     | {select_stmt}: _select_: { _anon: blob notnull, _anon: blob notnull }
+          |   |       | {select_core_list}: _select_: { _anon: blob notnull, _anon: blob notnull }
+          |   |       | | {select_core}: _select_: { _anon: blob notnull, _anon: blob notnull }
+          |   |       |   | {select_expr_list_con}: _select_: { _anon: blob notnull, _anon: blob notnull }
+          |   |       |     | {select_expr_list}: _select_: { _anon: blob notnull, _anon: blob notnull }
+          |   |       |     | | {select_expr}: blob notnull
+          |   |       |     | | | {call}: blob notnull
+          |   |       |     | |   | {name cql_blob_create}: blob notnull
+          |   |       |     | |   | {call_arg_list}
+          |   |       |     | |     | {call_filter_clause}
+          |   |       |     | |     | {arg_list}: ok
+          |   |       |     | |       | {name a_table}
+          |   |       |     | |       | {arg_list}
+          |   |       |     | |         | {dot}: col1: integer notnull
+          |   |       |     | |         | | {name V}
+          |   |       |     | |         | | {name col1}
+          |   |       |     | |         | {arg_list}
+          |   |       |     | |           | {dot}: integer notnull primary_key
+          |   |       |     | |             | {name a_table}
+          |   |       |     | |             | {name col1}
+          |   |       |     | | {select_expr_list}
+          |   |       |     |   | {select_expr}: blob notnull
+          |   |       |     |     | {call}: blob notnull
+          |   |       |     |       | {name cql_blob_create}: blob notnull
+          |   |       |     |       | {call_arg_list}
+          |   |       |     |         | {call_filter_clause}
+          |   |       |     |         | {arg_list}: ok
+          |   |       |     |           | {name a_table}
+          |   |       |     |           | {arg_list}
+          |   |       |     |             | {dot}: col2: integer notnull
+          |   |       |     |             | | {name V}
+          |   |       |     |             | | {name col2}
+          |   |       |     |             | {arg_list}
+          |   |       |     |               | {dot}: integer
+          |   |       |     |                 | {name a_table}
+          |   |       |     |                 | {name col2}
+          |   |       |     | {select_from_etc}: TABLE { V: _vals }
+          |   |       |       | {table_or_subquery_list}: TABLE { V: _vals }
+          |   |       |       | | {table_or_subquery}: TABLE { V: _vals }
+          |   |       |       |   | {name _vals}: TABLE { V: _vals }
+          |   |       |       |   | {opt_as_alias}
+          |   |       |       |     | {name V}
+          |   |       |       | {select_where}
+          |   |       |         | {opt_where}: integer notnull
+          |   |       |         | | {int 1}: integer notnull
+          |   |       |         | {select_groupby}
+          |   |       |           | {select_having}
+          |   |       | {select_orderby}
+          |   |         | {select_limit}
+          |   |           | {select_offset}
+          |   | {upsert_update}: ok
+          |     | {conflict_target}: `a backing table`: { `the key`: blob notnull qid, `the value`: blob qid }
+          |     | | {indexed_columns}
+          |     |   | {indexed_column}
+          |     |     | {name `the key`}: `the key`: blob notnull qid
+          |     | {update_stmt}: `a backing table`: { `the key`: blob notnull primary_key qid, `the value`: blob qid } backing qid
+          |       | {update_set}
+          |         | {update_list}: ok
+          |         | | {update_entry}: `the value`: blob qid
+          |         |   | {name `the value`}: `the value`: blob qid
+          |         |   | {call}: blob notnull
+          |         |     | {name cql_blob_update}: blob notnull
+          |         |     | {call_arg_list}
+          |         |       | {call_filter_clause}
+          |         |       | {arg_list}: ok
+          |         |         | {name `the value`}: `the value`: blob qid
+          |         |         | {arg_list}
+          |         |           | {int 1000}: integer notnull
+          |         |           | {arg_list}
+          |         |             | {dot}: integer
+          |         |               | {name a_table}
+          |         |               | {name col2}
+          |         | {update_from}
+          |           | {update_where}
+          |             | {opt_where}: bool notnull
+          |             | | {not_in}: bool notnull
+          |             |   | {call}: integer notnull primary_key
+          |             |   | | {name cql_blob_get}: integer notnull primary_key
+          |             |   | | {call_arg_list}
+          |             |   |   | {call_filter_clause}
+          |             |   |   | {arg_list}: ok
+          |             |   |     | {dot}: `the key`: blob notnull qid
+          |             |   |     | | {name excluded}
+          |             |   |     | | {name `the key`}
+          |             |   |     | {arg_list}
+          |             |   |       | {dot}: integer notnull primary_key
+          |             |   |         | {name a_table}
+          |             |   |         | {name col1}
+          |             |   | {select_stmt}: col1: integer
+          |             |     | {select_core_list}: UNION: { col1: integer notnull }
+          |             |     | | {select_core}: _select_: { col1: integer notnull }
+          |             |     | | | {select_expr_list_con}: _select_: { col1: integer notnull }
+          |             |     | |   | {select_expr_list}: _select_: { col1: integer notnull }
+          |             |     | |   | | {select_expr}: col1: integer notnull
+          |             |     | |   |   | {name col1}: col1: integer notnull
+          |             |     | |   | {select_from_etc}: TABLE { a_table: a_table }
+          |             |     | |     | {table_or_subquery_list}: TABLE { a_table: a_table }
+          |             |     | |     | | {table_or_subquery}: TABLE { a_table: a_table }
+          |             |     | |     |   | {name a_table}: TABLE { a_table: a_table }
+          |             |     | |     | {select_where}
+          |             |     | |       | {select_groupby}
+          |             |     | |         | {select_having}
+          |             |     | | {select_core_compound}
+          |             |     |   | {int 1}
+          |             |     |   | {select_core_list}: UNION: { col1: integer notnull }
+          |             |     |     | {select_core}: _select_: { col1: integer notnull }
+          |             |     |     | | {select_expr_list_con}: _select_: { col1: integer notnull }
+          |             |     |     |   | {select_expr_list}: _select_: { col1: integer notnull }
+          |             |     |     |   | | {select_expr}: col1: integer notnull
+          |             |     |     |   |   | {name col1}: col1: integer notnull
+          |             |     |     |   | {select_from_etc}: TABLE { b_table: b_table }
+          |             |     |     |     | {table_or_subquery_list}: TABLE { b_table: b_table }
+          |             |     |     |     | | {table_or_subquery}: TABLE { b_table: b_table }
+          |             |     |     |     |   | {name b_table}: TABLE { b_table: b_table }
+          |             |     |     |     | {select_where}
+          |             |     |     |       | {select_groupby}
+          |             |     |     |         | {select_having}
+          |             |     |     | {select_core_compound}
+          |             |     |       | {int 1}
+          |             |     |       | {select_core_list}: _select_: { col1: integer notnull }
+          |             |     |         | {select_core}: _select_: { col1: integer notnull }
+          |             |     |           | {select_expr_list_con}: _select_: { col1: integer notnull }
+          |             |     |             | {select_expr_list}: _select_: { col1: integer notnull }
+          |             |     |             | | {select_expr}: col1: integer notnull
+          |             |     |             |   | {name col1}: col1: integer notnull
+          |             |     |             | {select_from_etc}: TABLE { c_table: c_table }
+          |             |     |               | {table_or_subquery_list}: TABLE { c_table: c_table }
+          |             |     |               | | {table_or_subquery}: TABLE { c_table: c_table }
+          |             |     |               |   | {name c_table}: TABLE { c_table: c_table }
+          |             |     |               | {select_where}
+          |             |     |                 | {select_groupby}
+          |             |     |                   | {select_having}
+          |             |     | {select_orderby}
+          |             |       | {select_limit}
+          |             |         | {select_offset}
+          |             | {update_orderby}
+          | {select_expr_list}: _select_: { col1: integer notnull, col2: integer }
+            | {select_expr}: col1: integer notnull
+            | | {call}: col1: integer notnull backed_table(a_table)
+            |   | {name cql_blob_get}
+            |   | {call_arg_list}
+            |     | {call_filter_clause}
+            |     | {arg_list}
+            |       | {name `the key`}
+            |       | {arg_list}
+            |         | {dot}
+            |           | {name a_table}
+            |           | {name col1}
+            | {select_expr_list}
+              | {select_expr}: col2: integer
+                | {call}: col2: integer backed_table(a_table)
+                  | {name cql_blob_get}
+                  | {call_arg_list}
+                    | {call_filter_clause}
+                    | {arg_list}
+                      | {name `the value`}
+                      | {arg_list}
+                        | {dot}
+                          | {name a_table}
+                          | {name col2}
+

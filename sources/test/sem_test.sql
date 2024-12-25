@@ -26158,3 +26158,61 @@ proc select_exists_failure()
 begin
   let b := (select exists(select not 'x' from no_such_table));
 end;
+
+
+proc make_jsonb_backed_schema()
+begin
+  [[backing_table]]
+  [[jsonb]]
+  create table backtab(
+    kk blob primary key,
+    vv blob
+  );
+end;
+
+[[backed_by=`a backing table`]]
+create table a_table(
+  col1 int primary key,
+  col2 int
+);
+
+[[backed_by=`a backing table`]]
+create table b_table(
+  col1 int primary key,
+  col2 int
+);
+
+[[backed_by=`a backing table`]]
+create table c_table(
+  col1 int primary key,
+  col2 int
+);
+
+-- TEST: verify that all the implied backed tables are considered
+-- the point of this test is to verify that all three backing table references
+-- were added to the CTE list (there were bugs here)
+-- + WITH
+-- + a_table (rowid, col1, col2) AS (CALL _a_table()),
+-- + b_table (rowid, col1, col2) AS (CALL _b_table()),
+-- + c_table (rowid, col1, col2) AS (CALL _c_table()),
+-- + _vals (col1, col2) AS (
+-- + INSERT INTO `a backing table`(`the key`, `the value`)
+-- +3 (CALL %table())
+proc backed_table_implied_refs ()
+begin
+  cursor c for
+    insert into a_table(col1, col2)
+      values
+        (1, 1),
+        (5, 25)
+    on conflict (col1)
+    do update
+      set `col2` = 1000
+      where excluded.`col1` not in (
+      select col1 from a_table
+      union
+      select col1 from b_table
+      union
+      select col1 from c_table)
+      returning *;
+end;

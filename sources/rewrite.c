@@ -2365,6 +2365,15 @@ cql_noexport void rewrite_shared_fragment_from_backed_table(ast_node *_Nonnull b
 //
 // Note that walking the list in this way effectively reverses the order the items
 // will appear in the  CTE list.
+//
+// If you're thinking, just a hold it, what if there's a reference to the base
+// table for say an insert statement or something, won't the CTE we add for
+// that table be hiding the table we are trying to insert into?  But no, for
+// the main table if it is backed is necessarily renamed to be the backing table
+// so by the time SQLite sees it there will be possibly many CTEs for backed
+// tables that were mentioned, including the main table, but the main table
+// is gone, replaced by the backing table. This leaves the main table name
+// free to be used in the statement by a CTE like usual.
 static void rewrite_backed_table_ctes(
   list_item *backed_tables_list,
   ast_node **pcte_tables,

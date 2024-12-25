@@ -2445,7 +2445,7 @@ cql_noexport void rewrite_statement_backed_table_ctes(
     EXTRACT(with, stmt->left);
     EXTRACT(cte_tables, with->left);
     ast_set_right(cte_tail, cte_tables);
-    ast_set_left(with, cte_tail);
+    ast_set_left(with, backed_cte_tables);
   }
   else {
     // preserve the old (left, right) in a nested node and swap in the "with" node
@@ -2473,7 +2473,9 @@ cql_noexport void rewrite_statement_backed_table_ctes(
   }
 
   // stdout the rewrite for debugging if needed
+  // printf("------------\n");
   // gen_stmt_list_to_stdout(new_ast_stmt_list(stmt, NULL));
+  // printf("------------\n\n\n\n");
 }
 
 // Select is the simplest case, all we have to do is add the references

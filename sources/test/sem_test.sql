@@ -10993,7 +10993,7 @@ select * from foo offset 1;
 -- + {upsert_stmt}: ok
 -- + {insert_stmt}: ok
 -- + {upsert_update}: ok
--- + {conflict_target}: excluded: { id: integer notnull }
+-- + {conflict_target}: foo: { id: integer notnull }
 -- - error:
 proc upsert_do_nothing()
 begin
@@ -11006,7 +11006,7 @@ end;
 -- + {with_upsert_stmt}: ok
 -- + {insert_stmt}: ok
 -- + {upsert_update}: ok
--- + {conflict_target}: excluded: { id: integer notnull }
+-- + {conflict_target}: foo: { id: integer notnull }
 -- - error:
 proc with_upsert_do_nothing()
 begin
@@ -11042,7 +11042,7 @@ end;
 -- + {upsert_stmt}: ok
 -- + {insert_stmt}: ok
 -- + {upsert_update}: ok
--- + {conflict_target}: excluded: { id: integer notnull }
+-- + {conflict_target}: foo: { id: integer notnull }
 -- - error:
 proc upsert_without_conflict_target()
 begin
@@ -11055,7 +11055,7 @@ end;
 -- + {upsert_stmt}: ok
 -- + {insert_stmt}: ok
 -- + {upsert_update}: ok
--- + {conflict_target}: excluded: { id: integer notnull }
+-- + {conflict_target}: foo: { id: integer notnull }
 -- + {update_stmt}: foo: { id: integer notnull primary_key autoinc }
 -- + {opt_where}: bool notnull
 -- - error:
@@ -11158,7 +11158,7 @@ end;
 -- + {upsert_stmt}: ok
 -- + {insert_stmt}: ok
 -- + {upsert_update}: ok
--- + {conflict_target}: excluded: { a: integer notnull, b: text, c: real, d: longint }
+-- + {conflict_target}: simple_ak_table_2: { a: integer notnull, b: text, c: real, d: longint }
 -- - error:
 proc upsert_conflict_target_columns_valid()
 begin
@@ -11550,7 +11550,7 @@ create table upsert_test( id integer primary key, name text, rate real);
 -- + {upsert_stmt}: ok
 -- + {insert_stmt}: ok
 -- + {name upsert_test}: upsert_test: { id: integer notnull primary_key, name: text, rate: real }
--- + {conflict_target}: excluded: { id: integer notnull, name: text }
+-- + {conflict_target}: upsert_test: { id: integer notnull, name: text }
 -- + {update_stmt}: upsert_test: { id: integer notnull primary_key, name: text, rate: real }
 -- - error:
 insert into upsert_test(id, name) values (1, 'name')
@@ -26064,7 +26064,7 @@ end;
 -- + {declare_cursor}: C: _select_: { `col 1`: integer notnull qid, `col 2`: integer qid } variable dml_proc
 -- + {upsert_returning_stmt}: _select_: { `col 1`: integer notnull qid, `col 2`: integer qid }
 -- + {name `a backing table`}: `a backing table`: { `the key`: blob notnull primary_key qid, `the value`: blob qid } backing qid
--- + {conflict_target}: excluded: { `the key`: blob notnull qid, `the value`: blob qid }
+-- + {conflict_target}: `a backing table`: { `the key`: blob notnull qid, `the value`: blob qid }
 -- - error:
 proc upsert_into_backed_cursor()
 begin

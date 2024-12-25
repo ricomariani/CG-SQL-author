@@ -18355,14 +18355,20 @@ static void sem_upsert_stmt(ast_node *stmt) {
     sptr->names[i] = ast->left->sem->name;
     sptr->kinds[i] = ast->left->sem->kind;
   }
+  // we get the backed status from the tables jptr directly
+  sptr->is_backed = table_ast->sem->jptr->tables[0]->is_backed;
 
   // We'll store the resultant type in the AST as well on the conflict target
   // which gives us the ability to see it in the test output.
   conflict_target->sem = new_sem(SEM_TYPE_STRUCT);
   conflict_target->sem->sptr = sptr;
 
-  // and here is our join target
+  // and here is our join target. Now we've made the excluded table an alias for
+  // the backed table (subsetted) as thought it had an AS clause on it, this
+  // gives us both names and we will need both later to make the correct
+  // cql_blob_get call.
   sem_join *jptr_excluded = sem_join_from_sem_struct(sptr);
+  sptr->struct_name = name;
 
   int32_t select_count = 1;
   bool_t found_where_stmt = is_root_select_stmt_has_opt_where_node(insert_stmt, &select_count);

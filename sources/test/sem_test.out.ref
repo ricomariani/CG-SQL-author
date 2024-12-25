@@ -42241,7 +42241,7 @@ END;
         |         | {select_limit}
         |           | {select_offset}
         | {upsert_update}: ok
-          | {conflict_target}: excluded: { id: integer notnull }
+          | {conflict_target}: foo: { id: integer notnull }
             | {indexed_columns}
               | {indexed_column}
                 | {name id}: id: integer notnull
@@ -42322,7 +42322,7 @@ END;
           |         | {select_limit}
           |           | {select_offset}
           | {upsert_update}: ok
-            | {conflict_target}: excluded: { id: integer notnull }
+            | {conflict_target}: foo: { id: integer notnull }
               | {indexed_columns}
                 | {indexed_column}
                   | {name id}: id: integer notnull
@@ -42508,7 +42508,7 @@ END;
         |         | {select_limit}
         |           | {select_offset}
         | {upsert_update}: ok
-          | {conflict_target}: excluded: { id: integer notnull }
+          | {conflict_target}: foo: { id: integer notnull }
 
 The statement ending at line XXXX
 
@@ -42547,7 +42547,7 @@ END;
         |         | {select_limit}
         |           | {select_offset}
         | {upsert_update}: ok
-          | {conflict_target}: excluded: { id: integer notnull }
+          | {conflict_target}: foo: { id: integer notnull }
           | | {indexed_columns}
           | | | {indexed_column}
           | |   | {name id}: id: integer notnull
@@ -42652,7 +42652,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0281: upsert statement does not inc
         |         | {select_limit}
         |           | {select_offset}
         | {upsert_update}: err
-          | {conflict_target}: excluded: { id: integer notnull }
+          | {conflict_target}: foo: { id: integer notnull }
           | | {indexed_columns}
           |   | {indexed_column}
           |     | {name id}: id: integer notnull
@@ -42740,7 +42740,7 @@ test/sem_test.sql:XXXX:1: error: in insert_stmt : CQL0280: upsert statement requ
         |         | {select_limit}
         |           | {select_offset}
         | {upsert_update}
-          | {conflict_target}: excluded: { id: integer notnull }
+          | {conflict_target}: foo: { id: integer notnull }
             | {indexed_columns}
               | {indexed_column}
                 | {name id}
@@ -42976,7 +42976,7 @@ END;
         |         | {select_limit}
         |           | {select_offset}
         | {upsert_update}: ok
-          | {conflict_target}: excluded: { a: integer notnull, b: text, c: real, d: longint }
+          | {conflict_target}: simple_ak_table_2: { a: integer notnull, b: text, c: real, d: longint }
             | {indexed_columns}
               | {indexed_column}
               | | {name a}: a: integer notnull
@@ -43056,7 +43056,7 @@ DO NOTHING;
   |         | {select_limit}
   |           | {select_offset}
   | {upsert_update}: ok
-    | {conflict_target}: excluded: { id: integer notnull }
+    | {conflict_target}: bar: { id: integer notnull }
 
 The statement ending at line XXXX
 
@@ -44417,7 +44417,7 @@ DO UPDATE
   |         | {select_limit}
   |           | {select_offset}
   | {upsert_update}: ok
-    | {conflict_target}: excluded: { id: integer notnull, name: text }
+    | {conflict_target}: upsert_test: { id: integer notnull, name: text }
     | | {indexed_columns}
     |   | {indexed_column}
     |     | {name id}: id: integer notnull
@@ -83722,7 +83722,7 @@ DO NOTHING;
     |         | {select_limit}
     |           | {select_offset}
     | {upsert_update}: ok
-      | {conflict_target}: excluded: { k: blob notnull, v: blob notnull }
+      | {conflict_target}: simple_backing_table: { k: blob notnull, v: blob notnull }
         | {indexed_columns}
           | {indexed_column}
             | {name k}: k: blob notnull
@@ -83856,7 +83856,7 @@ DO UPDATE
     |         | {select_limit}
     |           | {select_offset}
     | {upsert_update}: ok
-      | {conflict_target}: excluded: { k: blob notnull, v: blob notnull }
+      | {conflict_target}: simple_backing_table: { k: blob notnull, v: blob notnull }
       | | {indexed_columns}
       |   | {indexed_column}
       |     | {name k}: k: blob notnull
@@ -84095,7 +84095,7 @@ DO UPDATE
     |         | {select_limit}
     |           | {select_offset}
     | {upsert_update}: ok
-      | {conflict_target}: excluded: { k: blob notnull, v: blob notnull }
+      | {conflict_target}: simple_backing_table: { k: blob notnull, v: blob notnull }
       | | {indexed_columns}
       |   | {indexed_column}
       |     | {name k}: k: blob notnull
@@ -100624,7 +100624,7 @@ END;
         |   |         | {select_limit}
         |   |           | {select_offset}
         |   | {upsert_update}: ok
-        |     | {conflict_target}: excluded: { `the key`: blob notnull qid, `the value`: blob qid }
+        |     | {conflict_target}: `a backing table`: { `the key`: blob notnull qid, `the value`: blob qid }
         |     | | {indexed_columns}
         |     | | | {indexed_column}
         |     | |   | {name `the key`}: `the key`: blob notnull qid
@@ -100813,7 +100813,7 @@ END;
           |   |         | {select_limit}
           |   |           | {select_offset}
           |   | {upsert_update}: ok
-          |     | {conflict_target}: excluded: { `the key`: blob notnull qid, `the value`: blob qid }
+          |     | {conflict_target}: `a backing table`: { `the key`: blob notnull qid, `the value`: blob qid }
           |     | | {indexed_columns}
           |     | | | {indexed_column}
           |     | |   | {name `the key`}: `the key`: blob notnull qid
@@ -101031,7 +101031,7 @@ END;
           |   |         | {select_limit}
           |   |           | {select_offset}
           |   | {upsert_update}: ok
-          |     | {conflict_target}: excluded: { `the key`: blob notnull qid, `the value`: blob qid }
+          |     | {conflict_target}: `a backing table`: { `the key`: blob notnull qid, `the value`: blob qid }
           |     | | {indexed_columns}
           |     | | | {indexed_column}
           |     | |   | {name `the key`}: `the key`: blob notnull qid
@@ -101309,7 +101309,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'nope'
           |   |         | {select_limit}
           |   |           | {select_offset}
           |   | {upsert_update}: ok
-          |     | {conflict_target}: excluded: { `the key`: blob notnull qid, `the value`: blob qid }
+          |     | {conflict_target}: `a backing table`: { `the key`: blob notnull qid, `the value`: blob qid }
           |       | {indexed_columns}
           |         | {indexed_column}
           |           | {name `the key`}: `the key`: blob notnull qid

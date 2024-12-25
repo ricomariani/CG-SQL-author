@@ -2690,6 +2690,41 @@ static ast_node *cql_blob_get_call (
   );
 }
 
+
+// create the wrapper for a cql_blob_get call for the given blob, backed table
+// name and column name, this is almost the same as the above but we use
+// the excluded name prefix to get the key or value field.  So it looks like
+// cql_blob_get(excluded.key, backed_table.col)
+static ast_node *cql_blob_get_call_with_excluded (
+  CSTR blob_field,
+  sem_t sem_type_blob,
+  CSTR backed_table,
+  CSTR col,
+  sem_t sem_type_col)
+{
+  // this is just cql_blob_get(excluded.blob_field, backed_table.col)
+  return new_ast_call(
+    new_ast_str("cql_blob_get"),
+    new_ast_call_arg_list(
+      new_ast_call_filter_clause(NULL, NULL),
+      new_ast_arg_list(
+        new_ast_dot(
+          new_ast_str("excluded"),
+          new_str_or_qstr(blob_field, sem_type_blob)
+        ),
+        new_ast_arg_list(
+          new_ast_dot(
+            new_maybe_qstr(backed_table),
+            new_str_or_qstr(col, sem_type_col)
+          ),
+          NULL
+        )
+      )
+    )
+  );
+}
+
+
 // Several args need to flow during the recursion so we bundle them into a struct
 // so that we can flow the pointer instead of all these arguments
 typedef struct update_rewrite_info {
@@ -2709,25 +2744,58 @@ static void rewrite_blob_column_references(
   // the name nodes have all we need in the semantic payload
   if (is_ast_str(ast) || is_ast_dot(ast)) {
     if (ast->sem && ast->sem->backed_table) {
-       // we know the name but to get the PK info we need to get to the semantic
-       // type of the column pk info doesn't flow through the normal exression
-       // tree. No problem, we'll just look up the name in the backed table and
-       // get the type from there.
-       sem_struct *sptr_backed = info->backed_table->sem->sptr;
-       Invariant(ast->sem);
-       Invariant(ast->sem->name);
-       int32_t i = find_col_in_sptr(sptr_backed, ast->sem->name);
-       Invariant(i >= 0);  // the column for sure exists, it's already been checked
-       sem_t sem_type = sptr_backed->semtypes[i];
+      // we know the name but to get the PK info we need to get to the semantic
+      // type of the column pk info doesn't flow through the normal exression
+      // tree. No problem, we'll just look up the name in the backed table and
+      // get the type from there.
 
-       // now we can easily decide which backing column to use
-       bool_t is_key_column = is_primary_key(sem_type) || is_partial_pk(sem_type);
-       CSTR blob_field = is_key_column ? info->backing_key : info->backing_val;
-       sem_t blob_type = is_key_column ? info->sem_type_key : info->sem_type_val;
-       ast_node *new = cql_blob_get_call(blob_field, blob_type, ast->sem->backed_table, ast->sem->name, ast->sem->sem_type);
-       ast->type = new->type;
-       ast_set_left(ast, new->left);
-       ast_set_right(ast, new->right);
+      sem_struct *sptr_backed = info->backed_table->sem->sptr;
+      Invariant(ast->sem);
+      Invariant(ast->sem->name);
+
+      bool excluded = false;
+
+      if (is_ast_dot(ast) && is_ast_str(ast->left)) {
+        // if the left side is excluded then we need to use the excluded.(k/v) blob
+        // instead of the k/v. This is a special case for upserts.  Note that
+        // "excluded" in this context is an alias for the set of columns being inserted
+        // and it will map back to the sptr with the backed table name in its sptr
+        // just like any other alias.  We set up the excluded join this way on
+        // purpose so that we would have the "real" name handy.
+        EXTRACT_STRING(sc, ast->left);
+        if (!strcmp(sc, "excluded")) {
+          excluded = true;
+        }
+      }
+
+      // these could be a subset of the columns in the backed table name if
+      // it's an insert and only some columns are in scope.
+      int32_t i = find_col_in_sptr(sptr_backed, ast->sem->name);
+      Invariant(i >= 0);  // the column for sure exists, it's already been checked
+      sem_t sem_type = sptr_backed->semtypes[i];
+
+      // now we can easily decide which backing column to use
+      bool_t is_key_column = is_primary_key(sem_type) || is_partial_pk(sem_type);
+      CSTR blob_field = is_key_column ? info->backing_key : info->backing_val;
+      sem_t blob_type = is_key_column ? info->sem_type_key : info->sem_type_val;
+
+      ast_node *new = !excluded ?
+        cql_blob_get_call(
+          blob_field,
+          blob_type,
+          ast->sem->backed_table, // this is a direct reference to the backed table
+          ast->sem->name,
+          ast->sem->sem_type) :
+        cql_blob_get_call_with_excluded( // use excluded.(k/v) for the blob
+          blob_field,
+          blob_type,
+          sptr_backed->struct_name, // get the backed table directly from struct name
+          ast->sem->name,
+          ast->sem->sem_type);
+
+      ast->type = new->type;
+      ast_set_left(ast, new->left);
+      ast_set_right(ast, new->right);
     }
     return;
   }
@@ -3358,12 +3426,12 @@ cql_noexport void rewrite_update_statement_for_backed_table(
   // against a from clause that is just the backed table.
 
   ast_node *select_stmt;
-  
+
   if (!in_upsert) {
 
-    // this generates the normal where clause for the update statement
-    // WHERE rowid in (SELECT rowid FROM backed) which is what you want
-    // for the pdate case
+    // this generates the normal where clause for the update statement WHERE
+    // rowid in (SELECT rowid FROM backed) which is what you want for the update
+    // case
 
     select_stmt = rewrite_select_rowid(
       backed_table_name,
@@ -3378,10 +3446,10 @@ cql_noexport void rewrite_update_statement_for_backed_table(
     // rowid IN (select rowid from selected rows)
   }
   else {
-    // in the upsert case, the rows in question are already selected by SQLite itself.
-    // We don't need to do the rowid selection, we just need to rewrite the
-    // update list to use the backing table columns directly and we'll select
-    // the rowid out of excluded.rowid
+    // in the upsert case, the rows in question are already selected by SQLite
+    // itself. We don't need to do the rowid selection, we just need to rewrite
+    // the update list to use the backing table columns directly and we'll
+    // select the rowid out of excluded.rowid
     select_stmt = NULL;
   }
 
@@ -3417,7 +3485,7 @@ cql_noexport void rewrite_update_statement_for_backed_table(
      )
     );
   }
-  else {    
+  else {
     // the upsert case can have a WHERE clause of its own, it stays as is
     new_opt_where = opt_where;
 

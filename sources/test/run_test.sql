@@ -7638,10 +7638,11 @@ begin
     fetch F;
     EXPECT!(not F);
 
+    -- force the excluded rewrite to work also
     cursor G for
       insert into `a table`(`col 1`, `col 2`) values (1, 1), (5, 25)
       on conflict(`col 1`)
-      do update set `col 2` = 1000 where `col 1` <= 4
+      do update set `col 2` = 1000 where excluded.`col 1` <= 4
       returning *;
 
     fetch G;

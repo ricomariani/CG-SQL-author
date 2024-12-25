@@ -6220,12 +6220,12 @@ create table insert_returning_test(ix int, iy int);
 -- + _rc_ = cql_prepare(_db_, &C_stmt,
 -- + "INSERT INTO insert_returning_test(ix, iy) "
 -- + "VALUES (1, 2) "
--- + "RETURNING (ix + iy AS xy, ix, iy)");
+-- + "RETURNING ix + iy AS xy, ix, iy");
 proc insert_returning_cursor()
 begin
   declare C cursor for
     insert into insert_returning_test(ix,iy) values (1,2)
-      returning (ix+iy xy, ix, iy);
+      returning ix+iy xy, ix, iy;
 end;
 
 -- TEST: test codegen for a uses insert returning
@@ -6245,11 +6245,11 @@ end;
 -- + _rc_ = cql_prepare(_db_, _result_stmt,
 -- + "INSERT INTO insert_returning_test(ix, iy) "
 -- + "VALUES (1, 2) "
--- + "RETURNING (ix + iy AS xy, ix, iy)");
+-- + "RETURNING ix + iy AS xy, ix, iy");
 proc insert_returning_resultset()
 begin
   insert into insert_returning_test(ix,iy) values (1,2)
-    returning (ix+iy xy, ix, iy);
+    returning ix+iy xy, ix, iy;
 end;
 
 -- TEST: test codegen for a cursor that uses insert returning
@@ -6257,12 +6257,12 @@ end;
 -- + CQL_WARN_UNUSED cql_code delete_returning_cursor(sqlite3 *_Nonnull _db_) {
 -- + _rc_ = cql_prepare(_db_, &C_stmt,
 -- + "DELETE FROM insert_returning_test "
--- + "RETURNING (ix + iy AS xy, ix, iy)");
+-- + "RETURNING ix + iy AS xy, ix, iy");
 proc delete_returning_cursor()
 begin
   declare C cursor for
     delete from insert_returning_test
-      returning (ix+iy xy, ix, iy);
+      returning ix+iy xy, ix, iy;
 end;
 
 -- TEST: test codegen for delete returning
@@ -6281,11 +6281,11 @@ end;
 -- + *_result_stmt = NULL;
 -- + _rc_ = cql_prepare(_db_, _result_stmt,
 -- + "DELETE FROM insert_returning_test "
--- + "RETURNING (ix + iy AS xy, ix, iy)");
+-- + "RETURNING ix + iy AS xy, ix, iy");
 proc delete_returning_resultset()
 begin
   delete from insert_returning_test
-    returning (ix+iy xy, ix, iy);
+    returning ix+iy xy, ix, iy;
 end;
 
 -- TEST: star should expand always in the returning position
@@ -6298,15 +6298,15 @@ end;
 -- + "INSERT INTO json_backing(k, v) "
 -- + "SELECT json_array(-1916485007726025434, V.name, V.id), json_object() "
 -- + "FROM _vals AS V "
--- + "RETURNING ( "
+-- + "RETURNING  "
 -- + "((k)->>2), "
 -- + "((k)->>1), "
 -- + "((v)->>'$.age'), "
--- + "((v)->>'$.zip'))");
+-- + "((v)->>'$.zip')");
 PROC expand_returning_star()
 BEGIN
   cursor C for
-  insert into jdata(id, name) values (1,'foo') returning (*);
+  insert into jdata(id, name) values (1,'foo') returning *;
 END;
 
 [[backing_table]]
@@ -6348,7 +6348,7 @@ create table `a table`(
 -- +   "SET [the key] = jsonb_set([the key],  '$[1]', ifnull((([the value])->>'$.X_colX202'), 0)) "
 -- +   "WHERE rowid IN (SELECT rowid "
 -- +     "FROM [a table]) "
--- +   "RETURNING ((([the key])->>1), (([the value])->>'$.X_colX202'))");
+-- +   "RETURNING (([the key])->>1), (([the value])->>'$.X_colX202')");
 proc upsert_returning_with_backing()
 begin
   cursor C  for
@@ -6358,7 +6358,7 @@ begin
   on conflict (`col 1`)
   where `col 2` in (select * from a_cte) do update
     set `col 1` = `col 2`:ifnull(0)
-    returning (`col 1`, `col 2`);
+    returning `col 1`, `col 2`;
 end;
 
 --------------------------------------------------------------------

@@ -98694,7 +98694,7 @@ PROC insert_returning1 ()
 BEGIN
   INSERT INTO insert_returning_test(ix, iy)
     VALUES (1, 2)
-    RETURNING (ix + iy AS xy, ix, iy);
+    RETURNING ix + iy AS xy, ix, iy;
 END;
 
   {create_proc_stmt}: insert_returning1: { xy: integer, ix: integer, iy: integer } dml_proc
@@ -98751,7 +98751,7 @@ BEGIN
   INSERT INTO insert_returning_test(ix, iy)
     SELECT ix + 10, iy + 10
       FROM base
-    RETURNING (ix + iy AS xy, ix, iy);
+    RETURNING ix + iy AS xy, ix, iy;
 END;
 
   {create_proc_stmt}: insert_returning2: { xy: integer, ix: integer, iy: integer } dml_proc
@@ -98851,7 +98851,7 @@ PROC insert_returning_invalid_insert ()
 BEGIN
   INSERT INTO insert_returning_yeah_no
     VALUES (1, 2)
-    RETURNING (ix + iy AS xy, ix, iy);
+    RETURNING ix + iy AS xy, ix, iy;
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0160: table in insert statement does not exist 'insert_returning_yeah_no'
@@ -98902,7 +98902,7 @@ BEGIN
     )
   INSERT INTO insert_returning_test
     VALUES (1, 2)
-    RETURNING (ix + iy AS xy, ix, iy);
+    RETURNING ix + iy AS xy, ix, iy;
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
@@ -98971,7 +98971,7 @@ PROC insert_returning_invalid_return ()
 BEGIN
   INSERT INTO insert_returning_test(ix, iy)
     VALUES (1, 2)
-    RETURNING (nope);
+    RETURNING nope;
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'nope'
@@ -99014,7 +99014,7 @@ BEGIN
   CURSOR C FOR
     INSERT INTO insert_returning_test(ix, iy)
       VALUES (1, 2)
-      RETURNING (ix + iy AS xy, ix, iy);
+      RETURNING ix + iy AS xy, ix, iy;
   LOOP FETCH C
   BEGIN
     CALL printf("%d %d %d", C.ix, C.iy, C.xy);
@@ -99219,7 +99219,7 @@ BEGIN
   INSERT INTO jb_insert(k, v)
     SELECT cql_blob_create(jbacked, V.id, jbacked.id), cql_blob_create(jbacked, V.name, jbacked.name, V.age, jbacked.age)
       FROM _vals AS V
-    RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
+    RETURNING cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age);
 END;
 
   {create_proc_stmt}: insert_into_backed_returning: { id: integer notnull, name: text, age: integer } dml_proc
@@ -99372,7 +99372,7 @@ BEGIN
   DELETE FROM jb_insert WHERE rowid IN (SELECT rowid
     FROM jbacked
     WHERE id = 5)
-    RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
+    RETURNING cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age);
 END;
 
   {create_proc_stmt}: delete_from_backed_returning: { id: integer notnull, name: text, age: integer } dml_proc
@@ -99473,7 +99473,7 @@ BEGIN
     FROM jbacked
     WHERE id IN (SELECT a_cte.x
     FROM a_cte))
-    RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
+    RETURNING cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age);
 END;
 
   {create_proc_stmt}: with_delete_from_backed_returning: { id: integer notnull, name: text, age: integer } dml_proc
@@ -99611,7 +99611,7 @@ BEGIN
     DELETE FROM jb_insert WHERE rowid IN (SELECT rowid
       FROM jbacked
       WHERE id = 5)
-      RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
+      RETURNING cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age);
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -99729,7 +99729,7 @@ BEGIN
       SELECT NOT 'x'
     )
   DELETE FROM insert_returning_test
-    RETURNING (ix + iy AS xy, ix, iy);
+    RETURNING ix + iy AS xy, ix, iy;
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
@@ -99782,7 +99782,7 @@ The statement ending at line XXXX
 PROC delete_returning_invalid_return ()
 BEGIN
   DELETE FROM insert_returning_test
-    RETURNING (nope);
+    RETURNING nope;
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'nope'
@@ -99809,7 +99809,7 @@ BEGIN
     WHERE rowid IN (SELECT rowid
       FROM jbacked
       WHERE id = 5)
-    RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
+    RETURNING cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age);
 END;
 
   {create_proc_stmt}: update_from_backed_returning: { id: integer notnull, name: text, age: integer } dml_proc
@@ -99930,7 +99930,7 @@ BEGIN
     WHERE rowid IN (SELECT rowid
       FROM jbacked
       WHERE id = 5)
-    RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
+    RETURNING cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age);
 END;
 
   {create_proc_stmt}: with_update_from_backed_returning: { id: integer notnull, name: text, age: integer } dml_proc
@@ -100071,7 +100071,7 @@ BEGIN
       WHERE rowid IN (SELECT rowid
         FROM jbacked
         WHERE id = 5)
-      RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
+      RETURNING cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age);
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -100224,7 +100224,7 @@ BEGIN
   UPDATE insert_returning_test
     SET ix = 7
     WHERE ix = 5
-    RETURNING (ix + iy AS xy, ix, iy);
+    RETURNING ix + iy AS xy, ix, iy;
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
@@ -100291,7 +100291,7 @@ BEGIN
   UPDATE insert_returning_test
     SET ix = 7
     WHERE ix = 5
-    RETURNING (nope);
+    RETURNING nope;
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'nope'
@@ -100331,7 +100331,7 @@ BEGIN
     INSERT INTO jb_insert(k, v)
       SELECT cql_blob_create(jbacked, V.id, jbacked.id), cql_blob_create(jbacked, V.name, jbacked.name)
         FROM _vals AS V
-      RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
+      RETURNING cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age);
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -100550,7 +100550,7 @@ BEGIN
     SET `the key` = cql_blob_update(`the key`, ifnull(cql_blob_get(`the value`, `a table`.`col 2`), 0), `a table`.`col 1`)
     WHERE rowid IN (SELECT rowid
       FROM `a table`)
-    RETURNING (cql_blob_get(`the key`, `a table`.`col 1`), cql_blob_get(`the value`, `a table`.`col 2`));
+    RETURNING cql_blob_get(`the key`, `a table`.`col 1`), cql_blob_get(`the value`, `a table`.`col 2`);
 END;
 
   {create_proc_stmt}: upsert_into_backed_returning: { `col 1`: integer notnull qid, `col 2`: integer qid } dml_proc
@@ -100756,7 +100756,7 @@ BEGIN
       SET `the key` = cql_blob_update(`the key`, ifnull(cql_blob_get(`the value`, `a table`.`col 2`), 0), `a table`.`col 1`)
       WHERE rowid IN (SELECT rowid
         FROM `a table`)
-      RETURNING (cql_blob_get(`the key`, `a table`.`col 1`), cql_blob_get(`the value`, `a table`.`col 2`));
+      RETURNING cql_blob_get(`the key`, `a table`.`col 1`), cql_blob_get(`the value`, `a table`.`col 2`);
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -100971,7 +100971,7 @@ BEGIN
       SET `the key` = cql_blob_update(`the key`, ifnull(cql_blob_get(`the value`, `a table`.`col 2`), 0), `a table`.`col 1`)
       WHERE rowid IN (SELECT rowid
         FROM `a table`)
-      RETURNING (cql_blob_get(`the key`, `a table`.`col 1`), cql_blob_get(`the value`, `a table`.`col 2`));
+      RETURNING cql_blob_get(`the key`, `a table`.`col 1`), cql_blob_get(`the value`, `a table`.`col 2`);
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -101214,7 +101214,7 @@ BEGIN
       VALUES (1, 2)
     ON CONFLICT
     DO NOTHING
-      RETURNING (`col 1`, `col 2`);
+      RETURNING `col 1`, `col 2`;
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
@@ -101286,7 +101286,7 @@ BEGIN
         FROM _vals AS V
     ON CONFLICT (`the key`)
     DO NOTHING
-      RETURNING (nope);
+      RETURNING nope;
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'nope'

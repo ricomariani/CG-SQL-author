@@ -2537,7 +2537,7 @@ LET without := 0;
 
 INSERT INTO foo
   VALUES (1)
-  RETURNING (a, b, c);
+  RETURNING a, b, c;
 
 WITH
   blah AS (
@@ -2545,10 +2545,10 @@ WITH
   )
 INSERT INTO foo
   VALUES (1)
-  RETURNING (a, b, c);
+  RETURNING a, b, c;
 
 DELETE FROM jbacked WHERE id = 5
-  RETURNING (id, name, age);
+  RETURNING id, name, age;
 
 WITH
   a_cte AS (
@@ -2556,12 +2556,12 @@ WITH
   )
 DELETE FROM jbacked WHERE id IN (SELECT *
   FROM a_cte)
-  RETURNING (id, name, age);
+  RETURNING id, name, age;
 
 UPDATE jbacked
   SET id = 7
   WHERE id = 5
-  RETURNING (id, name, age);
+  RETURNING id, name, age;
 
 WITH
   a_cte AS (
@@ -2570,7 +2570,7 @@ WITH
 UPDATE jbacked
   SET id = 7
   WHERE id = 5
-  RETURNING (id, name, age);
+  RETURNING id, name, age;
 
 CURSOR C FOR
   UPDATE jbacked
@@ -2588,7 +2588,7 @@ ON CONFLICT (`col 1`)
 WHERE `col 2` = 1 
 DO UPDATE
   SET `col 1` = `col 2`
-  RETURNING (`col 1`, `col 2`);
+  RETURNING `col 1`, `col 2`;
 
 CURSOR C FOR
   INSERT INTO `a table`(id)
@@ -2597,7 +2597,7 @@ CURSOR C FOR
   WHERE `col 2` = 1 
   DO UPDATE
     SET `col 1` = `col 2`
-    RETURNING (`col 1`, `col 2`);
+    RETURNING `col 1`, `col 2`;
 
 CURSOR C FOR
   INSERT INTO `a table`(id)

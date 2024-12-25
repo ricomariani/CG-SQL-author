@@ -4178,7 +4178,7 @@
     BEGIN
     INSERT INTO returning_tests(ix, iy)
       VALUES (1, 2)
-      RETURNING (ix + iy AS xy, ix, iy);
+      RETURNING ix + iy AS xy, ix, iy;
     END
 
     {
@@ -4206,7 +4206,7 @@
           "isNotNull" : 0
         }
       ],
-      "statement" : "INSERT INTO returning_tests(ix, iy) VALUES (1, 2) RETURNING (ix + iy AS xy, ix, iy)",
+      "statement" : "INSERT INTO returning_tests(ix, iy) VALUES (1, 2) RETURNING ix + iy AS xy, ix, iy",
       "statementArgs" : [  ]
     },
 
@@ -4215,7 +4215,7 @@
     PROC delete_returning_stmt ()
     BEGIN
     DELETE FROM returning_tests
-      RETURNING (ix + iy AS xy, ix, iy);
+      RETURNING ix + iy AS xy, ix, iy;
     END
 
     {
@@ -4243,7 +4243,7 @@
           "isNotNull" : 0
         }
       ],
-      "statement" : "DELETE FROM returning_tests RETURNING (ix + iy AS xy, ix, iy)",
+      "statement" : "DELETE FROM returning_tests RETURNING ix + iy AS xy, ix, iy",
       "statementArgs" : [  ]
     },
 
@@ -4253,7 +4253,7 @@
     BEGIN
     UPDATE returning_tests
       SET ix = 1, iy = 2
-      RETURNING (ix + iy AS xy, ix, iy);
+      RETURNING ix + iy AS xy, ix, iy;
     END
 
     {
@@ -4281,7 +4281,7 @@
           "isNotNull" : 0
         }
       ],
-      "statement" : "UPDATE returning_tests SET ix = 1, iy = 2 RETURNING (ix + iy AS xy, ix, iy)",
+      "statement" : "UPDATE returning_tests SET ix = 1, iy = 2 RETURNING ix + iy AS xy, ix, iy",
       "statementArgs" : [  ]
     }
   ],
@@ -5243,7 +5243,7 @@
         )
       INSERT INTO returning_tests(ix, iy)
         VALUES (1, 2)
-        RETURNING (ix + iy AS xy, ix, iy);
+        RETURNING ix + iy AS xy, ix, iy;
     END
 
     {
@@ -5269,7 +5269,7 @@
             FROM Foo
         )
       DELETE FROM returning_tests
-        RETURNING (ix + iy AS xy, ix, iy);
+        RETURNING ix + iy AS xy, ix, iy;
     END
 
     {
@@ -5296,7 +5296,7 @@
         )
       UPDATE returning_tests
         SET ix = 1, iy = 2
-        RETURNING (ix + iy AS xy, ix, iy);
+        RETURNING ix + iy AS xy, ix, iy;
     END
 
     {

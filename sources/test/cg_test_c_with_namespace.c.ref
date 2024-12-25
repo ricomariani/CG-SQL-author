@@ -18660,7 +18660,7 @@ BEGIN
   CURSOR C FOR
     INSERT INTO insert_returning_test(ix, iy)
       VALUES (1, 2)
-      RETURNING (ix + iy AS xy, ix, iy);
+      RETURNING ix + iy AS xy, ix, iy;
 END;
 */
 
@@ -18677,7 +18677,7 @@ CQL_WARN_UNUSED cql_code insert_returning_cursor(sqlite3 *_Nonnull _db_) {
   _rc_ = cql_prepare(_db_, &C_stmt,
     "INSERT INTO insert_returning_test(ix, iy) "
       "VALUES (1, 2) "
-      "RETURNING (ix + iy AS xy, ix, iy)");
+      "RETURNING ix + iy AS xy, ix, iy");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
 
@@ -18695,7 +18695,7 @@ PROC insert_returning_resultset ()
 BEGIN
   INSERT INTO insert_returning_test(ix, iy)
     VALUES (1, 2)
-    RETURNING (ix + iy AS xy, ix, iy);
+    RETURNING ix + iy AS xy, ix, iy;
 END;
 */
 
@@ -18756,7 +18756,7 @@ CQL_WARN_UNUSED cql_code insert_returning_resultset(sqlite3 *_Nonnull _db_, sqli
   _rc_ = cql_prepare(_db_, _result_stmt,
     "INSERT INTO insert_returning_test(ix, iy) "
       "VALUES (1, 2) "
-      "RETURNING (ix + iy AS xy, ix, iy)");
+      "RETURNING ix + iy AS xy, ix, iy");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
 
@@ -18774,7 +18774,7 @@ PROC delete_returning_cursor ()
 BEGIN
   CURSOR C FOR
     DELETE FROM insert_returning_test
-      RETURNING (ix + iy AS xy, ix, iy);
+      RETURNING ix + iy AS xy, ix, iy;
 END;
 */
 
@@ -18790,7 +18790,7 @@ CQL_WARN_UNUSED cql_code delete_returning_cursor(sqlite3 *_Nonnull _db_) {
 
   _rc_ = cql_prepare(_db_, &C_stmt,
     "DELETE FROM insert_returning_test "
-      "RETURNING (ix + iy AS xy, ix, iy)");
+      "RETURNING ix + iy AS xy, ix, iy");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
 
@@ -18807,7 +18807,7 @@ cql_cleanup:
 PROC delete_returning_resultset ()
 BEGIN
   DELETE FROM insert_returning_test
-    RETURNING (ix + iy AS xy, ix, iy);
+    RETURNING ix + iy AS xy, ix, iy;
 END;
 */
 
@@ -18867,7 +18867,7 @@ CQL_WARN_UNUSED cql_code delete_returning_resultset(sqlite3 *_Nonnull _db_, sqli
 
   _rc_ = cql_prepare(_db_, _result_stmt,
     "DELETE FROM insert_returning_test "
-      "RETURNING (ix + iy AS xy, ix, iy)");
+      "RETURNING ix + iy AS xy, ix, iy");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
 
@@ -18891,11 +18891,11 @@ BEGIN
     INSERT INTO json_backing(k, v)
       SELECT cql_blob_create(jdata, V.name, jdata.name, V.id, jdata.id), cql_blob_create(jdata)
         FROM _vals AS V
-      RETURNING (
+      RETURNING 
         cql_blob_get(k, jdata.id),
         cql_blob_get(k, jdata.name),
         cql_blob_get(v, jdata.age),
-        cql_blob_get(v, jdata.zip));
+        cql_blob_get(v, jdata.zip);
 END;
 */
 
@@ -18917,11 +18917,11 @@ CQL_WARN_UNUSED cql_code expand_returning_star(sqlite3 *_Nonnull _db_) {
     "INSERT INTO json_backing(k, v) "
       "SELECT json_array(-1916485007726025434, V.name, V.id), json_object() "
         "FROM _vals AS V "
-      "RETURNING ( "
+      "RETURNING  "
         "((k)->>2), "
         "((k)->>1), "
         "((v)->>'$.age'), "
-        "((v)->>'$.zip'))");
+        "((v)->>'$.zip')");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
 
@@ -18958,7 +18958,7 @@ BEGIN
       SET `the key` = cql_blob_update(`the key`, ifnull(cql_blob_get(`the value`, `a table`.`col 2`), 0), `a table`.`col 1`)
       WHERE rowid IN (SELECT rowid
         FROM `a table`)
-      RETURNING (cql_blob_get(`the key`, `a table`.`col 1`), cql_blob_get(`the value`, `a table`.`col 2`));
+      RETURNING cql_blob_get(`the key`, `a table`.`col 1`), cql_blob_get(`the value`, `a table`.`col 2`);
 END;
 */
 
@@ -18993,7 +18993,7 @@ CQL_WARN_UNUSED cql_code upsert_returning_with_backing(sqlite3 *_Nonnull _db_) {
       "SET [the key] = jsonb_set([the key],  '$[1]', ifnull((([the value])->>'$.X_colX202'), 0)) "
       "WHERE rowid IN (SELECT rowid "
         "FROM [a table]) "
-      "RETURNING ((([the key])->>1), (([the value])->>'$.X_colX202'))");
+      "RETURNING (([the key])->>1), (([the value])->>'$.X_colX202')");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
 

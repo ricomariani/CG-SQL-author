@@ -1944,7 +1944,7 @@ insert_stmt_plain:
     $$ = new_ast_insert_stmt($insert_stmt_type, name_columns_values); }
   ;
 
-returning_suffix: RETURNING '(' select_expr_list ')' { $$ = $select_expr_list; }
+returning_suffix: RETURNING select_expr_list { $$ = $select_expr_list; }
 
 insert_stmt:
      insert_stmt_plain { $$ = $insert_stmt_plain; }

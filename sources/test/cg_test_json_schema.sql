@@ -1957,7 +1957,7 @@ begin
   cursor C for
   with goo as (select * from Foo)
   insert into returning_tests(ix,iy) values (1,2)
-  returning (ix+iy xy, ix, iy);
+  returning ix+iy xy, ix, iy;
 end;
 
 -- TEST: proc using insert returning for a result
@@ -1969,12 +1969,12 @@ end;
 -- + "name" : "xy",
 -- + "name" : "ix",
 -- + "name" : "iy",
--- + "statement" : "INSERT INTO returning_tests(ix, iy) VALUES (1, 2) RETURNING (ix + iy AS xy, ix, iy)",
+-- + "statement" : "INSERT INTO returning_tests(ix, iy) VALUES (1, 2) RETURNING ix + iy AS xy, ix, iy",
 -- + "statementArgs" : [  ]
 proc insert_returning_stmt()
 begin
   insert into returning_tests(ix,iy) values (1,2)
-  returning (ix+iy xy, ix, iy);
+  returning ix+iy xy, ix, iy;
 end;
 
 -- TEST: proc using delete returning for a cursor
@@ -1988,7 +1988,7 @@ begin
   cursor C for
   with goo as (select * from Foo)
   delete from returning_tests
-  returning (ix+iy xy, ix, iy);
+  returning ix+iy xy, ix, iy;
 end;
 
 -- TEST: proc using delete returning for a result
@@ -2000,12 +2000,12 @@ end;
 -- + "name" : "xy",
 -- + "name" : "ix",
 -- + "name" : "iy",
--- + "statement" : "DELETE FROM returning_tests RETURNING (ix + iy AS xy, ix, iy)",
+-- + "statement" : "DELETE FROM returning_tests RETURNING ix + iy AS xy, ix, iy",
 -- + "statementArgs" : [  ]
 proc delete_returning_stmt()
 begin
   delete from returning_tests
-  returning (ix+iy xy, ix, iy);
+  returning ix+iy xy, ix, iy;
 end;
 
 -- TEST: proc using update returning for a cursor
@@ -2019,7 +2019,7 @@ begin
   cursor C for
   with goo as (select * from Foo)
   update returning_tests set ix=1, iy=2
-  returning (ix+iy xy, ix, iy);
+  returning ix+iy xy, ix, iy;
 end;
 
 -- TEST: proc using update returning for a result
@@ -2031,12 +2031,12 @@ end;
 -- + "name" : "xy",
 -- + "name" : "ix",
 -- + "name" : "iy",
--- + "statement" : "UPDATE returning_tests SET ix = 1, iy = 2 RETURNING (ix + iy AS xy, ix, iy)",
+-- + "statement" : "UPDATE returning_tests SET ix = 1, iy = 2 RETURNING ix + iy AS xy, ix, iy",
 -- + "statementArgs" : [  ]
 proc update_returning_stmt()
 begin
   update returning_tests set ix=1, iy=2
-  returning (ix+iy xy, ix, iy);
+  returning ix+iy xy, ix, iy;
 end;
 
 -- TEST: projection from a view

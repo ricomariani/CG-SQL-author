@@ -5271,51 +5271,51 @@ create table insert_returning_test(ix int, iy int);
 -- + local C_fields_ = { "xy", "ix", "iy" }
 -- + local C_types_ = "iii"
 -- +  _rc_, C_stmt = cql_prepare(_db_,
--- + "INSERT INTO insert_returning_test(ix, iy) VALUES (1, 2) RETURNING (ix + iy AS xy, ix, iy)")
+-- + "INSERT INTO insert_returning_test(ix, iy) VALUES (1, 2) RETURNING ix + iy AS xy, ix, iy")
 -- + C_stmt = nil
 -- + return _rc_
 proc insert_returning_cursor()
 begin
   declare C cursor for
     insert into insert_returning_test(ix,iy) values (1,2)
-      returning (ix+iy xy, ix, iy);
+      returning ix+iy xy, ix, iy;
 end;
 
 -- TEST: test codegen for insert returning
 -- + function insert_returning_resultset(_db_)
 -- + _rc_, _result_stmt = cql_prepare(_db_,
--- + "INSERT INTO insert_returning_test(ix, iy) VALUES (1, 2) RETURNING (ix + iy AS xy, ix, iy)")
+-- + "INSERT INTO insert_returning_test(ix, iy) VALUES (1, 2) RETURNING ix + iy AS xy, ix, iy")
 -- + return _rc_, _result_stmt
 -- + function insert_returning_resultset_fetch_results(_db_)
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "iii", { "xy", "ix", "iy" })
 proc insert_returning_resultset()
 begin
   insert into insert_returning_test(ix,iy) values (1,2)
-    returning (ix+iy xy, ix, iy);
+    returning ix+iy xy, ix, iy;
 end;
 
 -- TEST: test codegen for a cursor that uses insert returning
 -- + function delete_returning_cursor(_db_)
 -- +  _rc_, C_stmt = cql_prepare(_db_,
--- + "DELETE FROM insert_returning_test RETURNING (ix + iy AS xy, ix, iy)")
+-- + "DELETE FROM insert_returning_test RETURNING ix + iy AS xy, ix, iy")
 proc delete_returning_cursor()
 begin
   declare C cursor for
     delete from insert_returning_test
-      returning (ix+iy xy, ix, iy);
+      returning ix+iy xy, ix, iy;
 end;
 
 -- TEST: test codegen for delete returning
 -- + function delete_returning_resultset(_db_)
 -- + _rc_, _result_stmt = cql_prepare(_db_,
--- + "DELETE FROM insert_returning_test RETURNING (ix + iy AS xy, ix, iy)")
+-- + "DELETE FROM insert_returning_test RETURNING ix + iy AS xy, ix, iy")
 -- + function delete_returning_resultset_fetch_results(_db_)
 -- + _rc_, stmt = delete_returning_resultset(_db_)
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "iii", { "xy", "ix", "iy" })
 proc delete_returning_resultset()
 begin
   delete from insert_returning_test
-    returning (ix+iy xy, ix, iy);
+    returning ix+iy xy, ix, iy;
 end;
 
 -- backing storage using JSON (!!)
@@ -5342,14 +5342,14 @@ create table jdata(
 -- + _rc_, C_stmt = cql_prepare(_db_,
 -- + "WITH _vals (id, name) AS ( VALUES (1, 'foo') )
 -- = INSERT INTO json_backing(k, v) SELECT json_array(-1916485007726025434, V.name, V.id), json_object() FROM _vals AS V
--- = RETURNING ( ((k)->>2), ((k)->>1), ((v)->>'$.age'), ((v)->>'$.zip'))")
+-- = RETURNING  ((k)->>2), ((k)->>1), ((v)->>'$.age'), ((v)->>'$.zip')"
 --
 -- not a result set proc, returns only rc
 -- + return _rc_
 PROC expand_returning_star()
 BEGIN
   cursor C for
-  insert into jdata(id, name) values (1,'foo') returning (jdata.*);
+  insert into jdata(id, name) values (1,'foo') returning jdata.*;
 END;
 
 [[backing_table]]
@@ -5370,7 +5370,7 @@ create table `a table`(
 -- stay escaped.  This kind of sucks but it's the most flexible and normal
 -- names look fine. If you get weird, CQL gets weird.  Sorry :D
 -- +  _rc_, C_stmt = cql_prepare(_db_,
--- + "WITH a_cte (x) AS ( VALUES (1), (2), (3) ), _vals ([col 1], [col 2]) AS ( VALUES (1, 2) ) INSERT INTO [a backing table]([the key], [the value]) SELECT jsonb_array(-3079349931095810044, V.[col 1]), jsonb_object('X_colX202', V.[col 2]) FROM _vals AS V ON CONFLICT ([the key]) WHERE (([the value])->>'$.X_colX202') IN (SELECT a_cte.x FROM a_cte)  DO UPDATE SET [the key] = jsonb_set([the key],  '$[1]', ifnull((([the value])->>'$.X_colX202'), 0)) WHERE rowid IN (SELECT rowid FROM [a table]) RETURNING ((([the key])->>1), (([the value])->>'$.X_colX202'))")
+-- + "WITH a_cte (x) AS ( VALUES (1), (2), (3) ), _vals ([col 1], [col 2]) AS ( VALUES (1, 2) ) INSERT INTO [a backing table]([the key], [the value]) SELECT jsonb_array(-3079349931095810044, V.[col 1]), jsonb_object('X_colX202', V.[col 2]) FROM _vals AS V ON CONFLICT ([the key]) WHERE (([the value])->>'$.X_colX202') IN (SELECT a_cte.x FROM a_cte)  DO UPDATE SET [the key] = jsonb_set([the key],  '$[1]', ifnull((([the value])->>'$.X_colX202'), 0)) WHERE rowid IN (SELECT rowid FROM [a table]) RETURNING (([the key])->>1), (([the value])->>'$.X_colX202')")
 proc upsert_returning_with_backing()
 begin
   cursor C  for
@@ -5380,7 +5380,7 @@ begin
   on conflict (`col 1`)
   where `col 2` in (select * from a_cte) do update
     set `col 1` = `col 2`:ifnull(0)
-    returning (`col 1`, `col 2`);
+    returning `col 1`, `col 2`;
 end;
 
 --------------------------------------------------------------------

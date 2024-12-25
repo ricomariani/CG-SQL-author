@@ -3665,9 +3665,8 @@ static void gen_delete_returning_stmt(ast_node *ast) {
   else {
     gen_delete_stmt(delete_stmt);
   }
-  gen_printf("\n  RETURNING (");
+  gen_printf("\n  RETURNING ");
   gen_select_expr_list(ast->right);
-  gen_printf(")");
 }
 
 static void gen_update_entry(ast_node *ast) {
@@ -3827,9 +3826,8 @@ static void gen_update_returning_stmt(ast_node *ast) {
   else {
     gen_update_stmt(update_stmt);
   }
-  gen_printf("\n  RETURNING (");
+  gen_printf("\n  RETURNING ");
   gen_select_expr_list(ast->right);
-  gen_printf(")");
 }
 
 static void gen_insert_list(ast_node *_Nullable ast) {
@@ -4033,9 +4031,8 @@ static void gen_insert_returning_stmt(ast_node *ast) {
   else {
     gen_insert_stmt(insert_stmt);
   }
-  gen_printf("\n  RETURNING (");
+  gen_printf("\n  RETURNING ");
   gen_select_expr_list(ast->right);
-  gen_printf(")");
 }
 
 static void gen_expr_names(ast_node *ast) {
@@ -5364,9 +5361,8 @@ static void gen_upsert_returning_stmt(ast_node *ast) {
   else {
     gen_upsert_stmt(upsert_stmt);
   }
-  gen_printf("\n  RETURNING (");
+  gen_printf("\n  RETURNING ");
   gen_select_expr_list(ast->right);
-  gen_printf(")");
 }
 
 

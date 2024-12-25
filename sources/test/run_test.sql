@@ -171,8 +171,7 @@ end;
 @echo c, '
 
 #undef cql_error_trace
-#define cql_error_trace()
-  fprintf(stderr, "Error at %s:%d in %s: %d %s\n", __FILE__, __LINE__, _PROC_, _rc_, sqlite3_errmsg(_db_))
+#define cql_error_trace() fprintf(stderr, "Error at %s:%d in %s: %d %s\n", __FILE__, __LINE__, _PROC_, _rc_, sqlite3_errmsg(_db_))
 ';
 */
 
@@ -7470,7 +7469,6 @@ begin
   EXPECT!(not D);
 end);
 
-
 proc make_json_backed_schema()
 begin
   [[backing_table]]
@@ -7557,6 +7555,46 @@ begin
   end;
   -- we should be at the last row and done
   EXPECT_EQ!(i, 15);
+end);
+
+
+proc make_jsonb_backed_schema()
+begin
+  [[backing_table]]
+  [[jsonb]]
+  create table `a backing table`(
+    `the key` blob primary key,
+    `the value` blob
+  );
+end;
+
+[[backed_by=`a backing table`]]
+create table `a table`(
+  `col 1` int primary key,
+  `col 2` int
+);
+
+TEST_MODERN_ONLY!(verify_insert_returning,
+begin
+  make_jsonb_backed_schema();
+    cursor C for 
+    with data(a, b) as (values
+      (1, 1),
+      (2, 4),
+      (3, 9),
+      (4, 16)
+    )
+    insert into `a table`(`col 1`, `col 2`)
+      select * from data
+      returning(*);
+    
+    let i := 0;
+    loop fetch C
+    begin
+      i += 1;
+      EXPECT_EQ!(C.`col 1` * C.`col 1`, C.`col 2`);
+    end;
+    EXPECT_EQ!(i, 4);
 end);
 
 END_SUITE();

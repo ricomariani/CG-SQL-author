@@ -1079,7 +1079,7 @@ proc insert_returning_cursor()
 begin
   cursor C for
   insert into insert_returning_test(ix,iy) values (1,2)
-  returning (ix+iy xy, ix, iy);
+  returning ix+iy xy, ix, iy;
 end;
 
 -- TEST: verify proc with insert returning, it looks like a row creator
@@ -1099,7 +1099,7 @@ end;
 proc insert_returning_stmt()
 begin
   insert into insert_returning_test(ix,iy) values (1,2)
-  returning (ix+iy xy, ix, iy);
+  returning ix+iy xy, ix, iy;
 end;
 
 -- TEST: verify test helpers for delete returning as a statement (the hard case)
@@ -1119,7 +1119,7 @@ end;
 proc delete_returning_stmt()
 begin
   delete from insert_returning_test
-    returning (ix+iy xy, ix, iy);
+    returning ix+iy xy, ix, iy;
 end;
 
 -- TEST: verify test helpers for update returning as a statement (the hard case)
@@ -1139,7 +1139,7 @@ end;
 proc update_returning_stmt()
 begin
   update insert_returning_test set ix = 5 where ix = 7
-    returning (ix+iy xy, ix, iy);
+    returning ix+iy xy, ix, iy;
 end;
 
 [[backing_table]]
@@ -1178,6 +1178,6 @@ begin
   on conflict (`col 1`)
   where `col 2` in (select * from a_cte) do update
     set `col 1` = `col 2`:ifnull(0)
-    returning (`col 1`, `col 2`);
+    returning `col 1`, `col 2`;
 end;
 

@@ -1941,24 +1941,24 @@ let TEMP := 0;
 let TRANSACTION := 0;
 let WITHOUT := 0;
 
-insert into foo values(1) returning (a, b, c);
+insert into foo values(1) returning a, b, c;
 
 with blah as (select 1 x)
-insert into foo values(1) returning (a, b, c);
+insert into foo values(1) returning a, b, c;
 
 delete from jbacked where id = 5
-returning (id, name, age);
+returning id, name, age;
 
 with a_cte as (select 1 x)
 delete from jbacked where id in (select * from a_cte)
-returning (id, name, age);
+returning id, name, age;
 
 update jbacked set id = 7 where id = 5
-returning (id, name, age);
+returning id, name, age;
 
 with a_cte as (select 1 x)
 update jbacked set id = 7 where id = 5
-returning (id, name, age);
+returning id, name, age;
 
 declare C cursor for update jbacked set id  = 5 where 1;
 
@@ -1972,7 +1972,7 @@ insert into `a table`(id)
 on conflict (`col 1`) 
 where `col 2` = 1 do update
   set `col 1` = `col 2`
-  returning (`col 1`, `col 2`);
+  returning `col 1`, `col 2`;
 
 cursor C  for 
 insert into `a table`(id)
@@ -1980,7 +1980,7 @@ insert into `a table`(id)
 on conflict (`col 1`) 
 where `col 2` = 1 do update
   set `col 1` = `col 2`
-  returning (`col 1`, `col 2`);
+  returning `col 1`, `col 2`;
 
 cursor C  for 
 insert into `a table`(id)

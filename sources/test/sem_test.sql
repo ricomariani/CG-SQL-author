@@ -25667,7 +25667,7 @@ proc insert_returning1 ()
 begin
   insert into insert_returning_test
     values (1, 2)
-    returning (ix + iy as xy, ix, iy);
+    RETURNING ix + iy AS xy, ix, iy;
 end;
 
 -- TEST: insert returning normal case -- and with clause
@@ -25685,7 +25685,7 @@ begin
   insert into insert_returning_test
     select ix + 10, iy + 10
       from base
-    returning (ix + iy as xy, ix, iy);
+    RETURNING ix + iy AS xy, ix, iy;
 end;
 
 -- TEST: insert returning error case, bogus insert
@@ -25697,7 +25697,7 @@ proc insert_returning_invalid_insert ()
 begin
   insert into insert_returning_yeah_no
     values (1, 2)
-    returning (ix + iy as xy, ix, iy);
+    RETURNING ix + iy AS xy, ix, iy;
 end;
 
 -- TEST: insert returning error case, bogus with ... insert
@@ -25710,7 +25710,7 @@ begin
   with foo as (select not 'x')
   insert into insert_returning_test
     values (1, 2)
-    returning (ix + iy as xy, ix, iy);
+    RETURNING ix + iy AS xy, ix, iy;
 end;
 
 -- TEST: insert returning error case, bogus select list
@@ -25723,7 +25723,7 @@ proc insert_returning_invalid_return ()
 begin
   insert into insert_returning_test
     values (1, 2)
-    returning (nope);
+    returning nope;
 end;
 
 -- TEST: insert returning in a cursor
@@ -25734,7 +25734,7 @@ end;
 proc insert_returning_cursor()
 begin
   declare C cursor for insert into insert_returning_test(ix,iy) values (1,2)
-  returning (ix+iy xy, ix, iy);
+  returning ix+iy xy, ix, iy;
   loop fetch C
   begin
     printf("%d %d %d", C.ix, C.iy, C.xy);
@@ -25775,12 +25775,12 @@ create table jbacked(
 -- +   SELECT cql_blob_create(jbacked, V.id, jbacked.id),
 -- = cql_blob_create(jbacked, V.name, jbacked.name, V.age, jbacked.age)
 -- +     FROM _vals AS V
--- +   RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
+-- +   RETURNING cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age);
 -- - error:
 proc insert_into_backed_returning()
 begin
   insert into jbacked values (1, 'x', 10), (2, 'y', 15)
-  returning (id, name, age);
+  returning id, name, age;
 end;
 
 -- TEST: delete from backed with returning
@@ -25790,14 +25790,14 @@ end;
 -- + DELETE FROM jb_insert WHERE rowid IN (SELECT rowid
 -- +   FROM jbacked
 -- +   WHERE id = 5)
--- +   RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
+-- +   RETURNING cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age);
 -- + {create_proc_stmt}: delete_from_backed_returning: { id: integer notnull, name: text, age: integer } dml_proc
 -- + {delete_returning_stmt}: _select_: { id: integer notnull, name: text, age: integer }
 -- - error:
 proc delete_from_backed_returning()
 begin
   delete from jbacked where id = 5
-  returning (id, name, age);
+  returning id, name, age;
 end;
 
 -- TEST: delete from backed with returning and CTE
@@ -25811,7 +25811,7 @@ end;
 -- +   FROM jbacked
 -- +   WHERE id IN (SELECT a_cte.x
 -- +   FROM a_cte))
--- +   RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
+-- +   RETURNING cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age);
 -- + {create_proc_stmt}: with_delete_from_backed_returning: { id: integer notnull, name: text, age: integer } dml_proc
 -- + {delete_returning_stmt}: _select_: { id: integer notnull, name: text, age: integer }
 -- - error:
@@ -25819,7 +25819,7 @@ proc with_delete_from_backed_returning()
 begin
   with a_cte as (select 1 x)
   delete from jbacked where id in (select * from a_cte)
-  returning (id, name, age);
+  returning id, name, age;
 end;
 
 -- TEST: delete returning is ok in a cursor and that doesn't make the proc have a result set
@@ -25838,7 +25838,7 @@ proc delete_returning_cursor()
 begin
   cursor C for
     delete from jbacked where id = 5
-    returning (id, name, age);
+    returning id, name, age;
 end;
 
 -- TEST: this is an incorrect form, this delete isn't a row source
@@ -25860,7 +25860,7 @@ proc delete_returning_invalid_with_delete ()
 begin
   with foo as (select not 'x')
   delete from insert_returning_test
-    returning (ix + iy as xy, ix, iy);
+    RETURNING ix + iy AS xy, ix, iy;
 end;
 
 -- TEST: delete returning error case, bogus select list
@@ -25872,7 +25872,7 @@ end;
 proc delete_returning_invalid_return ()
 begin
   delete from insert_returning_test
-    returning (nope);
+    returning nope;
 end;
 
 -- TEST: update from backed with returning
@@ -25884,14 +25884,14 @@ end;
 -- +   WHERE rowid IN (SELECT rowid
 -- +     FROM jbacked
 -- +     WHERE id = 5)
--- +   RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
+-- +   RETURNING cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age);
 -- + {create_proc_stmt}: update_from_backed_returning: { id: integer notnull, name: text, age: integer } dml_proc
 -- + {update_returning_stmt}: _select_: { id: integer notnull, name: text, age: integer }
 -- - error:
 proc update_from_backed_returning()
 begin
   update jbacked set id = 7 where id = 5
-  returning (id, name, age);
+  returning id, name, age;
 end;
 
 -- TEST: update from backed with returning and CTE
@@ -25906,7 +25906,7 @@ end;
 -- +   WHERE rowid IN (SELECT rowid
 -- +    FROM jbacked
 -- +     WHERE id = 5)
--- +   RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
+-- +   RETURNING cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age);
 -- + {create_proc_stmt}: with_update_from_backed_returning: { id: integer notnull, name: text, age: integer } dml_proc
 -- + {update_returning_stmt}: _select_: { id: integer notnull, name: text, age: integer }
 -- - error:
@@ -25914,7 +25914,7 @@ proc with_update_from_backed_returning()
 begin
   with a_cte as (select 1 x)
   update jbacked set id = 7 where id = 5
-  returning (id, name, age);
+  returning id, name, age;
 end;
 
 -- TEST: update returning is ok in a cursor and that doesn't make the proc have a result set
@@ -25927,7 +25927,7 @@ end;
 -- +   WHERE rowid IN (SELECT rowid
 -- +     FROM jbacked
 -- +     WHERE id = 5)
--- +     RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
+-- +     RETURNING cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age);
 -- + {create_proc_stmt}: ok
 -- + {declare_cursor}: C: _select_: { id: integer notnull, name: text, age: integer } variable dml_proc
 -- + {update_returning_stmt}: _select_: { id: integer notnull, name: text, age: integer }
@@ -25936,7 +25936,7 @@ proc update_returning_cursor()
 begin
   cursor C for
     update jbacked set id = 7 where id = 5
-    returning (id, name, age);
+    returning id, name, age;
 end;
 
 -- TEST: this is an incorrect form, this update isn't a row source
@@ -25958,7 +25958,7 @@ proc update_returning_invalid_with_update ()
 begin
   with foo as (select not 'x')
   update insert_returning_test set ix = 7 where ix = 5
-    returning (ix + iy as xy, ix, iy);
+    RETURNING ix + iy AS xy, ix, iy;
 end;
 
 -- TEST: update returning error case, bogus select list
@@ -25970,7 +25970,7 @@ end;
 proc update_returning_invalid_return ()
 begin
   update insert_returning_test set ix = 7 where ix = 5
-    returning (nope);
+    returning nope;
 end;
 
 -- TEST: verify that the returning star is expanded correctly
@@ -25981,14 +25981,14 @@ end;
 -- but that is for a later time.
 --
 -- this is the essential rewrite
--- + RETURNING (cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age));
+-- + RETURNING cql_blob_get(k, jbacked.id), cql_blob_get(v, jbacked.name), cql_blob_get(v, jbacked.age);
 -- + {create_proc_stmt}: ok dml_proc
 -- + {declare_cursor}: C: _select_: { id: integer notnull, name: text, age: integer } variable dml_proc
 -- - error:
 PROC expand_returning_star()
 BEGIN
   cursor C for
-  insert into jbacked(id, name) values (1,'foo') returning (*);
+  insert into jbacked(id, name) values (1,'foo') returning *;
 END;
 
 -- stress test for backing tables with funky names
@@ -26032,7 +26032,7 @@ create table `a table`( `col 1` int primary key, `col 2` int);
 -- +   SET `the key` = cql_blob_update(`the key`, ifnull(cql_blob_get(`the value`, `a table`.`col 2`), 0), `a table`.`col 1`)
 -- +   WHERE rowid IN (SELECT rowid
 -- +     FROM `a table`)
--- +   RETURNING (cql_blob_get(`the key`, `a table`.`col 1`), cql_blob_get(`the value`, `a table`.`col 2`));
+-- +   RETURNING cql_blob_get(`the key`, `a table`.`col 1`), cql_blob_get(`the value`, `a table`.`col 2`);
 -- + {create_proc_stmt}: upsert_into_backed_returning: { `col 1`: integer notnull qid, `col 2`: integer qid } dml_proc
 -- + {upsert_returning_stmt}: _select_: { `col 1`: integer notnull qid, `col 2`: integer qid }
 -- + {update_stmt}: `a backing table`: { `the key`: blob notnull primary_key qid, `the value`: blob qid } backing qid
@@ -26045,7 +26045,7 @@ begin
   on conflict (`col 1`)
   where `col 2` = 1 do update
     set `col 1` = `col 2`:ifnull(0)
-    returning (`col 1`, `col 2`);
+    returning `col 1`, `col 2`;
 end;
 
 -- TEST: cursor form of update returning this should not affect the procedure
@@ -26064,7 +26064,7 @@ end;
 -- +     SET `the key` = cql_blob_update(`the key`, ifnull(cql_blob_get(`the value`, `a table`.`col 2`), 0), `a table`.`col 1`)
 -- +     WHERE rowid IN (SELECT rowid
 -- +       FROM `a table`)
--- +     RETURNING (cql_blob_get(`the key`, `a table`.`col 1`), cql_blob_get(`the value`, `a table`.`col 2`));
+-- +     RETURNING cql_blob_get(`the key`, `a table`.`col 1`), cql_blob_get(`the value`, `a table`.`col 2`);
 -- now essential AST shape
 -- + {create_proc_stmt}: ok dml_proc
 -- + {declare_cursor}: C: _select_: { `col 1`: integer notnull qid, `col 2`: integer qid } variable dml_proc
@@ -26080,7 +26080,7 @@ begin
   on conflict (`col 1`)
   where `col 2` = 1 do update
     set `col 1` = `col 2`:ifnull(0)
-    returning (`col 1`, `col 2`);
+    returning `col 1`, `col 2`;
 end;
 
 -- TEST: apply with clause
@@ -26101,7 +26101,7 @@ end;
 -- +     FROM a_cte)
 -- +   DO UPDATE
 -- +     SET `the key` = cql_blob_update(`the key`, ifnull(cql_blob_get(`the value`, `a table`.`col 2`), 0), `a table`.`col 1`)
--- +     RETURNING (cql_blob_get(`the key`, `a table`.`col 1`), cql_blob_get(`the value`, `a table`.`col 2`));
+-- +     RETURNING cql_blob_get(`the key`, `a table`.`col 1`), cql_blob_get(`the value`, `a table`.`col 2`);
 -- - backed(
 -- - error:
 proc with_upsert_returning()
@@ -26113,7 +26113,7 @@ begin
   on conflict (`col 1`) 
   where `col 2` in (select * from a_cte) do update
     set `col 1` = `col 2`:ifnull(0)
-    returning (`col 1`, `col 2`);
+    returning `col 1`, `col 2`;
 end;
 
 -- TEST: bogus CTE
@@ -26128,7 +26128,7 @@ begin
   insert into `a table`
     values (1, 2)
   on conflict do nothing
-  returning (`col 1`, `col 2`);
+  returning `col 1`, `col 2`;
 end;
 
 -- TEST: bogus returning clause
@@ -26142,7 +26142,7 @@ begin
   insert into `a table`
     values (1, 2)
   on conflict do nothing
-  returning (nope);
+  returning nope;
 end;
 
 -- TEST: anonymous columns in the return

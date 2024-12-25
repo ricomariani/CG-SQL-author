@@ -2975,13 +2975,11 @@ static void gen_select_no_with(ast_node *ast) {
 
 static void gen_cte_decl(ast_node *ast)  {
   Contract(is_ast_cte_decl(ast));
-  EXTRACT_STRING(name, ast->left);
-  if (is_ast_star(ast->right)) {
-    // use the shorter syntax for (*) which is just the name
-    gen_printf("%s", name);
-  }
-  else {
-    gen_printf("%s (", name);
+  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  gen_name(name_ast);
+  if (!is_ast_star(ast->right)) {
+    // skip this for foo(*), the shorter syntax is just the name
+    gen_printf(" (");
     gen_name_list(ast->right);
     gen_printf(")");
   }

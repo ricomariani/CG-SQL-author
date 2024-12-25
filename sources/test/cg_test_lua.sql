@@ -5370,7 +5370,7 @@ create table `a table`(
 -- stay escaped.  This kind of sucks but it's the most flexible and normal
 -- names look fine. If you get weird, CQL gets weird.  Sorry :D
 -- +  _rc_, C_stmt = cql_prepare(_db_,
--- + "WITH a_cte (x) AS ( VALUES (1), (2), (3) ), _vals ([col 1], [col 2]) AS ( VALUES (1, 2) ) INSERT INTO [a backing table]([the key], [the value]) SELECT jsonb_array(-3079349931095810044, V.[col 1]), jsonb_object('X_colX202', V.[col 2]) FROM _vals AS V ON CONFLICT ([the key]) WHERE (([the value])->>'$.X_colX202') IN (SELECT a_cte.x FROM a_cte)  DO UPDATE SET [the key] = jsonb_set([the key],  '$[1]', ifnull((([the value])->>'$.X_colX202'), 0)) WHERE rowid IN (SELECT rowid FROM [a table]) RETURNING (([the key])->>1), (([the value])->>'$.X_colX202')")
+-- + "WITH a_cte (x) AS ( VALUES (1), (2), (3) ), _vals ([col 1], [col 2]) AS ( VALUES (1, 2) ) INSERT INTO [a backing table]([the key], [the value]) SELECT jsonb_array(-3079349931095810044, V.[col 1]), jsonb_object('X_colX202', V.[col 2]) FROM _vals AS V WHERE 1 ON CONFLICT ([the key]) WHERE (([the value])->>'$.X_colX202') IN (SELECT a_cte.x FROM a_cte)  DO UPDATE SET [the key] = jsonb_set([the key],  '$[1]', ifnull((([the value])->>'$.X_colX202'), 0)) RETURNING (([the key])->>1), (([the value])->>'$.X_colX202')"
 proc upsert_returning_with_backing()
 begin
   cursor C  for

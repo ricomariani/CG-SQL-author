@@ -166,14 +166,23 @@ begin
   exit(fails);
 end;
 
-/* Enable this code if you want to get verbose errors from the run tests
+-- Use these macros to enable this verbose error tracking in this file
 
-@echo c, '
-
+@macro(stmt_list) ENABLE_CQL_ERROR_TRACE_FOR_C!()
+begin
+  @echo c, '
 #undef cql_error_trace
 #define cql_error_trace() fprintf(stderr, "Error at %s:%d in %s: %d %s\n", __FILE__, __LINE__, _PROC_, _rc_, sqlite3_errmsg(_db_))
 ';
-*/
+end;
+
+@macro(stmt_list) DISABLE_CQL_ERROR_TRACE_FOR_C!()
+begin
+  @echo c, '
+#undef cql_error_trace
+#define cql_error_trace()
+';
+end;
 
 declare const group blob_types (
   CQL_BLOB_TYPE_BOOL   = 0,
@@ -7520,7 +7529,7 @@ begin
      -- adjust for expected updates
      if i == 5 then
        update cursor D using 'modified' name;
-     else if i == 6 then 
+     else if i == 6 then
        update cursor D using 1234 id;
      end if;
 
@@ -7574,10 +7583,10 @@ create table `a table`(
   `col 2` int
 );
 
-TEST_MODERN_ONLY!(verify_insert_returning,
+TEST_MODERN_ONLY!(verify_returning,
 begin
   make_jsonb_backed_schema();
-    cursor C for 
+    cursor C for
     with data(a, b) as (values
       (1, 1),
       (2, 4),
@@ -7586,8 +7595,8 @@ begin
     )
     insert into `a table`(`col 1`, `col 2`)
       select * from data
-      returning(*);
-    
+      returning *;
+
     let i := 0;
     loop fetch C
     begin
@@ -7595,6 +7604,55 @@ begin
       EXPECT_EQ!(C.`col 1` * C.`col 1`, C.`col 2`);
     end;
     EXPECT_EQ!(i, 4);
+
+    cursor D for
+      delete from `a table` where `col 1` in (2, 3)
+      returning *;
+
+    fetch D;
+    EXPECT_EQ!(D.`col 1`, 2);
+    EXPECT_EQ!(D.`col 2`, 4);
+    fetch D;
+    EXPECT_EQ!(D.`col 1`, 3);
+    EXPECT_EQ!(D.`col 2`, 9);
+    fetch D;
+    EXPECT!(not D);
+
+    cursor E for select * from `a table`;
+    i := 0;
+    loop fetch E
+    begin
+      i += 1;
+      EXPECT_EQ!(E.`col 1` * E.`col 1`, E.`col 2`);
+    end;
+    EXPECT_EQ!(i, 2);
+
+    cursor F for
+      update `a table` set `col 2` = `col 1` * 1000
+      where `col 1` = 4
+      returning *;
+
+    fetch F;
+    EXPECT_EQ!(F.`col 1`, 4);
+    EXPECT_EQ!(F.`col 2`, 4000);
+    fetch F;
+    EXPECT!(not F);
+
+    cursor G for
+      insert into `a table`(`col 1`, `col 2`) values (1, 1), (5, 25)
+      on conflict(`col 1`)
+      do update set `col 2` = 1000 where `col 1` <= 4
+      returning *;
+
+    fetch G;
+    EXPECT_EQ!(G.`col 1`, 1);
+    EXPECT_EQ!(G.`col 2`, 1000);
+
+    fetch G;
+    EXPECT_EQ!(G.`col 1`, 5);
+    EXPECT_EQ!(G.`col 2`, 25);
+    fetch G;
+    EXPECT!(not G);
 end);
 
 END_SUITE();

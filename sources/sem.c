@@ -16065,7 +16065,7 @@ static void sem_create_table_stmt(ast_node *ast) {
   int32_t temp = flags & TABLE_IS_TEMP;
   int32_t no_rowid = flags & TABLE_IS_NO_ROWID;
 
-  // CREATE [TEMP]TABLE [name] [if_not_exist] [col_key_list] [without rowid] [table_attrs]
+  // CREATE [TEMP] TABLE [name] [if_not_exist] [col_key_list] [without rowid] [table_attrs]
 
   version_attrs_info table_vers_info;
   init_version_attrs_info(&table_vers_info, name, ast, table_attrs);

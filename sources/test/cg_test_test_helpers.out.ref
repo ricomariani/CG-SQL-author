@@ -3189,21 +3189,9 @@ BEGIN
   );
 END;
 
-[[backed_by=X_aX20backingX20table]]
-CREATE TABLE IF NOT EXISTS `a table`(
-  `col 1` INT PRIMARY KEY,
-  `col 2` INT
-);
-
 PROC test_upsert_returning_stmt_create_triggers()
 BEGIN
   IF @rc THEN END IF;
-END;
-
-PROC test_upsert_returning_stmt_populate_tables()
-BEGIN
-  INSERT OR IGNORE INTO `a table`(`col 1`) VALUES(1) @dummy_seed(123);
-  INSERT OR IGNORE INTO `a table`(`col 1`) VALUES(2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
 END;
 
 PROC test_upsert_returning_stmt_drop_tables()
@@ -3219,11 +3207,6 @@ END;
 PROC test_upsert_returning_stmt_read_X_aX20backingX20table()
 BEGIN
   SELECT * FROM `a backing table`;
-END;
-
-PROC test_upsert_returning_stmt_read_X_aX20table()
-BEGIN
-  SELECT * FROM `a table`;
 END;
 
 PROC open_upsert_returning_stmt()

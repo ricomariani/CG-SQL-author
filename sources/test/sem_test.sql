@@ -21904,7 +21904,7 @@ INSERT INTO bogus_table_not_present VALUES (1,2) on conflict(id) do nothing;
 -- + _vals (id, name) AS (
 -- +   SELECT id + 3, name
 -- +   FROM basic_table
--- +   WHERE id < 100
+-- +   WHERE id < 123
 -- + )
 -- + INSERT INTO simple_backing_table(k, v)
 -- + SELECT cql_blob_create(basic_table, V.id, basic_table.id), cql_blob_create(basic_table, V.name, basic_table.name)
@@ -21912,16 +21912,14 @@ INSERT INTO bogus_table_not_present VALUES (1,2) on conflict(id) do nothing;
 -- + ON CONFLICT (k)
 -- + DO UPDATE
 -- + SET k = cql_blob_update(k, cql_blob_get(k, basic_table.id) + 1, basic_table.id)
--- + WHERE rowid IN (SELECT rowid
--- + FROM basic_table
--- + WHERE id < 100);
+-- + WHERE cql_blob_get(k, basic_table.id) < 456;
 -- + {shared_cte}: _basic_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> } dml_proc
 -- + {update_stmt}: simple_backing_table: { k: blob notnull primary_key, v: blob notnull } backing
 -- - error:
 with a_useless_cte(x, y) as (select 1 ,2)
-insert into basic_table select id + 3, name from basic_table where id < 100
+insert into basic_table select id + 3, name from basic_table where id < 123
 on conflict(id)
-do update set id = id + 1 where id < 100;
+do update set id = id + 1 where id < 456;
 
 -- TEST: correct call to cql_blob_create
 -- + {call}: blob notnull
@@ -26030,8 +26028,6 @@ create table `a table`( `col 1` int primary key, `col 2` int);
 -- + WHERE cql_blob_get(`the value`, `a table`.`col 2`) = 1
 -- + DO UPDATE
 -- +   SET `the key` = cql_blob_update(`the key`, ifnull(cql_blob_get(`the value`, `a table`.`col 2`), 0), `a table`.`col 1`)
--- +   WHERE rowid IN (SELECT rowid
--- +     FROM `a table`)
 -- +   RETURNING cql_blob_get(`the key`, `a table`.`col 1`), cql_blob_get(`the value`, `a table`.`col 2`);
 -- + {create_proc_stmt}: upsert_into_backed_returning: { `col 1`: integer notnull qid, `col 2`: integer qid } dml_proc
 -- + {upsert_returning_stmt}: _select_: { `col 1`: integer notnull qid, `col 2`: integer qid }
@@ -26062,8 +26058,6 @@ end;
 -- +   WHERE cql_blob_get(`the value`, `a table`.`col 2`) = 1
 -- +   DO UPDATE
 -- +     SET `the key` = cql_blob_update(`the key`, ifnull(cql_blob_get(`the value`, `a table`.`col 2`), 0), `a table`.`col 1`)
--- +     WHERE rowid IN (SELECT rowid
--- +       FROM `a table`)
 -- +     RETURNING cql_blob_get(`the key`, `a table`.`col 1`), cql_blob_get(`the value`, `a table`.`col 2`);
 -- now essential AST shape
 -- + {create_proc_stmt}: ok dml_proc

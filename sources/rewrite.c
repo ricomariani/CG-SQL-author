@@ -2336,7 +2336,7 @@ cql_noexport void rewrite_shared_fragment_from_backed_table(ast_node *_Nonnull b
         NULL
       ),
       new_ast_create_proc_stmt(
-        new_ast_str(proc_name),
+        new_ast_str(proc_name), // certainly not a qname, it has a leading _
         new_ast_proc_params_stmts(
           NULL,
           new_ast_stmt_list(
@@ -2395,12 +2395,12 @@ static void rewrite_backed_table_ctes(
         backed_cte_tables = new_ast_cte_tables(
           new_ast_cte_table(
             new_ast_cte_decl(
-              ast_clone_tree(backed_table_name_ast),
+              new_maybe_qstr(backed_table_name), // the table name could be a qname
               new_ast_star()
             ),
             new_ast_shared_cte(
               new_ast_call_stmt(
-                new_maybe_qstr(backed_proc_name),
+                new_ast_str(backed_proc_name),  // with the leading _ this is not a qname for sure
                 NULL
               ),
               NULL
@@ -2767,11 +2767,12 @@ cql_noexport void rewrite_backed_column_references_in_ast(
    .for_key = false,  // this is ignored anyway
   };
 
+  // this can be called from an existing rewrite in the upsert case, handle both cases
+  AST_REWRITE_INFO_SAVE();
   AST_REWRITE_INFO_SET(root->lineno, root->filename);
-
-  rewrite_blob_column_references(&info, root);
-
+    rewrite_blob_column_references(&info, root);
   AST_REWRITE_INFO_RESET();
+  AST_REWRITE_INFO_RESTORE();
 }
 
 // This walks the update list and generates either the args for the key or the
@@ -2987,7 +2988,7 @@ cql_noexport void rewrite_insert_statement_for_backed_table(
       new_ast_str("_vals"),
       name_list
     ),
-    insert_list
+    insert_list // this could be values or a select statement and it's where caluse if it has one
   );
 
   ast_node *key_expr = rewrite_blob_create(true, backed_table, name_list);
@@ -3019,9 +3020,15 @@ cql_noexport void rewrite_insert_statement_for_backed_table(
                 ),
                 NULL
               ),
-              // use where to constraint the row type
+              // we only need this where 1 business to avoid ambiguity
+              // in the conflict clause of an upsert, it's the documented "use a where" business
+              // we actually check for this in user generated code but there are no laws for us
+              // Note that if there was an existing where clause associated with say a select that
+              // contributed to the values, it would be hoisted into the _vals CTE and would be
+              // part of the where clause of that select statement.  Which means for sure
+              // there is no user-created where clause left here for us to handle.
               new_ast_select_where(
-                NULL,
+                  in_upsert ? new_ast_opt_where( new_ast_num(NUM_INT, "1")) : NULL,
                 new_ast_select_groupby(
                   NULL,
                   new_ast_select_having(
@@ -3350,17 +3357,33 @@ cql_noexport void rewrite_update_statement_for_backed_table(
   // rowids of the rows to be updated.  This is using the existing where clause
   // against a from clause that is just the backed table.
 
-  ast_node *select_stmt = rewrite_select_rowid(
-     backed_table_name,
-     opt_where,
-     opt_orderby,
-     opt_limit);
+  ast_node *select_stmt;
+  
+  if (!in_upsert) {
 
-  // for debugging print just the select statement
-  // gen_stmt_list_to_stdout(new_ast_stmt_list(select_stmt, NULL));
+    // this generates the normal where clause for the update statement
+    // WHERE rowid in (SELECT rowid FROM backed) which is what you want
+    // for the pdate case
 
-  // the new where clause for the update statement is going to be something like
-  // rowid IN (select rowid from selected rows)
+    select_stmt = rewrite_select_rowid(
+      backed_table_name,
+      opt_where,
+      opt_orderby,
+      opt_limit);
+
+    // for debugging print just the select statement
+    // gen_stmt_list_to_stdout(new_ast_stmt_list(select_stmt, NULL));
+
+    // the new where clause for the update statement is going to be something like
+    // rowid IN (select rowid from selected rows)
+  }
+  else {
+    // in the upsert case, the rows in question are already selected by SQLite itself.
+    // We don't need to do the rowid selection, we just need to rewrite the
+    // update list to use the backing table columns directly and we'll select
+    // the rowid out of excluded.rowid
+    select_stmt = NULL;
+  }
 
   ast_node *key_expr = rewrite_blob_update(true, sptr_backing, backed_table, update_list);
   ast_node *val_expr = rewrite_blob_update(false, sptr_backing, backed_table, update_list);
@@ -3384,13 +3407,28 @@ cql_noexport void rewrite_update_statement_for_backed_table(
     ast_set_right(up_tail, new);
   }
 
-  ast_node *new_opt_where =
-    new_ast_opt_where(
+  ast_node *new_opt_where = NULL;
+
+  if (!in_upsert) {
+    new_opt_where = new_ast_opt_where(
      new_ast_in_pred(
        new_ast_str("rowid"),
        select_stmt
      )
-  );
+    );
+  }
+  else {    
+    // the upsert case can have a WHERE clause of its own, it stays as is
+    new_opt_where = opt_where;
+
+    if (opt_where) {
+      AST_REWRITE_INFO_SAVE();
+      AST_REWRITE_INFO_SET(opt_where->lineno, opt_where->filename);
+      rewrite_backed_column_references_in_ast(opt_where, backed_table);
+      AST_REWRITE_INFO_RESET();
+      AST_REWRITE_INFO_RESTORE();
+    }
+  }
 
   // replace the target table and where clause of the backed table
   // with the backing table and adjusted where clause

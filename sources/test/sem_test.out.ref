@@ -79916,7 +79916,7 @@ END;
         | | {cte_tables}: ok
         |   | {cte_table}: backed: { rowid: longint notnull, status_id: integer notnull, global_connection_state: longint }
         |     | {cte_decl}: backed: { rowid: longint notnull, status_id: integer notnull, global_connection_state: longint }
-        |     | | {name backed}: TABLE { backed: backed }
+        |     | | {name backed}
         |     | | {name_list}
         |     |   | {name rowid}
         |     |   | {name_list}
@@ -83634,6 +83634,7 @@ WITH
 INSERT INTO simple_backing_table(k, v)
   SELECT cql_blob_create(basic_table, V.id, basic_table.id), cql_blob_create(basic_table, V.name, basic_table.name)
     FROM _vals AS V
+    WHERE 1
 ON CONFLICT (k)
 DO NOTHING;
 
@@ -83713,6 +83714,8 @@ DO NOTHING;
     |       |       |   | {opt_as_alias}
     |       |       |     | {name V}
     |       |       | {select_where}
+    |       |         | {opt_where}: integer notnull
+    |       |         | | {int 1}: integer notnull
     |       |         | {select_groupby}
     |       |           | {select_having}
     |       | {select_orderby}
@@ -83736,19 +83739,18 @@ WITH
 INSERT INTO simple_backing_table(k, v)
   SELECT cql_blob_create(basic_table, V.id, basic_table.id), cql_blob_create(basic_table, V.name, basic_table.name)
     FROM _vals AS V
+    WHERE 1
 ON CONFLICT (k)
 DO UPDATE
   SET k = cql_blob_update(k, cql_blob_get(k, basic_table.id) + 1, basic_table.id)
-  WHERE rowid IN (SELECT rowid
-    FROM basic_table
-    WHERE id < 100);
+  WHERE cql_blob_get(k, basic_table.id) < 100;
 
   {with_upsert_stmt}: ok
   | {with}
   | | {cte_tables}: ok
   |   | {cte_table}: basic_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> }
   |   | | {cte_decl}: basic_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> }
-  |   | | | {name basic_table}: TABLE { basic_table: basic_table }
+  |   | | | {name basic_table}
   |   | | | {name_list}
   |   | |   | {name rowid}
   |   | |   | {name_list}
@@ -83846,6 +83848,8 @@ DO UPDATE
     |       |       |   | {opt_as_alias}
     |       |       |     | {name V}
     |       |       | {select_where}
+    |       |         | {opt_where}: integer notnull
+    |       |         | | {int 1}: integer notnull
     |       |         | {select_groupby}
     |       |           | {select_having}
     |       | {select_orderby}
@@ -83887,29 +83891,18 @@ DO UPDATE
           | {update_from}
             | {update_where}
               | {opt_where}: bool notnull
-              | | {in_pred}: bool notnull
-              |   | {name rowid}: rowid: longint notnull
-              |   | {select_stmt}: rowid: longint
-              |     | {select_core_list}: _select_: { rowid: longint notnull }
-              |     | | {select_core}: _select_: { rowid: longint notnull }
-              |     |   | {select_expr_list_con}: _select_: { rowid: longint notnull }
-              |     |     | {select_expr_list}: _select_: { rowid: longint notnull }
-              |     |     | | {select_expr}: rowid: longint notnull
-              |     |     |   | {name rowid}: rowid: longint notnull
-              |     |     | {select_from_etc}: TABLE { basic_table: basic_table }
-              |     |       | {table_or_subquery_list}: TABLE { basic_table: basic_table }
-              |     |       | | {table_or_subquery}: TABLE { basic_table: basic_table }
-              |     |       |   | {name basic_table}: TABLE { basic_table: basic_table }
-              |     |       | {select_where}
-              |     |         | {opt_where}: bool notnull
-              |     |         | | {lt}: bool notnull
-              |     |         |   | {name id}: id: integer notnull
-              |     |         |   | {int 100}: integer notnull
-              |     |         | {select_groupby}
-              |     |           | {select_having}
-              |     | {select_orderby}
-              |       | {select_limit}
-              |         | {select_offset}
+              | | {lt}: bool notnull
+              |   | {call}: integer notnull primary_key
+              |   | | {name cql_blob_get}: integer notnull primary_key
+              |   | | {call_arg_list}
+              |   |   | {call_filter_clause}
+              |   |   | {arg_list}: ok
+              |   |     | {name k}: k: blob notnull
+              |   |     | {arg_list}
+              |   |       | {dot}: integer notnull primary_key
+              |   |         | {name basic_table}
+              |   |         | {name id}
+              |   | {int 100}: integer notnull
               | {update_orderby}
 
 The statement ending at line XXXX
@@ -83955,24 +83948,23 @@ WITH
   _vals (id, name) AS (
     SELECT id + 3, name
       FROM basic_table
-      WHERE id < 100
+      WHERE id < 123
   )
 INSERT INTO simple_backing_table(k, v)
   SELECT cql_blob_create(basic_table, V.id, basic_table.id), cql_blob_create(basic_table, V.name, basic_table.name)
     FROM _vals AS V
+    WHERE 1
 ON CONFLICT (k)
 DO UPDATE
   SET k = cql_blob_update(k, cql_blob_get(k, basic_table.id) + 1, basic_table.id)
-  WHERE rowid IN (SELECT rowid
-    FROM basic_table
-    WHERE id < 100);
+  WHERE cql_blob_get(k, basic_table.id) < 456;
 
   {with_upsert_stmt}: ok
   | {with}
   | | {cte_tables}: ok
   |   | {cte_table}: basic_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> }
   |   | | {cte_decl}: basic_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> }
-  |   | | | {name basic_table}: TABLE { basic_table: basic_table }
+  |   | | | {name basic_table}
   |   | | | {name_list}
   |   | |   | {name rowid}
   |   | |   | {name_list}
@@ -84035,7 +84027,7 @@ DO UPDATE
   |           |         | {opt_where}: bool notnull
   |           |         | | {lt}: bool notnull
   |           |         |   | {name id}: id: integer notnull
-  |           |         |   | {int 100}: integer notnull
+  |           |         |   | {int 123}: integer notnull
   |           |         | {select_groupby}
   |           |           | {select_having}
   |           | {select_orderby}
@@ -84095,6 +84087,8 @@ DO UPDATE
     |       |       |   | {opt_as_alias}
     |       |       |     | {name V}
     |       |       | {select_where}
+    |       |         | {opt_where}: integer notnull
+    |       |         | | {int 1}: integer notnull
     |       |         | {select_groupby}
     |       |           | {select_having}
     |       | {select_orderby}
@@ -84136,29 +84130,18 @@ DO UPDATE
           | {update_from}
             | {update_where}
               | {opt_where}: bool notnull
-              | | {in_pred}: bool notnull
-              |   | {name rowid}: rowid: longint notnull
-              |   | {select_stmt}: rowid: longint
-              |     | {select_core_list}: _select_: { rowid: longint notnull }
-              |     | | {select_core}: _select_: { rowid: longint notnull }
-              |     |   | {select_expr_list_con}: _select_: { rowid: longint notnull }
-              |     |     | {select_expr_list}: _select_: { rowid: longint notnull }
-              |     |     | | {select_expr}: rowid: longint notnull
-              |     |     |   | {name rowid}: rowid: longint notnull
-              |     |     | {select_from_etc}: TABLE { basic_table: basic_table }
-              |     |       | {table_or_subquery_list}: TABLE { basic_table: basic_table }
-              |     |       | | {table_or_subquery}: TABLE { basic_table: basic_table }
-              |     |       |   | {name basic_table}: TABLE { basic_table: basic_table }
-              |     |       | {select_where}
-              |     |         | {opt_where}: bool notnull
-              |     |         | | {lt}: bool notnull
-              |     |         |   | {name id}: id: integer notnull
-              |     |         |   | {int 100}: integer notnull
-              |     |         | {select_groupby}
-              |     |           | {select_having}
-              |     | {select_orderby}
-              |       | {select_limit}
-              |         | {select_offset}
+              | | {lt}: bool notnull
+              |   | {call}: integer notnull primary_key
+              |   | | {name cql_blob_get}: integer notnull primary_key
+              |   | | {call_arg_list}
+              |   |   | {call_filter_clause}
+              |   |   | {arg_list}: ok
+              |   |     | {name k}: k: blob notnull
+              |   |     | {arg_list}
+              |   |       | {dot}: integer notnull primary_key
+              |   |         | {name basic_table}
+              |   |         | {name id}
+              |   | {int 456}: integer notnull
               | {update_orderby}
 
 The statement ending at line XXXX
@@ -89199,7 +89182,7 @@ CURSOR backed_cursor FOR
     | | {cte_tables}: ok
     |   | {cte_table}: simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull }
     |     | {cte_decl}: simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull }
-    |     | | {name simple_backed_table}: TABLE { simple_backed_table: simple_backed_table }
+    |     | | {name simple_backed_table}
     |     | | {name_list}
     |     |   | {name rowid}
     |     |   | {name_list}
@@ -89247,7 +89230,7 @@ INSERT INTO dummy_table_for_backed_test(id)
   | | {cte_tables}: ok
   |   | {cte_table}: simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull }
   |     | {cte_decl}: simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull }
-  |     | | {name simple_backed_table}: TABLE { simple_backed_table: simple_backed_table }
+  |     | | {name simple_backed_table}
   |     | | {name_list}
   |     |   | {name rowid}
   |     |   | {name_list}
@@ -89295,7 +89278,7 @@ DELETE FROM dummy_table_for_backed_test WHERE id IN (SELECT id
   | | {cte_tables}: ok
   |   | {cte_table}: simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull }
   |     | {cte_decl}: simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull }
-  |     | | {name simple_backed_table}: TABLE { simple_backed_table: simple_backed_table }
+  |     | | {name simple_backed_table}
   |     | | {name_list}
   |     |   | {name rowid}
   |     |   | {name_list}
@@ -89342,7 +89325,7 @@ UPDATE dummy_table_for_backed_test
   | | {cte_tables}: ok
   |   | {cte_table}: simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull }
   |     | {cte_decl}: simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull }
-  |     | | {name simple_backed_table}: TABLE { simple_backed_table: simple_backed_table }
+  |     | | {name simple_backed_table}
   |     | | {name_list}
   |     |   | {name rowid}
   |     |   | {name_list}
@@ -100544,12 +100527,11 @@ BEGIN
   INSERT INTO `a backing table`(`the key`, `the value`)
     SELECT cql_blob_create(`a table`, V.`col 1`, `a table`.`col 1`), cql_blob_create(`a table`, V.`col 2`, `a table`.`col 2`)
       FROM _vals AS V
+      WHERE 1
   ON CONFLICT (`the key`)
   WHERE cql_blob_get(`the value`, `a table`.`col 2`) = 1 
   DO UPDATE
     SET `the key` = cql_blob_update(`the key`, ifnull(cql_blob_get(`the value`, `a table`.`col 2`), 0), `a table`.`col 1`)
-    WHERE rowid IN (SELECT rowid
-      FROM `a table`)
     RETURNING cql_blob_get(`the key`, `a table`.`col 1`), cql_blob_get(`the value`, `a table`.`col 2`);
 END;
 
@@ -100634,6 +100616,8 @@ END;
         |   |       |       |   | {opt_as_alias}
         |   |       |       |     | {name V}
         |   |       |       | {select_where}
+        |   |       |         | {opt_where}: integer notnull
+        |   |       |         | | {int 1}: integer notnull
         |   |       |         | {select_groupby}
         |   |       |           | {select_having}
         |   |       | {select_orderby}
@@ -100692,26 +100676,6 @@ END;
         |         |               | {name `col 1`}
         |         | {update_from}
         |           | {update_where}
-        |             | {opt_where}: bool notnull
-        |             | | {in_pred}: bool notnull
-        |             |   | {name rowid}: rowid: longint notnull
-        |             |   | {select_stmt}: rowid: longint
-        |             |     | {select_core_list}: _select_: { rowid: longint notnull }
-        |             |     | | {select_core}: _select_: { rowid: longint notnull }
-        |             |     |   | {select_expr_list_con}: _select_: { rowid: longint notnull }
-        |             |     |     | {select_expr_list}: _select_: { rowid: longint notnull }
-        |             |     |     | | {select_expr}: rowid: longint notnull
-        |             |     |     |   | {name rowid}: rowid: longint notnull
-        |             |     |     | {select_from_etc}: TABLE { `a table`: `a table` }
-        |             |     |       | {table_or_subquery_list}: TABLE { `a table`: `a table` }
-        |             |     |       | | {table_or_subquery}: TABLE { `a table`: `a table` }
-        |             |     |       |   | {name `a table`}: TABLE { `a table`: `a table` }
-        |             |     |       | {select_where}
-        |             |     |         | {select_groupby}
-        |             |     |           | {select_having}
-        |             |     | {select_orderby}
-        |             |       | {select_limit}
-        |             |         | {select_offset}
         |             | {update_orderby}
         | {select_expr_list}: _select_: { `col 1`: integer notnull qid, `col 2`: integer qid }
           | {select_expr}: `col 1`: integer notnull qid
@@ -100750,12 +100714,11 @@ BEGIN
     INSERT INTO `a backing table`(`the key`, `the value`)
       SELECT cql_blob_create(`a table`, V.`col 1`, `a table`.`col 1`), cql_blob_create(`a table`, V.`col 2`, `a table`.`col 2`)
         FROM _vals AS V
+        WHERE 1
     ON CONFLICT (`the key`)
     WHERE cql_blob_get(`the value`, `a table`.`col 2`) = 1 
     DO UPDATE
       SET `the key` = cql_blob_update(`the key`, ifnull(cql_blob_get(`the value`, `a table`.`col 2`), 0), `a table`.`col 1`)
-      WHERE rowid IN (SELECT rowid
-        FROM `a table`)
       RETURNING cql_blob_get(`the key`, `a table`.`col 1`), cql_blob_get(`the value`, `a table`.`col 2`);
 END;
 
@@ -100842,6 +100805,8 @@ END;
           |   |       |       |   | {opt_as_alias}
           |   |       |       |     | {name V}
           |   |       |       | {select_where}
+          |   |       |         | {opt_where}: integer notnull
+          |   |       |         | | {int 1}: integer notnull
           |   |       |         | {select_groupby}
           |   |       |           | {select_having}
           |   |       | {select_orderby}
@@ -100900,26 +100865,6 @@ END;
           |         |               | {name `col 1`}
           |         | {update_from}
           |           | {update_where}
-          |             | {opt_where}: bool notnull
-          |             | | {in_pred}: bool notnull
-          |             |   | {name rowid}: rowid: longint notnull
-          |             |   | {select_stmt}: rowid: longint
-          |             |     | {select_core_list}: _select_: { rowid: longint notnull }
-          |             |     | | {select_core}: _select_: { rowid: longint notnull }
-          |             |     |   | {select_expr_list_con}: _select_: { rowid: longint notnull }
-          |             |     |     | {select_expr_list}: _select_: { rowid: longint notnull }
-          |             |     |     | | {select_expr}: rowid: longint notnull
-          |             |     |     |   | {name rowid}: rowid: longint notnull
-          |             |     |     | {select_from_etc}: TABLE { `a table`: `a table` }
-          |             |     |       | {table_or_subquery_list}: TABLE { `a table`: `a table` }
-          |             |     |       | | {table_or_subquery}: TABLE { `a table`: `a table` }
-          |             |     |       |   | {name `a table`}: TABLE { `a table`: `a table` }
-          |             |     |       | {select_where}
-          |             |     |         | {select_groupby}
-          |             |     |           | {select_having}
-          |             |     | {select_orderby}
-          |             |       | {select_limit}
-          |             |         | {select_offset}
           |             | {update_orderby}
           | {select_expr_list}: _select_: { `col 1`: integer notnull qid, `col 2`: integer qid }
             | {select_expr}: `col 1`: integer notnull qid
@@ -100964,13 +100909,12 @@ BEGIN
     INSERT INTO `a backing table`(`the key`, `the value`)
       SELECT cql_blob_create(`a table`, V.`col 1`, `a table`.`col 1`), cql_blob_create(`a table`, V.`col 2`, `a table`.`col 2`)
         FROM _vals AS V
+        WHERE 1
     ON CONFLICT (`the key`)
     WHERE cql_blob_get(`the value`, `a table`.`col 2`) IN (SELECT a_cte.x
       FROM a_cte) 
     DO UPDATE
       SET `the key` = cql_blob_update(`the key`, ifnull(cql_blob_get(`the value`, `a table`.`col 2`), 0), `a table`.`col 1`)
-      WHERE rowid IN (SELECT rowid
-        FROM `a table`)
       RETURNING cql_blob_get(`the key`, `a table`.`col 1`), cql_blob_get(`the value`, `a table`.`col 2`);
 END;
 
@@ -101079,6 +101023,8 @@ END;
           |   |       |       |   | {opt_as_alias}
           |   |       |       |     | {name V}
           |   |       |       | {select_where}
+          |   |       |         | {opt_where}: integer notnull
+          |   |       |         | | {int 1}: integer notnull
           |   |       |         | {select_groupby}
           |   |       |           | {select_having}
           |   |       | {select_orderby}
@@ -101155,26 +101101,6 @@ END;
           |         |               | {name `col 1`}
           |         | {update_from}
           |           | {update_where}
-          |             | {opt_where}: bool notnull
-          |             | | {in_pred}: bool notnull
-          |             |   | {name rowid}: rowid: longint notnull
-          |             |   | {select_stmt}: rowid: longint
-          |             |     | {select_core_list}: _select_: { rowid: longint notnull }
-          |             |     | | {select_core}: _select_: { rowid: longint notnull }
-          |             |     |   | {select_expr_list_con}: _select_: { rowid: longint notnull }
-          |             |     |     | {select_expr_list}: _select_: { rowid: longint notnull }
-          |             |     |     | | {select_expr}: rowid: longint notnull
-          |             |     |     |   | {name rowid}: rowid: longint notnull
-          |             |     |     | {select_from_etc}: TABLE { `a table`: `a table` }
-          |             |     |       | {table_or_subquery_list}: TABLE { `a table`: `a table` }
-          |             |     |       | | {table_or_subquery}: TABLE { `a table`: `a table` }
-          |             |     |       |   | {name `a table`}: TABLE { `a table`: `a table` }
-          |             |     |       | {select_where}
-          |             |     |         | {select_groupby}
-          |             |     |           | {select_having}
-          |             |     | {select_orderby}
-          |             |       | {select_limit}
-          |             |         | {select_offset}
           |             | {update_orderby}
           | {select_expr_list}: _select_: { `col 1`: integer notnull qid, `col 2`: integer qid }
             | {select_expr}: `col 1`: integer notnull qid
@@ -101284,6 +101210,7 @@ BEGIN
     INSERT INTO `a backing table`(`the key`, `the value`)
       SELECT cql_blob_create(`a table`, V.`col 1`, `a table`.`col 1`), cql_blob_create(`a table`, V.`col 2`, `a table`.`col 2`)
         FROM _vals AS V
+        WHERE 1
     ON CONFLICT (`the key`)
     DO NOTHING
       RETURNING nope;
@@ -101374,6 +101301,8 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'nope'
           |   |       |       |   | {opt_as_alias}
           |   |       |       |     | {name V}
           |   |       |       | {select_where}
+          |   |       |         | {opt_where}: integer notnull
+          |   |       |         | | {int 1}: integer notnull
           |   |       |         | {select_groupby}
           |   |       |           | {select_having}
           |   |       | {select_orderby}

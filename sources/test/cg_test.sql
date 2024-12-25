@@ -6346,8 +6346,6 @@ create table `a table`(
 -- +   "FROM a_cte)  "
 -- + "DO UPDATE "
 -- +   "SET [the key] = jsonb_set([the key],  '$[1]', ifnull((([the value])->>'$.X_colX202'), 0)) "
--- +   "WHERE rowid IN (SELECT rowid "
--- +     "FROM [a table]) "
 -- +   "RETURNING (([the key])->>1), (([the value])->>'$.X_colX202')");
 proc upsert_returning_with_backing()
 begin

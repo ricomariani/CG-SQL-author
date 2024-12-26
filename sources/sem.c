@@ -5062,8 +5062,9 @@ static void sem_col_def(ast_node *def, col_def_info *info) {
     }
 
     if (!is_nullable(def->sem->sem_type) && !has_default((def->sem->sem_type))) {
-      report_error(def, "CQL0034: create/delete version numbers can only be applied to "
-                        "columns that are nullable or have a default value", name);
+      report_error(def,
+        "CQL0034: create/delete version numbers can only be applied to "
+        "columns that are nullable or have a default value", name);
       record_error(def);
       return;
     }
@@ -7918,8 +7919,9 @@ static void sem_coalesce(ast_node *call_ast, bool_t is_ifnull) {
     // Even the first arg might be not-nullable so we check every time through
     if (is_not_nullable(sem_type_result) && ast->right) {
       CSTR err_msg = dup_expr_text(expr);
-      report_error(expr, "CQL0077: encountered arg known to be not null"
-                          " before the end of the list, rendering the rest useless.", err_msg);
+      report_error(expr,
+        "CQL0077: encountered arg known to be not null"
+        " before the end of the list, rendering the rest useless.", err_msg);
       record_error(call_ast);
       return;
     }
@@ -7997,8 +7999,9 @@ static void sem_expr_in_pred_or_not_in(ast_node *ast, CSTR cstr) {
       |SEM_EXPR_CONTEXT_UDF;
 
     if (CURRENT_EXPR_CONTEXT_IS_NOT(valid)) {
-      report_error( ast, "CQL0078: [not] in (select ...) is only allowed inside "
-                         "of select lists, where, on, and having clauses", NULL);
+      report_error( ast,
+        "CQL0078: [not] in (select ...) is only allowed inside "
+        "of select lists, where, on, and having clauses", NULL);
       record_error(ast);
       return;
     }
@@ -14388,9 +14391,10 @@ static void sem_drop_trigger_stmt(ast_node *ast) {
   EXTRACT_NAME_AST(name_ast, ast->right);
   EXTRACT_STRING(name, name_ast);
 
-  ast_node *trigger_ast = find_usable_trigger(name,
-                                              name_ast,
-                                              "CQL0113: trigger in drop statement was not declared");
+  ast_node *trigger_ast = find_usable_trigger(
+    name,
+    name_ast,
+    "CQL0113: trigger in drop statement was not declared");
   if (!trigger_ast) {
     record_error(ast);
     return;
@@ -18232,7 +18236,7 @@ cleanup:
 // we are scanning to have a WHERE clause in the SELECT statement. The upsert statement is
 // otherwise ambgiuously parseable.  So we force the issue in CQL ensuring SQLite will only
 // ever see the unambiguous form.  You might have to add WHERE TRUE like the SQLite docs say.
-static bool_t is_root_select_stmt_has_opt_where_node (ast_node *ast, int32_t *select_count) {
+static bool_t root_select_stmt_has_opt_where_node (ast_node *ast, int32_t *select_count) {
   if (!ast || is_primitive(ast)) {
     return false;
   }
@@ -18260,8 +18264,8 @@ static bool_t is_root_select_stmt_has_opt_where_node (ast_node *ast, int32_t *se
     return true;
   }
 
-  return is_root_select_stmt_has_opt_where_node(ast->left, select_count) ||
-         is_root_select_stmt_has_opt_where_node(ast->right, select_count);
+  return root_select_stmt_has_opt_where_node(ast->left, select_count) ||
+         root_select_stmt_has_opt_where_node(ast->right, select_count);
 }
 
 // Top level WITH-UPSERT form -- create the CTE context and then process
@@ -18371,7 +18375,7 @@ static void sem_upsert_stmt(ast_node *stmt) {
   sptr->struct_name = name;
 
   int32_t select_count = 1;
-  bool_t found_where_stmt = is_root_select_stmt_has_opt_where_node(insert_stmt, &select_count);
+  bool_t found_where_stmt = root_select_stmt_has_opt_where_node(insert_stmt, &select_count);
   if (select_count == 0 && !found_where_stmt && !in_upsert_rewrite) {
     report_error(insert_stmt, "CQL0280: upsert statement requires a where clause if the insert clause uses select", NULL);
     record_error(insert_stmt);
@@ -18399,9 +18403,10 @@ static void sem_upsert_stmt(ast_node *stmt) {
     // - unique index (CREATE UNIQUE INDEX ...)
     // - a group of primary key (PRIMARY KEY (a,b,...)).
     if (!is_single_unique_key) {
-      bool_t valid = find_referenceable_columns(current_upsert_table_ast,
-                                                validate_referenceable_fk_def_callback,
-                                                indexed_columns);
+      bool_t valid = find_referenceable_columns(
+        current_upsert_table_ast,
+        validate_referenceable_fk_def_callback,
+        indexed_columns);
       if (!valid) {
         report_error(indexed_columns, "CQL0279: columns referenced in an UPSERT conflict target must exactly match a unique key the target table", NULL);
         record_error(upsert_update);
@@ -18416,15 +18421,19 @@ static void sem_upsert_stmt(ast_node *stmt) {
 
     // The opt_where node is in the upsert context therefore we need to make sure
     // we register a join context for search
-    PUSH_JOIN_BLOCK()
     PUSH_JOIN(upsert_scope, &join);
     sem_opt_where(opt_where);
-    POP_JOIN()
     POP_JOIN()
     if (is_error(opt_where)) {
       record_error(upsert_update);
       record_error(conflict_target);
       goto error;
+    }
+
+    if (is_backed(current_upsert_table_ast->sem->sem_type)) {
+      // we need to change any references to the tables to be the blob extractions
+      // from the key and value blobs
+      rewrite_backed_column_references_in_ast(opt_where, current_upsert_table_ast);
     }
   }
 
@@ -25651,9 +25660,10 @@ static void sem_validate_region_links(ast_node *ast) {
 
     if (!is_error(region) && region->sem->region && !(region->sem->sem_type & SEM_TYPE_DEPLOYABLE)) {
        CHARBUF_OPEN(msg);
-       bprintf(&msg, "CQL0291: region links into the middle of a deployable region;"
-                     " you must point to the root of '%s' not into the middle:",
-                     region->sem->region);
+       bprintf(&msg,
+        "CQL0291: region links into the middle of a deployable region;"
+        " you must point to the root of '%s' not into the middle:",
+        region->sem->region);
        report_error(ast, msg.ptr, name);
        ast->sem->region = "(error)";
        record_error(ast);
@@ -25915,14 +25925,14 @@ static void sem_setup_region_filters() {
 
   if (options.include_regions_count) {
     included_regions = sem_accumulate_regions(
-                          options.include_regions_count,
-                          options.include_regions);
+      options.include_regions_count,
+      options.include_regions);
   }
 
   if (options.exclude_regions_count) {
     excluded_regions = sem_accumulate_regions(
-                          options.exclude_regions_count,
-                          options.exclude_regions);
+      options.exclude_regions_count,
+      options.exclude_regions);
   }
 }
 
@@ -26421,8 +26431,9 @@ cql_noexport void exit_on_validating_schema() {
 #define FUNC_INIT(x) symtab_add(builtin_funcs, #x, (void *)sem_func_ ## x)
 
 #undef FUNC_REWRITE_INIT
-#define FUNC_REWRITE_INIT(x) { symtab_add(builtin_funcs, #x, (void *)sem_func_ ## x); \
-                               symtab_add(builtin_sql_rewrites, #x, (void *)1);  }
+#define FUNC_REWRITE_INIT(x) { \
+  symtab_add(builtin_funcs, #x, (void *)sem_func_ ## x); \
+  symtab_add(builtin_sql_rewrites, #x, (void *)1);  }
 
 // A special function is one whose arguments require special treatment during
 // semantic analysis, for whatever reason. The procedure that does the analysis

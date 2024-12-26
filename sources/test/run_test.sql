@@ -7586,74 +7586,169 @@ create table `a table`(
 TEST_MODERN_ONLY!(verify_returning,
 begin
   make_jsonb_backed_schema();
-    cursor C for
-    with data(a, b) as (values
-      (1, 1),
-      (2, 4),
-      (3, 9),
-      (4, 16)
-    )
-    insert into `a table`(`col 1`, `col 2`)
-      select * from data
-      returning *;
 
-    let i := 0;
-    loop fetch C
-    begin
-      i += 1;
-      EXPECT_EQ!(C.`col 1` * C.`col 1`, C.`col 2`);
-    end;
-    EXPECT_EQ!(i, 4);
+  cursor C for
+  with data(a, b) as (values
+    (1, 1),
+    (2, 4),
+    (3, 9),
+    (4, 16)
+  )
+  insert into `a table`(`col 1`, `col 2`)
+    select * from data
+    returning *;
 
-    cursor D for
-      delete from `a table` where `col 1` in (2, 3)
-      returning *;
+  let i := 0;
+  loop fetch C
+  begin
+    i += 1;
+    EXPECT_EQ!(C.`col 1` * C.`col 1`, C.`col 2`);
+  end;
+  EXPECT_EQ!(i, 4);
 
-    fetch D;
-    EXPECT_EQ!(D.`col 1`, 2);
-    EXPECT_EQ!(D.`col 2`, 4);
-    fetch D;
-    EXPECT_EQ!(D.`col 1`, 3);
-    EXPECT_EQ!(D.`col 2`, 9);
-    fetch D;
-    EXPECT!(not D);
+  cursor D for
+    delete from `a table` where `col 1` in (2, 3)
+    returning *;
 
-    cursor E for select * from `a table`;
-    i := 0;
-    loop fetch E
-    begin
-      i += 1;
-      EXPECT_EQ!(E.`col 1` * E.`col 1`, E.`col 2`);
-    end;
-    EXPECT_EQ!(i, 2);
+  fetch D;
+  EXPECT_EQ!(D.`col 1`, 2);
+  EXPECT_EQ!(D.`col 2`, 4);
+  fetch D;
+  EXPECT_EQ!(D.`col 1`, 3);
+  EXPECT_EQ!(D.`col 2`, 9);
+  fetch D;
+  EXPECT!(not D);
 
-    cursor F for
-      update `a table` set `col 2` = `col 1` * 1000
-      where `col 1` = 4
-      returning *;
+  cursor E for select * from `a table`;
+  i := 0;
+  loop fetch E
+  begin
+    i += 1;
+    EXPECT_EQ!(E.`col 1` * E.`col 1`, E.`col 2`);
+  end;
+  EXPECT_EQ!(i, 2);
 
-    fetch F;
-    EXPECT_EQ!(F.`col 1`, 4);
-    EXPECT_EQ!(F.`col 2`, 4000);
-    fetch F;
-    EXPECT!(not F);
+  cursor F for
+    update `a table` set `col 2` = `col 1` * 1000
+    where `col 1` = 4
+    returning *;
 
-    -- force the excluded rewrite to work also
-    cursor G for
-      insert into `a table`(`col 1`, `col 2`) values (1, 1), (5, 25)
-      on conflict(`col 1`)
-      do update set `col 2` = 1000 where excluded.`col 1` <= 4
-      returning *;
+  fetch F;
+  EXPECT_EQ!(F.`col 1`, 4);
+  EXPECT_EQ!(F.`col 2`, 4000);
+  fetch F;
+  EXPECT!(not F);
 
-    fetch G;
-    EXPECT_EQ!(G.`col 1`, 1);
-    EXPECT_EQ!(G.`col 2`, 1000);
+  -- force the excluded rewrite to work also
+  cursor G for
+    insert into `a table`(`col 1`, `col 2`) values (1, 1), (5, 25)
+    on conflict(`col 1`)
+    do update set `col 2` = 1000 where excluded.`col 1` <= 4
+    returning *;
 
-    fetch G;
-    EXPECT_EQ!(G.`col 1`, 5);
-    EXPECT_EQ!(G.`col 2`, 25);
-    fetch G;
-    EXPECT!(not G);
+  fetch G;
+  EXPECT_EQ!(G.`col 1`, 1);
+  EXPECT_EQ!(G.`col 2`, 1000);
+
+  fetch G;
+  EXPECT_EQ!(G.`col 1`, 5);
+  EXPECT_EQ!(G.`col 2`, 25);
+  fetch G;
+  EXPECT!(not G);
+end);
+
+
+proc make_qname_backed_schema()
+begin
+  [[backing_table]]
+  create table `backing table 2`(
+    `the key` blob primary key,
+    `the value` blob
+  );
+end;
+
+[[backed_by=`backing table 2`]]
+create table `table 2`(
+  `col 1` int primary key,
+  `col 2` int
+);
+
+TEST!(verify_backed_qnames,
+begin
+  make_qname_backed_schema();
+
+  with data(a, b) as (values
+    (1, 1),
+    (2, 4),
+    (3, 9),
+    (4, 16)
+  )
+  insert into `table 2`(`col 1`, `col 2`)
+    select * from data;
+
+  cursor C for select * from `table 2`;
+
+  let i := 0;
+  loop fetch C
+  begin
+    i += 1;
+    EXPECT_EQ!(C.`col 1` * C.`col 1`, C.`col 2`);
+  end;
+  EXPECT_EQ!(i, 4);
+
+    delete from `table 2` where `col 1` in (2, 3);
+
+  cursor D for select * from `table 2`;
+
+  fetch D;
+  EXPECT_EQ!(D.`col 1`, 1);
+  EXPECT_EQ!(D.`col 2`, 1);
+  fetch D;
+  EXPECT_EQ!(D.`col 1`, 4);
+  EXPECT_EQ!(D.`col 2`, 16);
+  fetch D;
+  EXPECT!(not D);
+
+  update `table 2` set `col 2` = `col 1` * 1000
+  where `col 1` = 4;
+
+  cursor F for select * from `table 2`;
+
+  fetch F;
+  EXPECT_EQ!(F.`col 1`, 1);
+  EXPECT_EQ!(F.`col 2`, 1);
+  fetch F;
+  EXPECT_EQ!(F.`col 1`, 4);
+  EXPECT_EQ!(F.`col 2`, 4000);
+  fetch F;
+  EXPECT!(not F);
+
+  -- force the excluded rewrite to work also
+  insert into `table 2`(`col 1`, `col 2`) values (1, 1), (4, 100), (3, 9), (3, 9), (3, 11), (5, 25)
+  on conflict(`col 1`) where `col 2` != 9
+  do update set `col 2` = excluded.`col 1`*123
+  where excluded.`col 1` < 4;
+
+  cursor G for select * from `table 2` order by `col 1`;
+
+  fetch G;
+  EXPECT_EQ!(G.`col 1`, 1);
+  EXPECT_EQ!(G.`col 2`, 123);
+
+  fetch G;
+  EXPECT_EQ!(G.`col 1`, 3);
+  EXPECT_EQ!(G.`col 2`, 3*123);
+
+  fetch G;
+  EXPECT_EQ!(G.`col 1`, 4);
+  EXPECT_EQ!(G.`col 2`, 4000);
+
+  fetch G;
+  EXPECT_EQ!(G.`col 1`, 5);
+  EXPECT_EQ!(G.`col 2`, 25);
+  fetch G;
+
+  EXPECT!(not G);
 end);
 
 END_SUITE();

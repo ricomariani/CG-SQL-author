@@ -18339,26 +18339,9 @@ static void sem_upsert_stmt(ast_node *stmt) {
     goto error;
   }
 
-  // grab the columns portion from the insert statement ast
-  EXTRACT_NOTNULL(columns_values, name_columns_values->right);
-  EXTRACT(column_spec, columns_values->left);
-  EXTRACT(name_list, column_spec->left);
-
-  // The columns we attempted to insert will form the columns of the "excluded" table which
-  // we put into scope by pushing a join onto the joinscope stack, we'll do that when
-  // we process the update (but not the insert or the where on the insert)
-  // for now we just get the type ready.
-  uint32_t names_count = 0;
-  ast_node *ast = name_list;
-  for ( ;ast; ast = ast->right) names_count++;
-
-  sem_struct *sptr = new_sem_struct("excluded", names_count);
-  ast = name_list;
-  for (uint32_t i = 0; i < names_count; i++, ast = ast->right) {
-    sptr->semtypes[i] = ast->left->sem->sem_type;
-    sptr->names[i] = ast->left->sem->name;
-    sptr->kinds[i] = ast->left->sem->kind;
-  }
+  // deep copy from the table for the excluded columns, strip nothing extra
+  sem_struct *sptr = new_sem_struct_strip_table_flags(table_ast->sem->sptr); 
+  
   // we get the backed status from the tables jptr directly
   sptr->is_backed = table_ast->sem->jptr->tables[0]->is_backed;
 
@@ -18372,7 +18355,7 @@ static void sem_upsert_stmt(ast_node *stmt) {
   // gives us both names and we will need both later to make the correct
   // cql_blob_get call.
   sem_join *jptr_excluded = sem_join_from_sem_struct(sptr);
-  sptr->struct_name = name;
+  jptr_excluded->names[0] = "excluded";
 
   int32_t select_count = 1;
   bool_t found_where_stmt = root_select_stmt_has_opt_where_node(insert_stmt, &select_count);
@@ -18408,7 +18391,9 @@ static void sem_upsert_stmt(ast_node *stmt) {
         validate_referenceable_fk_def_callback,
         indexed_columns);
       if (!valid) {
-        report_error(indexed_columns, "CQL0279: columns referenced in an UPSERT conflict target must exactly match a unique key the target table", NULL);
+        report_error(indexed_columns,
+          "CQL0279: columns referenced in an UPSERT conflict target must exactly match a unique key the target table",
+          NULL);
         record_error(upsert_update);
         record_error(conflict_target);
         goto error;
@@ -18420,7 +18405,8 @@ static void sem_upsert_stmt(ast_node *stmt) {
     sem_join join = *current_upsert_table_ast->sem->jptr;
 
     // The opt_where node is in the upsert context therefore we need to make sure
-    // we register a join context for search
+    // we register a join context for search.  Note that it is not legal to use
+    // 'excluded' in the conflict target where clause, so we do not push it.
     PUSH_JOIN(upsert_scope, &join);
     sem_opt_where(opt_where);
     POP_JOIN()
@@ -26333,6 +26319,11 @@ static void insert_table_alias_string_overide(ast_node *_Nonnull ast, CSTR _Nonn
     return;
   }
 
+  // attemping to alias this table just makes it not work, you can't rename this virtual table
+  if (!strcmp(original_alias, "excluded")) {
+    return;
+  }
+
   if (!strcmp(table_name, original_alias)) {
     return;
   }
@@ -26353,7 +26344,6 @@ static void insert_table_alias_string_overide(ast_node *_Nonnull ast, CSTR _Nonn
   else {
     result = dup_printf("[TABLE %s AS %s]", table_name, original_alias);
   }
-
 
   // Allow existing alias to be reformatted as something like "TABLE table_name AS some_alias".
   sem_node *new_alias_sem = new_sem(SEM_TYPE_OK);

@@ -11550,7 +11550,7 @@ create table upsert_test( id integer primary key, name text, rate real);
 -- + {upsert_stmt}: ok
 -- + {insert_stmt}: ok
 -- + {name upsert_test}: upsert_test: { id: integer notnull primary_key, name: text, rate: real }
--- + {conflict_target}: upsert_test: { id: integer notnull, name: text }
+-- + {conflict_target}: upsert_test: { id: integer notnull, name: text, rate: real }
 -- + {update_stmt}: upsert_test: { id: integer notnull primary_key, name: text, rate: real }
 -- - error:
 insert into upsert_test(id, name) values (1, 'name')

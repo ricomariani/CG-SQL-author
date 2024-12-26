@@ -43056,7 +43056,7 @@ DO NOTHING;
   |         | {select_limit}
   |           | {select_offset}
   | {upsert_update}: ok
-    | {conflict_target}: bar: { id: integer notnull }
+    | {conflict_target}: bar: { id: integer notnull, name: text, rate: longint }
 
 The statement ending at line XXXX
 
@@ -44417,7 +44417,7 @@ DO UPDATE
   |         | {select_limit}
   |           | {select_offset}
   | {upsert_update}: ok
-    | {conflict_target}: upsert_test: { id: integer notnull, name: text }
+    | {conflict_target}: upsert_test: { id: integer notnull, name: text, rate: real }
     | | {indexed_columns}
     |   | {indexed_column}
     |     | {name id}: id: integer notnull

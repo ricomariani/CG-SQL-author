@@ -338,7 +338,6 @@ typedef struct out_cursor_identity_row {
 } out_cursor_identity_row;
 #endif
 extern CQL_WARN_UNUSED cql_code out_cursor_identity(sqlite3 *_Nonnull _db_, out_cursor_identity_row *_Nonnull _result_);
-extern CQL_WARN_UNUSED cql_code radioactive_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code autodropper(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 
 #ifndef row_type_decl_simple_cursor_proc_row
@@ -417,17 +416,6 @@ typedef struct out_union_values_row {
   cql_int32 y;
 } out_union_values_row;
 #endif
-
-#ifndef row_type_decl_out_union_dml_row
-#define row_type_decl_out_union_dml_row 1
-typedef struct out_union_dml_row {
-  cql_bool _has_row_;
-  cql_uint16 _refs_count_;
-  cql_uint16 _refs_offset_;
-  cql_int32 id;
-  cql_string_ref _Nullable data;
-} out_union_dml_row;
-#endif
 extern CQL_WARN_UNUSED cql_code window_function_invocation(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code out_union_with_dml_fetch_results(sqlite3 *_Nonnull _db_, out_union_with_dml_result_set_ref _Nullable *_Nonnull _result_set_, cql_nullable_int32 id);
 
@@ -474,15 +462,6 @@ typedef struct emit_setters_with_nullables_row {
 extern void emit_setters_with_nullables(cql_object_ref _Nullable o, cql_object_ref _Nullable x, cql_nullable_int32 i, cql_nullable_int64 l, cql_nullable_bool b, cql_nullable_double d, cql_string_ref _Nullable t, cql_blob_ref _Nullable bl, emit_setters_with_nullables_row *_Nonnull _result_);
 extern CQL_WARN_UNUSED cql_code no_out_with_setters(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code lotsa_columns_no_result_set(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
-extern CQL_WARN_UNUSED cql_code vault_sensitive_with_values_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
-extern CQL_WARN_UNUSED cql_code vault_not_nullable_sensitive_with_values_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
-extern CQL_WARN_UNUSED cql_code vault_sensitive_with_no_values_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
-extern CQL_WARN_UNUSED cql_code vault_union_all_table_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
-extern CQL_WARN_UNUSED cql_code vault_alias_column_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
-extern CQL_WARN_UNUSED cql_code vault_alias_column_name_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
-extern CQL_WARN_UNUSED cql_code vault_sensitive_with_context_and_sensitive_columns_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
-extern CQL_WARN_UNUSED cql_code vault_sensitive_with_no_context_and_sensitive_columns_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
-extern CQL_WARN_UNUSED cql_code vault_sensitive_with_context_and_no_sensitive_columns_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code window1(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code window2(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code window3(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
@@ -1106,7 +1085,6 @@ CQL_WARN_UNUSED cql_code with_result_set_fetch_results(sqlite3 *_Nonnull _db_, w
     .col_offsets = with_result_set_col_offsets,
     .refs_count = 1,
     .refs_offset = with_result_set_refs_offset,
-    .encode_context_index = -1,
     .rowsize = sizeof(with_result_set_row),
     .crc = CRC_with_result_set,
     .perf_index = &with_result_set_perf_index,
@@ -1185,7 +1163,6 @@ CQL_WARN_UNUSED cql_code select_from_view_fetch_results(sqlite3 *_Nonnull _db_, 
     .stmt = stmt,
     .data_types = select_from_view_data_types,
     .col_offsets = select_from_view_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(select_from_view_row),
     .crc = CRC_select_from_view,
     .perf_index = &select_from_view_perf_index,
@@ -1338,7 +1315,6 @@ CQL_WARN_UNUSED cql_code get_data_fetch_results(sqlite3 *_Nonnull _db_, get_data
     .col_offsets = get_data_col_offsets,
     .refs_count = 1,
     .refs_offset = get_data_refs_offset,
-    .encode_context_index = -1,
     .rowsize = sizeof(get_data_row),
     .crc = CRC_get_data,
     .perf_index = &get_data_perf_index,
@@ -1375,104 +1351,6 @@ CQL_WARN_UNUSED cql_code get_data(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullabl
 cql_cleanup:
   cql_error_report();
   if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
-  return _rc_;
-}
-#undef _PROC_
-
-// The statement ending at line XXXX
-
-/*
-[[vault_sensitive]]
-PROC easy_fetch ()
-BEGIN
-  CURSOR C FOR
-    SELECT
-        bar.id,
-        bar.name,
-        bar.rate,
-        bar.type,
-        bar.size
-      FROM bar;
-  FETCH C;
-  CALL printf("%d %s\n", C.id, C.name);
-  CURSOR C2 FOR
-    SELECT
-        bar.id,
-        bar.name,
-        bar.rate,
-        bar.type,
-        bar.size
-      FROM bar
-      WHERE C AND id = C.id;
-END;
-*/
-
-#define _PROC_ "easy_fetch"
-/*
-export:
-DECLARE PROC easy_fetch () USING TRANSACTION;
-*/
-
-typedef struct easy_fetch_C_row {
-  cql_bool _has_row_;
-  cql_uint16 _refs_count_;
-  cql_uint16 _refs_offset_;
-  cql_int32 id;
-  cql_nullable_int64 rate;
-  cql_nullable_int32 type;
-  cql_nullable_double size;
-  cql_string_ref _Nullable name;
-} easy_fetch_C_row;
-
-#define easy_fetch_C_refs_offset cql_offsetof(easy_fetch_C_row, name) // count = 1
-CQL_WARN_UNUSED cql_code easy_fetch(sqlite3 *_Nonnull _db_) {
-  cql_code _rc_ = SQLITE_OK;
-  cql_error_prepare();
-  sqlite3_stmt *C_stmt = NULL;
-  easy_fetch_C_row C = { ._refs_count_ = 1, ._refs_offset_ = easy_fetch_C_refs_offset };
-  sqlite3_stmt *C2_stmt = NULL;
-
-  _rc_ = cql_prepare(_db_, &C_stmt,
-    "SELECT "
-        "bar.id, "
-        "bar.name, "
-        "bar.rate, "
-        "bar.type, "
-        "bar.size "
-      "FROM bar");
-  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = sqlite3_step(C_stmt);
-  C._has_row_ = _rc_ == SQLITE_ROW;
-  cql_multifetch(_rc_, C_stmt, 5,
-                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.id,
-                 CQL_DATA_TYPE_STRING, &C.name,
-                 CQL_DATA_TYPE_INT64, &C.rate,
-                 CQL_DATA_TYPE_INT32, &C.type,
-                 CQL_DATA_TYPE_DOUBLE, &C.size);
-  if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
-  cql_alloc_cstr(_cstr_1, C.name);
-  printf("%d %s\n", C.id, _cstr_1);
-  cql_free_cstr(_cstr_1, C.name);
-  _rc_ = cql_prepare(_db_, &C2_stmt,
-    "SELECT "
-        "bar.id, "
-        "bar.name, "
-        "bar.rate, "
-        "bar.type, "
-        "bar.size "
-      "FROM bar "
-      "WHERE ? AND id = ?");
-  cql_multibind(&_rc_, _db_, &C2_stmt, 2,
-                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_BOOL, C._has_row_,
-                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, C.id);
-  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = SQLITE_OK;
-
-cql_cleanup:
-  cql_error_report();
-  cql_finalize_stmt(&C_stmt);
-  cql_teardown_row(C);
-  cql_finalize_stmt(&C2_stmt);
   return _rc_;
 }
 #undef _PROC_
@@ -1673,7 +1551,6 @@ CQL_WARN_UNUSED cql_code complex_return_fetch_results(sqlite3 *_Nonnull _db_, co
     .col_offsets = complex_return_col_offsets,
     .refs_count = 1,
     .refs_offset = complex_return_refs_offset,
-    .encode_context_index = -1,
     .rowsize = sizeof(complex_return_row),
     .crc = CRC_complex_return,
     .perf_index = &complex_return_perf_index,
@@ -1756,7 +1633,6 @@ CQL_WARN_UNUSED cql_code hierarchical_query_fetch_results(sqlite3 *_Nonnull _db_
     .stmt = stmt,
     .data_types = hierarchical_query_data_types,
     .col_offsets = hierarchical_query_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(hierarchical_query_row),
     .crc = CRC_hierarchical_query,
     .perf_index = &hierarchical_query_perf_index,
@@ -1845,7 +1721,6 @@ CQL_WARN_UNUSED cql_code hierarchical_unmatched_query_fetch_results(sqlite3 *_No
     .stmt = stmt,
     .data_types = hierarchical_unmatched_query_data_types,
     .col_offsets = hierarchical_unmatched_query_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(hierarchical_unmatched_query_row),
     .crc = CRC_hierarchical_unmatched_query,
     .perf_index = &hierarchical_unmatched_query_perf_index,
@@ -1928,7 +1803,6 @@ CQL_WARN_UNUSED cql_code union_select_fetch_results(sqlite3 *_Nonnull _db_, unio
     .stmt = stmt,
     .data_types = union_select_data_types,
     .col_offsets = union_select_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(union_select_row),
     .crc = CRC_union_select,
     .perf_index = &union_select_perf_index,
@@ -2001,7 +1875,6 @@ CQL_WARN_UNUSED cql_code union_all_select_fetch_results(sqlite3 *_Nonnull _db_, 
     .stmt = stmt,
     .data_types = union_all_select_data_types,
     .col_offsets = union_all_select_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(union_all_select_row),
     .crc = CRC_union_all_select,
     .perf_index = &union_all_select_perf_index,
@@ -2079,7 +1952,6 @@ CQL_WARN_UNUSED cql_code union_all_with_nullable_fetch_results(sqlite3 *_Nonnull
     .col_offsets = union_all_with_nullable_col_offsets,
     .refs_count = 1,
     .refs_offset = union_all_with_nullable_refs_offset,
-    .encode_context_index = -1,
     .rowsize = sizeof(union_all_with_nullable_row),
     .crc = CRC_union_all_with_nullable,
     .perf_index = &union_all_with_nullable_perf_index,
@@ -2222,7 +2094,6 @@ CQL_WARN_UNUSED cql_code with_stmt_fetch_results(sqlite3 *_Nonnull _db_, with_st
     .stmt = stmt,
     .data_types = with_stmt_data_types,
     .col_offsets = with_stmt_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(with_stmt_row),
     .crc = CRC_with_stmt,
     .perf_index = &with_stmt_perf_index,
@@ -2309,7 +2180,6 @@ CQL_WARN_UNUSED cql_code with_recursive_stmt_fetch_results(sqlite3 *_Nonnull _db
     .stmt = stmt,
     .data_types = with_recursive_stmt_data_types,
     .col_offsets = with_recursive_stmt_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(with_recursive_stmt_row),
     .crc = CRC_with_recursive_stmt,
     .perf_index = &with_recursive_stmt_perf_index,
@@ -2391,7 +2261,6 @@ CQL_WARN_UNUSED cql_code parent_proc_fetch_results(sqlite3 *_Nonnull _db_, paren
     .stmt = stmt,
     .data_types = parent_proc_data_types,
     .col_offsets = parent_proc_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(parent_proc_row),
     .crc = CRC_parent_proc,
     .perf_index = &parent_proc_perf_index,
@@ -2466,7 +2335,6 @@ CQL_WARN_UNUSED cql_code parent_proc_child_fetch_results(sqlite3 *_Nonnull _db_,
     .stmt = stmt,
     .data_types = parent_proc_child_data_types,
     .col_offsets = parent_proc_child_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(parent_proc_child_row),
     .crc = CRC_parent_proc_child,
     .perf_index = &parent_proc_child_perf_index,
@@ -2673,7 +2541,6 @@ void cursor_with_object_fetch_results( cursor_with_object_result_set_ref _Nullab
     .col_offsets = cursor_with_object_col_offsets,
     .refs_count = 1,
     .refs_offset = cursor_with_object_refs_offset,
-    .encode_context_index = -1,
     .rowsize = sizeof(cursor_with_object_row),
     .crc = CRC_cursor_with_object,
     .perf_index = &cursor_with_object_perf_index,
@@ -2933,7 +2800,6 @@ CQL_WARN_UNUSED cql_code uses_proc_for_result_fetch_results(sqlite3 *_Nonnull _d
     .col_offsets = uses_proc_for_result_col_offsets,
     .refs_count = 1,
     .refs_offset = uses_proc_for_result_refs_offset,
-    .encode_context_index = -1,
     .rowsize = sizeof(uses_proc_for_result_row),
     .crc = CRC_uses_proc_for_result,
     .perf_index = &uses_proc_for_result_perf_index,
@@ -3237,7 +3103,6 @@ CQL_WARN_UNUSED cql_code blob_returner_fetch_results(sqlite3 *_Nonnull _db_, blo
     .col_offsets = blob_returner_col_offsets,
     .refs_count = 2,
     .refs_offset = blob_returner_refs_offset,
-    .encode_context_index = -1,
     .rowsize = sizeof(blob_returner_row),
     .crc = CRC_blob_returner,
     .perf_index = &blob_returner_perf_index,
@@ -3351,7 +3216,6 @@ CQL_WARN_UNUSED cql_code out_cursor_proc_fetch_results(sqlite3 *_Nonnull _db_, o
     .col_offsets = out_cursor_proc_col_offsets,
     .refs_count = 3,
     .refs_offset = out_cursor_proc_refs_offset,
-    .encode_context_index = -1,
     .rowsize = sizeof(out_cursor_proc_row),
     .crc = CRC_out_cursor_proc,
     .perf_index = &out_cursor_proc_perf_index,
@@ -3617,7 +3481,6 @@ CQL_WARN_UNUSED cql_code thread_theme_info_list_fetch_results(sqlite3 *_Nonnull 
     .stmt = stmt,
     .data_types = thread_theme_info_list_data_types,
     .col_offsets = thread_theme_info_list_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(thread_theme_info_list_row),
     .crc = CRC_thread_theme_info_list,
     .perf_index = &thread_theme_info_list_perf_index,
@@ -3929,7 +3792,6 @@ void out_no_db_fetch_results( out_no_db_result_set_ref _Nullable *_Nonnull resul
     .rc = SQLITE_OK,
     .data_types = out_no_db_data_types,
     .col_offsets = out_no_db_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(out_no_db_row),
     .crc = CRC_out_no_db,
     .perf_index = &out_no_db_perf_index,
@@ -4003,7 +3865,6 @@ void declare_cursor_like_cursor_fetch_results( declare_cursor_like_cursor_result
     .rc = SQLITE_OK,
     .data_types = declare_cursor_like_cursor_data_types,
     .col_offsets = declare_cursor_like_cursor_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(declare_cursor_like_cursor_row),
     .crc = CRC_declare_cursor_like_cursor,
     .perf_index = &declare_cursor_like_cursor_perf_index,
@@ -4088,7 +3949,6 @@ void declare_cursor_like_proc_fetch_results( declare_cursor_like_proc_result_set
     .col_offsets = declare_cursor_like_proc_col_offsets,
     .refs_count = 1,
     .refs_offset = declare_cursor_like_proc_refs_offset,
-    .encode_context_index = -1,
     .rowsize = sizeof(declare_cursor_like_proc_row),
     .crc = CRC_declare_cursor_like_proc,
     .perf_index = &declare_cursor_like_proc_perf_index,
@@ -4172,7 +4032,6 @@ void declare_cursor_like_table_fetch_results( declare_cursor_like_table_result_s
     .col_offsets = declare_cursor_like_table_col_offsets,
     .refs_count = 1,
     .refs_offset = declare_cursor_like_table_refs_offset,
-    .encode_context_index = -1,
     .rowsize = sizeof(declare_cursor_like_table_row),
     .crc = CRC_declare_cursor_like_table,
     .perf_index = &declare_cursor_like_table_perf_index,
@@ -4254,7 +4113,6 @@ void declare_cursor_like_view_fetch_results( declare_cursor_like_view_result_set
     .rc = SQLITE_OK,
     .data_types = declare_cursor_like_view_data_types,
     .col_offsets = declare_cursor_like_view_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(declare_cursor_like_view_row),
     .crc = CRC_declare_cursor_like_view,
     .perf_index = &declare_cursor_like_view_perf_index,
@@ -4589,7 +4447,6 @@ void fetch_to_cursor_from_cursor_fetch_results( fetch_to_cursor_from_cursor_resu
     .col_offsets = fetch_to_cursor_from_cursor_col_offsets,
     .refs_count = 1,
     .refs_offset = fetch_to_cursor_from_cursor_refs_offset,
-    .encode_context_index = -1,
     .rowsize = sizeof(fetch_to_cursor_from_cursor_row),
     .crc = CRC_fetch_to_cursor_from_cursor,
     .perf_index = &fetch_to_cursor_from_cursor_perf_index,
@@ -4996,7 +4853,6 @@ cql_fetch_info out_union_helper_info = {
   .rc = SQLITE_OK,
   .data_types = out_union_helper_data_types,
   .col_offsets = out_union_helper_col_offsets,
-  .encode_context_index = -1,
   .rowsize = sizeof(out_union_helper_row),
   .crc = CRC_out_union_helper,
   .perf_index = &out_union_helper_perf_index,
@@ -5060,7 +4916,6 @@ cql_fetch_info out_union_dml_helper_info = {
   .rc = SQLITE_OK,
   .data_types = out_union_dml_helper_data_types,
   .col_offsets = out_union_dml_helper_col_offsets,
-  .encode_context_index = -1,
   .rowsize = sizeof(out_union_dml_helper_row),
   .crc = CRC_out_union_dml_helper,
   .perf_index = &out_union_dml_helper_perf_index,
@@ -5196,7 +5051,6 @@ cql_fetch_info forward_out_union_info = {
   .rc = SQLITE_OK,
   .data_types = forward_out_union_data_types,
   .col_offsets = forward_out_union_col_offsets,
-  .encode_context_index = -1,
   .rowsize = sizeof(forward_out_union_row),
   .crc = CRC_forward_out_union,
   .perf_index = &forward_out_union_perf_index,
@@ -5250,7 +5104,6 @@ cql_fetch_info forward_out_union_extern_info = {
   .rc = SQLITE_OK,
   .data_types = forward_out_union_extern_data_types,
   .col_offsets = forward_out_union_extern_col_offsets,
-  .encode_context_index = -1,
   .rowsize = sizeof(forward_out_union_extern_row),
   .crc = CRC_forward_out_union_extern,
   .perf_index = &forward_out_union_extern_perf_index,
@@ -5298,7 +5151,6 @@ cql_fetch_info forward_out_union_dml_info = {
   .rc = SQLITE_OK,
   .data_types = forward_out_union_dml_data_types,
   .col_offsets = forward_out_union_dml_col_offsets,
-  .encode_context_index = -1,
   .rowsize = sizeof(forward_out_union_dml_row),
   .crc = CRC_forward_out_union_dml,
   .perf_index = &forward_out_union_dml_perf_index,
@@ -5600,7 +5452,6 @@ CQL_WARN_UNUSED cql_code simple_identity_fetch_results(sqlite3 *_Nonnull _db_, s
     .data_types = simple_identity_data_types,
     .col_offsets = simple_identity_col_offsets,
     .identity_columns = simple_identity_identity_columns,
-    .encode_context_index = -1,
     .rowsize = sizeof(simple_identity_row),
     .crc = CRC_simple_identity,
     .perf_index = &simple_identity_perf_index,
@@ -5682,7 +5533,6 @@ CQL_WARN_UNUSED cql_code complex_identity_fetch_results(sqlite3 *_Nonnull _db_, 
     .data_types = complex_identity_data_types,
     .col_offsets = complex_identity_col_offsets,
     .identity_columns = complex_identity_identity_columns,
-    .encode_context_index = -1,
     .rowsize = sizeof(complex_identity_row),
     .crc = CRC_complex_identity,
     .perf_index = &complex_identity_perf_index,
@@ -5758,7 +5608,6 @@ CQL_WARN_UNUSED cql_code out_cursor_identity_fetch_results(sqlite3 *_Nonnull _db
     .data_types = out_cursor_identity_data_types,
     .col_offsets = out_cursor_identity_col_offsets,
     .identity_columns = out_cursor_identity_identity_columns,
-    .encode_context_index = -1,
     .rowsize = sizeof(out_cursor_identity_row),
     .crc = CRC_out_cursor_identity,
     .perf_index = &out_cursor_identity_perf_index,
@@ -5802,89 +5651,6 @@ CQL_WARN_UNUSED cql_code out_cursor_identity(sqlite3 *_Nonnull _db_, out_cursor_
 cql_cleanup:
   cql_error_report();
   cql_finalize_stmt(&C_stmt);
-  return _rc_;
-}
-#undef _PROC_
-
-// The statement ending at line XXXX
-
-/*
-[[vault_sensitive]]
-PROC radioactive_proc ()
-BEGIN
-  SELECT radioactive.id, radioactive.data
-    FROM radioactive;
-END;
-*/
-
-#define _PROC_ "radioactive_proc"
-static int32_t radioactive_proc_perf_index;
-
-cql_string_proc_name(radioactive_proc_stored_procedure_name, "radioactive_proc");
-
-typedef struct radioactive_proc_row {
-  cql_int32 id;
-  cql_string_ref _Nullable data;
-} radioactive_proc_row;
-
-uint8_t radioactive_proc_data_types[radioactive_proc_data_types_count] = {
-  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
-  CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED, // data
-};
-
-#define radioactive_proc_refs_offset cql_offsetof(radioactive_proc_row, data) // count = 1
-
-static cql_uint16 radioactive_proc_col_offsets[] = { 2,
-  cql_offsetof(radioactive_proc_row, id),
-  cql_offsetof(radioactive_proc_row, data)
-};
-
-cql_int32 radioactive_proc_result_count(radioactive_proc_result_set_ref _Nonnull result_set) {
-  return cql_result_set_get_count((cql_result_set_ref)result_set);
-}
-
-CQL_WARN_UNUSED cql_code radioactive_proc_fetch_results(sqlite3 *_Nonnull _db_, radioactive_proc_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
-  cql_profile_start(CRC_radioactive_proc, &radioactive_proc_perf_index);
-  cql_code rc = radioactive_proc(_db_, &stmt);
-  cql_fetch_info info = {
-    .rc = rc,
-    .db = _db_,
-    .stmt = stmt,
-    .data_types = radioactive_proc_data_types,
-    .col_offsets = radioactive_proc_col_offsets,
-    .refs_count = 1,
-    .refs_offset = radioactive_proc_refs_offset,
-    .encode_context_index = -1,
-    .rowsize = sizeof(radioactive_proc_row),
-    .crc = CRC_radioactive_proc,
-    .perf_index = &radioactive_proc_perf_index,
-  };
-  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
-}
-
-void radioactive_proc_set_encoding(cql_int32 col, cql_bool encode) {
-  return cql_set_encoding(radioactive_proc_data_types, radioactive_proc_data_types_count, col, encode);
-}
-
-/*
-export:
-DECLARE PROC radioactive_proc () (id INT!, data TEXT @SENSITIVE);
-*/
-CQL_WARN_UNUSED cql_code radioactive_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
-  cql_code _rc_ = SQLITE_OK;
-  *_result_stmt = NULL;
-  cql_error_prepare();
-
-  _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT radioactive.id, radioactive.data "
-      "FROM radioactive");
-  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = SQLITE_OK;
-
-cql_cleanup:
-  cql_error_report();
-  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
   return _rc_;
 }
 #undef _PROC_
@@ -6015,7 +5781,6 @@ CQL_WARN_UNUSED cql_code autodropper_fetch_results(sqlite3 *_Nonnull _db_, autod
     .stmt = stmt,
     .data_types = autodropper_data_types,
     .col_offsets = autodropper_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(autodropper_row),
     .crc = CRC_autodropper,
     .perf_index = &autodropper_perf_index,
@@ -6082,7 +5847,6 @@ void simple_cursor_proc_fetch_results( simple_cursor_proc_result_set_ref _Nullab
     .rc = SQLITE_OK,
     .data_types = simple_cursor_proc_data_types,
     .col_offsets = simple_cursor_proc_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(simple_cursor_proc_row),
     .crc = CRC_simple_cursor_proc,
     .perf_index = &simple_cursor_proc_perf_index,
@@ -6157,7 +5921,6 @@ CQL_WARN_UNUSED cql_code redundant_cast_fetch_results(sqlite3 *_Nonnull _db_, re
     .stmt = stmt,
     .data_types = redundant_cast_data_types,
     .col_offsets = redundant_cast_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(redundant_cast_row),
     .crc = CRC_redundant_cast,
     .perf_index = &redundant_cast_perf_index,
@@ -6308,7 +6071,6 @@ CQL_WARN_UNUSED cql_code top_level_select_alias_unused_fetch_results(sqlite3 *_N
     .stmt = stmt,
     .data_types = top_level_select_alias_unused_data_types,
     .col_offsets = top_level_select_alias_unused_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(top_level_select_alias_unused_row),
     .crc = CRC_top_level_select_alias_unused,
     .perf_index = &top_level_select_alias_unused_perf_index,
@@ -6387,7 +6149,6 @@ CQL_WARN_UNUSED cql_code top_level_select_alias_used_in_orderby_fetch_results(sq
     .stmt = stmt,
     .data_types = top_level_select_alias_used_in_orderby_data_types,
     .col_offsets = top_level_select_alias_used_in_orderby_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(top_level_select_alias_used_in_orderby_row),
     .crc = CRC_top_level_select_alias_used_in_orderby,
     .perf_index = &top_level_select_alias_used_in_orderby_perf_index,
@@ -6822,7 +6583,6 @@ cql_fetch_info out_union_two_info = {
   .col_offsets = out_union_two_col_offsets,
   .refs_count = 1,
   .refs_offset = out_union_two_refs_offset,
-  .encode_context_index = -1,
   .rowsize = sizeof(out_union_two_row),
   .crc = CRC_out_union_two,
   .perf_index = &out_union_two_perf_index,
@@ -6908,9 +6668,9 @@ CQL_WARN_UNUSED cql_code out_union_reader(sqlite3 *_Nonnull _db_) {
                    CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &c.x,
                    CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &c.y);
     if (!c._has_row_) break;
-    cql_alloc_cstr(_cstr_2, c.y);
-    printf("%d %s\n", c.x, _cstr_2);
-    cql_free_cstr(_cstr_2, c.y);
+    cql_alloc_cstr(_cstr_1, c.y);
+    printf("%d %s\n", c.x, _cstr_1);
+    cql_free_cstr(_cstr_1, c.y);
   }
   _rc_ = SQLITE_OK;
 
@@ -6962,7 +6722,6 @@ cql_fetch_info out_union_from_select_info = {
   .col_offsets = out_union_from_select_col_offsets,
   .refs_count = 1,
   .refs_offset = out_union_from_select_refs_offset,
-  .encode_context_index = -1,
   .rowsize = sizeof(out_union_from_select_row),
   .crc = CRC_out_union_from_select,
   .perf_index = &out_union_from_select_perf_index,
@@ -7065,9 +6824,9 @@ CQL_WARN_UNUSED cql_code out_union_dml_reader(sqlite3 *_Nonnull _db_) {
                    CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &c.x,
                    CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &c.y);
     if (!c._has_row_) break;
-    cql_alloc_cstr(_cstr_3, c.y);
-    printf("%d %s\n", c.x, _cstr_3);
-    cql_free_cstr(_cstr_3, c.y);
+    cql_alloc_cstr(_cstr_2, c.y);
+    printf("%d %s\n", c.x, _cstr_2);
+    cql_free_cstr(_cstr_2, c.y);
   }
   _rc_ = SQLITE_OK;
 
@@ -7112,7 +6871,6 @@ cql_fetch_info out_union_values_info = {
   .rc = SQLITE_OK,
   .data_types = out_union_values_data_types,
   .col_offsets = out_union_values_col_offsets,
-  .encode_context_index = -1,
   .rowsize = sizeof(out_union_values_row),
   .crc = CRC_out_union_values,
   .perf_index = &out_union_values_perf_index,
@@ -7190,160 +6948,6 @@ CQL_WARN_UNUSED cql_code read_out_union_values(sqlite3 *_Nonnull _db_, cql_int32
 
   cql_error_report();
   cql_object_release(C_result_set_);
-  return _rc_;
-}
-#undef _PROC_
-
-// The statement ending at line XXXX
-
-/*
-[[vault_sensitive]]
-PROC out_union_dml ()
-BEGIN
-  CURSOR x FOR
-    SELECT radioactive.id, radioactive.data
-      FROM radioactive;
-  FETCH x;
-  OUT UNION x;
-END;
-*/
-
-#define _PROC_ "out_union_dml_fetch_results"
-
-#define out_union_dml_refs_offset cql_offsetof(out_union_dml_row, data) // count = 1
-static int32_t out_union_dml_perf_index;
-
-cql_string_proc_name(out_union_dml_stored_procedure_name, "out_union_dml");
-
-uint8_t out_union_dml_data_types[out_union_dml_data_types_count] = {
-  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
-  CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED, // data
-};
-
-#define out_union_dml_refs_offset cql_offsetof(out_union_dml_row, data) // count = 1
-
-static cql_uint16 out_union_dml_col_offsets[] = { 2,
-  cql_offsetof(out_union_dml_row, id),
-  cql_offsetof(out_union_dml_row, data)
-};
-
-cql_int32 out_union_dml_result_count(out_union_dml_result_set_ref _Nonnull result_set) {
-  return cql_result_set_get_count((cql_result_set_ref)result_set);
-}
-cql_fetch_info out_union_dml_info = {
-  .rc = SQLITE_OK,
-  .data_types = out_union_dml_data_types,
-  .col_offsets = out_union_dml_col_offsets,
-  .refs_count = 1,
-  .refs_offset = out_union_dml_refs_offset,
-  .encode_context_index = -1,
-  .rowsize = sizeof(out_union_dml_row),
-  .crc = CRC_out_union_dml,
-  .perf_index = &out_union_dml_perf_index,
-};
-void out_union_dml_set_encoding(cql_int32 col, cql_bool encode) {
-  return cql_set_encoding(out_union_dml_data_types, out_union_dml_data_types_count, col, encode);
-}
-
-/*
-export:
-DECLARE PROC out_union_dml () OUT UNION (id INT!, data TEXT @SENSITIVE) USING TRANSACTION;
-*/
-
-typedef struct out_union_dml_x_row {
-  cql_bool _has_row_;
-  cql_uint16 _refs_count_;
-  cql_uint16 _refs_offset_;
-  cql_int32 id;
-  cql_string_ref _Nullable data;
-} out_union_dml_x_row;
-
-#define out_union_dml_x_refs_offset cql_offsetof(out_union_dml_x_row, data) // count = 1
-CQL_WARN_UNUSED cql_code out_union_dml_fetch_results(sqlite3 *_Nonnull _db_, out_union_dml_result_set_ref _Nullable *_Nonnull _result_set_) {
-  cql_code _rc_ = SQLITE_OK;
-  cql_bytebuf _rows_;
-  cql_bytebuf_open(&_rows_);
-  cql_error_prepare();
-  *_result_set_ = NULL;
-  sqlite3_stmt *x_stmt = NULL;
-  out_union_dml_x_row x = { ._refs_count_ = 1, ._refs_offset_ = out_union_dml_x_refs_offset };
-
-  cql_profile_start(CRC_out_union_dml, &out_union_dml_perf_index);
-  _rc_ = cql_prepare(_db_, &x_stmt,
-    "SELECT radioactive.id, radioactive.data "
-      "FROM radioactive");
-  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = sqlite3_step(x_stmt);
-  x._has_row_ = _rc_ == SQLITE_ROW;
-  cql_multifetch(_rc_, x_stmt, 2,
-                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &x.id,
-                 CQL_DATA_TYPE_STRING, &x.data);
-  if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
-  cql_retain_row(x);
-  if (x._has_row_) cql_bytebuf_append(&_rows_, (const void *)&x, sizeof(x));
-  _rc_ = SQLITE_OK;
-
-cql_cleanup:
-  cql_error_report();
-  out_union_dml_info.db = _db_;
-  cql_results_from_data(_rc_, &_rows_, &out_union_dml_info, (cql_result_set_ref *)_result_set_);
-  out_union_dml_info.db = NULL;
-  cql_finalize_stmt(&x_stmt);
-  cql_teardown_row(x);
-  return _rc_;
-}
-#undef _PROC_
-
-// The statement ending at line XXXX
-
-/*
-[[vault_sensitive]]
-PROC out_union_dml_for_call ()
-BEGIN
-  CURSOR C FOR
-    CALL out_union_dml();
-  FETCH C;
-END;
-*/
-
-#define _PROC_ "out_union_dml_for_call"
-/*
-export:
-DECLARE PROC out_union_dml_for_call () USING TRANSACTION;
-*/
-
-typedef struct out_union_dml_for_call_C_row {
-  cql_bool _has_row_;
-  cql_uint16 _refs_count_;
-  cql_uint16 _refs_offset_;
-  cql_int32 id;
-  cql_string_ref _Nullable data;
-} out_union_dml_for_call_C_row;
-
-#define out_union_dml_for_call_C_refs_offset cql_offsetof(out_union_dml_for_call_C_row, data) // count = 1
-CQL_WARN_UNUSED cql_code out_union_dml_for_call(sqlite3 *_Nonnull _db_) {
-  cql_code _rc_ = SQLITE_OK;
-  cql_error_prepare();
-  out_union_dml_result_set_ref C_result_set_ = NULL;
-  cql_int32 C_row_num_ = 0;
-  cql_int32 C_row_count_ = 0;
-  out_union_dml_for_call_C_row C = { ._refs_count_ = 1, ._refs_offset_ = out_union_dml_for_call_C_refs_offset };
-
-  _rc_ = out_union_dml_fetch_results(_db_, &C_result_set_);
-  C_row_num_ = C_row_count_ = -1;
-  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  C_row_count_ = cql_result_set_get_count((cql_result_set_ref)C_result_set_);
-  C_row_num_++;
-  C._has_row_ = C_row_num_ < C_row_count_;
-  cql_copyoutrow(_db_, (cql_result_set_ref)C_result_set_, C_row_num_, 2,
-                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.id,
-                 CQL_DATA_TYPE_STRING, &C.data);
-  _rc_ = SQLITE_OK;
-
-cql_cleanup:
-  cql_error_report();
-  cql_object_release(C_result_set_);
-  cql_teardown_row(C);
   return _rc_;
 }
 #undef _PROC_
@@ -7440,7 +7044,6 @@ CQL_WARN_UNUSED cql_code window_function_invocation_fetch_results(sqlite3 *_Nonn
     .stmt = stmt,
     .data_types = window_function_invocation_data_types,
     .col_offsets = window_function_invocation_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(window_function_invocation_row),
     .crc = CRC_window_function_invocation,
     .perf_index = &window_function_invocation_perf_index,
@@ -7565,7 +7168,6 @@ CQL_WARN_UNUSED cql_code use_return_fetch_results(sqlite3 *_Nonnull _db_, use_re
     .stmt = stmt,
     .data_types = use_return_data_types,
     .col_offsets = use_return_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(use_return_row),
     .crc = CRC_use_return,
     .perf_index = &use_return_perf_index,
@@ -7906,7 +7508,6 @@ CQL_WARN_UNUSED cql_code lotsa_columns_no_getters_fetch_results(sqlite3 *_Nonnul
     .col_offsets = lotsa_columns_no_getters_col_offsets,
     .refs_count = 1,
     .refs_offset = lotsa_columns_no_getters_refs_offset,
-    .encode_context_index = -1,
     .rowsize = sizeof(lotsa_columns_no_getters_row),
     .crc = CRC_lotsa_columns_no_getters,
     .perf_index = &lotsa_columns_no_getters_perf_index,
@@ -8004,7 +7605,6 @@ CQL_WARN_UNUSED cql_code sproc_with_copy_fetch_results(sqlite3 *_Nonnull _db_, s
     .col_offsets = sproc_with_copy_col_offsets,
     .refs_count = 1,
     .refs_offset = sproc_with_copy_refs_offset,
-    .encode_context_index = -1,
     .rowsize = sizeof(sproc_with_copy_row),
     .crc = CRC_sproc_with_copy,
     .perf_index = &sproc_with_copy_perf_index,
@@ -8095,7 +7695,6 @@ void emit_object_with_setters_fetch_results( emit_object_with_setters_result_set
     .col_offsets = emit_object_with_setters_col_offsets,
     .refs_count = 4,
     .refs_offset = emit_object_with_setters_refs_offset,
-    .encode_context_index = -1,
     .rowsize = sizeof(emit_object_with_setters_row),
     .crc = CRC_emit_object_with_setters,
     .perf_index = &emit_object_with_setters_perf_index,
@@ -8213,7 +7812,6 @@ void emit_setters_with_nullables_fetch_results( emit_setters_with_nullables_resu
     .col_offsets = emit_setters_with_nullables_col_offsets,
     .refs_count = 4,
     .refs_offset = emit_setters_with_nullables_refs_offset,
-    .encode_context_index = -1,
     .rowsize = sizeof(emit_setters_with_nullables_row),
     .crc = CRC_emit_setters_with_nullables,
     .perf_index = &emit_setters_with_nullables_perf_index,
@@ -8333,7 +7931,6 @@ CQL_WARN_UNUSED cql_code no_out_with_setters_fetch_results(sqlite3 *_Nonnull _db
     .col_offsets = no_out_with_setters_col_offsets,
     .refs_count = 1,
     .refs_offset = no_out_with_setters_refs_offset,
-    .encode_context_index = -1,
     .rowsize = sizeof(no_out_with_setters_row),
     .crc = CRC_no_out_with_setters,
     .perf_index = &no_out_with_setters_perf_index,
@@ -8464,913 +8061,6 @@ CQL_WARN_UNUSED cql_code early_out_rc_cleared(sqlite3 *_Nonnull _db_, cql_nullab
 cql_cleanup:
   cql_error_report();
   cql_finalize_stmt(&C_stmt);
-  return _rc_;
-}
-#undef _PROC_
-
-// The statement ending at line XXXX
-
-/*
-[[vault_sensitive=(id, name)]]
-[[custom_type_for_encoded_column]]
-PROC vault_sensitive_with_values_proc ()
-BEGIN
-  SELECT
-      vault_mixed_sensitive.id,
-      vault_mixed_sensitive.name,
-      vault_mixed_sensitive.title,
-      vault_mixed_sensitive.type
-    FROM vault_mixed_sensitive;
-END;
-*/
-
-#define _PROC_ "vault_sensitive_with_values_proc"
-static int32_t vault_sensitive_with_values_proc_perf_index;
-
-cql_string_proc_name(vault_sensitive_with_values_proc_stored_procedure_name, "vault_sensitive_with_values_proc");
-
-typedef struct vault_sensitive_with_values_proc_row {
-  cql_int32 id;
-  cql_nullable_int64 type;
-  cql_string_ref _Nullable name;
-  cql_string_ref _Nullable title;
-} vault_sensitive_with_values_proc_row;
-
-uint8_t vault_sensitive_with_values_proc_data_types[vault_sensitive_with_values_proc_data_types_count] = {
-  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
-  CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED, // name
-  CQL_DATA_TYPE_STRING, // title
-  CQL_DATA_TYPE_INT64, // type
-};
-
-#define vault_sensitive_with_values_proc_refs_offset cql_offsetof(vault_sensitive_with_values_proc_row, name) // count = 2
-
-static cql_uint16 vault_sensitive_with_values_proc_col_offsets[] = { 4,
-  cql_offsetof(vault_sensitive_with_values_proc_row, id),
-  cql_offsetof(vault_sensitive_with_values_proc_row, name),
-  cql_offsetof(vault_sensitive_with_values_proc_row, title),
-  cql_offsetof(vault_sensitive_with_values_proc_row, type)
-};
-
-cql_int32 vault_sensitive_with_values_proc_result_count(vault_sensitive_with_values_proc_result_set_ref _Nonnull result_set) {
-  return cql_result_set_get_count((cql_result_set_ref)result_set);
-}
-
-CQL_WARN_UNUSED cql_code vault_sensitive_with_values_proc_fetch_results(sqlite3 *_Nonnull _db_, vault_sensitive_with_values_proc_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
-  cql_profile_start(CRC_vault_sensitive_with_values_proc, &vault_sensitive_with_values_proc_perf_index);
-  cql_code rc = vault_sensitive_with_values_proc(_db_, &stmt);
-  cql_fetch_info info = {
-    .rc = rc,
-    .db = _db_,
-    .stmt = stmt,
-    .data_types = vault_sensitive_with_values_proc_data_types,
-    .col_offsets = vault_sensitive_with_values_proc_col_offsets,
-    .refs_count = 2,
-    .refs_offset = vault_sensitive_with_values_proc_refs_offset,
-    .encode_context_index = -1,
-    .rowsize = sizeof(vault_sensitive_with_values_proc_row),
-    .crc = CRC_vault_sensitive_with_values_proc,
-    .perf_index = &vault_sensitive_with_values_proc_perf_index,
-  };
-  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
-}
-
-void vault_sensitive_with_values_proc_set_encoding(cql_int32 col, cql_bool encode) {
-  return cql_set_encoding(vault_sensitive_with_values_proc_data_types, vault_sensitive_with_values_proc_data_types_count, col, encode);
-}
-
-/*
-export:
-DECLARE PROC vault_sensitive_with_values_proc () (id INT!, name TEXT @SENSITIVE, title TEXT, type LONG @SENSITIVE);
-*/
-CQL_WARN_UNUSED cql_code vault_sensitive_with_values_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
-  cql_code _rc_ = SQLITE_OK;
-  *_result_stmt = NULL;
-  cql_error_prepare();
-
-  _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT "
-        "vault_mixed_sensitive.id, "
-        "vault_mixed_sensitive.name, "
-        "vault_mixed_sensitive.title, "
-        "vault_mixed_sensitive.type "
-      "FROM vault_mixed_sensitive");
-  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = SQLITE_OK;
-
-cql_cleanup:
-  cql_error_report();
-  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
-  return _rc_;
-}
-#undef _PROC_
-
-// The statement ending at line XXXX
-
-/*
-[[vault_sensitive=(id, name)]]
-[[custom_type_for_encoded_column]]
-PROC vault_not_nullable_sensitive_with_values_proc ()
-BEGIN
-  SELECT
-      vault_mixed_not_nullable_sensitive.id,
-      vault_mixed_not_nullable_sensitive.name,
-      vault_mixed_not_nullable_sensitive.title,
-      vault_mixed_not_nullable_sensitive.type
-    FROM vault_mixed_not_nullable_sensitive;
-END;
-*/
-
-#define _PROC_ "vault_not_nullable_sensitive_with_values_proc"
-static int32_t vault_not_nullable_sensitive_with_values_proc_perf_index;
-
-cql_string_proc_name(vault_not_nullable_sensitive_with_values_proc_stored_procedure_name, "vault_not_nullable_sensitive_with_values_proc");
-
-typedef struct vault_not_nullable_sensitive_with_values_proc_row {
-  cql_int32 id;
-  cql_int64 type;
-  cql_string_ref _Nonnull name;
-  cql_string_ref _Nonnull title;
-} vault_not_nullable_sensitive_with_values_proc_row;
-
-uint8_t vault_not_nullable_sensitive_with_values_proc_data_types[vault_not_nullable_sensitive_with_values_proc_data_types_count] = {
-  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
-  CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_ENCODED, // name
-  CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_NOT_NULL, // title
-  CQL_DATA_TYPE_INT64 | CQL_DATA_TYPE_NOT_NULL, // type
-};
-
-#define vault_not_nullable_sensitive_with_values_proc_refs_offset cql_offsetof(vault_not_nullable_sensitive_with_values_proc_row, name) // count = 2
-
-static cql_uint16 vault_not_nullable_sensitive_with_values_proc_col_offsets[] = { 4,
-  cql_offsetof(vault_not_nullable_sensitive_with_values_proc_row, id),
-  cql_offsetof(vault_not_nullable_sensitive_with_values_proc_row, name),
-  cql_offsetof(vault_not_nullable_sensitive_with_values_proc_row, title),
-  cql_offsetof(vault_not_nullable_sensitive_with_values_proc_row, type)
-};
-
-cql_int32 vault_not_nullable_sensitive_with_values_proc_result_count(vault_not_nullable_sensitive_with_values_proc_result_set_ref _Nonnull result_set) {
-  return cql_result_set_get_count((cql_result_set_ref)result_set);
-}
-
-CQL_WARN_UNUSED cql_code vault_not_nullable_sensitive_with_values_proc_fetch_results(sqlite3 *_Nonnull _db_, vault_not_nullable_sensitive_with_values_proc_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
-  cql_profile_start(CRC_vault_not_nullable_sensitive_with_values_proc, &vault_not_nullable_sensitive_with_values_proc_perf_index);
-  cql_code rc = vault_not_nullable_sensitive_with_values_proc(_db_, &stmt);
-  cql_fetch_info info = {
-    .rc = rc,
-    .db = _db_,
-    .stmt = stmt,
-    .data_types = vault_not_nullable_sensitive_with_values_proc_data_types,
-    .col_offsets = vault_not_nullable_sensitive_with_values_proc_col_offsets,
-    .refs_count = 2,
-    .refs_offset = vault_not_nullable_sensitive_with_values_proc_refs_offset,
-    .encode_context_index = -1,
-    .rowsize = sizeof(vault_not_nullable_sensitive_with_values_proc_row),
-    .crc = CRC_vault_not_nullable_sensitive_with_values_proc,
-    .perf_index = &vault_not_nullable_sensitive_with_values_proc_perf_index,
-  };
-  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
-}
-
-void vault_not_nullable_sensitive_with_values_proc_set_encoding(cql_int32 col, cql_bool encode) {
-  return cql_set_encoding(vault_not_nullable_sensitive_with_values_proc_data_types, vault_not_nullable_sensitive_with_values_proc_data_types_count, col, encode);
-}
-
-/*
-export:
-DECLARE PROC vault_not_nullable_sensitive_with_values_proc () (id INT!, name TEXT! @SENSITIVE, title TEXT!, type LONG! @SENSITIVE);
-*/
-CQL_WARN_UNUSED cql_code vault_not_nullable_sensitive_with_values_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
-  cql_code _rc_ = SQLITE_OK;
-  *_result_stmt = NULL;
-  cql_error_prepare();
-
-  _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT "
-        "vault_mixed_not_nullable_sensitive.id, "
-        "vault_mixed_not_nullable_sensitive.name, "
-        "vault_mixed_not_nullable_sensitive.title, "
-        "vault_mixed_not_nullable_sensitive.type "
-      "FROM vault_mixed_not_nullable_sensitive");
-  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = SQLITE_OK;
-
-cql_cleanup:
-  cql_error_report();
-  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
-  return _rc_;
-}
-#undef _PROC_
-
-// The statement ending at line XXXX
-
-/*
-[[vault_sensitive]]
-PROC vault_sensitive_with_no_values_proc ()
-BEGIN
-  SELECT
-      vault_mixed_sensitive.id,
-      vault_mixed_sensitive.name,
-      vault_mixed_sensitive.title,
-      vault_mixed_sensitive.type
-    FROM vault_mixed_sensitive;
-END;
-*/
-
-#define _PROC_ "vault_sensitive_with_no_values_proc"
-static int32_t vault_sensitive_with_no_values_proc_perf_index;
-
-cql_string_proc_name(vault_sensitive_with_no_values_proc_stored_procedure_name, "vault_sensitive_with_no_values_proc");
-
-typedef struct vault_sensitive_with_no_values_proc_row {
-  cql_int32 id;
-  cql_nullable_int64 type;
-  cql_string_ref _Nullable name;
-  cql_string_ref _Nullable title;
-} vault_sensitive_with_no_values_proc_row;
-
-uint8_t vault_sensitive_with_no_values_proc_data_types[vault_sensitive_with_no_values_proc_data_types_count] = {
-  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
-  CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED, // name
-  CQL_DATA_TYPE_STRING, // title
-  CQL_DATA_TYPE_INT64 | CQL_DATA_TYPE_ENCODED, // type
-};
-
-#define vault_sensitive_with_no_values_proc_refs_offset cql_offsetof(vault_sensitive_with_no_values_proc_row, name) // count = 2
-
-static cql_uint16 vault_sensitive_with_no_values_proc_col_offsets[] = { 4,
-  cql_offsetof(vault_sensitive_with_no_values_proc_row, id),
-  cql_offsetof(vault_sensitive_with_no_values_proc_row, name),
-  cql_offsetof(vault_sensitive_with_no_values_proc_row, title),
-  cql_offsetof(vault_sensitive_with_no_values_proc_row, type)
-};
-
-cql_int32 vault_sensitive_with_no_values_proc_result_count(vault_sensitive_with_no_values_proc_result_set_ref _Nonnull result_set) {
-  return cql_result_set_get_count((cql_result_set_ref)result_set);
-}
-
-CQL_WARN_UNUSED cql_code vault_sensitive_with_no_values_proc_fetch_results(sqlite3 *_Nonnull _db_, vault_sensitive_with_no_values_proc_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
-  cql_profile_start(CRC_vault_sensitive_with_no_values_proc, &vault_sensitive_with_no_values_proc_perf_index);
-  cql_code rc = vault_sensitive_with_no_values_proc(_db_, &stmt);
-  cql_fetch_info info = {
-    .rc = rc,
-    .db = _db_,
-    .stmt = stmt,
-    .data_types = vault_sensitive_with_no_values_proc_data_types,
-    .col_offsets = vault_sensitive_with_no_values_proc_col_offsets,
-    .refs_count = 2,
-    .refs_offset = vault_sensitive_with_no_values_proc_refs_offset,
-    .encode_context_index = -1,
-    .rowsize = sizeof(vault_sensitive_with_no_values_proc_row),
-    .crc = CRC_vault_sensitive_with_no_values_proc,
-    .perf_index = &vault_sensitive_with_no_values_proc_perf_index,
-  };
-  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
-}
-
-void vault_sensitive_with_no_values_proc_set_encoding(cql_int32 col, cql_bool encode) {
-  return cql_set_encoding(vault_sensitive_with_no_values_proc_data_types, vault_sensitive_with_no_values_proc_data_types_count, col, encode);
-}
-
-/*
-export:
-DECLARE PROC vault_sensitive_with_no_values_proc () (id INT!, name TEXT @SENSITIVE, title TEXT, type LONG @SENSITIVE);
-*/
-CQL_WARN_UNUSED cql_code vault_sensitive_with_no_values_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
-  cql_code _rc_ = SQLITE_OK;
-  *_result_stmt = NULL;
-  cql_error_prepare();
-
-  _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT "
-        "vault_mixed_sensitive.id, "
-        "vault_mixed_sensitive.name, "
-        "vault_mixed_sensitive.title, "
-        "vault_mixed_sensitive.type "
-      "FROM vault_mixed_sensitive");
-  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = SQLITE_OK;
-
-cql_cleanup:
-  cql_error_report();
-  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
-  return _rc_;
-}
-#undef _PROC_
-
-// The statement ending at line XXXX
-
-/*
-[[vault_sensitive]]
-PROC vault_union_all_table_proc ()
-BEGIN
-  SELECT
-      vault_mixed_sensitive.id,
-      vault_mixed_sensitive.name,
-      vault_mixed_sensitive.title,
-      vault_mixed_sensitive.type
-    FROM vault_mixed_sensitive
-  UNION ALL
-  SELECT
-      vault_non_sensitive.id,
-      vault_non_sensitive.name,
-      vault_non_sensitive.title,
-      vault_non_sensitive.type
-    FROM vault_non_sensitive;
-END;
-*/
-
-#define _PROC_ "vault_union_all_table_proc"
-static int32_t vault_union_all_table_proc_perf_index;
-
-cql_string_proc_name(vault_union_all_table_proc_stored_procedure_name, "vault_union_all_table_proc");
-
-typedef struct vault_union_all_table_proc_row {
-  cql_int32 id;
-  cql_nullable_int64 type;
-  cql_string_ref _Nullable name;
-  cql_string_ref _Nullable title;
-} vault_union_all_table_proc_row;
-
-uint8_t vault_union_all_table_proc_data_types[vault_union_all_table_proc_data_types_count] = {
-  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
-  CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED, // name
-  CQL_DATA_TYPE_STRING, // title
-  CQL_DATA_TYPE_INT64 | CQL_DATA_TYPE_ENCODED, // type
-};
-
-#define vault_union_all_table_proc_refs_offset cql_offsetof(vault_union_all_table_proc_row, name) // count = 2
-
-static cql_uint16 vault_union_all_table_proc_col_offsets[] = { 4,
-  cql_offsetof(vault_union_all_table_proc_row, id),
-  cql_offsetof(vault_union_all_table_proc_row, name),
-  cql_offsetof(vault_union_all_table_proc_row, title),
-  cql_offsetof(vault_union_all_table_proc_row, type)
-};
-
-cql_int32 vault_union_all_table_proc_result_count(vault_union_all_table_proc_result_set_ref _Nonnull result_set) {
-  return cql_result_set_get_count((cql_result_set_ref)result_set);
-}
-
-CQL_WARN_UNUSED cql_code vault_union_all_table_proc_fetch_results(sqlite3 *_Nonnull _db_, vault_union_all_table_proc_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
-  cql_profile_start(CRC_vault_union_all_table_proc, &vault_union_all_table_proc_perf_index);
-  cql_code rc = vault_union_all_table_proc(_db_, &stmt);
-  cql_fetch_info info = {
-    .rc = rc,
-    .db = _db_,
-    .stmt = stmt,
-    .data_types = vault_union_all_table_proc_data_types,
-    .col_offsets = vault_union_all_table_proc_col_offsets,
-    .refs_count = 2,
-    .refs_offset = vault_union_all_table_proc_refs_offset,
-    .encode_context_index = -1,
-    .rowsize = sizeof(vault_union_all_table_proc_row),
-    .crc = CRC_vault_union_all_table_proc,
-    .perf_index = &vault_union_all_table_proc_perf_index,
-  };
-  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
-}
-
-void vault_union_all_table_proc_set_encoding(cql_int32 col, cql_bool encode) {
-  return cql_set_encoding(vault_union_all_table_proc_data_types, vault_union_all_table_proc_data_types_count, col, encode);
-}
-
-/*
-export:
-DECLARE PROC vault_union_all_table_proc () (id INT!, name TEXT @SENSITIVE, title TEXT, type LONG @SENSITIVE);
-*/
-CQL_WARN_UNUSED cql_code vault_union_all_table_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
-  cql_code _rc_ = SQLITE_OK;
-  *_result_stmt = NULL;
-  cql_error_prepare();
-
-  _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT "
-        "vault_mixed_sensitive.id, "
-        "vault_mixed_sensitive.name, "
-        "vault_mixed_sensitive.title, "
-        "vault_mixed_sensitive.type "
-      "FROM vault_mixed_sensitive "
-    "UNION ALL "
-    "SELECT "
-        "vault_non_sensitive.id, "
-        "vault_non_sensitive.name, "
-        "vault_non_sensitive.title, "
-        "vault_non_sensitive.type "
-      "FROM vault_non_sensitive");
-  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = SQLITE_OK;
-
-cql_cleanup:
-  cql_error_report();
-  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
-  return _rc_;
-}
-#undef _PROC_
-
-// The statement ending at line XXXX
-
-/*
-[[vault_sensitive=alias_name]]
-PROC vault_alias_column_proc ()
-BEGIN
-  SELECT name AS alias_name
-    FROM vault_mixed_sensitive;
-END;
-*/
-
-#define _PROC_ "vault_alias_column_proc"
-static int32_t vault_alias_column_proc_perf_index;
-
-cql_string_proc_name(vault_alias_column_proc_stored_procedure_name, "vault_alias_column_proc");
-
-typedef struct vault_alias_column_proc_row {
-  cql_string_ref _Nullable alias_name;
-} vault_alias_column_proc_row;
-
-uint8_t vault_alias_column_proc_data_types[vault_alias_column_proc_data_types_count] = {
-  CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED, // alias_name
-};
-
-#define vault_alias_column_proc_refs_offset cql_offsetof(vault_alias_column_proc_row, alias_name) // count = 1
-
-static cql_uint16 vault_alias_column_proc_col_offsets[] = { 1,
-  cql_offsetof(vault_alias_column_proc_row, alias_name)
-};
-
-cql_int32 vault_alias_column_proc_result_count(vault_alias_column_proc_result_set_ref _Nonnull result_set) {
-  return cql_result_set_get_count((cql_result_set_ref)result_set);
-}
-
-CQL_WARN_UNUSED cql_code vault_alias_column_proc_fetch_results(sqlite3 *_Nonnull _db_, vault_alias_column_proc_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
-  cql_profile_start(CRC_vault_alias_column_proc, &vault_alias_column_proc_perf_index);
-  cql_code rc = vault_alias_column_proc(_db_, &stmt);
-  cql_fetch_info info = {
-    .rc = rc,
-    .db = _db_,
-    .stmt = stmt,
-    .data_types = vault_alias_column_proc_data_types,
-    .col_offsets = vault_alias_column_proc_col_offsets,
-    .refs_count = 1,
-    .refs_offset = vault_alias_column_proc_refs_offset,
-    .encode_context_index = -1,
-    .rowsize = sizeof(vault_alias_column_proc_row),
-    .crc = CRC_vault_alias_column_proc,
-    .perf_index = &vault_alias_column_proc_perf_index,
-  };
-  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
-}
-
-void vault_alias_column_proc_set_encoding(cql_int32 col, cql_bool encode) {
-  return cql_set_encoding(vault_alias_column_proc_data_types, vault_alias_column_proc_data_types_count, col, encode);
-}
-
-/*
-export:
-DECLARE PROC vault_alias_column_proc () (alias_name TEXT @SENSITIVE);
-*/
-CQL_WARN_UNUSED cql_code vault_alias_column_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
-  cql_code _rc_ = SQLITE_OK;
-  *_result_stmt = NULL;
-  cql_error_prepare();
-
-  _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT name "
-      "FROM vault_mixed_sensitive");
-  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = SQLITE_OK;
-
-cql_cleanup:
-  cql_error_report();
-  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
-  return _rc_;
-}
-#undef _PROC_
-
-// The statement ending at line XXXX
-
-/*
-[[vault_sensitive=alias_name]]
-PROC vault_alias_column_name_proc ()
-BEGIN
-  SELECT name AS alias_name
-    FROM vault_mixed_sensitive;
-END;
-*/
-
-#define _PROC_ "vault_alias_column_name_proc"
-static int32_t vault_alias_column_name_proc_perf_index;
-
-cql_string_proc_name(vault_alias_column_name_proc_stored_procedure_name, "vault_alias_column_name_proc");
-
-typedef struct vault_alias_column_name_proc_row {
-  cql_string_ref _Nullable alias_name;
-} vault_alias_column_name_proc_row;
-
-uint8_t vault_alias_column_name_proc_data_types[vault_alias_column_name_proc_data_types_count] = {
-  CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED, // alias_name
-};
-
-#define vault_alias_column_name_proc_refs_offset cql_offsetof(vault_alias_column_name_proc_row, alias_name) // count = 1
-
-static cql_uint16 vault_alias_column_name_proc_col_offsets[] = { 1,
-  cql_offsetof(vault_alias_column_name_proc_row, alias_name)
-};
-
-cql_int32 vault_alias_column_name_proc_result_count(vault_alias_column_name_proc_result_set_ref _Nonnull result_set) {
-  return cql_result_set_get_count((cql_result_set_ref)result_set);
-}
-
-CQL_WARN_UNUSED cql_code vault_alias_column_name_proc_fetch_results(sqlite3 *_Nonnull _db_, vault_alias_column_name_proc_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
-  cql_profile_start(CRC_vault_alias_column_name_proc, &vault_alias_column_name_proc_perf_index);
-  cql_code rc = vault_alias_column_name_proc(_db_, &stmt);
-  cql_fetch_info info = {
-    .rc = rc,
-    .db = _db_,
-    .stmt = stmt,
-    .data_types = vault_alias_column_name_proc_data_types,
-    .col_offsets = vault_alias_column_name_proc_col_offsets,
-    .refs_count = 1,
-    .refs_offset = vault_alias_column_name_proc_refs_offset,
-    .encode_context_index = -1,
-    .rowsize = sizeof(vault_alias_column_name_proc_row),
-    .crc = CRC_vault_alias_column_name_proc,
-    .perf_index = &vault_alias_column_name_proc_perf_index,
-  };
-  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
-}
-
-void vault_alias_column_name_proc_set_encoding(cql_int32 col, cql_bool encode) {
-  return cql_set_encoding(vault_alias_column_name_proc_data_types, vault_alias_column_name_proc_data_types_count, col, encode);
-}
-
-/*
-export:
-DECLARE PROC vault_alias_column_name_proc () (alias_name TEXT @SENSITIVE);
-*/
-CQL_WARN_UNUSED cql_code vault_alias_column_name_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
-  cql_code _rc_ = SQLITE_OK;
-  *_result_stmt = NULL;
-  cql_error_prepare();
-
-  _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT name "
-      "FROM vault_mixed_sensitive");
-  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = SQLITE_OK;
-
-cql_cleanup:
-  cql_error_report();
-  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
-  return _rc_;
-}
-#undef _PROC_
-
-// The statement ending at line XXXX
-
-/*
-[[vault_sensitive]]
-PROC vault_cursor_proc ()
-BEGIN
-  CURSOR C FOR
-    SELECT name
-      FROM vault_mixed_sensitive;
-  FETCH c;
-END;
-*/
-
-#define _PROC_ "vault_cursor_proc"
-/*
-export:
-DECLARE PROC vault_cursor_proc () USING TRANSACTION;
-*/
-
-typedef struct vault_cursor_proc_C_row {
-  cql_bool _has_row_;
-  cql_uint16 _refs_count_;
-  cql_uint16 _refs_offset_;
-  cql_string_ref _Nullable name;
-} vault_cursor_proc_C_row;
-
-#define vault_cursor_proc_C_refs_offset cql_offsetof(vault_cursor_proc_C_row, name) // count = 1
-CQL_WARN_UNUSED cql_code vault_cursor_proc(sqlite3 *_Nonnull _db_) {
-  cql_code _rc_ = SQLITE_OK;
-  cql_error_prepare();
-  sqlite3_stmt *C_stmt = NULL;
-  vault_cursor_proc_C_row C = { ._refs_count_ = 1, ._refs_offset_ = vault_cursor_proc_C_refs_offset };
-
-  _rc_ = cql_prepare(_db_, &C_stmt,
-    "SELECT name "
-      "FROM vault_mixed_sensitive");
-  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = sqlite3_step(C_stmt);
-  C._has_row_ = _rc_ == SQLITE_ROW;
-  cql_multifetch(_rc_, C_stmt, 1,
-                 CQL_DATA_TYPE_STRING, &C.name);
-  if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = SQLITE_OK;
-
-cql_cleanup:
-  cql_error_report();
-  cql_finalize_stmt(&C_stmt);
-  cql_teardown_row(C);
-  return _rc_;
-}
-#undef _PROC_
-
-// The statement ending at line XXXX
-
-/*
-[[vault_sensitive=(title, (id, name))]]
-PROC vault_sensitive_with_context_and_sensitive_columns_proc ()
-BEGIN
-  SELECT
-      vault_mixed_sensitive.id,
-      vault_mixed_sensitive.name,
-      vault_mixed_sensitive.title,
-      vault_mixed_sensitive.type
-    FROM vault_mixed_sensitive;
-END;
-*/
-
-#define _PROC_ "vault_sensitive_with_context_and_sensitive_columns_proc"
-static int32_t vault_sensitive_with_context_and_sensitive_columns_proc_perf_index;
-
-cql_string_proc_name(vault_sensitive_with_context_and_sensitive_columns_proc_stored_procedure_name, "vault_sensitive_with_context_and_sensitive_columns_proc");
-
-typedef struct vault_sensitive_with_context_and_sensitive_columns_proc_row {
-  cql_int32 id;
-  cql_nullable_int64 type;
-  cql_string_ref _Nullable name;
-  cql_string_ref _Nullable title;
-} vault_sensitive_with_context_and_sensitive_columns_proc_row;
-
-uint8_t vault_sensitive_with_context_and_sensitive_columns_proc_data_types[vault_sensitive_with_context_and_sensitive_columns_proc_data_types_count] = {
-  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
-  CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED, // name
-  CQL_DATA_TYPE_STRING, // title
-  CQL_DATA_TYPE_INT64, // type
-};
-
-#define vault_sensitive_with_context_and_sensitive_columns_proc_refs_offset cql_offsetof(vault_sensitive_with_context_and_sensitive_columns_proc_row, name) // count = 2
-
-static cql_uint16 vault_sensitive_with_context_and_sensitive_columns_proc_col_offsets[] = { 4,
-  cql_offsetof(vault_sensitive_with_context_and_sensitive_columns_proc_row, id),
-  cql_offsetof(vault_sensitive_with_context_and_sensitive_columns_proc_row, name),
-  cql_offsetof(vault_sensitive_with_context_and_sensitive_columns_proc_row, title),
-  cql_offsetof(vault_sensitive_with_context_and_sensitive_columns_proc_row, type)
-};
-
-cql_int32 vault_sensitive_with_context_and_sensitive_columns_proc_result_count(vault_sensitive_with_context_and_sensitive_columns_proc_result_set_ref _Nonnull result_set) {
-  return cql_result_set_get_count((cql_result_set_ref)result_set);
-}
-
-CQL_WARN_UNUSED cql_code vault_sensitive_with_context_and_sensitive_columns_proc_fetch_results(sqlite3 *_Nonnull _db_, vault_sensitive_with_context_and_sensitive_columns_proc_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
-  cql_profile_start(CRC_vault_sensitive_with_context_and_sensitive_columns_proc, &vault_sensitive_with_context_and_sensitive_columns_proc_perf_index);
-  cql_code rc = vault_sensitive_with_context_and_sensitive_columns_proc(_db_, &stmt);
-  cql_fetch_info info = {
-    .rc = rc,
-    .db = _db_,
-    .stmt = stmt,
-    .data_types = vault_sensitive_with_context_and_sensitive_columns_proc_data_types,
-    .col_offsets = vault_sensitive_with_context_and_sensitive_columns_proc_col_offsets,
-    .refs_count = 2,
-    .refs_offset = vault_sensitive_with_context_and_sensitive_columns_proc_refs_offset,
-    .encode_context_index = 2,
-    .rowsize = sizeof(vault_sensitive_with_context_and_sensitive_columns_proc_row),
-    .crc = CRC_vault_sensitive_with_context_and_sensitive_columns_proc,
-    .perf_index = &vault_sensitive_with_context_and_sensitive_columns_proc_perf_index,
-  };
-  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
-}
-
-void vault_sensitive_with_context_and_sensitive_columns_proc_set_encoding(cql_int32 col, cql_bool encode) {
-  return cql_set_encoding(vault_sensitive_with_context_and_sensitive_columns_proc_data_types, vault_sensitive_with_context_and_sensitive_columns_proc_data_types_count, col, encode);
-}
-
-/*
-export:
-DECLARE PROC vault_sensitive_with_context_and_sensitive_columns_proc () (id INT!, name TEXT @SENSITIVE, title TEXT, type LONG @SENSITIVE);
-*/
-CQL_WARN_UNUSED cql_code vault_sensitive_with_context_and_sensitive_columns_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
-  cql_code _rc_ = SQLITE_OK;
-  *_result_stmt = NULL;
-  cql_error_prepare();
-
-  _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT "
-        "vault_mixed_sensitive.id, "
-        "vault_mixed_sensitive.name, "
-        "vault_mixed_sensitive.title, "
-        "vault_mixed_sensitive.type "
-      "FROM vault_mixed_sensitive");
-  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = SQLITE_OK;
-
-cql_cleanup:
-  cql_error_report();
-  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
-  return _rc_;
-}
-#undef _PROC_
-
-// The statement ending at line XXXX
-
-/*
-[[vault_sensitive=((id, name))]]
-PROC vault_sensitive_with_no_context_and_sensitive_columns_proc ()
-BEGIN
-  SELECT
-      vault_mixed_sensitive.id,
-      vault_mixed_sensitive.name,
-      vault_mixed_sensitive.title,
-      vault_mixed_sensitive.type
-    FROM vault_mixed_sensitive;
-END;
-*/
-
-#define _PROC_ "vault_sensitive_with_no_context_and_sensitive_columns_proc"
-static int32_t vault_sensitive_with_no_context_and_sensitive_columns_proc_perf_index;
-
-cql_string_proc_name(vault_sensitive_with_no_context_and_sensitive_columns_proc_stored_procedure_name, "vault_sensitive_with_no_context_and_sensitive_columns_proc");
-
-typedef struct vault_sensitive_with_no_context_and_sensitive_columns_proc_row {
-  cql_int32 id;
-  cql_nullable_int64 type;
-  cql_string_ref _Nullable name;
-  cql_string_ref _Nullable title;
-} vault_sensitive_with_no_context_and_sensitive_columns_proc_row;
-
-uint8_t vault_sensitive_with_no_context_and_sensitive_columns_proc_data_types[vault_sensitive_with_no_context_and_sensitive_columns_proc_data_types_count] = {
-  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
-  CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED, // name
-  CQL_DATA_TYPE_STRING, // title
-  CQL_DATA_TYPE_INT64, // type
-};
-
-#define vault_sensitive_with_no_context_and_sensitive_columns_proc_refs_offset cql_offsetof(vault_sensitive_with_no_context_and_sensitive_columns_proc_row, name) // count = 2
-
-static cql_uint16 vault_sensitive_with_no_context_and_sensitive_columns_proc_col_offsets[] = { 4,
-  cql_offsetof(vault_sensitive_with_no_context_and_sensitive_columns_proc_row, id),
-  cql_offsetof(vault_sensitive_with_no_context_and_sensitive_columns_proc_row, name),
-  cql_offsetof(vault_sensitive_with_no_context_and_sensitive_columns_proc_row, title),
-  cql_offsetof(vault_sensitive_with_no_context_and_sensitive_columns_proc_row, type)
-};
-
-cql_int32 vault_sensitive_with_no_context_and_sensitive_columns_proc_result_count(vault_sensitive_with_no_context_and_sensitive_columns_proc_result_set_ref _Nonnull result_set) {
-  return cql_result_set_get_count((cql_result_set_ref)result_set);
-}
-
-CQL_WARN_UNUSED cql_code vault_sensitive_with_no_context_and_sensitive_columns_proc_fetch_results(sqlite3 *_Nonnull _db_, vault_sensitive_with_no_context_and_sensitive_columns_proc_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
-  cql_profile_start(CRC_vault_sensitive_with_no_context_and_sensitive_columns_proc, &vault_sensitive_with_no_context_and_sensitive_columns_proc_perf_index);
-  cql_code rc = vault_sensitive_with_no_context_and_sensitive_columns_proc(_db_, &stmt);
-  cql_fetch_info info = {
-    .rc = rc,
-    .db = _db_,
-    .stmt = stmt,
-    .data_types = vault_sensitive_with_no_context_and_sensitive_columns_proc_data_types,
-    .col_offsets = vault_sensitive_with_no_context_and_sensitive_columns_proc_col_offsets,
-    .refs_count = 2,
-    .refs_offset = vault_sensitive_with_no_context_and_sensitive_columns_proc_refs_offset,
-    .encode_context_index = -1,
-    .rowsize = sizeof(vault_sensitive_with_no_context_and_sensitive_columns_proc_row),
-    .crc = CRC_vault_sensitive_with_no_context_and_sensitive_columns_proc,
-    .perf_index = &vault_sensitive_with_no_context_and_sensitive_columns_proc_perf_index,
-  };
-  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
-}
-
-void vault_sensitive_with_no_context_and_sensitive_columns_proc_set_encoding(cql_int32 col, cql_bool encode) {
-  return cql_set_encoding(vault_sensitive_with_no_context_and_sensitive_columns_proc_data_types, vault_sensitive_with_no_context_and_sensitive_columns_proc_data_types_count, col, encode);
-}
-
-/*
-export:
-DECLARE PROC vault_sensitive_with_no_context_and_sensitive_columns_proc () (id INT!, name TEXT @SENSITIVE, title TEXT, type LONG @SENSITIVE);
-*/
-CQL_WARN_UNUSED cql_code vault_sensitive_with_no_context_and_sensitive_columns_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
-  cql_code _rc_ = SQLITE_OK;
-  *_result_stmt = NULL;
-  cql_error_prepare();
-
-  _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT "
-        "vault_mixed_sensitive.id, "
-        "vault_mixed_sensitive.name, "
-        "vault_mixed_sensitive.title, "
-        "vault_mixed_sensitive.type "
-      "FROM vault_mixed_sensitive");
-  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = SQLITE_OK;
-
-cql_cleanup:
-  cql_error_report();
-  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
-  return _rc_;
-}
-#undef _PROC_
-
-// The statement ending at line XXXX
-
-/*
-[[vault_sensitive=(title, (id, name))]]
-PROC vault_sensitive_with_context_and_no_sensitive_columns_proc ()
-BEGIN
-  SELECT
-      vault_non_sensitive.id,
-      vault_non_sensitive.name,
-      vault_non_sensitive.title,
-      vault_non_sensitive.type
-    FROM vault_non_sensitive;
-END;
-*/
-
-#define _PROC_ "vault_sensitive_with_context_and_no_sensitive_columns_proc"
-static int32_t vault_sensitive_with_context_and_no_sensitive_columns_proc_perf_index;
-
-cql_string_proc_name(vault_sensitive_with_context_and_no_sensitive_columns_proc_stored_procedure_name, "vault_sensitive_with_context_and_no_sensitive_columns_proc");
-
-typedef struct vault_sensitive_with_context_and_no_sensitive_columns_proc_row {
-  cql_int32 id;
-  cql_nullable_int64 type;
-  cql_string_ref _Nullable name;
-  cql_string_ref _Nullable title;
-} vault_sensitive_with_context_and_no_sensitive_columns_proc_row;
-
-uint8_t vault_sensitive_with_context_and_no_sensitive_columns_proc_data_types[vault_sensitive_with_context_and_no_sensitive_columns_proc_data_types_count] = {
-  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
-  CQL_DATA_TYPE_STRING, // name
-  CQL_DATA_TYPE_STRING, // title
-  CQL_DATA_TYPE_INT64, // type
-};
-
-#define vault_sensitive_with_context_and_no_sensitive_columns_proc_refs_offset cql_offsetof(vault_sensitive_with_context_and_no_sensitive_columns_proc_row, name) // count = 2
-
-static cql_uint16 vault_sensitive_with_context_and_no_sensitive_columns_proc_col_offsets[] = { 4,
-  cql_offsetof(vault_sensitive_with_context_and_no_sensitive_columns_proc_row, id),
-  cql_offsetof(vault_sensitive_with_context_and_no_sensitive_columns_proc_row, name),
-  cql_offsetof(vault_sensitive_with_context_and_no_sensitive_columns_proc_row, title),
-  cql_offsetof(vault_sensitive_with_context_and_no_sensitive_columns_proc_row, type)
-};
-
-cql_int32 vault_sensitive_with_context_and_no_sensitive_columns_proc_result_count(vault_sensitive_with_context_and_no_sensitive_columns_proc_result_set_ref _Nonnull result_set) {
-  return cql_result_set_get_count((cql_result_set_ref)result_set);
-}
-
-CQL_WARN_UNUSED cql_code vault_sensitive_with_context_and_no_sensitive_columns_proc_fetch_results(sqlite3 *_Nonnull _db_, vault_sensitive_with_context_and_no_sensitive_columns_proc_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
-  cql_profile_start(CRC_vault_sensitive_with_context_and_no_sensitive_columns_proc, &vault_sensitive_with_context_and_no_sensitive_columns_proc_perf_index);
-  cql_code rc = vault_sensitive_with_context_and_no_sensitive_columns_proc(_db_, &stmt);
-  cql_fetch_info info = {
-    .rc = rc,
-    .db = _db_,
-    .stmt = stmt,
-    .data_types = vault_sensitive_with_context_and_no_sensitive_columns_proc_data_types,
-    .col_offsets = vault_sensitive_with_context_and_no_sensitive_columns_proc_col_offsets,
-    .refs_count = 2,
-    .refs_offset = vault_sensitive_with_context_and_no_sensitive_columns_proc_refs_offset,
-    .encode_context_index = 2,
-    .rowsize = sizeof(vault_sensitive_with_context_and_no_sensitive_columns_proc_row),
-    .crc = CRC_vault_sensitive_with_context_and_no_sensitive_columns_proc,
-    .perf_index = &vault_sensitive_with_context_and_no_sensitive_columns_proc_perf_index,
-  };
-  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
-}
-
-void vault_sensitive_with_context_and_no_sensitive_columns_proc_set_encoding(cql_int32 col, cql_bool encode) {
-  return cql_set_encoding(vault_sensitive_with_context_and_no_sensitive_columns_proc_data_types, vault_sensitive_with_context_and_no_sensitive_columns_proc_data_types_count, col, encode);
-}
-
-/*
-export:
-DECLARE PROC vault_sensitive_with_context_and_no_sensitive_columns_proc () (id INT!, name TEXT, title TEXT, type LONG);
-*/
-CQL_WARN_UNUSED cql_code vault_sensitive_with_context_and_no_sensitive_columns_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
-  cql_code _rc_ = SQLITE_OK;
-  *_result_stmt = NULL;
-  cql_error_prepare();
-
-  _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT "
-        "vault_non_sensitive.id, "
-        "vault_non_sensitive.name, "
-        "vault_non_sensitive.title, "
-        "vault_non_sensitive.type "
-      "FROM vault_non_sensitive");
-  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = SQLITE_OK;
-
-cql_cleanup:
-  cql_error_report();
-  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
   return _rc_;
 }
 #undef _PROC_
@@ -10020,7 +8710,6 @@ CQL_WARN_UNUSED cql_code window1_fetch_results(sqlite3 *_Nonnull _db_, window1_r
     .stmt = stmt,
     .data_types = window1_data_types,
     .col_offsets = window1_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(window1_row),
     .crc = CRC_window1,
     .perf_index = &window1_perf_index,
@@ -10099,7 +8788,6 @@ CQL_WARN_UNUSED cql_code window2_fetch_results(sqlite3 *_Nonnull _db_, window2_r
     .stmt = stmt,
     .data_types = window2_data_types,
     .col_offsets = window2_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(window2_row),
     .crc = CRC_window2,
     .perf_index = &window2_perf_index,
@@ -10178,7 +8866,6 @@ CQL_WARN_UNUSED cql_code window3_fetch_results(sqlite3 *_Nonnull _db_, window3_r
     .stmt = stmt,
     .data_types = window3_data_types,
     .col_offsets = window3_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(window3_row),
     .crc = CRC_window3,
     .perf_index = &window3_perf_index,
@@ -10257,7 +8944,6 @@ CQL_WARN_UNUSED cql_code window4_fetch_results(sqlite3 *_Nonnull _db_, window4_r
     .stmt = stmt,
     .data_types = window4_data_types,
     .col_offsets = window4_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(window4_row),
     .crc = CRC_window4,
     .perf_index = &window4_perf_index,
@@ -10336,7 +9022,6 @@ CQL_WARN_UNUSED cql_code window5_fetch_results(sqlite3 *_Nonnull _db_, window5_r
     .stmt = stmt,
     .data_types = window5_data_types,
     .col_offsets = window5_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(window5_row),
     .crc = CRC_window5,
     .perf_index = &window5_perf_index,
@@ -10415,7 +9100,6 @@ CQL_WARN_UNUSED cql_code window6_fetch_results(sqlite3 *_Nonnull _db_, window6_r
     .stmt = stmt,
     .data_types = window6_data_types,
     .col_offsets = window6_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(window6_row),
     .crc = CRC_window6,
     .perf_index = &window6_perf_index,
@@ -10494,7 +9178,6 @@ CQL_WARN_UNUSED cql_code window7_fetch_results(sqlite3 *_Nonnull _db_, window7_r
     .stmt = stmt,
     .data_types = window7_data_types,
     .col_offsets = window7_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(window7_row),
     .crc = CRC_window7,
     .perf_index = &window7_perf_index,
@@ -10573,7 +9256,6 @@ CQL_WARN_UNUSED cql_code window8_fetch_results(sqlite3 *_Nonnull _db_, window8_r
     .stmt = stmt,
     .data_types = window8_data_types,
     .col_offsets = window8_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(window8_row),
     .crc = CRC_window8,
     .perf_index = &window8_perf_index,
@@ -10652,7 +9334,6 @@ CQL_WARN_UNUSED cql_code window9_fetch_results(sqlite3 *_Nonnull _db_, window9_r
     .stmt = stmt,
     .data_types = window9_data_types,
     .col_offsets = window9_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(window9_row),
     .crc = CRC_window9,
     .perf_index = &window9_perf_index,
@@ -10731,7 +9412,6 @@ CQL_WARN_UNUSED cql_code window10_fetch_results(sqlite3 *_Nonnull _db_, window10
     .stmt = stmt,
     .data_types = window10_data_types,
     .col_offsets = window10_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(window10_row),
     .crc = CRC_window10,
     .perf_index = &window10_perf_index,
@@ -10810,7 +9490,6 @@ CQL_WARN_UNUSED cql_code window11_fetch_results(sqlite3 *_Nonnull _db_, window11
     .stmt = stmt,
     .data_types = window11_data_types,
     .col_offsets = window11_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(window11_row),
     .crc = CRC_window11,
     .perf_index = &window11_perf_index,
@@ -10889,7 +9568,6 @@ CQL_WARN_UNUSED cql_code window12_fetch_results(sqlite3 *_Nonnull _db_, window12
     .stmt = stmt,
     .data_types = window12_data_types,
     .col_offsets = window12_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(window12_row),
     .crc = CRC_window12,
     .perf_index = &window12_perf_index,
@@ -10968,7 +9646,6 @@ CQL_WARN_UNUSED cql_code window13_fetch_results(sqlite3 *_Nonnull _db_, window13
     .stmt = stmt,
     .data_types = window13_data_types,
     .col_offsets = window13_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(window13_row),
     .crc = CRC_window13,
     .perf_index = &window13_perf_index,
@@ -11047,7 +9724,6 @@ CQL_WARN_UNUSED cql_code window14_fetch_results(sqlite3 *_Nonnull _db_, window14
     .stmt = stmt,
     .data_types = window14_data_types,
     .col_offsets = window14_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(window14_row),
     .crc = CRC_window14,
     .perf_index = &window14_perf_index,
@@ -11126,7 +9802,6 @@ CQL_WARN_UNUSED cql_code window15_fetch_results(sqlite3 *_Nonnull _db_, window15
     .stmt = stmt,
     .data_types = window15_data_types,
     .col_offsets = window15_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(window15_row),
     .crc = CRC_window15,
     .perf_index = &window15_perf_index,
@@ -11205,7 +9880,6 @@ CQL_WARN_UNUSED cql_code window16_fetch_results(sqlite3 *_Nonnull _db_, window16
     .stmt = stmt,
     .data_types = window16_data_types,
     .col_offsets = window16_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(window16_row),
     .crc = CRC_window16,
     .perf_index = &window16_perf_index,
@@ -11659,7 +10333,6 @@ CQL_WARN_UNUSED cql_code virtual1_fetch_results(sqlite3 *_Nonnull _db_, virtual1
     .stmt = stmt,
     .data_types = virtual1_data_types,
     .col_offsets = virtual1_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(virtual1_row),
     .crc = CRC_virtual1,
     .perf_index = &virtual1_perf_index,
@@ -11737,7 +10410,6 @@ CQL_WARN_UNUSED cql_code virtual2_fetch_results(sqlite3 *_Nonnull _db_, virtual2
     .stmt = stmt,
     .data_types = virtual2_data_types,
     .col_offsets = virtual2_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(virtual2_row),
     .crc = CRC_virtual2,
     .perf_index = &virtual2_perf_index,
@@ -11822,7 +10494,6 @@ cql_fetch_info private_out_union_info = {
   .rc = SQLITE_OK,
   .data_types = private_out_union_data_types,
   .col_offsets = private_out_union_col_offsets,
-  .encode_context_index = -1,
   .rowsize = sizeof(private_out_union_row),
   .crc = CRC_private_out_union,
   .perf_index = &private_out_union_perf_index,
@@ -11963,7 +10634,6 @@ cql_fetch_info no_getters_out_union_info = {
   .rc = SQLITE_OK,
   .data_types = no_getters_out_union_data_types,
   .col_offsets = no_getters_out_union_col_offsets,
-  .encode_context_index = -1,
   .rowsize = sizeof(no_getters_out_union_row),
   .crc = CRC_no_getters_out_union,
   .perf_index = &no_getters_out_union_perf_index,
@@ -12080,7 +10750,6 @@ cql_fetch_info suppress_results_out_union_info = {
   .rc = SQLITE_OK,
   .data_types = suppress_results_out_union_data_types,
   .col_offsets = suppress_results_out_union_col_offsets,
-  .encode_context_index = -1,
   .rowsize = sizeof(suppress_results_out_union_row),
   .crc = CRC_suppress_results_out_union,
   .perf_index = &suppress_results_out_union_perf_index,
@@ -12692,7 +11361,6 @@ void out_object_fetch_results( out_object_result_set_ref _Nullable *_Nonnull res
     .col_offsets = out_object_col_offsets,
     .refs_count = 1,
     .refs_offset = out_object_refs_offset,
-    .encode_context_index = -1,
     .rowsize = sizeof(out_object_row),
     .crc = CRC_out_object,
     .perf_index = &out_object_perf_index,
@@ -12867,7 +11535,6 @@ CQL_WARN_UNUSED cql_code result_set_proc_with_contract_in_fetch_results_fetch_re
     .col_offsets = result_set_proc_with_contract_in_fetch_results_col_offsets,
     .refs_count = 1,
     .refs_offset = result_set_proc_with_contract_in_fetch_results_refs_offset,
-    .encode_context_index = -1,
     .rowsize = sizeof(result_set_proc_with_contract_in_fetch_results_row),
     .crc = CRC_result_set_proc_with_contract_in_fetch_results,
     .perf_index = &result_set_proc_with_contract_in_fetch_results_perf_index,
@@ -12952,7 +11619,6 @@ void out_proc_with_contract_in_fetch_results_fetch_results( out_proc_with_contra
     .col_offsets = out_proc_with_contract_in_fetch_results_col_offsets,
     .refs_count = 1,
     .refs_offset = out_proc_with_contract_in_fetch_results_refs_offset,
-    .encode_context_index = -1,
     .rowsize = sizeof(out_proc_with_contract_in_fetch_results_row),
     .crc = CRC_out_proc_with_contract_in_fetch_results,
     .perf_index = &out_proc_with_contract_in_fetch_results_perf_index,
@@ -13039,7 +11705,6 @@ CQL_WARN_UNUSED cql_code nullability_improvements_are_erased_for_sql_fetch_resul
     .stmt = stmt,
     .data_types = nullability_improvements_are_erased_for_sql_data_types,
     .col_offsets = nullability_improvements_are_erased_for_sql_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(nullability_improvements_are_erased_for_sql_row),
     .crc = CRC_nullability_improvements_are_erased_for_sql,
     .perf_index = &nullability_improvements_are_erased_for_sql_perf_index,
@@ -14047,7 +12712,6 @@ CQL_WARN_UNUSED cql_code sensitive_function_is_a_no_op_fetch_results(sqlite3 *_N
     .col_offsets = sensitive_function_is_a_no_op_col_offsets,
     .refs_count = 1,
     .refs_offset = sensitive_function_is_a_no_op_refs_offset,
-    .encode_context_index = -1,
     .rowsize = sizeof(sensitive_function_is_a_no_op_row),
     .crc = CRC_sensitive_function_is_a_no_op,
     .perf_index = &sensitive_function_is_a_no_op_perf_index,
@@ -14240,7 +12904,6 @@ CQL_WARN_UNUSED cql_code foo_fetch_results(sqlite3 *_Nonnull _db_, foo_result_se
     .stmt = stmt,
     .data_types = foo_data_types,
     .col_offsets = foo_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(foo_row),
     .crc = CRC_foo,
     .perf_index = &foo_perf_index,
@@ -14360,7 +13023,6 @@ CQL_WARN_UNUSED cql_code shared_conditional_user_fetch_results(sqlite3 *_Nonnull
     .col_offsets = shared_conditional_user_col_offsets,
     .refs_count = 1,
     .refs_offset = shared_conditional_user_refs_offset,
-    .encode_context_index = -1,
     .rowsize = sizeof(shared_conditional_user_row),
     .crc = CRC_shared_conditional_user,
     .perf_index = &shared_conditional_user_perf_index,
@@ -14504,7 +13166,6 @@ CQL_WARN_UNUSED cql_code nested_shared_stuff_fetch_results(sqlite3 *_Nonnull _db
     .stmt = stmt,
     .data_types = nested_shared_stuff_data_types,
     .col_offsets = nested_shared_stuff_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(nested_shared_stuff_row),
     .crc = CRC_nested_shared_stuff,
     .perf_index = &nested_shared_stuff_perf_index,
@@ -14635,7 +13296,6 @@ CQL_WARN_UNUSED cql_code use_nested_select_shared_frag_form_fetch_results(sqlite
     .stmt = stmt,
     .data_types = use_nested_select_shared_frag_form_data_types,
     .col_offsets = use_nested_select_shared_frag_form_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(use_nested_select_shared_frag_form_row),
     .crc = CRC_use_nested_select_shared_frag_form,
     .perf_index = &use_nested_select_shared_frag_form_perf_index,
@@ -14824,7 +13484,6 @@ CQL_WARN_UNUSED cql_code shared_frag_else_nothing_test_fetch_results(sqlite3 *_N
     .stmt = stmt,
     .data_types = shared_frag_else_nothing_test_data_types,
     .col_offsets = shared_frag_else_nothing_test_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(shared_frag_else_nothing_test_row),
     .crc = CRC_shared_frag_else_nothing_test,
     .perf_index = &shared_frag_else_nothing_test_perf_index,
@@ -14928,7 +13587,6 @@ CQL_WARN_UNUSED cql_code shared_frag_else_nothing_in_from_clause_test_fetch_resu
     .col_offsets = shared_frag_else_nothing_in_from_clause_test_col_offsets,
     .refs_count = 1,
     .refs_offset = shared_frag_else_nothing_in_from_clause_test_refs_offset,
-    .encode_context_index = -1,
     .rowsize = sizeof(shared_frag_else_nothing_in_from_clause_test_row),
     .crc = CRC_shared_frag_else_nothing_in_from_clause_test,
     .perf_index = &shared_frag_else_nothing_in_from_clause_test_perf_index,
@@ -15374,7 +14032,6 @@ CQL_WARN_UNUSED cql_code some_redeclared_out_proc_fetch_results(sqlite3 *_Nonnul
     .db = _db_,
     .data_types = some_redeclared_out_proc_data_types,
     .col_offsets = some_redeclared_out_proc_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(some_redeclared_out_proc_row),
     .crc = CRC_some_redeclared_out_proc,
     .perf_index = &some_redeclared_out_proc_perf_index,
@@ -15463,7 +14120,6 @@ cql_fetch_info some_redeclared_out_union_proc_info = {
   .rc = SQLITE_OK,
   .data_types = some_redeclared_out_union_proc_data_types,
   .col_offsets = some_redeclared_out_union_proc_col_offsets,
-  .encode_context_index = -1,
   .rowsize = sizeof(some_redeclared_out_union_proc_row),
   .crc = CRC_some_redeclared_out_union_proc,
   .perf_index = &some_redeclared_out_union_proc_perf_index,
@@ -15768,7 +14424,6 @@ cql_fetch_info a_proc_that_needs_dependents_info = {
   .col_offsets = a_proc_that_needs_dependents_col_offsets,
   .refs_count = 2,
   .refs_offset = a_proc_that_needs_dependents_refs_offset,
-  .encode_context_index = -1,
   .rowsize = sizeof(a_proc_that_needs_dependents_row),
   .crc = CRC_a_proc_that_needs_dependents,
   .perf_index = &a_proc_that_needs_dependents_perf_index,
@@ -15889,7 +14544,6 @@ CQL_WARN_UNUSED cql_code simple_child_proc_fetch_results(sqlite3 *_Nonnull _db_,
     .stmt = stmt,
     .data_types = simple_child_proc_data_types,
     .col_offsets = simple_child_proc_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(simple_child_proc_row),
     .crc = CRC_simple_child_proc,
     .perf_index = &simple_child_proc_perf_index,
@@ -15960,7 +14614,6 @@ cql_fetch_info simple_container_proc_info = {
   .col_offsets = simple_container_proc_col_offsets,
   .refs_count = 1,
   .refs_offset = simple_container_proc_refs_offset,
-  .encode_context_index = -1,
   .rowsize = sizeof(simple_container_proc_row),
   .crc = CRC_simple_container_proc,
   .perf_index = &simple_container_proc_perf_index,
@@ -16267,7 +14920,6 @@ CQL_WARN_UNUSED cql_code use_generated_fragment_fetch_results(sqlite3 *_Nonnull 
     .col_offsets = use_generated_fragment_col_offsets,
     .refs_count = 2,
     .refs_offset = use_generated_fragment_refs_offset,
-    .encode_context_index = -1,
     .rowsize = sizeof(use_generated_fragment_row),
     .crc = CRC_use_generated_fragment,
     .perf_index = &use_generated_fragment_perf_index,
@@ -16386,7 +15038,6 @@ CQL_WARN_UNUSED cql_code use_backed_table_directly_fetch_results(sqlite3 *_Nonnu
     .col_offsets = use_backed_table_directly_col_offsets,
     .refs_count = 2,
     .refs_offset = use_backed_table_directly_refs_offset,
-    .encode_context_index = -1,
     .rowsize = sizeof(use_backed_table_directly_row),
     .crc = CRC_use_backed_table_directly,
     .perf_index = &use_backed_table_directly_perf_index,
@@ -16574,7 +15225,6 @@ CQL_WARN_UNUSED cql_code use_backed_table_directly_in_with_select_fetch_results(
     .col_offsets = use_backed_table_directly_in_with_select_col_offsets,
     .refs_count = 2,
     .refs_offset = use_backed_table_directly_in_with_select_refs_offset,
-    .encode_context_index = -1,
     .rowsize = sizeof(use_backed_table_directly_in_with_select_row),
     .crc = CRC_use_backed_table_directly_in_with_select,
     .perf_index = &use_backed_table_directly_in_with_select_perf_index,
@@ -17996,9 +16646,9 @@ void no_check_func_calls(cql_string_ref _Nullable *_Nonnull result) {
   x = stew1(0, "x");
   cql_set_created_string_ref(&y, stew2(1, 2, 3));
   cql_set_string_ref(&z, stew3(2, "x", 1));
-  cql_alloc_cstr(_cstr_4, y);
-  cql_set_created_string_ref(&q, stew2(1, _cstr_4));
-  cql_free_cstr(_cstr_4, y);
+  cql_alloc_cstr(_cstr_3, y);
+  cql_set_created_string_ref(&q, stew2(1, _cstr_3));
+  cql_free_cstr(_cstr_3, y);
   cql_set_created_string_ref(result, stew2(1, 2, 3));
 
   cql_string_release(y);
@@ -18596,7 +17246,6 @@ CQL_WARN_UNUSED cql_code a_backed_join_fetch_results(sqlite3 *_Nonnull _db_, a_b
     .col_offsets = a_backed_join_col_offsets,
     .refs_count = 2,
     .refs_offset = a_backed_join_refs_offset,
-    .encode_context_index = -1,
     .rowsize = sizeof(a_backed_join_row),
     .crc = CRC_a_backed_join,
     .perf_index = &a_backed_join_perf_index,
@@ -18736,7 +17385,6 @@ CQL_WARN_UNUSED cql_code insert_returning_resultset_fetch_results(sqlite3 *_Nonn
     .stmt = stmt,
     .data_types = insert_returning_resultset_data_types,
     .col_offsets = insert_returning_resultset_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(insert_returning_resultset_row),
     .crc = CRC_insert_returning_resultset,
     .perf_index = &insert_returning_resultset_perf_index,
@@ -18848,7 +17496,6 @@ CQL_WARN_UNUSED cql_code delete_returning_resultset_fetch_results(sqlite3 *_Nonn
     .stmt = stmt,
     .data_types = delete_returning_resultset_data_types,
     .col_offsets = delete_returning_resultset_col_offsets,
-    .encode_context_index = -1,
     .rowsize = sizeof(delete_returning_resultset_row),
     .crc = CRC_delete_returning_resultset,
     .perf_index = &delete_returning_resultset_perf_index,

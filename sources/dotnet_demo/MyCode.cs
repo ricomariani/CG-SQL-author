@@ -115,17 +115,15 @@ public class MyCode {
       String? s = System.Text.Encoding.UTF8.GetString(bytes);
 
       Console.WriteLine(
-        "Row {0}: name:{1} blob:{2} age:{3}({4}) thing:{5:F6} key1:{6} key2:{7}({8})",
+        "Row {0}: name:{1} blob:{2} age:{3} thing:{4:F6} key1:{5} key2:{6}",
         i, // 0
         data.get_name(i), // 1
         s, // 2
         data.get_age(i), // 3
-        data.get_age_IsEncoded() ? "encoded" : "clear", // 4
-        data.get_thing(i), // 5
-        data.get_key1(i), // 6
-        data.get_key2(i), // 7
-        data.get_key2_IsEncoded() ? "encoded" : "clear" // 8
-     );
+        data.get_thing(i), // 4
+        data.get_key1(i), // 5
+        data.get_key2(i) // 6
+      );
 
       // this could be done automatically in the helper, it just isn't yet
       // var child = data.get_my_child_result(i) should do the job

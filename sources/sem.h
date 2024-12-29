@@ -304,8 +304,6 @@ cql_noexport ast_node *sem_get_col_default_value(ast_node *attrs);
 cql_noexport void sem_accumulate_full_region_image(symtab *regions, CSTR name);
 cql_noexport void sem_accumulate_public_region_image(symtab *regions, CSTR name);
 cql_noexport sem_t find_column_type(CSTR table_name, CSTR column_name);
-cql_noexport void init_encode_info(ast_node *misc_attrs, bool_t *use_encode_arg, CSTR *encode_context_column_arg, symtab *encode_columns_arg);
-cql_noexport bool_t should_encode_col(CSTR col, sem_t sem_type, bool_t use_encode_arg, symtab *encode_columns_arg);
 
 #define LIKEABLE_FOR_ARGS   1
 #define LIKEABLE_FOR_VALUES 2
@@ -367,14 +365,6 @@ cql_data_decl( charbuf *error_capture );
 cql_data_decl( cte_state *cte_cur );
 cql_data_decl( symtab *ref_sources_for_target_table );
 cql_data_decl( symtab *ref_targets_for_source_table );
-
-// True if we are presently emitting a vault stored proc.
-// A stored proc with attribution vault_sensitive is a vault stored proc
-cql_data_decl( bool_t use_encode );
-cql_data_decl( CSTR encode_context_column );
-
-// List of column names reference in a stored proc that we should vault
-cql_data_decl( symtab *encode_columns );
 
 // These are the symbol tables with the accumulated included/excluded regions
 cql_data_decl( symtab *included_regions );

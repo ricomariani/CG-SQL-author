@@ -641,7 +641,6 @@ def emit_proc_c_func_body(proc, meta_results, attributes):
         if ref_field_count:
             print(f"    .refs_count = {proc_row_type}_refs_count,")
             print(f"    .refs_offset = {proc_row_type}_refs_offset,")
-        print("    .encode_context_index = -1,")
         print(f"    .rowsize = sizeof({proc_row_type}),")
         print("  };")
 
@@ -691,11 +690,6 @@ def emit_result_set_projection(proc, attributes):
         isNotNull = p["isNotNull"]
         hasOutResult = "hasOutResult" in proc and proc["hasOutResult"]
 
-        # vaulted columns get encoding treatment, the treatment is defined
-        # the primary docs discuss vaulted columns.
-        vaulted_columns = attributes.get("cql:vault_sensitive", None)
-        vault_all = vaulted_columns == 1
-
         # we compute the name of the getter based on the type of the column
         getter = getters[c_type]
         c_type = notnull_types[c_type]
@@ -713,16 +707,6 @@ def emit_result_set_projection(proc, attributes):
         if getter == "ChildResultSet":
             c_type = "CQLResultSet"
 
-        # we use the encoded getter if needed
-        isEncoded = False
-        if (isSensitive and vaulted_columns is not None
-                and (vault_all or c_name in vaulted_columns)):
-            isEncoded = True
-            # use custom encoded string type for encoded strings
-            if c_type == "String":
-                c_type = "CQLEncodedString"
-                getter = "Encoded" + getter
-
         # if there is only one row (because it was made with an out statement)
         # then we can elide all the row arguments and just pass "row 0" to the helpers.
         row_arg = "" if hasOutResult else "int row"
@@ -734,12 +718,6 @@ def emit_result_set_projection(proc, attributes):
             f"      return mResultSet.get{nullable}{getter}({row_formal}, {col});"
         )
         print("    }\n")
-
-        # if the column might be encoded then we emit the IsEncoded helper
-        if isEncoded:
-            print(f"    public boolean get_{c_name}_IsEncoded() {{")
-            print(f"      return mResultSet.getIsEncoded({col});")
-            print("    }\n")
 
         col += 1
 
@@ -1033,7 +1011,6 @@ def main():
 
             print("import com.acme.cgsql.CQLResultSet;\n")
             print("import com.acme.cgsql.CQLViewModel;\n")
-            print("import com.acme.cgsql.CQLEncodedString;\n")
 
             print(f"public class {class_name}")
             print("{")

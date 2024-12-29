@@ -116,16 +116,14 @@ public class MyJava {
       String s = new String(bytes, StandardCharsets.UTF_8);
       System.out.println(
         String.format(
-          "Row %d: name:%s blob:%s age:%-7d(%s) thing:%f key1:%s key2:%s(%s)",
+          "Row %d: name:%s blob:%s age:%-7d thing:%f key1:%s key2:%s",
           i,
           data.get_name(i),
           s,
           data.get_age(i),
-          data.get_age_IsEncoded() ? "encoded" : "clear",
           data.get_thing(i),
           data.get_key1(i),
-          data.get_key2(i),
-          data.get_key2_IsEncoded() ? "encoded" : "clear"
+          data.get_key2(i)
         )
       );
 

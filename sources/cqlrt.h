@@ -286,11 +286,6 @@ typedef struct cql_result_set_meta {
     cql_result_set_ref _Nonnull rs2,
     cql_int32 row2);
 
-  // check whether the column value is encoded
-  cql_bool(*_Nullable getIsEncoded)(
-   cql_result_set_ref _Nonnull result_set,
-   cql_int32 col);
-
   // count of references and offset to the first
   uint16_t refsCount;
   uint16_t refsOffset;
@@ -310,12 +305,6 @@ typedef struct cql_result_set_meta {
   // all datatypes of the columns
   uint8_t *_Nullable dataTypes;
 
-  // index of the encode context column
-  int16_t encodeContextIndex;
-
-  // release custom internal memory for the rowset that ARE NOT released
-  // by teardown
-  void(*_Nullable custom_teardown)(cql_result_set_ref _Nonnull result_set);
 } cql_result_set_meta;
 
 typedef struct cql_result_set {

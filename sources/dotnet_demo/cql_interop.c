@@ -127,8 +127,3 @@ cql_int64 copy(cql_int64 rs, cql_int32 row, cql_int32 count) {
   cql_rowset_copy(ref, &refNew, row, count);
   return (cql_int64)refNew;
 }
-
-cql_bool getIsEncoded(cql_int64 rs, cql_int32 col) {
-  cql_result_set_ref ref = (cql_result_set_ref)(rs);
-  return cql_result_set_get_is_encoded_col(ref, col);
-}

@@ -156,11 +156,6 @@ typedef struct cql_result_set_meta {
     cql_result_set_ref _Nonnull rs2,
     cql_int32 row2);
 
-  // check whether the column value is encoded
-  cql_bool(*_Nullable getIsEncoded)(
-   cql_result_set_ref _Nonnull result_set,
-   cql_int32 col);
-
   // count of references and offset to the first
   uint16_t refsCount;
   uint16_t refsOffset;
@@ -180,12 +175,6 @@ typedef struct cql_result_set_meta {
   // all datatypes of the columns
   uint8_t *_Nullable dataTypes;
 
-  // index of the encode context column
-  int16_t encodeContextIndex;
-
-  // release custom internal memory for the rowset that ARE NOT released
-  // by teardown
-  void(*_Nullable custom_teardown)(cql_result_set_ref _Nonnull result_set);
 } cql_result_set_meta;
 
 typedef struct cql_result_set {
@@ -224,83 +213,6 @@ SQLITE_API cql_code mockable_sqlite3_step(sqlite3_stmt *_Nonnull);
 //   you could emit any junk in the call and it would still compile.
 #define cql_profile_start(crc, index) (void)crc; (void)index;
 #define cql_profile_stop(crc, index)  (void)crc; (void)index;
-
-// implementation of encoding values. All sensitive values read from sqlite db will
-// be encoded at the source. CQL never decode encoded sensitive string unless the
-// user call explicitly decode function from code.
-cql_object_ref _Nullable cql_copy_encoder(sqlite3 *_Nonnull db);
-
-cql_bool cql_encode_bool(
-  cql_object_ref _Nullable encoder,
-  cql_bool value,
-  cql_int32 context_type,
-  void *_Nullable context);
-
-cql_int32 cql_encode_int32(
-  cql_object_ref _Nullable encoder,
-  cql_int32 value,
-  cql_int32 context_type,
-  void *_Nullable context);
-
-cql_int64 cql_encode_int64(
-  cql_object_ref _Nullable encoder,
-  cql_int64 value,
-  cql_int32 context_type,
-  void *_Nullable context);
-
-cql_double cql_encode_double(
-  cql_object_ref _Nullable encoder,
-  cql_double value,
-  cql_int32 context_type,
-  void *_Nullable context);
-
-cql_string_ref _Nonnull cql_encode_string_ref_new(
-  cql_object_ref _Nullable encoder,
-  cql_string_ref _Nonnull value,
-  cql_int32 context_type,
-  void *_Nullable context);
-
-cql_blob_ref _Nonnull cql_encode_blob_ref_new(
-  cql_object_ref _Nullable encoder,
-  cql_blob_ref _Nonnull value,
-  cql_int32 context_type,
-  void *_Nullable context);
-
-cql_bool cql_decode_bool(
-  cql_object_ref _Nullable encoder,
-  cql_bool value,
-  cql_int32 context_type,
-  void *_Nullable context);
-
-cql_int32 cql_decode_int32(
-  cql_object_ref _Nullable encoder,
-  cql_int32 value,
-  cql_int32 context_type,
-  void *_Nullable context);
-
-cql_int64 cql_decode_int64(
-  cql_object_ref _Nullable encoder,
-  cql_int64 value,
-  cql_int32 context_type,
-  void *_Nullable context);
-
-cql_double cql_decode_double(
-  cql_object_ref _Nullable encoder,
-  cql_double value,
-  cql_int32 context_type,
-  void *_Nullable context);
-
-cql_string_ref _Nonnull cql_decode_string_ref_new(
-  cql_object_ref _Nullable encoder,
-  cql_string_ref _Nonnull value,
-  cql_int32 context_type,
-  void *_Nullable context);
-
-cql_blob_ref _Nonnull cql_decode_blob_ref_new(
-  cql_object_ref _Nullable encoder,
-  cql_blob_ref _Nonnull value,
-  cql_int32 context_type,
-  void *_Nullable context);
 
 // NOTE: This must be included *after* all of the above symbols/macros.
 #include "cqlrt_common.h"

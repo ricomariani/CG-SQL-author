@@ -113,7 +113,6 @@ javac -d $O \
   com/acme/cgsql/CQLDb.java \
   com/acme/cgsql/CQLResultSet.java \
   com/acme/cgsql/CQLViewModel.java \
-  com/acme/cgsql/CQLEncodedString.java \
   $O/sample/SampleJNI.java
 
 echo "executing the java program"

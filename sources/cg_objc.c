@@ -25,9 +25,6 @@ cql_noexport void cg_objc_main(ast_node *head) {}
 #include "sem.h"
 #include "symtab.h"
 
-// Whether a text column in the result set of a proc is encoded
-static bool_t is_string_column_encoded = 0;
-
 static void cg_objc_proc_result_set_c_getter(
   bool_t fetch_proc,
   charbuf *buffer,
@@ -56,9 +53,7 @@ static void cg_objc_proc_result_set_getter(
   CSTR c_convert,
   uint32_t col,
   sem_t sem_type,
-  charbuf *output,
-  bool_t encode,
-  bool_t custom_type_for_encoded_column)
+  charbuf *output)
 {
   Contract(is_unitary(sem_type));
   sem_t core_type = core_type_of(sem_type);
@@ -95,15 +90,8 @@ static void cg_objc_proc_result_set_getter(
         bprintf(&value_convert_begin, "(__bridge NSData *)");
         break;
       case SEM_TYPE_TEXT:
-        if (encode && custom_type_for_encoded_column) {
-          is_string_column_encoded = 1;
-          bprintf(&return_type, "cql_string_ref_encode *_Nullable");
-          bprintf(&value_convert_begin, "(__bridge cql_string_ref_encode *)");
-        }
-        else {
-          bprintf(&return_type, "NSString *_Nullable");
-          bprintf(&value_convert_begin, "(__bridge NSString *)");
-        }
+        bprintf(&return_type, "NSString *_Nullable");
+        bprintf(&value_convert_begin, "(__bridge NSString *)");
         return_type_separator = " ";
         break;
       case SEM_TYPE_OBJECT:
@@ -133,15 +121,8 @@ static void cg_objc_proc_result_set_getter(
         value_convert_end = " ? YES : NO";
         break;
       case SEM_TYPE_TEXT:
-        if (encode && custom_type_for_encoded_column) {
-          is_string_column_encoded = 1;
-          bprintf(&return_type, "cql_string_ref_encode");
-          bprintf(&value_convert_begin, "(__bridge cql_string_ref_encode *)");
-        }
-        else {
-          bprintf(&return_type, "NSString *");
-          bprintf(&value_convert_begin, "(__bridge NSString *)");
-        }
+        bprintf(&return_type, "NSString *");
+        bprintf(&value_convert_begin, "(__bridge NSString *)");
         break;
       case SEM_TYPE_BLOB:
         bprintf(&return_type, "NSData *");
@@ -230,13 +211,6 @@ static void cg_objc_proc_result_set(ast_node *ast) {
     return;
   }
 
-  Invariant(!use_encode);
-  Invariant(!encode_context_column);
-  Invariant(!encode_columns);
-  encode_columns = symtab_new();
-  init_encode_info(misc_attrs, &use_encode, &encode_context_column, encode_columns);
-
-  bool_t custom_type_for_encoded_column = !!exists_attribute_str(misc_attrs, "custom_type_for_encoded_column");
   CSTR c_result_set_name = name;
   charbuf *h = cg_header_output;
 
@@ -294,44 +268,7 @@ static void cg_objc_proc_result_set(ast_node *ast) {
       c_convert.ptr,
       i,
       sem_type,
-      h,
-      should_encode_col(col, sem_type, use_encode, encode_columns),
-      custom_type_for_encoded_column);
-  }
-
-  if (use_encode) {
-    for (uint32_t i = 0; i < count; i++) {
-      CSTR col = sptr->names[i];
-      sem_t sem_type = sptr->semtypes[i];
-      bool_t encode = should_encode_col(col, sem_type, use_encode, encode_columns);
-      if (encode) {
-        CG_CHARBUF_OPEN_SYM_WITH_PREFIX(
-            objc_getter, objc_name.ptr, "_get_", col, "_is_encoded");
-        CG_CHARBUF_OPEN_SYM_WITH_PREFIX(
-            c_getter, c_name.ptr, "_get_", col, "_is_encoded");
-
-        bprintf(h,
-            "\nstatic inline cql_bool %s(%s *resultSet)\n",
-            objc_getter.ptr,
-            objc_result_set_name.ptr);
-        bprintf(h, "{\n");
-        bprintf(h, "  return %s(%s(resultSet));\n", c_getter.ptr, c_convert.ptr);
-        bprintf(h, "}\n");
-
-        CHARBUF_CLOSE(c_getter);
-        CHARBUF_CLOSE(objc_getter);
-      }
-    }
-
-    // Add a helper function that overrides CQL_DATA_TYPE_ENCODED bit of a resultset.
-    // It's a debugging function that allow you to turn ON/OFF encoding/decoding when
-    // your app is running.
-    bprintf(h,
-            "\nstatic inline void %sSetEncoding(cql_int32 col, cql_bool encode)\n",
-            objc_name.ptr);
-    bprintf(h, "{\n");
-    bprintf(h, "  return %sSetEncoding(col, encode);\n", c_name.ptr);
-    bprintf(h, "}\n");
+      h);
   }
 
   CG_CHARBUF_OPEN_SYM(cgs_result_count, name, "_result_count");
@@ -433,11 +370,6 @@ static void cg_objc_proc_result_set(ast_node *ast) {
   CHARBUF_CLOSE(c_name);
   CHARBUF_CLOSE(objc_result_set_name);
   CHARBUF_CLOSE(objc_name);
-
-  use_encode = 0;
-  symtab_delete(encode_columns);
-  encode_columns = NULL;
-  encode_context_column = NULL;
 }
 
 static void cg_objc_create_proc_stmt(ast_node *ast) {
@@ -482,7 +414,6 @@ static void cg_objc_init(void) {
 // Main entry point for code-gen.
 cql_noexport void cg_objc_main(ast_node *head) {
   Invariant(options.file_names_count == 1);
-  Invariant(is_string_column_encoded == 0);
   if (!options.objc_c_include_path) {
     cql_error("The C header path must be provided as argument (use --objc_c_include_path)\n");
     cql_cleanup_and_exit(1);
@@ -502,11 +433,6 @@ cql_noexport void cg_objc_main(ast_node *head) {
   cg_objc_stmt_list(head);
 
   bprintf(&header_file, "%s", rt->header_wrapper_begin);
-
-  if (is_string_column_encoded) {
-    bprintf(&header_file, "\n@class cql_string_ref_encode;\n");
-  }
-
   bprintf(&header_file, "%s", cg_header_output->ptr);
   bprintf(&header_file, "%s", rt->header_wrapper_end);
 
@@ -515,9 +441,6 @@ cql_noexport void cg_objc_main(ast_node *head) {
 
   CHARBUF_CLOSE(imports);
   CHARBUF_CLOSE(header_file);
-
-  // reset globals so they don't interfere with leaksan
-  is_string_column_encoded = 0;
 }
 
 #endif

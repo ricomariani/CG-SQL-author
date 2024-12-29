@@ -13281,16 +13281,6 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-  {enforce_strict_stmt}
-  | {int 13}
-
-The statement ending at line XXXX
-
-  {enforce_normal_stmt}
-  | {int 13}
-
-The statement ending at line XXXX
-
   {enforce_reset_stmt}
 
 The statement ending at line XXXX
@@ -16910,7 +16900,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
   {enforce_strict_stmt}
-  | {int 20}
+  | {int 13}
 
 The statement ending at line XXXX
 
@@ -17763,7 +17753,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
   {enforce_strict_stmt}
-  | {int 22}
+  | {int 15}
 
 The statement ending at line XXXX
 
@@ -18290,7 +18280,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
   {enforce_strict_stmt}
-  | {int 23}
+  | {int 16}
 
 The statement ending at line XXXX
 

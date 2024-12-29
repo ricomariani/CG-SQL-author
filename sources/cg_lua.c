@@ -2434,10 +2434,6 @@ static void cg_lua_create_proc_stmt(ast_node *ast) {
   charbuf *saved_fwd_ref = cg_fwd_ref_output;
   cg_lua_scratch_masks *saved_masks = cg_lua_current_masks;
 
-  Invariant(!use_encode);
-  Invariant(!encode_context_column);
-  Invariant(!encode_columns);
-  encode_columns = symtab_new();
   Invariant(lua_named_temporaries == NULL);
   lua_named_temporaries = symtab_new();
 
@@ -2449,8 +2445,6 @@ static void cg_lua_create_proc_stmt(ast_node *ast) {
   lua_in_var_group_emit = false;
   current_proc = ast;
   lua_seed_declared = false;
-
-  init_encode_info(misc_attrs, &use_encode, &encode_context_column, encode_columns);
 
   bprintf(cg_declarations_output, "\n");
 
@@ -2602,13 +2596,9 @@ static void cg_lua_create_proc_stmt(ast_node *ast) {
   }
 
   lua_in_proc = false;
-  use_encode = false;
   current_proc = NULL;
 
-  symtab_delete(encode_columns);
   symtab_delete(lua_named_temporaries);
-  encode_context_column = NULL;
-  encode_columns = NULL;
   lua_named_temporaries = NULL;
   lua_error_target_used = saved_lua_error_target_used;
   lua_rcthrown_index = saved_lua_rcthrown_index;

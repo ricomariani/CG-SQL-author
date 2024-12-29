@@ -96,7 +96,6 @@ typedef long long llint_t;
 #define CQL_DATA_TYPE_BLOB      6
 #define CQL_DATA_TYPE_OBJECT    7
 #define CQL_DATA_TYPE_CORE      0x3f    // bit mask for core types
-#define CQL_DATA_TYPE_ENCODED   0x40    // set if and only if encode
 #define CQL_DATA_TYPE_NOT_NULL  0x80    // set if and only if null is not possible
 #define CQL_CORE_DATA_TYPE_OF(type) ((type) & CQL_DATA_TYPE_CORE)
 
@@ -136,7 +135,6 @@ CQL_EXPORT void cql_multifetch(cql_code rc, sqlite3_stmt *_Nullable stmt, cql_in
 CQL_EXPORT void cql_multibind(cql_code *_Nonnull rc, sqlite3 *_Nonnull db, sqlite3_stmt *_Nullable *_Nonnull pstmt, cql_int32 count, ...);
 CQL_EXPORT void cql_multibind_var(cql_code *_Nonnull rc, sqlite3 *_Nonnull db, sqlite3_stmt *_Nullable *_Nonnull pstmt, cql_int32 count, const char *_Nullable vpreds, ...);
 CQL_EXPORT cql_code cql_best_error(cql_code rc);
-CQL_EXPORT void cql_set_encoding(uint8_t *_Nonnull data_types, cql_int32 count, cql_int32 col, cql_bool encode);
 
 typedef struct cql_fetch_info {
   cql_code rc;
@@ -147,12 +145,10 @@ typedef struct cql_fetch_info {
   uint16_t refs_count;
   uint16_t refs_offset;
   uint16_t *_Nullable identity_columns;
-  int16_t encode_context_index;
   cql_int32 rowsize;
   const char *_Nullable autodrop_tables;
   int64_t crc;
   cql_int32 *_Nullable perf_index;
-  cql_object_ref _Nullable encoder;
 } cql_fetch_info;
 
 CQL_EXPORT void cql_multifetch_meta(char *_Nonnull data, cql_fetch_info *_Nonnull info);
@@ -272,24 +268,6 @@ CQL_EXPORT cql_string_ref _Nonnull cql_cursor_format(cql_dynamic_cursor *_Nonnul
 
 // teardown all the internal data for the given result_set
 CQL_EXPORT void cql_result_set_teardown(cql_result_set_ref _Nonnull result_set);
-
-// The normal cql_result_set_teardown() function only frees the directly
-// allocated columns and rows of the result set.  This is no suprise because
-// they're the only one heap allocated in the CQL runtime.
-//
-// This function allows you to set a callback for your result sets
-// when they are finally destroyed so that you can free any extra memory
-// you might have allocated.  This can be particularly useful if the
-// result set has been proxied into some other language and there are
-// wrappers and so forth that need to be taken down.  The code that
-// owns memory for those wrappers can be informed by this callback
-// that the result set is condemned.
-//
-// Of course the particular action will be determined by whatever is
-// wrapping or otherwise holding on to the result set.
-CQL_EXPORT void cql_result_set_set_custom_teardown(
-  cql_result_set_ref _Nonnull result_set,
-  void(*_Nonnull custom_teardown)(cql_result_set_ref _Nonnull result_set));
 
 // retain/release references in a row using the given offset array
 CQL_EXPORT void cql_retain_offsets(void *_Nonnull pv, cql_uint16 refs_count, cql_uint16 refs_offset);
@@ -437,14 +415,6 @@ CQL_EXPORT void cql_result_set_set_blob_col(cql_result_set_ref _Nonnull result_s
 // @param col The column to set the value for.
 // @param new_value the new object value to be set.
 CQL_EXPORT void cql_result_set_set_object_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_object_ref _Nullable new_value);
-
-// Generic is_encoded value getter on base result set object.
-// NOTE: This function should call through to the
-// inline type getters that are passed into the ctor for the result set.
-// @param result_set The cql result_set object.
-// @param col The column to fetch the value for.
-// @return cql_true if the value is sensitive, otherwise cql_false.
-CQL_EXPORT cql_bool cql_result_set_get_is_encoded_col(cql_result_set_ref _Nonnull result_set, cql_int32 col);
 
 // result set metadata management
 CQL_EXPORT void cql_initialize_meta(cql_result_set_meta *_Nonnull meta, cql_fetch_info *_Nonnull info);

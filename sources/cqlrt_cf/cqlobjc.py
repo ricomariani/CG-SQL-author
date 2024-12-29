@@ -32,16 +32,6 @@ def usage():
     )
     sys.exit(0)
 
-# Reference type check
-is_ref_type = {}
-is_ref_type["bool"] = False
-is_ref_type["integer"] = False
-is_ref_type["long"] = False
-is_ref_type["real"] = False
-is_ref_type["object"] = True
-is_ref_type["blob"] = True
-is_ref_type["text"] = True
-
 # Java types for not null cql types
 notnull_types = {}
 notnull_types["bool"] = "cql_bool"
@@ -79,27 +69,6 @@ nullable_conv["real"] = "@"
 nullable_conv["object"] = "(__bridge NSObject *)"
 nullable_conv["blob"] = "(__bridge NSData *)"
 nullable_conv["text"] = "(__bridge NSString *)"
-
-
-# Notnull CQL C types for the given type of fields
-c_notnull_types = {}
-c_notnull_types["bool"] = "cql_bool"
-c_notnull_types["integer"] = "cql_int32"
-c_notnull_types["long"] = "cql_int64"
-c_notnull_types["real"] = "cql_double"
-c_notnull_types["object"] = "cql_object_ref"
-c_notnull_types["blob"] = "cql_blob_ref"
-c_notnull_types["text"] = "cql_string_ref"
-
-# Nullable CQL C types for the given type of fields
-c_nullable_types = {}
-c_nullable_types["bool"] = "cql_nullable_bool"
-c_nullable_types["integer"] = "cql_nullable_int32"
-c_nullable_types["long"] = "cql_nullable_int64"
-c_nullable_types["real"] = "cql_nullable_double"
-c_nullable_types["object"] = "cql_object_ref"
-c_nullable_types["blob"] = "cql_blob_ref"
-c_nullable_types["text"] = "cql_string_ref"
 
 # Storage for the various command line arguments
 cmd_args = {}

@@ -1985,3 +1985,8 @@ on conflict (`col 1`)
 where `col 2` = 1 do update
   set `col 1` = `col 2`;
 
+
+-- parse both forms of select if nothing or null then throw
+
+let x := (select xx if nothing or null throw);
+let x := (select xx if nothing or null then throw);

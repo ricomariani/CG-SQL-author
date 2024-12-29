@@ -2602,3 +2602,7 @@ CURSOR C FOR
   WHERE `col 2` = 1 
   DO UPDATE
     SET `col 1` = `col 2`;
+
+LET x := ( SELECT xx IF NOTHING OR NULL THEN THROW );
+
+LET x := ( SELECT xx IF NOTHING OR NULL THEN THROW );

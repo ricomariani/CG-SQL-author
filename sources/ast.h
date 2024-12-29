@@ -1020,6 +1020,7 @@ AST1(select_core_macro_arg_ref)
 AST1(select_expr_macro_arg);
 AST1(select_expr_macro_arg_ref)
 AST1(select_if_nothing_throw_expr)
+AST1(select_if_nothing_or_null_throw_expr)
 AST1(select_opts)
 AST1(stmt_list_macro_arg);
 AST1(stmt_list_macro_arg_ref);

@@ -19709,3 +19709,43 @@ The statement ending at line XXXX
             | {update_where}
               | {update_orderby}
 
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name x}
+  | {select_if_nothing_or_null_throw_expr}
+    | {select_stmt}
+      | {select_core_list}
+      | | {select_core}
+      |   | {select_expr_list_con}
+      |     | {select_expr_list}
+      |     | | {select_expr}
+      |     |   | {name xx}
+      |     | {select_from_etc}
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
+
+The statement ending at line XXXX
+
+  {let_stmt}
+  | {name x}
+  | {select_if_nothing_or_null_throw_expr}
+    | {select_stmt}
+      | {select_core_list}
+      | | {select_core}
+      |   | {select_expr_list_con}
+      |     | {select_expr_list}
+      |     | | {select_expr}
+      |     |   | {name xx}
+      |     | {select_from_etc}
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
+

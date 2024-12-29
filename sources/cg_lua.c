@@ -1993,6 +1993,62 @@ static void cg_lua_expr_select_if_nothing_or_null(ast_node *ast, CSTR op, charbu
   CG_LUA_CLEANUP_RESULT_VAR();
 }
 
+// This is a nested select expression.  To evaluate we will
+//  * prepare a temporary to hold the result
+//  * generate the bound SQL statement
+//  * extract the exactly one argument into the result variable
+//    which is of exactly the right type
+//  * use that variable as the result.
+//  * if there is no row, or the returned value is null we throw
+// The helper methods take care of sqlite error management.
+static void cg_lua_expr_select_if_nothing_or_null_throw(ast_node *ast, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
+  Contract(is_ast_select_if_nothing_or_null_throw_expr(ast));
+
+  EXTRACT_ANY_NOTNULL(select_stmt, ast->left);
+
+  // SELECT [select_opts] [select_expr_list_con] IF NOTHING THROW
+
+  sem_t sem_type_result = ast->sem->sem_type;
+
+  CG_LUA_SETUP_RESULT_VAR(ast, sem_type_result);
+
+  CHARBUF_OPEN(select_value);
+
+  // the select statement might have a different result type than overall
+  // e.g. (select an_int from somewhere if nothing 2.5), the overall result is real
+  int32_t stmt_index = cg_lua_expr_select_frag(select_stmt, &select_value);
+
+  // we're inside of the "if _rc_ == CQL_ROW then" case
+  // in this variation we have to first see if the result is null before we use it
+  bprintf(cg_main_output, "end\n");
+  bprintf(cg_main_output, "if _rc_ == CQL_DONE or %s == nil then\n", select_value.ptr);
+  bprintf(cg_main_output, "  cql_error_trace(_rc_, _db_)\n");
+  bprintf(cg_main_output, "  goto %s\n", lua_error_target);
+  bprintf(cg_main_output, "else\n  ");
+  // ok to use the value we fetched, go ahead an copy it to its final destination
+  // note this may change the type but only in a compatible way
+  cg_lua_store(cg_main_output, result_var.ptr, sem_type_result, sem_type_result, select_value.ptr);
+  bprintf(cg_main_output, "end\n");
+  bprintf(cg_main_output, "_rc_ = CQL_OK\n");
+
+  CHARBUF_OPEN(temp_stmt);
+  CG_TEMP_STMT_NAME(stmt_index, &temp_stmt);
+
+  // if statement index 0 then we're not re-using this statement in a loop
+  if (stmt_index == 0) {
+    bprintf(cg_main_output, "cql_finalize_stmt(%s)\n", temp_stmt.ptr);
+    bprintf(cg_main_output, "%s = nil\n", temp_stmt.ptr);
+  }
+  else {
+    bprintf(cg_main_output, "cql_reset_stmt(%s)\n", temp_stmt.ptr);
+  }
+
+  CHARBUF_CLOSE(temp_stmt);
+  CHARBUF_CLOSE(select_value);
+
+  CG_LUA_CLEANUP_RESULT_VAR();
+}
+
 // This is the elementary piece of the if-then construct, it's one condition
 // and one statement list.  It can happen in the context of the top level
 // if or any else-if.  In lua 0 is not falsey so we have to be sure to
@@ -3397,10 +3453,14 @@ static int32_t cg_lua_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_
     }
     bprintf(cg_main_output, ")\n");
   }
-  cg_lua_error_on_not_sqlite_ok();
 
   if (reusing_statement) {
-    bprintf(cg_main_output, "end\n  ");
+    bprintf(cg_main_output, "  ");
+    cg_lua_error_on_not_sqlite_ok();
+    bprintf(cg_main_output, "end\n");
+  }
+  else {
+    cg_lua_error_on_not_sqlite_ok();
   }
 
   CHARBUF_CLOSE(temp_stmt);
@@ -5639,6 +5699,7 @@ cql_noexport void cg_lua_init(void) {
   LUA_EXPR_INIT(select_if_nothing_expr, cg_lua_expr_select_if_nothing, "SELECT", LUA_EXPR_PRI_ROOT);
   LUA_EXPR_INIT(select_if_nothing_throw_expr, cg_lua_expr_select_if_nothing_throw, "SELECT", LUA_EXPR_PRI_ROOT);
   LUA_EXPR_INIT(select_if_nothing_or_null_expr, cg_lua_expr_select_if_nothing_or_null, "SELECT", LUA_EXPR_PRI_ROOT);
+  LUA_EXPR_INIT(select_if_nothing_or_null_throw_expr, cg_lua_expr_select_if_nothing_or_null_throw, "SELECT", LUA_EXPR_PRI_ROOT);
   LUA_EXPR_INIT(with_select_stmt, cg_lua_expr_select, "WITH...SELECT", LUA_EXPR_PRI_ROOT);
   LUA_EXPR_INIT(is, cg_lua_is_or_is_not, "==", LUA_EXPR_PRI_EQ_NE);
   LUA_EXPR_INIT(is_not, cg_lua_is_or_is_not, "~=", LUA_EXPR_PRI_EQ_NE);

@@ -3911,6 +3911,33 @@ begin
   insert into tdata values(2, null, "x");
   set `value one` := (select v from tdata where id == 2 if nothing or null then -1);
   EXPECT_EQ!(`value one`, -1);
+
+  let caught := 0;
+  try
+    t1 := (select t from tdata if nothing or null then throw);
+  catch
+    caught := 1;
+  end;
+
+  EXPECT_EQ!(caught, 1);
+
+  try
+    t1 := (select t from tdata where 0 if nothing or null then throw);
+  catch
+    caught := 2;
+  end;
+
+  EXPECT_EQ!(caught, 2);
+
+  try
+    let id_out := (select id from tdata limit 1 if nothing or null then throw);
+  catch
+    caught := 3;
+  end;
+
+  EXPECT_EQ!(id_out, 1);
+  EXPECT_EQ!(caught, 2);
+
 end);
 
 proc simple_select()

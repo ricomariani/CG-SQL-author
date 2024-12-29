@@ -5383,6 +5383,31 @@ begin
     returning `col 1`, `col 2`;
 end;
 
+-- TEST: loop version of if nothing or null throw
+-- +  LET x := ( SELECT a_local IF NOTHING OR NULL THEN THROW );
+-- + _rc_ = cql_multibind(_db_, _temp1_stmt, "i", a_local)
+-- + if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+-- + _rc_ = cql_step(_temp1_stmt)
+-- + if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+-- + if _rc_ == CQL_ROW then
+-- +   _tmp_n_int_1 = cql_get_value(_temp1_stmt, 0)
+-- + end
+-- + if _rc_ == CQL_DONE or _tmp_n_int_1 == nil then
+-- +   cql_error_trace(_rc_, _db_)
+-- +   goto cql_cleanup
+-- + else
+-- +   x = _tmp_n_int_1
+-- + end
+create proc select_if_nothing_or_null_throw(a_local int)
+begin
+  let i := 0;
+  while i < 5
+  begin
+    i += 1;
+    let x := (select a_local if nothing or null throw);
+  end;
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

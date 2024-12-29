@@ -3030,6 +3030,52 @@ static void cg_expr_select_if_nothing_or_null(ast_node *ast, CSTR op, charbuf *i
   CG_CLEANUP_RESULT_VAR();
 }
 
+// This is a nested select expression.  To evaluate we will
+//  * prepare a temporary to hold the result
+//  * generate the bound SQL statement
+//  * extract the exactly one argument into the result variable
+//    which is of exactly the right type
+//  * use that variable as the result.
+//  * if there is no row, or the returned value is null then we throw
+// The helper methods take care of sqlite error management.
+static void cg_expr_select_if_nothing_or_null_throw(ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
+  Contract(is_ast_select_if_nothing_or_null_throw_expr(ast));
+
+  EXTRACT_ANY_NOTNULL(select_stmt, ast->left);
+
+  // SELECT [select_opts] [select_expr_list_con] IF NOTHING OR NULL THROW
+
+  sem_t sem_type_result = ast->sem->sem_type;
+
+  CG_SETUP_RESULT_VAR(ast, sem_type_result);
+
+  CHARBUF_OPEN(select_is_null);
+  CHARBUF_OPEN(select_value);
+
+  // the select statement might have a different result type than overall
+  // e.g. (select an_int from somewhere if nothing 2.5), the overall result is real
+  int32_t stmt_index = cg_expr_select_frag(select_stmt, &select_is_null, &select_value);
+
+  // we're inside of the "if (__rc__ == SQLITE_ROW) {" case
+  // in this variation we have to first see if the result is null before we use it
+  bprintf(cg_main_output, "}\n");
+  bprintf(cg_main_output, "if (_rc_ == SQLITE_DONE || %s) {\n  ", select_is_null.ptr);
+  bprintf(cg_main_output, "  cql_error_trace();\n");
+  bprintf(cg_main_output, "  goto %s;\n", error_target);
+  bprintf(cg_main_output, "} else { \n  ");
+  // ok to use the value we fetched, go ahead an copy it to its final destination
+  // note this may change the type but only in a compatible way
+  cg_store(cg_main_output, result_var.ptr, sem_type_result, sem_type_result, select_is_null.ptr, select_value.ptr);
+  bprintf(cg_main_output, "}\n");
+  bprintf(cg_main_output, "_rc_ = SQLITE_OK;\n");
+  cg_temp_stmt_cleanup(stmt_index, cg_main_output);
+
+  CHARBUF_CLOSE(select_value);
+  CHARBUF_CLOSE(select_is_null);
+
+  CG_CLEANUP_RESULT_VAR();
+}
+
 // This is the elementary piece of the if-then construct, it's one condition
 // and one statement list.  It can happen in the context of the top level
 // if or any else-if.  The conditional generated requires either simple true
@@ -8750,6 +8796,7 @@ cql_noexport void cg_c_init(void) {
   EXPR_INIT(select_stmt, cg_expr_select, "SELECT", C_EXPR_PRI_ROOT);
   EXPR_INIT(select_if_nothing_expr, cg_expr_select_if_nothing, "SELECT", C_EXPR_PRI_ROOT);
   EXPR_INIT(select_if_nothing_throw_expr, cg_expr_select_if_nothing_throw, "SELECT", C_EXPR_PRI_ROOT);
+  EXPR_INIT(select_if_nothing_or_null_throw_expr, cg_expr_select_if_nothing_or_null_throw, "SELECT", C_EXPR_PRI_ROOT);
   EXPR_INIT(select_if_nothing_or_null_expr, cg_expr_select_if_nothing_or_null, "SELECT", C_EXPR_PRI_ROOT);
   EXPR_INIT(with_select_stmt, cg_expr_select, "WITH...SELECT", C_EXPR_PRI_ROOT);
   EXPR_INIT(is, cg_expr_is, "IS", C_EXPR_PRI_EQ_NE);

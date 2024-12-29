@@ -24809,6 +24809,7 @@ static void sem_expr_select(ast_node *ast, CSTR cstr) {
   bool_t in_select_if_nothing =
      is_ast_select_if_nothing_throw_expr(parent) ||
      is_ast_select_if_nothing_expr(parent) ||
+     is_ast_select_if_nothing_or_null_throw_expr(parent) ||
      is_ast_select_if_nothing_or_null_expr(parent);
 
   if (in_select_if_nothing && current_expr_context != SEM_EXPR_CONTEXT_NONE) {
@@ -24904,6 +24905,17 @@ static void sem_expr_select_if_nothing_throw(ast_node *ast, CSTR op) {
   EXTRACT_ANY_NOTNULL(select_expr, ast->left);
   sem_expr_select(select_expr, op);
   ast->sem = select_expr->sem;
+}
+
+// just like the above except we can mark the return type to be not null
+static void sem_expr_select_if_nothing_or_null_throw(ast_node *ast, CSTR op) {
+  Contract(is_ast_select_if_nothing_or_null_throw_expr(ast));
+  EXTRACT_ANY_NOTNULL(select_expr, ast->left);
+  sem_expr_select(select_expr, op);
+  ast->sem = select_expr->sem;
+  if (!is_error(ast)) {
+    sem_add_flags(ast, SEM_TYPE_NOTNULL);
+  }
 }
 
 // Despite the unusual nature of SELECT .. IF NOTHING ... the net semantic rules
@@ -26391,6 +26403,7 @@ cql_noexport void sem_main(ast_node *ast) {
   EXPR_INIT(or, sem_binary_logical, "OR");
   EXPR_INIT(select_stmt, sem_expr_select, "SELECT");
   EXPR_INIT(select_if_nothing_throw_expr, sem_expr_select_if_nothing_throw, "IF NOTHING THROW");
+  EXPR_INIT(select_if_nothing_or_null_throw_expr, sem_expr_select_if_nothing_or_null_throw, "IF NOTHING OR NULL THROW");
   EXPR_INIT(select_if_nothing_expr, sem_expr_select_if_nothing, "IF NOTHING");
   EXPR_INIT(select_if_nothing_or_null_expr, sem_expr_select_if_nothing, "IF NOTHING OR NULL");
   EXPR_INIT(with_select_stmt, sem_expr_select, "WITH...SELECT");

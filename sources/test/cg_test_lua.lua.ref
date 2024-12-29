@@ -8699,9 +8699,9 @@ function stmt_in_loop(_db_)
     if _temp1_stmt == nil then
       _rc_, _temp1_stmt = cql_prepare(_db_, 
       "DELETE FROM foo WHERE id = ?")
-    if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+      if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
     end
-      _rc_ = cql_multibind(_db_, _temp1_stmt, "I", i)
+    _rc_ = cql_multibind(_db_, _temp1_stmt, "I", i)
     if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
     _rc_ = cql_step(_temp1_stmt)
     if _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -8812,9 +8812,9 @@ function select_in_loop(_db_)
     if _temp1_stmt == nil then
       _rc_, _temp1_stmt = cql_prepare(_db_, 
       "SELECT 1")
-    if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+      if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
     end
-      _rc_ = cql_step(_temp1_stmt)
+    _rc_ = cql_step(_temp1_stmt)
     if _rc_ ~= CQL_ROW then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
       z = cql_get_value(_temp1_stmt, 0)
     cql_reset_stmt(_temp1_stmt)
@@ -8851,9 +8851,9 @@ function select_if_nothing_in_loop(_db_)
     if _temp1_stmt == nil then
       _rc_, _temp1_stmt = cql_prepare(_db_, 
       "SELECT 1")
-    if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+      if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
     end
-      _rc_ = cql_step(_temp1_stmt)
+    _rc_ = cql_step(_temp1_stmt)
     if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
     if _rc_ == CQL_ROW then
       _tmp_int_1 = cql_get_value(_temp1_stmt, 0)
@@ -8895,9 +8895,9 @@ function select_if_nothing_or_null_in_loop(_db_)
     if _temp1_stmt == nil then
       _rc_, _temp1_stmt = cql_prepare(_db_, 
       "SELECT 1")
-    if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+      if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
     end
-      _rc_ = cql_step(_temp1_stmt)
+    _rc_ = cql_step(_temp1_stmt)
     if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
     if _rc_ == CQL_ROW then
       _tmp_int_1 = cql_get_value(_temp1_stmt, 0)
@@ -9213,6 +9213,61 @@ function upsert_returning_with_backing(_db_)
 ::cql_cleanup::
   cql_finalize_stmt(C_stmt)
   C_stmt = nil
+  return _rc_
+end
+
+-- The statement ending at line XXXX
+
+--[[
+PROC select_if_nothing_or_null_throw (a_local INT)
+BEGIN
+  LET i := 0;
+  WHILE i < 5
+  BEGIN
+    SET i := i + 1;
+    LET x := ( SELECT a_local IF NOTHING OR NULL THEN THROW );
+  END;
+END;
+--]]
+
+function select_if_nothing_or_null_throw(_db_, a_local)
+  local _rc_ = CQL_OK
+  local i = 0
+  local _tmp_n_int_1
+  local x = 0
+  local _temp1_stmt = nil
+
+  i = 0
+  while true
+  do
+    if not(i < 5) then break end
+    i = i + 1
+    if _temp1_stmt == nil then
+      _rc_, _temp1_stmt = cql_prepare(_db_, 
+      "SELECT ?")
+      if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+    end
+    _rc_ = cql_multibind(_db_, _temp1_stmt, "i", a_local)
+    if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+    _rc_ = cql_step(_temp1_stmt)
+    if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+    if _rc_ == CQL_ROW then
+      _tmp_n_int_1 = cql_get_value(_temp1_stmt, 0)
+    end
+    if _rc_ == CQL_DONE or _tmp_n_int_1 == nil then
+      cql_error_trace(_rc_, _db_)
+      goto cql_cleanup
+    else
+      x = _tmp_n_int_1
+    end
+    _rc_ = CQL_OK
+    cql_reset_stmt(_temp1_stmt)
+  end
+  _rc_ = CQL_OK
+
+::cql_cleanup::
+  cql_finalize_stmt(_temp1_stmt)
+  _temp1_stmt = nil
   return _rc_
 end
 local this_is_the_end = 0

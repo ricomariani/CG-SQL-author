@@ -5,7 +5,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-# cqljava.py -> converts CQL JSON format into java classes for interop
+# cqlobjc.py -> converts CQL JSON format into interop functions for Objective-C
 #
 # The CQL JSON format is documented here:
 #   https://cgsql.dev/cql-guide/ch13
@@ -180,12 +180,8 @@ def emit_proc_c_objc(proc, attributes):
     print(f"  return {p_name}_row_equal({p_name}_from_{CGS}{p_name}(resultSet1){r1_arg}, {p_name}_from_{CGS}{p_name}(resultSet2){r2_arg});")
     print("}")
 
-# Here we emit all the information for the procedures that are known
-# this is basic info about the name and arguments as well as dependencies.
-# For any chunk of JSON that has the "dependencies" sub-block
-# (see CQL JSON docs) we emit the table dependency info
-# by following the "usesTables" data.  Note that per docs
-# this entry is not optional!
+# emit all the procedures in a section, any of the sections might have projections
+# typically it's just "queries" but there's no need to assume that, we can just look
 def emit_proc_section(section, s_name):
     for proc in section:
         # we unwrap the attributes array into a map for easy access

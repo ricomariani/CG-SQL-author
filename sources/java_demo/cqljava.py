@@ -342,7 +342,6 @@ def emit_proc_c_metadata(proc, attributes):
         "ref_field_count": ref_field_count
     }
 
-
 # This emits the main body of the C JNI function, this includes
 # * the JNI entry point for the procedure
 # * the call to the procedure
@@ -909,13 +908,8 @@ def emit_proc_java_projection(proc, attributes):
         print("    }")
         print("  }\n")
 
-
-# Here we emit all the information for the procedures that are known
-# this is basic info about the name and arguments as well as dependencies.
-# For any chunk of JSON that has the "dependencies" sub-block
-# (see CQL JSON docs) we emit the table dependency info
-# by following the "usesTables" data.  Note that per docs
-# this entry is not optional!
+# emit all the procedures in a section, the most interesting are those
+# that have a projection, those are the ones that return a result set.
 def emit_proc_section(section, s_name):
     emit_c = cmd_args["emit_c"]
     for proc in section:

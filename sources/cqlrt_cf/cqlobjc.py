@@ -27,8 +27,8 @@ def usage():
     print(
         "Usage: input.json [options] >result.h\n"
         "\n"
-        "--cql_header header_file  (this is mandatory)\n"
-        "    specifies the CQL generated header file to include in the generated C code\n"
+        "--objc_c_include_path header_file  (this is mandatory)\n"
+        "    specifies the CQL generated header file for C to include in the generated ObjC code\n"
     )
     sys.exit(0)
 
@@ -37,7 +37,7 @@ notnull_types = {}
 notnull_types["bool"] = "cql_bool"
 notnull_types["integer"] = "cql_int32"
 notnull_types["long"] = "cql_int64"
-notnull_types["real"] = "double"
+notnull_types["real"] = "cql_double"
 notnull_types["object"] = "NSObject *"
 notnull_types["blob"] = "NSData *"
 notnull_types["text"] = "NSString *"
@@ -103,10 +103,16 @@ def emit_result_set_projection(proc, attributes):
         row_arg = "" if hasOutResult else ", row"
         row_param = "" if hasOutResult else ", cql_int32 row"
 
-        print(f"static inline {objc_type} {CGS}{p_name}_get_{c_name}({CGS}{p_name} *resultSet{row_param})")
+        sp = "" if objc_type.endswith("*") else " "
+
+        print(f"static inline {objc_type}{sp}{CGS}{p_name}_get_{c_name}({CGS}{p_name} *resultSet{row_param})")
         print("{")
         print(f"  {p_name}_result_set_ref cResultSet = {p_name}_from_{CGS}{p_name}(resultSet);")
-        print(f"  return {conv}{p_name}_get_{c_name}(cResultSet{row_arg}){bool_fix};")
+
+        if conv == "@":            
+            print(f"  return {p_name}_get_{c_name}_is_null(cResultSet{row_arg}) ? nil : @({p_name}_get_{c_name}_value(cResultSet{row_arg}));")
+        else:
+            print(f"  return {conv}{p_name}_get_{c_name}(cResultSet{row_arg}){bool_fix};")
         print("}")
         print("")
 
@@ -154,6 +160,7 @@ def emit_proc_c_objc(proc, attributes):
     print("{")
     print(f"  return {p_name}_result_count({p_name}_from_{CGS}{p_name}(resultSet));")
     print("}")
+    print("")
 
     # the copy method isn't cheap so it's often elided
     if "cql:generate_copy"  in attributes:
@@ -164,21 +171,26 @@ def emit_proc_c_objc(proc, attributes):
         print(f"  cql_result_set_note_ownership_transferred(copy);")
         print(f"  return (__bridge_transfer {CGS}{p_name} *)copy;")
         print("}")
+        print("")
 
-    print(f"static inline NSUInteger {CGS}{p_name}_row_hash({CGS}{p_name} *resultSet{row_param})")
+    row = "" if hasOutResult else "_row"
+
+    print(f"static inline NSUInteger {CGS}{p_name}{row}_hash({CGS}{p_name} *resultSet{row_param})")
     print("{")
-    print(f"  return {p_name}_row_hash({p_name}_from_{CGS}{p_name}(resultSet){row_arg});")
+    print(f"  return {p_name}{row}_hash({p_name}_from_{CGS}{p_name}(resultSet){row_arg});")
     print("}")
+    print("")
 
     r1_arg = "" if hasOutResult else ", row1"
     r2_arg = "" if hasOutResult else ", row2"
     r1_param = "" if hasOutResult else ", cql_int32 row1"
     r2_param = "" if hasOutResult else ", cql_int32 row2"
 
-    print(f"static inline BOOL {CGS}{p_name}_row_equal({CGS}{p_name} *resultSet1{r1_param}, {CGS}{p_name} *resultSet2{r2_param})")
+    print(f"static inline BOOL {CGS}{p_name}{row}_equal({CGS}{p_name} *resultSet1{r1_param}, {CGS}{p_name} *resultSet2{r2_param})")
     print("{")
-    print(f"  return {p_name}_row_equal({p_name}_from_{CGS}{p_name}(resultSet1){r1_arg}, {p_name}_from_{CGS}{p_name}(resultSet2){r2_arg});")
+    print(f"  return {p_name}{row}_equal({p_name}_from_{CGS}{p_name}(resultSet1){r1_arg}, {p_name}_from_{CGS}{p_name}(resultSet2){r2_arg});")
     print("}")
+    print("")
 
 # emit all the procedures in a section, any of the sections might have projections
 # typically it's just "queries" but there's no need to assume that, we can just look
@@ -192,8 +204,10 @@ def emit_proc_section(section, s_name):
             v = attr["value"]
             attributes[k] = v
 
+        suppressed = "cql:suppress_result_set" in attributes or "cql:private" in attributes or "cql:suppress_getters" in attributes
+
         # no codegen for private methods
-        if "cql:private" not in attributes:
+        if not suppressed:
             # emit the C code for the JNI entry points and the supporting metadata
             emit_proc_c_objc(proc, attributes)
 
@@ -212,17 +226,14 @@ def main():
     with open(jfile) as json_file:
         data = json.load(json_file)
 
-        # pull the flags, starting with whether we will be emitting C or java
+        # pull the flags out of the command line
         i = 2
-        if sys.argv[i] == "--emit_c":
-            cmd_args["emit_c"] = True
-            i += 1
 
         # these are the various fragments we might need, we need all the parts
         # to generate the C.  The first two are enough for the java, there are
         # defaults but they are kind of useless.
         while i + 2 <= len(sys.argv):
-            if sys.argv[i] == "--cql_header":
+            if sys.argv[i] == "--objc_c_include_path":
                 cmd_args["cql_header"] = sys.argv[i + 1]
             else:
                 usage()

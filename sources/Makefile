@@ -50,7 +50,7 @@ PROGRAMS = $O/cql $O/cqlrt.o $O/cqltest.o
 all: ${PROGRAMS}
 
 OBJECTS = $O/cql.y.o $O/cql.o $O/ast.o $O/gen_sql.o $O/sem.o $O/list.o $O/bytebuf.o $O/charbuf.o \
-          $O/cg_common.o $O/cg_c.o $O/cg_objc.o $O/symtab.o $O/compat.o \
+          $O/cg_common.o $O/cg_c.o $O/symtab.o $O/compat.o \
           $O/cg_schema.o $O/crc64xz.o $O/sha256.o $O/cg_json_schema.o $O/cg_test_helpers.o $O/encoders.o \
           $O/unit_tests.o $O/cg_query_plan.o ${O}/minipool.o $O/rt.o $O/eval.o \
           $O/rewrite.o $O/printf.o $O/flow.o $O/cg_stats.o $O/cg_lua.o
@@ -129,8 +129,6 @@ $O/bytebuf.o: bytebuf.c bytebuf.h cql.h
 $O/cg_common.o: cg_common.c cg_common.h ast.h charbuf.h cql.h symtab.h sem.h
 
 $O/cg_c.o: cg_c.c cg_c.h cg_common.h ast.h sem.h charbuf.h list.h cql.h ast.h
-
-$O/cg_objc.o: cg_objc.c cg_objc.h cg_common.h ast.h sem.h charbuf.h list.h cql.h ast.h
 
 $O/cg_test_helpers.o: cg_test_helpers.c cg_test_helpers.h cg_common.h sem.h charbuf.h list.h cql.h ast.h
 

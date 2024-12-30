@@ -36,9 +36,6 @@ Result Types (--rt *) These are the various outputs the compiler can produce.
 --rt lua
   this is the lua compilation of the sql file
   requires one output files (foo.lua)
---rt objc
-  Objective-C wrappers for result sets produced by the stored procedures in the input
-  requires one output file (foo.h)
 --rt json_schema
   produces JSON output suitable for consumption by downstream codegen tools
   requires one output file (foo.json)
@@ -71,8 +68,6 @@ Result Types (--rt *) These are the various outputs the compiler can produce.
   for the C codegen runtimes, headers will be referenced as #include <namespace/file.h>
 --c_include_path
   for C codegen runtimes this will be used to create the #include directive at the start of the C
---objc_c_include_path
-  for ObjC codegen runtimes this represents the header of the C generated code for the same CQL source file
 --cqlrt foo.h
   emits foo.h into the C output instead of cqlrt.h
 --generate_exports

@@ -102,7 +102,6 @@ typedef struct cmd_options {
   uint32_t exclude_regions_count;
   int32_t min_schema_version;
   char *c_include_path;
-  char *objc_c_include_path;
   char *c_include_namespace;
   char *cqlrt;
   bool_t dev;                           // option use to activate features in development or dev features

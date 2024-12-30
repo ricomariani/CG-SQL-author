@@ -51,7 +51,6 @@
 #include "cg_json_schema.h"
 #include "cg_test_helpers.h"
 #include "cg_query_plan.h"
-#include "cg_objc.h"
 #include "gen_sql.h"
 #include "sem.h"
 #include "encoders.h"
@@ -2990,7 +2989,7 @@ static void parse_cmd(int argc, char **argv) {
       a = gather_arg_param(a, argc, argv, &options.cqlrt, "for the name of the runtime header");
     }
     else if (strcmp(arg, "--rt") == 0) {
-      a = gather_arg_param(a, argc, argv, &options.rt, "(e.g., c, objc, json_schema)");
+      a = gather_arg_param(a, argc, argv, &options.rt, "(e.g., c, lua, json_schema)");
       rt = find_rtdata(options.rt);
       if (!rt) {
         cql_error("unknown cg runtime '%s'\n", options.rt);
@@ -3033,9 +3032,6 @@ static void parse_cmd(int argc, char **argv) {
     }
     else if (strcmp(arg, "--c_include_path") == 0) {
       a = gather_arg_param(a, argc, argv, &options.c_include_path, "for the include path of a C header");
-    }
-    else if (strcmp(arg, "--objc_c_include_path") == 0) {
-      a = gather_arg_param(a, argc, argv, &options.objc_c_include_path, "for the include path of a C header");
     }
     else if (strcmp(arg, "--c_include_namespace") == 0) {
       a = gather_arg_param(a, argc, argv, &options.c_include_namespace, "for the C include namespace");
@@ -3783,9 +3779,6 @@ static void cql_usage() {
     "--rt lua\n"
     "  this is the lua compilation of the sql file\n"
     "  requires one output files (foo.lua)\n"
-    "--rt objc\n"
-    "  Objective-C wrappers for result sets produced by the stored procedures in the input\n"
-    "  requires one output file (foo.h)\n"
     "--rt json_schema\n"
     "  produces JSON output suitable for consumption by downstream codegen tools\n"
     "  requires one output file (foo.json)\n"
@@ -3818,8 +3811,6 @@ static void cql_usage() {
     "  for the C codegen runtimes, headers will be referenced as #include <namespace/file.h>\n"
     "--c_include_path\n"
     "  for C codegen runtimes this will be used to create the #include directive at the start of the C\n"
-    "--objc_c_include_path\n"
-    "  for ObjC codegen runtimes this represents the header of the C generated code for the same CQL source file\n"
     "--cqlrt foo.h\n"
     "  emits foo.h into the C output instead of cqlrt.h\n"
     "--generate_exports\n"

@@ -428,32 +428,8 @@ code_gen_c_test() {
   fi
 }
 
-code_gen_objc_test() {
-  echo '--------------------------------- STAGE 7 -- OBJ-C CODE GEN TEST'
-  echo running codegen test
-  if ! ${CQL} --dev --test --cg "$O/cg_test_objc.out" --objc_c_include_path Test/TestFile.h --in "$T/cg_test.sql" --rt objc 2>"$O/cg_test_objc.err"; then
-    echo "ERROR:"
-    cat "$O/cg_test_objc.err"
-    failed
-  fi
-
-  echo validating codegen
-  echo "  check that the objc_c_include_path argument was is used"
-  if ! grep "<Test/TestFile.h>" "$O/cg_test_objc.out"; then
-    echo "<Test/TestFile.h>" should appear in the output
-    echo check "$O/cg_test_objc.out" for this pattern and root cause.
-    failed
-  fi
-
-  echo validating codegen
-  echo "  computing diffs (empty if none)"
-
-  on_diff_exit cg_test_objc.out
-  on_diff_exit cg_test_objc.err
-}
-
 assorted_errors_test() {
-  echo '--------------------------------- STAGE 8 -- FAST FAIL CASES'
+  echo '--------------------------------- STAGE 6 -- FAST FAIL CASES'
   echo running various failure cases that cause no output
 
   # the output path doesn't exist, should cause an error
@@ -474,32 +450,12 @@ assorted_errors_test() {
 
   on_diff_exit unwriteable.err
 
-  # wrong number of args specified in --cg (for objc)
-
-  if ${CQL} --dev --cg "$O/__temp" "$O/__temp2" --in "$T/cg_test.sql" --rt objc 2>"$O/cg_1_2.err"; then
-    echo "objc rt should require 1 files for the cg param but two were passed, should have failed"
-    failed
-  fi
-
-  # semantic errors should abort output (we'll not try to write)
-
-  on_diff_exit cg_1_2.err
-
   if ${CQL} --cg "$O/__temp" /xx/yy/zz --in "$T/semantic_error.sql" 2>"$O/sem_abort.err"; then
     echo "simple semantic error to abort output -- failed"
     failed
   fi
 
   on_diff_exit sem_abort.err
-
-  # no result sets in the input for objc should result in empty output, not errors
-
-  if ! ${CQL} --cg "$O/__temp" --in "$T/noresult.sql" --objc_c_include_path dummy --rt objc 2>"$O/objc_no_results.err"; then
-    echo "no result sets in output objc case, should not fail"
-    failed
-  fi
-
-  on_diff_exit objc_no_results.err
 
   # bogus arg should report error
 
@@ -573,15 +529,6 @@ assorted_errors_test() {
 
   on_diff_exit global_proc_missing.err
 
-  # objc_c_include_path had no path
-
-  if ${CQL} --objc_c_include_path 2>"$O/objc_include_missing.err"; then
-    echo "failed to require an include path with --objc_c_include_path"
-    failed
-  fi
-
-  on_diff_exit objc_include_missing.err
-
   # --in arg missing
 
   if ${CQL} --in 2>"$O/in_arg_missing.err"; then
@@ -602,7 +549,7 @@ assorted_errors_test() {
 }
 
 schema_migration_test() {
-  echo '--------------------------------- STAGE 9 -- SCHEMA MIGRATION TESTS'
+  echo '--------------------------------- STAGE 7 -- SCHEMA MIGRATION TESTS'
   echo running semantic analysis for migration test
   if ! sem_check --sem --ast --in "$T/sem_test_migrate.sql" >"$O/sem_test_migrate.out" 2>"$O/sem_test_migrate.err"; then
     echo "CQL semantic analysis returned unexpected error code"
@@ -751,7 +698,7 @@ schema_migration_test() {
 }
 
 misc_cases() {
-  echo '--------------------------------- STAGE 10 -- MISC CASES'
+  echo '--------------------------------- STAGE 8 -- MISC CASES'
   echo running usage test
   if ! ${CQL} >"$O/usage.out" 2>"$O/usage.err"; then
     echo usage test failed
@@ -845,18 +792,11 @@ misc_cases() {
     failed
   fi
 
-  echo "  check that the objc_c_include_path argument is provided in arguments"
-  if ${CQL} --test --cg "$O/cg_test_objc.out" --in "$T/cg_test.sql" --rt objc 2>"$O/c_include_needed.err"; then
-    echo c_include is required for --rt objc
-    failed
-  fi
-
-  on_diff_exit c_include_needed.err
-
   if ! grep "Generated from test/cg_test_generated_from.sql:21" "$O/cg_test_generated_from.h" >/dev/null; then
     echo Generated from text did not appear in the header output.
     failed
   fi
+
   if ! grep "Generated from test/cg_test_generated_from.sql:21" "$O/cg_test_generated_from.c" >/dev/null; then
     echo Generated from text did not appear in the implementation output.
     failed
@@ -903,7 +843,7 @@ json_validate() {
 }
 
 json_schema_test() {
-  echo '--------------------------------- STAGE 11 -- JSON SCHEMA TEST'
+  echo '--------------------------------- STAGE 9 -- JSON SCHEMA TEST'
   echo running json schema test
   if ! ${CQL} --test --cg "$O/cg_test_json_schema.out" --in "$T/cg_test_json_schema.sql" --rt json_schema 2>"$O/cg_test_json_schema.err"; then
     echo "ERROR:"
@@ -926,7 +866,7 @@ json_schema_test() {
 }
 
 test_helpers_test() {
-  echo '--------------------------------- STAGE 12 -- TEST HELPERS TEST'
+  echo '--------------------------------- STAGE 10 -- TEST HELPERS TEST'
   echo running test builders test
   if ! ${CQL} --test --cg "$O/cg_test_test_helpers.out" --in "$T/cg_test_test_helpers.sql" --rt test_helpers 2>"$O/cg_test_test_helpers.err"; then
     echo "ERROR:"
@@ -970,7 +910,7 @@ test_helpers_test() {
 }
 
 run_test() {
-  echo '--------------------------------- STAGE 13 -- RUN CODE TEST'
+  echo '--------------------------------- STAGE 11 -- RUN CODE TEST'
 
   if ! ${CQL} --nolines --cg "$O/run_test.h" "$O/run_test.c" --in "$T/run_test.sql" --global_proc cql_startup --rt c; then
     echo codegen failed.
@@ -1035,14 +975,14 @@ run_test() {
 }
 
 upgrade_test() {
-  echo '--------------------------------- STAGE 14 -- SCHEMA UPGRADE TEST'
+  echo '--------------------------------- STAGE 12 -- SCHEMA UPGRADE TEST'
   if ! upgrade/upgrade_test.sh "${TEST_COVERAGE_ARGS}"; then
     failed
   fi
 }
 
 query_plan_test() {
-  echo '--------------------------------- STAGE 15 -- TEST QUERY PLAN'
+  echo '--------------------------------- STAGE 13 -- TEST QUERY PLAN'
 
   echo semantic analysis
   if ! ${CQL} --sem --ast --dev --in "$T/cg_test_query_plan.sql" >"$O/__temp" 2>"$O/cg_test_query_plan.err"; then
@@ -1153,7 +1093,7 @@ query_plan_test() {
 }
 
 line_number_test() {
-  echo '--------------------------------- STAGE 16 -- TEST LINE DIRECTIVES'
+  echo '--------------------------------- STAGE 14 -- TEST LINE DIRECTIVES'
 
   echo "Checking for presence any # line directives"
   if ! ${CQL} --cg "$O/cg_test_generated_from.h" "$O/cg_test_generated_from.c" "$O/cg_test_generated_from.out" --in "$T/cg_test_generated_from.sql" 2>"$O/cg_test_generated_from.err"; then
@@ -1197,7 +1137,7 @@ line_number_test() {
 }
 
 stats_test() {
-  echo '--------------------------------- STAGE 17 -- STATS OUTPUT TEST'
+  echo '--------------------------------- STAGE 15 -- STATS OUTPUT TEST'
   echo running status test
   if ! ${CQL} --cg "$O/stats.csv" --in "$T/stats_test.sql" --rt stats 2>"$O/stats_test.err"; then
     echo "ERROR:"
@@ -1210,7 +1150,7 @@ stats_test() {
 }
 
 amalgam_test() {
-  echo '--------------------------------- STAGE 18 -- TEST AMALGAM'
+  echo '--------------------------------- STAGE 16 -- TEST AMALGAM'
 
   if ! ("./$O/amalgam_test" "$T/cql_amalgam_test_success.sql" "$T/cql_amalgam_test_semantic_error.sql" "$T/cql_amalgam_test_syntax_error.sql" >"$O/cql_amalgam_test.out" 2>"$O/cql_amalgam_test.err"); then
     cat "$O/cql_amalgam_test.err"
@@ -1232,7 +1172,7 @@ unit_tests() {
 }
 
 code_gen_lua_test() {
-  echo '--------------------------------- STAGE 19 -- LUA CODE GEN TEST'
+  echo '--------------------------------- STAGE 17 -- LUA CODE GEN TEST'
   echo running codegen test
   if ! ${CQL} --dev --test --cg "$O/cg_test_lua.lua" --in "$T/cg_test_lua.sql" --global_proc cql_startup --rt lua 2>"$O/cg_test_lua.err"; then
     echo "ERROR:"
@@ -1263,7 +1203,7 @@ code_gen_lua_test() {
 }
 
 dot_test() {
-  echo '--------------------------------- STAGE 20 -- .DOT OUTPUT TEST'
+  echo '--------------------------------- STAGE 18 -- .DOT OUTPUT TEST'
   echo running "$T/dottest.sql"
   if ! ${CQL} --dot --hide_builtins --in "$T/dottest.sql" >"$O/dottest.out"; then
     echo DOT syntax test failed
@@ -1299,7 +1239,6 @@ unit_tests
 macro_test
 semantic_test
 code_gen_c_test
-code_gen_objc_test
 assorted_errors_test
 schema_migration_test
 misc_cases

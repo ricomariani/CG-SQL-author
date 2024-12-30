@@ -10,7 +10,6 @@
 #include "cg_c.h"
 #include "cg_json_schema.h"
 #include "cg_lua.h"
-#include "cg_objc.h"
 #include "cg_query_plan.h"
 #include "cg_schema.h"
 #include "cg_stats.h"
@@ -63,24 +62,6 @@ static rtdata rt_lua = {
   .symbol_case = cg_symbol_case_snake,
   .generate_equality_macros = 1,
   .symbol_prefix = ""
-};
-
-static rtdata rt_objc = {
-  .name = "objc",
-  .code_generator = &cg_objc_main,
-  .required_file_names_count = 1,
-  // note the @ is split from the generated so that tools don't think this is a generated file
-  .header_prefix =
-    RT_AUTOGEN("//")
-    "#pragma once\n\n"
-    "#import <Foundation/Foundation.h>\n",
-  .header_wrapper_begin = "\nNS_ASSUME_NONNULL_BEGIN\n",
-  .header_wrapper_end = "\nNS_ASSUME_NONNULL_END\n",
-  .symbol_case = cg_symbol_case_snake,
-  .generate_equality_macros = 1,
-  .symbol_prefix = "CGS_",
-  .impl_symbol_prefix = "",
-  .cql_string_ref_encode_include = "",
 };
 
 static rtdata rt_schema_upgrade = {
@@ -142,7 +123,6 @@ static rtdata rt_stats = {
 
 static rtdata *(rt_all[]) = {
   &rt_c,
-  &rt_objc,
   &rt_lua,
   &rt_schema_upgrade,
   &rt_schema_sqlite,

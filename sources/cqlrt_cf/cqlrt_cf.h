@@ -13,9 +13,26 @@
 #include <math.h>
 #include <sqlite3.h>
 
+#ifdef CQL_OBJC_MIN_COMPILE
+
+// lacking any portable way to build on Linux this kludge allows us to
+// at least test that the classes we are creating can compile if not link
+// it does require gnustep to do this but not CoreFoundation.h.  This is
+// hardly a great situation but it gives us some ability to make changes
+// to the objc files without being totally blind to errors
+
+typedef void *CFTypeRef;
+typedef void *CFDataRef;
+typedef void *CFStringRef;
+typedef int8_t Boolean;
+
+#else
+
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreFoundation/CFBase.h>
 #include <CoreFoundation/CFString.h>
+
+#endif
 
 #ifndef __clang__
 #ifndef _Nonnull

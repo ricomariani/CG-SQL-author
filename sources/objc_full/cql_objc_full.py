@@ -115,7 +115,7 @@ nullable_conv["bool"] = "@"
 nullable_conv["integer"] = "@"
 nullable_conv["long"] = "@"
 nullable_conv["real"] = "@"
-nullable_conv["object"] = "B"
+nullable_conv["object"] = "bridge"
 nullable_conv["blob"] = "bridge"
 nullable_conv["text"] = "bridge"
 

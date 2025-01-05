@@ -25801,3 +25801,55 @@ begin
       select col1 from c_table)
       returning *;
 end;
+
+-- TEST: for loop ok
+-- + for_stmt}: ok
+-- + {le}: bool notnull
+-- + {int 5}: integer 
+-- + {for_info}
+-- + {assign}: i: integer notnull variable was_set
+-- -error:
+proc for_loop_ok()
+begin
+  let i := 0;
+  for i <= 5; i += 1;
+  begin
+  end;
+end;
+
+-- TEST: for loop bad expression
+-- + error: % string operand not allowed in 'NOT'
+-- +1 error:
+-- + {for_stmt}: err
+proc for_loop_bad_expr()
+begin
+  let i := 0;
+  for i <= not 'x'; i += 1;
+  begin
+  end;
+end;
+
+-- TEST: for loop bad update stmts
+-- + error: % duplicate variable name in the same scope 'i'
+-- +1 error:
+-- + {for_stmt}: err
+proc for_loop_bad_update()
+begin
+  let i := 0;
+  for i <= 5; let i := 0;
+  begin
+  end;
+end;
+
+-- TEST: for loop bad stmt block
+-- + error: % duplicate variable name in the same scope 'i'
+-- +1 error:
+-- + {for_stmt}: err
+proc for_loop_bad_block()
+begin
+  let i := 0;
+  for i <= 5; i += 1;
+  begin
+    let i := not 'x';
+  end;
+end;

@@ -5480,9 +5480,7 @@ static void gen_cte_tables_macro_def(ast_node *ast) {
 cql_data_defn( int32_t gen_stmt_level );
 
 static void gen_stmt_list_flat(ast_node *root) {
-  if (!root) {
-    return;
-  }
+  Contract(is_ast_stmt_list(root));
 
   for (ast_node *semi = root; semi; semi = semi->right) {
     EXTRACT_STMT_AND_MISC_ATTRS(stmt, misc_attrs, semi);

@@ -7790,13 +7790,13 @@ begin
 
   EXPECT_EQ!(t1, 1+2+3+4+5);
 
-  i := 0;
-  let t2 := 0;
-  for i <= 6; i += 1;
+  let j := nullable(0);
+  let t2 := j;
+  for j <= 6; j += 1;
   begin
-    if i == 3 continue;
-    if i == 5 leave;
-    t2 += i;
+    if j == 3 continue;
+    if j == 5 leave;
+    t2 += j;
   end;
 
   EXPECT_EQ!(t2, 1+2+4);

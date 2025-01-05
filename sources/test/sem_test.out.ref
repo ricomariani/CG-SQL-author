@@ -100402,3 +100402,129 @@ END;
                           | {name a_table}
                           | {name col2}
 
+The statement ending at line XXXX
+
+PROC for_loop_ok ()
+BEGIN
+  LET i := 0;
+  FOR i <= 5; SET i := i + 1;
+  BEGIN
+  END;
+END;
+
+  {create_proc_stmt}: ok
+  | {name for_loop_ok}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {let_stmt}: i: integer notnull variable was_set
+      | | {name i}: i: integer notnull variable was_set
+      | | {int 0}: integer notnull
+      | {for_stmt}: ok
+        | {le}: bool notnull
+        | | {name i}: i: integer notnull variable
+        | | {int 5}: integer notnull
+        | {for_info}
+          | {stmt_list}: ok
+            | {assign}: i: integer notnull variable was_set
+              | {name i}: i: integer notnull variable was_set
+              | {add}: integer notnull
+                | {name i}: i: integer notnull variable
+                | {int 1}: integer notnull
+
+The statement ending at line XXXX
+
+PROC for_loop_bad_expr ()
+BEGIN
+  LET i := 0;
+  FOR i <= (NOT 'x'); i += 1;
+  BEGIN
+  END;
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
+
+  {create_proc_stmt}: err
+  | {name for_loop_bad_expr}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {let_stmt}: i: integer notnull variable
+      | | {name i}: i: integer notnull variable
+      | | {int 0}: integer notnull
+      | {for_stmt}: err
+        | {le}: err
+        | | {name i}: i: integer notnull variable
+        | | {not}: err
+        |   | {strlit 'x'}: text notnull
+        | {for_info}
+          | {stmt_list}
+            | {expr_stmt}
+              | {add_eq}
+                | {name i}
+                | {int 1}
+
+The statement ending at line XXXX
+
+PROC for_loop_bad_update ()
+BEGIN
+  LET i := 0;
+  FOR i <= 5; LET i := 0;
+  BEGIN
+  END;
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0197: duplicate variable name in the same scope 'i'
+
+  {create_proc_stmt}: err
+  | {name for_loop_bad_update}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {let_stmt}: i: integer notnull variable
+      | | {name i}: i: integer notnull variable
+      | | {int 0}: integer notnull
+      | {for_stmt}: err
+        | {le}: bool notnull
+        | | {name i}: i: integer notnull variable
+        | | {int 5}: integer notnull
+        | {for_info}
+          | {stmt_list}: err
+            | {let_stmt}: err
+              | {name i}
+              | {int 0}
+
+The statement ending at line XXXX
+
+PROC for_loop_bad_block ()
+BEGIN
+  LET i := 0;
+  FOR i <= 5; SET i := i + 1;
+  BEGIN
+    LET i := NOT 'x';
+  END;
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0197: duplicate variable name in the same scope 'i'
+
+  {create_proc_stmt}: err
+  | {name for_loop_bad_block}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {let_stmt}: i: integer notnull variable was_set
+      | | {name i}: i: integer notnull variable was_set
+      | | {int 0}: integer notnull
+      | {for_stmt}: err
+        | {le}: bool notnull
+        | | {name i}: i: integer notnull variable
+        | | {int 5}: integer notnull
+        | {for_info}
+          | {stmt_list}: ok
+          | | {assign}: i: integer notnull variable was_set
+          |   | {name i}: i: integer notnull variable was_set
+          |   | {add}: integer notnull
+          |     | {name i}: i: integer notnull variable
+          |     | {int 1}: integer notnull
+          | {stmt_list}: err
+            | {let_stmt}: err
+              | {name i}
+              | {not}
+                | {strlit 'x'}
+

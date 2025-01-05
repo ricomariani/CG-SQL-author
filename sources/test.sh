@@ -475,6 +475,12 @@ assorted_errors_test() {
 
   on_diff_exit cg_requires_file.err
 
+  # wrong number of args specified in --cg (for lua)
+  if ${CQL} --dev --cg "$O/__temp" "$O/__temp2" --in "$T/cg_test.sql" --rt lua 2>"$O/cg_1_2.err"; then
+    echo "lua rt should require 1 files for the cg param but two were passed, should have failed"
+    failed
+  fi
+
   # --generate_file_type did not specify a file type
 
   if ${CQL} --generate_file_type 2>"$O/generate_file_type.err"; then

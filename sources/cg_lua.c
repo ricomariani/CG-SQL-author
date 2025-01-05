@@ -4214,7 +4214,7 @@ static void cg_lua_loop_stmt(ast_node *ast) {
 
   bprintf(cg_main_output, "if not %s._has_row_ then break end\n", cursor_name);
 
-  int32_t loop_saved = lua_in_loop;
+  bool_t loop_saved = lua_in_loop;
   lua_in_loop = true;
 
   bool_t lua_continue_label_needed_saved = lua_continue_label_needed;

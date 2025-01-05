@@ -77,6 +77,7 @@ static void gen_expr_at_id(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new)
 static void gen_select_expr(ast_node *ast);
 static void gen_arg_list(ast_node *ast);
 static void gen_any_macro_ref(ast_node *ast);
+static void gen_stmt_list_flat(ast_node *root);
 
 static int32_t gen_indent = 0;
 static int32_t pending_indent = 0;
@@ -4780,6 +4781,23 @@ static void gen_switch_stmt(ast_node *ast) {
   gen_switch_cases(switch_case);
 }
 
+static void gen_for_stmt(ast_node *ast) {
+  Contract(is_ast_for_stmt(ast));
+  EXTRACT_ANY_NOTNULL(expr, ast->left);
+  EXTRACT(for_info, ast->right);
+
+  // FOR [expr] ; stmt_list; BEGIN [stmt_list] END
+
+  gen_printf("FOR ");
+  gen_root_expr(expr);
+  gen_printf("; ");
+  gen_stmt_list_flat(for_info->left);
+
+  gen_printf("\nBEGIN\n");
+  gen_stmt_list(for_info->right);
+  gen_printf("END");
+}
+
 static void gen_while_stmt(ast_node *ast) {
   Contract(is_ast_while_stmt(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
@@ -5461,6 +5479,32 @@ static void gen_cte_tables_macro_def(ast_node *ast) {
 
 cql_data_defn( int32_t gen_stmt_level );
 
+static void gen_stmt_list_flat(ast_node *root) {
+  if (!root) {
+    return;
+  }
+
+  for (ast_node *semi = root; semi; semi = semi->right) {
+    EXTRACT_STMT_AND_MISC_ATTRS(stmt, misc_attrs, semi);
+
+    if (misc_attrs) {
+      gen_misc_attrs(misc_attrs);
+    }
+
+    gen_one_stmt(stmt);
+
+    bool_t prep = is_ast_ifdef_stmt(stmt) || is_ast_ifndef_stmt(stmt);
+
+    if (!prep) {
+      gen_printf(";");
+    }
+
+    if (semi->right) {
+       gen_printf(" ");
+    }
+  }
+}
+
 static void gen_stmt_list(ast_node *root) {
   if (!root) {
     return;
@@ -5619,6 +5663,7 @@ cql_noexport void gen_init() {
   STMT_INIT(fetch_call_stmt);
   STMT_INIT(fetch_stmt);
   STMT_INIT(fetch_values_stmt);
+  STMT_INIT(for_stmt);
   STMT_INIT(guard_stmt);
   STMT_INIT(if_stmt);
   STMT_INIT(ifdef_stmt);

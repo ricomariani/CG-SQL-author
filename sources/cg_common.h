@@ -191,3 +191,9 @@ typedef struct {
   gen_sql_callbacks *_Nonnull callbacks;
   bool_t minify_aliases;
 } cte_proc_call_info;
+
+// loop constants for the type of loop we are in, for is special
+// because it has a continue lable
+#define LOOP_NONE 0
+#define LOOP_ANY 1
+#define LOOP_FOR 2

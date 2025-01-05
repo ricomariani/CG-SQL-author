@@ -22537,6 +22537,47 @@ static void sem_while_stmt(ast_node *ast) {
   record_ok(ast);
 }
 
+// For semantic analysis is super simple.
+//  * the condition must be numeric
+//  * the statement lists must be error-free
+//  * loop_depth is increased allowing the use of interior leave/continue
+static void sem_for_stmt(ast_node *ast) {
+  Contract(is_ast_for_stmt(ast));
+  EXTRACT_ANY_NOTNULL(expr, ast->left);
+  EXTRACT(for_info, ast->right);
+
+  // FOR expr; stmt_list; BEGIN [stmt_list] END
+
+  sem_numeric_expr(expr, ast, "FOR", SEM_EXPR_CONTEXT_NONE);
+
+  if (is_error(expr)) {
+    record_error(ast);
+    return;
+  }
+
+  Contract(is_ast_stmt_list(for_info->left));
+  sem_stmt_list(for_info->left);
+  if (is_error(for_info->left)) {
+    record_error(ast);
+    return;
+  }
+
+  if (for_info->right) {
+    loop_depth++;
+
+    sem_stmt_list_within_loop(for_info->right, expr);
+
+    loop_depth--;
+
+    if (is_error(for_info->right)) {
+      record_error(ast);
+      return;
+    }
+  }
+
+  record_ok(ast);
+}
+
 // Loop analysis is just as simple as "while" -- because the loop_stmt
 // literally has an embedded fetch, you simply use the fetch helper to
 // validate that the fetch is good and then visit the statement list.
@@ -26165,6 +26206,7 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(echo_stmt);
   STMT_INIT(expr_stmt);
   STMT_INIT(fetch_values_stmt);
+  STMT_INIT(for_stmt);
   STMT_INIT(guard_stmt);
   STMT_INIT(if_stmt);
   STMT_INIT(ifdef_stmt);

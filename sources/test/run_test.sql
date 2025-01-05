@@ -7778,6 +7778,31 @@ begin
   EXPECT!(not G);
 end);
 
+TEST!(for_loop,
+begin
+  let t1 := 0;
+  let i := 0;
+
+  for i <= 5; i+= 1;
+  begin
+    t1 += i;
+  end;
+
+  EXPECT_EQ!(t1, 1+2+3+4+5);
+
+  i := 0;
+  let t2 := 0;
+  for i <= 6; i += 1;
+  begin
+    if i == 3 continue;
+    if i == 5 leave;
+    t2 += i;
+  end;
+
+  EXPECT_EQ!(t2, 1+2+4);
+
+end);
+
 END_SUITE();
 
 -- manually force tracing on by redefining the macros

@@ -4122,6 +4122,71 @@ static void cg_lua_while_stmt(ast_node *ast) {
   lua_continue_label_number = lua_continue_label_number_saved;
 }
 
+// "For" suffers from the same problem as IF and as a consequence
+// generating while (expression) would not generalize.
+// The overall pattern for while has to look like this:
+//
+//  while true
+//  do
+//    prep statements;
+//    condition = final expression;
+//    if  not(condition) then break end
+//
+//    statements;
+//    ::continue_label%d::
+//  end
+//
+// Note that while can have leave and continue substatements which have to map
+// to break and goto ::continue::.   That means other top level statements that aren't loops
+// must not create a C loop construct or break/continue would have the wrong target.
+static void cg_lua_for_stmt(ast_node *ast) {
+  Contract(is_ast_for_stmt(ast));
+  EXTRACT_ANY_NOTNULL(expr, ast->left);
+  EXTRACT(for_info, ast->right);
+  sem_t sem_type = expr->sem->sem_type;
+
+  bool_t lua_continue_label_needed_saved = lua_continue_label_needed;
+  int32_t lua_continue_label_number_saved = lua_continue_label_number;
+  lua_continue_label_needed = false;
+  lua_continue_label_next++;
+  lua_continue_label_number = lua_continue_label_next;
+
+  // FOR expr; stmt_list; BEGIN [stmt_list] END
+
+  bprintf(cg_main_output, "while true\n");
+  bprintf(cg_main_output, "do\n");
+
+  CG_LUA_PUSH_EVAL(expr, LUA_EXPR_PRI_ROOT);
+
+  // note that not(nil) is true in lua because nil is falsey
+  // so we correctly break out of the while if the expression's value is nil
+  cg_lua_to_bool(sem_type, &expr_value);
+  CG_PUSH_MAIN_INDENT2(loop);
+  bprintf(cg_main_output, "if not(%s) then break end\n", expr_value.ptr);
+  CG_POP_MAIN_INDENT(loop);
+
+  bool_t loop_saved = lua_in_loop;
+  lua_in_loop = true;
+
+  CG_LUA_POP_EVAL(expr);
+
+  if (for_info->right) {
+    cg_lua_stmt_list(for_info->right);
+  }
+
+  if (lua_continue_label_needed) {
+    bprintf(cg_main_output, "::continue%d::\n", lua_continue_label_number);
+  }
+
+  cg_lua_stmt_list(for_info->left);
+
+  bprintf(cg_main_output, "end\n");
+
+  lua_in_loop = loop_saved;
+  lua_continue_label_needed = lua_continue_label_needed_saved;
+  lua_continue_label_number = lua_continue_label_number_saved;
+}
+
 // The general pattern for this is very simple:
 //   while true
 //   do
@@ -4149,7 +4214,7 @@ static void cg_lua_loop_stmt(ast_node *ast) {
 
   bprintf(cg_main_output, "if not %s._has_row_ then break end\n", cursor_name);
 
-  bool_t loop_saved = lua_in_loop;
+  int32_t loop_saved = lua_in_loop;
   lua_in_loop = true;
 
   bool_t lua_continue_label_needed_saved = lua_continue_label_needed;
@@ -5613,6 +5678,7 @@ cql_noexport void cg_lua_init(void) {
   LUA_STMT_INIT(ifndef_stmt);
   LUA_STMT_INIT(switch_stmt);
   LUA_STMT_INIT(while_stmt);
+  LUA_STMT_INIT(for_stmt);
   LUA_STMT_INIT(leave_stmt);
   LUA_STMT_INIT(continue_stmt);
   LUA_STMT_INIT(return_stmt);

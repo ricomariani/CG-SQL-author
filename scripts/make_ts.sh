@@ -22,6 +22,9 @@ rm -f $OUT/cql_grammar.*
 debug "Building CQL Grammar"
 
 cat $CQL_ROOT_DIR/cql.y \
+  | $SCRIPT_DIR_RELATIVE/grammar_utils/remove_c_code_from_yacc_output.awk >x
+
+cat $CQL_ROOT_DIR/cql.y \
   | $SCRIPT_DIR_RELATIVE/grammar_utils/remove_c_code_from_yacc_output.awk \
   | sed -e "/^  *$/d" \
   | $CQL_OUT_DIR/replacements \

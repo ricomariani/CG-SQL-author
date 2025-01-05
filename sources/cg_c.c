@@ -79,7 +79,7 @@ static bool_t in_var_group_decl = false;
 static bool_t in_var_group_emit = false;
 
 // True if we are in a loop (hence the statement might run again)
-static bool_t cg_in_loop = false;
+static int32_t cg_in_loop = LOOP_NONE;
 
 // exports file if we are outputing exports
 static charbuf *exports_output = NULL;
@@ -111,8 +111,12 @@ static bool_t temp_statement_emitted = false;
 // seed variable holder _seed_ in the current context.
 static bool_t seed_declared;
 
-// Each catch block needs a unique pair of lables, they are numbered.
+// Each catch block needs a unique pair of labels, they are numbered.
 static int32_t catch_block_count = 0;
+
+// Each for loop needs a unique continue label, they are numbered.
+static int32_t for_loop_count = 0;
+static int32_t for_loop_cur = 0;
 
 // Used to give us a clue about when it might be smart to emit diagnostic
 // output but otherwise uninteresting.  We increment this on ever nested block.
@@ -6340,8 +6344,8 @@ static void cg_while_stmt(ast_node *ast) {
   }
   CG_POP_MAIN_INDENT(loop);
 
-  bool_t loop_saved = cg_in_loop;
-  cg_in_loop = true;
+  int32_t loop_saved = cg_in_loop;
+  cg_in_loop = LOOP_ANY;
 
   CG_POP_EVAL(expr);
 
@@ -6350,6 +6354,62 @@ static void cg_while_stmt(ast_node *ast) {
   bprintf(cg_main_output, "}\n");
 
   cg_in_loop = loop_saved;
+}
+
+// "For" suffers from the same problem as IF and as a consequence generating
+// while (expression) would not generalize. The overall pattern for while has to
+// look like this:
+//
+//  for (;;) {
+//    prep statements;
+//    condition = final expression;
+//    if (!condition) break;
+//
+//    statements;
+//  }
+//
+// Note that while can have leave and continue substatements which have to map
+// to break and continue.   That means other top level statements that aren't
+// loops must not create a C loop construct or break/continue would have the
+// wrong target.
+static void cg_for_stmt(ast_node *ast) {
+  Contract(is_ast_for_stmt(ast));
+  EXTRACT_ANY_NOTNULL(expr, ast->left);
+  EXTRACT(for_info, ast->right);
+  sem_t sem_type = expr->sem->sem_type;
+
+  // FOR expr ; stmt_list BEGIN [stmt_list] END
+
+  int32_t for_loop_saved = for_loop_cur;
+  for_loop_cur = ++for_loop_count;
+
+  bprintf(cg_main_output, "for (;;) {\n");
+
+  CG_PUSH_EVAL(expr, C_EXPR_PRI_ROOT);
+
+  CG_PUSH_MAIN_INDENT(loop, 2);
+  if (is_nullable(sem_type)) {
+    bprintf(cg_main_output, "if (!cql_is_nullable_true(%s, %s)) break;\n", expr_is_null.ptr, expr_value.ptr);
+  }
+  else {
+    bprintf(cg_main_output, "if (!(%s)) break;\n", expr_value.ptr);
+  }
+  CG_POP_MAIN_INDENT(loop);
+
+  int32_t loop_saved = cg_in_loop;
+  cg_in_loop = LOOP_FOR;
+
+  CG_POP_EVAL(expr);
+
+  cg_stmt_list(for_info->right);
+
+  bprintf(cg_main_output, "for_continue_%d:\n", for_loop_cur);
+  cg_stmt_list(for_info->left);
+
+  bprintf(cg_main_output, "}\n");
+
+  cg_in_loop = loop_saved;
+  for_loop_cur = for_loop_saved;
 }
 
 // The general pattern for this is very simple:
@@ -6386,8 +6446,8 @@ static void cg_loop_stmt(ast_node *ast) {
     bprintf(cg_main_output, "if (!_%s_has_row_) break;\n", cursor_name);
   }
 
-  bool_t loop_saved = cg_in_loop;
-  cg_in_loop = true;
+  int32_t loop_saved = cg_in_loop;
+  cg_in_loop = LOOP_ANY;
 
   CG_POP_MAIN_INDENT(loop);
 
@@ -6403,7 +6463,12 @@ static void cg_continue_stmt(ast_node *ast) {
   Contract(is_ast_continue_stmt(ast));
 
   // CONTINUE
-  bprintf(cg_main_output, "continue;\n");
+  if (cg_in_loop == LOOP_FOR) {
+    bprintf(cg_main_output, "goto for_continue_%d;\n", for_loop_cur);
+  }
+  else {
+    bprintf(cg_main_output, "continue;\n");
+  }
 }
 
 // Only SQL loops are allowed to use C loops, so "break" is perfect
@@ -8709,6 +8774,7 @@ cql_noexport void cg_c_init(void) {
   STMT_INIT(ifdef_stmt);
   STMT_INIT(ifndef_stmt);
   STMT_INIT(switch_stmt);
+  STMT_INIT(for_stmt);
   STMT_INIT(while_stmt);
   STMT_INIT(leave_stmt);
   STMT_INIT(continue_stmt);
@@ -8829,9 +8895,11 @@ cql_noexport void cg_c_cleanup() {
   error_target = NULL;
   cg_current_masks = NULL;
 
-  cg_in_loop = false;
+  cg_in_loop = LOOP_NONE;
   case_statement_count = 0;
   catch_block_count = 0;
+  for_loop_count = 0;
+  for_loop_cur = 0;
   error_target = CQL_CLEANUP_DEFAULT_LABEL;
   error_target_used = false;
   rcthrown_current = CQL_RCTHROWN_DEFAULT;

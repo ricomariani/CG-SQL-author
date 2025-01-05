@@ -28,8 +28,7 @@ void put_quoted(const char *s) {
 
 %%
 
-%prec[ ]UMINUS[ ]                     { /* gobble */ }
-%prec[ ]BETWEEN[ ]                    { /* gobble */ }
+%prec[ ][A-Z_]+                       { /* gobble */ }
 [ ][ ]*$                              { /* gobble */ }
 
 ABORT                                 { put_quoted("ABORT"); }

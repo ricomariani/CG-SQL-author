@@ -275,7 +275,7 @@ static void cql_reset_globals(void);
 %token DESC INNER AUTOINCREMENT DISTINCT
 %token LIMIT OFFSET TEMP TRIGGER IF ALL CROSS USING RIGHT AT_EPONYMOUS
 %token HIDDEN UNIQUE HAVING SET LET TO DISTINCTROW ENUM
-%token FUNC FUNCTION PROC PROCEDURE INTERFACE BEGIN_ OUT INOUT CURSOR DECLARE VAR TYPE FETCH LOOP LEAVE CONTINUE FOR ENCODE CONTEXT_COLUMN CONTEXT_TYPE
+%token FUNC FUNCTION PROC PROCEDURE INTERFACE OUT INOUT CURSOR DECLARE VAR TYPE FETCH LOOP LEAVE CONTINUE ENCODE CONTEXT_COLUMN CONTEXT_TYPE
 %token OPEN CLOSE ELSE_IF WHILE CALL TRY CATCH THROW RETURN
 %token SAVEPOINT ROLLBACK COMMIT TRANSACTION RELEASE ARGUMENTS
 %token TYPE_CHECK CAST WITH RECURSIVE REPLACE IGNORE ADD COLUMN AT_COLUMNS RENAME ALTER
@@ -290,6 +290,8 @@ static void cql_reset_globals(void);
 %token SIGN_FUNCTION CURSOR_HAS_ROW AT_UNSUB
 %left BEGIN_INCLUDE END_INCLUDE
 %token AT_IFDEF AT_IFNDEF AT_ELSE AT_ENDIF RETURNING
+%right BEGIN_
+%right FOR
 
 /* ddl stuff */
 %type <ival> opt_temp opt_if_not_exists opt_unique opt_no_rowid dummy_modifier compound_operator opt_query_plan
@@ -381,7 +383,7 @@ static void cql_reset_globals(void);
 %type <aval> throw_stmt
 %type <aval> trycatch_stmt
 %type <aval> version_annotation
-%type <aval> while_stmt
+%type <aval> while_stmt for_stmt
 %type <aval> enforce_strict_stmt enforce_normal_stmt enforce_reset_stmt enforce_push_stmt enforce_pop_stmt
 %type <aval> enforcement_options shape_def shape_def_base shape_expr shape_exprs
 %type <aval> keep_table_name_in_aliases_stmt
@@ -614,6 +616,7 @@ any_stmt:
   | update_stmt
   | upsert_stmt
   | while_stmt
+  | for_stmt
   | keep_table_name_in_aliases_stmt
   ;
 
@@ -844,14 +847,14 @@ misc_attr_value:
 
 misc_attr:
   AT_ATTRIBUTE '(' misc_attr_key ')'  { $misc_attr = new_ast_misc_attr($misc_attr_key, NULL); }
-  | AT_ATTRIBUTE '(' misc_attr_key '=' misc_attr_value ')'  { $misc_attr = new_ast_misc_attr($misc_attr_key, $misc_attr_value); }
+  | AT_ATTRIBUTE '(' misc_attr_key '=' misc_attr_value ')' { $misc_attr = new_ast_misc_attr($misc_attr_key, $misc_attr_value); }
   | '[' '[' cql_attr_key ']' ']' { $misc_attr = new_ast_misc_attr($cql_attr_key, NULL); }
   | '[' '[' cql_attr_key  '=' misc_attr_value ']' ']' { $misc_attr = new_ast_misc_attr($cql_attr_key, $misc_attr_value); }
   ;
 
 misc_attrs[result]:
-  /* nil */  { $result = NULL; }
-  | misc_attr misc_attrs[ma]  { $result = new_ast_misc_attrs($misc_attr, $ma); }
+  /* nil */ %prec BEGIN_ { $result = NULL; }
+  | misc_attr misc_attrs[ma] %prec BEGIN_ { $result = new_ast_misc_attrs($misc_attr, $ma); }
   ;
 
 col_def:
@@ -2246,8 +2249,12 @@ declare_vars_stmt:
   ;
 
 call_stmt: CALL loose_name[name] '(' arg_list ')'  {
-      YY_ERROR_ON_CQL_INFERRED_NOTNULL($name);
-      $call_stmt = new_ast_call_stmt($name, $arg_list); }
+   YY_ERROR_ON_CQL_INFERRED_NOTNULL($name);
+   $$ = new_ast_call_stmt($name, $arg_list); }
+  ;
+
+for_stmt: FOR expr ';' stmt_list[step] BEGIN_ opt_stmt_list END {
+   $$ = new_ast_for_stmt($expr, new_ast_for_info($step, $opt_stmt_list)); }
   ;
 
 while_stmt:
@@ -2262,7 +2269,7 @@ switch_stmt:
   | SWITCH expr ALL VALUES switch_case switch_cases {
     ast_node *cases = new_ast_switch_case($switch_case, $switch_cases);
     ast_node *switch_body = new_ast_switch_body($expr, cases);
-    $switch_stmt = new_ast_switch_stmt(new_ast_option(1), switch_body);  }
+    $$ = new_ast_switch_stmt(new_ast_option(1), switch_body);  }
   ;
 
 switch_case:
@@ -2270,65 +2277,65 @@ switch_case:
   | WHEN expr_list THEN NOTHING { $switch_case = new_ast_connector($expr_list, NULL); }
   ;
 
-switch_cases[result]:
+switch_cases:
   switch_case switch_cases[next] {
-    $result = new_ast_switch_case($switch_case, $next); }
+    $$ = new_ast_switch_case($switch_case, $next); }
   | ELSE stmt_list END {
     ast_node *conn = new_ast_connector(NULL, $stmt_list);
-    $result = new_ast_switch_case(conn, NULL); }
-  | END { $result = NULL; }
+    $$ = new_ast_switch_case(conn, NULL); }
+  | END { $$ = NULL; }
   ;
 
 loop_stmt:
-  LOOP fetch_stmt BEGIN_ opt_stmt_list END  { $loop_stmt = new_ast_loop_stmt($fetch_stmt, $opt_stmt_list); }
+  LOOP fetch_stmt BEGIN_ opt_stmt_list END  { $$ = new_ast_loop_stmt($fetch_stmt, $opt_stmt_list); }
   ;
 
 leave_stmt:
-  LEAVE  { $leave_stmt = new_ast_leave_stmt(); }
+  LEAVE  { $$ = new_ast_leave_stmt(); }
   ;
 
 return_stmt:
-  RETURN  { $return_stmt = new_ast_return_stmt(); }
+  RETURN  { $$ = new_ast_return_stmt(); }
   ;
 
 rollback_return_stmt:
-  ROLLBACK RETURN { $rollback_return_stmt = new_ast_rollback_return_stmt(); }
+  ROLLBACK RETURN { $$ = new_ast_rollback_return_stmt(); }
   ;
 
 commit_return_stmt:
-  COMMIT RETURN  { $commit_return_stmt = new_ast_commit_return_stmt(); }
+  COMMIT RETURN  { $$ = new_ast_commit_return_stmt(); }
   ;
 
 throw_stmt:
-  THROW  { $throw_stmt = new_ast_throw_stmt(); }
+  THROW  { $$ = new_ast_throw_stmt(); }
   ;
 
 trycatch_stmt:
-  BEGIN_ TRY opt_stmt_list[osl1] END TRY ';' BEGIN_ CATCH opt_stmt_list[osl2] END CATCH  { $trycatch_stmt = new_ast_trycatch_stmt($osl1, $osl2); }
-  | TRY opt_stmt_list[osl1] CATCH opt_stmt_list[osl2] END { $trycatch_stmt = new_ast_trycatch_stmt($osl1, $osl2); }
+  BEGIN_ TRY opt_stmt_list[osl1] END TRY ';' BEGIN_ CATCH opt_stmt_list[osl2] END CATCH  { $$ = new_ast_trycatch_stmt($osl1, $osl2); }
+  | TRY opt_stmt_list[osl1] CATCH opt_stmt_list[osl2] END { $$ = new_ast_trycatch_stmt($osl1, $osl2); }
   ;
 
 continue_stmt:
-  CONTINUE  { $continue_stmt = new_ast_continue_stmt(); }
+  CONTINUE  { $$ = new_ast_continue_stmt(); }
   ;
 
 fetch_stmt:
-  FETCH name INTO name_list  { $fetch_stmt = new_ast_fetch_stmt($name, $name_list); }
-  | FETCH name  { $fetch_stmt = new_ast_fetch_stmt($name, NULL); }
+  FETCH name INTO name_list  { $$ = new_ast_fetch_stmt($name, $name_list); }
+  | FETCH name  { $$ = new_ast_fetch_stmt($name, NULL); }
   ;
 
 fetch_values_stmt:
   FETCH name opt_column_spec FROM VALUES '(' insert_list ')' opt_insert_dummy_spec  {
     struct ast_node *columns_values = new_ast_columns_values($opt_column_spec, $insert_list);
     struct ast_node *name_columns_values = new_ast_name_columns_values($name, columns_values);
-    $fetch_values_stmt = new_ast_fetch_values_stmt($opt_insert_dummy_spec, name_columns_values); }
+    $$ = new_ast_fetch_values_stmt($opt_insert_dummy_spec, name_columns_values); }
   | FETCH name opt_column_spec from_shape opt_insert_dummy_spec  {
     struct ast_node *columns_values = new_ast_columns_values($opt_column_spec, $from_shape);
     struct ast_node *name_columns_values = new_ast_name_columns_values($name, columns_values);
-    $fetch_values_stmt = new_ast_fetch_values_stmt($opt_insert_dummy_spec, name_columns_values); }
+    $$ = new_ast_fetch_values_stmt($opt_insert_dummy_spec, name_columns_values); }
   | FETCH name USING expr_names opt_insert_dummy_spec {
     struct ast_node *name_columns_values = new_ast_name_columns_values($name, $expr_names);
-    $fetch_values_stmt = new_ast_fetch_values_stmt($opt_insert_dummy_spec, name_columns_values); }
+    $$ = new_ast_fetch_values_stmt($opt_insert_dummy_spec, name_columns_values); }
   ;
 
 expr_names[result]:
@@ -2336,7 +2343,7 @@ expr_names[result]:
   |  expr_name ',' expr_names[sel]  { $result = new_ast_expr_names($expr_name, $sel); }
   ;
 
-expr_name: expr as_alias { $expr_name = new_ast_expr_name($expr, $as_alias); }
+expr_name: expr as_alias { $$ = new_ast_expr_name($expr, $as_alias); }
   ;
 
 fetch_call_stmt:
@@ -2421,7 +2428,7 @@ transaction_mode:
   ;
 
 begin_trans_stmt:
-  BEGIN_ transaction_mode TRANSACTION  { $begin_trans_stmt = new_ast_begin_trans_stmt(new_ast_option($transaction_mode)); }
+  BEGIN_ transaction_mode TRANSACTION { $begin_trans_stmt = new_ast_begin_trans_stmt(new_ast_option($transaction_mode)); }
   | BEGIN_ transaction_mode { $begin_trans_stmt = new_ast_begin_trans_stmt(new_ast_option($transaction_mode)); }
   ;
 

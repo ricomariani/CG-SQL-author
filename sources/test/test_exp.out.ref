@@ -2629,3 +2629,16 @@ CURSOR C FOR
 LET x := ( SELECT xx IF NOTHING OR NULL THEN THROW );
 
 LET x := ( SELECT xx IF NOTHING OR NULL THEN THROW );
+
+PROC foo ()
+BEGIN
+  LET x := 1;
+  FOR x < 5; [[foo]]
+  [[bar]]
+  x += 1; [[foo]]
+  [[bar]]
+  x += 1;
+  BEGIN
+    x += 1;
+  END;
+END;

@@ -84,6 +84,7 @@ OPERATOR_PATTERN = re.compile(r"\"[!+-=:~/*<>]+\"")
 
 # Some of the rules have conflicts therefore we need to define the precedent priority.
 APPLY_FUNC_LIST = {
+    "fk_options": "prec.left({})",
     "fk_target_options": "prec.left({})",
     "join_target": "prec.left({})",
     "elseif_list": "prec.left({})",
@@ -156,7 +157,7 @@ FIXED_RULES = """
        seq('--', /(\\\\(.|\\r?\\n)|[^\\\\\\n])*/),
        seq('/*', /[^*]*\*+([^/*][^*]*\*+)*/, '/'))),
 
-    stmt_list: $ => repeat1(choice($.stmt, $.include_stmt, $.comment)),
+    stmt_list: $ => prec.left(repeat1(choice($.stmt, $.include_stmt, $.comment))),
 """
 
 # These are problematic rules to the cql tree-sitter grammar. We're just going
@@ -453,9 +454,7 @@ module.exports = grammar({
      /\\s|\\r?\\n/,
      $.comment
   ],
-  conflicts: $ => [
-     [$.fk_options],
-  ],
+  conflicts: $ => [],
   word: $ => $.ID,
   rules: {""")
 

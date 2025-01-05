@@ -19749,3 +19749,54 @@ The statement ending at line XXXX
         | {select_limit}
           | {select_offset}
 
+The statement ending at line XXXX
+
+  {create_proc_stmt}
+  | {name foo}
+  | {proc_params_stmts}
+    | {stmt_list}
+      | {let_stmt}
+      | | {name x}
+      | | {int 1}
+      | {for_stmt}
+        | {lt}
+        | | {name x}
+        | | {int 5}
+        | {for_info}
+          | {stmt_list}
+          | | {stmt_and_attr}
+          | | | {misc_attrs}
+          | | | | {misc_attr}
+          | | | | | {dot}
+          | | | |   | {name cql}
+          | | | |   | {name foo}
+          | | | | {misc_attrs}
+          | | |   | {misc_attr}
+          | | |     | {dot}
+          | | |       | {name cql}
+          | | |       | {name bar}
+          | | | {expr_stmt}
+          | |   | {add_eq}
+          | |     | {name x}
+          | |     | {int 1}
+          | | {stmt_and_attr}
+          |   | {misc_attrs}
+          |   | | {misc_attr}
+          |   | | | {dot}
+          |   | |   | {name cql}
+          |   | |   | {name foo}
+          |   | | {misc_attrs}
+          |   |   | {misc_attr}
+          |   |     | {dot}
+          |   |       | {name cql}
+          |   |       | {name bar}
+          |   | {expr_stmt}
+          |     | {add_eq}
+          |       | {name x}
+          |       | {int 1}
+          | {stmt_list}
+            | {expr_stmt}
+              | {add_eq}
+                | {name x}
+                | {int 1}
+

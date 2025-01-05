@@ -1990,3 +1990,12 @@ where `col 2` = 1 do update
 
 let x := (select xx if nothing or null throw);
 let x := (select xx if nothing or null then throw);
+
+proc foo()
+begin
+  let x := 1;
+  for x < 5; [[foo]] [[bar]] x += 1; [[foo]] [[bar]] x += 1;
+  begin
+    x += 1;
+  end;
+end;

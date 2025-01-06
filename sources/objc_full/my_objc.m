@@ -15,16 +15,19 @@ void Expect(Boolean b, char *str) {
   }
 }
 
-int main(int argc, char **argv) {
-  // make an empty database (this can be replaced)
-  sqlite3 *db;
-  int rc = sqlite3_open(":memory:", &db);
+void VerifyMultiOut(sqlite3 *db) {
+  // a procedure with multiple out-ish arguments
 
-  CGSOutArgThingRT *outargs = CGSCreateOutArgThingRT(@"_input", @5, @2);
-  Expect([outargs.y intValue] == 3, "in out argument not incremented");
-  Expect([outargs.z intValue] == 7, "sum not computed");
-  Expect([outargs.t isEqualToString: @"prefix__input"], "string not assigned");
+  // RT is the "return type"  and RS is the "result set"
+  // These were abbreviated to keep the names from getting ridiculously long
 
+  CGSOutArgThingRT *rt = CGSCreateOutArgThingRT(@"_input", @5, @2);
+  Expect([rt.y intValue] == 3, "in out argument not incremented");
+  Expect([rt.z intValue] == 7, "sum not computed");
+  Expect([rt.t isEqualToString: @"prefix__input"], "string not assigned");
+}
+
+void VerifyArgConversions(sqlite3 *db) {
   // Test passing of all not nullable primitive types
   CGSCheckBoolean(true, @true);
   CGSCheckInteger(1234, @1234);
@@ -52,8 +55,10 @@ int main(int argc, char **argv) {
   NSData *b2 = CGSCreateBlobFromTextRT(db, @"a blob from text").test_blob;
   CGSCheckBlob(b1, b2);
   CGSCheckBlob(nil, nil);
+}
 
-  // Out notnull numeric types
+void VerifyAllNumericCombos(sqlite3 *db) {
+    // Out notnull numeric types
   Expect(true == CGSCreateOutBooleanRT(true).test, "mismatched out bool");
   Expect(123 == CGSCreateOutIntegerRT(123).test, "mismatched out int");
   Expect(456L == CGSCreateOutLongRT(456L).test, "mismatched out long");
@@ -88,14 +93,9 @@ int main(int argc, char **argv) {
   Expect(CGSCreateInOutNullableIntegerRT(nil).test == nil, "mismatched nil inout int");
   Expect(CGSCreateInOutNullableLongRT(nil).test == nil, "mismatched nil inout long");
   Expect(CGSCreateInOutNullableRealRT(nil).test == nil, "mismatched nil inout real");
+}
 
-  // try a recursive procedure
-  CGSFibRT *fib = CGSCreateFibRT(10);
-  Expect(55 == fib.result, "Fibnacci value did not compute correctly");
-
-  // RT is the "return type"  and RS is the "result set"
-  // These were abbreviated to keep the names from getting ridiculously long
-
+void VerifyOutandOutUnionResultSets() {
   CGSOutStatementRT *rtOut = CGSCreateOutStatementRT(314);
   CGSOutStatementRS *rsOut = rtOut.resultSet;
 
@@ -108,6 +108,23 @@ int main(int argc, char **argv) {
   Expect(2 == rsOutU.count, "expected row count is 2");
   Expect(301 == [rsOutU x:0], "value+1 not echoed with OutUnionStatement");
   Expect(302 == [rsOutU x:1], "value+2 not echoed with OutUnionStatement");
+}
+
+
+int main(int argc, char **argv) {
+  // make an empty database (this can be replaced)
+  sqlite3 *db;
+  int rc = sqlite3_open(":memory:", &db);
+
+  VerifyMultiOut(db);
+  VerifyArgConversions(db);
+  VerifyAllNumericCombos(db);
+
+  // try a recursive procedure
+  CGSFibRT *rtFib = CGSCreateFibRT(10);
+  Expect(55 == rtFib.result, "Fibnacci value did not compute correctly");
+
+  VerifyOutandOutUnionResultSets();
 
   // get call result code and rowset
   CGSDemoRT *rtDemo = CGSCreateDemoRT(db);

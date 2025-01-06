@@ -7,7 +7,7 @@
 
 #import "Sample_objc.h"
 
-void dumpResults(CGSDemoRS *data);
+void dumpResults(CGSDemoRS *rs);
 
 void Expect(Boolean b, char *str) {
   if (!b) {
@@ -53,27 +53,37 @@ int main(int argc, char **argv) {
   CGSCheckBlob(b1, b2);
   CGSCheckBlob(nil, nil);
 
+  // Out notnull numeric types
   Expect(true == CGSCreateOutBooleanRT(true).test, "mismatched out bool");
   Expect(123 == CGSCreateOutIntegerRT(123).test, "mismatched out int");
   Expect(456L == CGSCreateOutLongRT(456L).test, "mismatched out long");
   Expect(8.5 == CGSCreateOutRealRT(8.5).test, "mismatched out real");
+
+  // Out nullable numeric types
   Expect(false == [CGSCreateOutNullableBooleanRT(false).test intValue], "mismatched nullable out bool");
   Expect(1234 == [CGSCreateOutNullableIntegerRT(@1234).test intValue], "mismatched nullable out int");
   Expect(4567L == [CGSCreateOutNullableLongRT(@4567L).test longLongValue], "mismatched nullable out long");
   Expect(8.25 == [CGSCreateOutNullableRealRT(@8.25).test doubleValue], "mismatched nullable out real");
+
+  // Out nullable numeric types with nil
   Expect(CGSCreateOutNullableBooleanRT(nil).test == nil, "mismatched nil out bool");
   Expect(CGSCreateOutNullableIntegerRT(nil).test == nil, "mismatched nil out int");
   Expect(CGSCreateOutNullableLongRT(nil).test == nil, "mismatched nil out long");
   Expect(CGSCreateOutNullableRealRT(nil).test == nil, "mismatched nil out real");
 
+  // Inout notnull numeric types
   Expect(true == CGSCreateInOutBooleanRT(false).test, "mismatched inout bool");
   Expect(124 == CGSCreateInOutIntegerRT(123).test, "mismatched inout int");
   Expect(457L == CGSCreateInOutLongRT(456L).test, "mismatched inout long");
   Expect(9.5 == CGSCreateInOutRealRT(8.5).test, "mismatched inout real");
+
+  // Inout nullable numeric types
   Expect(true == [CGSCreateInOutNullableBooleanRT(@false).test intValue], "mismatched nullable inout bool");
   Expect(1235 == [CGSCreateInOutNullableIntegerRT(@1234).test intValue], "mismatched nullable inout int");
   Expect(4568L == [CGSCreateInOutNullableLongRT(@4567L).test longLongValue], "mismatched nullable inout long");
   Expect(9.25 == [CGSCreateInOutNullableRealRT(@8.25).test doubleValue], "mismatched nullable inout real");
+
+  // Inout nullable numeric types with nil
   Expect(CGSCreateInOutNullableBooleanRT(nil).test == nil, "mismatched nil inout bool");
   Expect(CGSCreateInOutNullableIntegerRT(nil).test == nil, "mismatched nil inout int");
   Expect(CGSCreateInOutNullableLongRT(nil).test == nil, "mismatched nil inout long");
@@ -85,27 +95,27 @@ int main(int argc, char **argv) {
 
   // RT is the "return type"  and RS is the "result set"
   // These were abbreviated to keep the names from getting ridiculously long
-  
-  CGSOutStatementRT *outS = CGSCreateOutStatementRT(314);
-  CGSOutStatementRS *outSResult = outS.resultSet;
 
-  Expect(1 == outSResult.count, "expected row count is 1");
-  Expect(314 == outSResult.x, "value not echoed with OutStatement");
+  CGSOutStatementRT *rtOut = CGSCreateOutStatementRT(314);
+  CGSOutStatementRS *rsOut = rtOut.resultSet;
 
-  CGSOutUnionStatementRT *outU = CGSCreateOutUnionStatementRT(300);
-  CGSOutUnionStatementRS *outUResult = outU.resultSet;
+  Expect(1 == rsOut.count, "expected row count is 1");
+  Expect(314 == rsOut.x, "value not echoed with OutStatement");
 
-  Expect(2 == outUResult.count, "expected row count is 2");
-  Expect(301 == [outUResult x:0], "value+1 not echoed with OutUnionStatement");
-  Expect(302 == [outUResult x:1], "value+2 not echoed with OutUnionStatement");
+  CGSOutUnionStatementRT *rtOutU = CGSCreateOutUnionStatementRT(300);
+  CGSOutUnionStatementRS *rsOutU = rtOutU.resultSet;
+
+  Expect(2 == rsOutU.count, "expected row count is 2");
+  Expect(301 == [rsOutU x:0], "value+1 not echoed with OutUnionStatement");
+  Expect(302 == [rsOutU x:1], "value+2 not echoed with OutUnionStatement");
 
   // get call result code and rowset
-  CGSDemoRT *results = CGSCreateDemoRT(db);
+  CGSDemoRT *rtDemo = CGSCreateDemoRT(db);
 
-  Expect(results.resultCode == 0, "rc == SQLITE_OK");
+  Expect(rtDemo.resultCode == 0, "rc == SQLITE_OK");
 
   // use the results
-  dumpResults(results.resultSet);
+  dumpResults(rtDemo.resultSet);
 
   // release the connection
   sqlite3_close(db);
@@ -113,29 +123,29 @@ int main(int argc, char **argv) {
   return 0;
 }
 
-void dumpResults(CGSDemoRS *data)
+void dumpResults(CGSDemoRS *rs)
 {
-  int count = data.count;
+  int count = rs.count;
   printf("dumping result set: count = %d\n", count);
 
   Expect(count == 5, "count == 5");
 
   for (int i = 0; i < count; i++) {
-    NSData *bytes = [data bytes:i];
+    NSData *bytes = [rs bytes:i];
     NSString *s = [[NSString alloc] initWithData:bytes encoding:NSUTF8StringEncoding];
 
     NSLog(
       @"Row %d: name:%@ blob:%@ age:%@ thing:%@ key1:%@ key2:%@",
       i,
-      [data name:i],
+      [rs name:i],
       s,
-      [data age:i],
-      [data thing:i],
-      [data key1:i],
-      [data key2:i]
+      [rs age:i],
+      [rs thing:i],
+      [rs key1:i],
+      [rs key2:i]
     );
 
-    CGSChildRS *child = [data my_child_result:i];
+    CGSChildRS *child = [rs my_child_result:i];
     for (int j = 0; j < child.count; j++) {
       int irow = [child irow:j];
       NSString *t = [child t:j];

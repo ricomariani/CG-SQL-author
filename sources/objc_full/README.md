@@ -22,15 +22,23 @@ in some sense the core of the demo.  Everything else is scaffolding.
 ## The OBJC Generator
 
 The CQL compiler is used to generated JSON to describe the exact contents of
-`Sample.sql`. The python reads the generated JSON and creates first the Java
-wrappers and then the necessary C code to support them.  It is invoked twice.
+`Sample.sql`. The python reads the generated JSON and creates first the @interface
+ and then the @implemenation.  It is invoked twice.
 
 * `./cql_objc_full.py`
 
+
+## The applicaton
+
+This file accesses the sample stored procedures using the generated interface.
+
+* `my_objc.m`
+
+
 ## Building Tools
 
-Use `make.sh` to build and execute the JNI demo.  Use `clean.sh` to clean up the
-build artifacts afterwards.
+Use `make.sh` to build the demo.  Use `clean.sh` to clean up the build artifacts afterwards.
+This demo does not run except maybe on a Mac, it has never been tested.  See below.
 
 * `./make.sh`
 * `./clean.sh`

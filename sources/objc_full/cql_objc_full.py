@@ -101,6 +101,7 @@ c_nullable_types["object"] = "cql_object_ref"
 c_nullable_types["blob"] = "cql_blob_ref"
 c_nullable_types["text"] = "cql_string_ref"
 
+# encoding for the types of conversions that might be necessary
 notnull_conv = {}
 notnull_conv["bool"] = ""
 notnull_conv["integer"] = ""
@@ -123,6 +124,7 @@ c_types = {}
 c_types[False] = c_nullable_types
 c_types[True] = c_notnull_types
 
+# methods to extract the indicated type out of an NSNumber
 box_vals = {}
 box_vals["bool"] = "intValue"
 box_vals["integer"] = "intValue"
@@ -134,13 +136,17 @@ cmd_args = {}
 cmd_args["emit_impllass"] = False
 cmd_args["header"] = "something.h"
 
+# The prefix for all the generated classes and procedures.
+# Change as you see fit.
 CGS = "CGS"
 
 
 # The procedure might have any number of out arguments plus its normal returns
 # We emit them all here.  We make a synthetic result set type to hold all those
 # out results as well as the SQLite return code if it's needed and the returned
-# result set if it's needed.
+# result set if it's needed.  We don't make a return type if the procedure is
+# void or returns just returns the status code.  Out arguments or a result set
+# are the triggers for the return type.
 def emit_proc_objc_return_impl(proc):
     p_name = proc["name"]
     args = proc["args"]
@@ -152,7 +158,7 @@ def emit_proc_objc_return_impl(proc):
     # this is the result type for the procedure out arguments and returns
     print("")
     print(dashes)
-    print(f"@implementation {CGS}{p_name}ReturnType : NSObject", end="")
+    print(f"@implementation {CGS}{p_name}RT : NSObject", end="")
     print(" {")
 
     for p in args:
@@ -170,7 +176,7 @@ def emit_proc_objc_return_impl(proc):
         print("  int _resultCode;")
 
     if projection:
-        print(f"  {CGS}{p_name}ResultSet *_Nullable _resultSet;")
+        print(f"  {CGS}{p_name}RS *_Nullable _resultSet;")
 
     print("}")
     print("")
@@ -192,6 +198,12 @@ def emit_proc_objc_return_impl(proc):
     print(dashes)
 
 
+# This creates the body of the result set class.  This is the class that
+# holds the result set from a procedure that returns a result set.  The
+# result set is a collection of rows, each row is a collection of columns.
+# The columns are the projected columns of the procedure.  This class
+# is a wrapper around the CQL result set, it knows how to fetch the
+# columns from the result set and how to convert them into Objc types.
 def emit_proc_objc_projection_impl(proc, attributes):
     p_name = proc["name"]
 
@@ -203,7 +215,7 @@ def emit_proc_objc_projection_impl(proc, attributes):
 
     print("")
     print(dashes)
-    print(f"@implementation {CGS}{p_name}ResultSet : NSObject", end="")
+    print(f"@implementation {CGS}{p_name}RS : NSObject", end="")
     print(" {")
     print(f"  {p_name}_result_set_ref _resultSet;")
     print("}")
@@ -230,6 +242,11 @@ def emit_proc_objc_projection_impl(proc, attributes):
         row_arg = "" if hasOutResult else ", row"
         row_param = "" if hasOutResult else ", cql_int32 row"
 
+        # the getter body is one of three forms
+        # 1. For reference types we convert the value to NSString, NSData etc.
+        # 2. For nullable types value types we convert the value to NSNumber
+        # 3. For non-nullable value types we just return the value
+
         print(" {")
 
         if conv == "@":
@@ -254,10 +271,16 @@ def emit_proc_objc_projection_impl(proc, attributes):
     print(f"  return {identityResult};")
     print("}")
 
+    # expose the count of the result set, note that even result set
+    # that was made with OUT (i.e. a one row result) might be empty
+    # so the count is the only way to know if there is a row or not.
+
     print("")
     print("-(int)count {")
-    print("  return 0;")
+    print(f"  return {p_name}_result_count(_resultSet);")
     print("}")
+
+    # we own the handle so we release it in dealloc
 
     print("")
     print("-(void)dealloc {")
@@ -272,12 +295,11 @@ def emit_proc_objc_projection_impl(proc, attributes):
     print(dashes)
 
 
-# This emits the main body of the C JNI function, this includes
-# * the JNI entry point for the procedure
-# * the call to the procedure
-# * the marshalling of the results
+# This emits the main body of the implementation function, this includes
+# * the OBJC entry point for the procedure
+# * the call to the CQL procedure
+# * the appropriate bridge of the results
 # * the return of the results
-# * the cleanup of the results
 def emit_proc_objc_impl(proc, attributes):
     p_name = proc["name"]
     args = proc["args"]
@@ -301,9 +323,7 @@ def emit_proc_objc_impl(proc, attributes):
     # emit a suitable entry point, use int or void return if possible
     # otherwise we have to create the result set type, and return that
     if needs_return_type:
-        print(
-            f"{CGS}{p_name}ReturnType *_Nonnull {CGS}Create{p_name}ReturnType("
-        )
+        print(f"{CGS}{p_name}RT *_Nonnull {CGS}Create{p_name}RT(")
     elif needs_only_result_code:
         print(f"int {CGS}{p_name}(")
     else:
@@ -354,9 +374,7 @@ def emit_proc_objc_impl(proc, attributes):
     # row result set just like the result of a CQL "out" statement.  Such a row is
     # never empty, it has at least the result code.
     if needs_return_type:
-        print(
-            f"  {CGS}{p_name}ReturnType *_result = [{CGS}{p_name}ReturnType new];"
-        )
+        print(f"  {CGS}{p_name}RT *_result = [{CGS}{p_name}RT new];")
 
     # now it's time to make the call, we have variables to hold what goes before
     # the call, the call, and what goes after the call.  Before the call go things
@@ -522,7 +540,7 @@ def emit_proc_objc_impl(proc, attributes):
 def objc_type_for_arg(a_type, kind, isNotNull):
     if a_type == "object" and kind.endswith(" SET"):
         set_type = kind[:-4]
-        c_type = f"{CGS}{set_type}ResultSet *"
+        c_type = f"{CGS}{set_type}RS *"
         if isNotNull:
             c_type = f"{c_type}_Nonnull"
         else:
@@ -593,7 +611,7 @@ def emit_proc_objc_return_type(proc):
     # this is the result type for the procedure out arguments and returns
     print("")
     print(dashes)
-    print(f"@interface {CGS}{p_name}ReturnType : NSObject", end="")
+    print(f"@interface {CGS}{p_name}RT : NSObject", end="")
     print(" {")
 
     for p in args:
@@ -611,7 +629,7 @@ def emit_proc_objc_return_type(proc):
         print("  int _resultCode;")
 
     if projection:
-        print(f"  {CGS}{p_name}ResultSet *_Nullable _resultSet;")
+        print(f"  {CGS}{p_name}RS *_Nullable _resultSet;")
 
     print("}")
 
@@ -640,7 +658,7 @@ def emit_proc_objc_return_type(proc):
     if projection:
         print("")
         print(
-            f"@property (nonatomic, retain) {CGS}{p_name}ResultSet *_Nullable resultSet;"
+            f"@property (nonatomic, retain) {CGS}{p_name}RS *_Nullable resultSet;"
         )
 
     print("")
@@ -657,7 +675,7 @@ def emit_proc_objc_projection_header(proc, attributes):
 
     print("")
     print(dashes)
-    print(f"@interface {CGS}{p_name}ResultSet : NSObject", end="")
+    print(f"@interface {CGS}{p_name}RS : NSObject", end="")
     print(" {")
     print(f"  {p_name}_result_set_ref _resultSet;")
     print("}")
@@ -744,13 +762,8 @@ def emit_proc_objc_header(proc, attributes):
         if binding == "inout" or binding == "out":
             outArgs = True
 
-    # Any of these demand a return type, the JNI entry point will return
-    # a result set thing for the return shape.  That itself might include
-    # a "normal" result set.  The return type is a nested class that
-    # has the result set and the out arguments.  This is a little bit
-    # more complex than the C version because the C version can return
-    # multiple things in the return shape.  The Objc version only
-    # returns one thing, so we wrap the result set and the out arguments.
+    # Out args or a projection demand a return type.
+    # If those are missing we need only the result code, or nothing.
     needs_return_type = outArgs or projection
     needs_only_result_code = usesDatabase and not needs_return_type
 
@@ -760,9 +773,7 @@ def emit_proc_objc_header(proc, attributes):
     # emit a suitable entry point, use int or void return if possible
     # otherwise we have to create the result set type, and return that
     if needs_return_type:
-        print(
-            f"{CGS}{p_name}ReturnType *_Nonnull {CGS}Create{p_name}ReturnType({params});"
-        )
+        print(f"{CGS}{p_name}RT *_Nonnull {CGS}Create{p_name}RT({params});")
     elif needs_only_result_code:
         print(f"int {CGS}{p_name}({params});")
     else:
@@ -783,8 +794,12 @@ def emit_proc_section(section, s_name):
             v = attr["value"]
             attributes[k] = v
 
+        # these are the procedures that are suppressed from the public API
+        # they are used internally by other procedures but we can't call them
+        suppressed = "cql:suppress_result_set" in attributes or "cql:private" in attributes or "cql:suppress_getters" in attributes
+
         # no codegen for private methods
-        if "cql:private" not in attributes:
+        if not suppressed:
             if emit_impl:
                 emit_proc_objc_impl(proc, attributes)
             else:
@@ -838,14 +853,12 @@ def main():
         print(f"// @{gen} {ss1}{ss2}<<{hash}>>")
 
         if cmd_args["emit_impl"]:
+            # The objc implementation
             print(f"#import \"{header}\"")
             print("")
             emit_procs(data)
         else:
-            # The C code gen has the standard header files per the flags
-            # after which we emit the JNI helpers to unbox int, long, etc.
-            # Finally we emit the actual JNI entry points to invoke the CQL.
-            # These convert the objc types to CQL types and back.
+            # The objc headers
             print("#pragma once")
             print("")
             print("#import <Foundation/Foundation.h>")

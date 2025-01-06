@@ -23,6 +23,7 @@
 import json
 import sys
 
+
 def usage():
     print(
         "Usage: input.json [options] >result.h\n"
@@ -31,6 +32,7 @@ def usage():
         "    specifies the CQL generated header file for C to include in the generated ObjC code\n"
     )
     sys.exit(0)
+
 
 # Java types for not null cql types
 notnull_types = {}
@@ -74,6 +76,7 @@ nullable_conv["text"] = "(__bridge NSString *)"
 cmd_args = {}
 cmd_args["cql_header"] = ""
 
+
 # The procedure might have any number of projected columns if it creates
 # a result set.  We emit a class for the reading such a result set here.
 #
@@ -95,7 +98,8 @@ def emit_result_set_projection(proc, attributes):
         isNotNull = p["isNotNull"]
         hasOutResult = "hasOutResult" in proc and proc["hasOutResult"]
 
-        objc_type = notnull_types[c_type] if isNotNull else nullable_types[c_type]
+        objc_type = notnull_types[c_type] if isNotNull else nullable_types[
+            c_type]
         conv = notnull_conv[c_type] if isNotNull else nullable_conv[c_type]
 
         bool_fix = "" if objc_type != "cql_bool" else " ? YES : NO"
@@ -105,18 +109,28 @@ def emit_result_set_projection(proc, attributes):
 
         sp = "" if objc_type.endswith("*") else " "
 
-        print(f"static inline {objc_type}{sp}{CGS}{p_name}_get_{c_name}({CGS}{p_name} *resultSet{row_param})")
+        print(
+            f"static inline {objc_type}{sp}{CGS}{p_name}_get_{c_name}({CGS}{p_name} *resultSet{row_param})"
+        )
         print("{")
-        print(f"  {p_name}_result_set_ref cResultSet = {p_name}_from_{CGS}{p_name}(resultSet);")
+        print(
+            f"  {p_name}_result_set_ref cResultSet = {p_name}_from_{CGS}{p_name}(resultSet);"
+        )
 
-        if conv == "@":            
-            print(f"  return {p_name}_get_{c_name}_is_null(cResultSet{row_arg}) ? nil : @({p_name}_get_{c_name}_value(cResultSet{row_arg}));")
+        if conv == "@":
+            print(
+                f"  return {p_name}_get_{c_name}_is_null(cResultSet{row_arg}) ? nil : @({p_name}_get_{c_name}_value(cResultSet{row_arg}));"
+            )
         else:
-            print(f"  return {conv}{p_name}_get_{c_name}(cResultSet{row_arg}){bool_fix};")
+            print(
+                f"  return {conv}{p_name}_get_{c_name}(cResultSet{row_arg}){bool_fix};"
+            )
         print("}")
         print("")
 
+
 CGS = "CGS_"
+
 
 def emit_proc_c_objc(proc, attributes):
     p_name = proc["name"]
@@ -139,12 +153,16 @@ def emit_proc_c_objc(proc, attributes):
     print("")
 
     # conversion methods to go from the result set reference to the Arc friendly type
-    print(f"static inline {CGS}{p_name} *{CGS}{p_name}_from_{p_name}({p_name}_result_set_ref resultSet)")
+    print(
+        f"static inline {CGS}{p_name} *{CGS}{p_name}_from_{p_name}({p_name}_result_set_ref resultSet)"
+    )
     print("{")
     print(f"  return (__bridge {CGS}{p_name} *)resultSet;")
     print("}")
     print("")
-    print(f"static inline {p_name}_result_set_ref {p_name}_from_{CGS}{p_name}({CGS}{p_name} *resultSet)")
+    print(
+        f"static inline {p_name}_result_set_ref {p_name}_from_{CGS}{p_name}({CGS}{p_name} *resultSet)"
+    )
     print("{")
     print(f"  return (__bridge {p_name}_result_set_ref)resultSet;")
     print("}")
@@ -156,18 +174,26 @@ def emit_proc_c_objc(proc, attributes):
     row_arg = "" if hasOutResult else ", row"
     row_param = "" if hasOutResult else ", cql_int32 row"
 
-    print(f"static inline cql_int32 {CGS}{p_name}_result_count({CGS}{p_name} *resultSet)")
+    print(
+        f"static inline cql_int32 {CGS}{p_name}_result_count({CGS}{p_name} *resultSet)"
+    )
     print("{")
-    print(f"  return {p_name}_result_count({p_name}_from_{CGS}{p_name}(resultSet));")
+    print(
+        f"  return {p_name}_result_count({p_name}_from_{CGS}{p_name}(resultSet));"
+    )
     print("}")
     print("")
 
     # the copy method isn't cheap so it's often elided
-    if "cql:generate_copy"  in attributes:
-        print(f"static inline {CGS}{p_name} *{CGS}{p_name}_copy({CGS}{p_name} *resultSet, cql_int32 from, cql_int32 count)")
+    if "cql:generate_copy" in attributes:
+        print(
+            f"static inline {CGS}{p_name} *{CGS}{p_name}_copy({CGS}{p_name} *resultSet, cql_int32 from, cql_int32 count)"
+        )
         print("{")
         print(f"  {p_name}_result_set_ref copy;")
-        print(f"  {p_name}_copy({p_name}_from_{CGS}{p_name}(resultSet), &copy, from, count);")
+        print(
+            f"  {p_name}_copy({p_name}_from_{CGS}{p_name}(resultSet), &copy, from, count);"
+        )
         print(f"  cql_result_set_note_ownership_transferred(copy);")
         print(f"  return (__bridge_transfer {CGS}{p_name} *)copy;")
         print("}")
@@ -175,9 +201,13 @@ def emit_proc_c_objc(proc, attributes):
 
     row = "" if hasOutResult else "_row"
 
-    print(f"static inline NSUInteger {CGS}{p_name}{row}_hash({CGS}{p_name} *resultSet{row_param})")
+    print(
+        f"static inline NSUInteger {CGS}{p_name}{row}_hash({CGS}{p_name} *resultSet{row_param})"
+    )
     print("{")
-    print(f"  return {p_name}{row}_hash({p_name}_from_{CGS}{p_name}(resultSet){row_arg});")
+    print(
+        f"  return {p_name}{row}_hash({p_name}_from_{CGS}{p_name}(resultSet){row_arg});"
+    )
     print("}")
     print("")
 
@@ -186,11 +216,16 @@ def emit_proc_c_objc(proc, attributes):
     r1_param = "" if hasOutResult else ", cql_int32 row1"
     r2_param = "" if hasOutResult else ", cql_int32 row2"
 
-    print(f"static inline BOOL {CGS}{p_name}{row}_equal({CGS}{p_name} *resultSet1{r1_param}, {CGS}{p_name} *resultSet2{r2_param})")
+    print(
+        f"static inline BOOL {CGS}{p_name}{row}_equal({CGS}{p_name} *resultSet1{r1_param}, {CGS}{p_name} *resultSet2{r2_param})"
+    )
     print("{")
-    print(f"  return {p_name}{row}_equal({p_name}_from_{CGS}{p_name}(resultSet1){r1_arg}, {p_name}_from_{CGS}{p_name}(resultSet2){r2_arg});")
+    print(
+        f"  return {p_name}{row}_equal({p_name}_from_{CGS}{p_name}(resultSet1){r1_arg}, {p_name}_from_{CGS}{p_name}(resultSet2){r2_arg});"
+    )
     print("}")
     print("")
+
 
 # emit all the procedures in a section, any of the sections might have projections
 # typically it's just "queries" but there's no need to assume that, we can just look
@@ -210,6 +245,7 @@ def emit_proc_section(section, s_name):
         if not suppressed:
             # emit the C code for the JNI entry points and the supporting metadata
             emit_proc_c_objc(proc, attributes)
+
 
 # These are all of the procedure sources
 def emit_procs(data):

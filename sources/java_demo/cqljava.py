@@ -342,6 +342,7 @@ def emit_proc_c_metadata(proc, attributes):
         "ref_field_count": ref_field_count
     }
 
+
 # This emits the main body of the C JNI function, this includes
 # * the JNI entry point for the procedure
 # * the call to the procedure
@@ -908,6 +909,7 @@ def emit_proc_java_projection(proc, attributes):
         print("    }")
         print("  }\n")
 
+
 # emit all the procedures in a section, the most interesting are those
 # that have a projection, those are the ones that return a result set.
 def emit_proc_section(section, s_name):
@@ -921,8 +923,13 @@ def emit_proc_section(section, s_name):
             v = attr["value"]
             attributes[k] = v
 
-        # no codegen for private methods
-        if "cql:private" not in attributes:
+        # these are the procedures that are suppressed from the public API
+        # they are used internally by other procedures but we can't call them
+        suppressed = ("cql:suppress_result_set" in attributes
+                      or "cql:private" in attributes
+                      or "cql:suppress_getters" in attributes)
+
+        if not suppressed:
             if emit_c:
                 # emit the C code for the JNI entry points and the supporting metadata
                 emit_proc_c_jni(proc, attributes)

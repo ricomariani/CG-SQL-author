@@ -796,7 +796,9 @@ def emit_proc_section(section, s_name):
 
         # these are the procedures that are suppressed from the public API
         # they are used internally by other procedures but we can't call them
-        suppressed = "cql:suppress_result_set" in attributes or "cql:private" in attributes or "cql:suppress_getters" in attributes
+        suppressed = ("cql:suppress_result_set" in attributes
+                      or "cql:private" in attributes
+                      or "cql:suppress_getters" in attributes)
 
         # no codegen for private methods
         if not suppressed:

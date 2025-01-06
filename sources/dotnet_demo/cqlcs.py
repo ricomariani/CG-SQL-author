@@ -896,8 +896,13 @@ def emit_proc_section(section, s_name):
             v = attr["value"]
             attributes[k] = v
 
-        # no codegen for private methods
-        if "cql:private" not in attributes:
+        # these are the procedures that are suppressed from the public API
+        # they are used internally by other procedures but we can't call them
+        suppressed = ("cql:suppress_result_set" in attributes
+                      or "cql:private" in attributes
+                      or "cql:suppress_getters" in attributes)
+
+        if not suppressed:
             if emit_c:
                 # emit the C code for the Interop entry points and the supporting metadata
                 emit_proc_c_interop(proc, attributes)

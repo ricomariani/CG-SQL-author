@@ -1443,10 +1443,9 @@ begin
   delete from mixed;
 
   let i := 0;
-  while i < rows_
+  for i < rows_; i += 1;
   begin
     insert into mixed values (i, "a name", 12, 1, 5.0, cast(i as blob));
-    i += 1;
   end;
 end;
 
@@ -1479,6 +1478,7 @@ begin
     select id, (select count(*) from codes T2 where T2.id = T1.id) as code_count
     from vals T1
     where val >= 7;
+
   loop fetch c2 into id_, count_
   begin
     EXPECT_EQ!(count_, case id_ when 1 then 3 when 2 then 2 when 3 then 1 else 0 end);
@@ -1748,15 +1748,14 @@ TEST!(dummy_values,
 begin
   delete from mixed;
   let i := 0;
-  while (i < 20)
+  for i < 20; i += 1;
   begin
     insert into mixed (bl) values (cast(i as blob)) @dummy_seed(i) @dummy_nullables @dummy_defaults;
-    i += 1;
   end;
 
   cursor C for select * from mixed;
   i := 0;
-  while (i < 20)
+  for i < 20; i += 1;
   begin
     fetch C;
     EXPECT_EQ!(C.id, i);
@@ -1764,7 +1763,6 @@ begin
     EXPECT_EQ!(C.code, i);
     EXPECT_EQ!(not C.flag, not i);
     EXPECT_EQ!(C.rate, i);
-    i += 1;
   end;
 end);
 
@@ -1808,17 +1806,13 @@ begin
   let i := 0;
   let count := 20;
 
-  declare b1 blob;
-  declare b2 blob!;
-
-  while (i < count)
+  for i < count; i += 1;
   begin
     let s := printf("nullable blob %d", i);
-    b1 := blob_from_string(s);
+    let b1 := blob_from_string(s);
     s := printf("not nullable blob %d", i);
-    b2 := blob_from_string(s);
+    let b2 := blob_from_string(s);
     insert into blob_table(id, b1, b2) values (i, b1, b2);
-    i += 1;
   end;
 end;
 
@@ -1873,14 +1867,13 @@ begin
   let i := 0;
   let count := 20;
 
-  while (i < count)
+  for i < count; i += 1;
   begin
     s := printf("nullable blob %d", i);
     b1 := case when i % 2 == 0 then blob_from_string(s) else null end;
     s := printf("not nullable blob %d", i);
     b2 := blob_from_string(s);
     insert into blob_table(id, b1, b2) values (i, b1, b2);
-    i += 1;
   end;
 end;
 
@@ -3198,11 +3191,10 @@ begin
   cursor C like select 1 v, 2 vsq, "xx" junk;
   declare i int!;
   i := start;
-  while (i < stop)
+  for i < stop; i += 1;
   begin
     fetch C(v, vsq, junk) from values (i, i * i, printf("%d", i));
     out union C;
-    i += 1;
   end;
 
   -- if the start was -1 then force an error, this ensures full cleanup
@@ -3387,7 +3379,7 @@ end);
 TEST!(boxing_cursors,
 begin
   let i := 0;
-  while i < 5
+  for i < 5; i += 1;
   begin
     cursor C for
       with data(x,y) as (values (1,2), (3,4), (5,6))
@@ -3414,8 +3406,6 @@ begin
     EXPECT_EQ!(C.y, 6);
     EXPECT_EQ!(D.x, 3);
     EXPECT_EQ!(D.y, 4);
-
-    i += 1;
   end;
 end);
 
@@ -3428,7 +3418,7 @@ end;
 TEST!(boxing_from_call,
 begin
   let i := 0;
-  while i < 5
+  for i < 5; i += 1;
   begin
     cursor C for call a_few_rows();
 
@@ -3453,8 +3443,6 @@ begin
     EXPECT_EQ!(C.y, 6);
     EXPECT_EQ!(D.x, 3);
     EXPECT_EQ!(D.y, 4);
-
-    i += 1;
   end;
 end);
 
@@ -3947,10 +3935,9 @@ end;
 
 TEST!(call_in_loop,
 begin
-  let i := 0;
-  while i < 5
+  let i := 1;
+  for i <= 5; i += 1;
   begin
-    i += 1;
     cursor C for call simple_select();
     fetch C;
     EXPECT_EQ!(C.x, 1);
@@ -3959,10 +3946,9 @@ end);
 
 TEST!(call_in_loop_boxed,
 begin
-  let i := 0;
-  while i < 5
+  let i := 1;
+  for i <= 5; i += 1;
   begin
-    i += 1;
     cursor C for call simple_select();
     declare box object<C cursor>;
     set box from cursor C;
@@ -3981,10 +3967,9 @@ end;
 
 TEST!(call_out_union_in_loop,
 begin
-  let i := 0;
-  while i < 5
+  let i := 1;
+  for i <= 5; i += 1;
   begin
-    i += 1;
     cursor C for call out_union_helper();
     fetch C;
     EXPECT_EQ!(C.x, 1);
@@ -4116,34 +4101,30 @@ begin
 
   -- add some facets
   let i := 0;
-  while i < 1000
+  for i < 1000; i += 1;
   begin
     EXPECT!(cql_facet_add(facets, printf('fake facet %d', i), i * i));
-    i += 1;
   end;
 
   -- all duplicates, all the adds should return false
   i := 0;
-  while i < 1000
+  for i < 1000; i += 1;
   begin
     EXPECT!(not cql_facet_add(facets, printf('fake facet %d', i), i * i));
-    i += 1;
   end;
 
   -- we should be able to find all of these
   i := 0;
-  while i < 1000
+  for i < 1000; i += 1;
   begin
     EXPECT_EQ!(i * i, cql_facet_find(facets, printf('fake facet %d', i)));
-    i += 1;
   end;
 
   -- we should be able to find none of these
   i := 0;
-  while i < 1000
+  for i < 1000; i += 1;
   begin
     EXPECT_EQ!(-1, cql_facet_find(facets, printf('fake_facet %d', i)));
-    i += 1;
   end;
 
   -- NOTE the test infra is counting refs so that if we fail
@@ -4896,7 +4877,7 @@ begin
 
   -- try truncated blobs of every size
   let i := 0;
-  while i < full_size
+  for i < full_size; i += 1;
   begin
     declare blob_broken  blob<storage_both>;
     blob_broken := create_truncated_blob(blob_both, i);
@@ -4910,7 +4891,6 @@ begin
       caught := true;
     end;
     EXPECT!(caught);
-    i += 1;
   end;
 
   @echo lua, "cql_disable_tracing = false\n";
@@ -5267,11 +5247,9 @@ begin
   -- on the attempt that crashed, check out this value in the debugger
   let attempt := 0;
 
-  let i := 0;
-  while i < 100
+  let i := 1;
+  for i <= 100; i += 1;
   begin
-    i += 1;
-
     -- refresh the blob from the cursor, it's good now (again)
     my_blob := cursor_both:to_blob;
 
@@ -5339,7 +5317,7 @@ begin
   EXPECT_EQ!(0, cql_cursor_hash(C));
 
   let i := 0;
-  while i < 5
+  for i < 5; i += 1;
   begin
     -- no explicit values, all dummy
     fetch C() from values () @dummy_seed(i);
@@ -5470,8 +5448,6 @@ begin
 
     hash2 := cql_cursor_hash(D);
     EXPECT_NE!(hash1, hash2);  -- now different
-
-    i += 1;
   end;
 end);
 
@@ -5488,9 +5464,8 @@ begin
   EXPECT!(not cql_cursors_equal(C, D));
   EXPECT!(not cql_cursors_equal(D, C));
 
-
   let i := 0;
-  while i < 5
+  for i < 5; i += 1;
   begin
     -- no explicit values, all dummy
     fetch C() from values () @dummy_seed(i);
@@ -5596,8 +5571,6 @@ begin
     update cursor D using null as t0;
 
     EXPECT!(not cql_cursors_equal(C, D));
-
-    i += 1;
   end;
 
   -- different number of columns
@@ -5885,8 +5858,7 @@ begin
   EXPECT!(not added);
 
   let i := 0;
-
-  while i < 10
+  for i < 10; i += 1;
   begin
     fetch v() from values() @dummy_seed(i) @dummy_nullables;
     fetch k from v(like k);
@@ -5902,12 +5874,10 @@ begin
       added := cql_partition_cursor(p, k, v);
       EXPECT!(added);
     end if;
-
-    i += 1;
   end;
 
   i := -2;
-  while i < 12
+  for i < 12; i += 1;
   begin
     /* don't join #6 to force cleanup */
     if i != 6 then
@@ -5942,18 +5912,17 @@ begin
           then EXPECT_EQ!(row_count, 3);
       end;
     end if;
-
-    i += 1;
   end;
 end);
 
 proc ch1()
 begin
-  let i := 0;
   let base := 500;
   cursor C like (k1 int, k2 text, v1 bool, v2 text, v3 real);
   declare K cursor like C(k1,k2);
-  while i < 10
+
+  let i := 0;
+  for i < 10; i += 1;
   begin
     -- note that 1/3 of parents do not have this child
     if i % 3 != 2 then
@@ -5963,17 +5932,17 @@ begin
       fetch C(like K) from values(from K) @dummy_seed(base + i * 2 + 1) @dummy_nullables;
       out union C;
     end if;
-    i += 1;
   end;
 end;
 
 proc ch2()
 begin
-  let i := 0;
   let base := 1000;
   cursor C like (k3 integer, k4 text, v1 bool, v2 text, v3 real);
   declare K cursor like C(k3, k4);
-  while i < 10
+
+  let i := 0;
+  for i < 10; i += 1;
   begin
     -- note that 1/3 of parents do not have this child
     if i % 3 != 1 then
@@ -5983,7 +5952,6 @@ begin
       fetch C(like K) from values(from K) @dummy_seed(base + i * 2 + 1) @dummy_nullables;
       out union C;
     end if;
-    i += 1;
   end;
 end;
 
@@ -6011,10 +5979,10 @@ end;
 
 proc parent()
 begin
-  let i := 0;
   cursor C like (k1 int, k2 text, k3 int, k4 text, v1 bool, v2 text, v3 real);
   declare D cursor like C;
-  while i < 10
+  let i := 0;
+  for i < 10; i += 1;
   begin
     fetch C() from values() @dummy_seed(i) @dummy_nullables;
 
@@ -6027,7 +5995,6 @@ begin
     update cursor C using D.k3 k3, D.k4 k4;
 
     out union C;
-    i += 1;
   end;
 end;
 
@@ -6114,12 +6081,12 @@ end);
 TEST!(string_dictionary,
 begin
   let i := 1;
-  while i <= 512
+  for i <= 512; i *= 2;
   begin
     let dict := cql_string_dictionary_create();
 
     let j := 0;
-    while j < i
+    for j < i; j += 2;
     begin
       -- set to bogus original value
       let added := dict:add(printf("%d", j), "0");
@@ -6131,18 +6098,14 @@ begin
       -- replace
       added := dict:add(printf("%d", j), printf("%d", j * 100));
       EXPECT!(not added);
-      j := j + 2;
     end;
 
     j := 0;
-    while j < i
+    for j < i; j += 1;
     begin
       let result := dict:find(printf("%d", j));
       EXPECT_EQ!(result, case when j % 2 then null else printf("%d", j * 100) end);
-      j += 1;
     end;
-
-    i *= 2;
   end;
 
   -- test null lookup, always fails
@@ -6152,12 +6115,12 @@ end);
 TEST!(long_dictionary,
 begin
   let i := 1;
-  while i <= 512
+  for i <= 512; i *= 2;
   begin
     let dict := cql_long_dictionary_create();
 
     let j := 0;
-    while j < i
+    for j < i; j += 2;
     begin
       -- set to bogus original value
       let added := dict:add(printf("%d", j), 0);
@@ -6169,18 +6132,14 @@ begin
       -- replace
       added := dict:add(printf("%d", j), j * 100);
       EXPECT!(not added);
-      j := j + 2;
     end;
 
     j := 0;
-    while j < i
+    for j < i; j += 1;
     begin
       let result := dict[printf("%d", j)];
       EXPECT_EQ!(result, case when j % 2 then null else j * 100 end);
-      j += 1;
     end;
-
-    i *= 2;
   end;
 
   -- test null lookup, always fails
@@ -6190,12 +6149,12 @@ end);
 TEST!(real_dictionary,
 begin
   let i := 1;
-  while i <= 512
+  for i <= 512; i *= 2;
   begin
     let dict := cql_real_dictionary_create();
 
     let j := 0;
-    while j < i
+    for j < i; j += 2;
     begin
       -- set to bogus original value
       let added := dict:add(printf("%d", j), 0);
@@ -6207,18 +6166,15 @@ begin
       -- replace
       added := dict:add(printf("%d", j), j * 100.5);
       EXPECT!(not added);
-      j := j + 2;
     end;
 
     j := 0;
-    while j < i
+    for j < i; j += 1;
     begin
       let result := dict[printf("%d", j)];
       EXPECT_EQ!(result, case when j % 2 then null else j * 100.5 end);
       j += 1;
     end;
-
-    i *= 2;
   end;
 
   -- test null lookup, always fails
@@ -6238,12 +6194,12 @@ begin
   cursor C like storage_one_real;
 
   let i := 1;
-  while i <= 512
+  for i <= 512; i *= 2;
   begin
     let dict := cql_blob_dictionary_create();
 
     let j := 0;
-    while j < i
+    for j < i; j += 2;
     begin
       -- set to bogus original value
       let added := dict:add(printf("%d", j), zero);
@@ -6258,11 +6214,10 @@ begin
       let b := blob_for_real(j * 100.5);
       added := dict:add(printf("%d", j), b);
       EXPECT!(not added);
-      j := j + 2;
     end;
 
     j := 0;
-    while j < i
+    for j < i; j += 1;
     begin
       let result := dict[printf("%d", j)] ~blob<storage_one_real>~;
 
@@ -6272,10 +6227,7 @@ begin
         C:from_blob(result);
         EXPECT_EQ!(C.data, j * 100.5);
       end if;
-      j += 1;
     end;
-
-    i *= 2;
   end;
 
   -- test null lookup, always fails
@@ -6397,17 +6349,15 @@ begin
   -- test some growth
   list := cql_long_list_create();
   let i := 0;
-  while i < 1024
+  for i < 1024; i += 1;
   begin
     list:add(i * 3);
-    i += 1;
   end;
 
   i := 0;
-  while i < 1024
+  for i < 1024; i += 1;
   begin
     EXPECT_EQ!(list[i], i * 3);
-    i += 1;
   end;
 end);
 
@@ -6429,17 +6379,15 @@ begin
   -- test some growth
   list := cql_real_list_create();
   let i := 0;
-  while i < 1024
+  for i < 1024; i += 1;
   begin
     list:add(i * 3.5);
-    i += 1;
   end;
 
   i := 0;
-  while i < 1024
+  for i < 1024; i += 1;
   begin
     EXPECT_EQ!(list[i], i * 3.5);
-    i += 1;
   end;
 end);
 
@@ -7525,10 +7473,9 @@ create table my_data(
 proc insert_data_into_json()
 begin
   make_json_backed_schema();
-  let i := 0;
-  while i < 15
+  let i := 1;
+  for i <= 15; i += 1;
   begin
-    i += 1;
     insert into my_data() values() @dummy_seed(i);
   end;
 

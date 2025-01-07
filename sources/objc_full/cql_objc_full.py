@@ -161,7 +161,14 @@ def emit_proc_objc_return_impl(proc):
     # this is the result type for the procedure out arguments and returns
     print("")
     print(dashes)
-    print(f"@implementation {CGS}{p_name}RT : NSObject", end="")
+
+    legacy = cmd_args["legacy"]
+   
+    if legacy:
+      print(f"@implementation {CGS}{p_name}RT : NSObject", end="")
+    else:
+      print(f"@implementation {CGS}{p_name}RT", end="")
+
     print(" {")
 
     for p in args:
@@ -218,7 +225,13 @@ def emit_proc_objc_projection_impl(proc, attributes):
 
     print("")
     print(dashes)
-    print(f"@implementation {CGS}{p_name}RS : NSObject", end="")
+    legacy = cmd_args["legacy"]
+   
+    if legacy:
+      print(f"@implementation {CGS}{p_name}RS : NSObject", end="")
+    else:
+      print(f"@implementation {CGS}{p_name}RS", end="")
+
     print(" {")
     print(f"  {p_name}_result_set_ref _resultSet;")
     print("}")
@@ -285,10 +298,13 @@ def emit_proc_objc_projection_impl(proc, attributes):
 
     # we own the handle so we release it in dealloc
 
+
     print("")
     print("-(void)dealloc {")
     print("  cql_release((cql_type_ref)self.resultSet);")
-    print("  [super dealloc];")
+    if legacy:
+      print("  [super dealloc];")
+  
     print("}")
 
     print("")
@@ -369,7 +385,7 @@ def emit_proc_objc_impl(proc, attributes):
     # if the procedure creates a result set then it is captured in "data_result_set"
     # this is typically the result of a query or something like that
     if projection:
-        print(f"  {p_name}_result_set_ref _result_set_ = NULL;")
+        print(f"  {p_name}_result_set_ref _result_set_ref = NULL;")
 
     # if the procedure has outputs, like a return code or a result set, or out arguments
     # then we need a row to capture those outputs. This row is allocated and filled
@@ -415,7 +431,7 @@ def emit_proc_objc_impl(proc, attributes):
     if projection:
         if needsComma:
             call += ",\n    "
-        call += "&_result_set_"
+        call += "&_result_set_ref"
         needsComma = True
 
     # Now we walk the arguments and emit the call to the procedure.  There
@@ -530,9 +546,11 @@ def emit_proc_objc_impl(proc, attributes):
         # if we have a result set we need to return that
         if projection:
             print(
-                "  // the result object takes over the result set reference, it knows to clean it up"
+                f"  // {CGS}{p_name}RS takes over result_set_ref, it knows to clean it up"
             )
-            print("  _result.resultSet = _result_set_;")
+            print(f" {CGS}{p_name}RS *rs = [{CGS}{p_name}RS new];")
+            print("  rs.resultSet = _result_set_ref;")
+            print("  _result.resultSet = rs;")
 
         print("  return _result;")
 
@@ -650,7 +668,7 @@ def emit_proc_objc_return_type(proc):
 
         isRef = is_ref_type[c_type]
         objc_type = objc_type_for_arg(c_type, kind, isNotNull)
-        retain = "retain" if isRef else "assign"
+        retain = "retain" if isRef or not isNotNull else "assign"
 
         if binding == "out" or binding == "inout":
             if first:

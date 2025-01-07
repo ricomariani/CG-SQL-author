@@ -9,5 +9,3 @@ echo gathering the release pieces from the build locations
 cp ../sources/out/cql_amalgam.c .
 cp ../sources/cqlrt*.c ../sources/cqlrt*.h ../sources/cqlrt*.lua .
 cp ../sources/cqlrt_cf/cqlrt_cf.* .
-
-./test_amalgam.sh

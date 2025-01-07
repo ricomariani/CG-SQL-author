@@ -578,7 +578,13 @@ function cql_multibind_var(db, stmt, bind_count, bind_preds, types, ...)
   return rc
 end
 
+cql_disable_tracing = false
+
 function cql_error_trace(rc, db)
+  if cql_disable_tracing then
+    return
+  end
+
   if db:errcode() ~= 0 then
     print("err: ", rc, "db info:", db:errcode(), db:errmsg())
   else
@@ -634,6 +640,16 @@ function cql_multifetch(stmt, result, types, columns)
   return rc
 end
 
+function cql_autodrop(db, autodrops)
+  -- best effort, return codes are ignored
+  for i = 1, #autodrops
+  do
+    tab = autodrops[i]
+    cql_exec_internal(db, "drop table if exists "..tab)
+  end
+end
+
+
 function cql_fetch_all_rows(stmt, types, columns)
   local rc
   local result_set = {}
@@ -650,6 +666,7 @@ function cql_fetch_all_rows(stmt, types, columns)
   else
      rc = sqlite3.OK
   end
+
   return rc, result_set
 end
 
@@ -680,17 +697,24 @@ function cql_contract_argument_notnull(arg, index)
   end
 end
 
+function cql_contract(b)
+  if cql_is_false(b) then
+    print("contract violation");
+    exit_on_error();
+  end
+end
+
 function cql_partition_create()
   return {};
 end;
 
-function cql_make_str_key(key_table)
+function cql_make_str_key(key_table, fields)
   local key = ""
-  for k,v in pairs(key_table)
+  for i = 1, #fields
   do
-     if k ~= "_has_row_" then
-       key = key .. ":" .. tostring(v)
-     end
+    k = fields[i]
+    v = key_table[k]
+    key = key .. ":" .. tostring(v)
   end
   return key
 end
@@ -711,7 +735,7 @@ function cql_cursor_hash(key, key_types, key_fields)
      return 0
   end
 
-  return cql_hash_string(cql_make_str_key(key))
+  return cql_hash_string(cql_make_str_key(key, key_fields))
 end
 
 function cql_cursors_equal(k1, k1_types, k1_fields, k2, k2_types, k2_fields)
@@ -730,9 +754,90 @@ function cql_cursors_equal(k1, k1_types, k1_fields, k2, k2_types, k2_fields)
   return true
 end
 
+function cql_cursor_diff_index(k1, k1_types, k1_fields, k2, k2_types, k2_fields)
+  -- one has a row and the other doesn't
+  if k1._has_row_ ~= k2._has_row_ then
+    return -2
+  end;
+
+  -- both empty is a match
+  if not k1._has_row_ then
+    return -1
+  end
+
+  if #k1 ~= #k2 then
+    print("cursor column count doesn't match first:"..#k1.." second:"..#k2)
+    exit_on_error();
+  end
+
+  for i = 1, #k1_fields
+  do
+    k = k1_fields[i]
+    if k2_fields[i] ~= k then
+      print("cursor field names don't match first:"..k.." second:"..k2_fields[i])
+      exit_on_error();
+    end
+
+    if k1[k] ~= k2[k] then
+      return i-1
+    end
+  end
+
+  return -1
+end
+
+function cql_cursor_diff_col(k1, k1_types, k1_fields, k2, k2_types, k2_fields)
+  if (not k1._has_row_) and not k2._has_row_ then
+    return nil
+  end
+  if k1._has_row_ ~= k2._has_row_ then
+    return "_has_row_"
+  end
+  if #k1 ~= #k2 then
+    return "$error_field_counts_do_not_match"
+  end
+
+  for i = 1, #k1_fields
+  do
+    k = k1_fields[i]
+    if k2_fields[i] ~= k then
+      return "$error_field_names_differ"
+    end
+
+    if k1[k] ~= k2[k] then
+      return k
+    end
+  end
+
+  return nil
+end
+
+function cql_cursor_diff_val(k1, k1_types, k1_fields, k2, k2_types, k2_fields)
+  local i = cql_cursor_diff_index(k1, k1_types, k1_fields, k2, k2_types, k2_fields)
+
+  if i == -1 then
+     return nil
+  end
+
+  if i == -2 then
+    return "column:_has_row_ c1:"..tostring(k1._has_row_).." c2:"..tostring(k2._has_row_)
+  end
+
+  -- field offsets are all 1 based in lua, fix that
+  i = i + 1
+
+  local code = string.byte(k1_types, i, i)
+  local value1 = k1[k]
+  local value2 = k2[k]
+
+  return "column:"..k..
+      " c1:"..cql_format_one_field(code, value1)..
+      " c2:"..cql_format_one_field(code, value2)
+end
+
 function cql_partition_cursor(partition, key, key_types, key_fields, cursor, cursor_types, cursor_fields)
   if not cursor._has_row_ then return false end
-  key = cql_make_str_key(key)
+  key = cql_make_str_key(key, key_fields)
   cursor = cql_clone_row(cursor)
   if partition[key] ~= nil then
      table.insert(partition[key], cursor)
@@ -743,7 +848,7 @@ function cql_partition_cursor(partition, key, key_types, key_fields, cursor, cur
 end;
 
 function cql_extract_partition(partition, key, key_types, key_fields)
-  key = cql_make_str_key(key)
+  key = cql_make_str_key(key, key_fields)
   if partition[key] ~= nil then
      return partition[key]
   else
@@ -800,6 +905,21 @@ cql_object_dictionary_create = cql_string_dictionary_create
 cql_object_dictionary_add = cql_string_dictionary_add
 cql_object_dictionary_find = cql_string_dictionary_find
 
+-- in Lua, the string dictionary is the same, we can steal the implementation
+cql_long_dictionary_create = cql_string_dictionary_create
+cql_long_dictionary_add = cql_string_dictionary_add
+cql_long_dictionary_find = cql_string_dictionary_find
+
+-- in Lua, the string dictionary is the same, we can steal the implementation
+cql_real_dictionary_create = cql_string_dictionary_create
+cql_real_dictionary_add = cql_string_dictionary_add
+cql_real_dictionary_find = cql_string_dictionary_find
+
+-- in Lua, the string dictionary is the same, we can steal the implementation
+cql_blob_dictionary_create = cql_string_dictionary_create
+cql_blob_dictionary_add = cql_string_dictionary_add
+cql_blob_dictionary_find = cql_string_dictionary_find
+
 function cql_string_list_create()
   return {}
 end
@@ -823,6 +943,31 @@ function cql_string_list_set_at(list, i, val)
   list[i+1] = val
   return list
 end
+
+-- the long/real/blob versions are the same in Lua
+cql_long_list_create = cql_string_list_create;
+cql_long_list_count = cql_string_list_count;
+cql_long_list_add = cql_string_list_add;
+cql_long_list_get_at = cql_string_list_get_at;
+cql_long_list_set_at = cql_string_list_set_at;
+
+cql_real_list_create = cql_string_list_create;
+cql_real_list_count = cql_string_list_count;
+cql_real_list_add = cql_string_list_add;
+cql_real_list_get_at = cql_string_list_get_at;
+cql_real_list_set_at = cql_string_list_set_at;
+
+cql_blob_list_create = cql_string_list_create;
+cql_blob_list_count = cql_string_list_count;
+cql_blob_list_add = cql_string_list_add;
+cql_blob_list_get_at = cql_string_list_get_at;
+cql_blob_list_set_at = cql_string_list_set_at;
+
+cql_object_list_create = cql_string_list_create;
+cql_object_list_count = cql_string_list_count;
+cql_object_list_add = cql_string_list_add;
+cql_object_list_get_at = cql_string_list_get_at;
+cql_object_list_set_at = cql_string_list_set_at;
 
 function cql_exec_internal(db, str)
   return db:exec(str)
@@ -868,11 +1013,18 @@ function cql_cursor_column_type(C, types, fields, i)
   return type
 end
 
+function cql_cursor_column_name(C, types, fields, i)
+  if i < 0 or i >= #fields then
+    return nil
+  end
+  return fields[i+1]
+end
+
 function cql_cursor_get_any(C, types, fields, i, reqd)
   if i >= 0 and i < #fields then
     i = i + 1
     local code = string.byte(types, i, i)
-    local type = cql_data_type_decode[code] & CQL_DATA_TYPE_CORE 
+    local type = cql_data_type_decode[code] & CQL_DATA_TYPE_CORE
     if type == reqd then
       return C[fields[i]]
     end
@@ -909,6 +1061,22 @@ function cql_cursor_get_object(C, types, fields, i)
   return cql_cursor_get_any(C, types, fields, i, CQL_DATA_TYPE_OBJECT)
 end
 
+function cql_format_one_field(code, value)
+  if value == nil then
+    return "null"
+  end
+
+  if code == CQL_ENCODED_TYPE_BLOB_NOTNULL or code == CQL_ENCODED_TYPE_BLOB then
+    return "length "..tostring(#value).." blob"
+  end
+
+  if code == CQL_ENCODED_TYPE_OBJECT_NOTNULL or code == CQL_ENCODED_TYPE_OBJECT then
+    return "generic object"
+  end
+
+  return tostring(value)
+end
+
 function cql_cursor_format(C, types, fields)
   local result = ""
   for i = 1, #fields
@@ -917,17 +1085,19 @@ function cql_cursor_format(C, types, fields)
     result = result..fields[i]..":"
     local code = string.byte(types, i, i)
     local value = C[fields[i]]
-    if value == nil then
-      result = result.."null"
-    else
-      if code == CQL_ENCODED_TYPE_BLOB_NOTNULL or code == CQL_ENCODED_TYPE_BLOB then
-        result = result.."length "..tostring(#value).." blob"
-      else
-        result = result..tostring(value)
-      end
-    end
+    result = result .. cql_format_one_field(code, value)
   end
   return result
+end
+
+function cql_cursor_format_column(C, types, fields, i)
+  cql_contract(i >= 0);
+  cql_contract(i < #fields);
+  i = i + 1
+
+  local code = string.byte(types, i, i)
+  local value = C[fields[i]]
+  return cql_format_one_field(code, value)
 end
 
 function _cql_create_upgrader_input_statement_list(str, parse_word)
@@ -1119,6 +1289,9 @@ function cql_box_object(x)
 end
 
 function cql_box_get_type(x)
+  if x == nil then
+    return CQL_DATA_TYPE_NULL
+  end
   for k,v in pairs(x) do
     return k
   end
@@ -1127,29 +1300,582 @@ function cql_box_get_type(x)
 end
 
 function cql_unbox_int(x)
+  if x == nil then
+    return nil
+  end
   return x[CQL_DATA_TYPE_INT32]
 end
 
 function cql_unbox_long(x)
+  if x == nil then
+    return nil
+  end
   return x[CQL_DATA_TYPE_INT64]
 end
 
 function cql_unbox_real(x)
+  if x == nil then
+    return nil
+  end
   return x[CQL_DATA_TYPE_DOUBLE]
 end
 
 function cql_unbox_bool(x)
+  if x == nil then
+    return nil
+  end
   return x[CQL_DATA_TYPE_BOOL]
 end
 
 function cql_unbox_text(x)
+  if x == nil then
+    return nil
+  end
   return x[CQL_DATA_TYPE_STRING]
 end
 
 function cql_unbox_blob(x)
+  if x == nil then
+    return nil
+  end
   return x[CQL_DATA_TYPE_BLOB]
 end
 
 function cql_unbox_object(x)
+  if x == nil then
+    return nil
+  end
   return x[CQL_DATA_TYPE_OBJECT]
+end
+
+function cql_setbit(x, i)
+  local offset = 1 + i // 8
+  local bit = i % 8
+  x[offset] = x[offset] | (1<<bit)
+end
+
+function cql_getbit(x, i)
+  local offset = 1 + i // 8
+  local bit = i % 8
+  if offset > #x then
+    return nil
+  end
+  return cql_is_true(x[offset] & (1<<bit))
+end
+
+function cql_zigzag_encode_32(x)
+  return cql_zigzag_encode_64(x) & 0xFFFFFFFF
+end
+
+function cql_zigzag_encode_64(x)
+  if x < 0 then
+    return (x << 1) ~ -1
+  end
+  return x << 1
+end
+
+function cql_zigzag_decode(x)
+  return (x >> 1) ~ -(x & 1)
+end
+
+function cql_varint_encode(x)
+  local result = {}
+  while x > 0 or #result == 0 do
+    local b = x & 0x7F
+    x = x >> 7
+    if x > 0 then
+      b = b | 0x80
+    end
+    table.insert(result, b)
+  end
+  result = string.char(table.unpack(result))
+  return result;
+end
+
+function cql_int_encode_32(x)
+  return cql_varint_encode(cql_zigzag_encode_32(x))
+end
+
+function cql_int_encode_64(x)
+  return cql_varint_encode(cql_zigzag_encode_64(x))
+end
+
+function cql_cursor_to_blob(db, C, C_types, C_fields)
+  local bool_count = 0
+  local var_encoding_count = 0
+  local nullable_count = 0
+  local header = {}
+  local pieces = {}
+  local bits = {}
+
+  -- output starts with null terminated types
+  table.insert(header, C_types)
+  table.insert(header, "\0")
+
+  -- We need to count bools and nullable types to figure out how many bytes we
+  -- need for the bit vector. We want to pre-allocate the bytes we will need.
+  -- Bools get stored in the bit vector. The is null state is stored in the bit
+  -- vector for nullable types.  We do not have an actual payload if the value
+  -- is a bool or null.  Note that a nullable bool uses both bits.
+  for i = 1, #C_types do
+    local code = string.byte(C_types, i)
+    if code == CQL_ENCODED_TYPE_BOOL_NOTNULL or code == CQL_ENCODED_TYPE_BOOL then
+      bool_count = bool_count + 1;
+    end
+    if code >= string.byte("a") then
+      nullable_count = nullable_count + 1;
+    end
+  end
+
+  -- this is our bit vector, it will be emitted as bytes
+  bytes = (nullable_count + bool_count + 7) // 8
+  for i = 1, bytes do
+    table.insert(bits, 0)
+  end
+
+  local nullable_index = 0
+  local bool_index = 0
+
+  -- now we emit the actual data
+  for i = 1, #C_types do
+    local code = string.byte(C_types, i)
+    local field = C_fields[i]
+    local value = C[field]
+
+    if code == CQL_ENCODED_TYPE_BOOL_NOTNULL then
+      if value == nil then
+         return -1, ""
+      end
+      if cql_is_true(value) then
+        cql_setbit(bits, nullable_count + bool_index)
+      end
+      bool_index = bool_index + 1
+    elseif code == CQL_ENCODED_TYPE_BOOL then
+      if value ~= nil then
+        cql_setbit(bits, nullable_index)
+        if cql_is_true(value) then
+          cql_setbit(bits, nullable_count + bool_index)
+        end
+      end
+      nullable_index = nullable_index + 1
+      bool_index = bool_index + 1
+    elseif code == CQL_ENCODED_TYPE_INT_NOTNULL then
+      if value == nil then
+         return -1, ""
+      end
+      table.insert(pieces, cql_int_encode_32(value))
+    elseif code == CQL_ENCODED_TYPE_INT then
+      if value ~= nil then
+        cql_setbit(bits, nullable_index)
+        table.insert(pieces, cql_int_encode_32(value))
+      end
+      nullable_index = nullable_index + 1
+    elseif code == CQL_ENCODED_TYPE_LONG_NOTNULL then
+      if value == nil then
+         return -1, ""
+      end
+      table.insert(pieces, cql_int_encode_64(value))
+    elseif code == CQL_ENCODED_TYPE_LONG then
+      if value ~= nil then
+        cql_setbit(bits, nullable_index)
+        table.insert(pieces, cql_int_encode_64(value))
+      end
+      nullable_index = nullable_index + 1
+    elseif code == CQL_ENCODED_TYPE_STRING_NOTNULL then
+      if value == nil then
+         return -1, ""
+      end
+      table.insert(pieces, string.pack("z", value))
+    elseif code == CQL_ENCODED_TYPE_STRING then
+      if value ~= nil then
+        cql_setbit(bits, nullable_index)
+        table.insert(pieces, string.pack("z", value))
+      end
+      nullable_index = nullable_index + 1
+    elseif code == CQL_ENCODED_TYPE_BLOB_NOTNULL then
+      if value == nil then
+         return -1, ""
+      end
+      table.insert(pieces, cql_int_encode_32(#value))
+      table.insert(pieces, value)
+    elseif code == CQL_ENCODED_TYPE_BLOB then
+      if value ~= nil then
+        cql_setbit(bits, nullable_index)
+        table.insert(pieces, cql_int_encode_32(#value))
+        table.insert(pieces, value)
+      end
+      nullable_index = nullable_index + 1
+    elseif code == CQL_ENCODED_TYPE_DOUBLE_NOTNULL then
+      if value == nil then
+         return - 1, ""
+      end
+      table.insert(pieces, string.pack("d", value))
+    elseif code == CQL_ENCODED_TYPE_DOUBLE then
+      if value ~= nil then
+        cql_setbit(bits, nullable_index)
+        table.insert(pieces, string.pack("d", value))
+      end
+      nullable_index = nullable_index + 1
+    end
+  end
+
+  table.insert(header, string.char(table.unpack(bits)))
+
+  result = table.concat(header)..table.concat(pieces)
+  return 0, result
+end
+
+function format_as_hex(str)
+  local hex_output = {}
+  local printable_output = {}
+
+  for i = 1, #str do
+      local byte = string.byte(str, i)
+      -- Convert byte to hex
+      table.insert(hex_output, string.format("%02X", byte))
+
+      -- Check if the byte is printable (ASCII range 32-126)
+      if byte >= 32 and byte <= 126 then
+          -- If printable, store the character
+          table.insert(hex_output, string.char(byte)..",")
+      else
+          -- If not printable, store a placeholder (like -)
+          table.insert(hex_output, "-,")
+      end
+  end
+
+  -- Print hex and printable characters, 32 per line
+  local hex_index = 1
+  local line_length = 32
+
+  while hex_index <= #hex_output do
+    -- Collect hex characters for the current line
+    local line = {}
+    for i = 1, line_length do
+      if hex_index <= #hex_output then
+        table.insert(line, hex_output[hex_index])
+        hex_index = hex_index + 1
+      end
+    end
+
+    -- Print the current line with hex values and printable characters
+    print(table.concat(line, " "))
+  end
+end
+
+function cql_varint_decode(x, pos, lim)
+  local result = 0
+  local shift = 0
+  local b = 0
+  local count = 0
+  repeat
+    b = string.byte(x, pos)
+    if b == nil or count >= lim then
+      return nil, nil
+    end
+    pos = pos + 1
+    result = result | ((b & 0x7F) << shift)
+    shift = shift + 7
+    count = count + 1
+  until b < 0x80
+  result = cql_zigzag_decode(result)
+  return result, pos
+end
+
+function cql_varint_decode_32(x, pos)
+  -- at most 5 bytes
+  x, pos = cql_varint_decode(x, pos, 5)
+  return x, pos
+end
+
+function cql_varint_decode_64(x, pos)
+  -- at most 10 bytes
+  x, pos = cql_varint_decode(x, pos, 10)
+  return x, pos
+end
+
+function cql_unpack_z(str, pos)
+  local success, result, next_pos = pcall(string.unpack, "z", str, pos)
+  if success then
+    return result, next_pos
+  else
+    return nil, nil
+  end
+end
+
+function cql_unpack_d(str, pos)
+  local success, result, next_pos = pcall(string.unpack, "d", str, pos)
+  if success then
+    return result, next_pos
+  else
+    return nil, nil
+  end
+end
+
+function cql_unpack_c(str, pos, size)
+  local success, result, next_pos = pcall(string.unpack, "c" .. size, str, pos)
+  if success then
+    return result, next_pos
+  else
+    return nil, nil
+  end
+end
+
+function cql_cursor_from_blob(db, C, C_types, C_fields, buffer)
+  if C == nil then
+    return -100
+  end
+
+  C._has_row_ = false
+
+  if buffer == nil then
+    return -101
+  end
+
+  if C_types == nil then
+    return -102
+  end
+
+  if C_fields == nil then
+    return -103
+  end
+
+  -- this will help us with missing fields, we have to assume that the buffer
+  -- might be from the past or future and have different fields, we can
+  -- handle a lot of these cases.
+  cql_empty_cursor(C, C_types, C_fields)
+
+  local pos = 1
+  local types, pos = cql_unpack_z(buffer, pos)
+  if types == nil then
+    return -104
+  end
+
+  local nullable_count = 0
+  local bool_count = 0
+  local actual_count = #types
+  local needed_count = #C_fields
+  local code
+  local type
+  local chunk_size
+  local i = 0
+  local bit = false
+
+  for i = 1, actual_count do
+    code = string.byte(types, i)
+
+    if code >= string.byte("a") then
+      nullable_count = nullable_count + 1;
+    end
+
+    if code == CQL_ENCODED_TYPE_BOOL_NOTNULL or code == CQL_ENCODED_TYPE_BOOL then
+      bool_count = bool_count + 1;
+    end
+
+    -- Extra fields do not have to match, the assumption is that this is a
+    -- future version of the type talking to a past version.  The past version
+    -- sees only what it expects to see.  However, we did have to compute the
+    -- nullable_count and bool_count to get the bit vector size correct.
+    if i <= needed_count then
+      type = string.byte(C_types, i)
+
+      if type ~= code then
+        -- if the type doesn't match exactly we're still ok if the actual type
+        -- is not nullable and the required type is nullable.
+        if code + 32 ~= type then
+          rc = sqlite3.TYPE_MISMATCH
+          goto cql_error
+        end
+      end
+    end
+  end
+
+  -- if we have too few fields we can use null fillers, this is the versioning
+  -- policy, we will check that any missing fields are nullable.
+  for i = actual_count +1, needed_count do
+    local type = string.byte(C_types, i)
+    if type < string.byte("a") then
+      rc = sqlite3.TYPE_MISMATCH
+      goto cql_error
+    end
+    i = i + 1
+  end
+
+  bytes = (nullable_count + bool_count + 7) // 8
+
+  bits = {}
+  for i = 1, bytes do
+    bits[i] = string.byte(buffer, pos)
+    pos = pos + 1
+  end
+
+  -- all the fields are already zeroed out, we only need to set the ones that
+  -- are not null and not zero.
+  nullable_index = 0
+  bool_index = 0
+
+  for i = 1, math.min(needed_count, actual_count) do
+    field = C_fields[i]
+    code = string.byte(types, i)
+    if code == CQL_ENCODED_TYPE_BOOL_NOTNULL then
+      bit = cql_getbit(bits, nullable_count + bool_index)
+      if bit == nil then
+        return -1
+      end
+      C[field] = bit
+      bool_index = bool_index + 1
+    elseif code == CQL_ENCODED_TYPE_BOOL then
+      bit = cql_getbit(bits, nullable_index)
+      if bit == nil then
+        return -2
+      end
+      if bit then
+        bit = cql_getbit(bits, nullable_count + bool_index)
+        if bit == nil then
+          return -3
+        end
+        C[field] = bit
+      end
+      bool_index = bool_index + 1
+      nullable_index = nullable_index + 1
+    elseif code == CQL_ENCODED_TYPE_INT_NOTNULL then
+      C[field], pos = cql_varint_decode_32(buffer, pos)
+      if pos == nil then
+        return -4
+      end
+    elseif code == CQL_ENCODED_TYPE_INT then
+      bit = cql_getbit(bits, nullable_index)
+      if bit == nil then
+        return -5
+      end
+      if bit then
+        C[field], pos = cql_varint_decode_32(buffer, pos)
+        if pos == nil then
+          return -6
+        end
+      end
+      nullable_index = nullable_index + 1
+    elseif code == CQL_ENCODED_TYPE_LONG_NOTNULL then
+      C[field], pos = cql_varint_decode_64(buffer, pos)
+      if pos == nil then
+        return -7
+      end
+    elseif code == CQL_ENCODED_TYPE_LONG then
+      bit = cql_getbit(bits, nullable_index)
+      if bit == nil then
+        return -8
+      end
+      if bit then
+        C[field], pos = cql_varint_decode_64(buffer, pos)
+        if pos == nil then
+          return -9
+        end
+      end
+      nullable_index = nullable_index + 1
+    elseif code == CQL_ENCODED_TYPE_DOUBLE_NOTNULL then
+      C[field], pos = cql_unpack_d(buffer, pos)
+      if pos == nil then
+        return -10
+      end
+    elseif code == CQL_ENCODED_TYPE_DOUBLE then
+      bit = cql_getbit(bits, nullable_index)
+      if bit == nil then
+        return -11
+      end
+      if bit then
+        C[field], pos = cql_unpack_d(buffer, pos)
+        if pos == nil then
+          return -12
+        end
+      end
+      nullable_index = nullable_index + 1
+    elseif code == CQL_ENCODED_TYPE_STRING_NOTNULL then
+      C[field], pos = cql_unpack_z(buffer, pos)
+      if pos == nil then
+        return -13
+      end
+    elseif code == CQL_ENCODED_TYPE_STRING then
+      bit = cql_getbit(bits, nullable_index)
+      if bit == nil then
+        return -14
+      end
+      if bit then
+        C[field], pos = cql_unpack_z(buffer, pos)
+        if pos == nil then
+          return -15
+        end
+      end
+      nullable_index = nullable_index + 1
+    elseif code == CQL_ENCODED_TYPE_BLOB_NOTNULL then
+      chunk_size, pos = cql_varint_decode_32(buffer, pos)
+      if pos == nil then
+        return -16
+      end
+      C[field], pos = cql_unpack_c(buffer, pos, chunk_size)
+      if pos == nil then
+        return -17
+      end
+    elseif code == CQL_ENCODED_TYPE_BLOB then
+      bit = cql_getbit(bits, nullable_index)
+      if bit == nil then
+        return -18
+      end
+      if bit then
+        chunk_size, pos = cql_varint_decode_32(buffer, pos)
+        if pos == nil then
+          return -19
+        end
+        C[field], pos = cql_unpack_c(buffer, pos, chunk_size)
+        if pos == nil then
+          return -20
+        end
+      end
+      nullable_index = nullable_index + 1
+    end
+  end
+
+  C._has_row_ = true
+  rc = sqlite3.OK
+
+::cql_error::
+  return rc
+end
+
+function cql_blob_from_int(prefix, seed)
+  if prefix == nil then
+    prefix = ''
+  end
+  return prefix..seed
+end
+
+function cql_format_bool(value)
+  return cql_format_one_field(CQL_ENCODED_TYPE_BOOL, value)
+end
+
+function cql_format_int(value)
+  return cql_format_one_field(CQL_ENCODED_TYPE_INT32, value)
+end
+
+function cql_format_long(value)
+  return cql_format_one_field(CQL_ENCODED_TYPE_INT64, value)
+end
+
+function cql_format_double(value)
+  return cql_format_one_field(CQL_ENCODED_TYPE_DOUBLE, value)
+end
+
+function cql_format_string(value)
+  return cql_format_one_field(CQL_ENCODED_TYPE_STRING, value)
+end
+
+function cql_format_blob(value)
+  return cql_format_one_field(CQL_ENCODED_TYPE_BLOB, value)
+end
+
+function cql_format_object(value)
+  return cql_format_one_field(CQL_ENCODED_TYPE_OBJECT, value)
+end
+
+function cql_format_null()
+  return "null"
 end

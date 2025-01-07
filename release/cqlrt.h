@@ -21,15 +21,23 @@
 #endif
 #endif
 
+// Assertion macro for API contract violations, these should stay in the release build.
 #define cql_contract assert
+
+// Assertion for internal invariant broken, these should stay in the release build.
 #define cql_invariant assert
+
+// Assertion for a failure that we might like to promote to an invariant
+// but there may be exceptions yet.  This should fire in debug builds.
 #define cql_tripwire assert
+
+// Logging database error;
 #define cql_log_database_error(...)
 
 // value types
 typedef unsigned char cql_bool;
-#define cql_true (cql_bool)1
-#define cql_false (cql_bool)0
+#define cql_true ((cql_bool)1)
+#define cql_false ((cql_bool)0)
 
 // metatypes for the straight C implementation
 #define CQL_C_TYPE_STRING 0
@@ -43,6 +51,9 @@ typedef uint32_t cql_uint32;
 typedef uint16_t cql_uint16;
 typedef sqlite3_int64 cql_int64;
 typedef double cql_double;
+
+// The data type for a cql return code
+// Note: normally we prefer int32_t or int64_t but we have to match the sqlite3 API
 typedef int cql_code;
 
 // base ref counting struct
@@ -65,7 +76,15 @@ typedef struct cql_object {
   void *_Nonnull ptr;
   void (*_Nonnull finalize)(void *_Nonnull ptr);
 } cql_object;
+
+// Adds a reference count to the object.
+// @param obj The  object to be retained.
+// void cql_object_retain(cql_object_ref _Nullable obj);
 #define cql_object_retain(object) cql_retain((cql_type_ref)object);
+
+// Subtracts a reference count from the object.  When it reaches 0, the object SHOULD be freed.
+// @param str The object to be released.
+// void cql_object_release(cql_object_ref _Nullable obj);
 #define cql_object_release(object) cql_release((cql_type_ref)object);
 
 // builtin statement box
@@ -77,24 +96,53 @@ typedef struct cql_boxed_stmt {
 
 // builtin blob
 typedef struct cql_blob *cql_blob_ref;
+
 typedef struct cql_blob {
   cql_type base;
   const void *_Nonnull ptr;
   cql_uint32 size;
 } cql_blob;
 
-typedef struct cql_partitioning *cql_partitioning_ref;
-typedef struct cql_partitioning {
-  cql_type base;
-  const void *_Nonnull ptr;
-} cql_partitioning;
-
+// Adds a reference count to the blob.
+// @param blob The blob to be retained.
+// void cql_blob_retain(cql_blob_ref _Nullable blob);
 #define cql_blob_retain(object) cql_retain((cql_type_ref)object);
+
+// Subtracts a reference count from the blob.  When it reaches 0, the blob SHOULD be freed.
+// @param str The blob to be released.
+// void cql_blob_release(cql_blob_ref _Nullable blob);
 #define cql_blob_release(object) cql_release((cql_type_ref)object);
+
+// Construct a new blob object.
+// @param data the bytes to be stored.
+// @param size the number of bytes of the data.
+// @return A blob object of the type defined by cql_blob_ref.
+// cql_blob_ref cql_blob_ref_new(const void *data, cql_uint32 size);
 cql_blob_ref _Nonnull cql_blob_ref_new(const void *_Nonnull data, cql_uint32 size);
+
+// Get the bytes of the blob object.  This is not null, even if the blob is zero
+// size and in general the memory allocated might be larger than the size of the blob.
+// Get cql_get_blob_size must be used to know how much you can read.
+// @param blob The blob object to get the bytes from.
+// @return The bytes of the blob.
 #define cql_get_blob_bytes(data) (data->ptr)
+
+// Get size of a blob ref in bytes.
+// @param blob The blob object to get the size from.
+// @return The size of the blob in bytes.
 #define cql_get_blob_size(data) (data->size)
+
+// Creates a hash code for the blob object.
+// @param blob The blob object to be hashed.
+// cql_hash_code cql_blob_hash(cql_string_ref _Nullable str);
 cql_hash_code cql_blob_hash(cql_blob_ref _Nullable str);
+
+// Checks if two blob objects are equal.
+// NOTE: If both objects are NULL, they are equal; if only 1 is NULL, they are not equal.
+// @param str1 The first blob to compare.
+// @param str2 The second blob to compare.
+// @return cql_true if they are equal, otherwise cql_false.
+// cql_bool cql_blob_equal(cql_blob_ref _Nullable bl1, cql_blob_ref _Nullable bl2);
 cql_bool cql_blob_equal(cql_blob_ref _Nullable blob1, cql_blob_ref _Nullable blob2);
 
 // builtin string
@@ -103,10 +151,30 @@ typedef struct cql_string {
   cql_type base;
   const char *_Nullable ptr;
 } cql_string;
+
+// Construct a new string object.
+// @param cstr The C string to be stored.
+// @return A string object of the type defined by cql_string_ref.
+// cql_string_ref cql_string_ref_new(const char *cstr);
 cql_string_ref _Nonnull cql_string_ref_new(const char *_Nonnull cstr);
+
+// Adds a reference count to the string object.
+// @param str The string object to be retained.
+// void cql_string_retain(cql_string_ref _Nullable str);
 #define cql_string_retain(string) cql_retain((cql_type_ref)string);
+
+// Subtracts a reference count from the string object.  When it reaches 0, the string SHOULD be freed.
+// @param str The string object to be released.
+// void cql_string_release(cql_string_ref _Nullable str);
 #define cql_string_release(string) cql_release((cql_type_ref)string);
 
+// Declare a static const string literal object. This must be a global object
+// and will be executed in the global context.
+// NOTE: This MUST be implemented as a macro as it both declares and assigns
+// the value.
+// @param name The name of the object.
+// @param text The text to be stored in the object.
+// cql_string_literal(cql_string_ref name, const char *text);
 #define cql_string_literal(name, text) \
   static cql_string name##_ = { \
     .base = { \
@@ -118,6 +186,13 @@ cql_string_ref _Nonnull cql_string_ref_new(const char *_Nonnull cstr);
   }; \
   static cql_string_ref name = &name##_
 
+// Declare a const string that holds the name of a stored procedure. This must
+// be a global object and will be executed in the global context.
+// NOTE: This MUST be implemented as a macro as it both declares and assigns
+// the value.
+// @param name The name of the object.
+// @param proc_name The procedure name to be stored in the object.
+// cql_string_literal(cql_string_ref name, const char *proc_name);
 #define cql_string_proc_name(name, proc_name) \
   cql_string name##_ = { \
     .base = { \
@@ -129,16 +204,58 @@ cql_string_ref _Nonnull cql_string_ref_new(const char *_Nonnull cstr);
   }; \
   cql_string_ref name = &name##_
 
+// Compares two string objects.
+// @param str1 The first string to compare.
+// @param str2 The second string to compare.
+// @return < 0 if str1 is less than str2, > 0 if str2 is less than str1, = 0 if str1 is equal to str2.
+// int cql_string_compare(cql_string_ref str1, cql_string_ref str2);
 int cql_string_compare(cql_string_ref _Nonnull s1, cql_string_ref _Nonnull s2);
+
+// Creates a hash code for the string object.
+// @param str The string object to be hashed.
+// cql_hash_code cql_string_hash(cql_string_ref _Nullable str);
 cql_hash_code cql_string_hash(cql_string_ref _Nullable str);
+
+// Checks if two string objects are equal.
+// NOTE: If both objects are NULL, they are equal; if only 1 is NULL, they are not equal.
+// @param str1 The first string to compare.
+// @param str2 The second string to compare.
+// @return cql_true if they are equal, otherwise cql_false.
+// cql_bool cql_string_equal(cql_string_ref _Nullable str1, cql_string_ref _Nullable str2);
 cql_bool cql_string_equal(cql_string_ref _Nullable s1, cql_string_ref _Nullable s2);
+
+// Compares two string objects with SQL LIKE semantics.
+// NOTE: If either object is NULL, the result should be 1.
+// @param str1 The first string to compare.
+// @param str2 The second string to compare.
+// @return 0 if the str1 is LIKE str2, else != 0.
+// int cql_string_like(cql_string_ref str1, cql_string_ref str2);
 int cql_string_like(cql_string_ref _Nonnull s1, cql_string_ref _Nonnull s2);
+
+// Declare and allocate a C string from a string object.
+// NOTE: This MUST be implemented as a macro, as it both declares and assigns the value.
+// @param cstr The C string var to be declared and assigned.
+// @param str The string object that contains the string value.
+// cql_alloc_cstr(const char *cstr, cql_string_ref str);
 #define cql_alloc_cstr(cstr, str) const char *_Nonnull cstr = (str)->ptr
+
+// Free a C string that was allocated by cql_alloc_cstr
+// @param cstr The C string to be freed.
+// @param str The string object that the C string was allocated from.
+// cql_free_cstr(const char *cstr, cql_string_ref str);
 #define cql_free_cstr(cstr, str) 0
 
-// builtin result set
+// The type for a generic cql result set.
+// NOTE: Result sets are cast to this type before being passed to the cql_result_set_get_count/_data functions.
 typedef struct cql_result_set *cql_result_set_ref;
 
+// The struct must have the following fields, by name.  A different
+// runtime implementation can add additional fields for its own use.
+// Extra fields just go along for the right but, since you can
+// recover the "meta" from the result set, you can always get to
+// to your extra fields.  Note that the meta is one copy per result
+// set *type* these are not instance fields.  Hence, helper functions,
+// offsets common to all instances, stuff like that can go in the meta.
 typedef struct cql_result_set_meta {
   // release the internal memory for the rowset
   void (*_Nonnull teardown)(cql_result_set_ref _Nonnull result_set);
@@ -169,11 +286,6 @@ typedef struct cql_result_set_meta {
     cql_result_set_ref _Nonnull rs2,
     cql_int32 row2);
 
-  // check whether the column value is encoded
-  cql_bool(*_Nullable getIsEncoded)(
-   cql_result_set_ref _Nonnull result_set,
-   cql_int32 col);
-
   // count of references and offset to the first
   uint16_t refsCount;
   uint16_t refsOffset;
@@ -193,12 +305,6 @@ typedef struct cql_result_set_meta {
   // all datatypes of the columns
   uint8_t *_Nullable dataTypes;
 
-  // index of the encode context column
-  int16_t encodeContextIndex;
-
-  // release custom internal memory for the rowset that ARE NOT released
-  // by teardown
-  void(*_Nullable custom_teardown)(cql_result_set_ref _Nonnull result_set);
 } cql_result_set_meta;
 
 typedef struct cql_result_set {
@@ -211,16 +317,51 @@ typedef struct cql_result_set {
 #define cql_result_set_type_decl(result_set_type, result_set_ref) \
   typedef struct _##result_set_type *result_set_ref;
 
+// Construct a new result set object.
+// @param data The data to be stored in the result set.
+// @param count The count of records represented by the data in the result_set.
+// @param callbacks The callbacks that are used for the data access.
+// @return A result_set object of the type.
+// cql_result_set_ref _Nonnull cql_result_set_create(
+//     void *_Nonnull data,
+//     cql_int32 count,
+//     cql_result_set_meta meta);
 cql_result_set_ref _Nonnull cql_result_set_create(
   void *_Nonnull data,
   cql_int32 count,
   cql_result_set_meta meta);
 
+// Adds a reference count to the result_set object.
+// NOTE: This MUST be implemented as a macro, as it takes a result set as a param, which has an undefined type.
+// @param result_set The result set object to be retained.
+// void cql_result_set_retain(** _Nullable result_set);
 #define cql_result_set_retain(result_set) cql_retain((cql_type_ref)result_set);
+
+// Subtracts a reference count from the result_set object.  When it reaches 0, the result_set SHOULD be freed.
+// NOTE: This MUST be implemented as a macro, as it takes a result set as a param, which has an undefined type.
+// @param result_set The result set object to be released.
+// void cql_result_set_release(** _Nullable result_set);
 #define cql_result_set_release(result_set) cql_release((cql_type_ref)result_set);
-#define cql_result_set_note_ownership_transferred(result_set)
+
+// Gives the metadata struct back as provided to the construction above
+// NOTE: This MUST be implemented as a macro, as it takes a result set as a param, which has an undefined type.
+// @param result_set The cql result_set object.
+// @return The data that was previous stored on the result set.
+// void *cql_result_set_get_data(** result_set)
 #define cql_result_set_get_meta(result_set) (&((cql_result_set_ref)result_set)->meta)
+
+// Retrieve the storage of the query data.
+// NOTE: This MUST be implemented as a macro, as it takes a result set as a param, which has an undefined type.
+// @param result_set The cql result_set object.
+// @return The data that was previous stored on the result set.
+// void *cql_result_set_get_data(** result_set)
 #define cql_result_set_get_data(result_set) ((cql_result_set_ref)result_set)->data
+
+// Get the count of the query data.
+// NOTE: This MUST be implemented as a macro, as it takes a result set as a param, which has an undefined type.
+// @param result_set The cql result set object.
+// @return The count that was previous stored on the result set.
+// cql_int32 cql_result_set_get_count(** result_set);
 #define cql_result_set_get_count(result_set) ((cql_result_set_ref)result_set)->count
 
 #ifdef CQL_RUN_TEST

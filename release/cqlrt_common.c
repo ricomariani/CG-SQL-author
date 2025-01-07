@@ -44,24 +44,6 @@ cql_code cql_best_error(cql_code rc) {
   return rc;
 }
 
-// This code overrides the CQL_DATA_TYPE_ENCODED bit in a result_set's
-// data_type. It's used indirectly by app at runtime to control the encoding and
-// decoding of the column value.
-void cql_set_encoding(
-  uint8_t *_Nonnull data_types,
-  cql_int32 count,
-  cql_int32 col,
-  cql_bool encode)
-{
-  cql_contract(col < count);
-  if (encode) {
-    data_types[col] |= CQL_DATA_TYPE_ENCODED;
-  }
-  else {
-    data_types[col] &= ~CQL_DATA_TYPE_ENCODED;
-  }
-}
-
 // The indicated statement should be immediately finalized out latest result was
 // not SQLITE_OK This code is used during binding (which is now always done with
 // multibind) in order to ensure that the statement exits finalized in the event
@@ -227,11 +209,11 @@ char *_Nonnull cql_address_of_col(
 // four bytes which is more than enough for sql strings...
 static const char *_Nonnull cql_decode(
   const char *_Nonnull data,
-  int32_t *_Nonnull result)
+  cql_int32 *_Nonnull result)
 {
-  int32_t out = 0;
-  int32_t byte;
-  int32_t offset = 0;
+  cql_int32 out = 0;
+  cql_int32 byte;
+  cql_int32 offset = 0;
   do {
     byte = *data++;
     out |= (byte & 0x7f) << offset;
@@ -251,7 +233,7 @@ static void cql_expand_frags(
   const char *_Nonnull base,
   const char *_Nonnull frags)
 {
-  int32_t offset;
+  cql_int32 offset;
   for (;;) {
     frags = cql_decode(frags, &offset);
     if (offset == 0) {
@@ -277,7 +259,7 @@ cql_code cql_prepare_frags(
 {
   // NOTE: len is the allocation size (includes trailing \0)
   cql_finalize_stmt(pstmt);
-  int32_t len;
+  cql_int32 len;
   frags = cql_decode(frags, &len);
   STACK_BYTES_ALLOC(sql, len);
   cql_expand_frags(sql, base, frags);
@@ -300,7 +282,7 @@ cql_code cql_exec_frags(
   const char *_Nonnull frags)
 {
   // NOTE: len is the allocation size (includes trailing \0)
-  int32_t len;
+  cql_int32 len;
   frags = cql_decode(frags, &len);
   STACK_BYTES_ALLOC(sql, len);
   cql_expand_frags(sql, base, frags);
@@ -486,6 +468,17 @@ void cql_set_object_ref(
   *target = source;
 }
 
+// This variant is for when you call a Create function and get a ref with a +1 on it
+// and have to store that reference.
+void cql_set_created_object_ref(
+  cql_object_ref _Nullable *_Nonnull target,
+  cql_object_ref _Nullable source)
+{
+  // no upcount, we were given an upcounted ref. We just release what we had and store
+  cql_object_release(*target);
+  *target = source;
+}
+
 // This helper is used by CQL to set a string reference.  It does the primitive
 // retain/release operations. For now all the reference types are the same in
 // this regard but there are different helpers for additional type safety in the
@@ -500,6 +493,17 @@ void cql_set_string_ref(
   *target = source;
 }
 
+// This variant is for when you call a Create function and get a ref with a +1 on it
+// and have to store that reference.
+void cql_set_created_string_ref(
+  cql_string_ref _Nullable *_Nonnull target,
+  cql_string_ref _Nullable source)
+{
+  // no upcount, we were given an upcounted ref. We just release what we had and store
+  cql_string_release(*target);
+  *target = source;
+}
+
 // This helper is used by CQL to set a blob reference.  It does the primitive
 // retain/release operations. For now all the reference types are the same in
 // this regard but there are different helpers for additional type safety in the
@@ -510,6 +514,17 @@ void cql_set_blob_ref(
 {
   // upcount first in case source is an alias for target
   cql_blob_retain(source);
+  cql_blob_release(*target);
+  *target = source;
+}
+
+// This variant is for when you call a Create function and get a ref with a +1 on it
+// and have to store that reference.
+void cql_set_created_blob_ref(
+  cql_blob_ref _Nullable *_Nonnull target,
+  cql_blob_ref _Nullable source)
+{
+  // no upcount, we were given an upcounted ref. We just release what we had and store
   cql_blob_release(*target);
   *target = source;
 }
@@ -652,7 +667,7 @@ void cql_bytebuf_close(cql_bytebuf *_Nonnull b) {
 // independent and reference count invariant. (i.e. you can memcpy it safely if
 // you then also destroy the old copy)
 void *_Nonnull cql_bytebuf_alloc(cql_bytebuf *_Nonnull b, int needed) {
-  int32_t avail = b->max - b->used;
+  cql_int32 avail = b->max - b->used;
 
   if (needed > avail) {
     if (b->max > BYTEBUF_EXP_GROWTH_CAP) {
@@ -677,7 +692,7 @@ void *_Nonnull cql_bytebuf_alloc(cql_bytebuf *_Nonnull b, int needed) {
 void cql_bytebuf_append(
   cql_bytebuf *_Nonnull buffer,
   const void *_Nonnull data,
-  int32_t bytes)
+  cql_int32 bytes)
 {
   void *pv = cql_bytebuf_alloc(buffer, bytes);
   memcpy(pv, data, bytes);
@@ -825,128 +840,75 @@ static void cql_multinull(
   }
 }
 
-// This helper fetch a column value from sqlite and store it in the holder. CQL
-// encode column value with flag CQL_DATA_TYPE_ENCODED as soon as they're read
-// from db like that only encoded value is accessible. This means the proc
-// creating result_set should decode explicitely sensitive column value to get
-// the real value.
+// This helper fetch a column value from sqlite and store it in the holder.
 static void cql_fetch_field(
   cql_int32 type,
   cql_int32 column,
   sqlite3 *_Nonnull db,
   sqlite3_stmt *_Nullable stmt,
-  char *_Nonnull field,
-  cql_bool enable_encoding,
-  cql_int32 encode_context_type,
-  char *_Nullable encode_context_field,
-  cql_object_ref _Nullable encoder)
+  char *_Nonnull field)
 {
-  bool is_encoded = (type & CQL_DATA_TYPE_ENCODED) && enable_encoding;
-  cql_int32 core_data_type_and_not_null = type & ~CQL_DATA_TYPE_ENCODED;
+  cql_int32 core_data_type_and_not_null = type;
 
   switch (core_data_type_and_not_null) {
     case CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL: {
       cql_int32 *int32_data = (cql_int32 *)field;
       *int32_data = sqlite3_column_int(stmt, column);
-      if (is_encoded) {
-        *int32_data = cql_encode_int32(encoder, *int32_data, encode_context_type, encode_context_field);
-      }
       break;
     }
     case CQL_DATA_TYPE_INT64 | CQL_DATA_TYPE_NOT_NULL: {
       cql_int64 *int64_data = (cql_int64 *)field;
       *int64_data = sqlite3_column_int64(stmt, column);
-      if (is_encoded) {
-        *int64_data = cql_encode_int64(encoder, *int64_data, encode_context_type, encode_context_field);
-      }
       break;
     }
     case CQL_DATA_TYPE_DOUBLE | CQL_DATA_TYPE_NOT_NULL: {
       cql_double *double_data = (cql_double *)field;
       *double_data = sqlite3_column_double(stmt, column);
-      if (is_encoded) {
-        *double_data = cql_encode_double(encoder, *double_data, encode_context_type, encode_context_field);
-      }
       break;
     }
     case CQL_DATA_TYPE_BOOL | CQL_DATA_TYPE_NOT_NULL: {
       cql_bool *bool_data = (cql_bool *)field;
       *bool_data = !!sqlite3_column_int(stmt, column);
-      if (is_encoded) {
-        *bool_data = cql_encode_bool(encoder, *bool_data, encode_context_type, encode_context_field);
-      }
       break;
     }
     case CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_NOT_NULL: {
       cql_string_ref *str_ref = (cql_string_ref *)field;
       cql_column_string_ref(stmt, column, str_ref);
-      if (is_encoded) {
-        cql_string_ref new_str_ref = cql_encode_string_ref_new(encoder, *str_ref, encode_context_type, encode_context_field);
-        cql_set_string_ref(str_ref, new_str_ref);
-        cql_string_release(new_str_ref);
-      }
       break;
     }
     case CQL_DATA_TYPE_BLOB | CQL_DATA_TYPE_NOT_NULL: {
       cql_blob_ref *blob_ref = (cql_blob_ref *)field;
       cql_column_blob_ref(stmt, column, blob_ref);
-      if (is_encoded) {
-        cql_blob_ref new_blob_ref = cql_encode_blob_ref_new(encoder, *blob_ref, encode_context_type, encode_context_field);
-        cql_set_blob_ref(blob_ref, new_blob_ref);
-        cql_blob_release(new_blob_ref);
-      }
       break;
     }
     case CQL_DATA_TYPE_INT32: {
       cql_nullable_int32 *_Nonnull int32p = (cql_nullable_int32 *)field;
       cql_column_nullable_int32(stmt, column, int32p);
-      if (is_encoded && !int32p->is_null) {
-        int32p->value = cql_encode_int32(encoder, int32p->value, encode_context_type, encode_context_field);
-      }
       break;
     }
     case CQL_DATA_TYPE_INT64: {
       cql_nullable_int64 *_Nonnull int64p = (cql_nullable_int64 *)field;
       cql_column_nullable_int64(stmt, column, int64p);
-      if (is_encoded && !int64p->is_null) {
-        int64p->value = cql_encode_int64(encoder, int64p->value, encode_context_type, encode_context_field);
-      }
       break;
     }
     case CQL_DATA_TYPE_DOUBLE: {
       cql_nullable_double *_Nonnull doublep = (cql_nullable_double *)field;
       cql_column_nullable_double(stmt, column, doublep);
-      if (is_encoded && !doublep->is_null) {
-        doublep->value = cql_encode_double(encoder, doublep->value, encode_context_type, encode_context_field);
-      }
       break;
     }
     case CQL_DATA_TYPE_BOOL: {
       cql_nullable_bool *_Nonnull boolp = (cql_nullable_bool *)field;
       cql_column_nullable_bool(stmt, column, boolp);
-      if (is_encoded && !boolp->is_null) {
-        boolp->value = cql_encode_bool(encoder, boolp->value, encode_context_type, encode_context_field);
-      }
       break;
     }
     case CQL_DATA_TYPE_STRING: {
       cql_string_ref *str_ref = (cql_string_ref *)field;
       cql_column_nullable_string_ref(stmt, column, str_ref);
-      if (is_encoded && *str_ref) {
-        cql_string_ref new_str_ref = cql_encode_string_ref_new(encoder, *str_ref, encode_context_type, encode_context_field);
-        cql_set_string_ref(str_ref, new_str_ref);
-        cql_string_release(new_str_ref);
-      }
       break;
     }
     case CQL_DATA_TYPE_BLOB: {
       cql_blob_ref *blob_ref = (cql_blob_ref *)field;
       cql_column_nullable_blob_ref(stmt, column, blob_ref);
-      if (is_encoded && *blob_ref) {
-        cql_blob_ref new_blob_ref = cql_encode_blob_ref_new(encoder, *blob_ref, encode_context_type, encode_context_field);
-        cql_set_blob_ref(blob_ref, new_blob_ref);
-        cql_blob_release(new_blob_ref);
-      }
       break;
     }
   }
@@ -971,46 +933,10 @@ void cql_multifetch_meta(
   uint32_t count = col_offsets[0];
   col_offsets++;
 
-  // If vault context column is specified, we fetch it first with the column index
-  cql_int32 encode_context_type = -1;
-  char *encode_context_field = NULL;
-  if (info->encode_context_index >= 0) {
-    encode_context_type = data_types[info->encode_context_index];
-    encode_context_field = data + col_offsets[info->encode_context_index];
-    cql_fetch_field(
-      encode_context_type,
-      info->encode_context_index,
-      db,
-      stmt,
-      encode_context_field,
-      false /* enable_encoding */,
-      -1 /* encode_context_type */,
-      NULL /* encode_context_field */,
-      info->encoder);
-  }
-
   for (cql_int32 column = 0; column < count; column++) {
-    if (column == info->encode_context_index) {
-      // This vault context column has been fetched already, skip
-      continue;
-    }
     uint8_t type = data_types[column];
     char *field = data + col_offsets[column];
-    // We're fetching column values from the db to store in a result_set.
-    // Therefore we need to encode those values because it's the result_set
-    // output of the proc. Because of that, we set enable_encoding = TRUE. The
-    // value true means if the field has the CQL_DATA_TYPE_ENCODED bit then it
-    // will be encoded, otherwise it will not be encoded.
-    cql_fetch_field(
-      type,
-      column,
-      db,
-      stmt,
-      field,
-      true /* enable_encoding */,
-      encode_context_type,
-      encode_context_field,
-      info->encoder);
+    cql_fetch_field(type, column, db, stmt, field);
   }
 }
 
@@ -1039,20 +965,7 @@ void cql_multifetch(
   for (cql_int32 column = 0; column < count; column++) {
     cql_int32 type = va_arg(args, cql_int32);
     void *field = va_arg(args, void *);
-    // We're fetching column values from db to store in variable. Therefore we
-    // don't need to encode it because it's not a result_set output of the proc.
-    // Because of that we set enable_encoding = FALSE. The value false means do
-    // not encode even if the field has the CQL_DATA_TYPE_ENCODED bit.
-    cql_fetch_field(
-      type,
-      column,
-      db,
-      stmt,
-      field,
-      false /* enable_encoding */,
-      -1 /* encode_context_type */,
-      NULL /* encode_context_field */,
-      NULL /* encoder */);
+    cql_fetch_field(type, column, db, stmt, field);
   }
 
   va_end(args);
@@ -1083,92 +996,45 @@ void cql_copyoutrow(
   }
 
   bool got_decoder = false;
-  cql_object_ref _Nullable encoder = NULL;
 
   // Find vault context column
   cql_result_set_meta *meta = cql_result_set_get_meta(result_set);
-  cql_int32 encode_context_type = -1;
-  char *encode_context_field = NULL;
-  if (meta->encodeContextIndex >= 0) {
-    encode_context_type = meta->dataTypes[meta->encodeContextIndex];
-    encode_context_field = cql_address_of_col(result_set, row, meta->encodeContextIndex, &encode_context_type);
-  }
-  // sometimes the below usages resolve to do-noting macros and thus this gets
-  // considered as unused. So to always give it a "usage" cast it to void here.
-  (void)encode_context_field;
 
   for (cql_int32 column = 0; column < count; column++) {
     cql_int32 type = va_arg(args, cql_int32);
     cql_int32 core_data_type_and_not_null = CQL_CORE_DATA_TYPE_OF(type) | (type & CQL_DATA_TYPE_NOT_NULL);
-    // The workings of "should_decode" need some clarification it impacts how
-    // the vault feature works in CQL.
-    // This function copy raw values from a result set (out union). Therefore if
-    // we detect that some of the fields read are encoded (should_decode ==
-    // TRUE), then we have to decode the value copied. We never encode values
-    // read from result_set even though the type flag is CQL_DATA_TYPE_ENCODED.
-    // The flag CQL_DATA_TYPE_ENCODED is used to encode fields read from db (see
-    // cql_multifetch(...)) or to decode fields read from result_set (out
-    // union).
-    bool should_decode = db && cql_result_set_get_is_encoded_col(result_set, column);
-
-    if (should_decode && !got_decoder) {
-      encoder = cql_copy_encoder(db);
-      got_decoder = true;  // note the decoder might be null so we need a flag
-    }
 
     switch (core_data_type_and_not_null) {
       case CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL: {
         cql_int32 *int32_data = va_arg(args, cql_int32 *);
         *int32_data = cql_result_set_get_int32_col(result_set, row, column);
-        if (should_decode) {
-          *int32_data = cql_decode_int32(encoder, *int32_data, encode_context_type, encode_context_field);
-        }
         break;
       }
       case CQL_DATA_TYPE_INT64 | CQL_DATA_TYPE_NOT_NULL: {
         cql_int64 *int64_data = va_arg(args, cql_int64 *);
         *int64_data = cql_result_set_get_int64_col(result_set, row, column);
-        if (should_decode) {
-          *int64_data = cql_decode_int64(encoder, *int64_data, encode_context_type, encode_context_field);
-        }
         break;
       }
       case CQL_DATA_TYPE_DOUBLE | CQL_DATA_TYPE_NOT_NULL: {
         cql_double *double_data = va_arg(args, cql_double *);
         *double_data = cql_result_set_get_double_col(result_set, row, column);
-        if (should_decode) {
-          *double_data = cql_decode_double(encoder, *double_data, encode_context_type, encode_context_field);
-        }
         break;
       }
       case CQL_DATA_TYPE_BOOL | CQL_DATA_TYPE_NOT_NULL: {
         cql_bool *bool_data = va_arg(args, cql_bool *);
         *bool_data = cql_result_set_get_bool_col(result_set, row, column);
-        if (should_decode) {
-          *bool_data = cql_decode_bool(encoder, *bool_data, encode_context_type, encode_context_field);
-        }
         break;
       }
       case CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_NOT_NULL: {
         cql_string_ref *str_ref = va_arg(args, cql_string_ref *);
         cql_set_string_ref(str_ref, cql_result_set_get_string_col(result_set, row, column));
         cql_string_ref new_str_ref = NULL;
-        if (should_decode) {
-          new_str_ref = cql_decode_string_ref_new(encoder, *str_ref, encode_context_type, encode_context_field);
-          cql_set_string_ref(str_ref, new_str_ref);
-          cql_string_release(new_str_ref);
-        }
         break;
       }
       case CQL_DATA_TYPE_BLOB | CQL_DATA_TYPE_NOT_NULL: {
         cql_blob_ref *blob_ref = va_arg(args, cql_blob_ref *);
         cql_set_blob_ref(blob_ref, cql_result_set_get_blob_col(result_set, row, column));
         cql_blob_ref new_blob_ref = NULL;
-        if (should_decode) {
-          new_blob_ref = cql_decode_blob_ref_new(encoder, *blob_ref, encode_context_type, encode_context_field);
-          cql_set_blob_ref(blob_ref, new_blob_ref);
-          cql_blob_release(new_blob_ref);
-        }
         break;
       }
       case CQL_DATA_TYPE_OBJECT | CQL_DATA_TYPE_NOT_NULL: {
@@ -1184,9 +1050,6 @@ void cql_copyoutrow(
         else {
           cql_set_notnull(*int32p, cql_result_set_get_int32_col(result_set, row, column));
         }
-        if (!int32p->is_null && should_decode) {
-          int32p->value = cql_decode_int32(encoder, int32p->value, encode_context_type, encode_context_field);
-        }
         break;
       }
       case CQL_DATA_TYPE_INT64: {
@@ -1196,9 +1059,6 @@ void cql_copyoutrow(
         }
         else {
           cql_set_notnull(*int64p, cql_result_set_get_int64_col(result_set, row, column));
-        }
-        if (!int64p->is_null && should_decode) {
-          int64p->value = cql_decode_int64(encoder, int64p->value, encode_context_type, encode_context_field);
         }
         break;
       }
@@ -1210,9 +1070,6 @@ void cql_copyoutrow(
         else {
           cql_set_notnull(*doublep, cql_result_set_get_double_col(result_set, row, column));
         }
-        if (!doublep->is_null && should_decode) {
-          doublep->value = cql_decode_double(encoder, doublep->value, encode_context_type, encode_context_field);
-        }
         break;
       }
       case CQL_DATA_TYPE_BOOL: {
@@ -1223,31 +1080,18 @@ void cql_copyoutrow(
         else {
           cql_set_notnull(*boolp, cql_result_set_get_bool_col(result_set, row, column));
         }
-        if (!boolp->is_null && should_decode) {
-          boolp->value = cql_decode_bool(encoder, boolp->value, encode_context_type, encode_context_field);
-        }
         break;
       }
       case CQL_DATA_TYPE_STRING: {
         cql_string_ref *str_ref = va_arg(args, cql_string_ref *);
         cql_set_string_ref(str_ref, cql_result_set_get_string_col(result_set, row, column));
         cql_string_ref new_str_ref = NULL;
-        if (*str_ref && should_decode) {
-          new_str_ref = cql_decode_string_ref_new(encoder, *str_ref, encode_context_type, encode_context_field);
-          cql_set_string_ref(str_ref, new_str_ref);
-          cql_string_release(new_str_ref);
-        }
         break;
       }
       case CQL_DATA_TYPE_BLOB: {
         cql_blob_ref *blob_ref = va_arg(args, cql_blob_ref *);
         cql_set_blob_ref(blob_ref, cql_result_set_get_blob_col(result_set, row, column));
         cql_blob_ref new_blob_ref = NULL;
-        if (*blob_ref && should_decode) {
-          new_blob_ref = cql_decode_blob_ref_new(encoder, *blob_ref, encode_context_type, encode_context_field);
-          cql_set_blob_ref(blob_ref, new_blob_ref);
-          cql_blob_release(new_blob_ref);
-        }
         break;
       }
       case CQL_DATA_TYPE_OBJECT: {
@@ -1257,8 +1101,6 @@ void cql_copyoutrow(
       }
     }
   }
-
-  cql_object_release(encoder);
 
   va_end(args);
 }
@@ -1544,15 +1386,6 @@ void cql_result_set_teardown(cql_result_set_ref _Nonnull result_set) {
   free(data);
 }
 
-// Record the desired user-teardown function
-void cql_result_set_set_custom_teardown(
-  cql_result_set_ref _Nonnull result_set,
-  void(*_Nonnull custom_teardown)(cql_result_set_ref _Nonnull result_set))
-{
-  cql_result_set_meta *meta = cql_result_set_get_meta(result_set);
-  meta->custom_teardown = custom_teardown;
-}
-
 // Hash a cursor or row as described by the buffer size and refs offset
 static cql_hash_code cql_hash_buffer(
   const char *_Nonnull data,
@@ -1601,7 +1434,7 @@ cql_hash_code cql_row_hash(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row)
 {
-  int32_t count = cql_result_set_get_count(result_set);
+  cql_int32 count = cql_result_set_get_count(result_set);
   cql_contract(row < count);
 
   cql_result_set_meta *meta = cql_result_set_get_meta(result_set);
@@ -1660,8 +1493,8 @@ cql_bool cql_rows_equal(
   cql_result_set_ref _Nonnull rs2,
   cql_int32 row2)
 {
-  int32_t count1 = cql_result_set_get_count(rs1);
-  int32_t count2 = cql_result_set_get_count(rs2);
+  cql_int32 count1 = cql_result_set_get_count(rs1);
+  cql_int32 count2 = cql_result_set_get_count(rs2);
   cql_contract(row1 < count1);
   cql_contract(row2 < count2);
 
@@ -1714,8 +1547,8 @@ cql_bool cql_rows_same(
   cql_result_set_ref _Nonnull rs2,
   cql_int32 row2)
 {
-  int32_t count1 = cql_result_set_get_count(rs1);
-  int32_t count2 = cql_result_set_get_count(rs2);
+  cql_int32 count1 = cql_result_set_get_count(rs1);
+  cql_int32 count2 = cql_result_set_get_count(rs2);
   cql_contract(row1 < count1);
   cql_contract(row2 < count2);
 
@@ -1774,7 +1607,7 @@ cql_bool cql_rows_same(
 void cql_rowset_copy(
   cql_result_set_ref _Nonnull result_set,
   cql_result_set_ref _Nonnull *_Nonnull to_result_set,
-  int32_t from,
+  cql_int32 from,
   cql_int32 count)
 {
   cql_contract(from >= 0);
@@ -1792,7 +1625,7 @@ void cql_rowset_copy(
   memcpy(new_data, old_data, count * row_size);
 
   char *row = new_data;
-  for (int32_t i = 0; i < count; i++, row += row_size) {
+  for (cql_int32 i = 0; i < count; i++, row += row_size) {
     cql_retain_offsets(row, refs_count, refs_offset);
   }
 
@@ -1856,7 +1689,7 @@ char *_Nonnull cql_address_of_col(
 
   // Check to make sure the requested column is a valid column
   // See above for reasons why this might fail.
-  int32_t columnCount = meta->columnCount;
+  cql_int32 columnCount = meta->columnCount;
   cql_contract(col < columnCount);
 
   // Check to make sure the requested column is of the correct type
@@ -2141,7 +1974,7 @@ cql_bool cql_result_set_get_is_null_col(
 
   // Check to make sure the requested column is a valid column See
   // cql_address_of_col for reasons why this might fail.
-  int32_t columnCount = meta->columnCount;
+  cql_int32 columnCount = meta->columnCount;
   cql_contract(col < columnCount);
 
   uint8_t data_type = meta->dataTypes[col];
@@ -2150,7 +1983,7 @@ cql_bool cql_result_set_get_is_null_col(
   size_t row_size = meta->rowsize;
   char *data =((char *)cql_result_set_get_data(result_set)) + row * row_size + offset;
 
-  int32_t core_data_type = CQL_CORE_DATA_TYPE_OF(data_type);
+  cql_int32 core_data_type = CQL_CORE_DATA_TYPE_OF(data_type);
 
   if (core_data_type == CQL_DATA_TYPE_BLOB
     || core_data_type == CQL_DATA_TYPE_STRING
@@ -2205,7 +2038,7 @@ void cql_result_set_set_to_null_col(
 
   // Check to make sure the requested column is a valid column See
   // cql_address_of_col for reasons why this might fail.
-  int32_t columnCount = meta->columnCount;
+  cql_int32 columnCount = meta->columnCount;
   cql_contract(col < columnCount);
 
   uint8_t data_type = meta->dataTypes[col];
@@ -2214,7 +2047,7 @@ void cql_result_set_set_to_null_col(
   size_t row_size = meta->rowsize;
   char *data =((char *)cql_result_set_get_data(result_set)) + row * row_size + offset;
 
-  int32_t core_data_type = CQL_CORE_DATA_TYPE_OF(data_type);
+  cql_int32 core_data_type = CQL_CORE_DATA_TYPE_OF(data_type);
 
   // if this fails you are attempting to set a not null column to null
   cql_contract(!(data_type & CQL_DATA_TYPE_NOT_NULL));
@@ -2248,22 +2081,6 @@ void cql_result_set_set_to_null_col(
   }
 }
 
-// This is the helper method that determines if a column is encoded return TRUE
-// if the data type value has the flag CQL_DATA_TYPE_ENCODED
-cql_bool cql_result_set_get_is_encoded_col(
-  cql_result_set_ref _Nonnull result_set,
-  cql_int32 col)
-{
-  cql_result_set_meta *meta = cql_result_set_get_meta(result_set);
-
-  // Check to make sure the requested column is a valid column See
-  // cql_address_of_col for reasons why this might fail.
-  int32_t columnCount = meta->columnCount;
-  cql_contract(col < columnCount);
-
-  return !!(meta->dataTypes[col] & CQL_DATA_TYPE_ENCODED);
-}
-
 // Tables contains a list of tables we need to drop.  The format is
 // "table1\0table2\0table3\0\0".  The list is terminated by a double null.
 // We try to drop all those tables.
@@ -2280,13 +2097,13 @@ static void cql_autodrop_tables(
 
   const char *drop_table = "DROP TABLE IF EXISTS ";
   const char *p = tables;
-  int32_t max_len = 0;
-  int32_t drop_len = (int32_t)strlen(drop_table);
+  cql_int32 max_len = 0;
+  cql_int32 drop_len = (cql_int32)strlen(drop_table);
 
   // find the longest table name so we can make a suitable buffer
   for (;;) {
     // stop when we find the zero length table name
-    int32_t len = (int32_t)strlen(p);
+    cql_int32 len = (cql_int32)strlen(p);
     if (!len) {
       break;
     }
@@ -2308,7 +2125,7 @@ static void cql_autodrop_tables(
   p = tables;
   for (;;) {
     // stop when we find the zero length table name
-    int32_t len = (int32_t)strlen(p);
+    cql_int32 len = (cql_int32)strlen(p);
     if (!len) {
       break;
     }
@@ -2341,24 +2158,7 @@ void cql_initialize_meta(
   meta->columnCount = info->col_offsets[0];
   meta->identityColumns = info->identity_columns;
   meta->dataTypes = info->data_types;
-  meta->encodeContextIndex = info->encode_context_index;
   meta->copy = cql_rowset_copy;
-}
-
-// true if any of the columns of this result set are to be encoded all we have
-// to do is check the encoded bit on the data types
-static cql_bool cql_are_any_encoded(cql_fetch_info *_Nonnull info) {
-  uint8_t *_Nonnull data_types = info->data_types;
-  uint16_t *_Nonnull col_offsets = info->col_offsets;
-  uint32_t count = col_offsets[0];
-
-  for (cql_int32 column = 0; column < count; column++) {
-    uint8_t type = data_types[column];
-    if (type & CQL_DATA_TYPE_ENCODED) {
-      return true;
-    }
-  }
-  return false;
 }
 
 // By the time we get here, a CQL stored proc has completed execution and there
@@ -2372,19 +2172,15 @@ cql_code cql_fetch_all_results(
   cql_result_set_ref _Nullable *_Nonnull result_set)
 {
   *result_set = NULL;
-  int32_t count = 0;
+  cql_int32 count = 0;
   cql_bytebuf b;
   cql_bytebuf_open(&b);
   sqlite3_stmt *stmt = info->stmt;
-  int32_t rowsize = info->rowsize;
+  cql_int32 rowsize = info->rowsize;
   char *row;
   cql_code rc = info->rc;
 
   if (rc != SQLITE_OK) goto cql_error;
-
-  if (cql_are_any_encoded(info)) {
-    info->encoder = cql_copy_encoder(info->db);
-  }
 
   for (;;) {
     rc = sqlite3_step(stmt);
@@ -2403,8 +2199,6 @@ cql_code cql_fetch_all_results(
   cql_finalize_stmt(&stmt);
   cql_result_set_meta meta;
   cql_initialize_meta(&meta, info);
-  cql_object_release(info->encoder); // nullsafe
-  info->encoder = NULL;
 
   *result_set = cql_result_set_create(b.ptr, count, meta);
   cql_autodrop_tables(info->db, info->autodrop_tables);
@@ -2423,149 +2217,8 @@ cql_error:
   cql_finalize_stmt(&stmt);
   cql_log_database_error(info->db, "cql", "database error");
   cql_autodrop_tables(info->db, info->autodrop_tables);
-  cql_object_release(info->encoder); // nullsafe
-  info->encoder = NULL;
   cql_profile_stop(info->crc, info->perf_index);
   return rc;
-}
-
-// As soon as a new result_set is created. The result_set's field needs to be
-// encoded if they're sensitive and has the bit CQL_DATA_TYPE_ENCODED. We only
-// encode result_set's field when creating the result_set for:
-//  - [OUT C] statement: @see cql_one_row_result(...)
-//  - [OUT UNION C] statement: @see cql_results_from_data(...)
-//
-// We also decode when reading fields from a result set (see
-// cql_copyoutrow(...)) If applicable this helper encode the result_set rows of
-// the newly created result_set.
-static void cql_encode_new_result_set_data(
-  cql_fetch_info *_Nonnull info,
-  char *_Nullable data,
-  cql_int32 rows)
-{
-  sqlite3 *db = info->db;
-  if (!db) {
-    // DB pointer is only set if the result_set is a came from the database. We
-    // also only encode/decode if the result_set came from the database. Non
-    // database result sets (e.g. out union) are never encoded/decoded therefore
-    // we should end here.
-    return;
-  }
-
-  int32_t rowsize = info->rowsize;
-  uint8_t *_Nonnull data_types = info->data_types;
-  uint16_t *_Nonnull col_offsets = info->col_offsets;
-
-  uint32_t count = col_offsets[0];
-  col_offsets++;
-
-  cql_bool got_encoder = false;
-  cql_object_ref encoder = NULL;
-
-  cql_int32 encode_context_type = -1;
-  if (info->encode_context_index >= 0) {
-    encode_context_type = data_types[info->encode_context_index];
-  }
-  char *encode_context_field = NULL;
-  char *row = data;
-  for (cql_int32 i = 0; i < rows ; i++, row += rowsize) {
-    if (info->encode_context_index >= 0) {
-      encode_context_field = row + col_offsets[info->encode_context_index];
-    }
-    for (cql_int32 column = 0; column < count; column++) {
-      uint8_t type = data_types[column];
-      char *field = row + col_offsets[column];
-
-      if (!got_encoder && type & CQL_DATA_TYPE_ENCODED) {
-        encoder = cql_copy_encoder(db);
-        got_encoder = true;
-      }
-
-      switch (type) {
-        case CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_ENCODED | CQL_DATA_TYPE_NOT_NULL: {
-          cql_int32 *int32_data = (cql_int32 *)field;
-          *int32_data = cql_encode_int32(encoder, *int32_data, encode_context_type, encode_context_field);
-          break;
-        }
-        case CQL_DATA_TYPE_INT64 | CQL_DATA_TYPE_ENCODED | CQL_DATA_TYPE_NOT_NULL: {
-          cql_int64 *int64_data = (cql_int64 *)field;
-          *int64_data = cql_encode_int64(encoder, *int64_data, encode_context_type, encode_context_field);
-          break;
-        }
-        case CQL_DATA_TYPE_DOUBLE | CQL_DATA_TYPE_ENCODED | CQL_DATA_TYPE_NOT_NULL: {
-          cql_double *double_data = (cql_double *)field;
-          *double_data = cql_encode_double(encoder, *double_data, encode_context_type, encode_context_field);
-          break;
-        }
-        case CQL_DATA_TYPE_BOOL | CQL_DATA_TYPE_ENCODED | CQL_DATA_TYPE_NOT_NULL: {
-          cql_bool *bool_data = (cql_bool *)field;
-          *bool_data = cql_encode_bool(encoder, *bool_data, encode_context_type, encode_context_field);
-          break;
-        }
-        case CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED | CQL_DATA_TYPE_NOT_NULL: {
-          cql_string_ref *str_ref = (cql_string_ref *)field;
-          cql_string_ref new_str_ref = cql_encode_string_ref_new(encoder, *str_ref, encode_context_type, encode_context_field);
-          cql_set_string_ref(str_ref, new_str_ref);
-          cql_string_release(new_str_ref);
-          break;
-        }
-        case CQL_DATA_TYPE_BLOB | CQL_DATA_TYPE_ENCODED | CQL_DATA_TYPE_NOT_NULL: {
-          cql_blob_ref *blob_ref = (cql_blob_ref *)field;
-          cql_blob_ref new_blob_ref = cql_encode_blob_ref_new(encoder, *blob_ref, encode_context_type, encode_context_field);
-          cql_set_blob_ref(blob_ref, new_blob_ref);
-          cql_blob_release(new_blob_ref);
-          break;
-        }
-        case CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_ENCODED: {
-          cql_nullable_int32 *_Nonnull int32p = (cql_nullable_int32 *_Nonnull)field;
-          if (!int32p->is_null) {
-            int32p->value = cql_encode_int32(encoder, int32p->value, encode_context_type, encode_context_field);
-          }
-          break;
-        }
-        case CQL_DATA_TYPE_INT64 | CQL_DATA_TYPE_ENCODED: {
-          cql_nullable_int64 *_Nonnull int64p = (cql_nullable_int64 *_Nonnull)field;
-          if (!int64p->is_null) {
-            int64p->value = cql_encode_int64(encoder, int64p->value, encode_context_type, encode_context_field);
-          }
-          break;
-        }
-        case CQL_DATA_TYPE_DOUBLE | CQL_DATA_TYPE_ENCODED: {
-          cql_nullable_double *_Nonnull doublep = (cql_nullable_double *_Nonnull)field;
-          if (!doublep->is_null) {
-            doublep->value = cql_encode_double(encoder, doublep->value, encode_context_type, encode_context_field);
-          }
-          break;
-        }
-        case CQL_DATA_TYPE_BOOL | CQL_DATA_TYPE_ENCODED: {
-          cql_nullable_bool *_Nonnull boolp = (cql_nullable_bool *_Nonnull)field;
-          if (!boolp->is_null) {
-            boolp->value = cql_encode_bool(encoder, boolp->value, encode_context_type, encode_context_field);
-          }
-          break;
-        }
-        case CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_ENCODED: {
-          cql_string_ref *str_ref = (cql_string_ref *)field;
-          if (*str_ref) {
-            cql_string_ref new_str_ref = cql_encode_string_ref_new(encoder, *str_ref, encode_context_type, encode_context_field);
-            cql_set_string_ref(str_ref, new_str_ref);
-            cql_string_release(new_str_ref);
-          }
-          break;
-        }
-        case CQL_DATA_TYPE_BLOB | CQL_DATA_TYPE_ENCODED: {
-          cql_blob_ref *blob_ref = (cql_blob_ref *)field;
-          if (*blob_ref) {
-            cql_blob_ref new_blob_ref = cql_encode_blob_ref_new(encoder, *blob_ref, encode_context_type, encode_context_field);
-            cql_set_blob_ref(blob_ref, new_blob_ref);
-            cql_blob_release(new_blob_ref);
-          }
-          break;
-        }
-      }
-    }
-  }
-  cql_object_release(encoder);
 }
 
 // In this result set creator, the rows are sitting pretty in a buffer we've
@@ -2579,15 +2232,12 @@ void cql_results_from_data(
   cql_result_set_ref _Nullable *_Nonnull result_set)
 {
   *result_set = NULL;
-  int32_t rowsize = info->rowsize;
-  int32_t count = buffer->used / rowsize;
+  cql_int32 rowsize = info->rowsize;
+  cql_int32 count = buffer->used / rowsize;
 
   if (rc == SQLITE_OK) {
     cql_result_set_meta meta;
     cql_initialize_meta(&meta, info);
-    // We need to encode the column value of the new result_set's data. We're
-    // only encoding result_set because it's the final output of a stored proc.
-    cql_encode_new_result_set_data(info, buffer->ptr, count);
     *result_set = cql_result_set_create(buffer->ptr, count, meta);
   }
   else {
@@ -2611,7 +2261,7 @@ void cql_results_from_data(
 cql_code cql_one_row_result(
   cql_fetch_info *_Nonnull info,
   char *_Nullable data,
-  int32_t count,
+  cql_int32 count,
   cql_result_set_ref _Nullable *_Nonnull result_set)
 {
   cql_code rc = info->rc;
@@ -2620,9 +2270,6 @@ cql_code cql_one_row_result(
 
   cql_result_set_meta meta;
   cql_initialize_meta(&meta, info);
-  // We need to encode the column value of the new result_set's data. We're only
-  // encoding result_set because it's the final output of a stored proc.
-  cql_encode_new_result_set_data(info, data, count);
   *result_set = cql_result_set_create(data, count, meta);
   cql_autodrop_tables(info->db, info->autodrop_tables);
   cql_profile_stop(info->crc, info->perf_index);
@@ -2645,7 +2292,7 @@ typedef struct cql_no_rows_row {
   cql_int32 x;
 } cql_no_rows_row;
 
-static int32_t cql_no_rows_row_perf_index;
+static cql_int32 cql_no_rows_row_perf_index;
 
 uint8_t cql_no_rows_row_data_types[] = {
   CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // x
@@ -2875,9 +2522,9 @@ cql_object_ref _Nonnull cql_facets_create(void) {
     cql_key_str_hash,
     cql_key_str_eq,
     cql_key_retain,
-    cql_no_op_retain_release,
+    cql_no_op_retain_release,  // value retain is a no-op
     cql_key_release,
-    cql_no_op_retain_release,
+    cql_no_op_retain_release,  // value release is a no-op
     NULL
   );
 
@@ -3078,7 +2725,7 @@ static bool cql_read_varint_64(
 
 // variable length encoding using zigzag and 7 bits with extension
 // note that this also takes care of any endian issues
-static void cql_write_varint_32(cql_bytebuf *_Nonnull buf, int32_t si) {
+static void cql_write_varint_32(cql_bytebuf *_Nonnull buf, cql_int32 si) {
   uint32_t i = cql_zigzag_encode_32(si);
   do {
     uint8_t byte = i & 0x7f;
@@ -3109,9 +2756,10 @@ static void cql_write_varint_64(cql_bytebuf *_Nonnull buf, int64_t si) {
 // about the cursor.  By the time this is called many checks have been made
 // about the suitability of this cursor for serialization (e.g. no OBJECT
 // fields). As a consequence we get a nice simple strategy that is flexible.
-cql_code cql_serialize_to_blob(
-  cql_blob_ref _Nullable *_Nonnull blob,
-  cql_dynamic_cursor *_Nonnull dyn_cursor)
+cql_code cql_cursor_to_blob(
+  sqlite3 *_Nonnull db,
+  cql_dynamic_cursor *_Nonnull dyn_cursor,
+  cql_blob_ref _Nullable *_Nonnull blob)
 {
   if (!*dyn_cursor->cursor_has_row) {
     return SQLITE_ERROR;
@@ -3210,8 +2858,8 @@ cql_code cql_serialize_to_blob(
         case CQL_DATA_TYPE_BLOB: {
           cql_blob_ref blob_ref = *(cql_blob_ref *)(cursor + offset);
           const void *bytes = cql_get_blob_bytes(blob_ref);
-          cql_uint32 size = cql_get_blob_size(blob_ref);
-          cql_append_value(b, size);
+          cql_int32 size = cql_get_blob_size(blob_ref);
+          cql_write_varint_32(&b, size);
           cql_bytebuf_append(&b, bytes, size);
           break;
         }
@@ -3269,8 +2917,8 @@ cql_code cql_serialize_to_blob(
           if (blob_ref) {
             cql_setbit(bits, nullable_index);
             const void *bytes = cql_get_blob_bytes(blob_ref);
-            uint32_t size = cql_get_blob_size(blob_ref);
-            cql_append_value(b, size);
+            cql_int32 size = cql_get_blob_size(blob_ref);
+            cql_write_varint_32(&b, size);
             cql_bytebuf_append(&b, bytes, size);
           }
           break;
@@ -3354,9 +3002,10 @@ static void cql_clear_references_before_deserialization(
      goto error; \
    }
 
-cql_code cql_deserialize_from_blob(
-  cql_blob_ref _Nullable b,
-  cql_dynamic_cursor *_Nonnull dyn_cursor)
+cql_code cql_cursor_from_blob(
+  sqlite3 *_Nonnull db,
+  cql_dynamic_cursor *_Nonnull dyn_cursor,
+  cql_blob_ref _Nullable b)
 {
   cql_bool *has_row = dyn_cursor->cursor_has_row;
   uint16_t *offsets = dyn_cursor->cursor_col_offsets;
@@ -3468,7 +3117,6 @@ cql_code cql_deserialize_from_blob(
     bool fetch_data = false;
     bool needed_notnull = !!(type & CQL_DATA_TYPE_NOT_NULL);
 
-
     if (i >= actual_count) {
       // we don't have this field
       fetch_data = false;
@@ -3560,8 +3208,10 @@ cql_code cql_deserialize_from_blob(
         }
         case CQL_DATA_TYPE_BLOB: {
           cql_blob_ref *blob_ref = (cql_blob_ref *)(cursor + offset);
-          uint32_t byte_count;
-          cql_read_var(&input, byte_count);
+          cql_int32 byte_count;
+          if (!cql_read_varint_32(&input, &byte_count)) {
+            goto error;
+          }
           const uint8_t *result;
           if (!cql_input_inline_bytes(&input, &result, byte_count)) {
             goto error;
@@ -3595,6 +3245,7 @@ cql_code cql_deserialize_from_blob(
           cql_nullable_bool *bool_data = (cql_nullable_bool *)(cursor + offset);
           bool_data->value = 0;
           bool_data->is_null = true;
+          bool_index++;
           break;
         }
         case CQL_DATA_TYPE_STRING: {
@@ -3669,7 +3320,7 @@ static void cql_partition_val_release(
   if (refs_count) {
     int16_t refs_offset = self->c_val.cursor_refs_offset;
     size_t rowsize = self->c_val.cursor_size;
-    int32_t count = buffer->used / rowsize;
+    cql_int32 count = buffer->used / rowsize;
 
     char *row = buffer->ptr;
     for (cql_int32 i = 0; i < count ; i++, row += rowsize) {
@@ -3893,8 +3544,7 @@ cql_object_ref _Nonnull cql_extract_partition(
         .col_offsets = self->c_val.cursor_col_offsets,
         .refs_count = self->c_val.cursor_refs_count,
         .refs_offset = self->c_val.cursor_refs_offset,
-        .rowsize = (int32_t)self->c_val.cursor_size,
-        .encode_context_index = -1,
+        .rowsize = (cql_int32)self->c_val.cursor_size,
       };
 
       // make the meta from standard info
@@ -3925,7 +3575,6 @@ cql_object_ref _Nonnull cql_extract_partition(
     cql_fetch_info empty_info = {
       .data_types = empty_dataTypes,
       .col_offsets = empty_colOffsets,
-      .encode_context_index = -1,
     };
 
     // make the meta from standard info
@@ -4027,6 +3676,8 @@ cql_bool cql_string_dictionary_add(
   cql_hashtab_entry *entry = cql_hashtab_find(self, (cql_int64)key);
 
   if (entry) {
+    // mutate the value in place, retain the new value first
+    // in case it is the same as the old value
     cql_string_retain(val);
     cql_string_release((cql_string_ref)entry->val);
     entry->val = (cql_int64)val;
@@ -4053,6 +3704,171 @@ cql_string_ref _Nullable cql_string_dictionary_find(
   cql_hashtab_entry *entry = cql_hashtab_find(self, (cql_int64)key);
 
   return entry ? (cql_string_ref)entry->val : NULL;
+}
+
+// This makes a simple long dictionary with string keys.  The storage
+// is the usual cql_hashtab but the keys are strings and the values are
+// longs.  The keys are retained and released as strings.  The long values
+// of course fit directly in the hash table which holds cql_int64 natively.
+cql_object_ref _Nonnull cql_long_dictionary_create() {
+
+  // we can re-use the hash, equality, retain, and release from the
+  // cql_string_dictionary keys.  Values are not objects so they
+  // need no cleanup.
+  cql_hashtab *self = cql_hashtab_new(
+      cql_key_str_hash,
+      cql_key_str_eq,
+      cql_key_retain,
+      cql_no_op_retain_release, // value retain is a no-op
+      cql_key_release,
+      cql_no_op_retain_release, // value release is a no-op
+      NULL
+    );
+
+  // the dictionary finalizer is the same for all dictionaries
+  cql_object_ref obj = _cql_generic_object_create(
+    self,
+    cql_string_dictionary_finalize);
+
+  return obj;
+}
+
+// Delegate the add operation to the internal hashtable
+cql_bool cql_long_dictionary_add(
+  cql_object_ref _Nonnull dict,
+  cql_string_ref _Nonnull key,
+  cql_int64 val)
+{
+  cql_contract(dict);
+  cql_contract(key);
+
+  cql_hashtab *_Nonnull self = _cql_generic_object_get_data(dict);
+  cql_hashtab_entry *entry = cql_hashtab_find(self, (cql_int64)key);
+
+  if (entry) {
+    // mutate the value in place
+    entry->val = val;
+    return false;
+  }
+
+  // retain/release defined above, the key will be retained
+  return cql_hashtab_add(self, (cql_int64)key, val);
+}
+
+// Lookup the given string in the hash table, note that we do not retain the string
+cql_nullable_int64 cql_long_dictionary_find(
+  cql_object_ref _Nonnull dict,
+  cql_string_ref _Nullable key)
+{
+  cql_contract(dict);
+  cql_nullable_int64 result = {
+     .is_null = true,
+     .value = 0,
+  };
+
+  if (key) {
+    cql_hashtab *_Nonnull self = _cql_generic_object_get_data(dict);
+    cql_hashtab_entry *entry = cql_hashtab_find(self, (cql_int64)key);
+
+    if (entry) {
+      // we have a result
+       result.value = entry->val;
+       result.is_null = 0;
+    }
+  }
+
+  return result;
+}
+
+// This makes a simple real dictionary with string keys, the values are doubles.
+// We have to assume that a double is the same size as an int64 so we can store
+// it directly in the hash table.  The keys are retained and released as
+// strings. The double values are not objects so they need no cleanup. The
+// storage is the usual cql_hashtab. There are asserts to verify that the size
+// of a double is the same as an int64. If you need this to work somewhere this
+// isn't true then cqlrt.h will need to provide a wrapper to do the platform
+// specific conversion for you.  cql_hashtab could be generalized so that it
+// holds a union for its values but at this point int64 does the job so we just
+// go with that.
+cql_object_ref _Nonnull cql_real_dictionary_create() {
+
+  // we can re-use the hash, equality, retain, and release from the
+  // cql_string_dictionary keys.  Values are not objects so they
+  // need no cleanup.
+  cql_hashtab *self = cql_hashtab_new(
+      cql_key_str_hash,
+      cql_key_str_eq,
+      cql_key_retain,
+      cql_no_op_retain_release, // value retain is a no-op
+      cql_key_release,
+      cql_no_op_retain_release, // value release is a no-op
+      NULL
+    );
+
+  // the dictionary finalizer is the same for all dictionaries
+  cql_object_ref obj = _cql_generic_object_create(
+    self,
+    cql_string_dictionary_finalize);
+
+  return obj;
+}
+
+// Delegate the add operation to the internal hashtable
+cql_bool cql_real_dictionary_add(
+  cql_object_ref _Nonnull dict,
+  cql_string_ref _Nonnull key,
+  cql_double val)
+{
+  cql_contract(dict);
+  cql_contract(key);
+
+  cql_hashtab *_Nonnull self = _cql_generic_object_get_data(dict);
+  cql_hashtab_entry *entry = cql_hashtab_find(self, (cql_int64)key);
+
+  // We need to cast the double to an int64 to store it in the hash table but we
+  // do it in such as way as to preserve the bit pattern of the double so that
+  // we can recover the double later. This assumes that a double is exactly the
+  // same size as an int64 which is true on all platforms we care about.  If
+  // this stops being true we can add a wrapper in cqlrt.h to do the platform
+  // specific conversion for us or otherwise generalize the payload.
+  CQL_C_ASSERT(sizeof(cql_double) == sizeof(cql_int64));
+  cql_int64 v = *(cql_int64 *)&val;
+
+  if (entry) {
+    // mutate the value in place
+    entry->val = v;
+    return false;
+  }
+
+  // retain/release defined above, the key will be retained
+  return cql_hashtab_add(self, (cql_int64)key, v);
+}
+
+// Lookup the given string in the hash table, note that we do not retain the string
+cql_nullable_double cql_real_dictionary_find(
+  cql_object_ref _Nonnull dict,
+  cql_string_ref _Nullable key)
+{
+  cql_contract(dict);
+
+  cql_nullable_double result = {
+     .is_null = true,
+     .value = 0,
+  };
+
+  if (key) {
+    cql_hashtab *_Nonnull self = _cql_generic_object_get_data(dict);
+    cql_hashtab_entry *entry = cql_hashtab_find(self, (cql_int64)key);
+
+    if (entry) {
+      // This is the reverse mapping, think of the bits as a double again
+      CQL_C_ASSERT(sizeof(cql_double) == sizeof(cql_int64));
+      result.value = *(cql_double*)&entry->val;
+      result.is_null = 0;
+    }
+  }
+
+  return result;
 }
 
 // This makes a simple object dictionary with retained strings
@@ -4082,10 +3898,37 @@ cql_object_ref _Nullable cql_object_dictionary_find(
   return (cql_object_ref)cql_string_dictionary_find(dict, key);
 }
 
+// This makes a simple blob dictionary with retained strings
+cql_object_ref _Nonnull cql_blob_dictionary_create() {
+  // it's the same as a string dictionary internally as it's just object refs
+  return cql_string_dictionary_create();
+}
+
+// Delegate the add operation to the internal hashtable
+cql_bool cql_blob_dictionary_add(
+  cql_object_ref _Nonnull dict,
+  cql_string_ref _Nonnull key,
+  cql_blob_ref _Nonnull val)
+{
+  // again we can cheat... the guts are the same and the value is only retained
+  // this could change some day but for now we live for free
+  return cql_string_dictionary_add(dict, key, (cql_string_ref)val);
+}
+
+// Lookup the given string in the hash table, note that we do not retain the result
+cql_blob_ref _Nullable cql_blob_dictionary_find(
+  cql_object_ref _Nonnull dict,
+  cql_string_ref _Nullable key)
+{
+  // and again, the lookup only borrows the value so we can re-use string
+  // dictionary for free.
+  return (cql_blob_ref)cql_string_dictionary_find(dict, key);
+}
+
 // We have to release all the strings in the buffer then release the buffer memory
 static void cql_string_list_finalize(void *_Nonnull data) {
   cql_bytebuf *_Nonnull self = data;
-  int32_t count = self->used / sizeof(cql_string_ref);
+  cql_int32 count = self->used / sizeof(cql_string_ref);
   for (uint32_t i = 0; i < count; i++) {
     size_t offset = i * sizeof(cql_string_ref);
     cql_string_ref string = *(cql_string_ref *)(self->ptr + offset);
@@ -4114,7 +3957,7 @@ cql_object_ref _Nonnull cql_string_list_add(cql_object_ref _Nonnull list, cql_st
 }
 
 // Returns the number of elements in the given string list
-int32_t cql_string_list_count(cql_object_ref _Nonnull list) {
+cql_int32 cql_string_list_count(cql_object_ref _Nonnull list) {
   cql_contract(list);
 
   cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
@@ -4124,13 +3967,13 @@ int32_t cql_string_list_count(cql_object_ref _Nonnull list) {
 // Returns the nth string from the string list with no extra retain (get semantics)
 cql_string_ref _Nonnull cql_string_list_get_at(
   cql_object_ref _Nonnull list,
-  int32_t index)
+  cql_int32 index)
 {
   cql_contract(list);
   cql_string_ref result = NULL;
 
   cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
-  int32_t count = self->used / sizeof(cql_string_ref);
+  cql_int32 count = self->used / sizeof(cql_string_ref);
   cql_contract(index >= 0 && index < count);
   cql_invariant(self->ptr);
   size_t offset = index * sizeof(cql_string_ref);
@@ -4141,19 +3984,211 @@ cql_string_ref _Nonnull cql_string_list_get_at(
 // Edits the string item in place
 cql_object_ref _Nonnull cql_string_list_set_at(
   cql_object_ref _Nonnull list,
-  int32_t index,
+  cql_int32 index,
   cql_string_ref _Nonnull value)
 {
   cql_contract(list);
   cql_contract(value);
 
   cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
-  int32_t count = self->used / sizeof(cql_string_ref);
+  cql_int32 count = self->used / sizeof(cql_string_ref);
   cql_contract(index >= 0 && index < count);
   cql_invariant(self->ptr);
   size_t offset = index * sizeof(cql_string_ref);
   cql_string_ref *data = (cql_string_ref *)(self->ptr + offset);
   cql_set_string_ref(data, value);
+
+  return list;
+}
+
+cql_object_ref _Nonnull cql_object_list_create(void) {
+  // the details are the same for strings as objects
+  return cql_string_list_create();
+}
+
+cql_object_ref _Nonnull cql_object_list_add(
+  cql_object_ref _Nonnull list,
+  cql_object_ref _Nonnull value)
+{
+  // the details are the same for strings as objects
+  return cql_string_list_add(list, (cql_string_ref)value);
+}
+
+cql_int32 cql_object_list_count(cql_object_ref _Nonnull list) {
+  // the details are the same for strings as objects
+  return cql_string_list_count(list);
+}
+
+cql_object_ref _Nonnull cql_object_list_get_at(
+  cql_object_ref _Nonnull list,
+  cql_int32 index)
+{
+  // the details are the same for strings as objects
+  return (cql_object_ref)cql_string_list_get_at(list, index);
+}
+
+cql_object_ref _Nonnull cql_object_list_set_at(
+  cql_object_ref _Nonnull list,
+  cql_int32 index,
+  cql_object_ref _Nonnull value)
+{
+  // the details are the same for strings as objects
+  return cql_string_list_set_at(list, index, (cql_string_ref)value);
+}
+
+cql_object_ref _Nonnull cql_blob_list_create(void) {
+  // the details are the same for strings as blobs
+  return cql_string_list_create();
+}
+
+cql_object_ref _Nonnull cql_blob_list_add(
+  cql_object_ref _Nonnull list,
+  cql_blob_ref _Nonnull value)
+{
+  // the details are the same for strings as blobs
+  return cql_string_list_add(list, (cql_string_ref)value);
+}
+
+cql_int32 cql_blob_list_count(cql_object_ref _Nonnull list) {
+  // the details are the same for strings as blobs
+  return cql_string_list_count(list);
+}
+
+cql_blob_ref _Nonnull cql_blob_list_get_at(
+  cql_object_ref _Nonnull list,
+  cql_int32 index)
+{
+  // the details are the same for strings as blobs
+  return (cql_blob_ref)cql_string_list_get_at(list, index);
+}
+
+cql_object_ref _Nonnull cql_blob_list_set_at(
+  cql_object_ref _Nonnull list,
+  cql_int32 index,
+  cql_blob_ref _Nonnull value)
+{
+  // the details are the same for strings as blobs
+  return cql_string_list_set_at(list, index, (cql_string_ref)value);
+}
+
+// We just release the buffer memory
+static void cql_long_list_finalize(void *_Nonnull data) {
+  cql_bytebuf *_Nonnull self = data;
+  cql_bytebuf_close(self);
+  free(self);
+}
+
+// Creates the list storage using a byte buffer
+cql_object_ref _Nonnull cql_long_list_create(void) {
+  cql_bytebuf *self = calloc(1, sizeof(cql_bytebuf));
+  cql_bytebuf_open(self);
+  return _cql_generic_object_create(self, cql_long_list_finalize);
+}
+
+// Adds a long to the given list
+cql_object_ref _Nonnull cql_long_list_add(cql_object_ref _Nonnull list, cql_int64 value) {
+  cql_contract(list);
+  cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
+  cql_bytebuf_append(self, &value, sizeof(value));
+  return list;
+}
+
+// Returns the number of elements in the given list
+cql_int32 cql_long_list_count(cql_object_ref _Nonnull list) {
+  cql_contract(list);
+
+  cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
+  return self->used / sizeof(cql_int64);
+}
+
+// Returns the nth long from the list
+cql_int64 cql_long_list_get_at(
+  cql_object_ref _Nonnull list,
+  cql_int32 index)
+{
+  cql_contract(list);
+
+  cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
+  cql_int32 count = self->used / sizeof(cql_int64);
+  cql_contract(index >= 0 && index < count);
+  cql_invariant(self->ptr);
+  size_t offset = index * sizeof(cql_int64);
+  return *(cql_int64 *)(self->ptr + offset);
+}
+
+// Edits the item in place
+cql_object_ref _Nonnull cql_long_list_set_at(
+  cql_object_ref _Nonnull list,
+  cql_int32 index,
+  cql_int64 value)
+{
+  cql_contract(list);
+  cql_contract(value);
+
+  cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
+  cql_int32 count = self->used / sizeof(cql_int64);
+  cql_contract(index >= 0 && index < count);
+  cql_invariant(self->ptr);
+  size_t offset = index * sizeof(cql_int64);
+  *(cql_int64 *)(self->ptr + offset) = value;
+
+  return list;
+}
+
+// Creates the list storage using a byte buffer
+cql_object_ref _Nonnull cql_real_list_create(void) {
+  cql_bytebuf *self = calloc(1, sizeof(cql_bytebuf));
+  cql_bytebuf_open(self);
+  // the long list finalizer works, it just releases the buffer
+  return _cql_generic_object_create(self, cql_long_list_finalize);
+}
+
+// Adds a real to the given list
+cql_object_ref _Nonnull cql_real_list_add(cql_object_ref _Nonnull list, cql_double value) {
+  cql_contract(list);
+  cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
+  cql_bytebuf_append(self, &value, sizeof(value));
+  return list;
+}
+
+// Returns the number of elements in the given list
+cql_int32 cql_real_list_count(cql_object_ref _Nonnull list) {
+  cql_contract(list);
+
+  cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
+  return self->used / sizeof(cql_double);
+}
+
+// Returns the nth long from the list
+cql_double cql_real_list_get_at(
+  cql_object_ref _Nonnull list,
+  cql_int32 index)
+{
+  cql_contract(list);
+
+  cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
+  cql_int32 count = self->used / sizeof(cql_double);
+  cql_contract(index >= 0 && index < count);
+  cql_invariant(self->ptr);
+  size_t offset = index * sizeof(cql_double);
+  return *(cql_double *)(self->ptr + offset);
+}
+
+// Edits the item in place
+cql_object_ref _Nonnull cql_real_list_set_at(
+  cql_object_ref _Nonnull list,
+  cql_int32 index,
+  cql_double value)
+{
+  cql_contract(list);
+  cql_contract(value);
+
+  cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
+  cql_int32 count = self->used / sizeof(cql_double);
+  cql_contract(index >= 0 && index < count);
+  cql_invariant(self->ptr);
+  size_t offset = index * sizeof(cql_double);
+  *(cql_double *)(self->ptr + offset) = value;
 
   return list;
 }
@@ -4182,7 +4217,7 @@ sqlite3_stmt *_Nullable cql_unbox_stmt(cql_object_ref _Nonnull ref) {
 static void cql_format_one_cursor_column(
   cql_bytebuf *_Nonnull b,
   cql_dynamic_cursor *_Nonnull dyn_cursor,
-  int32_t i)
+  cql_int32 i)
 {
   uint16_t *offsets = dyn_cursor->cursor_col_offsets;
   uint8_t *types = dyn_cursor->cursor_data_types;
@@ -4226,6 +4261,11 @@ static void cql_format_one_cursor_column(
         cql_blob_ref blob_ref = *(cql_blob_ref *)(cursor + offset);
         cql_uint32 size = cql_get_blob_size(blob_ref);
         cql_bprintf(b, "length %d blob", size);
+        break;
+      }
+      case CQL_DATA_TYPE_OBJECT: {
+        cql_object_ref obj_ref = *(cql_object_ref *)(cursor + offset);
+        cql_bprintf(b, "generic object");
         break;
       }
     }
@@ -4295,6 +4335,16 @@ static void cql_format_one_cursor_column(
         }
         break;
       }
+      case CQL_DATA_TYPE_OBJECT: {
+        cql_object_ref obj_ref = *(cql_object_ref *)(cursor + offset);
+        if (!obj_ref) {
+          cql_bprintf(b, "null");
+        }
+        else {
+          cql_bprintf(b, "generic object");
+        }
+        break;
+      }
     }
   }
 }
@@ -4343,29 +4393,296 @@ cql_string_ref _Nonnull cql_cursor_format(
   return result;
 }
 
+static cql_bool cql_compare_one_cursor_column(
+  cql_dynamic_cursor *_Nonnull dyn_cursor1,
+  cql_dynamic_cursor *_Nonnull dyn_cursor2,
+  cql_int32 i)
+{
+  uint16_t *offsets1 = dyn_cursor1->cursor_col_offsets;
+  uint8_t *types1 = dyn_cursor1->cursor_data_types;
+  uint8_t *cursor1 = dyn_cursor1->cursor_data;  // we will be using char offsets
+  uint16_t *offsets2 = dyn_cursor2->cursor_col_offsets;
+  uint8_t *types2 = dyn_cursor2->cursor_data_types;
+  uint8_t *cursor2 = dyn_cursor2->cursor_data;  // we will be using char offsets
+
+  // the type must be an exact match for cursor equality
+  // down to nullability.  If we relax this then the combinatorics
+  // go through the roof and we just don't need to support all of that.
+  // This is pre-verified in semantic analysis for this function
+  // so if it reaches this point it's a contract violation.
+  uint8_t type1 = types1[i];
+  uint8_t type2 = types2[i];
+  cql_contract(type1 == type2);
+
+  uint16_t offset1 = offsets1[i+1];
+  uint16_t offset2 = offsets2[i+1];
+
+  // count is stored in first offset
+  uint16_t count1 = offsets1[0];
+  uint16_t count2 = offsets2[0];
+
+  // also pre-verified
+  cql_contract(count1 == count2);
+  cql_contract(i >= 0 && i < count1);
+
+  int8_t core_data_type = CQL_CORE_DATA_TYPE_OF(type1);
+
+  // handle the reference types first
+  switch (core_data_type) {
+      case CQL_DATA_TYPE_STRING: {
+        cql_string_ref str_ref1 = *(cql_string_ref *)(cursor1 + offset1);
+        cql_string_ref str_ref2 = *(cql_string_ref *)(cursor2 + offset2);
+        return str_ref1 == str_ref2 || cql_string_equal(str_ref1, str_ref2);
+      }
+      case CQL_DATA_TYPE_BLOB: {
+        cql_blob_ref blob_ref1 = *(cql_blob_ref *)(cursor1 + offset1);
+        cql_blob_ref blob_ref2 = *(cql_blob_ref *)(cursor2 + offset2);
+        return blob_ref1 == blob_ref2 || cql_blob_equal(blob_ref1, blob_ref2);
+      }
+      case CQL_DATA_TYPE_OBJECT: {
+        cql_object_ref object_ref1 = *(cql_object_ref *)(cursor1 + offset1);
+        cql_object_ref object_ref2 = *(cql_object_ref *)(cursor2 + offset2);
+        return object_ref1 == object_ref2;
+      }
+  }
+
+  // value types have to be treated differently depending on nullability
+
+  if (type1 & CQL_DATA_TYPE_NOT_NULL) {
+    switch (core_data_type) {
+      case CQL_DATA_TYPE_BOOL: {
+        cql_bool bool_data1 = *(cql_bool *)(cursor1 + offset1);
+        cql_bool bool_data2 = *(cql_bool *)(cursor2 + offset2);
+        return bool_data1 == bool_data2;
+      }
+      case CQL_DATA_TYPE_INT32: {
+        cql_int32 int32_data1 = *(cql_int32 *)(cursor1 + offset1);
+        cql_int32 int32_data2 = *(cql_int32 *)(cursor2 + offset2);
+        return int32_data1 == int32_data2;
+      }
+      case CQL_DATA_TYPE_INT64: {
+        cql_int64 int64_data1 = *(cql_int64 *)(cursor1 + offset1);
+        cql_int64 int64_data2 = *(cql_int64 *)(cursor2 + offset2);
+        return int64_data1 == int64_data2;
+      }
+      default: {
+        // this is all that's left
+        cql_contract(core_data_type == CQL_DATA_TYPE_DOUBLE);
+
+        cql_double double_data1 = *(cql_double *)(cursor1 + offset1);
+        cql_double double_data2 = *(cql_double *)(cursor2 + offset2);
+        return double_data1 == double_data2;
+      }
+    }
+  }
+  else {
+    switch (core_data_type) {
+      case CQL_DATA_TYPE_BOOL: {
+        cql_nullable_bool bool_data1 = *(cql_nullable_bool *)(cursor1 + offset1);
+        cql_nullable_bool bool_data2 = *(cql_nullable_bool *)(cursor2 + offset2);
+        if (bool_data1.is_null != bool_data2.is_null) {
+          return false;
+        }
+        if (bool_data1.is_null) {
+          return true;
+        }
+        return bool_data1.value == bool_data2.value;
+      }
+      case CQL_DATA_TYPE_INT32: {
+        cql_nullable_int32 int32_data1 = *(cql_nullable_int32 *)(cursor1 + offset1);
+        cql_nullable_int32 int32_data2 = *(cql_nullable_int32 *)(cursor2 + offset2);
+        if (int32_data1.is_null != int32_data2.is_null) {
+          return false;
+        }
+        if (int32_data1.is_null) {
+          return true;
+        }
+        return int32_data1.value == int32_data2.value;
+        break;
+      }
+      case CQL_DATA_TYPE_INT64: {
+        cql_nullable_int64 int64_data1 = *(cql_nullable_int64 *)(cursor1 + offset1);
+        cql_nullable_int64 int64_data2 = *(cql_nullable_int64 *)(cursor2 + offset2);
+        if (int64_data1.is_null != int64_data2.is_null) {
+          return false;
+        }
+        if (int64_data1.is_null) {
+          return true;
+        }
+        return int64_data1.value == int64_data2.value;
+      }
+      default: {
+        // this is all that's left
+        cql_contract(core_data_type == CQL_DATA_TYPE_DOUBLE);
+
+        cql_nullable_double double_data1 = *(cql_nullable_double *)(cursor1 + offset1);
+        cql_nullable_double double_data2 = *(cql_nullable_double *)(cursor2 + offset2);
+        if (double_data1.is_null != double_data2.is_null) {
+          return false;
+        }
+        if (double_data1.is_null) {
+          return true;
+        }
+        return double_data1.value == double_data2.value;
+      }
+    }
+  }
+}
+
+cql_int32 cql_cursor_diff_index(
+  cql_dynamic_cursor *_Nonnull dyn_cursor1,
+  cql_dynamic_cursor *_Nonnull dyn_cursor2)
+{
+  // count is stored in first offset
+  uint16_t count1 = dyn_cursor1->cursor_col_offsets[0];
+  uint16_t count2 = dyn_cursor2->cursor_col_offsets[0];
+
+  // -2 indicates one has a row and the other doesn't
+  if (*dyn_cursor1->cursor_has_row != *dyn_cursor2->cursor_has_row) {
+    return -2;
+  }
+
+  // both empty is a match
+  if (!*dyn_cursor1->cursor_has_row) {
+    return -1;
+  }
+
+  // pre-verified by semantic analysis
+  cql_contract(count1 == count2);
+
+  for (uint16_t i = 0; i < count1; i++) {
+    if (!cql_compare_one_cursor_column(dyn_cursor1, dyn_cursor2, i)) {
+      return i;
+    }
+  }
+
+  return -1;
+}
+
+cql_string_ref _Nullable cql_cursor_diff_col(
+  cql_dynamic_cursor *_Nonnull dyn_cursor1,
+  cql_dynamic_cursor *_Nonnull dyn_cursor2)
+{
+  cql_int32 i = cql_cursor_diff_index(dyn_cursor1, dyn_cursor2);
+  if (i >= 0) {
+    return cql_cursor_column_name(dyn_cursor1, i);
+  }
+
+  if (i == -2) {
+    return cql_string_ref_new("_has_row_");
+  }
+
+  return NULL;
+}
+
+cql_string_ref _Nullable cql_cursor_diff_val(
+  cql_dynamic_cursor *_Nonnull dyn_cursor1,
+  cql_dynamic_cursor *_Nonnull dyn_cursor2)
+{
+  cql_int32 i = cql_cursor_diff_index(dyn_cursor1, dyn_cursor2);
+
+  if (i >= 0) {
+    cql_bytebuf b;
+    cql_bytebuf_open(&b);
+
+    // field names for printing
+    const char **fields = dyn_cursor1->cursor_fields;
+    cql_bprintf(&b, "column:%s", fields[i]);
+
+    cql_bprintf(&b, " c1:");
+    cql_format_one_cursor_column(&b, dyn_cursor1, i);
+    cql_bprintf(&b, " c2:");
+    cql_format_one_cursor_column(&b, dyn_cursor2, i);
+
+    cql_bytebuf_append_null(&b);
+
+    cql_string_ref result = cql_string_ref_new(b.ptr);
+    cql_bytebuf_close(&b);
+    return result;
+  }
+
+  if (i == -2) {
+    cql_bytebuf b;
+    cql_bytebuf_open(&b);
+
+    // field names for printing
+    const char **fields = dyn_cursor1->cursor_fields;
+    cql_bprintf(&b, "column:_has_row_ c1:%s c2:%s",
+      *dyn_cursor1->cursor_has_row ? "true" : "false",
+      *dyn_cursor2->cursor_has_row ? "true" : "false");
+
+    cql_bytebuf_append_null(&b);
+
+    cql_string_ref result = cql_string_ref_new(b.ptr);
+    cql_bytebuf_close(&b);
+    return result;
+  }
+
+  return NULL;
+}
+
+// Create a blob from an integer value, this is used
+// for dummy data generation and pretty much not interesting
+// for anything else.  The blob is just the ascii representation
+// of the integer value. The blob is not null terminated.
+cql_blob_ref _Nonnull cql_blob_from_int(
+  cql_string_ref _Nullable prefix,
+  cql_int32 value)
+{
+  cql_bytebuf b;
+  cql_bytebuf_open(&b);
+  if (prefix) {
+    cql_alloc_cstr(temp, prefix);
+    cql_bprintf(&b, "%s", temp);
+    cql_free_cstr(temp, prefix);
+  }
+  cql_bprintf(&b, "%d", value);
+  cql_blob_ref result = cql_blob_ref_new(b.ptr, b.used);
+  cql_bytebuf_close(&b);
+  return result;
+}
+
 // type of the indicated field
 // this is also available as <some_cursor>:type(i)
-int32_t cql_cursor_column_type(
+cql_int32 cql_cursor_column_type(
   cql_dynamic_cursor *_Nonnull dyn_cursor,
-  int32_t i)
+  cql_int32 i)
 {
   uint16_t *offsets = dyn_cursor->cursor_col_offsets;
-  int32_t type = -1;
+  cql_int32 type = -1;
   uint16_t count = offsets[0];  // the first index is the count of fields
 
   if (i >= 0 && i < count) {
     uint8_t *types = dyn_cursor->cursor_data_types;
-    type = (int32_t)types[i];
+    type = (cql_int32)types[i];
     type &= CQL_DATA_TYPE_CORE|CQL_DATA_TYPE_NOT_NULL;
   }
   return type;
+}
+
+// name of the indicated field
+// this is also available as <some_cursor>:name(i)
+cql_string_ref _Nullable cql_cursor_column_name(
+  cql_dynamic_cursor *_Nonnull dyn_cursor,
+  cql_int32 i)
+{
+  uint16_t *offsets = dyn_cursor->cursor_col_offsets; // field offsets for values
+  const char **fields = dyn_cursor->cursor_fields; // field names for printing
+
+  uint16_t count = offsets[0];  // the first index is the count of fields
+
+  if (i < 0 || i >= count) {
+    return NULL;
+  }
+
+  return cql_string_ref_new(fields[i]);
 }
 
 // extract a boolean from the indicated field number of the cursor if there is one
 // this is also available as <some_cursor>:to_bool(i)
 cql_nullable_bool cql_cursor_get_bool(
   cql_dynamic_cursor *_Nonnull dyn_cursor,
-  int32_t i)
+  cql_int32 i)
 {
   cql_nullable_bool result;
   result.value = 0;
@@ -4397,7 +4714,7 @@ cql_nullable_bool cql_cursor_get_bool(
 // this is also available as <some_cursor>:to_int(i)
 cql_nullable_int32 cql_cursor_get_int(
   cql_dynamic_cursor *_Nonnull dyn_cursor,
-  int32_t i)
+  cql_int32 i)
 {
   cql_nullable_int32 result;
   result.value = 0;
@@ -4429,7 +4746,7 @@ cql_nullable_int32 cql_cursor_get_int(
 // this is also available as <some_cursor>:to_long(i)
 cql_nullable_int64 cql_cursor_get_long(
   cql_dynamic_cursor *_Nonnull dyn_cursor,
-  int32_t i)
+  cql_int32 i)
 {
   cql_nullable_int64 result;
   result.value = 0;
@@ -4461,7 +4778,7 @@ cql_nullable_int64 cql_cursor_get_long(
 // this is also available as <some_cursor>:to_real(i)
 cql_nullable_double cql_cursor_get_real(
   cql_dynamic_cursor *_Nonnull dyn_cursor,
-  int32_t i)
+  cql_int32 i)
 {
   cql_nullable_double result;
   result.value = 0;
@@ -4493,7 +4810,7 @@ cql_nullable_double cql_cursor_get_real(
 // this is also available as <some_cursor>:to_text(i)
 cql_string_ref _Nullable cql_cursor_get_text(
   cql_dynamic_cursor *_Nonnull dyn_cursor,
-  int32_t i)
+  cql_int32 i)
 {
   cql_string_ref result = NULL;
   uint16_t *offsets = dyn_cursor->cursor_col_offsets;
@@ -4519,7 +4836,7 @@ cql_string_ref _Nullable cql_cursor_get_text(
 // this is also available as <some_cursor>:to_blob(i)
 cql_blob_ref _Nullable cql_cursor_get_blob(
   cql_dynamic_cursor *_Nonnull dyn_cursor,
-  int32_t i)
+  cql_int32 i)
 {
   cql_blob_ref result = NULL;
   uint16_t *offsets = dyn_cursor->cursor_col_offsets;
@@ -4545,7 +4862,7 @@ cql_blob_ref _Nullable cql_cursor_get_blob(
 // this is also available as <some_cursor>:to_object(i)
 cql_object_ref _Nullable cql_cursor_get_object(
   cql_dynamic_cursor *_Nonnull dyn_cursor,
-  int32_t i)
+  cql_int32 i)
 {
   cql_object_ref result = NULL;
   uint16_t *offsets = dyn_cursor->cursor_col_offsets;
@@ -4567,10 +4884,31 @@ cql_object_ref _Nullable cql_cursor_get_object(
   return result;
 }
 
-// total number of fields in the cursor
-int32_t cql_cursor_column_count(cql_dynamic_cursor *_Nonnull dyn_cursor) {
+cql_string_ref _Nonnull cql_cursor_format_column(
+  cql_dynamic_cursor *_Nonnull dyn_cursor,
+  cql_int32 i)
+{
   uint16_t *offsets = dyn_cursor->cursor_col_offsets;
-  return (int32_t)offsets[0];  // the first index is the count of fields
+  uint16_t count = offsets[0];  // the first index is the count of fields
+
+  cql_contract(i >= 0);
+  cql_contract(i < count);
+
+  cql_bytebuf b;
+  cql_bytebuf_open(&b);
+
+  cql_format_one_cursor_column(&b, dyn_cursor, i);
+  cql_bytebuf_append_null(&b);
+  cql_string_ref result = cql_string_ref_new(b.ptr);
+  cql_bytebuf_close(&b);
+
+  return result;
+}
+
+// total number of fields in the cursor
+cql_int32 cql_cursor_column_count(cql_dynamic_cursor *_Nonnull dyn_cursor) {
+  uint16_t *offsets = dyn_cursor->cursor_col_offsets;
+  return (cql_int32)offsets[0];  // the first index is the count of fields
 }
 
 // To keep the contract as simple as possible we encode everything we need into
@@ -4584,7 +4922,7 @@ cql_string_ref _Nonnull cql_uncompress(
   cql_contract(frags[0]);
 
   // NOTE: len is the allocation size (includes trailing \0)
-  int32_t len;
+  cql_int32 len;
   frags = cql_decode(frags, &len);
   STACK_BYTES_ALLOC(str, len);
   cql_expand_frags(str, base, frags);
@@ -4669,8 +5007,10 @@ cleanup:
   return list;
 }
 
-// This function assumes the input follows CQL railroad syntax and contains
-// characters uptil atleast the first "(" if it exists
+// This function assumes the input follows CQL normalized syntax and contains
+// characters until at least the first "(" if it exists.  Which is to say we
+// expect to be reading back our own schema, not arbitrary SQL.  We can't
+// upgrade arbitrary SQL because we don't know what weird things it might have.
 static char* _Nonnull _cql_create_table_name_from_table_creation_statement(
   cql_string_ref _Nonnull create)
 {
@@ -4684,11 +5024,13 @@ static char* _Nonnull _cql_create_table_name_from_table_creation_statement(
   cql_contract(p);
   cql_contract(p > c_create);
 
-  // backspace spaces (if they exist) between table name preceeding pattern. We
-  // don't want extra spaces in our table names.
+  // We found the '(' so we know there is a table name before it Now we back up
+  // past spaces (if they exist). We don't want extra spaces in our table names.
   while (p[-1] == ' ') p--;
   const char *lineStart = p;
 
+  // if the table name is of the form [foo bar] then we need to back up to the
+  // the introducing '[' to get the whole table name
   if (lineStart[-1] == ']') {
     while (lineStart[-1] != '[') {
       lineStart--;
@@ -4696,7 +5038,8 @@ static char* _Nonnull _cql_create_table_name_from_table_creation_statement(
     lineStart--;
   }
   else {
-    // find space preceeding table name
+    // otherwise we just find the space preceding the table name to get the
+    // whole name
     while (lineStart[-1] != ' ') {
       lineStart--;
     }
@@ -4736,9 +5079,9 @@ static char *_Nonnull _cql_create_table_name_from_index_creation_statement(
 // This function provides the naive implementation of cql_rebuild_recreate_group
 // called in the cg_schema CQL upgrader. We take input three recreate-group
 // specific strings.
-//  * tables: series of semi-colon seperated CREATE (VIRTUAL) TABLE statements
-//  * indices: series of semi-colon seperated CREATE INDEX statements
-//  * deletes: series of semi-colon seperated DROP TABLE statements (ex:
+//  * tables: series of semi-colon separated CREATE (VIRTUAL) TABLE statements
+//  * indices: series of semi-colon separated CREATE INDEX statements
+//  * deletes: series of semi-colon separated DROP TABLE statements (ex:
 //    unsubscribed or deleted tables)
 //
 // We currently always do recreate here (no rebuild). We just drop our tables,
@@ -4889,8 +5232,8 @@ static uint64_t cql_read_big_endian_u64(const uint8_t *_Nonnull b) {
 #define CQL_BLOB_MAGIC 0x524d3030
 
 typedef struct cql_blob_header {
-  int32_t magic;
-  int32_t column_count;
+  cql_int32 magic;
+  cql_int32 column_count;
   int64_t record_type;
 } cql_blob_header;
 
@@ -4953,7 +5296,7 @@ static void cql_compute_key_blob_shape(
   shape->total_bytes = shape->header_size + shape->type_codes_size + shape->storage_size + variable_size;
 
   // we don't support records this big, they are insane already
-  cql_contract(shape->total_bytes == (int32_t)shape->total_bytes);
+  cql_contract(shape->total_bytes == (cql_int32)shape->total_bytes);
 
   shape->storage_offset = shape->header_size;
   shape->type_codes_offset = shape->storage_offset + shape->storage_size;
@@ -4967,7 +5310,7 @@ static void cql_compute_key_blob_shape(
 // )
 void bcreatekey(
   sqlite3_context *_Nonnull context,
-  int32_t argc,
+  cql_int32 argc,
   sqlite3_value *_Nonnull *_Nonnull argv)
 {
   // if there is an even number of args or there is not at least one column specified
@@ -4986,14 +5329,14 @@ void bcreatekey(
 
   // type and value for each argument
   // plus the
-  int32_t column_count = (argc - 1) / 2;
+  cql_int32 column_count = (argc - 1) / 2;
   cql_invariant(column_count >= 1);
 
   // In the first pass we verify the provided values are compatible with
   // the provided types and compute the needed variable size.
   int64_t variable_size = 0;
   for (uint32_t icol = 0; icol < column_count; icol++) {
-    int32_t index = icol * 2 + 1;
+    cql_int32 index = icol * 2 + 1;
     sqlite3_value *field_value_arg = argv[index];
     sqlite3_value *field_type_arg = argv[index + 1];
 
@@ -5018,7 +5361,7 @@ void bcreatekey(
   cql_key_blob_shape shape;
   cql_compute_key_blob_shape(&shape, column_count, variable_size);
 
-  uint8_t *b = sqlite3_malloc((int32_t)shape.total_bytes);
+  uint8_t *b = sqlite3_malloc((cql_int32)shape.total_bytes);
   cql_contract(b != NULL);
 
   // The helper writes the header in place for us
@@ -5078,7 +5421,7 @@ void bcreatekey(
       case CQL_BLOB_TYPE_STRING:
       {
         const unsigned char *val = sqlite3_value_text(field_value_arg);
-        int32_t len = sqlite3_value_bytes(field_value_arg);
+        cql_int32 len = sqlite3_value_bytes(field_value_arg);
         uint64_t info = (uint64_t)(variable_offset << 32) | (uint64_t)len;
         cql_write_big_endian_u64(b + storage_offset, info);
 
@@ -5093,7 +5436,7 @@ void bcreatekey(
       case CQL_BLOB_TYPE_BLOB:
       {
         const void *val = sqlite3_value_blob(field_value_arg);
-        int32_t len = sqlite3_value_bytes(field_value_arg);
+        cql_int32 len = sqlite3_value_bytes(field_value_arg);
         uint64_t info = (uint64_t)(variable_offset << 32) | (uint64_t)len;
         cql_write_big_endian_u64(b + storage_offset, info);
 
@@ -5121,7 +5464,7 @@ cql_error:
 // )
 void bgetkey(
   sqlite3_context *_Nonnull context,
-  int32_t argc,
+  cql_int32 argc,
   sqlite3_value *_Nonnull *_Nonnull argv)
 {
   // these are enforced at compile time
@@ -5216,7 +5559,7 @@ cql_error:
 // )
 void bgetkey_type(
   sqlite3_context *_Nonnull context,
-  int32_t argc,
+  cql_int32 argc,
   sqlite3_value *_Nonnull *_Nonnull argv)
 {
   // these are enforced at compile time
@@ -5246,7 +5589,7 @@ void bgetkey_type(
 // )
 void bupdatekey(
   sqlite3_context *_Nonnull context,
-  int32_t argc,
+  cql_int32 argc,
   sqlite3_value *_Nonnull *_Nonnull argv)
 {
   // copy of the header of the storage
@@ -5292,9 +5635,9 @@ void bupdatekey(
   // sure that the values provided are compatible with the column data type.
   // Note that you can't change the column data type and in key blobs all
   // columns are always present.
-  int32_t updates = (argc - 1) / 2;
-  for (int32_t iupdate = 0; iupdate < updates; iupdate++) {
-    int32_t index = iupdate * 2 + 1;
+  cql_int32 updates = (argc - 1) / 2;
+  for (cql_int32 iupdate = 0; iupdate < updates; iupdate++) {
+    cql_int32 index = iupdate * 2 + 1;
     sqlite3_value *field_index_arg = argv[index];
     sqlite3_value *field_value_arg = argv[index + 1];
 
@@ -5362,9 +5705,9 @@ void bupdatekey(
   int64_t total_bytes = original_bytes + variable_size_adjustment;
 
   // we don't support records this big, they are insane already
-  cql_contract(total_bytes == (int32_t)total_bytes);
+  cql_contract(total_bytes == (cql_int32)total_bytes);
 
-  uint8_t *result = sqlite3_malloc((int32_t)total_bytes);
+  uint8_t *result = sqlite3_malloc((cql_int32)total_bytes);
   cql_contract(result != NULL);
 
   // copy the original buffer before changes (but with dirty bits)
@@ -5376,8 +5719,8 @@ void bupdatekey(
 
   // In the second pass, we copy over any provided values
   // At this point everything is known to be compatible.
-  for (int32_t iupdate = 0; iupdate < updates; iupdate++) {
-    int32_t index = iupdate * 2 + 1;
+  for (cql_int32 iupdate = 0; iupdate < updates; iupdate++) {
+    cql_int32 index = iupdate * 2 + 1;
     sqlite3_value *field_index_arg = argv[index];
     sqlite3_value *field_value_arg = argv[index + 1];
 
@@ -5497,7 +5840,7 @@ void bupdatekey(
         sqlite3_value *field_value_arg = argv[iarg];
 
         const unsigned char *val = sqlite3_value_text(field_value_arg);
-        int32_t len = sqlite3_value_bytes(field_value_arg);
+        cql_int32 len = sqlite3_value_bytes(field_value_arg);
         uint64_t info = (uint64_t)(variable_offset << 32) | (uint64_t)len;
         cql_write_big_endian_u64(result + storage_offset, info);
 
@@ -5515,7 +5858,7 @@ void bupdatekey(
         sqlite3_value *field_value_arg = argv[iarg];
 
         const void *val = sqlite3_value_blob(field_value_arg);
-        int32_t len = sqlite3_value_bytes(field_value_arg);
+        cql_int32 len = sqlite3_value_bytes(field_value_arg);
         uint64_t info = (uint64_t)(variable_offset << 32) | (uint64_t)len;
         cql_write_big_endian_u64(result + storage_offset, info);
 
@@ -5630,7 +5973,7 @@ static void cql_compute_val_blob_shape(
   shape->total_bytes = shape->header_size + shape->field_ids_size + shape->type_codes_size + shape->storage_size + variable_size;
 
   // we don't support records this big, they are insane already
-  cql_contract(shape->total_bytes == (int32_t)shape->total_bytes);
+  cql_contract(shape->total_bytes == (cql_int32)shape->total_bytes);
 
   shape->field_ids_offset = shape->header_size;
   shape->storage_offset = shape->field_ids_offset + shape->field_ids_size;
@@ -5647,7 +5990,7 @@ static void cql_compute_val_blob_shape(
 // absence.
 void bcreateval(
   sqlite3_context *_Nonnull context,
-  int32_t argc,
+  cql_int32 argc,
   sqlite3_value *_Nonnull *_Nonnull argv)
 {
   // the number of args must be a multiple of 3 plus 1
@@ -5662,16 +6005,16 @@ void bcreateval(
   }
   int64_t rtype = sqlite3_value_int64(argv[0]);
 
-  int32_t colspecs = (argc - 1)  / 3;
+  cql_int32 colspecs = (argc - 1)  / 3;
   cql_invariant(colspecs >= 0);
 
   // In the first pass we verify the provided values are compatible with the
   // provided types and compute the needed variable size.  We also need to know
   // the actual number of columns, null provided values don't count.
   int64_t variable_size = 0;
-  int32_t actual_cols = 0;
-  for (int32_t ispec = 0; ispec < colspecs; ispec++) {
-    int32_t index = ispec * 3 + 1;
+  cql_int32 actual_cols = 0;
+  for (cql_int32 ispec = 0; ispec < colspecs; ispec++) {
+    cql_int32 index = ispec * 3 + 1;
     sqlite3_value *field_id_arg = argv[index];
     sqlite3_value *field_value_arg = argv[index + 1];
     sqlite3_value *field_type_arg = argv[index + 2];
@@ -5714,7 +6057,7 @@ void bcreateval(
   cql_val_blob_shape shape;
   cql_compute_val_blob_shape(&shape, actual_cols, variable_size);
 
-  uint8_t *b = sqlite3_malloc((int32_t)shape.total_bytes);
+  uint8_t *b = sqlite3_malloc((cql_int32)shape.total_bytes);
   cql_contract(b != NULL);
 
   cql_blob_header header;
@@ -5733,8 +6076,8 @@ void bcreateval(
 
   // In the second pass we write the arguments into the blob
   // using the offsets computed above.
-  for (int32_t ispec = 0; ispec < colspecs; ispec++) {
-    int32_t index = ispec * 3 + 1;
+  for (cql_int32 ispec = 0; ispec < colspecs; ispec++) {
+    cql_int32 index = ispec * 3 + 1;
     sqlite3_value *field_id_arg = argv[index];
     sqlite3_value *field_value_arg = argv[index + 1];
     sqlite3_value *field_type_arg = argv[index + 2];
@@ -5789,7 +6132,7 @@ void bcreateval(
       case CQL_BLOB_TYPE_STRING:
       {
         const unsigned char *val = sqlite3_value_text(field_value_arg);
-        int32_t len = sqlite3_value_bytes(field_value_arg);
+        cql_int32 len = sqlite3_value_bytes(field_value_arg);
         uint64_t info = (uint64_t)(variable_offset << 32) | (uint64_t)len;
         cql_write_big_endian_u64(b + storage_offset, info);
 
@@ -5803,7 +6146,7 @@ void bcreateval(
       case CQL_BLOB_TYPE_BLOB:
       {
         const void *val = sqlite3_value_blob(field_value_arg);
-        int32_t len = sqlite3_value_bytes(field_value_arg);
+        cql_int32 len = sqlite3_value_bytes(field_value_arg);
         uint64_t info = (uint64_t)(variable_offset << 32) | (uint64_t)len;
         cql_write_big_endian_u64(b + storage_offset, info);
 
@@ -5829,7 +6172,7 @@ cql_error:
 // )
 void bgetval(
   sqlite3_context *_Nonnull context,
-  int32_t argc,
+  cql_int32 argc,
   sqlite3_value *_Nonnull *_Nonnull argv)
 {
   // these are enforced at compile time
@@ -5858,7 +6201,7 @@ void bgetval(
   cql_compute_val_blob_shape(&shape, header.column_count, 0);
 
   // we have to find the column using the field id
-  int32_t icol;
+  cql_int32 icol;
   for (icol = 0; icol < header.column_count; icol++) {
     uint64_t field_id_offset = shape.field_ids_offset + icol * sizeof(uint64_t);
     int64_t stored_field_id = (int64_t)cql_read_big_endian_u64(b + field_id_offset);
@@ -5941,7 +6284,7 @@ cql_error:
 // )
 void bgetval_type(
   sqlite3_context *_Nonnull context,
-  int32_t argc,
+  cql_int32 argc,
   sqlite3_value *_Nonnull *_Nonnull argv)
 {
   // these are enforced at compile time
@@ -5973,7 +6316,7 @@ void bgetval_type(
 // NOTE: THIS CODE DOES NOT HANDLE THE CASE WHERE NEW COLUMNS ARE ADDED
 void bupdateval(
   sqlite3_context *_Nonnull context,
-  int32_t argc,
+  cql_int32 argc,
   sqlite3_value *_Nonnull *_Nonnull argv)
 {
   // copy of the header of the storage
@@ -6015,7 +6358,7 @@ void bupdateval(
   // We need to track how much variable space we need to add or remove we'll do
   // it here.  Likewise we track if columns were added or removed.
   int64_t variable_size_adjustment = 0;
-  int32_t col_adjustment = 0;
+  cql_int32 col_adjustment = 0;
 
   // In the first pass we're going to go over the arguments, we're going to
   // figure out how many columns are going to be added/removed and we're going
@@ -6027,9 +6370,9 @@ void bupdateval(
   //     id
   //   * data type of field_value_arg (the provided value) must be compatible
   //     with value of field_type_arg (the provided type)
-  int32_t updates = (argc - 1) / 3;
-  for (int32_t iupdate = 0; iupdate < updates; iupdate++) {
-    int32_t index = iupdate * 3 + 1;
+  cql_int32 updates = (argc - 1) / 3;
+  for (cql_int32 iupdate = 0; iupdate < updates; iupdate++) {
+    cql_int32 index = iupdate * 3 + 1;
     sqlite3_value *field_id_arg = argv[index];
     sqlite3_value *field_value_arg = argv[index + 1];
     sqlite3_value *field_type_arg = argv[index + 2];
@@ -6040,7 +6383,7 @@ void bupdateval(
 
     int64_t field_id = sqlite3_value_int64(field_id_arg);
 
-    int32_t icol_original;
+    cql_int32 icol_original;
     for (icol_original = 0; icol_original < column_count_original; icol_original++) {
       uint64_t field_id_offset = original_shape.field_ids_offset + icol_original * sizeof(uint64_t);
       int64_t stored_field_id = (int64_t)cql_read_big_endian_u64(b + field_id_offset);
@@ -6148,7 +6491,7 @@ void bupdateval(
   cql_val_blob_shape new_shape;
   cql_compute_val_blob_shape(&new_shape, column_count_new, new_variable_size);
 
-  uint8_t *result = sqlite3_malloc((int32_t)new_shape.total_bytes);
+  uint8_t *result = sqlite3_malloc((cql_int32)new_shape.total_bytes);
   cql_contract(result != NULL);
 
   // this is where we will be storing values as we encounter them
@@ -6161,8 +6504,8 @@ void bupdateval(
   // copy them over just like we would in bcreateval, making a new group of
   // arrays of field ids, storage, and types.  When this is done we have
   // consumed the arguments.
-  for (int32_t iupdate = 0; iupdate < updates; iupdate++) {
-    int32_t index = iupdate * 3 + 1;
+  for (cql_int32 iupdate = 0; iupdate < updates; iupdate++) {
+    cql_int32 index = iupdate * 3 + 1;
     sqlite3_value *field_id_arg = argv[index];
     sqlite3_value *field_value_arg = argv[index + 1];
     sqlite3_value *field_type_arg = argv[index + 2];
@@ -6213,7 +6556,7 @@ void bupdateval(
       case CQL_BLOB_TYPE_STRING:
       {
         const unsigned char *val = sqlite3_value_text(field_value_arg);
-        int32_t len = sqlite3_value_bytes(field_value_arg);
+        cql_int32 len = sqlite3_value_bytes(field_value_arg);
         uint64_t info = (uint64_t)(new_variable_offset << 32) | (uint64_t)len;
         cql_write_big_endian_u64(result + new_storage_offset, info);
 
@@ -6227,7 +6570,7 @@ void bupdateval(
       case CQL_BLOB_TYPE_BLOB:
       {
         const void *val = sqlite3_value_blob(field_value_arg);
-        int32_t len = sqlite3_value_bytes(field_value_arg);
+        cql_int32 len = sqlite3_value_bytes(field_value_arg);
         uint64_t info = (uint64_t)(new_variable_offset << 32) | (uint64_t)len;
         cql_write_big_endian_u64(result + new_storage_offset, info);
 
@@ -6244,7 +6587,7 @@ void bupdateval(
   // can do this more economically in most cases because the stored values are
   // already big endian encoded. We do have to recode the offset of all the
   // variable length items.
-  for (int32_t icol = 0; icol < column_count_original; icol++) {
+  for (cql_int32 icol = 0; icol < column_count_original; icol++) {
     uint8_t blob_column_type = b[original_shape.type_codes_offset + icol];
     int64_t data_offset = original_shape.storage_offset + icol * sizeof(int64_t);
     int64_t field_id_offset = original_shape.field_ids_offset + icol * sizeof(int64_t);
@@ -6351,7 +6694,10 @@ static void cql_boxed_value_finalize(void *_Nonnull data) {
 }
 
 // get the type of the thing in the box
-int32_t cql_box_get_type(cql_object_ref _Nonnull box) {
+cql_int32 cql_box_get_type(cql_object_ref _Nullable box) {
+  if (!box) {
+    return CQL_DATA_TYPE_NULL;
+  }
   cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
   return self->type;
 }
@@ -6381,8 +6727,13 @@ cql_object_ref _Nonnull cql_box_bool(cql_nullable_bool data) {
 // Extract a bool from a box, if the box is null or the type is wrong
 // the result will be null.
 // This is also available as object<cql_box>:to_bool
-cql_nullable_bool cql_unbox_bool(cql_object_ref _Nonnull box) {
+cql_nullable_bool cql_unbox_bool(cql_object_ref _Nullable box) {
     cql_nullable_bool result;
+    if (!box) {
+       result.is_null = true;
+       result.value = 0;
+       return result;
+    }
     cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
     if (self->type == CQL_DATA_TYPE_BOOL) {
        result.is_null = false;
@@ -6415,8 +6766,13 @@ cql_object_ref _Nonnull cql_box_int(cql_nullable_int32 data) {
 // Extract an integer from a box, if the box is null or the type is wrong
 // the result will be null.
 // This is also available as object<cql_box>:to_int
-cql_nullable_int32 cql_unbox_int(cql_object_ref _Nonnull box) {
+cql_nullable_int32 cql_unbox_int(cql_object_ref _Nullable box) {
     cql_nullable_int32 result;
+    if (!box) {
+       result.is_null = true;
+       result.value = 0;
+       return result;
+    }
     cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
     if (self->type == CQL_DATA_TYPE_INT32) {
        result.is_null = false;
@@ -6449,8 +6805,13 @@ cql_object_ref _Nonnull cql_box_long(cql_nullable_int64 data) {
 // Unbox a long from a box, if the box is null or the type is wrong
 // the result will be null.
 // This is also available as object<cql_box>:to_long
-cql_nullable_int64 cql_unbox_long(cql_object_ref _Nonnull box) {
+cql_nullable_int64 cql_unbox_long(cql_object_ref _Nullable box) {
     cql_nullable_int64 result;
+    if (!box) {
+       result.is_null = true;
+       result.value = 0;
+       return result;
+    }
     cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
     if (self->type == CQL_DATA_TYPE_INT64) {
        result.is_null = false;
@@ -6483,8 +6844,13 @@ cql_object_ref _Nonnull cql_box_real(cql_nullable_double data) {
 // Extract a double from a box, if the box is null or the type is wrong
 // the result will be null.
 // This is also available as object<cql_box>:to_real
-cql_nullable_double cql_unbox_real(cql_object_ref _Nonnull box) {
+cql_nullable_double cql_unbox_real(cql_object_ref _Nullable box) {
     cql_nullable_double result;
+    if (!box) {
+       result.is_null = true;
+       result.value = 0;
+       return result;
+    }
     cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
     if (self->type == CQL_DATA_TYPE_DOUBLE) {
        result.is_null = false;
@@ -6500,7 +6866,7 @@ cql_nullable_double cql_unbox_real(cql_object_ref _Nonnull box) {
 
 
 // Box a string, note that even null can be boxed and return a not null box
-// that contains null. 
+// that contains null.
 // This is also available as <expr>:box
 cql_object_ref _Nonnull cql_box_text(cql_string_ref _Nullable data) {
     cql_object_ref _Nonnull box = cql_boxed_value_create();
@@ -6518,7 +6884,10 @@ cql_object_ref _Nonnull cql_box_text(cql_string_ref _Nullable data) {
 // Extract a string from a box or else return null if the type is wrong
 // or if the box is null, or contains null.
 // This is also available as object<cql_box>:to_text
-cql_string_ref _Nullable cql_unbox_text(cql_object_ref _Nonnull box) {
+cql_string_ref _Nullable cql_unbox_text(cql_object_ref _Nullable box) {
+    if (!box) {
+       return NULL;
+    }
     cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
     if (self->type == CQL_DATA_TYPE_STRING) {
        return (cql_string_ref)self->obj;
@@ -6547,7 +6916,10 @@ cql_object_ref _Nonnull cql_box_blob(cql_blob_ref _Nullable data) {
 // Extract a blob from a box or else return null if the type is wrong
 // or if the box is null, or contains null.
 // This is also available as object<cql_box>:to_blob
-cql_blob_ref _Nullable cql_unbox_blob(cql_object_ref _Nonnull box) {
+cql_blob_ref _Nullable cql_unbox_blob(cql_object_ref _Nullable box) {
+    if (!box) {
+       return NULL;
+    }
     cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
     if (self->type == CQL_DATA_TYPE_BLOB) {
        return (cql_blob_ref)self->obj;
@@ -6575,7 +6947,10 @@ cql_object_ref _Nonnull cql_box_object(cql_object_ref _Nullable data) {
 // Extract an object from a box or else return null if the type is wrong
 // or if the box is null, or contains null.
 // This is also available as object<cql_box>:to_object
-cql_object_ref _Nullable cql_unbox_object(cql_object_ref _Nonnull box) {
+cql_object_ref _Nullable cql_unbox_object(cql_object_ref _Nullable box) {
+    if (!box) {
+       return NULL;
+    }
     cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
     if (self->type == CQL_DATA_TYPE_OBJECT) {
        return self->obj;
@@ -6583,4 +6958,31 @@ cql_object_ref _Nullable cql_unbox_object(cql_object_ref _Nonnull box) {
     else {
        return NULL;
     }
+}
+
+#define CQL_FORMAT_VAL(name, type, code) \
+cql_string_ref _Nonnull cql_format_##name(type val) { \
+  cql_bool yes = true; \
+  uint16_t offsets[] = { 1, 0 }; \
+  uint8_t types[] = { code }; \
+  /* make a skeletal cursor */ \
+  cql_dynamic_cursor c = { \
+   .cursor_col_offsets = offsets, \
+   .cursor_data_types = types, \
+   .cursor_data = &val, \
+   .cursor_has_row = &yes \
+  }; \
+  return cql_cursor_format_column(&c, 0); \
+}
+
+CQL_FORMAT_VAL(bool, cql_nullable_bool, CQL_DATA_TYPE_BOOL)
+CQL_FORMAT_VAL(int, cql_nullable_int32, CQL_DATA_TYPE_INT32)
+CQL_FORMAT_VAL(long, cql_nullable_int64, CQL_DATA_TYPE_INT64)
+CQL_FORMAT_VAL(double, cql_nullable_double, CQL_DATA_TYPE_DOUBLE)
+CQL_FORMAT_VAL(string, cql_string_ref _Nullable, CQL_DATA_TYPE_STRING)
+CQL_FORMAT_VAL(blob, cql_blob_ref _Nullable, CQL_DATA_TYPE_BLOB)
+CQL_FORMAT_VAL(object, cql_object_ref _Nullable, CQL_DATA_TYPE_OBJECT)
+
+cql_string_ref _Nonnull cql_format_null(cql_nullable_bool b) {
+  return cql_string_ref_new("null");
 }

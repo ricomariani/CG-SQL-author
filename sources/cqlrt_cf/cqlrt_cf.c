@@ -89,7 +89,9 @@ cql_blob_ref _Nonnull cql_blob_ref_new(const void *_Nonnull bytes, cql_int64 siz
   return CFDataCreate(NULL, bytes, size);
 }
 
-cql_bool cql_blob_equal(cql_blob_ref _Nonnull b1, cql_blob_ref _Nonnull b2) {
+cql_bool cql_blob_equal(cql_blob_ref _Nullable  b1, cql_blob_ref _Nullable b2) {
+  if (b1 == NULL && b2 == NULL) return cql_true;
+  if (b1 == NULL || b2 == NULL) return cql_false;
   return CFEqual(b1,b2);
 }
 
@@ -117,7 +119,9 @@ cql_hash_code cql_string_hash(cql_string_ref _Nonnull str) {
   return CFHash(str);
 }
 
-cql_int32 cql_string_equal(cql_string_ref _Nonnull s1, cql_string_ref _Nonnull s2) {
+cql_int32 cql_string_equal(cql_string_ref _Nullable s1, cql_string_ref _Nullable s2) {
+  if (s1 == NULL && s2 == NULL) return cql_true;
+  if (s1 == NULL || s2 == NULL) return cql_false;
   return CFEqual(s1, s2);
 }
 

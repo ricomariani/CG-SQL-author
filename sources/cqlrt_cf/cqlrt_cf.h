@@ -92,7 +92,7 @@ void cql_blob_release(cql_blob_ref _Nullable obj);
 void *_Nonnull cql_get_blob_bytes(cql_blob_ref _Nonnull blob);
 cql_int64 cql_get_blob_size(cql_blob_ref _Nonnull blob);
 cql_blob_ref _Nonnull cql_blob_ref_new(const void *_Nonnull bytes, cql_int64 size);
-cql_bool cql_blob_equal(cql_blob_ref _Nonnull b1, cql_blob_ref _Nonnull b2);
+cql_bool cql_blob_equal(cql_blob_ref _Nullable b1, cql_blob_ref _Nullable  b2);
 
 // CF object
 typedef CFTypeRef cql_object_ref ;
@@ -128,7 +128,7 @@ void cql_string_retain(cql_string_ref _Nullable str);
 void cql_string_release(cql_string_ref _Nullable str);
 cql_string_ref _Nonnull cql_string_ref_new(const char *_Nonnull cstr);
 cql_hash_code cql_string_hash(cql_string_ref _Nonnull str);
-cql_int32 cql_string_equal(cql_string_ref _Nonnull s1, cql_string_ref _Nonnull s2);
+cql_int32 cql_string_equal(cql_string_ref _Nullable s1, cql_string_ref _Nullable s2);
 cql_int32 cql_string_compare(cql_string_ref _Nonnull s1, cql_string_ref _Nonnull s2);
 cql_int32 cql_string_like(cql_string_ref _Nonnull s1, cql_string_ref _Nonnull s2);
 

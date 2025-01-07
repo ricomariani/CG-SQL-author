@@ -233,7 +233,7 @@ def emit_proc_objc_projection_impl(proc, attributes):
       print(f"@implementation {CGS}{p_name}RS", end="")
 
     print(" {")
-    print(f"  {p_name}_result_set_ref _resultSet;")
+    print(f"  {p_name}_result_set_ref _result_set_ref;")
     print("}")
 
     for p in projection:
@@ -267,15 +267,23 @@ def emit_proc_objc_projection_impl(proc, attributes):
 
         if conv == "@":
             print(
-                f"  return {p_name}_get_{c_name}_is_null(_resultSet{row_arg}) ? nil : @({p_name}_get_{c_name}_value(_resultSet{row_arg}));"
+                f"  return {p_name}_get_{c_name}_is_null(_result_set_ref{row_arg}) ? nil : @({p_name}_get_{c_name}_value(_result_set_ref{row_arg}));"
             )
         elif conv == "bridge":
-            print(
-                f"  return (__bridge {objc_type}){p_name}_get_{c_name}(_resultSet{row_arg}){bool_fix};"
-            )
+            if objc_type.endswith("RS *_Nullable"):
+                cls = objc_type[:-11]
+                print(f"  // make child result")
+                print(f"  {objc_type} rs = [{cls} new];")
+                print(f"  rs.result_set_ref = {p_name}_get_{c_name}(_result_set_ref{row_arg});")
+                print(f"  cql_retain((cql_type_ref)rs.result_set_ref);")
+                print(f"  return rs;")
+            else:
+                print(
+                    f"  return (__bridge {objc_type}){p_name}_get_{c_name}(_result_set_ref{row_arg}){bool_fix};"
+                )
         else:
             print(
-                f"  return {p_name}_get_{c_name}(_resultSet{row_arg}){bool_fix};"
+                f"  return {p_name}_get_{c_name}(_result_set_ref{row_arg}){bool_fix};"
             )
 
         print("}")
@@ -293,7 +301,7 @@ def emit_proc_objc_projection_impl(proc, attributes):
 
     print("")
     print("-(int)count {")
-    print(f"  return {p_name}_result_count(_resultSet);")
+    print(f"  return {p_name}_result_count(_result_set_ref);")
     print("}")
 
     # we own the handle so we release it in dealloc
@@ -301,14 +309,14 @@ def emit_proc_objc_projection_impl(proc, attributes):
 
     print("")
     print("-(void)dealloc {")
-    print("  cql_release((cql_type_ref)self.resultSet);")
+    print("  cql_release((cql_type_ref)self.result_set_ref);")
     if legacy:
       print("  [super dealloc];")
   
     print("}")
 
     print("")
-    print("@synthesize resultSet = _resultSet;")
+    print("@synthesize result_set_ref = _result_set_ref;")
     print("")
     print("@end")
     print(dashes)
@@ -548,8 +556,8 @@ def emit_proc_objc_impl(proc, attributes):
             print(
                 f"  // {CGS}{p_name}RS takes over result_set_ref, it knows to clean it up"
             )
-            print(f" {CGS}{p_name}RS *rs = [{CGS}{p_name}RS new];")
-            print("  rs.resultSet = _result_set_ref;")
+            print(f"  {CGS}{p_name}RS *rs = [{CGS}{p_name}RS new];")
+            print("  rs.result_set_ref = _result_set_ref;")
             print("  _result.resultSet = rs;")
 
         print("  return _result;")
@@ -731,7 +739,7 @@ def emit_proc_objc_projection_header(proc, attributes):
     identityResult = "true" if "cql:identity" in attributes else "false"
 
     print("")
-    print(f"@property (nonatomic, assign) {p_name}_result_set_ref resultSet;")
+    print(f"@property (nonatomic, assign) {p_name}_result_set_ref result_set_ref;")
     print("@property (nonatomic, readonly) cql_bool hasIdentityColumns;")
     print("@property (nonatomic, readonly) int count;")
     print("")

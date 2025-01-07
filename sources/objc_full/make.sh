@@ -10,13 +10,13 @@ set -e
 echo "building cql"
 (cd .. ; make)
 
-echo "This script minimally tests the generated code to see if it will at least compile"
+CQL=../out/cql
 
 echo "building C code"
-../out/cql --in Sample.sql --cg Sample.h Sample.c --cqlrt cqlrt_cf.h
+${CQL} --in Sample.sql --cg Sample.h Sample.c --cqlrt cqlrt_cf.h
 
 echo "building JSON"
-../out/cql --in Sample.sql --cg Sample.json --rt json_schema
+${CQL} --in Sample.sql --cg Sample.json --rt json_schema
 
 echo "building OBJC header (.h)"
 ./cql_objc_full.py Sample.json --header Sample.h >Sample_objc.h
@@ -25,7 +25,7 @@ echo "building OBJC implementation (.m)"
 ./cql_objc_full.py Sample.json --emit_impl --header Sample_objc.h >Sample_objc.m
 
 echo "compiling sample consumer"
-clang -o demo -g Sample_objc.m my_objc.m -I. -I.. -I../cqlrt_cf -fobjc-arc -framework Framework -lsqlite3
+clang -o demo -g Sample.c Sample_objc.m my_objc.m ../cqlrt_cf/cqlholder.m ../cqlrt_cf/cqlrt_cf.c  -I. -I.. -I../cqlrt_cf -fobjc-arc -lsqlite3
 
 echo "running demo"
 ./demo

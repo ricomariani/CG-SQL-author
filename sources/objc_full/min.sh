@@ -19,19 +19,21 @@ echo "building JSON"
 ../out/cql --in Sample.sql --cg Sample.json --rt json_schema
 
 echo "building OBJC header (.h)"
-./cql_objc_full.py Sample.json --header Sample.h >Sample_objc.h
+./cql_objc_full.py Sample.json --header Sample.h --legacy >Sample_objc.h
 
 echo "building OBJC implementation (.m)"
-./cql_objc_full.py Sample.json --emit_impl --header Sample_objc.h >Sample_objc.m
+./cql_objc_full.py Sample.json --emit_impl --header Sample_objc.h --legacy >Sample_objc.m
+
+echo "compiling generated code looking for errors"
+clang -DCQL_OBJC_MIN_COMPILE -c Sample_objc.m -I/usr/include/GNUstep/ -I/usr/lib/gcc/x86_64-linux-gnu/11/include -I. -I.. -I../cqlrt_cf -Wno-arc-bridge-casts-disallowed-in-nonarc
 
 echo "compiling sample consumer"
-clang -o demo -g Sample_objc.m my_objc.m -I. -I.. -I../cqlrt_cf -fobjc-arc -framework Framework -lsqlite3
+clang -DCQL_OBJC_MIN_COMPILE -c my_objc.m -I/usr/include/GNUstep/ -I/usr/lib/gcc/x86_64-linux-gnu/11/include -I. -I.. -I../cqlrt_cf -Wno-arc-bridge-casts-disallowed-in-nonarc
 
-echo "running demo"
-./demo
+echo "not linking or running -- this is a compile test only"
+#./demo
 
 echo ""
 echo "Done"
 echo ""
 echo "to clean the directory run ./clean.sh"
-echo "building executable"

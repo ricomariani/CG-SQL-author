@@ -32,6 +32,8 @@ def usage():
     print(
         "Usage: input.json [options] >result.h or >result.m\n"
         "\n"
+        "--legacy\n"
+        "    emit extra instance variable definitions in the header (legacy objc)\n"
         "--emit_impl\n"
         "    activates the code pass to make the .m file, run the tool once with this flag once without\n"
         "--header header_file\n"
@@ -135,11 +137,12 @@ box_vals["real"] = "doubleValue"
 cmd_args = {}
 cmd_args["emit_impllass"] = False
 cmd_args["header"] = "something.h"
+cmd_args["legacy"] = False
+cmd_args["emit_impl"] = False
 
 # The prefix for all the generated classes and procedures.
 # Change as you see fit.
 CGS = "CGS"
-
 
 # The procedure might have any number of out arguments plus its normal returns
 # We emit them all here.  We make a synthetic result set type to hold all those
@@ -612,26 +615,30 @@ def emit_proc_objc_return_type(proc):
     print("")
     print(dashes)
     print(f"@interface {CGS}{p_name}RT : NSObject", end="")
-    print(" {")
 
-    for p in args:
-        c_name = p["name"]
-        c_type = p["type"]
-        kind = p.get("kind", "")
-        isNotNull = p["isNotNull"]
-        binding = p["binding"] if "binding" in p else ""
+    legacy = cmd_args["legacy"]
 
-        if binding == "out" or binding == "inout":
-            objc_type = objc_type_for_arg(c_type, kind, isNotNull)
-            print(f"  {objc_type} _{c_name};")
+    if legacy:
+        print(" {")
 
-    if usesDatabase:
-        print("  int _resultCode;")
+        for p in args:
+            c_name = p["name"]
+            c_type = p["type"]
+            kind = p.get("kind", "")
+            isNotNull = p["isNotNull"]
+            binding = p["binding"] if "binding" in p else ""
 
-    if projection:
-        print(f"  {CGS}{p_name}RS *_Nullable _resultSet;")
+            if binding == "out" or binding == "inout":
+                objc_type = objc_type_for_arg(c_type, kind, isNotNull)
+                print(f"  {objc_type} _{c_name};")
 
-    print("}")
+            if usesDatabase:
+                print("  int _resultCode;")
+
+            if projection:
+                print(f"  {CGS}{p_name}RS *_Nullable _resultSet;")
+
+        print("}")
 
     first = True
     for p in args:
@@ -676,9 +683,14 @@ def emit_proc_objc_projection_header(proc, attributes):
     print("")
     print(dashes)
     print(f"@interface {CGS}{p_name}RS : NSObject", end="")
-    print(" {")
-    print(f"  {p_name}_result_set_ref _resultSet;")
-    print("}")
+
+    legacy = cmd_args["legacy"]
+
+    if legacy:
+        print(" {")
+        print(f"  {p_name}_result_set_ref _resultSet;")
+        print("}")
+
     print("")
 
     p_name = proc["name"]
@@ -825,23 +837,19 @@ def main():
 
         # pull the flags, starting with whether we will be emitting C or objc
         i = 2
-        if len(sys.argv) > 2 and sys.argv[i] == "--emit_impl":
-            cmd_args["emit_impl"] = True
-            i += 1
-        else:
-            cmd_args["emit_impl"] = False
 
-        # these are the various fragments we might need, we need all the parts
-        # to generate the C.  The first two are enough for the objc, there are
-        # defaults but they are kind of useless.
-        while i + 2 <= len(sys.argv):
-            if sys.argv[i] == "--header":
+        while i < len(sys.argv):
+            if sys.argv[i] == "--header" and i + 1 < len(sys.argv):
                 cmd_args["header"] = sys.argv[i + 1]
+                i += 2
+            elif sys.argv[i] == "--legacy":
+                cmd_args["legacy"] = True
+                i += 1
+            elif sys.argv[i] == "--emit_impl":
+                cmd_args["emit_impl"] = True
+                i += 1
             else:
                 usage()
-            i += 2
-
-        header = cmd_args["header"]
 
         # Each generated file gets the standard header.
         # It still uses the Meta header because that was required
@@ -853,6 +861,8 @@ def main():
         hash = "deadbeef8badf00ddefec8edfacefeed"
         gen = "generated"
         print(f"// @{gen} {ss1}{ss2}<<{hash}>>")
+
+        header = cmd_args["header"]
 
         if cmd_args["emit_impl"]:
             # The objc implementation

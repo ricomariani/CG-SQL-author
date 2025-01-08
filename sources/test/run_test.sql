@@ -17,7 +17,7 @@ declare proc exit no check;
 
 @MACRO(stmt_list) EXPECT!(pred! expr)
 begin
-  errcheck(pred!, @text(pred!), @MACRO_LINE);
+  error_check(pred!, @text(pred!), @MACRO_LINE);
 end;
 
 -- storage for the expectation check
@@ -30,7 +30,7 @@ begin
   let @tmp(a) := a!;
   let @tmp(b) := b!;
   expected := @tmp(a) IS @tmp(b);
-  errcheck(expected, @text(a!, " == ", b!), @MACRO_LINE);
+  error_check(expected, @text(a!, " == ", b!), @MACRO_LINE);
   if not expected then
     printf("left: %s\n", @tmp(a):fmt);
     printf("right: %s\n", @tmp(b):fmt);
@@ -44,7 +44,7 @@ begin
   let @tmp(a) := a!;
   let @tmp(b) := b!;
   expected := @tmp(a) IS NOT @tmp(b);
-  errcheck(expected, @text(a!, " != ", b!), @MACRO_LINE);
+  error_check(expected, @text(a!, " != ", b!), @MACRO_LINE);
   if not expected then
     printf("left: %s\n", @tmp(a):fmt);
     printf("right: %s\n", @tmp(b):fmt);
@@ -53,7 +53,7 @@ end;
 
 -- use this for both normal eval and SQLite eval this is where we expect CQL to
 -- give us the same result as SQLite we do this by evaluating the predicate
--- normally and also wrapped in a (select x).  This is a valueable control.
+-- normally and also wrapped in a (select x).  This is a valuable control.
 @MACRO(stmt_list) EXPECT_SQL_TOO!(pred! expr)
 begin
   -- this tests the pipeline syntax for statement list macros
@@ -150,7 +150,7 @@ begin
   end_suite();
 end;
 
-proc errcheck(passed bool @sensitive, message text, line int!)
+proc error_check(passed bool @sensitive, message text, line int!)
 begin
   expectations += 1;
   if passed is not true then
@@ -198,7 +198,7 @@ declare const group blob_types (
 -- directly for test purposes so we make some kind of approximate
 -- declaration.  We'll make it perfect by adding explicit casts.
 -- Note that these are configurable so the compiler can't literally
--- predeclare them for you.  You tell it what you are going to do.
+-- pre-declare them for you.  You tell it what you are going to do.
 
 declare select function bgetkey_type(b blob) long;
 declare select function bgetval_type(b blob) long;
@@ -263,7 +263,7 @@ BEGIN_SUITE!();
 
 TEST!(vers,
 begin
-  printf("SQLite Verison: %s\n", (select sqlite_version()));
+  printf("SQLite Version: %s\n", (select sqlite_version()));
 end);
 
 TEST!(arithmetic,
@@ -461,7 +461,7 @@ begin
   reset_counts();
 
   -- This is the same as not (0 < 0) rather than (not 0) < 0
-  -- do not move not around in the codegen or you will break stuff
+  -- do not move not around in the code gen or you will break stuff
   -- I have broken this many times now. Do not change this expectation
   -- it will save your life...
   EXPECT_SQL_TOO!(not 0 < 0);
@@ -550,7 +550,7 @@ begin
   EXPECT_SQL_TOO!(one <= 1);
 end);
 
-TEST!(simple_funcs,
+TEST!(simple_functions,
 begin
   EXPECT_SQL_TOO!(abs(-2) = 2);
   EXPECT_SQL_TOO!(abs(2) = 2);
@@ -1569,8 +1569,6 @@ begin
   EXPECT_EQ!((select cast(1.3 as int)), 1); -- cast expression
 end);
 
-let uuux := 5;
-
 TEST!(type_check_,
 begin
   let int_val := type_check(1 as int!);
@@ -1664,7 +1662,7 @@ cursor C for
   EXPECT_EQ!(i, 11); -- 10 results matched, 11th did not match
 end);
 
-proc outint(out int1 int, out int2 int!)
+proc out_int(out int1 int, out int2 int!)
 begin
   declare C1 cursor for select 1;
   fetch C1 into int1;
@@ -1674,7 +1672,7 @@ end;
 
 TEST!(fetch_output_param,
 begin
-  declare out call outint(int1, int2);
+  declare out call out_int(int1, int2);
   EXPECT_EQ!(int1, 1); -- bind output nullable
   EXPECT_EQ!(int2, 2); -- bind output not nullable
 end);
@@ -1729,13 +1727,13 @@ begin
   _set := _set2; -- this is a copy
 
   EXPECT_NE!(nullable(_set), null);  -- successful create
-  EXPECT!(not set_contains(_set, "garbonzo")); -- initially empty
-  EXPECT!(set_add(_set, "garbonzo")); -- successful addition
-  EXPECT!(set_contains(_set, "garbonzo")); -- key added
-  EXPECT!(not set_add(_set, "garbonzo")); -- duplicate addition
+  EXPECT!(not set_contains(_set, "something")); -- initially empty
+  EXPECT!(set_add(_set, "something")); -- successful addition
+  EXPECT!(set_contains(_set, "something")); -- key added
+  EXPECT!(not set_add(_set, "something")); -- duplicate addition
 end);
 
-TEST!(object_notnull,
+TEST!(object_not_null,
 begin
   declare _setNN object!;
   declare _set object;
@@ -1826,7 +1824,7 @@ begin
   EXPECT_EQ!(s2, "b2_5");
 end);
 
-TEST!(blob_data_manip,
+TEST!(blob_data_manipulate,
 begin
   load_blobs();
 
@@ -1877,7 +1875,7 @@ begin
   end;
 end;
 
-TEST!(blob_data_manip_nullables,
+TEST!(blob_data_manipulate_nullables,
 begin
   cursor C for select * from blob_table order by id;
   let i := 0;
@@ -1913,10 +1911,10 @@ end;
 
 TEST!(data_reader,
 begin
-  cursor C fetch from call row_getter(1, 2.5, "xyzzy");
+  cursor C fetch from call row_getter(1, 2.5, "something");
   EXPECT_EQ!(C.X, 1);
   EXPECT_EQ!(C.Y, 2.5);
-  EXPECT_EQ!(C.Z, "xyzzy");
+  EXPECT_EQ!(C.Z, "something");
 end);
 
 -- test simple recursive function -- using func syntax!
@@ -3169,10 +3167,9 @@ begin
   insert into temp_table_three values(3);
 end;
 
-
 -- This helper proc will be called by the client producing its one-row result
--- it has no DB pointer and that exercises and important case in the autodrop logic
--- where info.db is null.  There can be no autodrop tables here.
+-- it has no DB pointer and that exercises and important case in the auto drop logic
+-- where info.db is null.  There can be no auto drop tables here.
 proc simple_cursor_proc()
 begin
   cursor C like temp_table_one;
@@ -3204,25 +3201,25 @@ begin
   end if;
 end;
 
--- we need this helper to get a rowset out with type "object", all it does is call the above proc
+-- we need this helper to get a row set out with type "object", all it does is call the above proc
 -- we just need the cast that it does really, but there's no way to code that cast in CQL.
 
 declare proc some_integers_fetch(out rs object!, start int!, stop int!) using transaction;
 
--- these are the helper functions we will be using to read the rowset, they are defined and registered elsewhere
+-- these are the helper functions we will be using to read the row set, they are defined and registered elsewhere
 -- See the "call cql_init_extensions();" above for registration.
 
 declare select function rscount(rs long) long;
 declare select function rscol(rs long, row int!, col int!) long;
 
--- This test is is going to create a rowset using a stored proc, then
+-- This test is is going to create a row set using a stored proc, then
 -- using the helper proc some_integers_fetch() get access to the result set pointer
 -- rather than the sqlite statement.  Then it iterates over the result set as though
 -- that result set were a virtual table.  The point of all of this is to test
 -- the virtual-table-like construct that we have created and in so doing
 -- test the runtime binding facilities needed by ptr(x)
 
-TEST!(rowset_reading,
+TEST!(row_set_reading,
 begin
   declare start, stop, cur int!;
   start := 10;
@@ -3249,7 +3246,7 @@ begin
   end;
 end);
 
-TEST!(rowset_reading_language_support,
+TEST!(row_set_reading_language_support,
 begin
   declare cur int!;
   cur := 7;
@@ -3275,7 +3272,7 @@ begin
   out union C;
 end;
 
-TEST!(read_all_types_rowset,
+TEST!(read_all_types_row_set,
 begin
   cursor C for call all_types_union();
   fetch C;
@@ -3317,7 +3314,7 @@ end);
 TEST!(read_all_types_auto_fetcher,
 begin
   -- we want to force the auto fetcher to be called, so we capture the result set
-  -- rather than cursoring over it.  Then we cursor over the captured result set
+  -- rather than cursor over it.  Then we cursor over the captured result set
 
   let result_set := load_all_types_table();
   cursor C for result_set;
@@ -3358,7 +3355,7 @@ begin
   EXPECT!(not C);
 end);
 
-TEST!(rowset_via_union_failed,
+TEST!(row_set_via_union_failed,
 begin
   declare ok_after_all bool!;
   declare start, stop, cur int!;
@@ -3511,18 +3508,18 @@ begin
 end);
 
 declare proc cql_exec_internal(sql text!) using TRANSACTION;
-create table xyzzy(id int, name text, data blob);
+create table something(id int, name text, data blob);
 
 TEST!(exec_internal,
 begin
-  cql_exec_internal("create table xyzzy(id integer, name text, data blob);");
+  cql_exec_internal("create table something(id integer, name text, data blob);");
   declare bl1 blob;
   bl1 := blob_from_string('z');
   declare bl2 blob;
   bl2 := blob_from_string('w');
-  insert into xyzzy using 1 id, 'x' name, bl1 data;
-  insert into xyzzy using 2 id, 'y' name, bl2 data;
-  cursor C for select * from xyzzy;
+  insert into something using 1 id, 'x' name, bl1 data;
+  insert into something using 2 id, 'y' name, bl2 data;
+  cursor C for select * from something;
   declare D cursor like C;
   fetch C;
   fetch D using 1 id, 'x' name, bl1 data;
@@ -3607,7 +3604,7 @@ end);
 TEST!(const_folding2,
 begin
 /* note that in the below we often do not use EXPECT_EQ because the point of the
- * relevant tests is to test the const equiality or inequality.  So the comparisons
+ * relevant tests is to test the const equality or inequality.  So the comparisons
  * need to be part of the const expression itself.
  */
 
@@ -3675,8 +3672,7 @@ begin
   EXPECT_EQ!(const(null >> null), null);
 
   EXPECT!(const((null + null) is null));
-  EXPECT!(const((null - null) is null));
-  EXPECT!(const((null * null) is null));
+  EXPECT!(const((null - null) is null));EXPECT!(const((null * null) is null));
   EXPECT!(const((null / null) is null));
   EXPECT!(const((null % null) is null));
   EXPECT!(const((null | null) is null));
@@ -3873,36 +3869,36 @@ end);
 
 TEST!(if_nothing_forms,
 begin
-  create table tdata (
+  create table t_data (
     id int,
     v int,
     t text);
 
   declare t1 text;
-  t1 := (select t from tdata if nothing then "nothing");
+  t1 := (select t from t_data if nothing then "nothing");
   EXPECT_EQ!(t1, "nothing");
 
   declare `value one` int;
-  set `value one` := (select v from tdata if nothing then -1);
+  set `value one` := (select v from t_data if nothing then -1);
   EXPECT_EQ!(`value one`, -1);
 
-  insert into tdata values(1, 2, null);
-  t1 := (select t from tdata if nothing then "nothing");
+  insert into t_data values(1, 2, null);
+  t1 := (select t from t_data if nothing then "nothing");
   EXPECT_EQ!(t1, null);
 
-  set `value one` := (select v from tdata if nothing then -1);
+  set `value one` := (select v from t_data if nothing then -1);
   EXPECT_EQ!(`value one`, 2);
 
-  t1 := (select t from tdata if nothing or null then "still nothing");
+  t1 := (select t from t_data if nothing or null then "still nothing");
   EXPECT_EQ!(t1, "still nothing");
 
-  insert into tdata values(2, null, "x");
-  set `value one` := (select v from tdata where id == 2 if nothing or null then -1);
+  insert into t_data values(2, null, "x");
+  set `value one` := (select v from t_data where id == 2 if nothing or null then -1);
   EXPECT_EQ!(`value one`, -1);
 
   let caught := 0;
   try
-    t1 := (select t from tdata if nothing or null then throw);
+    t1 := (select t from t_data if nothing or null then throw);
   catch
     caught := 1;
   end;
@@ -3910,7 +3906,7 @@ begin
   EXPECT_EQ!(caught, 1);
 
   try
-    t1 := (select t from tdata where 0 if nothing or null then throw);
+    t1 := (select t from t_data where 0 if nothing or null then throw);
   catch
     caught := 2;
   end;
@@ -3918,7 +3914,7 @@ begin
   EXPECT_EQ!(caught, 2);
 
   try
-    let id_out := (select id from tdata limit 1 if nothing or null then throw);
+    let id_out := (select id from t_data limit 1 if nothing or null then throw);
   catch
     caught := 3;
   end;
@@ -4089,7 +4085,7 @@ BEGIN
   EXPECT_EQ!(@proc, "test_at_proc");
 END);
 
--- facet helper functions, used by the schema upgrader
+-- facet helper functions, used by the schema upgrade system
 declare facet_data TYPE OBJECT<facet_data>;
 declare func cql_facets_create() create facet_data!;
 declare func cql_facet_add(facets facet_data, facet text!, crc LONG not null) BOOL not null;
@@ -4198,7 +4194,7 @@ begin
   call get_row();
 end;
 
-TEST!(out_union_refcounts,
+TEST!(out_union_ref_counts,
 begin
   cursor C for call get_row();
   fetch C;
@@ -4223,12 +4219,12 @@ begin
 end;
 
 [[shared_fragment]]
-proc f2(pattern text, idstart int!, idend int!, lim int!)
+proc f2(pattern text, id_start int!, id_end int!, lim int!)
 begin
   with
   source(*) like f1,
   data(*) as (call f1(pattern) using source as source)
-  select * from data where data.id between idstart and idend
+  select * from data where data.id between id_start and id_end
   limit lim;
 end;
 
@@ -4262,7 +4258,7 @@ end);
 proc select_nothing_user(flag bool!)
 begin
   if flag then
-    select flag as xyzzy;
+    select flag as anything;
   else
     select nothing;
   end if;
@@ -4405,7 +4401,7 @@ begin
 end);
 
 [[shared_fragment]]
-proc skip_notnulls(a_ int!, b_ bool!, c_ long!, d_ real!, e_ text!, f_ blob!, g_ object!)
+proc skip_not_nulls(a_ int!, b_ bool!, c_ long!, d_ real!, e_ text!, f_ blob!, g_ object!)
 begin
   if a_ == 0 then
     select a_ - 100 result;
@@ -4426,7 +4422,7 @@ begin
   end if;
 end;
 
-TEST!(skip_notnulls,
+TEST!(skip_not_nulls,
 begin
   declare _set object!;
   _set := set_create();
@@ -4434,7 +4430,7 @@ begin
   _bl := blob_from_string('hi');
 
   cursor C for
-    with some_cte(*) as (call skip_notnulls(123, false, 1L, 2.3, 'x', _bl, _set))
+    with some_cte(*) as (call skip_not_nulls(123, false, 1L, 2.3, 'x', _bl, _set))
     select * from some_cte;
 
   fetch C;
@@ -4576,7 +4572,7 @@ begin
   EXPECT!(not C);
 end);
 
-declare proc alltypes_nullable() (
+declare proc all_types_nullable() (
   t bool,
   f bool,
   i int,
@@ -4586,9 +4582,9 @@ declare proc alltypes_nullable() (
   str text
 );
 
-declare proc alltypes_notnull() (
-  `bool 1 notnull` bool!,
-  `bool 2 notnull` bool!,
+declare proc all_types_not_null() (
+  `bool 1 not null` bool!,
+  `bool 2 not null` bool!,
   i_nn int!,
   l_nn long!,
   r_nn real!,
@@ -4597,24 +4593,24 @@ declare proc alltypes_notnull() (
 );
 
 [[blob_storage]]
-create table storage_notnull(
-  like alltypes_notnull
+create table storage_not_null(
+  like all_types_not_null
 );
 
 [[blob_storage]]
 create table storage_nullable(
-  like alltypes_nullable
+  like all_types_nullable
 );
 
 [[blob_storage]]
 create table storage_both(
-  like alltypes_notnull,
-  like alltypes_nullable
+  like all_types_not_null,
+  like all_types_nullable
 );
 
 [[blob_storage]]
 create table storage_with_extras(
-  like alltypes_notnull,
+  like all_types_not_null,
   x int!
 );
 
@@ -4642,9 +4638,9 @@ begin
   declare cursor_both cursor like storage_both;
   fetch cursor_both using
       false f, true t, 22 i, 33L l, 3.14 r, a_blob bl, "text" str,
-      false `bool 2 notnull`, true `bool 1 notnull`, 88 i_nn, 66L l_nn, 6.28 r_nn, b_blob bl_nn, "text2" str_nn;
+      false `bool 2 not null`, true `bool 1 not null`, 88 i_nn, 66L l_nn, 6.28 r_nn, b_blob bl_nn, "text2" str_nn;
 
-  -- note: using Cursor_both and cursor_both ensures codegen is canonicalizing the name
+  -- note: using Cursor_both and cursor_both ensures code gen is canonicalizing the name
   declare blob_both blob<storage_both>;
   blob_both := Cursor_both:to_blob;
 
@@ -4652,8 +4648,8 @@ begin
   test_cursor_both:from_blob(blob_both);
 
   EXPECT!(test_cursor_both);
-  EXPECT_EQ!(test_cursor_both.`bool 1 notnull`, cursor_both.`bool 1 notnull`);
-  EXPECT_EQ!(test_cursor_both.`bool 2 notnull`, cursor_both.`bool 2 notnull`);
+  EXPECT_EQ!(test_cursor_both.`bool 1 not null`, cursor_both.`bool 1 not null`);
+  EXPECT_EQ!(test_cursor_both.`bool 2 not null`, cursor_both.`bool 2 not null`);
   EXPECT_EQ!(test_cursor_both.i_nn, cursor_both.i_nn);
   EXPECT_EQ!(test_cursor_both.l_nn, cursor_both.l_nn);
   EXPECT_EQ!(test_cursor_both.r_nn, cursor_both.r_nn);
@@ -4667,25 +4663,25 @@ begin
   EXPECT_EQ!(test_cursor_both.bl, cursor_both.bl);
   EXPECT_EQ!(test_cursor_both.str, cursor_both.str);
 
-  declare cursor_notnulls cursor like storage_notnull;
-  fetch cursor_notnulls from cursor_both(like cursor_notnulls);
-  let blob_notnulls := cursor_notnulls:to_blob;
-  declare test_cursor_notnulls cursor like cursor_notnulls;
-  test_cursor_notnulls:from_blob(blob_notnulls);
+  cursor cursor_not_nulls  like storage_not_null;
+  fetch cursor_not_nulls from cursor_both(like cursor_not_nulls);
+  let blob_not_nulls := cursor_not_nulls:to_blob;
+  declare test_cursor_not_nulls cursor like cursor_not_nulls;
+  test_cursor_not_nulls:from_blob(blob_not_nulls);
 
-  EXPECT!(test_cursor_notnulls);
-  EXPECT_EQ!(test_cursor_notnulls.`bool 1 notnull`, cursor_both.`bool 1 notnull`);
-  EXPECT_EQ!(test_cursor_notnulls.`bool 2 notnull`, cursor_both.`bool 2 notnull`);
-  EXPECT_EQ!(test_cursor_notnulls.i_nn, cursor_both.i_nn);
-  EXPECT_EQ!(test_cursor_notnulls.l_nn, cursor_both.l_nn);
-  EXPECT_EQ!(test_cursor_notnulls.r_nn, cursor_both.r_nn);
-  EXPECT_EQ!(test_cursor_notnulls.bl_nn, cursor_both.bl_nn);
-  EXPECT_EQ!(test_cursor_notnulls.str_nn, cursor_both.str_nn);
+  EXPECT!(test_cursor_not_nulls);
+  EXPECT_EQ!(test_cursor_not_nulls.`bool 1 not null`, cursor_both.`bool 1 not null`);
+  EXPECT_EQ!(test_cursor_not_nulls.`bool 2 not null`, cursor_both.`bool 2 not null`);
+  EXPECT_EQ!(test_cursor_not_nulls.i_nn, cursor_both.i_nn);
+  EXPECT_EQ!(test_cursor_not_nulls.l_nn, cursor_both.l_nn);
+  EXPECT_EQ!(test_cursor_not_nulls.r_nn, cursor_both.r_nn);
+  EXPECT_EQ!(test_cursor_not_nulls.bl_nn, cursor_both.bl_nn);
+  EXPECT_EQ!(test_cursor_not_nulls.str_nn, cursor_both.str_nn);
 
   -- deserializing should not screw up the reference counts
-  blob_notnulls := cursor_notnulls:to_blob;
-  blob_notnulls := cursor_notnulls:to_blob;
-  blob_notnulls := cursor_notnulls:to_blob;
+  blob_not_nulls := cursor_not_nulls:to_blob;
+  blob_not_nulls := cursor_not_nulls:to_blob;
+  blob_not_nulls := cursor_not_nulls:to_blob;
 
   -- The next tests verify various things with blobs that are
   -- not directly the right type so we're cheesing the type system.
@@ -4697,14 +4693,14 @@ begin
   -- this is ok and it is our versioning strategy.
   declare any_blob blob;
   let stash_both := blob_both;
-  let stash_notnulls := blob_notnulls;
-  any_blob := blob_notnulls;
+  let stash_not_nulls := blob_not_nulls;
+  any_blob := blob_not_nulls;
   blob_both := any_blob;
   test_cursor_both:from_blob(blob_both);
 
   EXPECT!(test_cursor_both);
-  EXPECT_EQ!(test_cursor_both.`bool 1 notnull`, cursor_both.`bool 1 notnull`);
-  EXPECT_EQ!(test_cursor_both.`bool 2 notnull`, cursor_both.`bool 2 notnull`);
+  EXPECT_EQ!(test_cursor_both.`bool 1 not null`, cursor_both.`bool 1 not null`);
+  EXPECT_EQ!(test_cursor_both.`bool 2 not null`, cursor_both.`bool 2 not null`);
   EXPECT_EQ!(test_cursor_both.i_nn, cursor_both.i_nn);
   EXPECT_EQ!(test_cursor_both.l_nn, cursor_both.l_nn);
   EXPECT_EQ!(test_cursor_both.r_nn, cursor_both.r_nn);
@@ -4733,23 +4729,23 @@ begin
   -- big blob will have too many fields...
   caught := false;
   any_blob := stash_both;
-  blob_notnulls := any_blob;
-  test_cursor_notnulls:from_blob(blob_notnulls);
+  blob_not_nulls := any_blob;
+  test_cursor_not_nulls:from_blob(blob_not_nulls);
 
   -- we still expect to be able to read the fields we know without error
-  EXPECT!(test_cursor_notnulls);
-  EXPECT_EQ!(test_cursor_notnulls.`bool 1 notnull`, cursor_both.`bool 1 notnull`);
-  EXPECT_EQ!(test_cursor_notnulls.`bool 2 notnull`, cursor_both.`bool 2 notnull`);
-  EXPECT_EQ!(test_cursor_notnulls.i_nn, cursor_both.i_nn);
-  EXPECT_EQ!(test_cursor_notnulls.l_nn, cursor_both.l_nn);
-  EXPECT_EQ!(test_cursor_notnulls.r_nn, cursor_both.r_nn);
-  EXPECT_EQ!(test_cursor_notnulls.bl_nn, cursor_both.bl_nn);
-  EXPECT_EQ!(test_cursor_notnulls.str_nn, cursor_both.str_nn);
+  EXPECT!(test_cursor_not_nulls);
+  EXPECT_EQ!(test_cursor_not_nulls.`bool 1 not null`, cursor_both.`bool 1 not null`);
+  EXPECT_EQ!(test_cursor_not_nulls.`bool 2 not null`, cursor_both.`bool 2 not null`);
+  EXPECT_EQ!(test_cursor_not_nulls.i_nn, cursor_both.i_nn);
+  EXPECT_EQ!(test_cursor_not_nulls.l_nn, cursor_both.l_nn);
+  EXPECT_EQ!(test_cursor_not_nulls.r_nn, cursor_both.r_nn);
+  EXPECT_EQ!(test_cursor_not_nulls.bl_nn, cursor_both.bl_nn);
+  EXPECT_EQ!(test_cursor_not_nulls.str_nn, cursor_both.str_nn);
 
   -- we're missing fields and they aren't nullable, this will make errors
   declare cursor_with_extras cursor like storage_with_extras;
   caught := false;
-  any_blob := stash_notnulls;
+  any_blob := stash_not_nulls;
   declare blob_with_extras blob<storage_with_extras>;
   blob_with_extras := any_blob;
   try
@@ -4774,15 +4770,15 @@ begin
   -- the types are all wrong but they are simply not null values of the same types
   -- we can safely decode that
   declare blob_nullables blob<storage_nullable>;
-  any_blob := stash_notnulls;
+  any_blob := stash_not_nulls;
   blob_nullables := any_blob;
   declare cursor_nullables cursor like storage_nullable;
   cursor_nullables:from_blob(blob_nullables);
 
   -- note that we read the not null versions of the fields
   EXPECT!(cursor_nullables);
-  EXPECT_EQ!(cursor_nullables.t, cursor_both.`bool 1 notnull`);
-  EXPECT_EQ!(cursor_nullables.f, cursor_both.`bool 2 notnull`);
+  EXPECT_EQ!(cursor_nullables.t, cursor_both.`bool 1 not null`);
+  EXPECT_EQ!(cursor_nullables.f, cursor_both.`bool 2 not null`);
   EXPECT_EQ!(cursor_nullables.i, cursor_both.i_nn);
   EXPECT_EQ!(cursor_nullables.l, cursor_both.l_nn);
   EXPECT_EQ!(cursor_nullables.r, cursor_both.r_nn);
@@ -4792,14 +4788,14 @@ begin
   -- now blob_nullables really does have nullable types
   blob_nullables := cursor_nullables:to_blob;
   any_blob := blob_nullables;
-  blob_notnulls := any_blob;
+  blob_not_nulls := any_blob;
 
   -- we can't read possibly null types into not null types
   caught := false;
   try
-    test_cursor_notnulls:from_blob(blob_notnulls);
+    test_cursor_not_nulls:from_blob(blob_not_nulls);
   catch
-    EXPECT!(not test_cursor_notnulls);
+    EXPECT!(not test_cursor_not_nulls);
     caught := true;
   end;
   EXPECT!(caught);
@@ -4862,7 +4858,7 @@ begin
   declare cursor_both cursor like storage_both;
   fetch cursor_both using
       false f, true t, 22 i, 33L l, 3.14 r, a_blob bl, "text" str,
-      false `bool 2 notnull`, true `bool 1 notnull`, 88 i_nn, 66L l_nn, 6.28 r_nn, b_blob bl_nn, "text2" str_nn;
+      false `bool 2 not null`, true `bool 1 not null`, 88 i_nn, 66L l_nn, 6.28 r_nn, b_blob bl_nn, "text2" str_nn;
 
   let blob_both := cursor_both:to_blob;
 
@@ -4896,7 +4892,7 @@ begin
   @echo lua, "cql_disable_tracing = false\n";
 end);
 
-TEST!(bogus_varint,
+TEST!(bogus_var_int,
 begin
   @echo lua, "cql_disable_tracing = true\n";
 
@@ -4928,7 +4924,7 @@ begin
   @echo lua, "cql_disable_tracing = false\n";
 end);
 
-TEST!(bogus_varlong,
+TEST!(bogus_var_long,
 begin
   @echo lua, "cql_disable_tracing = true\n";
 
@@ -5216,7 +5212,7 @@ declare function corrupt_blob_with_invalid_shenanigans(b blob!) create blob!;
 
 TEST!(clobber_blobs,
 begin
-  -- the point of the test is to ensure that we don't segv or get ASAN failures
+  -- the point of the test is to ensure that we don't fault or get sanitizer failures
   -- or leak memory when dealing with broken blobs.  Some of the blobs
   -- may still be valid since we corrupt them randomly.  But this will
   -- help us to be sure that nothing horrible happens if you corrupt blobs
@@ -5229,7 +5225,7 @@ begin
   declare cursor_both cursor like storage_both;
   fetch cursor_both using
       false f, true t, 22 i, 33L l, 3.14 r, a_blob bl, "text" str,
-      false `bool 2 notnull`, true `bool 1 notnull`, 88 i_nn, 66L l_nn, 6.28 r_nn, b_blob bl_nn, "text2" str_nn;
+      false `bool 2 not null`, true `bool 1 not null`, 88 i_nn, 66L l_nn, 6.28 r_nn, b_blob bl_nn, "text2" str_nn;
 
   -- storage both means nullable types and not null types
   let my_blob := cursor_both:to_blob;
@@ -5263,7 +5259,7 @@ begin
       my_blob := corrupt_blob_with_invalid_shenanigans(my_blob);
 
       try
-        -- almost certainly going to get an error, that's fine, but no segv, no leaks, etc.
+        -- almost certainly going to get an error, that's fine, but no seg violation, no leaks, etc.
         -- each attempt will be more smashed, there are 100 trails with 10 smashes each
         -- each smash clobbers 20 bytes of the blob
 
@@ -5293,7 +5289,7 @@ begin
   change_arg(null);
 end);
 
-declare proc lotsa_types() (
+declare proc many_types() (
   i int!,
   l long!,
   b bool!,
@@ -5310,7 +5306,7 @@ declare function cql_cursor_hash(C cursor) long!;
 
 TEST!(cursor_hash,
 begin
-  cursor C like lotsa_types;
+  cursor C like many_types;
   declare D cursor like C;
 
   -- empty cursor hashes to nothing
@@ -5453,7 +5449,7 @@ end);
 
 TEST!(cursor_equal,
 begin
-  cursor C like lotsa_types;
+  cursor C like many_types;
   declare D cursor like C;
 
   -- empty cursor hashes to nothing
@@ -6237,7 +6233,7 @@ end);
 
 declare func _cql_contains_column_def(haystack text, needle text) BOOL not null;
 
--- _cql_contains_column_def is used by the upgrader to find string matches the indicate a column is present
+-- _cql_contains_column_def is used by the schema upgrade logic to find string matches the indicate a column is present
 -- it's the same as this expression: haystack glob printf('*[) ]%s*', needle)
 -- any null arguments yield a false result
 TEST!(cql_contains_column_def,

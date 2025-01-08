@@ -541,8 +541,8 @@ cql_code test_blob_rowsets(sqlite3 *db) {
     char buf1[100];
     char buf2[100];
 
-    sprintf(buf1, "nullable blob %d", i);
-    sprintf(buf2, "not nullable blob %d", i);
+    snprintf(buf1, sizeof(buf1), "nullable blob %d", i);
+    snprintf(buf2, sizeof(buf2), "not nullable blob %d", i);
 
     cql_string_ref b1_ref = string_from_blob(b1);
     cql_string_ref b2_ref = string_from_blob(b2);
@@ -602,8 +602,8 @@ cql_code test_sparse_blob_rowsets(sqlite3 *db) {
     char buf1[100];
     char buf2[100];
 
-    sprintf(buf1, "nullable blob %d", i);
-    sprintf(buf2, "not nullable blob %d", i);
+    snprintf(buf1, sizeof(buf1), "nullable blob %d", i);
+    snprintf(buf2, sizeof(buf2), "not nullable blob %d", i);
 
     cql_string_ref b1_ref = string_from_blob(b1);
     if (i % 2 == 0) {

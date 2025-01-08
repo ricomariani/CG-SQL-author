@@ -100496,7 +100496,7 @@ The statement ending at line XXXX
 PROC for_loop_bad_block ()
 BEGIN
   LET i := 0;
-  FOR i <= 5; SET i := i + 1;
+  FOR i <= 5; i += 1;
   BEGIN
     LET i := NOT 'x';
   END;
@@ -100508,23 +100508,56 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0197: duplicate variable name in th
   | {name for_loop_bad_block}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {let_stmt}: i: integer notnull variable was_set
-      | | {name i}: i: integer notnull variable was_set
+      | {let_stmt}: i: integer notnull variable
+      | | {name i}: i: integer notnull variable
       | | {int 0}: integer notnull
       | {for_stmt}: err
         | {le}: bool notnull
         | | {name i}: i: integer notnull variable
         | | {int 5}: integer notnull
         | {for_info}
-          | {stmt_list}: ok
-          | | {assign}: i: integer notnull variable was_set
-          |   | {name i}: i: integer notnull variable was_set
-          |   | {add}: integer notnull
-          |     | {name i}: i: integer notnull variable
-          |     | {int 1}: integer notnull
+          | {stmt_list}
+          | | {expr_stmt}
+          |   | {add_eq}
+          |     | {name i}
+          |     | {int 1}
           | {stmt_list}: err
             | {let_stmt}: err
               | {name i}
               | {not}
                 | {strlit 'x'}
+
+The statement ending at line XXXX
+
+PROC for_loop_update_second ()
+BEGIN
+  LET i := 0;
+  FOR i <= 5; LET not_visible := 1;
+  BEGIN
+    SET not_visible := 5;
+  END;
+END;
+
+test/sem_test.sql:XXXX:1: error: in assign : CQL0173: variable not found 'not_visible'
+
+  {create_proc_stmt}: err
+  | {name for_loop_update_second}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {let_stmt}: i: integer notnull variable
+      | | {name i}: i: integer notnull variable
+      | | {int 0}: integer notnull
+      | {for_stmt}: err
+        | {le}: bool notnull
+        | | {name i}: i: integer notnull variable
+        | | {int 5}: integer notnull
+        | {for_info}
+          | {stmt_list}
+          | | {let_stmt}
+          |   | {name not_visible}
+          |   | {int 1}
+          | {stmt_list}: err
+            | {assign}: err
+              | {name not_visible}
+              | {int 5}
 

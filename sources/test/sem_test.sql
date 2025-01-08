@@ -25853,3 +25853,16 @@ begin
     let i := not 'x';
   end;
 end;
+
+-- TEST: for loop, update statements are evaluated second
+-- + error: % variable not found 'not_visible'
+-- +1 error:
+-- + {for_stmt}: err
+proc for_loop_update_second()
+begin
+  let i := 0;
+  for i <= 5; let not_visible := 1;
+  begin
+    not_visible := 5;
+  end;
+end;

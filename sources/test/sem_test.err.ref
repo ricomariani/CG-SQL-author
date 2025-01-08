@@ -1840,4 +1840,5 @@ test/sem_test.sql:XXXX:1: error: in table_or_subquery : CQL0095: table/view not 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 test/sem_test.sql:XXXX:1: error: in str : CQL0197: duplicate variable name in the same scope 'i'
 test/sem_test.sql:XXXX:1: error: in str : CQL0197: duplicate variable name in the same scope 'i'
+test/sem_test.sql:XXXX:1: error: in assign : CQL0173: variable not found 'not_visible'
 semantic errors present; no code gen.

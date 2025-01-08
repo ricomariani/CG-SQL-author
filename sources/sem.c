@@ -22555,13 +22555,11 @@ static void sem_for_stmt(ast_node *ast) {
     return;
   }
 
-  Contract(is_ast_stmt_list(for_info->left));
-  sem_stmt_list(for_info->left);
-  if (is_error(for_info->left)) {
-    record_error(ast);
-    return;
-  }
-
+  // the loop body has to go first, anything potentially
+  // declared in the update statements is logically after
+  // the loop body.  For instance if there is a let
+  // statement in those statements in must not be visible
+  // in the loop.
   if (for_info->right) {
     loop_depth++;
 
@@ -22574,6 +22572,17 @@ static void sem_for_stmt(ast_node *ast) {
       return;
     }
   }
+
+  // this has to go second, it might declare stuff
+  // that the main body should not have access to.
+  // those declarations are ok to use after the loop
+  Contract(is_ast_stmt_list(for_info->left));
+  sem_stmt_list(for_info->left);
+  if (is_error(for_info->left)) {
+    record_error(ast);
+    return;
+  }
+
 
   record_ok(ast);
 }

@@ -185,6 +185,93 @@ loop. So the next bit will not run, which is the printing.
 Finishing up the control flow, on every 10th iteration we print the value of the
 loop variable.
 
+
+### The FOR Statement
+
+The `FOR` statement provides a bit more convenience over `WHILE` and that's pretty much it.
+The usual thing that goes wrong with a simple `WHILE` loop is that you end up forgetting
+to add the iteration increment and then you debug an infinite loop.  To help avoid this
+`FOR` lets you specify the loop end action in the same place as the condition.  Looking
+at the previous example, with `FOR` it looks like this:
+
+```sql
+declare procedure printf no check;
+
+create proc looper(x int!)
+begin
+  for x > 0; x -= 1;
+  begin
+    printf('%d\n', x);
+  end;
+end;
+```
+
+Here we've also used some of the more modern forms, eliding the `call`.
+
+`FOR` very general, any number of statements can follow the condition so for instance
+
+```
+for x < 5 and y < 5; x += 1; y += 1;
+begin
+   ...
+end;
+```
+
+Any statements may appear in the list, even things that don't seem very loop-like.  You could fetch a cursor
+or something.
+
+The `FOR` construct is similar to while, you might think of it as:
+
+```sql
+--- for <condition> ; <loop update statements; ... ;> ; begin  <main body> end;
+while <condition>
+begin
+  <main body>
+
+continue_will_go_here:
+  <loop update statements; ... ;>
+end;
+```
+
+Essentially it's the same as putting all those statements at the end except that `continue` will
+go to those statements instead of the top of the loop.
+
+There is no difference in code quality.  The only advantage is that the all the loop info is together.
+
+This is possible:
+
+```
+let x := 5; for x < 10; x += 1;
+begin
+  ...
+end;
+```
+It would be very simple to macroize `FOR` to do some simple loop cases like:
+
+```sql
+@macro(stmt_list) _for!(id! expr, c1! expr, c2! expr, s! stmt_list)
+begin
+   id! := c1!;
+   for id! <= c2! ; id! += 1;
+   begin
+      s!;
+   end;
+end;
+
+proc foo()
+begin
+  var x int;
+
+  _for!(x, 1, 5,
+  begin
+    printf("%d\n", x);
+  end);
+end;
+```
+
+For is useful for this because all the loop pieces are together so it's a little easier to macroize.
+
+
 ### The SWITCH Statement
 
  The CQL `SWITCH` is designed to map to the C `switch` statement for better code

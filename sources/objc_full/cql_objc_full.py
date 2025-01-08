@@ -144,6 +144,7 @@ cmd_args["emit_impl"] = False
 # Change as you see fit.
 CGS = "CGS"
 
+
 # The procedure might have any number of out arguments plus its normal returns
 # We emit them all here.  We make a synthetic result set type to hold all those
 # out results as well as the SQLite return code if it's needed and the returned
@@ -163,11 +164,11 @@ def emit_proc_objc_return_impl(proc):
     print(dashes)
 
     legacy = cmd_args["legacy"]
-   
+
     if legacy:
-      print(f"@implementation {CGS}{p_name}RT : NSObject", end="")
+        print(f"@implementation {CGS}{p_name}RT : NSObject", end="")
     else:
-      print(f"@implementation {CGS}{p_name}RT", end="")
+        print(f"@implementation {CGS}{p_name}RT", end="")
 
     print(" {")
 
@@ -226,11 +227,11 @@ def emit_proc_objc_projection_impl(proc, attributes):
     print("")
     print(dashes)
     legacy = cmd_args["legacy"]
-   
+
     if legacy:
-      print(f"@implementation {CGS}{p_name}RS : NSObject", end="")
+        print(f"@implementation {CGS}{p_name}RS : NSObject", end="")
     else:
-      print(f"@implementation {CGS}{p_name}RS", end="")
+        print(f"@implementation {CGS}{p_name}RS", end="")
 
     print(" {")
     print(f"  {p_name}_result_set_ref _result_set_ref;")
@@ -274,7 +275,9 @@ def emit_proc_objc_projection_impl(proc, attributes):
                 cls = objc_type[:-11]
                 print(f"  // make child result")
                 print(f"  {objc_type} rs = [{cls} new];")
-                print(f"  rs.result_set_ref = {p_name}_get_{c_name}(_result_set_ref{row_arg});")
+                print(
+                    f"  rs.result_set_ref = {p_name}_get_{c_name}(_result_set_ref{row_arg});"
+                )
                 print(f"  cql_retain((cql_type_ref)rs.result_set_ref);")
                 print(f"  return rs;")
             else:
@@ -306,13 +309,12 @@ def emit_proc_objc_projection_impl(proc, attributes):
 
     # we own the handle so we release it in dealloc
 
-
     print("")
     print("-(void)dealloc {")
     print("  cql_release((cql_type_ref)self.result_set_ref);")
     if legacy:
-      print("  [super dealloc];")
-  
+        print("  [super dealloc];")
+
     print("}")
 
     print("")
@@ -658,11 +660,11 @@ def emit_proc_objc_return_type(proc):
                 objc_type = objc_type_for_arg(c_type, kind, isNotNull)
                 print(f"  {objc_type} _{c_name};")
 
-            if usesDatabase:
-                print("  int _resultCode;")
+        if usesDatabase:
+            print("  int _resultCode;")
 
-            if projection:
-                print(f"  {CGS}{p_name}RS *_Nullable _resultSet;")
+        if projection:
+            print(f"  {CGS}{p_name}RS *_Nullable _resultSet;")
 
         print("}")
 
@@ -714,7 +716,7 @@ def emit_proc_objc_projection_header(proc, attributes):
 
     if legacy:
         print(" {")
-        print(f"  {p_name}_result_set_ref _resultSet;")
+        print(f"  {p_name}_result_set_ref _result_set_ref;")
         print("}")
 
     print("")
@@ -739,7 +741,9 @@ def emit_proc_objc_projection_header(proc, attributes):
     identityResult = "true" if "cql:identity" in attributes else "false"
 
     print("")
-    print(f"@property (nonatomic, assign) {p_name}_result_set_ref result_set_ref;")
+    print(
+        f"@property (nonatomic, assign) {p_name}_result_set_ref result_set_ref;"
+    )
     print("@property (nonatomic, readonly) cql_bool hasIdentityColumns;")
     print("@property (nonatomic, readonly) int count;")
     print("")

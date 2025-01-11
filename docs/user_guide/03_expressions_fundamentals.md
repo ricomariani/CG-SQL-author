@@ -298,7 +298,8 @@ different sources combined with `UNION ALL`.
 > information, which SQLite doesn't need/use anyway.
 
 > NOTE: The trailing cast notation is often helpful for economy here, e.g.
-> `NULL :TEXT:` is a lot shorter than `CAST(TEXT AS NULL)` and is identical.
+> `NULL ~TEXT~` is a lot shorter than `CAST(NULL AS TEXT)` and is identical.
+> SQLite will never see the shorthand version, it is converted immediately.
 
 #### Boolean Literals
 

@@ -449,6 +449,56 @@ This `const` form ensures that the constant will be evaluated at compile time. T
 from other macros or you can build enum values this way. Anywhere you might need
 literals, you can use `const`.
 
+### Constant Groups
+
+Constant groups are more general than enumerations but very similar.  This statement
+declares named global constants of any type.
+
+```sql
+declare const group some_constants (
+  my_x = cast(5 as integer<job_id>),
+  my_y = 12.0,
+  my_z = 'foo'
+);
+```
+
+As with enums, referring to `my_x`, `my_y`, or `my_z` after this will cause the
+appropriate constant value to be inlined into the code.  The output code carries
+no symbolic reference to the constant.  However, if you wish the constant to be
+consumable by external code you can use
+
+
+```sql
+@emit_const_groups some_constant;
+```
+
+This causes
+
+```C
+#ifndef const_group_some_constants_defined
+#define const_group_some_constants_defined
+
+#define my_x 5
+#define my_y 1.200000e+01
+#define my_z "foo"
+
+#endif
+```
+
+To go into the header file for C.  For Lua you instead get this call:
+
+```lua
+  cql_emit_constants("const", "some_constants", {
+    my_x = 5,
+    my_y = 1.200000e+01,
+    my_z = "foo"
+  })
+```
+
+You can use this call to create whatever constant dictionary or dictionaries you want
+by overriding `cql_emit_constants`.  By default they are added to a global dictionary
+named `_cql`
+
 ### Named Types
 
 A common source of errors in stored procedures is incorrect typing in variables

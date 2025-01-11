@@ -3766,6 +3766,8 @@ static void cql_usage() {
     "  any number of output files may be needed for a particular result type, two is common\n"
     "--defines\n"
     "  define symbols for use with @ifdef and @ifndef\n"
+    "--include_paths\n"
+    "  specify prefixes to use with the @include directive\n"
     "--nolines\n"
     "  suppress the #line directives for lines; useful if you need to debug the C code\n"
     "--global_proc name\n"

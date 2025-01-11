@@ -420,7 +420,20 @@ you get:
 #define floating__e 2.718280e+00
 #define floating__pi 3.141590e+00
 ```
-In Lua output the compiler generates initialized global variables with names like the above.
+In Lua output the compiler creates a call to `cql_emit_constants` like so:
+
+```lua
+  cql_emit_constants("enum", "business_type", {
+    restaurant = 1,
+    laundromat = 2,
+    corner_store = 14
+  })
+```
+
+By default this function adds the indicated constants to the global dictionary
+`_cql` but you can override this to do whatever you like with the constants.
+
+#### Constant Folding
 
 In order to get useful expressions in enumeration values, constant folding and
 general evaluation were added to the compiler; these expressions work on any
@@ -464,8 +477,8 @@ declare const group some_constants (
 
 As with enums, referring to `my_x`, `my_y`, or `my_z` after this will cause the
 appropriate constant value to be inlined into the code.  The output code carries
-no symbolic reference to the constant.  However, if you wish the constant to be
-consumable by external code you can use
+no symbolic reference to the constant.  However, similary to enums, if you wish
+the constant to be consumable by external code you can use:
 
 
 ```sql
@@ -509,7 +522,7 @@ change, you have to revisit all the places.
 
 To help with this situation, and to make the code a little more self-describing,
 we added named types to the language. This is a lot like `typedef` in the C
-language. These defintiions do not create different incompatible types, but they
+language. These defintions do not create different incompatible types, but they
 do let you name types for reuse.
 
 You can now write these sorts of forms:

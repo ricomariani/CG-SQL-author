@@ -897,10 +897,10 @@ Generates:
     }
 ```
 
-### Procecdure Declarations
+### Procedure Declarations
 
 The `declareProcs` section contains a list of procedure
-declaractions. Each declaration is of the form:
+declarations. Each declaration is of the form:
 
 * **name** : the name of the procedure
 * **args** : _procedure arguments_ see the relevant section

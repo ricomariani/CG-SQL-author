@@ -458,7 +458,7 @@ select * from foo, bar;
 select 1 as one, 2 as two;
 
 -- TEST: select * with no from is an error
--- * error: % select *, T.*, or columns(...) cannot be used with no FROM clause
+-- * error: % select *, T.*, or @columns(...) cannot be used with no FROM clause
 -- +1 error:
 -- + {select_stmt}: err
 -- + {star}: err
@@ -5985,7 +5985,7 @@ select 0 as _first, T.*, 3 as _last from (select 1 as A, 2 as B) as T;
 select 0 as _first, T.*, S.*, 3 as _last from (select 1 as A, 2 as B) as T, (select 1 as C) as S;
 
 -- TEST: try to use T.* with no from clause
--- * error: % select *, T.*, or columns(...) cannot be used with no FROM clause
+-- * error: % select *, T.*, or @columns(...) cannot be used with no FROM clause
 -- + {table_star}: err
 select T.*;
 
@@ -20112,7 +20112,7 @@ select @columns(simple_shape like with_kind) from simple_shape;
 -- TEST: can't use the columns construct if there is no from clause
 -- + {select_stmt}: err
 -- + {select_expr_list_con}: err
--- * error: % select *, T.*, or columns(...) cannot be used with no FROM clause
+-- * error: % select *, T.*, or @columns(...) cannot be used with no FROM clause
 -- +1 error:
 select @columns(like foo);
 

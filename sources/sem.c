@@ -17007,7 +17007,7 @@ static void sem_returning_clause(
 
   sem_join join = *table_ast->sem->jptr;
 
-  // change * and T.* to COLUMNS(T)
+  // change * and T.* to @COLUMNS(T)
   rewrite_star_and_table_star_as_columns_calc(select_expr_list, &join);
 
   // expand those (there may be some there in the source too)

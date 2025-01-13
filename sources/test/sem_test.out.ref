@@ -1732,7 +1732,7 @@ The statement ending at line XXXX
 
 SELECT *;
 
-test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0052: select *, T.*, or columns(...) cannot be used with no FROM clause
+test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0052: select *, T.*, or @columns(...) cannot be used with no FROM clause
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -23904,7 +23904,7 @@ The statement ending at line XXXX
 
 SELECT T.*;
 
-test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0052: select *, T.*, or columns(...) cannot be used with no FROM clause
+test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0052: select *, T.*, or @columns(...) cannot be used with no FROM clause
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -76051,7 +76051,7 @@ The statement ending at line XXXX
 
 SELECT @COLUMNS(LIKE foo);
 
-test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0052: select *, T.*, or columns(...) cannot be used with no FROM clause
+test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0052: select *, T.*, or @columns(...) cannot be used with no FROM clause
 
   {select_stmt}: err
   | {select_core_list}: err

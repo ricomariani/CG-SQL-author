@@ -105,20 +105,73 @@ in some sense more general.
 In all the cases if the number or type of variables do not match the select
 statement, semantic errors are produced.
 
+### Shapes
+
+In the following discussion the notion of "Shapes" will make its first major
+appearance. Shapes are in some sense one of the magic CQL features that allow
+you to use work with dozens of columns without having to type the names
+all the time and without creating a maintenance disaster.  They first made
+their appearance in cursor features but soon found their way throughout the
+language, as we will see below, we consume shapes with `LIKE` when the shape
+is used for type information and `FROM` when it is being expanded into values.
+
+SQL doesn't have the notion of structure types, but structures actually appear
+pretty directly in many places.  Generally we call these things "Shapes" and
+there are a variety of source for shapes including:
+
+* the columns of a table, `like my_table`
+* the projection of a sample `SELECT` statement `like select 1 x, 2 y`
+* the columns of a cursor use `like my_cursor`
+* the result type of a procedure with a result set `like my_proc`
+* the arguments of a procedure  `like my_proc ARGUMENTS`
+* the columns from an `like interface`
+
+The interface statement directly declares a named shape. e.g.,
+
+```sql
+interface foo (x int, y int, n text!);
+```
+
+The other shape sources similarly define a set of named fields.
+
+The most typical ways to consume shapes are using LIKE, for instance:
+
+```sql
+-- all of the shape S
+LIKE S
+
+-- x and y from S
+LIKE S(x, y)
+
+-- all of S except x and y
+LIKE S(-x, -y)
+
+-- take from S, the columns of shapes A and B plus x and y
+LIKE S(like A, like B, x, y)
+```
+
+When consuming values use
+
+```sql
+FROM X LIKE Y
+```
+
+The `FROM` part indicates the domain and the optional LIKE part indicates
+
+```sql
+FROM arguments [like ...]
+FROM locals [like ...]
+FROM my_cursor [like ...]
+FROM arg_bundle [like ...]
+FROM proc [like ...]
+```
+
+The most important use of shapes is to create value cursors.
+
 ### Value Cursors
 
 The purpose of value cursors is to make it possible for a stored procedure to
-work with structures as a unit rather than only field by field.  SQL doesn't
-have the notion of structure types, but structures actually appear pretty
-directly in many places.  Generally we call these things "Shapes" and there are
-a variety of source for shapes including:
-
-* the columns of a table
-* the projection of a `SELECT` statement
-* the columns of a cursor
-* the result type of a procedure that returns a select
-* the arguments of a procedure
-* other things derived from the above
+work with structures as a unit rather than only field by field.
 
 Let's first start with how you declare a value cursor.  It is providing one of
 the shape sources above.
@@ -131,6 +184,7 @@ declare C cursor like select 1 a, 'x' b;
 declare C cursor like (a integer not null, b text not null);
 declare C cursor like my_view;
 declare C cursor like my_other_cursor;
+declare C cursor like my_interface;
 declare C cursor like my_previously_declared_stored_proc;
 declare C cursor like my_previously_declared_stored_proc arguments;
 ```
@@ -213,7 +267,7 @@ the system in this way.
 
 This form allows any kind of declaration, for instance:
 
-```
+```sql
 declare C cursor like ( id integer not null, val real, flag boolean );
 ```
 
@@ -221,13 +275,13 @@ This wouldn't really give us much more than the other forms, however typed name
 lists can include LIKE in them again, as part of the list.  Which means you can
 do this kind of thing:
 
-```
+```sql
 declare C cursor like (like D, extra1 real, extra2 bool)
 ```
 
 You could then load that cursor like so:
 
-```
+```sql
 fetch C from values (from D, 2.5, false);
 ```
 
@@ -236,7 +290,6 @@ and now you have D plus 2 more fields which maybe you want to output.
 Importantly this way of doing it means that C always includes D, even if D
 changes over time.  As long as the `extra1` and `extra2` fields don't conflict
 names it will always work.
-
 
 ### OUT Statement
 
@@ -318,6 +371,7 @@ places in CQL as a very useful construct, but it began here with the need to
 describe a cursor shape economically, by reference.
 
 ### OUT UNION Statement
+
 The semantics of the `OUT` statement are that it always produces one row of
 output (a procedure can produce no row if an `out` never actually rans but the
 procedure does use `OUT`).
@@ -425,6 +479,7 @@ maximum row numbers. Stepping through the cursor simply increments the row
 number and fetches the next row out of the rowset instead of from SQLite.
 
 Example:
+
 ```sql
 -- reading the above
 create proc reader()
@@ -999,18 +1054,19 @@ the `@COLUMNS` construct was added to the language.  This allows for a sugared
 syntax for extracting columns in bulk.
 
 The `@COLUMNS` clause is like of a generalization of the `select T.*` with shape
-slicing and type-checking.  The forms are discussed below:
+slicing and type-checking.  In fact, the standard forms `*` and `T.*` are converted
+to the more general `@COLUMNS` form internally. The forms are discussed below:
 
 
 #### Columns from a join table or tables
 
 This is the simplest form, it's just like `T.*`:
 
-```
--- same as A.*
+```sql
+-- this is the same as A.*
 select @columns(A) from ...;
 
--- same as A.*, B.*
+-- this is the same as A.*, B.*
 select @columns(A, B) from ...;
 ```
 
@@ -1018,7 +1074,7 @@ select @columns(A, B) from ...;
 
 This allows you to choose some of the columns of one table of the FROM clause.
 
-```
+```sql
 -- the columns of A that match the shape Foo
 select @columns(A like Foo) from ...;
 
@@ -1031,7 +1087,7 @@ select @columns(A like Foo, B like Bar) from ...;
 Here we do not specify a particular table that contains the columns, they could
 come from any of the tables in the FROM clause.
 
-```
+```sql
 --- get the Foo shape from anywhere in the join
 select @columns(like Foo) from ...;
 
@@ -1042,14 +1098,15 @@ select @columns(like Foo, like Bar) from ...;
 #### Subsets of Columns from shapes
 
 This pattern can be helpful for getting part of a shape.
-```
+
+```sql
 -- get the a and b from the Foo shape only
 select @columns(like Foo(a,b))
 ```
 
 This pattern is great for getting almost all of a shape (e.g. all but the pk).
 
-```
+```sql
 -- get the Foo shape except the a and b columns
 select @columns(like Foo(-a, -b))
 ```
@@ -1059,7 +1116,7 @@ select @columns(like Foo(-a, -b))
 This form allows you to slice out a few columns without defining a shape, you
 simply list the exact columns you want.
 
-```
+```sql
 -- T1.x and T2.y plus the Foo shape
 select @columns(T1.x, T2.y, like Foo) from ...;
 ```
@@ -1070,9 +1127,10 @@ Its often the case that there are duplicate column names in the `FROM` clause.
 For instance, you could join `A` to `B` with both having a column `pk`. The
 final result set can only have one column named `pk`, the distinct clause helps
 you to get distinct column names.  In this context `distinct` is about column
-names, not values.
+names, not values.  This is especially helpful when it is known that the
+duplicate column names have the same values like in a join.
 
-```
+```sql
 -- removes duplicate column names
 -- e.g. there will be one copy of 'pk'
 select @columns(distinct A, B) from A join B using(pk);
@@ -1084,7 +1142,7 @@ select @columns(distinct like Foo, like Bar) from ...;
 If a specific column is mentioned it is always included, but later expressions
 that are not a specific column will avoid that column name.
 
-```
+```sql
 -- if F or B has an x it won't appear again, just T.x
 select @columns(distinct T.x, F like Foo, B like Bar) from F, B ..;
 ```
@@ -1093,12 +1151,12 @@ Of course this is all just sugar, so it all compiles to a column list with table
 qualifications -- but the syntax is very powerful.  You can easily narrow a wide
 table, or fuse joins that share common keys without creating conflicts.
 
-```
+```sql
 -- just the Foo columns
 select @columns(like Foo) from Superset_Of_Foo_From_Many_Joins_Even;
 
 -- only one copy of 'pk'
-select @columns(distinct A,B,C) from
+select @columns(distinct A, B, C) from
   A join B using (pk) join C using (pk);
 ```
 
@@ -1108,9 +1166,9 @@ other shapes.  For instance, you can declare procedures that return the shape
 you want and never actually create the procedure -- a pattern is very much like
 a shape "typedef".  E.g.
 
-```
-declare proc shape1() (x integer, y real, z text);
-declare proc shape2() (like shape1, u bool, v bool);
+```sql
+interface shape1 (x integer, y real, z text);
+interface shape2 (like shape1, u bool, v bool);
 ```
 
 With this combination you can easily define common column shapes and slice them
@@ -1360,3 +1418,124 @@ standard helper procedures that can get a cursor from a variety of places and
 process it.  Boxing isn’t the usual pattern at all and returning cursors in a
 box, while possible, should be avoided in favor of the simpler patterns, if only
 because then then lifetime management is very simple in all those cases.
+
+### Advanced Shape Usage
+
+There are a number of ways that shapes can be used creatively given their
+sources. A few examples should illustrate what is possible.
+
+Let's suppose we want to write code to call a function with test arguments,
+there are dozens of combos so we might do something like this.
+
+```sql
+declare C cursor for select * from test_args;
+loop fetch C
+begin
+  let ok := foo(from C);
+  if not x throw;
+end;
+```
+
+OK that's fair enough but how did we make that table?
+
+```sql
+
+-- example
+proc foo(x int, y int, out result int)
+begin
+  result := x + y;
+end;
+
+-- all of the columns of the arguments but not the out arg result
+create table test_args(
+  like foo arguments(-result)
+);
+```
+
+In a test case we might want to use default values for many of the
+arguments and vary just one or two.  We could do something like this:
+
+```sql
+proc foo_defaults()
+begin
+  -- here we let the result column be part of the cursor
+  -- it wil hold the result when the call is made
+  -- we could omit it like the previous example
+  cursor C like foo arguments;
+  -- @dummy_seed could also be used
+  fetch C from values (... defaults ...);
+  out C;
+end;
+```
+
+now we could do
+
+```sql
+cursor C fetch from call foo_defaults();
+call foo(from C);
+-- test C.result
+```
+
+If we wanted to change some of the defaults for our test (procedures might have
+many arguments) we can change it up a bit
+
+```sql
+proc foo_args_case1(x_ int)
+begin
+  cursor C like foo arguments;
+  fetch C from call foo_defaults();
+
+  -- change some columns
+  update cursor C using x_ x;
+  out C;
+end;
+
+cursor C fetch from call foo_args_case1(5);
+call foo(from C);
+-- test C.result
+```
+
+Many such combinations are possible and this can materially reduce the test burden.
+Remember any of the columns of a value cursor can come from anywhere, they could
+be computed, stored or any combination.  Result could include arguments for
+more than one function as long as each unique argument has a unique shape.
+For instance:
+
+```sql
+-- foo and bar share some arguments (or not)
+
+-- pull just the arguments for foo out of C which has foo and bar args
+call foo(from C like foo arguments);
+
+-- pull just the arguments for bar out of C which has foo and bar args
+call bar(from C like bar arguments);
+```
+
+All sorts of combinations like this are possible.  Forwarding your own
+arguments to helper functions can be massively simplified using these
+forms.
+
+```sql
+-- call bar using my arguments, pass the ones that match
+call bar(from arguments like bar arguments);
+
+-- call bar using my arguments and locals, pass the ones that match
+call bar(from locals like bar arguments);
+```
+
+I can easily create a procedure that gets some input state, assembles
+the arguments to call various helper procedures, and calls them all.
+If the state is common I can easily flow the argument values each
+helper needs from my locals without having to type them all the time.
+If a helper needs one of the usual context locals it can be added
+to the signature of the helper and it will be automatically populated
+at the call sites without having to change code.  This sort of thing
+happens all the time in test code.
+
+The `from` form can be used for call arguments, inserted values, cursor
+fetch values -- the usual places expression lists go.  The `like` form
+can go anywhere column names go, like the columns of an `insert` statement,
+the columns in a `create table` statement, an `interface`.  Anywhere
+typed names like `(x int, y int)` could go.
+
+

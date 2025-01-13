@@ -31,7 +31,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in '-'
 test/sem_test.sql:XXXX:1: error: in call : CQL0212: too few arguments provided to procedure 'simple_func2'
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in '-'
-test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0052: select *, T.*, or columns(...) cannot be used with no FROM clause
+test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0052: select *, T.*, or @columns(...) cannot be used with no FROM clause
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'c'
 test/sem_test.sql:XXXX:1: error: in str : CQL0436: alias referenced from WHERE, GROUP BY, HAVING, or WINDOW clause 'x'
 test/sem_test.sql:XXXX:1: error: in str : CQL0436: alias referenced from WHERE, GROUP BY, HAVING, or WINDOW clause 'y'
@@ -532,7 +532,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0206: duplicate name in list 'curre
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
-test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0052: select *, T.*, or columns(...) cannot be used with no FROM clause
+test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0052: select *, T.*, or @columns(...) cannot be used with no FROM clause
 test/sem_test.sql:XXXX:1: error: in str : CQL0054: table not found 'T'
 Incompatible declarations found
 test/sem_test.sql:XXXX:1: error: in declare_func_stmt : DECLARE FUNC simple_func (arg1 INT) REAL!
@@ -1490,7 +1490,7 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
 test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, table, or view 'this_is_not_a_shape'
 test/sem_test.sql:XXXX:1: error: in shape_def : CQL0069: name not found 'cost'
 test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0069: name not found 'simple_shape.cost'
-test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0052: select *, T.*, or columns(...) cannot be used with no FROM clause
+test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0052: select *, T.*, or @columns(...) cannot be used with no FROM clause
 test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0012: incompatible types in expression 'two_col_v3.r'
 test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0069: name not found 'two_col_v3.t'
 test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0012: incompatible types in expression 'two_col_v3.r'

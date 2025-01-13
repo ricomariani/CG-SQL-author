@@ -1406,7 +1406,7 @@ static void jfind_cleanup(jfind_t *jfind) {
 
 // This will check if the indicated column of the required sptr is a type match
 // for the same column name (maybe different index) in the actual column.  We
-// have to do this because we want to make sure that when you say COLUMNS(X like foo)
+// have to do this because we want to make sure that when you say @COLUMNS(X like foo)
 // that the foo columns of X are the same type as those in foo.
 static bool_t verify_matched_column(
   ast_node *ast,
@@ -1449,7 +1449,7 @@ cleanup:
 }
 
 // Here we've found one column_calculation node, this corresponds to a single
-// instance of COLUMNS(...) in the select list.  When we process this, we
+// instance of @COLUMNS(...) in the select list.  When we process this, we
 // will replace it with its expansion.  Note that each one is independent
 // so often you really only need one (distinct is less powerful if you have two or more).
 static void rewrite_column_calculation(ast_node *column_calculation, jfind_t *jfind) {
@@ -1618,18 +1618,18 @@ cleanup:
 }
 
 // At this point we're going to walk the select expression list looking for
-// the construct COLUMNS(...) with its various forms.  This is a generalization
+// the construct @COLUMNS(...) with its various forms.  This is a generalization
 // of the T.* syntax that allows you to pull slices of the tables and to
 // get distinct columns where there are duplicates due to joins.  Ultimately
 // this is just sugar but the point is that there could be dozens of such columns
 // and if you have to type it all yourself it is very easy to get it wrong. So
-// here we're going to expand out the COLUMNS(...) operator into the actual
+// here we're going to expand out the @COLUMNS(...) operator into the actual
 // tables/columns you requested.  SQLite, has no support for this sort of thing
 // so it, and indeed the rest of the compilation chain, will just see the result
 // of the expansion.
 cql_noexport void rewrite_select_expr_list(ast_node *select_expr_list, sem_join *jptr_from) {
 
-  // change * and T.* to COLUMNS(T) or COLUMNS(A, B, C) as appropriate
+  // change * and T.* to @COLUMNS(T) or @COLUMNS(A, B, C) as appropriate
   rewrite_star_and_table_star_as_columns_calc(select_expr_list, jptr_from);
 
   jfind_t jfind = {0};
@@ -1637,11 +1637,11 @@ cql_noexport void rewrite_select_expr_list(ast_node *select_expr_list, sem_join 
   for (ast_node *item = select_expr_list; item; item = item->right) {
     Contract(is_ast_select_expr_list(item));
 
-    // all star and table star will be rewritten to columns(...) by now so any left will indicate
+    // all star and table star will be rewritten to @columns(...) by now so any left will indicate
     // jptr_from is null like a select with no from clause.
     if (is_ast_column_calculation(item->left) || is_ast_star(item->left) || is_ast_table_star(item->left)) {
       if (!jptr_from) {
-        report_error(select_expr_list, "CQL0052: select *, T.*, or columns(...) cannot be used with no FROM clause", NULL);
+        report_error(select_expr_list, "CQL0052: select *, T.*, or @columns(...) cannot be used with no FROM clause", NULL);
         record_error(item->left);
         record_error(select_expr_list);
         return;
@@ -4036,7 +4036,7 @@ cql_noexport void rewrite_star_and_table_star_as_columns_calc(
       // if we have * then we need to expand it to the full list of columns
       // we need to do this first because it could include backed columns
       // the usual business of delaying this until codegen time doesn't work
-      // fortunately we have a rewrite ready for this case, COLUMNS(T)
+      // fortunately we have a rewrite ready for this case, @COLUMNS(T)
       // so we'll swap that in for the * right here before we go any further.
       // As it is there is an invariant that * never applies to backed tables
       // because in the select form the backed table is instantly replaced with

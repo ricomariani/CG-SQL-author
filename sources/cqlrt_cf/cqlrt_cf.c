@@ -81,8 +81,8 @@ void *_Nonnull cql_get_blob_bytes(cql_blob_ref _Nonnull blob)  {
   return (void *_Nonnull)CFDataGetBytePtr(blob);
 }
 
-cql_int64 cql_get_blob_size(cql_blob_ref _Nonnull blob)  {
-  return CFDataGetLength(blob);
+cql_int32 cql_get_blob_size(cql_blob_ref _Nonnull blob)  {
+  return (cql_int32)CFDataGetLength(blob);
 }
 
 cql_blob_ref _Nonnull cql_blob_ref_new(const void *_Nonnull bytes, cql_int64 size) {

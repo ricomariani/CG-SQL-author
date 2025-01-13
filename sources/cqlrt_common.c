@@ -1219,7 +1219,7 @@ static void cql_multibind_v(
         case CQL_DATA_TYPE_BLOB: {
           cql_blob_ref blob_ref = va_arg(*args, cql_blob_ref);
           const void *bytes = cql_get_blob_bytes(blob_ref);
-          cql_uint32 size = (cql_uint32)cql_get_blob_size(blob_ref);
+          cql_uint32 size = cql_get_blob_size(blob_ref);
           *prc = sqlite3_bind_blob(*pstmt, column, bytes, size, SQLITE_TRANSIENT);
           column++;
           break;
@@ -1282,7 +1282,7 @@ static void cql_multibind_v(
           }
           else {
             const void *bytes = cql_get_blob_bytes(nullable_blob_ref);
-            cql_uint32 size = (cql_uint32)cql_get_blob_size(nullable_blob_ref);
+            cql_uint32 size = cql_get_blob_size(nullable_blob_ref);
             *prc = sqlite3_bind_blob(*pstmt, column, bytes, size, SQLITE_TRANSIENT);
           }
           column++;
@@ -2851,7 +2851,7 @@ cql_code cql_cursor_to_blob(
         case CQL_DATA_TYPE_BLOB: {
           cql_blob_ref blob_ref = *(cql_blob_ref *)(cursor + offset);
           const void *bytes = cql_get_blob_bytes(blob_ref);
-          cql_int32 size = (cql_uint32)cql_get_blob_size(blob_ref);
+          cql_int32 size = cql_get_blob_size(blob_ref);
           cql_write_varint_32(&b, size);
           cql_bytebuf_append(&b, bytes, size);
           break;
@@ -2910,7 +2910,7 @@ cql_code cql_cursor_to_blob(
           if (blob_ref) {
             cql_setbit(bits, nullable_index);
             const void *bytes = cql_get_blob_bytes(blob_ref);
-            cql_int32 size = (cql_uint32)cql_get_blob_size(blob_ref);
+            cql_int32 size = cql_get_blob_size(blob_ref);
             cql_write_varint_32(&b, size);
             cql_bytebuf_append(&b, bytes, size);
           }
@@ -3019,7 +3019,7 @@ cql_code cql_cursor_from_blob(
 
   cql_input_buf input;
   input.data = bytes;
-  input.remaining = (cql_uint32)cql_get_blob_size(b);
+  input.remaining = cql_get_blob_size(b);
 
   uint16_t needed_count = offsets[0];  // the first index is the count of fields
 
@@ -4252,7 +4252,7 @@ static void cql_format_one_cursor_column(
       }
       case CQL_DATA_TYPE_BLOB: {
         cql_blob_ref blob_ref = *(cql_blob_ref *)(cursor + offset);
-        cql_uint32 size = (cql_uint32)cql_get_blob_size(blob_ref);
+        cql_uint32 size = cql_get_blob_size(blob_ref);
         cql_bprintf(b, "length %d blob", size);
         break;
       }
@@ -4322,7 +4322,7 @@ static void cql_format_one_cursor_column(
           cql_bprintf(b, "null");
         }
         else {
-          cql_uint32 size = (cql_uint32)cql_get_blob_size(blob_ref);
+          cql_uint32 size = cql_get_blob_size(blob_ref);
           cql_bprintf(b, "length %d blob", size);
         }
         break;
@@ -5198,7 +5198,7 @@ static void cql_write_big_endian_u64(uint8_t *_Nonnull b, uint64_t val) {
 
 // four byte portable big endian decoding
 static uint32_t cql_read_big_endian_u32(const uint8_t *_Nonnull b) {
-  uint64_t val = b[0];
+  uint32_t val = b[0];
   val = (val << 8) | b[1];
   val = (val << 8) | b[2];
   val = (val << 8) | b[3];

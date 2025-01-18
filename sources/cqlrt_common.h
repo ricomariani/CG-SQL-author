@@ -16,6 +16,13 @@
 #include <limits.h>
 #include <setjmp.h>
 
+// CQLABI is used to mark functions that are called via the CQL ABI
+// These functions are callable from CQL as functions or procedures
+// so they must use only data types that CQL understands, i.e.
+// the CQL ABI.  This sometimes means things that you would expect
+// to be unsigned are signed because CQL has no unsigned types.
+// It also means there are no complex structure types etc.
+
 #ifdef __cplusplus
 #define CQL_EXTERN_C_BEGIN extern "C" {
 #define CQL_EXTERN_C_END }
@@ -373,6 +380,7 @@ CQL_EXPORT void cql_bprintf(
 
 CQL_EXPORT void cql_bytebuf_append_null(cql_bytebuf *_Nonnull buffer);
 
+// CQLABI
 CQL_EXPORT cql_string_ref _Nonnull cql_cursor_format(cql_dynamic_cursor *_Nonnull dyn_cursor);
 
 // teardown all the internal data for the given result_set
@@ -392,22 +400,27 @@ CQL_EXPORT void cql_release_offsets(
 CQL_EXPORT cql_hash_code cql_row_hash(cql_result_set_ref _Nonnull result_set, cql_int32 row);
 
 // hash a cursor using the metadata (CQL compatible types)
+// CQLABI
 cql_int64 cql_cursor_hash(cql_dynamic_cursor *_Nonnull dyn_cursor);
 
 // compare cursors using metadata
+// CQLABI
 cql_bool cql_cursors_equal(cql_dynamic_cursor *_Nonnull c1, cql_dynamic_cursor *_Nonnull c2);
 
 // generic access to type of nth column
+// CQLABI
 CQL_EXPORT cql_int32 cql_cursor_column_type(
   cql_dynamic_cursor *_Nonnull dyn_cursor,
   cql_int32 i);
 
 // generic access to name of nth column
+// CQLABI
 CQL_EXPORT cql_string_ref _Nullable cql_cursor_column_name(
   cql_dynamic_cursor *_Nonnull dyn_cursor,
   cql_int32 i);
 
 // generic string conversion for column, useful for diagnostics
+// CQLABI
 CQL_EXPORT cql_string_ref _Nonnull cql_cursor_format_column(
   cql_dynamic_cursor *_Nonnull dyn_cursor,
   cql_int32 i);
@@ -678,69 +691,86 @@ CQL_EXPORT cql_object_ref _Nonnull cql_extract_partition(
 
 // String dictionary helpers, a simple hash table wrapper with very basic
 // dictionary functions.  Used by lots of things.
+// CQLABI
 CQL_EXPORT cql_object_ref _Nonnull cql_string_dictionary_create(void);
 
+// CQLABI
 CQL_EXPORT cql_bool cql_string_dictionary_add(
   cql_object_ref _Nonnull dict,
   cql_string_ref _Nonnull key,
   cql_string_ref _Nonnull val);
 
+// CQLABI
 CQL_EXPORT cql_string_ref _Nullable cql_string_dictionary_find(
   cql_object_ref _Nonnull dict,
   cql_string_ref _Nullable key);
 
 // Long dictionary helpers, a simple hash table wrapper with very basic
 // dictionary functions.
+// CQLABI
 CQL_EXPORT cql_object_ref _Nonnull cql_long_dictionary_create(void);
 
+// CQLABI
 CQL_EXPORT cql_bool cql_long_dictionary_add(
   cql_object_ref _Nonnull dict,
   cql_string_ref _Nonnull key,
   cql_int64 val);
 
+// CQLABI
 CQL_EXPORT cql_nullable_int64 cql_long_dictionary_find(
   cql_object_ref _Nonnull dict,
   cql_string_ref _Nullable key);
 
 // Real dictionary helpers, a simple hash table wrapper with very basic
 // dictionary functions.
+// CQLABI
 CQL_EXPORT cql_object_ref _Nonnull cql_real_dictionary_create(void);
 
+// CQLABI
 CQL_EXPORT cql_bool cql_real_dictionary_add(
   cql_object_ref _Nonnull dict,
   cql_string_ref _Nonnull key,
   cql_double val);
 
+// CQLABI
 CQL_EXPORT cql_nullable_double cql_real_dictionary_find(
   cql_object_ref _Nonnull dict,
   cql_string_ref _Nullable key);
 
 // object dictionary has the same contract as string dictionary except the
 // stored type. It uses the same code internally
+// CQLABI
 CQL_EXPORT cql_object_ref _Nonnull cql_object_dictionary_create(void);
 
+// CQLABI
 CQL_EXPORT cql_bool cql_object_dictionary_add(
   cql_object_ref _Nonnull dict,
   cql_string_ref _Nonnull key,
   cql_object_ref _Nonnull val);
 
+// CQLABI
 CQL_EXPORT cql_object_ref _Nullable cql_object_dictionary_find(
   cql_object_ref _Nonnull dict,
   cql_string_ref _Nullable key);
 
 // String list helpers
+// CQLABI
 CQL_EXPORT cql_object_ref _Nonnull cql_string_list_create(void);
 
+// CQLABI
 CQL_EXPORT cql_object_ref _Nonnull cql_string_list_add(
   cql_object_ref _Nonnull list,
   cql_string_ref _Nonnull string);
 
+// CQLABI
 CQL_EXPORT cql_int32 cql_string_list_count(cql_object_ref _Nonnull list);
 
+// CQLABI
 CQL_EXPORT cql_string_ref _Nonnull cql_string_list_get_at(
   cql_object_ref _Nonnull list,
   cql_int32 index);
 
+// CQLABI
 CQL_EXPORT cql_object_ref _Nonnull cql_string_list_set_at(
   cql_object_ref _Nonnull list,
   cql_int32 index,
@@ -749,70 +779,89 @@ CQL_EXPORT cql_object_ref _Nonnull cql_string_list_set_at(
 // Blob list helpers
 CQL_EXPORT cql_object_ref _Nonnull cql_blob_list_create(void);
 
+// CQLABI
 CQL_EXPORT cql_object_ref _Nonnull cql_blob_list_add(
   cql_object_ref _Nonnull list,
   cql_blob_ref _Nonnull value);
 
+// CQLABI
 CQL_EXPORT cql_int32 cql_blob_list_count(cql_object_ref _Nonnull list);
 
+// CQLABI
 CQL_EXPORT cql_blob_ref _Nonnull cql_blob_list_get_at(
   cql_object_ref _Nonnull list,
   cql_int32 index);
 
+// CQLABI
 CQL_EXPORT cql_object_ref _Nonnull cql_blob_list_set_at(
   cql_object_ref _Nonnull list,
   cql_int32 index,
   cql_blob_ref _Nonnull value);
 
 // Object list helpers
+// CQLABI
 CQL_EXPORT cql_object_ref _Nonnull cql_object_list_create(void);
 
+// CQLABI
 CQL_EXPORT cql_object_ref _Nonnull cql_object_list_add(
   cql_object_ref _Nonnull list,
   cql_object_ref _Nonnull value);
 
+// CQLABI
 CQL_EXPORT cql_int32 cql_object_list_count(cql_object_ref _Nonnull list);
 
+// CQLABI
 CQL_EXPORT cql_object_ref _Nonnull cql_object_list_get_at(
   cql_object_ref _Nonnull list,
   cql_int32 index);
 
+// CQLABI
 CQL_EXPORT cql_object_ref _Nonnull cql_object_list_set_at(
   cql_object_ref _Nonnull list,
   cql_int32 index,
   cql_object_ref _Nonnull value);
 
 // Long list helpers
+// CQLABI
 CQL_EXPORT cql_object_ref _Nonnull cql_long_list_create(void);
 
+// CQLABI
 CQL_EXPORT cql_object_ref _Nonnull cql_long_list_add(
   cql_object_ref _Nonnull list,
   cql_int64 value);
 
+// CQLABI
 CQL_EXPORT cql_int32 cql_long_list_count(cql_object_ref _Nonnull list);
 
+// CQLABI
 CQL_EXPORT cql_int64 cql_long_list_get_at(
   cql_object_ref _Nonnull list,
   cql_int32 index);
 
+// CQLABI
 CQL_EXPORT cql_object_ref _Nonnull cql_long_list_set_at(
   cql_object_ref _Nonnull list,
   cql_int32 index,
   cql_int64 value);
 
 // Real list helpers
+// CQLABI
 CQL_EXPORT cql_object_ref _Nonnull cql_real_list_create(void);
 
+// CQLABI
 CQL_EXPORT cql_object_ref _Nonnull cql_real_list_add(
   cql_object_ref _Nonnull list,
   cql_double value);
 
+// CQLABI
 CQL_EXPORT cql_int32 cql_real_list_count(cql_object_ref _Nonnull list);
 
+// CQLABI
 CQL_EXPORT cql_double cql_real_list_get_at(
   cql_object_ref _Nonnull list,
   cql_int32 index);
 
+// CQLABI
 CQL_EXPORT cql_object_ref _Nonnull cql_real_list_set_at(
   cql_object_ref _Nonnull list,
   cql_int32 index,
@@ -830,20 +879,49 @@ CQL_EXPORT sqlite3_stmt *_Nullable cql_unbox_stmt(cql_object_ref _Nonnull ref);
 
 
 // boxing helpers for primitive types
+// CQLABI
 CQL_EXPORT cql_object_ref _Nonnull cql_box_int(cql_nullable_int32 data);
+
+// CQLABI
 CQL_EXPORT cql_nullable_int32 cql_unbox_int(cql_object_ref _Nullable box);
+
+// CQLABI
 CQL_EXPORT cql_object_ref _Nonnull cql_box_real(cql_nullable_double data);
+
+// CQLABI
 CQL_EXPORT cql_nullable_double cql_unbox_real(cql_object_ref _Nullable box);
+
+// CQLABI
 CQL_EXPORT cql_object_ref _Nonnull cql_box_bool(cql_nullable_bool data);
+
+// CQLABI
 CQL_EXPORT cql_nullable_bool cql_unbox_bool(cql_object_ref _Nullable box);
+
+// CQLABI
 CQL_EXPORT cql_object_ref _Nonnull cql_box_long(cql_nullable_int64 data);
+
+// CQLABI
 CQL_EXPORT cql_nullable_int64 cql_unbox_long(cql_object_ref _Nullable box);
+
+// CQLABI
 CQL_EXPORT cql_object_ref _Nonnull cql_box_text(cql_string_ref _Nullable data);
+
+// CQLABI
 CQL_EXPORT cql_string_ref _Nullable cql_unbox_text(cql_object_ref _Nullable box);
+
+// CQLABI
 CQL_EXPORT cql_object_ref _Nonnull cql_box_blob(cql_blob_ref _Nullable data);
+
+// CQLABI
 CQL_EXPORT cql_blob_ref _Nullable cql_unbox_blob(cql_object_ref _Nullable box);
+
+// CQLABI
 CQL_EXPORT cql_object_ref _Nonnull cql_box_object(cql_object_ref _Nullable data);
+
+// CQLABI
 CQL_EXPORT cql_object_ref _Nullable cql_unbox_object(cql_object_ref _Nullable box);
+
+// CQLABI
 CQL_EXPORT cql_int32 cql_box_get_type(cql_object_ref _Nullable box);
 
 // String literals can be stored in a compressed format using the --compress
@@ -915,8 +993,10 @@ void bupdateval(
   cql_int32 argc,
   sqlite3_value *_Nonnull *_Nonnull argv);
 
+// CQLABI
 CQL_EXPORT cql_code cql_throw(sqlite3 *_Nonnull db, int code);
 
+// CQLABI
 CQL_EXPORT cql_blob_ref _Nonnull cql_blob_from_int(
   cql_string_ref _Nullable prefix,
   cql_int32 value);

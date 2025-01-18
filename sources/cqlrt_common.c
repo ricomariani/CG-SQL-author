@@ -2749,6 +2749,7 @@ static void cql_write_varint_64(cql_bytebuf *_Nonnull buf, int64_t si) {
 // about the cursor.  By the time this is called many checks have been made
 // about the suitability of this cursor for serialization (e.g. no OBJECT
 // fields). As a consequence we get a nice simple strategy that is flexible.
+// CQLABI
 cql_code cql_cursor_to_blob(
   sqlite3 *_Nonnull db,
   cql_dynamic_cursor *_Nonnull dyn_cursor,
@@ -2935,6 +2936,7 @@ cql_code cql_cursor_to_blob(
 // "value = 0" so the whole thing can be hashed with impunity even when it is in
 // the null state.  With not much work this assumption could be removed if
 // needed at a later time.
+// CQLABI
 cql_int64 cql_cursor_hash(
   cql_dynamic_cursor *_Nonnull dyn_cursor)
 {
@@ -2954,6 +2956,7 @@ cql_int64 cql_cursor_hash(
 // "value = 0" so the whole thing can be hashed with impunity even when it is in
 // the null state.  With not much work this assumption could be removed if
 // needed at a later time.
+// CQLABI
 cql_bool cql_cursors_equal(
   cql_dynamic_cursor *_Nonnull c1,
   cql_dynamic_cursor *_Nonnull c2)
@@ -2995,6 +2998,7 @@ static void cql_clear_references_before_deserialization(
      goto error; \
    }
 
+// CQLABI
 cql_code cql_cursor_from_blob(
   sqlite3 *_Nonnull db,
   cql_dynamic_cursor *_Nonnull dyn_cursor,
@@ -3632,6 +3636,7 @@ static void cql_string_dictionary_finalize(void *_Nonnull data) {
 }
 
 // This makes a simple string dictionary with retained strings
+// CQLABI
 cql_object_ref _Nonnull cql_string_dictionary_create(void) {
 
   // we can re-use the hash, equality, retain, and release from the
@@ -3655,6 +3660,7 @@ cql_object_ref _Nonnull cql_string_dictionary_create(void) {
 }
 
 // Delegate the add operation to the internal hashtable
+// CQLABI
 cql_bool cql_string_dictionary_add(
   cql_object_ref _Nonnull dict,
   cql_string_ref _Nonnull key,
@@ -3682,6 +3688,7 @@ cql_bool cql_string_dictionary_add(
 }
 
 // Lookup the given string in the hash table, note that we do not retain the string
+// CQLABI
 cql_string_ref _Nullable cql_string_dictionary_find(
   cql_object_ref _Nonnull dict,
   cql_string_ref _Nullable key)
@@ -3703,6 +3710,7 @@ cql_string_ref _Nullable cql_string_dictionary_find(
 // is the usual cql_hashtab but the keys are strings and the values are
 // longs.  The keys are retained and released as strings.  The long values
 // of course fit directly in the hash table which holds cql_int64 natively.
+// CQLABI
 cql_object_ref _Nonnull cql_long_dictionary_create(void) {
 
   // we can re-use the hash, equality, retain, and release from the
@@ -3727,6 +3735,7 @@ cql_object_ref _Nonnull cql_long_dictionary_create(void) {
 }
 
 // Delegate the add operation to the internal hashtable
+// CQLABI
 cql_bool cql_long_dictionary_add(
   cql_object_ref _Nonnull dict,
   cql_string_ref _Nonnull key,
@@ -3749,6 +3758,7 @@ cql_bool cql_long_dictionary_add(
 }
 
 // Lookup the given string in the hash table, note that we do not retain the string
+// CQLABI
 cql_nullable_int64 cql_long_dictionary_find(
   cql_object_ref _Nonnull dict,
   cql_string_ref _Nullable key)
@@ -3783,6 +3793,7 @@ cql_nullable_int64 cql_long_dictionary_find(
 // specific conversion for you.  cql_hashtab could be generalized so that it
 // holds a union for its values but at this point int64 does the job so we just
 // go with that.
+// CQLABI
 cql_object_ref _Nonnull cql_real_dictionary_create(void) {
 
   // we can re-use the hash, equality, retain, and release from the
@@ -3807,6 +3818,7 @@ cql_object_ref _Nonnull cql_real_dictionary_create(void) {
 }
 
 // Delegate the add operation to the internal hashtable
+// CQLABI
 cql_bool cql_real_dictionary_add(
   cql_object_ref _Nonnull dict,
   cql_string_ref _Nonnull key,
@@ -3838,6 +3850,7 @@ cql_bool cql_real_dictionary_add(
 }
 
 // Lookup the given string in the hash table, note that we do not retain the string
+// CQLABI
 cql_nullable_double cql_real_dictionary_find(
   cql_object_ref _Nonnull dict,
   cql_string_ref _Nullable key)
@@ -3865,12 +3878,14 @@ cql_nullable_double cql_real_dictionary_find(
 }
 
 // This makes a simple object dictionary with retained strings
+// CQLABI
 cql_object_ref _Nonnull cql_object_dictionary_create(void) {
   // it's the same as a string dictionary internally as it's just object refs
   return cql_string_dictionary_create();
 }
 
 // Delegate the add operation to the internal hashtable
+// CQLABI
 cql_bool cql_object_dictionary_add(
   cql_object_ref _Nonnull dict,
   cql_string_ref _Nonnull key,
@@ -3882,6 +3897,7 @@ cql_bool cql_object_dictionary_add(
 }
 
 // Lookup the given string in the hash table, note that we do not retain the result
+// CQLABI
 cql_object_ref _Nullable cql_object_dictionary_find(
   cql_object_ref _Nonnull dict,
   cql_string_ref _Nullable key)
@@ -3892,12 +3908,14 @@ cql_object_ref _Nullable cql_object_dictionary_find(
 }
 
 // This makes a simple blob dictionary with retained strings
+// CQLABI
 cql_object_ref _Nonnull cql_blob_dictionary_create(void) {
   // it's the same as a string dictionary internally as it's just object refs
   return cql_string_dictionary_create();
 }
 
 // Delegate the add operation to the internal hashtable
+// CQLABI
 cql_bool cql_blob_dictionary_add(
   cql_object_ref _Nonnull dict,
   cql_string_ref _Nonnull key,
@@ -3909,6 +3927,7 @@ cql_bool cql_blob_dictionary_add(
 }
 
 // Lookup the given string in the hash table, note that we do not retain the result
+// CQLABI
 cql_blob_ref _Nullable cql_blob_dictionary_find(
   cql_object_ref _Nonnull dict,
   cql_string_ref _Nullable key)
@@ -3932,6 +3951,7 @@ static void cql_string_list_finalize(void *_Nonnull data) {
 }
 
 // Creates the string list storage using a byte buffer
+// CQLABI
 cql_object_ref _Nonnull cql_string_list_create(void) {
   cql_bytebuf *self = calloc(1, sizeof(cql_bytebuf));
   cql_bytebuf_open(self);
@@ -3939,6 +3959,7 @@ cql_object_ref _Nonnull cql_string_list_create(void) {
 }
 
 // Adds a string to the given string list and retains it.
+// CQLABI
 cql_object_ref _Nonnull cql_string_list_add(cql_object_ref _Nonnull list, cql_string_ref _Nonnull string) {
   cql_contract(list);
   cql_contract(string);
@@ -3950,6 +3971,7 @@ cql_object_ref _Nonnull cql_string_list_add(cql_object_ref _Nonnull list, cql_st
 }
 
 // Returns the number of elements in the given string list
+// CQLABI
 cql_int32 cql_string_list_count(cql_object_ref _Nonnull list) {
   cql_contract(list);
 
@@ -3958,6 +3980,7 @@ cql_int32 cql_string_list_count(cql_object_ref _Nonnull list) {
 }
 
 // Returns the nth string from the string list with no extra retain (get semantics)
+// CQLABI
 cql_string_ref _Nonnull cql_string_list_get_at(
   cql_object_ref _Nonnull list,
   cql_int32 index)
@@ -3975,6 +3998,7 @@ cql_string_ref _Nonnull cql_string_list_get_at(
 }
 
 // Edits the string item in place
+// CQLABI
 cql_object_ref _Nonnull cql_string_list_set_at(
   cql_object_ref _Nonnull list,
   cql_int32 index,
@@ -3994,6 +4018,7 @@ cql_object_ref _Nonnull cql_string_list_set_at(
   return list;
 }
 
+// CQLABI
 cql_object_ref _Nonnull cql_object_list_create(void) {
   // the details are the same for strings as objects
   return cql_string_list_create();
@@ -4007,11 +4032,13 @@ cql_object_ref _Nonnull cql_object_list_add(
   return cql_string_list_add(list, (cql_string_ref)value);
 }
 
+// CQLABI
 cql_int32 cql_object_list_count(cql_object_ref _Nonnull list) {
   // the details are the same for strings as objects
   return cql_string_list_count(list);
 }
 
+// CQLABI
 cql_object_ref _Nonnull cql_object_list_get_at(
   cql_object_ref _Nonnull list,
   cql_int32 index)
@@ -4020,6 +4047,7 @@ cql_object_ref _Nonnull cql_object_list_get_at(
   return (cql_object_ref)cql_string_list_get_at(list, index);
 }
 
+// CQLABI
 cql_object_ref _Nonnull cql_object_list_set_at(
   cql_object_ref _Nonnull list,
   cql_int32 index,
@@ -4029,11 +4057,13 @@ cql_object_ref _Nonnull cql_object_list_set_at(
   return cql_string_list_set_at(list, index, (cql_string_ref)value);
 }
 
+// CQLABI
 cql_object_ref _Nonnull cql_blob_list_create(void) {
   // the details are the same for strings as blobs
   return cql_string_list_create();
 }
 
+// CQLABI
 cql_object_ref _Nonnull cql_blob_list_add(
   cql_object_ref _Nonnull list,
   cql_blob_ref _Nonnull value)
@@ -4042,11 +4072,13 @@ cql_object_ref _Nonnull cql_blob_list_add(
   return cql_string_list_add(list, (cql_string_ref)value);
 }
 
+// CQLABI
 cql_int32 cql_blob_list_count(cql_object_ref _Nonnull list) {
   // the details are the same for strings as blobs
   return cql_string_list_count(list);
 }
 
+// CQLABI
 cql_blob_ref _Nonnull cql_blob_list_get_at(
   cql_object_ref _Nonnull list,
   cql_int32 index)
@@ -4055,6 +4087,7 @@ cql_blob_ref _Nonnull cql_blob_list_get_at(
   return (cql_blob_ref)cql_string_list_get_at(list, index);
 }
 
+// CQLABI
 cql_object_ref _Nonnull cql_blob_list_set_at(
   cql_object_ref _Nonnull list,
   cql_int32 index,
@@ -4072,6 +4105,7 @@ static void cql_long_list_finalize(void *_Nonnull data) {
 }
 
 // Creates the list storage using a byte buffer
+// CQLABI
 cql_object_ref _Nonnull cql_long_list_create(void) {
   cql_bytebuf *self = calloc(1, sizeof(cql_bytebuf));
   cql_bytebuf_open(self);
@@ -4079,7 +4113,11 @@ cql_object_ref _Nonnull cql_long_list_create(void) {
 }
 
 // Adds a long to the given list
-cql_object_ref _Nonnull cql_long_list_add(cql_object_ref _Nonnull list, cql_int64 value) {
+// CQLABI
+cql_object_ref _Nonnull cql_long_list_add(
+  cql_object_ref _Nonnull list,
+  cql_int64 value)
+{
   cql_contract(list);
   cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
   cql_bytebuf_append(self, &value, sizeof(value));
@@ -4087,6 +4125,7 @@ cql_object_ref _Nonnull cql_long_list_add(cql_object_ref _Nonnull list, cql_int6
 }
 
 // Returns the number of elements in the given list
+// CQLABI
 cql_int32 cql_long_list_count(cql_object_ref _Nonnull list) {
   cql_contract(list);
 
@@ -4095,6 +4134,7 @@ cql_int32 cql_long_list_count(cql_object_ref _Nonnull list) {
 }
 
 // Returns the nth long from the list
+// CQLABI
 cql_int64 cql_long_list_get_at(
   cql_object_ref _Nonnull list,
   cql_int32 index)
@@ -4110,6 +4150,7 @@ cql_int64 cql_long_list_get_at(
 }
 
 // Edits the item in place
+// CQLABI
 cql_object_ref _Nonnull cql_long_list_set_at(
   cql_object_ref _Nonnull list,
   cql_int32 index,
@@ -4129,6 +4170,7 @@ cql_object_ref _Nonnull cql_long_list_set_at(
 }
 
 // Creates the list storage using a byte buffer
+// CQLABI
 cql_object_ref _Nonnull cql_real_list_create(void) {
   cql_bytebuf *self = calloc(1, sizeof(cql_bytebuf));
   cql_bytebuf_open(self);
@@ -4137,7 +4179,11 @@ cql_object_ref _Nonnull cql_real_list_create(void) {
 }
 
 // Adds a real to the given list
-cql_object_ref _Nonnull cql_real_list_add(cql_object_ref _Nonnull list, cql_double value) {
+// CQLABI
+cql_object_ref _Nonnull cql_real_list_add(
+  cql_object_ref _Nonnull list,
+  cql_double value)
+{
   cql_contract(list);
   cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
   cql_bytebuf_append(self, &value, sizeof(value));
@@ -4145,6 +4191,7 @@ cql_object_ref _Nonnull cql_real_list_add(cql_object_ref _Nonnull list, cql_doub
 }
 
 // Returns the number of elements in the given list
+// CQLABI
 cql_int32 cql_real_list_count(cql_object_ref _Nonnull list) {
   cql_contract(list);
 
@@ -4153,6 +4200,7 @@ cql_int32 cql_real_list_count(cql_object_ref _Nonnull list) {
 }
 
 // Returns the nth long from the list
+// CQLABI
 cql_double cql_real_list_get_at(
   cql_object_ref _Nonnull list,
   cql_int32 index)
@@ -4168,6 +4216,7 @@ cql_double cql_real_list_get_at(
 }
 
 // Edits the item in place
+// CQLABI
 cql_object_ref _Nonnull cql_real_list_set_at(
   cql_object_ref _Nonnull list,
   cql_int32 index,
@@ -4357,6 +4406,7 @@ static void cql_format_one_cursor_column(
 // I'm not even sure sqlite printf is invariant between systems on that score.
 //
 // this is also available as <some_cursor>:format
+// CQLABI
 cql_string_ref _Nonnull cql_cursor_format(
   cql_dynamic_cursor *_Nonnull dyn_cursor)
 {
@@ -4521,6 +4571,7 @@ static cql_bool cql_compare_one_cursor_column(
   }
 }
 
+// CQLABI
 cql_int32 cql_cursor_diff_index(
   cql_dynamic_cursor *_Nonnull dyn_cursor1,
   cql_dynamic_cursor *_Nonnull dyn_cursor2)
@@ -4551,6 +4602,7 @@ cql_int32 cql_cursor_diff_index(
   return -1;
 }
 
+// CQLABI
 cql_string_ref _Nullable cql_cursor_diff_col(
   cql_dynamic_cursor *_Nonnull dyn_cursor1,
   cql_dynamic_cursor *_Nonnull dyn_cursor2)
@@ -4567,6 +4619,7 @@ cql_string_ref _Nullable cql_cursor_diff_col(
   return NULL;
 }
 
+// CQLABI
 cql_string_ref _Nullable cql_cursor_diff_val(
   cql_dynamic_cursor *_Nonnull dyn_cursor1,
   cql_dynamic_cursor *_Nonnull dyn_cursor2)
@@ -4616,6 +4669,7 @@ cql_string_ref _Nullable cql_cursor_diff_val(
 // for dummy data generation and pretty much not interesting
 // for anything else.  The blob is just the ascii representation
 // of the integer value. The blob is not null terminated.
+// CQLABI
 cql_blob_ref _Nonnull cql_blob_from_int(
   cql_string_ref _Nullable prefix,
   cql_int32 value)
@@ -4635,6 +4689,7 @@ cql_blob_ref _Nonnull cql_blob_from_int(
 
 // type of the indicated field
 // this is also available as <some_cursor>:type(i)
+// CQLABI
 cql_int32 cql_cursor_column_type(
   cql_dynamic_cursor *_Nonnull dyn_cursor,
   cql_int32 i)
@@ -4653,6 +4708,7 @@ cql_int32 cql_cursor_column_type(
 
 // name of the indicated field
 // this is also available as <some_cursor>:name(i)
+// CQLABI
 cql_string_ref _Nullable cql_cursor_column_name(
   cql_dynamic_cursor *_Nonnull dyn_cursor,
   cql_int32 i)
@@ -4671,6 +4727,7 @@ cql_string_ref _Nullable cql_cursor_column_name(
 
 // extract a boolean from the indicated field number of the cursor if there is one
 // this is also available as <some_cursor>:to_bool(i)
+// CQLABI
 cql_nullable_bool cql_cursor_get_bool(
   cql_dynamic_cursor *_Nonnull dyn_cursor,
   cql_int32 i)
@@ -4702,6 +4759,7 @@ cql_nullable_bool cql_cursor_get_bool(
 
 // extract an int32 from the indicated field number of the cursor if there is one
 // this is also available as <some_cursor>:to_int(i)
+// CQLABI
 cql_nullable_int32 cql_cursor_get_int(
   cql_dynamic_cursor *_Nonnull dyn_cursor,
   cql_int32 i)
@@ -4733,6 +4791,7 @@ cql_nullable_int32 cql_cursor_get_int(
 
 // extract an int64 from the indicated field number of the cursor if there is one
 // this is also available as <some_cursor>:to_long(i)
+// CQLABI
 cql_nullable_int64 cql_cursor_get_long(
   cql_dynamic_cursor *_Nonnull dyn_cursor,
   cql_int32 i)
@@ -4764,6 +4823,7 @@ cql_nullable_int64 cql_cursor_get_long(
 
 // extract a double from the indicated field number of the cursor if there is one
 // this is also available as <some_cursor>:to_real(i)
+// CQLABI
 cql_nullable_double cql_cursor_get_real(
   cql_dynamic_cursor *_Nonnull dyn_cursor,
   cql_int32 i)
@@ -4795,6 +4855,7 @@ cql_nullable_double cql_cursor_get_real(
 
 // extract a string from the indicated field number of the cursor if there is one
 // this is also available as <some_cursor>:to_text(i)
+// CQLABI
 cql_string_ref _Nullable cql_cursor_get_text(
   cql_dynamic_cursor *_Nonnull dyn_cursor,
   cql_int32 i)
@@ -4820,6 +4881,7 @@ cql_string_ref _Nullable cql_cursor_get_text(
 
 // extract a blob from the indicated field number of the cursor if there is one
 // this is also available as <some_cursor>:to_blob(i)
+// CQLABI
 cql_blob_ref _Nullable cql_cursor_get_blob(
   cql_dynamic_cursor *_Nonnull dyn_cursor,
   cql_int32 i)
@@ -4845,6 +4907,7 @@ cql_blob_ref _Nullable cql_cursor_get_blob(
 
 // extract an object from the indicated field number of the cursor if there is one
 // this is also available as <some_cursor>:to_object(i)
+// CQLABI
 cql_object_ref _Nullable cql_cursor_get_object(
   cql_dynamic_cursor *_Nonnull dyn_cursor,
   cql_int32 i)
@@ -4868,6 +4931,7 @@ cql_object_ref _Nullable cql_cursor_get_object(
   return result;
 }
 
+// CQLABI
 cql_string_ref _Nonnull cql_cursor_format_column(
   cql_dynamic_cursor *_Nonnull dyn_cursor,
   cql_int32 i)
@@ -4890,6 +4954,7 @@ cql_string_ref _Nonnull cql_cursor_format_column(
 }
 
 // total number of fields in the cursor
+// CQLABI
 cql_int32 cql_cursor_column_count(cql_dynamic_cursor *_Nonnull dyn_cursor) {
   uint16_t *offsets = dyn_cursor->cursor_col_offsets;
   return (cql_int32)offsets[0];  // the first index is the count of fields
@@ -6651,6 +6716,7 @@ cleanup:
 }
 
 // use the code to create an "exception" if non-zero
+// CQLABI
 cql_code cql_throw(sqlite3 *_Nonnull db, int code)
 {
    // this is how we throw
@@ -6676,6 +6742,7 @@ static void cql_boxed_value_finalize(void *_Nonnull data) {
 }
 
 // get the type of the thing in the box
+// CQLABI
 cql_int32 cql_box_get_type(cql_object_ref _Nullable box) {
   if (!box) {
     return CQL_DATA_TYPE_NULL;
@@ -6693,6 +6760,7 @@ static cql_object_ref _Nonnull cql_boxed_value_create(void) {
 // Box a bool, note that even null can be boxed and return a not null box
 // that contains null.
 // This is also available as <expr>:box
+// CQLABI
 cql_object_ref _Nonnull cql_box_bool(cql_nullable_bool data) {
     cql_object_ref _Nonnull box = cql_boxed_value_create();
     cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
@@ -6709,6 +6777,7 @@ cql_object_ref _Nonnull cql_box_bool(cql_nullable_bool data) {
 // Extract a bool from a box, if the box is null or the type is wrong
 // the result will be null.
 // This is also available as object<cql_box>:to_bool
+// CQLABI
 cql_nullable_bool cql_unbox_bool(cql_object_ref _Nullable box) {
     cql_nullable_bool result;
     if (!box) {
@@ -6732,6 +6801,7 @@ cql_nullable_bool cql_unbox_bool(cql_object_ref _Nullable box) {
 // Box an integer, note that even null can be boxed and return a not null box
 // that contains null.
 // This is also available as <expr>:box
+// CQLABI
 cql_object_ref _Nonnull cql_box_int(cql_nullable_int32 data) {
     cql_object_ref _Nonnull box = cql_boxed_value_create();
     cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
@@ -6748,6 +6818,7 @@ cql_object_ref _Nonnull cql_box_int(cql_nullable_int32 data) {
 // Extract an integer from a box, if the box is null or the type is wrong
 // the result will be null.
 // This is also available as object<cql_box>:to_int
+// CQLABI
 cql_nullable_int32 cql_unbox_int(cql_object_ref _Nullable box) {
     cql_nullable_int32 result;
     if (!box) {
@@ -6771,6 +6842,7 @@ cql_nullable_int32 cql_unbox_int(cql_object_ref _Nullable box) {
 // Box a long, note that even null can be boxed and return a not null box
 // that contains null.
 // This is also available as <expr>:box
+// CQLABI
 cql_object_ref _Nonnull cql_box_long(cql_nullable_int64 data) {
     cql_object_ref _Nonnull box = cql_boxed_value_create();
     cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
@@ -6787,6 +6859,7 @@ cql_object_ref _Nonnull cql_box_long(cql_nullable_int64 data) {
 // Unbox a long from a box, if the box is null or the type is wrong
 // the result will be null.
 // This is also available as object<cql_box>:to_long
+// CQLABI
 cql_nullable_int64 cql_unbox_long(cql_object_ref _Nullable box) {
     cql_nullable_int64 result;
     if (!box) {
@@ -6810,6 +6883,7 @@ cql_nullable_int64 cql_unbox_long(cql_object_ref _Nullable box) {
 // Box a double, note that even null can be boxed and return a not null box
 // that contains null.
 // This is also available as <expr>:box
+// CQLABI
 cql_object_ref _Nonnull cql_box_real(cql_nullable_double data) {
     cql_object_ref _Nonnull box = cql_boxed_value_create();
     cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
@@ -6826,6 +6900,7 @@ cql_object_ref _Nonnull cql_box_real(cql_nullable_double data) {
 // Extract a double from a box, if the box is null or the type is wrong
 // the result will be null.
 // This is also available as object<cql_box>:to_real
+// CQLABI
 cql_nullable_double cql_unbox_real(cql_object_ref _Nullable box) {
     cql_nullable_double result;
     if (!box) {
@@ -6850,6 +6925,7 @@ cql_nullable_double cql_unbox_real(cql_object_ref _Nullable box) {
 // Box a string, note that even null can be boxed and return a not null box
 // that contains null.
 // This is also available as <expr>:box
+// CQLABI
 cql_object_ref _Nonnull cql_box_text(cql_string_ref _Nullable data) {
     cql_object_ref _Nonnull box = cql_boxed_value_create();
     cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
@@ -6866,6 +6942,7 @@ cql_object_ref _Nonnull cql_box_text(cql_string_ref _Nullable data) {
 // Extract a string from a box or else return null if the type is wrong
 // or if the box is null, or contains null.
 // This is also available as object<cql_box>:to_text
+// CQLABI
 cql_string_ref _Nullable cql_unbox_text(cql_object_ref _Nullable box) {
     if (!box) {
        return NULL;
@@ -6882,6 +6959,7 @@ cql_string_ref _Nullable cql_unbox_text(cql_object_ref _Nullable box) {
 // Box a blob, note that even null can be boxed and return a not null box
 // that contains null.
 // This is also available as <expr>:box
+// CQLABI
 cql_object_ref _Nonnull cql_box_blob(cql_blob_ref _Nullable data) {
     cql_object_ref _Nonnull box = cql_boxed_value_create();
     cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
@@ -6898,6 +6976,7 @@ cql_object_ref _Nonnull cql_box_blob(cql_blob_ref _Nullable data) {
 // Extract a blob from a box or else return null if the type is wrong
 // or if the box is null, or contains null.
 // This is also available as object<cql_box>:to_blob
+// CQLABI
 cql_blob_ref _Nullable cql_unbox_blob(cql_object_ref _Nullable box) {
     if (!box) {
        return NULL;
@@ -6913,6 +6992,7 @@ cql_blob_ref _Nullable cql_unbox_blob(cql_object_ref _Nullable box) {
 // Box an object, note that even null can be boxed and return a not null box
 // that contains null.
 // This is also available as <expr>:box
+// CQLABI
 cql_object_ref _Nonnull cql_box_object(cql_object_ref _Nullable data) {
     cql_object_ref _Nonnull box = cql_boxed_value_create();
     cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
@@ -6929,6 +7009,7 @@ cql_object_ref _Nonnull cql_box_object(cql_object_ref _Nullable data) {
 // Extract an object from a box or else return null if the type is wrong
 // or if the box is null, or contains null.
 // This is also available as object<cql_box>:to_object
+// CQLABI
 cql_object_ref _Nullable cql_unbox_object(cql_object_ref _Nullable box) {
     if (!box) {
        return NULL;
@@ -6965,6 +7046,7 @@ CQL_FORMAT_VAL(string, cql_string_ref _Nullable, CQL_DATA_TYPE_STRING)
 CQL_FORMAT_VAL(blob, cql_blob_ref _Nullable, CQL_DATA_TYPE_BLOB)
 CQL_FORMAT_VAL(object, cql_object_ref _Nullable, CQL_DATA_TYPE_OBJECT)
 
+// CQLABI
 cql_string_ref _Nonnull cql_format_null(cql_nullable_bool b) {
   return cql_string_ref_new("null");
 }

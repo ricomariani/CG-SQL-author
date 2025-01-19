@@ -199,8 +199,8 @@ CQL_WARN_UNUSED cql_code cql_exec_internal(
 
 char *_Nonnull cql_address_of_col(
   cql_result_set_ref _Nonnull result_set,
-  cql_uint32 row,
-  cql_uint32 col,
+  cql_int32 row,
+  cql_int32 col,
   cql_int32 *_Nonnull type);
 
 // The variable byte encoding is little endian, you stop when you reach a byte
@@ -981,7 +981,7 @@ void cql_multifetch(
 void cql_copyoutrow(
   sqlite3 *_Nullable db,
   cql_result_set_ref _Nonnull result_set,
-  cql_uint32 row,
+  cql_int32 row,
   cql_uint32 count, ...)
 {
   cql_contract(result_set);
@@ -989,7 +989,7 @@ void cql_copyoutrow(
   va_list args;
   va_start(args, count);
 
-  cql_uint32 row_count = cql_result_set_get_count(result_set);
+  cql_int32 row_count = cql_result_set_get_count(result_set);
 
   if (row >= row_count || row < 0) {
     cql_multinull(count, &args);
@@ -999,7 +999,7 @@ void cql_copyoutrow(
 
   // Find vault context column
 
-  for (cql_uint32 column = 0; column < count; column++) {
+  for (cql_int32 column = 0; column < count; column++) {
     cql_int32 type = va_arg(args, cql_int32);
     cql_int32 core_data_type_and_not_null = CQL_CORE_DATA_TYPE_OF(type) | (type & CQL_DATA_TYPE_NOT_NULL);
 
@@ -1365,7 +1365,7 @@ void cql_retain_offsets(void *_Nonnull pv, cql_uint16 refs_count, cql_uint16 ref
 void cql_result_set_teardown(cql_result_set_ref _Nonnull result_set) {
   cql_result_set_meta *meta = cql_result_set_get_meta(result_set);
   size_t row_size = meta->rowsize;
-  cql_uint32 count = cql_result_set_get_count(result_set);
+  cql_int32 count = cql_result_set_get_count(result_set);
   cql_uint16 refs_count = meta->refsCount;
   cql_uint16 refs_offset = meta->refsOffset;
   char *_Nullable data = (char *)cql_result_set_get_data(result_set);
@@ -1427,16 +1427,16 @@ static cql_hash_code cql_hash_buffer(
 //   any row of any result set, thereby saving a lot of code generation.
 cql_hash_code cql_row_hash(
   cql_result_set_ref _Nonnull result_set,
-  cql_uint32 row)
+  cql_int32 row)
 {
-  cql_uint32 count = cql_result_set_get_count(result_set);
+  cql_int32 count = cql_result_set_get_count(result_set);
   cql_contract(row < count);
 
   cql_result_set_meta *meta = cql_result_set_get_meta(result_set);
   cql_uint16 refs_count = meta->refsCount;
   cql_uint16 refs_offset = meta->refsOffset;
   size_t row_size = meta->rowsize;
-  char *data = ((char *)cql_result_set_get_data(result_set)) + row * row_size;
+  char *data = ((char *)cql_result_set_get_data(result_set)) + ((size_t)row) * row_size;
 
   return cql_hash_buffer(data, row_size, refs_count, refs_offset);
 }
@@ -1484,12 +1484,12 @@ static cql_bool cql_buffers_equal(
 // can be more economical.  All result sets can use this one function.
 cql_bool cql_rows_equal(
   cql_result_set_ref _Nonnull rs1,
-  cql_uint32 row1,
+  cql_int32 row1,
   cql_result_set_ref _Nonnull rs2,
-  cql_uint32 row2)
+  cql_int32 row2)
 {
-  cql_uint32 count1 = cql_result_set_get_count(rs1);
-  cql_uint32 count2 = cql_result_set_get_count(rs2);
+  cql_int32 count1 = cql_result_set_get_count(rs1);
+  cql_int32 count2 = cql_result_set_get_count(rs2);
   cql_contract(row1 < count1);
   cql_contract(row2 < count2);
 
@@ -1502,8 +1502,8 @@ cql_bool cql_rows_equal(
   cql_contract(meta2->refsOffset == refs_offset);
 
   size_t row_size = meta1->rowsize;
-  char *data1 = ((char *)cql_result_set_get_data(rs1)) + row1 * row_size;
-  char *data2 = ((char *)cql_result_set_get_data(rs2)) + row2 * row_size;
+  char *data1 = ((char *)cql_result_set_get_data(rs1)) + ((size_t)row1) * row_size;
+  char *data2 = ((char *)cql_result_set_get_data(rs2)) + ((size_t)row2) * row_size;
 
   return cql_buffers_equal(data1, data2, row_size, refs_count, refs_offset);
 }
@@ -1538,12 +1538,12 @@ static cql_uint32 nullable_datasizes[] = {
 // guaranteed to be offset order.
 cql_bool cql_rows_same(
   cql_result_set_ref _Nonnull rs1,
-  cql_uint32 row1,
+  cql_int32 row1,
   cql_result_set_ref _Nonnull rs2,
-  cql_uint32 row2)
+  cql_int32 row2)
 {
-  cql_uint32 count1 = cql_result_set_get_count(rs1);
-  cql_uint32 count2 = cql_result_set_get_count(rs2);
+  cql_int32 count1 = cql_result_set_get_count(rs1);
+  cql_int32 count2 = cql_result_set_get_count(rs2);
   cql_contract(row1 < count1);
   cql_contract(row2 < count2);
 
@@ -1558,8 +1558,8 @@ cql_bool cql_rows_same(
   uint16_t *columnOffsets = &(meta1->columnOffsets[1]);
 
   size_t row_size = meta1->rowsize;
-  char *data1 = ((char *)cql_result_set_get_data(rs1)) + row1 * row_size;
-  char *data2 = ((char *)cql_result_set_get_data(rs2)) + row2 * row_size;
+  char *data1 = ((char *)cql_result_set_get_data(rs1)) + ((size_t)row1) * row_size;
+  char *data2 = ((char *)cql_result_set_get_data(rs2)) + ((size_t)row2) * row_size;
 
   for (uint16_t i = 0; i < identityColumnCount; i++) {
     uint16_t col = identityColumns[i];
@@ -1602,8 +1602,8 @@ cql_bool cql_rows_same(
 void cql_rowset_copy(
   cql_result_set_ref _Nonnull result_set,
   cql_result_set_ref _Nonnull *_Nonnull to_result_set,
-  cql_uint32 from,
-  cql_uint32 count)
+  cql_int32 from,
+  cql_int32 count)
 {
   cql_contract(from >= 0);
   cql_contract(from + count <= cql_result_set_get_count(result_set));
@@ -1615,9 +1615,10 @@ void cql_rowset_copy(
 
   size_t row_size = cql_result_set_get_meta(result_set)->rowsize;
 
-  char *new_data = calloc(count, row_size);
-  char *old_data = ((char *)cql_result_set_get_data(result_set))+ row_size * from;
-  memcpy(new_data, old_data, count * row_size);
+  char *new_data = calloc((size_t)count, row_size);
+  char *old_data = ((char *)cql_result_set_get_data(result_set)) + row_size * (size_t)from;
+
+  memcpy(new_data, old_data, ((size_t)(count) * row_size));
 
   char *row = new_data;
   for (cql_int32 i = 0; i < count; i++, row += row_size) {
@@ -1668,13 +1669,13 @@ void cql_rowset_copy(
 // there is a problem actually in this code.
 char *_Nonnull cql_address_of_col(
   cql_result_set_ref _Nonnull result_set,
-  cql_uint32 row,
-  cql_uint32 col,
+  cql_int32 row,
+  cql_int32 col,
   cql_int32 *_Nonnull type)
 {
   // Check to make sure the requested row is a valid row
   // See above for reasons why this might fail.
-  cql_uint32 count = cql_result_set_get_count(result_set);
+  cql_int32 count = cql_result_set_get_count(result_set);
   cql_contract(row < count);
 
   // Check to make sure the meta data has column data
@@ -1697,17 +1698,18 @@ char *_Nonnull cql_address_of_col(
   // column offset, and rowsize and do the math to compute the data pointer.
   cql_uint16 offset = meta->columnOffsets[col + 1];
   size_t row_size = meta->rowsize;
-  return ((char *)cql_result_set_get_data(result_set)) + row * row_size + offset;
+  return ((char *)cql_result_set_get_data(result_set)) + ((size_t)row) * row_size + offset;
 }
 
 // This is the helper method that reads an int32 out of a rowset at a particular
 // row and column. The same helper is used for reading the value from a nullable
 // or not nullable value, so the address helper has to report which kind of
 // datum it is.  All the error checking is in cql_address_of_col.
+// CQLABI
 cql_int32 cql_result_set_get_int32_col(
   cql_result_set_ref _Nonnull result_set,
-  cql_uint32 row,
-  cql_uint32 col)
+  cql_int32 row,
+  cql_int32 col)
 {
   cql_int32 data_type = CQL_DATA_TYPE_INT32;
   char *data = cql_address_of_col(result_set, row, col, &data_type);
@@ -1722,10 +1724,11 @@ cql_int32 cql_result_set_get_int32_col(
 // row and column. The same helper is used for writing the value from a nullable
 // or not nullable value, so the address helper has to report which kind of
 // datum it is.  All the error checking is in cql_address_of_col.
+// CQLABI
 void cql_result_set_set_int32_col(
   cql_result_set_ref _Nonnull result_set,
-  cql_uint32 row,
-  cql_uint32 col,
+  cql_int32 row,
+  cql_int32 col,
   cql_int32 new_value)
 {
   cql_int32 data_type = CQL_DATA_TYPE_INT32;
@@ -1744,10 +1747,11 @@ void cql_result_set_set_int32_col(
 // row and column. The same helper is used for reading the value from a nullable
 // or not nullable value, so the address helper has to report which kind of
 // datum it is.  All the error checking is in cql_address_of_col.
+// CQLABI
 cql_int64 cql_result_set_get_int64_col(
   cql_result_set_ref _Nonnull result_set,
-  cql_uint32 row,
-  cql_uint32 col)
+  cql_int32 row,
+  cql_int32 col)
 {
   cql_int32 data_type = CQL_DATA_TYPE_INT64;
   char *data = cql_address_of_col(result_set, row, col, &data_type);
@@ -1762,10 +1766,11 @@ cql_int64 cql_result_set_get_int64_col(
 // row and column. The same helper is used for writing the value from a nullable
 // or not nullable value, so the address helper has to report which kind of
 // datum it is.  All the error checking is in cql_address_of_col.
+// CQLABI
 void cql_result_set_set_int64_col(
   cql_result_set_ref _Nonnull result_set,
-  cql_uint32 row,
-  cql_uint32 col,
+  cql_int32 row,
+  cql_int32 col,
   cql_int64 new_value)
 {
   cql_int32 data_type = CQL_DATA_TYPE_INT64;
@@ -1784,10 +1789,11 @@ void cql_result_set_set_int64_col(
 // row and column. The same helper is used for reading the value from a nullable
 // or not nullable value, so the address helper has to report which kind of
 // datum it is.  All the error checking is in cql_address_of_col.
+// CQLABI
 cql_double cql_result_set_get_double_col(
   cql_result_set_ref _Nonnull result_set,
-  cql_uint32 row,
-  cql_uint32 col)
+  cql_int32 row,
+  cql_int32 col)
 {
   cql_int32 data_type = CQL_DATA_TYPE_DOUBLE;
   char *data = cql_address_of_col(result_set, row, col, &data_type);
@@ -1802,10 +1808,11 @@ cql_double cql_result_set_get_double_col(
 // row and column. The same helper is used for writing the value from a nullable
 // or not nullable value, so the address helper has to report which kind of
 // datum it is.  All the error checking is in cql_address_of_col.
+// CQLABI
 void cql_result_set_set_double_col(
   cql_result_set_ref _Nonnull result_set,
-  cql_uint32 row,
-  cql_uint32 col,
+  cql_int32 row,
+  cql_int32 col,
   cql_double new_value)
 {
   cql_int32 data_type = CQL_DATA_TYPE_DOUBLE;
@@ -1824,10 +1831,11 @@ void cql_result_set_set_double_col(
 // row and column. The same helper is used for reading the value from a nullable
 // or not nullable value, so the address helper has to report which kind of
 // datum it is.  All the error checking is in cql_address_of_col.
+// CQLABI
 cql_bool cql_result_set_get_bool_col(
   cql_result_set_ref _Nonnull result_set,
-  cql_uint32 row,
-  cql_uint32 col)
+  cql_int32 row,
+  cql_int32 col)
 {
   cql_int32 data_type = CQL_DATA_TYPE_BOOL;
   char *data = cql_address_of_col(result_set, row, col, &data_type);
@@ -1842,10 +1850,11 @@ cql_bool cql_result_set_get_bool_col(
 // row and column. The same helper is used for writing the value from a nullable
 // or not nullable value, so the address helper has to report which kind of
 // datum it is.  All the error checking is in cql_address_of_col.
+// CQLABI
 void cql_result_set_set_bool_col(
   cql_result_set_ref _Nonnull result_set,
-  cql_uint32 row,
-  cql_uint32 col,
+  cql_int32 row,
+  cql_int32 col,
   cql_bool new_value)
 {
   cql_int32 data_type = CQL_DATA_TYPE_BOOL;
@@ -1864,10 +1873,11 @@ void cql_result_set_set_bool_col(
 // row and column. The same helper is used for reading the value from a nullable
 // or not nullable value, so the address helper has to report which kind of
 // datum it is.  All the error checking is in cql_address_of_col.
+// CQLABI
 cql_string_ref _Nullable cql_result_set_get_string_col(
   cql_result_set_ref _Nonnull result_set,
-  cql_uint32 row,
-  cql_uint32 col)
+  cql_int32 row,
+  cql_int32 col)
 {
   cql_int32 data_type = CQL_DATA_TYPE_STRING;
   char *data = cql_address_of_col(result_set, row, col, &data_type);
@@ -1878,10 +1888,11 @@ cql_string_ref _Nullable cql_result_set_get_string_col(
 // row and column. The same helper is used for writing the value from a nullable
 // or not nullable value, so the address helper has to report which kind of
 // datum it is.  All the error checking is in cql_address_of_col.
+// CQLABI
 void cql_result_set_set_string_col(
   cql_result_set_ref _Nonnull result_set,
-  cql_uint32 row,
-  cql_uint32 col,
+  cql_int32 row,
+  cql_int32 col,
   cql_string_ref _Nullable new_value)
 {
   cql_int32 data_type = CQL_DATA_TYPE_STRING;
@@ -1893,10 +1904,11 @@ void cql_result_set_set_string_col(
 // row and column. The same helper is used for reading the value from a nullable
 // or not nullable value, so the address helper has to report which kind of
 // datum it is.  All the error checking is in cql_address_of_col.
+// CQLABI
 cql_object_ref _Nullable cql_result_set_get_object_col(
   cql_result_set_ref _Nonnull result_set,
-  cql_uint32 row,
-  cql_uint32 col)
+  cql_int32 row,
+  cql_int32 col)
 {
   cql_int32 data_type = CQL_DATA_TYPE_OBJECT;
   char *data = cql_address_of_col(result_set, row, col, &data_type);
@@ -1907,10 +1919,11 @@ cql_object_ref _Nullable cql_result_set_get_object_col(
 // row and column. The same helper is used for writing the value from a nullable
 // or not nullable value, so the address helper has to report which kind of
 // datum it is.  All the error checking is in cql_address_of_col.
+// CQLABI
 void cql_result_set_set_object_col(
   cql_result_set_ref _Nonnull result_set,
-  cql_uint32 row,
-  cql_uint32 col,
+  cql_int32 row,
+  cql_int32 col,
   cql_object_ref _Nullable new_value)
 {
   cql_int32 data_type = CQL_DATA_TYPE_OBJECT;
@@ -1922,10 +1935,11 @@ void cql_result_set_set_object_col(
 // row and column. The same helper is used for reading the value from a nullable
 // or not nullable value, so the address helper has to report which kind of
 // datum it is.  All the error checking is in cql_address_of_col.
+// CQLABI
 cql_blob_ref _Nullable cql_result_set_get_blob_col(
   cql_result_set_ref _Nonnull result_set,
-  cql_uint32 row,
-  cql_uint32 col)
+  cql_int32 row,
+  cql_int32 col)
 {
   cql_int32 data_type = CQL_DATA_TYPE_BLOB;
   char *data = cql_address_of_col(result_set, row, col, &data_type);
@@ -1936,10 +1950,11 @@ cql_blob_ref _Nullable cql_result_set_get_blob_col(
 // row and column. The same helper is used for writing the value from a nullable
 // or not nullable value, so the address helper has to report which kind of
 // datum it is.  All the error checking is in cql_address_of_col.
+// CQLABI
 void cql_result_set_set_blob_col(
   cql_result_set_ref _Nonnull result_set,
-  cql_uint32 row,
-  cql_uint32 col,
+  cql_int32 row,
+  cql_int32 col,
   cql_blob_ref _Nullable new_value)
 {
   cql_int32 data_type = CQL_DATA_TYPE_BLOB;
@@ -1952,14 +1967,18 @@ void cql_result_set_set_blob_col(
 // null value for the pointer in question If the data type is not nullable, we
 // return false. If the data type is nullable then we read the is_null value out
 // of the row
+// CQLABI
 cql_bool cql_result_set_get_is_null_col(
   cql_result_set_ref _Nonnull result_set,
-  cql_uint32 row,
-  cql_uint32 col)
+  cql_int32 row_,
+  cql_int32 col_)
 {
+  cql_uint32 row = (cql_uint32)row_;
+  cql_uint32 col = (cql_uint32)col_;
+
   // Check to make sure the requested row is a valid row See cql_address_of_col
   // for reasons why this might fail.
-  cql_uint32 count = cql_result_set_get_count(result_set);
+  cql_int32 count = cql_result_set_get_count(result_set);
   cql_contract(row < count);
 
   // Check to make sure the meta data has column data See cql_address_of_col for
@@ -2018,12 +2037,15 @@ cql_bool cql_result_set_get_is_null_col(
 // This is the helper method that sets a nullable column to null
 void cql_result_set_set_to_null_col(
   cql_result_set_ref _Nonnull result_set,
-  cql_uint32 row,
-  cql_uint32 col)
+  cql_int32 row_,
+  cql_int32 col_)
 {
+  cql_uint32 row = (cql_uint32)row_;
+  cql_uint32 col = (cql_uint32)col_;
+
   // Check to make sure the requested row is a valid row See cql_address_of_col
   // for reasons why this might fail.
-  cql_uint32 count = cql_result_set_get_count(result_set);
+  cql_int32 count = cql_result_set_get_count(result_set);
   cql_contract(row < count);
 
   // Check to make sure the meta data has column data See cql_address_of_col for
@@ -2167,7 +2189,7 @@ cql_code cql_fetch_all_results(
   cql_result_set_ref _Nullable *_Nonnull result_set)
 {
   *result_set = NULL;
-  cql_uint32 count = 0;
+  cql_int32 count = 0;
   cql_bytebuf b;
   cql_bytebuf_open(&b);
   sqlite3_stmt *stmt = info->stmt;
@@ -2228,7 +2250,7 @@ void cql_results_from_data(
 {
   *result_set = NULL;
   cql_uint32 rowsize = info->rowsize;
-  cql_uint32 count = buffer->used / rowsize;
+  cql_int32 count = (cql_int32)(buffer->used / rowsize);
 
   if (rc == SQLITE_OK) {
     cql_result_set_meta meta;
@@ -2256,7 +2278,7 @@ void cql_results_from_data(
 cql_code cql_one_row_result(
   cql_fetch_info *_Nonnull info,
   char *_Nullable data,
-  cql_uint32 count,
+  cql_int32 count,
   cql_result_set_ref _Nullable *_Nonnull result_set)
 {
   cql_code rc = info->rc;
@@ -3536,7 +3558,7 @@ cql_object_ref _Nonnull cql_extract_partition(
       // happened.
       cql_invariant(buf);
 
-      cql_uint32 count = (cql_uint32)(buf->used / self->c_val.cursor_size);
+      cql_int32 count = (cql_int32)(buf->used / self->c_val.cursor_size);
 
       cql_fetch_info info = {
         .data_types = self->c_val.cursor_data_types,
@@ -3834,7 +3856,7 @@ cql_bool cql_real_dictionary_add(
 
   // We need to cast the double to an int64 to store it in the hash table but we
   // do it in such as way as to preserve the bit pattern of the double so that
-  // we can recover the double later. This assumes that a double is exactly the
+  // we can recover thecouble later. This assumes that a double is exactly the
   // same size as an int64 which is true on all platforms we care about.  If
   // this stops being true we can add a wrapper in cqlrt.h to do the platform
   // specific conversion for us or otherwise generalize the payload.

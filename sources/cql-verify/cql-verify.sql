@@ -47,8 +47,8 @@ declare function str_left(self text!, `len` int!) create text;
 @op text: call right as str_right;
 @op text: call left as str_left;
 
-var sql_name text;
-var result_name text;
+var sql_file_name text;
+var result_file_name text;
 var attempts int!;
 var errors int!;
 var tests int!;
@@ -353,8 +353,8 @@ begin
 
   print_error_block(test_output_line, pat, expectation_line, expected);
 
-  printf("test file %s:%d\n", sql_name, expectation_line);
-  printf("result file: %s\n", result_name);
+  printf("test file %s:%d\n", sql_file_name, expectation_line);
+  printf("result file: %s\n", result_file_name);
   printf("\n");
 end;
 
@@ -465,8 +465,8 @@ begin
   end if;
 
   -- store the test and output file names
-  set sql_name := args[1]:ifnull_throw;
-  set result_name := args[2]:ifnull_throw;
+  set sql_file_name := args[1]:ifnull_throw;
+  set result_file_name := args[2]:ifnull_throw;
 end;
 
 -- main entry point
@@ -475,8 +475,8 @@ begin
   setup();
   parse_args(args);
 
-  if sql_name is not null and result_name is not null then
-    load_data(sql_name, result_name);
+  if sql_file_name is not null and result_file_name is not null then
+    load_data(sql_file_name, result_file_name);
     process();
   end if;
 end;

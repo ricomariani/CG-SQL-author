@@ -265,27 +265,27 @@ typedef struct cql_result_set_meta {
   void (*_Nullable copy)(
     cql_result_set_ref _Nonnull result_set,
     cql_result_set_ref _Nullable *_Nonnull to_result_set,
-    cql_uint32 from,
-    cql_uint32 count);
+    cql_int32 from,
+    cql_int32 count);
 
  // hash a row in a row set using the metadata
   cql_hash_code (*_Nullable rowHash)(
     cql_result_set_ref _Nonnull result_set,
-    cql_uint32 row);
+    cql_int32 row);
 
  // compare two rows for equality
   cql_bool (*_Nullable rowsEqual)(
     cql_result_set_ref _Nonnull rs1,
-    cql_uint32 row1,
+    cql_int32 row1,
     cql_result_set_ref _Nonnull rs2,
-    cql_uint32 row2);
+    cql_int32 row2);
 
   // compare two rows for the same identity column value(s)
   cql_bool (*_Nullable rowsSame)(
     cql_result_set_ref _Nonnull rs1,
-    cql_uint32 row1,
+    cql_int32 row1,
     cql_result_set_ref _Nonnull rs2,
-    cql_uint32 row2);
+    cql_int32 row2);
 
   // count of references and offset to the first
   uint16_t refsCount;
@@ -311,7 +311,7 @@ typedef struct cql_result_set_meta {
 typedef struct cql_result_set {
   cql_type base;
   cql_result_set_meta meta;
-  cql_uint32 count;
+  cql_int32 count;
   void *_Nonnull data;
 } cql_result_set;
 
@@ -329,7 +329,7 @@ typedef struct cql_result_set {
 //     cql_result_set_meta meta);
 cql_result_set_ref _Nonnull cql_result_set_create(
   void *_Nonnull data,
-  cql_uint32 count,
+  cql_int32 count,
   cql_result_set_meta meta);
 
 // Adds a reference count to the result_set object.
@@ -363,6 +363,7 @@ cql_result_set_ref _Nonnull cql_result_set_create(
 // @param result_set The cql result set object.
 // @return The count that was previous stored on the result set.
 // cql_int32 cql_result_set_get_count(** result_set);
+// CQLABI
 #define cql_result_set_get_count(result_set) ((cql_result_set_ref)result_set)->count
 
 #ifdef CQL_RUN_TEST

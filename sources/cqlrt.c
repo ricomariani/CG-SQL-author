@@ -194,7 +194,7 @@ static void cql_result_set_finalize(cql_type_ref _Nonnull ref) {
 // its proven necessary.
 cql_result_set_ref _Nonnull cql_result_set_create(
   void *_Nonnull data,
-  cql_uint32 count,
+  cql_int32 count,
   cql_result_set_meta meta)
 {
   cql_result_set_ref result = malloc(sizeof(cql_result_set));

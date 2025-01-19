@@ -138,10 +138,11 @@ cql_hash_code cql_string_hash(cql_string_ref _Nullable str) {
   if (str) {
     // djb2
     hash = 5381;
-    const char *chars = str->ptr;
-    int c;
-    while ((c = *chars++))
+    const uint8_t *chars = (const uint8_t *)str->ptr;
+    uint8_t c;
+    while ((c = *chars++)) {
       hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+    }
   }
   return hash;
 }
@@ -191,7 +192,11 @@ static void cql_result_set_finalize(cql_type_ref _Nonnull ref) {
 // by the CQL compiler typically but unit tests or such can create fake versions
 // of the cql_result_set_meta.  This isn't really a great practice but sometimes
 // its proven necessary.
-cql_result_set_ref _Nonnull cql_result_set_create(void *_Nonnull data, cql_int32 count, cql_result_set_meta meta) {
+cql_result_set_ref _Nonnull cql_result_set_create(
+  void *_Nonnull data,
+  cql_uint32 count,
+  cql_result_set_meta meta)
+{
   cql_result_set_ref result = malloc(sizeof(cql_result_set));
   result->base.type = CQL_C_TYPE_RESULTS;
   result->base.ref_count = 1;

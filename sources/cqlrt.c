@@ -56,13 +56,13 @@ static void cql_blob_finalize(cql_type_ref _Nonnull ref) {
 // We create a new blob from size and count and copy the bytes.  The object
 // is set up so that it will use the finalizer above to give the memory back.
 // Note that blobs are immutable.
-cql_blob_ref _Nonnull cql_blob_ref_new(const void *_Nonnull bytes, cql_uint32 size) {
+cql_blob_ref _Nonnull cql_blob_ref_new(const void *_Nonnull bytes, cql_int32 size) {
   cql_invariant(bytes != NULL);
   cql_blob_ref result = malloc(sizeof(cql_blob));
   result->base.type = CQL_C_TYPE_BLOB;
   result->base.ref_count = 1;
   result->base.finalize = &cql_blob_finalize;
-  result->ptr = malloc(size);
+  result->ptr = malloc((size_t)size);
   result->size = size;
   memcpy((void *)result->ptr, bytes, size);
   cql_outstanding_refs++;
@@ -76,7 +76,7 @@ cql_hash_code cql_blob_hash(cql_blob_ref _Nullable blob) {
     // djb2
     hash = 5381;
     const unsigned char *bytes = blob->ptr;
-    cql_uint32 size = blob->size;
+    cql_int32 size = blob->size;
     while (size--) {
       hash = ((hash << 5) + hash) + *bytes++; /* hash * 33 + c */
     }
@@ -95,11 +95,11 @@ cql_bool cql_blob_equal(cql_blob_ref _Nullable blob1, cql_blob_ref _Nullable blo
   }
 
   const unsigned char *bytes1 = blob1->ptr;
-  cql_uint32 size1 = blob1->size;
+  cql_int32 size1 = blob1->size;
   const unsigned char *bytes2 = blob2->ptr;
-  cql_uint32 size2 = blob2->size;
+  cql_int32 size2 = blob2->size;
 
-  return size1 == size2 && !memcmp(bytes1, bytes2, size1);
+  return size1 == size2 && !memcmp(bytes1, bytes2, (size_t)size1);
 }
 
 // If a string object goes to zero references we give back the memory

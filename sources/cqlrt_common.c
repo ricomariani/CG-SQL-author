@@ -3510,7 +3510,7 @@ cql_bool cql_partition_cursor(
   cql_invariant(buf);
 
   // append this value to the growable buffer
-  char *new_data = cql_bytebuf_alloc(buf, val->cursor_size);
+  char *new_data = cql_bytebuf_alloc(buf, (cql_uint32)val->cursor_size);
   memcpy(new_data, val->cursor_data, val->cursor_size);
   cql_retain_offsets(new_data, val->cursor_refs_count, val->cursor_refs_offset);
 
@@ -3565,7 +3565,7 @@ cql_object_ref _Nonnull cql_extract_partition(
         .col_offsets = self->c_val.cursor_col_offsets,
         .refs_count = self->c_val.cursor_refs_count,
         .refs_offset = self->c_val.cursor_refs_offset,
-        .rowsize = self->c_val.cursor_size,
+        .rowsize = (uint32_t)self->c_val.cursor_size,
       };
 
       // make the meta from standard info

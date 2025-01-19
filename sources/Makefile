@@ -194,6 +194,9 @@ $O/test_helpers_test.o: test_helpers_test.c
 $O/cqlrt_mocked.o: cqlrt.c cqlrt.h cqlrt_common.c cqlrt_common.h
 	$(CC) $(CFLAGS) -DCQL_RUN_TEST -c -o $O/cqlrt_mocked.o cqlrt.c
 
+$O/cqlrt_diag.o: cqlrt.c cqlrt.h cqlrt_common.c cqlrt_common.h
+	$(CC) $(CFLAGS) -DCQLRT_DIAG -c -o $O/cqlrt_diag.o cqlrt.c
+
 RUN_TEST_DEPS=$O/run_test.o $O/cqltest.o $O/run_test_client.o $O/cqlrt_mocked.o $O/result_set_extension.o
 
 run_test: $(RUN_TEST_DEPS)

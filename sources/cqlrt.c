@@ -64,7 +64,7 @@ cql_blob_ref _Nonnull cql_blob_ref_new(const void *_Nonnull bytes, cql_int32 siz
   result->base.finalize = &cql_blob_finalize;
   result->ptr = malloc((size_t)size);
   result->size = size;
-  memcpy((void *)result->ptr, bytes, size);
+  memcpy((void *)result->ptr, bytes, (size_t)size);
   cql_outstanding_refs++;
   return result;
 }

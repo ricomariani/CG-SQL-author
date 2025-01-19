@@ -54,11 +54,6 @@ while [ "$1" != "" ]; do
   fi
 done
 
-# no extra tests
-extra_tests() {
-  echo "no extra tests at this time"
-}
-
 MAKE_ARGS="${MAKE_COVERAGE_ARGS}"
 
 do_make() {
@@ -1220,6 +1215,15 @@ dot_test() {
   on_diff_exit dottest.out
 }
 
+cqlrt_diag() {
+  echo '--------------------------------- STAGE 19 -- COMPILING CQLRT WITH HIGH WARNINGS'
+  echo Building "$O/cqlrt_diag.o -- this is cqlrt with lots of warnings enabled"
+  if ! do_make $O/cqlrt_diag.o; then
+    echo Warnings discovered in cqlrt
+    failed
+  fi
+}
+
 GENERATED_TAG=generated
 AT_GENERATED_TAG="@$GENERATED_TAG"
 
@@ -1259,8 +1263,9 @@ amalgam_test
 signatures_test
 code_gen_lua_test
 dot_test
-extra_tests
+cqlrt_diag
 
+echo '---------------------------------'
 make_clean_msg
 echo '--------------------------------- DONE SUCCESS'
 exit 0

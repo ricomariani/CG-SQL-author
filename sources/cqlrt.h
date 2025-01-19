@@ -13,6 +13,10 @@
 #include <math.h>
 #include <sqlite3.h>
 
+#ifdef CQLRT_DIAG
+#include "diags.h"
+#endif
+
 #ifndef __clang__
 #ifndef _Nonnull
     /* Hide Clang-only nullability specifiers if not Clang */

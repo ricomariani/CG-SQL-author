@@ -130,7 +130,7 @@ typedef struct cql_dynamic_cursor {
   cql_uint16 *_Nonnull cursor_col_offsets;
   uint8_t *_Nonnull cursor_data_types;
   const char *_Nonnull *_Nonnull cursor_fields;
-  uint32_t cursor_size;
+  size_t cursor_size;
   uint16_t cursor_refs_count;
   uint16_t cursor_refs_offset;
 } cql_dynamic_cursor;

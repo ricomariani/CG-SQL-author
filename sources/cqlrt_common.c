@@ -3856,7 +3856,7 @@ cql_bool cql_real_dictionary_add(
 
   // We need to cast the double to an int64 to store it in the hash table but we
   // do it in such as way as to preserve the bit pattern of the double so that
-  // we can recover thecouble later. This assumes that a double is exactly the
+  // we can recover the double later. This assumes that a double is exactly the
   // same size as an int64 which is true on all platforms we care about.  If
   // this stops being true we can add a wrapper in cqlrt.h to do the platform
   // specific conversion for us or otherwise generalize the payload.

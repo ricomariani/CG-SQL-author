@@ -324,7 +324,7 @@ typedef struct cql_result_set {
 // @return A result_set object of the type.
 // cql_result_set_ref _Nonnull cql_result_set_create(
 //     void *_Nonnull data,
-//     cql_uint32 count,
+//     cql_int32 count,
 //     cql_result_set_meta meta);
 cql_result_set_ref _Nonnull cql_result_set_create(
   void *_Nonnull data,

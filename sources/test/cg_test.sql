@@ -3123,115 +3123,115 @@ begin
   end;
 end;
 
-DECLARE x INT!;
+DECLARE cg_test_x INT!;
 
 -- TEST: a series of paren checks on left association
 -- avoid hard coded divide by zero
--- + x = 1 * (4 / 3);
-SET x := 1 * (4 / 3);
+-- + cg_test_x = 1 * (4 / 3);
+SET cg_test_x := 1 * (4 / 3);
 
--- + x = 1 * 2 / 3;
-SET x := 1 * 2 / 3;
+-- + cg_test_x = 1 * 2 / 3;
+SET cg_test_x := 1 * 2 / 3;
 
--- + x = 1 + 2 / 3;
-SET x := 1 + 2 / 3;
+-- + cg_test_x = 1 + 2 / 3;
+SET cg_test_x := 1 + 2 / 3;
 
--- + x = 1 + (2 - 3);
-SET x := 1 + (2 - 3);
+-- + cg_test_x = 1 + (2 - 3);
+SET cg_test_x := 1 + (2 - 3);
 
--- + x = 1 + 2 * 3;
-SET x := 1 + 2 * 3;
+-- + cg_test_x = 1 + 2 * 3;
+SET cg_test_x := 1 + 2 * 3;
 
--- + x = 1 * (2 + 3);
-SET x := 1 * (2 + 3);
+-- + cg_test_x = 1 * (2 + 3);
+SET cg_test_x := 1 * (2 + 3);
 
--- + x = 1 - (2 + 3);
-SET x := 1 - (2 + 3);
+-- + cg_test_x = 1 - (2 + 3);
+SET cg_test_x := 1 - (2 + 3);
 
--- + x = 1 - (2 - 3);
-SET x := 1 - (2 - 3);
+-- + cg_test_x = 1 - (2 - 3);
+SET cg_test_x := 1 - (2 - 3);
 
--- + x = 1 - 2 - (2 - 3);
-SET x := 1 - 2 - (2 - 3);
+-- + cg_test_x = 1 - 2 - (2 - 3);
+SET cg_test_x := 1 - 2 - (2 - 3);
 
 -- the first parens do not change eval order from left to right at all
--- + x = 1 - 2 - (2 - 3);
-SET x := (1 - 2) - (2 - 3);
+-- + cg_test_x = 1 - 2 - (2 - 3);
+SET cg_test_x := (1 - 2) - (2 - 3);
 
--- + x = 1 / 2 / 3;
-SET x := 1 / 2 / 3;
+-- + cg_test_x = 1 / 2 / 3;
+SET cg_test_x := 1 / 2 / 3;
 
 -- avoid hard coded divide by zero
--- + x = 1 / (4 / 3);
-SET x := 1 / (4 / 3);
+-- + cg_test_x = 1 / (4 / 3);
+SET cg_test_x := 1 / (4 / 3);
 
--- + x = 1 / 2;
-SET x := 1 / 2;
+-- + cg_test_x = 1 / 2;
+SET cg_test_x := 1 / 2;
 
--- + x = 1 * 2 * (3 * 4)
-SET x := 1 * 2 * (3 * 4);
+-- + cg_test_x = 1 * 2 * (3 * 4)
+SET cg_test_x := 1 * 2 * (3 * 4);
 
 -- the first parens don't change anything
 -- the second parens could matter if it was floating point
--- + x = 1 * 2 * (3 * 4)
-SET x := (1 * 2) * (3 * 4);
+-- + cg_test_x = 1 * 2 * (3 * 4)
+SET cg_test_x := (1 * 2) * (3 * 4);
 
 -- note that in C & binds tighter than | so parens are required in C
 -- note that in SQL | and & are equal so this expression left associates
--- + x = (1 | 2) & 3;
-SET x := 1 | 2 & 3;
+-- + cg_test_x = (1 | 2) & 3;
+SET cg_test_x := 1 | 2 & 3;
 
--- + x = 1 | 2 & 3;
-SET x := 1 | (2 & 3);
+-- + cg_test_x = 1 | 2 & 3;
+SET cg_test_x := 1 | (2 & 3);
 
--- + x = 1 | 2 | 3
-SET x := 1 | 2 | 3;
+-- + cg_test_x = 1 | 2 | 3
+SET cg_test_x := 1 | 2 | 3;
 
 -- sub optimal but we're trying to preserve written order due to floating point
--- + x = 1 | (2 | 3)
-SET x := 1 | (2 | 3);
+-- + cg_test_x = 1 | (2 | 3)
+SET cg_test_x := 1 | (2 | 3);
 
--- + x = 1 | (3 + 4 | 5);
-SET x := 1 | (3 + 4 | 5);
+-- + cg_test_x = 1 | (3 + 4 | 5);
+SET cg_test_x := 1 | (3 + 4 | 5);
 
--- + x = 1 | 3 + (4 | 5);
-SET x := 1 | 3 + (4 | 5);
+-- + cg_test_x = 1 | 3 + (4 | 5);
+SET cg_test_x := 1 | 3 + (4 | 5);
 
--- +  x = (1 | 3) + (4 | 5);
-SET x := (1 | 3) + (4 | 5);
+-- +  cg_test_x = (1 | 3) + (4 | 5);
+SET cg_test_x := (1 | 3) + (4 | 5);
 
--- + x = (1 + 2) * 5;
-set x := (1 + 2) * 5;
+-- + cg_test_x = (1 + 2) * 5;
+set cg_test_x := (1 + 2) * 5;
 
--- + x = 1 + 2 - 1;
-set x := (1 + 2) - 1;
+-- + cg_test_x = 1 + 2 - 1;
+set cg_test_x := (1 + 2) - 1;
 
--- + x = 1 << 2 | 3;
-set x := 1 << 2 | 3;
+-- + cg_test_x = 1 << 2 | 3;
+set cg_test_x := 1 << 2 | 3;
 
--- + x = 1 << (2 | 3);
-set x := 1 << (2 | 3);
+-- + cg_test_x = 1 << (2 | 3);
+set cg_test_x := 1 << (2 | 3);
 
--- + x = 1 | 2 << 3
-set x := 1 | (2 << 3);
+-- + cg_test_x = 1 | 2 << 3
+set cg_test_x := 1 | (2 << 3);
 
--- + x = 1 << (2 << 3);
-set x := 1 << (2 << 3);
+-- + cg_test_x = 1 << (2 << 3);
+set cg_test_x := 1 << (2 << 3);
 
--- + x = 1 < (2 > 3);
-set x := 1 < (2 > 3);
+-- + cg_test_x = 1 < (2 > 3);
+set cg_test_x := 1 < (2 > 3);
 
--- + x = 1 << (2 >> 3);
-set x := 1 << (2 >> 3);
+-- + cg_test_x = 1 << (2 >> 3);
+set cg_test_x := 1 << (2 >> 3);
 
--- + x = 1 | (2 | 3);
-set x := 1 | (2 | 3);
+-- + cg_test_x = 1 | (2 | 3);
+set cg_test_x := 1 | (2 | 3);
 
--- + x = 1 | 2 | 3;
-set x := (1 | 2) | 3;
+-- + cg_test_x = 1 | 2 | 3;
+set cg_test_x := (1 | 2) | 3;
 
--- + x = 1 == (2 != 3);
-set x := 1 == (2 != 3);
+-- + cg_test_x = 1 == (2 != 3);
+set cg_test_x := 1 == (2 != 3);
 
 create table SalesInfo(
   month int,

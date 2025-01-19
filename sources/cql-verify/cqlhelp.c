@@ -36,7 +36,7 @@ cql_string_ref readline_object_file(cql_object_ref file_ref) {
   FILE *f = cql_file_get(file_ref);
   char buf[4096];
   if (fgets(buf, sizeof(buf), f)) {
-     int len = strlen(buf);
+     size_t len = strlen(buf);
      if (len) buf[len-1] = 0;
      return cql_string_ref_new(buf);
   }
@@ -83,7 +83,7 @@ cql_int32 len_text(cql_string_ref text) {
   cql_int32 result = 0;
   if (text) {
     cql_alloc_cstr(t, text);
-    result = strlen(t);
+    result = (cql_int32)strlen(t);
     cql_free_cstr(t, text);
   }
   return result;
@@ -103,7 +103,7 @@ cql_bool starts_with_text(cql_string_ref _Nonnull haystack, cql_string_ref _Nonn
   cql_alloc_cstr(h, haystack);
   cql_alloc_cstr(n, needle);
 
-  int len = strlen(n);
+  size_t len = strlen(n);
   cql_bool result = strncmp(h, n, len) == 0;
 
   cql_free_cstr(n, needle);
@@ -121,7 +121,7 @@ cql_int32 index_of_text(cql_string_ref _Nonnull haystack, cql_string_ref _Nonnul
   const char *loc = strstr(h, n);
 
   if (loc) {
-    result = loc - h;
+    result = (cql_int32)(loc - h);
   }
 
   cql_free_cstr(n, needle);
@@ -134,7 +134,7 @@ cql_bool contains_at_text(cql_string_ref _Nonnull haystack, cql_string_ref _Nonn
   cql_alloc_cstr(h, haystack);
   cql_alloc_cstr(n, needle);
 
-  int len = strlen(n);
+  size_t len = strlen(n);
   cql_bool result = strncmp(h + index, n, len) == 0;
 
   cql_free_cstr(n, needle);
@@ -146,17 +146,17 @@ cql_bool contains_at_text(cql_string_ref _Nonnull haystack, cql_string_ref _Nonn
 // Function to perform MID operation on a C string and return the result using malloc
 cql_string_ref str_mid(cql_string_ref in, int startIndex, int length) {
   cql_alloc_cstr(inStr, in);
-  int inputLength = strlen(inStr);
+  size_t inputLength = strlen(inStr);
   if (startIndex >= inputLength) {
     return cql_string_ref_new("");
   }
 
-  int endIndex = startIndex + length;
+  size_t endIndex = (size_t)(startIndex + length);
   if (endIndex > inputLength) {
     endIndex = inputLength;
   }
 
-  int outputLength = endIndex - startIndex;
+  size_t outputLength = (size_t)(endIndex - (size_t)startIndex);
   char *temp = alloca(outputLength + 1); // +1 for null terminator
 
   strncpy(temp, inStr + startIndex, outputLength);
@@ -166,14 +166,15 @@ cql_string_ref str_mid(cql_string_ref in, int startIndex, int length) {
   return cql_string_ref_new(temp);
 }
 
-cql_string_ref str_left(cql_string_ref in, int length) {
+cql_string_ref str_left(cql_string_ref in, int length_) {
   cql_alloc_cstr(inStr, in);
-  int inputLength = strlen(inStr);
-  if (length <= 0) {
+  size_t inputLength = strlen(inStr);
+  if (length_ <= 0) {
     return cql_string_ref_new("");
   }
+  size_t length = (size_t)length_;
 
-  int outputLength = (length < inputLength) ? length : inputLength;
+  size_t outputLength = (length < inputLength) ? length : inputLength;
   char *temp = alloca(outputLength + 1); // +1 for null terminator
 
   strncpy(temp, inStr, outputLength);
@@ -183,15 +184,17 @@ cql_string_ref str_left(cql_string_ref in, int length) {
   return cql_string_ref_new(temp);
 }
 
-cql_string_ref str_right(cql_string_ref in, int length) {
+cql_string_ref str_right(cql_string_ref in, int length_) {
   cql_alloc_cstr(inStr, in);
-  int inputLength = strlen(inStr);
-  if (length <= 0) {
+  size_t inputLength = strlen(inStr);
+  if (length_ <= 0) {
     return cql_string_ref_new("");
   }
 
-  int startIndex = (inputLength > length) ? inputLength - length : 0;
-  int outputLength = (startIndex < inputLength) ? inputLength - startIndex : 0;
+  size_t length = (size_t)length_;
+
+  size_t startIndex = (inputLength > length) ? inputLength - length : 0;
+  size_t outputLength = (startIndex < inputLength) ? inputLength - startIndex : 0;
   char *temp = alloca(outputLength + 1); // +1 for null terminator
 
   strncpy(temp, inStr + startIndex, outputLength);

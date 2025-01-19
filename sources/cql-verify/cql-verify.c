@@ -172,16 +172,16 @@ DECLARE PROC cql_cursor_from_blob (C CURSOR, b BLOB) USING TRANSACTION;
 // Generated from cql-verify.sql:50
 
 /*
-DECLARE sql_name TEXT;
+DECLARE sql_file_name TEXT;
 */
-cql_string_ref sql_name = NULL;
+cql_string_ref sql_file_name = NULL;
 
 // Generated from cql-verify.sql:51
 
 /*
-DECLARE result_name TEXT;
+DECLARE result_file_name TEXT;
 */
-cql_string_ref result_name = NULL;
+cql_string_ref result_file_name = NULL;
 
 // Generated from cql-verify.sql:52
 
@@ -962,8 +962,8 @@ BEGIN
   END;
   SET errors := errors + 1;
   CALL print_error_block(test_output_line, pat, expectation_line, expected);
-  CALL printf("test file %s:%d\n", sql_name, expectation_line);
-  CALL printf("result file: %s\n", result_name);
+  CALL printf("test file %s:%d\n", sql_file_name, expectation_line);
+  CALL printf("result file: %s\n", result_file_name);
   CALL printf("\n");
 END;
 */
@@ -1069,12 +1069,12 @@ CQL_WARN_UNUSED cql_code match_actual(sqlite3 *_Nonnull _db_, cql_string_ref _No
   errors = errors + 1;
   _rc_ = print_error_block(_db_, test_output_line, pat, expectation_line, expected);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  cql_alloc_cstr(_cstr_6, sql_name);
+  cql_alloc_cstr(_cstr_6, sql_file_name);
   printf("test file %s:%d\n", _cstr_6, expectation_line);
-  cql_free_cstr(_cstr_6, sql_name);
-  cql_alloc_cstr(_cstr_7, result_name);
+  cql_free_cstr(_cstr_6, sql_file_name);
+  cql_alloc_cstr(_cstr_7, result_file_name);
   printf("result file: %s\n", _cstr_7);
-  cql_free_cstr(_cstr_7, result_name);
+  cql_free_cstr(_cstr_7, result_file_name);
   printf("\n");
   _rc_ = SQLITE_OK;
 
@@ -1135,7 +1135,7 @@ cql_cleanup:
 PROC process ()
 BEGIN
   CURSOR C FOR
-    SELECT *
+    SELECT test_input.line, test_input.data
       FROM test_input;
   LOOP FETCH C
   BEGIN
@@ -1163,7 +1163,7 @@ static CQL_WARN_UNUSED cql_code process(sqlite3 *_Nonnull _db_) {
   process_C_row C = { ._refs_count_ = 1, ._refs_offset_ = process_C_refs_offset };
 
   _rc_ = cql_prepare(_db_, &C_stmt,
-    "SELECT line, data "
+    "SELECT test_input.line, test_input.data "
       "FROM test_input");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   for (;;) {
@@ -1213,7 +1213,7 @@ BEGIN
       SET line := atoi_at_text(data, loc + len);
     END;
     INSERT INTO test_results(line, data)
-      VALUES(line, data);
+      VALUES (line, data);
   END;
 END;
 */
@@ -1255,7 +1255,7 @@ static CQL_WARN_UNUSED cql_code read_test_results(sqlite3 *_Nonnull _db_, cql_st
     if (!_temp1_stmt) {
       _rc_ = cql_prepare(_db_, &_temp1_stmt,
       "INSERT INTO test_results(line, data) "
-        "VALUES(?, ?)");
+        "VALUES (?, ?)");
     }
     else {
       _rc_ = SQLITE_OK;
@@ -1299,7 +1299,7 @@ BEGIN
       LEAVE;
     END;
     INSERT INTO test_input(line, data)
-      VALUES(line, data);
+      VALUES (line, data);
     SET line := line + 1;
   END;
 END;
@@ -1333,7 +1333,7 @@ static CQL_WARN_UNUSED cql_code read_test_file(sqlite3 *_Nonnull _db_, cql_strin
     if (!_temp1_stmt) {
       _rc_ = cql_prepare(_db_, &_temp1_stmt,
       "INSERT INTO test_input(line, data) "
-        "VALUES(?, ?)");
+        "VALUES (?, ?)");
     }
     else {
       _rc_ = SQLITE_OK;
@@ -1399,8 +1399,8 @@ BEGIN
     CALL printf("looking for patterns to match in the CQL output foo.out\n");
     RETURN;
   END;
-  SET sql_name := ifnull_throw(cql_string_list_get_at(args, 1));
-  SET result_name := ifnull_throw(cql_string_list_get_at(args, 2));
+  SET sql_file_name := ifnull_throw(cql_string_list_get_at(args, 1));
+  SET result_file_name := ifnull_throw(cql_string_list_get_at(args, 2));
 END;
 */
 
@@ -1425,14 +1425,14 @@ static CQL_WARN_UNUSED cql_code parse_args(sqlite3 *_Nonnull _db_, cql_object_re
     cql_error_trace();
     goto cql_cleanup;
   }
-  cql_set_string_ref(&sql_name, _tmp_n_text_0);
+  cql_set_string_ref(&sql_file_name, _tmp_n_text_0);
   cql_set_string_ref(&_tmp_n_text_0, cql_string_list_get_at(args, 2));
   if (!_tmp_n_text_0) {
     _rc_ = SQLITE_ERROR;
     cql_error_trace();
     goto cql_cleanup;
   }
-  cql_set_string_ref(&result_name, _tmp_n_text_0);
+  cql_set_string_ref(&result_file_name, _tmp_n_text_0);
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
@@ -1449,8 +1449,8 @@ PROC dbhelp_main (args OBJECT<cql_string_list>!)
 BEGIN
   CALL setup();
   CALL parse_args(args);
-  IF sql_name IS NOT NULL AND result_name IS NOT NULL THEN
-    CALL load_data(sql_name, result_name);
+  IF sql_file_name IS NOT NULL AND result_file_name IS NOT NULL THEN
+    CALL load_data(sql_file_name, result_file_name);
     CALL process();
   END;
 END;
@@ -1467,8 +1467,8 @@ CQL_WARN_UNUSED cql_code dbhelp_main(sqlite3 *_Nonnull _db_, cql_object_ref _Non
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = parse_args(_db_, args);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  if (!!sql_name && !!result_name) {
-    _rc_ = load_data(_db_, sql_name, result_name);
+  if (!!sql_file_name && !!result_file_name) {
+    _rc_ = load_data(_db_, sql_file_name, result_file_name);
     if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
     _rc_ = process(_db_);
     if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }

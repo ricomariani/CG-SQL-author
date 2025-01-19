@@ -31,7 +31,7 @@
 #define CQL_EXTERN_C_END
 #endif // __cplusplus
 
-#define CQL_C_ASSERT(e) typedef char __CQL_C_ASSERT__[(e)?1:-1]
+#define CQL_C_ASSERT(e) void __CQL_C_ASSERT__(char x[(e)?1:-1]);
 
 #if LONG_MAX > 0x7fffffff
 #define _64(x) x##L
@@ -141,24 +141,24 @@ CQL_EXPORT void cql_copyoutrow(
   sqlite3 *_Nullable db,
   cql_result_set_ref _Nonnull rs,
   cql_int32 row,
-  cql_int32 count, ...);
+  cql_uint32 count, ...);
 
 CQL_EXPORT void cql_multifetch(
   cql_code rc,
   sqlite3_stmt *_Nullable stmt,
-  cql_int32 count, ...);
+  cql_uint32 count, ...);
 
 CQL_EXPORT void cql_multibind(
   cql_code *_Nonnull rc,
   sqlite3 *_Nonnull db,
   sqlite3_stmt *_Nullable *_Nonnull pstmt,
-  cql_int32 count, ...);
+  cql_uint32 count, ...);
 
 CQL_EXPORT void cql_multibind_var(
   cql_code *_Nonnull rc,
   sqlite3 *_Nonnull db,
   sqlite3_stmt *_Nullable *_Nonnull pstmt,
-  cql_int32 count,
+  cql_uint32 count,
   const char *_Nullable vpreds, ...);
 
 CQL_EXPORT cql_code cql_best_error(cql_code rc);
@@ -172,7 +172,7 @@ typedef struct cql_fetch_info {
   uint16_t refs_count;
   uint16_t refs_offset;
   uint16_t *_Nullable identity_columns;
-  cql_int32 rowsize;
+  cql_uint32 rowsize;
   const char *_Nullable autodrop_tables;
   int64_t crc;
   cql_int32 *_Nullable perf_index;
@@ -224,7 +224,7 @@ CQL_EXPORT cql_code cql_prepare(
 CQL_EXPORT cql_code cql_prepare_var(
   sqlite3 *_Nonnull db,
   sqlite3_stmt *_Nullable *_Nonnull pstmt,
-  cql_int32 count,
+  cql_uint32 count,
   const char *_Nullable preds, ...);
 
 CQL_EXPORT cql_code cql_no_rows_stmt(
@@ -237,7 +237,7 @@ CQL_EXPORT cql_code cql_exec(sqlite3 *_Nonnull db, const char *_Nonnull sql);
 
 CQL_EXPORT cql_code cql_exec_var(
   sqlite3 *_Nonnull db,
-  cql_int32 count,
+  cql_uint32 count,
   const char *_Nullable preds, ...);
 
 CQL_EXPORT CQL_WARN_UNUSED cql_code cql_exec_internal(
@@ -354,8 +354,8 @@ extern jmp_buf *_Nullable cql_contract_argument_notnull_tripwire_jmp_buf;
 
 typedef struct cql_bytebuf {
   char *_Nullable ptr;   // pointer to stored data, if any
-  cql_int32 used;        // bytes used in current buffer
-  cql_int32 max;         // max bytes in current buffer
+  cql_uint32 used;       // bytes used in current buffer
+  cql_uint32 max;        // max bytes in current buffer
 } cql_bytebuf;
 
 CQL_EXPORT cql_int32 bytebuf_open_count;
@@ -366,12 +366,12 @@ CQL_EXPORT void cql_bytebuf_close(cql_bytebuf *_Nonnull b);
 
 CQL_EXPORT void *_Nonnull cql_bytebuf_alloc(
   cql_bytebuf *_Nonnull b,
-  int needed);
+  cql_uint32 needed);
 
 CQL_EXPORT void cql_bytebuf_append(
   cql_bytebuf *_Nonnull buffer,
   const void *_Nonnull data,
-  cql_int32 bytes);
+  cql_uint32 bytes);
 
 CQL_EXPORT void cql_bprintf(
   cql_bytebuf *_Nonnull buffer,
@@ -397,7 +397,9 @@ CQL_EXPORT void cql_release_offsets(
   cql_uint16 refs_offset);
 
 // hash a row in a row set using the metadata
-CQL_EXPORT cql_hash_code cql_row_hash(cql_result_set_ref _Nonnull result_set, cql_int32 row);
+CQL_EXPORT cql_hash_code cql_row_hash(
+  cql_result_set_ref _Nonnull result_set,
+  cql_int32 row);
 
 // hash a cursor using the metadata (CQL compatible types)
 // CQLABI
@@ -453,6 +455,7 @@ CQL_EXPORT void cql_rowset_copy(
 // @param row The row number to fetch the value for.
 // @param col The column to fetch the value for.
 // @return cql_true if the value is null, otherwise cql_false.
+// CQLABI
 CQL_EXPORT cql_bool cql_result_set_get_is_null_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -463,6 +466,7 @@ CQL_EXPORT cql_bool cql_result_set_get_is_null_col(
 // @param row The row number to fetch the value for.
 // @param col The column to fetch the value for.
 // @return The bool value.
+// CQLABI
 CQL_EXPORT cql_bool cql_result_set_get_bool_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -473,6 +477,7 @@ CQL_EXPORT cql_bool cql_result_set_get_bool_col(
 // @param row The row number to fetch the value for.
 // @param col The column to fetch the value for.
 // @return The int32 value.
+// CQLABI
 CQL_EXPORT cql_int32 cql_result_set_get_int32_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -483,6 +488,7 @@ CQL_EXPORT cql_int32 cql_result_set_get_int32_col(
 // @param row The row number to fetch the value for.
 // @param col The column to fetch the value for.
 // @return The int64 value.ali
+// CQLABI
 CQL_EXPORT cql_int64 cql_result_set_get_int64_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -493,6 +499,7 @@ CQL_EXPORT cql_int64 cql_result_set_get_int64_col(
 // @param row The row number to fetch the value for.
 // @param col The column to fetch the value for.
 // @return The double value.
+// CQLABI
 CQL_EXPORT cql_double cql_result_set_get_double_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -503,6 +510,7 @@ CQL_EXPORT cql_double cql_result_set_get_double_col(
 // @param row The row number to fetch the value for.
 // @param col The column to fetch the value for.
 // @return The string value.
+// CQLABI
 CQL_EXPORT cql_string_ref _Nullable cql_result_set_get_string_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -513,6 +521,7 @@ CQL_EXPORT cql_string_ref _Nullable cql_result_set_get_string_col(
 // @param row The row number to fetch the value for.
 // @param col The column to fetch the value for.
 // @return The string value.
+// CQLABI
 CQL_EXPORT cql_blob_ref _Nullable cql_result_set_get_blob_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -523,6 +532,7 @@ CQL_EXPORT cql_blob_ref _Nullable cql_result_set_get_blob_col(
 // @param row The row number to fetch the value for.
 // @param col The column to fetch the value for.
 // @return The object value.
+// CQLABI
 CQL_EXPORT cql_object_ref _Nullable cql_result_set_get_object_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -534,6 +544,7 @@ CQL_EXPORT cql_object_ref _Nullable cql_result_set_get_object_col(
 // @param result_set The cql result_set object.
 // @param row The row number to set the value for.
 // @param col The column to set the value for.
+// CQLABI
 CQL_EXPORT void cql_result_set_set_to_null_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -544,6 +555,7 @@ CQL_EXPORT void cql_result_set_set_to_null_col(
 // @param row The row number to set the value for.
 // @param col The column to set the value for.
 // @param new_value the new boolean value to be set.
+// CQLABI
 CQL_EXPORT void cql_result_set_set_bool_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -555,6 +567,7 @@ CQL_EXPORT void cql_result_set_set_bool_col(
 // @param row The row number to set the value for.
 // @param col The column to set the value for.
 // @param new_value the new cql_int32 value to be set.
+// CQLABI
 CQL_EXPORT void cql_result_set_set_int32_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -566,6 +579,7 @@ CQL_EXPORT void cql_result_set_set_int32_col(
 // @param row The row number to set the value for.
 // @param col The column to set the value for.
 // @param new_value the new int64 value to be set.
+// CQLABI
 CQL_EXPORT void cql_result_set_set_int64_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -577,6 +591,7 @@ CQL_EXPORT void cql_result_set_set_int64_col(
 // @param row The row number to set the value for.
 // @param col The column to set the value for.
 // @param new_value the new boolean value to be set.
+// CQLABI
 CQL_EXPORT void cql_result_set_set_double_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -588,6 +603,7 @@ CQL_EXPORT void cql_result_set_set_double_col(
 // @param row The row number to set the value for.
 // @param col The column to set the value for.
 // @param new_value the new string value to be set.
+// CQLABI
 CQL_EXPORT void cql_result_set_set_string_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -599,6 +615,7 @@ CQL_EXPORT void cql_result_set_set_string_col(
 // @param row The row number to set the value for.
 // @param col The column to set the value for.
 // @param new_value the new blob value to be set.
+// CQLABI
 CQL_EXPORT void cql_result_set_set_blob_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -610,6 +627,7 @@ CQL_EXPORT void cql_result_set_set_blob_col(
 // @param row The row number to set the value for.
 // @param col The column to set the value for.
 // @param new_value the new object value to be set.
+// CQLABI
 CQL_EXPORT void cql_result_set_set_object_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -650,8 +668,8 @@ typedef struct cql_hashtab_entry {
 
 // hash table with payloads and capacity info
 typedef struct cql_hashtab {
-  cql_int32 count;
-  cql_int32 capacity;
+  cql_uint32 count;
+  cql_uint32 capacity;
   cql_hashtab_entry *_Nullable payload;
   uint64_t (*_Nonnull hash_key)(void *_Nullable context, cql_int64 key);
   bool (*_Nonnull compare_keys)(void *_Nullable context, cql_int64 key1, cql_int64 key2);

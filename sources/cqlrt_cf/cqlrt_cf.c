@@ -40,7 +40,7 @@ char *_Nullable cql_copy_string_to_stack_or_heap(
           cstr = stack_string;
       }
       else {
-        heap_string = malloc(size);
+        heap_string = malloc((size_t)size);
         if (CFStringGetCString(cf_string_ref, heap_string, size, kCFStringEncodingUTF8)) {
           cstr = heap_string;
         }

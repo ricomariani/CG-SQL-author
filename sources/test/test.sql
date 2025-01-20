@@ -17,16 +17,17 @@
 -- You cannot expect correct output if you also add the --sem flag to cql
 -- it will start to whine about all the mistakes.
 
-@include "test/macro_basic_parse_test.sql"
+@include "macro_basic_parse_test.sql"
 @include "line_directive_parse_test.sql"
+@include "test2_include_file.sql"
 
 -- duplicate include doesn't spam the output again
 -- note that duplicate macros give parse errors so this is a legit test
-@include "test/macro_basic_parse_test.sql"
-
--- this is resolved by path, still doesn't cause a duplication
--- note that duplicate macros give parse errors so this is a legit test
 @include "macro_basic_parse_test.sql"
+
+-- duplicate include doesn't spam the output again, this is using the include paths
+-- note that duplicate macros give parse errors so this is a legit test
+@include "test2_include_file.sql"
 
 -- create very simple table
 create table foo(id int);

@@ -22,6 +22,7 @@
 #include <charbuf.h>
 #include <encoders.h>
 #include <symtab.h>
+#include <libgen.h>
 
 void yyerror(const char *s, ...);
 void line_directive(const char *);
@@ -55,6 +56,10 @@ static bool cql_builtins_processing = false;
 static bool cql_delete_main_buffer = false;
 static YY_BUFFER_STATE cql_main_buffer;
 
+// this remembers the directory in which we found the most recent file
+// later paths are relative to this by default
+static char ambient_path[PATH_MAX];
+
 cql_noexport void cql_setup_for_builtins() {
   // stash a buffer for the main input, note that we might already have a buffer
   // in the amalgam case, if we do then use that.
@@ -71,6 +76,16 @@ cql_noexport void cql_setup_for_builtins() {
   // add the builtin declares before we process the real input
   yy_scan_string(cql_builtin_text());
   cql_builtins_processing = true;
+
+  // use the path part of the initial input file as the starting ambient path
+  if (!strcmp("<stdin>", current_file)) {
+     ambient_path[0] = '\0';
+  }
+  else {
+    strncpy(ambient_path, current_file, sizeof(ambient_path));
+    ambient_path[sizeof(ambient_path)-1] = 0;
+    dirname(ambient_path);
+  }
 }
 
 #define MAX_INCLUDES 10
@@ -79,6 +94,7 @@ typedef struct {
   YY_BUFFER_STATE buf;
   int32_t line_saved;
   char *filename_saved;
+  char *ambient_saved;
 } cql_include_state;
 
 static cql_include_state cql_includes[MAX_INCLUDES];
@@ -87,6 +103,7 @@ static int cql_include_index = 0;
 static symtab *processed_files;
 
 cql_noexport void cql_reset_open_includes() {
+  ambient_path[0] = '\0';
   cql_include_index = 0;
   memset(cql_includes, 0, sizeof(cql_includes));
   if (processed_files) {
@@ -118,6 +135,7 @@ static void cql_setup_for_include(CSTR str) {
   inc->buf = YY_CURRENT_BUFFER;
   inc->line_saved = yylineno;
   inc->filename_saved = current_file;
+  inc->ambient_saved = Strdup(ambient_path);
   cql_include_index++;
 
   CHARBUF_OPEN(name);
@@ -128,15 +146,25 @@ static void cql_setup_for_include(CSTR str) {
 
   yyin = NULL;
 
-  CSTR opened_name = name.ptr;
-
   // Call realpath to resolve the pathname
-  char *abspath = realpath(name.ptr, resolved_path);
+  bclear(&path);
+  if (ambient_path[0]) {
+    bprintf(&path, "%s/%s", ambient_path, name.ptr);
+  }
+  else {
+    bprintf(&path, "%s", name.ptr);
+  }
+
+  CSTR opened_name = path.ptr;
+
+  char *abspath = realpath(path.ptr, resolved_path);
   if (abspath) {
     if (cql_already_processed_file(abspath)) {
       yy_switch_to_buffer(yy_scan_string(""));
       goto done;
     }
+    strcpy(ambient_path, path.ptr);
+    dirname(ambient_path);
     yyin = fopen(abspath, "r");
   }
 
@@ -151,6 +179,8 @@ static void cql_setup_for_include(CSTR str) {
             goto done;
           }
 
+          strcpy(ambient_path, path.ptr);
+          dirname(ambient_path);
           yyin = fopen(path.ptr, "r");
           if (yyin) {
             opened_name = path.ptr;
@@ -193,9 +223,6 @@ static bool_t cql_already_processed_file(CSTR str) {
   Contract(processed_files);
   return !!symtab_find(processed_files, str);
 }
-
-/*
-*/
 
 %}
 
@@ -575,6 +602,7 @@ X'({hex}{hex})*'                 { yylval.sval = Strdup(yytext); return BLOBLIT;
                                      yy_switch_to_buffer(inc->buf);
                                      yylineno = inc->line_saved;
                                      current_file = inc->filename_saved;
+                                     strcpy(ambient_path, inc->ambient_saved);
                                      return END_INCLUDE;
                                    }
                                  }

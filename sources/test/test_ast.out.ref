@@ -5174,6 +5174,29 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
+  {create_proc_stmt}
+  | {name another_dummy_proc}
+  | {proc_params_stmts}
+
+The statement ending at line XXXX
+
+  {create_proc_stmt}
+  | {name any_proc}
+  | {proc_params_stmts}
+    | {params}
+    | | {param}
+    |   | {out}
+    |   | {param_detail}
+    |     | {name z}
+    |     | {type_int}
+    | {stmt_list}
+      | {expr_stmt}
+        | {expr_assign}
+          | {name z}
+          | {int 1}
+
+The statement ending at line XXXX
+
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}

@@ -274,6 +274,15 @@ SET file := 'long/path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';
 
+PROC another_dummy_proc ()
+BEGIN
+END;
+
+PROC any_proc (OUT z INT)
+BEGIN
+  z := 1;
+END;
+
 CREATE TABLE foo(
   id INT
 );

@@ -179,7 +179,7 @@ basic_test() {
   echo '--------------------------------- STAGE 2 -- BASIC PARSING TEST'
   echo running "$T/test.sql"
   # exercising the non --in path (i.e. read from stdin)
-  if ! ${CQL} --echo --dev --include_paths "$T" <"$T/test.sql" >"$O/test.out"; then
+  if ! ${CQL} --echo --dev --include_paths "test" "test2" <"$T/test.sql" >"$O/test.out"; then
     echo basic parsing test failed
     failed
   fi
@@ -189,7 +189,7 @@ basic_test() {
   fi
 
   echo "creating basic ast for test.sql"
-  if ! ${CQL} --ast_no_echo --dev --include_paths "$T" <"$T/test.sql" >"$O/test_ast.out"; then
+  if ! ${CQL} --ast_no_echo --dev --include_paths test2 --in "$T/test.sql" >"$O/test_ast.out"; then
     echo basic ast test failed
     failed
   fi
@@ -204,7 +204,7 @@ basic_test() {
 
   echo running "$T/test.sql" "with CRLF line endings"
   sed -e "s/$/\\r/" <$T/test.sql >$O/test.sql
-  if ! ${CQL} --include_paths "$T" --echo --dev --in "$O/test.sql" >"$O/test.out2"; then
+  if ! ${CQL} --include_paths test test2 --echo --dev --in "$O/test.sql" >"$O/test.out2"; then
     echo "Echo CRLF version does not parse correctly"
     failed
   fi
@@ -214,7 +214,7 @@ basic_test() {
   on_diff_exit test.out
 
   echo running "$T/test.sql" "with macro expansion"
-  if ! ${CQL} --echo --dev --include_paths "$T" --in "$T/test.sql" --exp >"$O/test_exp.out"; then
+  if ! ${CQL} --echo --dev --include_paths test2 --in "$T/test.sql" --exp >"$O/test_exp.out"; then
     echo basic parsing with expansion test failed
     failed
   fi
@@ -232,7 +232,7 @@ basic_test() {
 
   echo testing include files nested too deeply
 
-  if ${CQL} --in "$T/include_files_infinite_nesting.sql" --include_paths test 2>"$O/include_nesting.err"; then
+  if ${CQL} --in "$T/include_files_infinite_nesting.sql" 2>"$O/include_nesting.err"; then
     echo "error code should have indicated failure"
     failed
   fi
@@ -252,7 +252,7 @@ basic_test() {
 
   echo "testing empty include file"
 
-  if ! ${CQL} --in "$T/include_empty.sql" --echo --include_paths test >"$O/include_empty.out" 2>"$O/include_empty.err"; then
+  if ! ${CQL} --in "$T/include_empty.sql" --echo >"$O/include_empty.out" 2>"$O/include_empty.err"; then
     echo "empty include file failed"
     cat "$O/include_empty.err"
     failed

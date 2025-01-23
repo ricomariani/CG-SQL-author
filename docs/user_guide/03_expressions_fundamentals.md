@@ -185,11 +185,11 @@ right. More on expressions in the coming sections. The right side is often a
 constant in these cases but does not need to be.
 
 ```sql
-LET i := 1;  -- integer not null
-LET l := 1L;  -- long not null
-LET t := "x";  -- text not null
-LET b := x IS y; -- bool not null
-LET b := x = y;  -- bool (maybe not null depending on x/y)
+LET i := 1;       -- integer not null
+LET l := 1L;      -- long not null
+LET t := "x";     -- text not null
+LET b := x IS y;  -- bool not null
+LET b := x = y;   -- bool (maybe not null depending on x/y)
 ```
 
 The pseudo-function "nullable" removes `not null` from the type of
@@ -197,7 +197,7 @@ its argument but otherwise does no computation. This can be useful to
 initialize nullable types.
 
 ```sql
-LET n_i := nullable(1);  -- nullable integer variable initialized to 1
+LET n_i := nullable(1);   -- nullable integer variable initialized to 1
 LET n_l := nullable(1L);  -- nullable long variable initialized to 1
 ```
 
@@ -206,7 +206,7 @@ argument but otherwise does no computation. This also can be useful to
 initialize nullable types.
 
 ```sql
-LET s_i := sensitive(1);  -- sensitive nullable integer variable initialized to 1
+LET s_i := sensitive(1);   -- sensitive nullable integer variable initialized to 1
 LET s_l := sensitive(1L);  -- sensitive nullable long variable initialized to 1
 ```
 
@@ -337,7 +337,7 @@ We'll see both in the sections to follow.
 declare enum business_type integer (
   restaurant,
   laundromat,
-  corner_store = 11+3  /* math added for demo purposes only */
+  corner_store = 11 + 3  /* math added for demo purposes only */
 );
 ```
 
@@ -381,16 +381,22 @@ SELECT * FROM businesses WHERE type = state.delaware;
 Enumerations follow these rules:
 
 * The enumeration can be any numeric type (bool, integer, long integer, real).
-* The values of the enumeration start at 1 (i.e., if there is no `= expression`, the first item will be `1`, not `0`).
+* The values of the enumeration start at 1 (i.e., if there is no `= expression`,
+  the first item will be `1`, not `0`).
 * If you don't specify a value, the next value is the previous value plus one.
-* If you do specify a value, it can be any constant expression, and it will be cast to the type of the enumeration (even if that is lossy).
-* The enumeration can refer to previous values in itself with no qualification `(big = 100.0, medium = big/2, small = medium/2)`.
-* The enumeration can refer to previously defined enumerations as usual `(code = business_type.restaurant)`.
-* Once the enumeration is defined, you refer to its members in a fully qualified fashion `enum_name.member_name` elsewhere.
+* If you do specify a value, it can be any constant expression, and it will be
+  cast to the type of the enumeration (even if that is lossy).
+* The enumeration can refer to previous values in itself with no qualification
+  `(big = 100.0, medium = big/2, small = medium/2)`.
+* The enumeration can refer to previously defined enumerations as usual `(code =
+  business_type.restaurant)`.
+* Once the enumeration is defined, you refer to its members in a fully qualified
+  fashion `enum_name.member_name` elsewhere.
 
 With these forms, you get some additional useful output:
 * The JSON includes the enumerations and their values in their own section.
-* You can use the `@emit_enums` directive to put declarations like this into the `.h` file that corresponds to the current compiland.
+* You can use the `@emit_enums` directive to put declarations like this into the
+  `.h` file that corresponds to the current compiland.
 
 ```c
 enum business_type {
@@ -478,7 +484,7 @@ declare const group some_constants (
 
 As with enums, referring to `my_x`, `my_y`, or `my_z` after this will cause the
 appropriate constant value to be inlined into the code.  The output code carries
-no symbolic reference to the constant.  However, similary to enums, if you wish
+no symbolic reference to the constant.  However, similarly to enums, if you wish
 the constant to be consumable by external code you can use:
 
 
@@ -523,7 +529,7 @@ change, you have to revisit all the places.
 
 To help with this situation, and to make the code a little more self-describing,
 we added named types to the language. This is a lot like `typedef` in the C
-language. These defintions do not create different incompatible types, but they
+language. These definitions do not create different incompatible types, but they
 do let you name types for reuse.
 
 You can now write these sorts of forms:
@@ -628,7 +634,7 @@ expression will be assigned a nullable type, you can follow these rules; they
 will hopefully be intuitive if you are familiar with SQL:
 
 The literal `NULL` is, of course, always assigned a nullable type. All other
-literals are nonnull.
+literals are non-null.
 
 In general, the type of an expression involving an operator (e.g., `+`, `==`,
 `!=`, `~`, `LIKE`, et cetera) is nullable if any of its arguments are
@@ -669,7 +675,7 @@ columns on the left side of the join are considered nullable.
 As in most other languages, CQL does not perform evaluation of value-level
 expressions during type checking. There is one exception to this rule: An
 expression within a `const` is evaluated at compilation time, and if its
-result is then known to be nonnull, it will be given a `NOT NULL` type. For
+result is then known to be non-null, it will be given a `NOT NULL` type. For
 example, `const(NULL or 1)` is given the type `BOOL NOT NULL`, whereas merely
 `NULL or 1` has the type `BOOL`.
 
@@ -1293,13 +1299,23 @@ And equivalently using pipeline notation
 
 The trailing `~type~` notation has very strong binding,  As shown in
 the order of operations table, it is even stronger than the unary `~`
-operator. It is indended to be used in function pipelines in combination
+operator. It is intended to be used in function pipelines in combination
 with other pipeline operations (the `:` family) rather than as part of arithmetic
 and so forth, hence it has a fairly strong binding (equal to `:`).
 
-The `~type~` form is immediatley converted to the standard `CAST` form
+The `~type~` form is immediately converted to the standard `CAST` form
 and so SQLite will never see this alternate notation.  This form is purely
-syntatic sugar.
+syntactic sugar.
+
+Compare:
+
+```sql
+-- pipeline notation
+select x:substr(5) ~int~ :ifnull(0) x from X;
+
+-- equivalent
+SELECT ifnull(CAST(substr(x, 5) AS INT), 0) AS x FROM X;
+```
 
 ### CASE Expressions
 
@@ -1437,9 +1453,9 @@ of examples. So let's start with a table with some sensitive data.
 
 ```sql
 create table with_sensitive(
- id integer,
- name text @sensitive,
- sens integer @sensitive
+  id integer,
+  name text @sensitive,
+  sens integer @sensitive
 );
 ```
 
@@ -1469,8 +1485,8 @@ So looking at that procedure, we can see that it's reading sensitive data, so th
 * and the `between` expression is also sensitive
 
 Generally, sensitivity is "radioactive" - anything it touches becomes sensitive.
-This is very important because even a simple-looking expression like `sens IS NOT NULL`
-must lead to a sensitive result or the whole process would be largely
+This is very important because even a simple-looking expression like `sens IS
+NOT NULL` must lead to a sensitive result or the whole process would be largely
 useless. It has to be basically impossible to wash away sensitivity.
 
 These rules apply to normal expressions as well as expressions in the context of
@@ -1609,11 +1625,11 @@ Now these "assignments" can happen in a variety of ways:
 
 * you can set an out parameter of your procedure
 * when calling a function or procedure, we require:
-  * any IN parameters of the target be "assignable" from the value of the
+  * any `IN` parameters of the target be "assignable" from the value of the
     argument expression
-  * any OUT parameters of the target be "assignable" from the procedures type
+  * any `OUT` parameters of the target be "assignable" from the procedures type
     to the argument variable
-  * any IN/OUT parameters require both the above
+  * any `INOUT` parameters require both the above
 
 Now it's possible to write a procedure that accepts sensitive things and returns
 non-sensitive things.  This is fundamentally necessary because the proc must be
@@ -1633,8 +1649,8 @@ are ref counted by the runtime.
 The three reference types are:
 
 * `TEXT`
-* `OBJECT`
 * `BLOB`
+* `OBJECT`
 
 Each of these has their own macro for `retain` and `release` though all three
 actually turn into the exact same code in all the current CQL runtime
@@ -1708,7 +1724,7 @@ in a global or an out parameter the result will survive to be used later.
 
 CQL tries to adhere to normal SQL comparison rules but with a C twist.
 
-### `OBJECT`
+#### `OBJECT`
 
 The object type has no value-based comparison, so there is no `<`, `>` and so
 forth.
@@ -1734,7 +1750,7 @@ the usual SQL rules. And again, as in SQL, the `IS` operator returns true for
 > that are known to be `NOT NULL` against `NULL` yields errors. This is also true
 > where an expression has been inferred to be `NOT NULL` by control flow analysis.
 
-### `TEXT`
+#### `TEXT`
 
 Text has value comparison semantics, but normal string comparison is done only
 with `strcmp`, which is of limited value. Typically, you'll want to either
@@ -1768,7 +1784,7 @@ comparisons as above.
 Additionally there are special text comparison operators such as `LIKE`, `MATCH`
 and `GLOB`. These comparisons are defined by SQLite.
 
-### `BLOB`
+#### `BLOB`
 
 Blobs are compared by value (equivalent to `memcmp`) but have no well-defined
 ordering. The `memcmp` order is deemed not helpful as blobs usually have

@@ -17,14 +17,18 @@ First there are three types of cursors, as we will see below.
 
 ### Statement Cursors
 
-A statement cursor is based on a SQL `SELECT` statement.  A full example might
-look like this:
+A statement cursor is based on a SQL `SELECT` statement, or some other statement
+that returns a result set (like DML with `RETURNING`).  An example might look like this:
 
 ```sql
--- elsewhere
+-- somewhere we declare this table
 create table xy_table(x integer, y integer);
 
+-- legacy syntax
 declare C cursor for select x, y from xy_table;
+
+-- economical syntax (same thing)
+cursor C for select x, y from xy_table;
 ```
 
 When compiled, this will result in creating a SQLite statement object (type
@@ -44,13 +48,16 @@ the local variables `x` and `y`.
 These variables might then be used to create some output such as:
 
 ```sql
-/* note use of double quotes so that \n is legal */
+-- somewhere we say printf is a varargs external function with any arg in any position
+declare proc printf no check;
+
+-- note use of double quotes so that \n is legal
 call printf("x:%d y:%d\n", ifnull(x, 0), ifnull(y,0));
 ```
 
-More generally, there the cursor may or may not be holding fetched values. The
-cursor variable `C` can be used by itself as a boolean indicating the presence
-of a row.  So a more complete example might be
+More generally, attemping to fetch values may or may not actually get a row,
+there may be none left.  The cursor variable `C` can be used by itself as a
+boolean to indicate if the fetch succeeded.  So a more complete example might be:
 
 ```sql
 if C then
@@ -60,7 +67,7 @@ else
 end if
 ```
 
-And even more generally
+This often happens in a loop, yielding this form:
 
 ```sql
 loop fetch C into x, y
@@ -75,13 +82,13 @@ Now if the table `xy_table` had instead had dozens of columns, those
 declarations would be very verbose and error prone, and frankly annoying,
 especially if the table definition was changing over time.
 
-To make this a little easier, there are so-called 'automatic' cursors.  These
-happen implicitly and include all the necessary storage to exactly match the
-rows in their statement.  Using the automatic syntax for the above looks like
-so:
+To make this a little easier, the cursor can include its own storage, sometimes
+these are called 'automatic' cursors.  The storage is declared implicitly and
+includes all the necessary fields to exactly match the rows of the cursor.
+Using the automatic syntax for the above looks like so:
 
 ```sql
-declare C cursor for select * from xy_table;
+cursor C for select * from xy_table;
 fetch C;
 if C then
   call printf("x:%d y:%d\n", ifnull(C.x, 0), ifnull(C.y,0));
@@ -91,32 +98,33 @@ end if;
 or the equivalent loop form:
 
 ```sql
-declare C cursor for select * from xy_table;
+cursor C for select * from xy_table;
 loop fetch C
 begin
   call printf("x:%d y:%d\n", ifnull(C.x, 0), ifnull(C.y,0));
 end;
 ```
 
-All the necessary local state is automatically created, hence "automatic"
-cursor. This pattern is generally preferred, but the loose variables pattern is
-in some sense more general.
+All the necessary local state is automatically created, hence the name
+"automatic" cursor. This pattern is generally preferred, but the loose variables
+pattern is in some sense more general.  For instance you could store values
+directing into out variables this way.
 
-In all the cases if the number or type of variables do not match the select
-statement, semantic errors are produced.
+In all the cases semantic errors are produced if the number and type of
+variables do not match the select statement.
 
 ### Shapes
 
-In the following discussion the notion of "Shapes" will make its first major
+In the following discussion the notion of "shapes" will make its first major
 appearance. Shapes are in some sense one of the magic CQL features that allow
-you to use work with dozens of columns without having to type the names
-all the time and without creating a maintenance disaster.  They first made
-their appearance in cursor features but soon found their way throughout the
-language, as we will see below, we consume shapes with `LIKE` when the shape
-is used for type information and `FROM` when it is being expanded into values.
+you to use work with dozens of columns without having to type their names all
+the time and without creating a maintenance disaster.  They first made their
+appearance in cursor features but soon found their way throughout the language,
+as we will see below, we consume shapes with `LIKE` when the shape is used for
+type information and `FROM` when it is being expanded into values.
 
 SQL doesn't have the notion of structure types, but structures actually appear
-pretty directly in many places.  Generally we call these things "Shapes" and
+pretty directly in many places.  Generally we call these things "shapes" and
 there are a variety of source for shapes including:
 
 * the columns of a table, `like my_table`
@@ -134,7 +142,7 @@ interface foo (x int, y int, n text!);
 
 The other shape sources similarly define a set of named fields.
 
-The most typical ways to consume shapes are using LIKE, for instance:
+The most typical ways to consume shapes are using `LIKE`, for instance:
 
 ```sql
 -- all of the shape S
@@ -147,23 +155,26 @@ LIKE S(x, y)
 LIKE S(-x, -y)
 
 -- take from S, the columns of shapes A and B plus x and y
+-- this of course creates an error if S does not in fact
+-- have all those columns
 LIKE S(like A, like B, x, y)
 ```
 
-When consuming values use
+When consuming values from somewhere with a shape we use:
 
 ```sql
 FROM X LIKE Y
 ```
 
-The `FROM` part indicates the domain and the optional LIKE part indicates
+The `FROM` part indicates the domain (the source of the values) and the optional
+`LIKE` part indicates the subset of those values that are desired (via one of
+the shape selections above). For example
 
 ```sql
-FROM arguments [like ...]
-FROM locals [like ...]
-FROM my_cursor [like ...]
-FROM arg_bundle [like ...]
-FROM proc [like ...]
+FROM ARGUMENTS [like ...]
+FROM LOCALS [like ...]
+FROM a_cursor [like ...]
+FROM an_arg_bundle [like ...]
 ```
 
 The most important use of shapes is to create value cursors.
@@ -171,7 +182,9 @@ The most important use of shapes is to create value cursors.
 ### Value Cursors
 
 The purpose of value cursors is to make it possible for a stored procedure to
-work with structures as a unit rather than only field by field.
+work with structures as a unit rather than only field by field.  The value cursor
+need not have a SQLite equivalent, any shape source will do to define it and any
+data source, computed or otherwise, can be used to load it.
 
 Let's first start with how you declare a value cursor.  It is providing one of
 the shape sources above.
@@ -182,17 +195,18 @@ So:
 declare C cursor like xy_table;
 declare C cursor like select 1 a, 'x' b;
 declare C cursor like (a integer not null, b text not null);
-declare C cursor like my_view;
-declare C cursor like my_other_cursor;
-declare C cursor like my_interface;
-declare C cursor like my_previously_declared_stored_proc;
-declare C cursor like my_previously_declared_stored_proc arguments;
+declare C cursor like a_view;
+declare C cursor like a_cursor;
+declare C cursor like an_interface;
+declare C cursor like a_previously_declared_procedure;
+declare C cursor like a_previously_declared_procedure arguments;
 ```
 
-Any of those forms define a valid set of columns -- a shape.  Note that the
+Any of those forms define a valid set of columns, i.e., a shape.  Note that the
 `select` example in no way causes the query provided to run. Instead, the select
 statement is analyzed and the column names and types are computed.  The cursor
-gets the same field names and types.  Nothing happens at run time.
+gets the same field names and types.  The cursor's shape is literally `like` the
+`select` clause but that `select` never runs.
 
 The last two examples assume that there is a stored procedure defined somewhere
 earlier in the same translation unit and that the procedure returns a result set
@@ -200,15 +214,28 @@ or has arguments, respectively.
 
 In all cases the cursor declaration makes a cursor that could hold the indicated
 result. That result can then be loaded with `FETCH` or emitted with `OUT` or
-`OUT UNION` which will be discussed below.
+`OUT UNION` -- all of which is discussed below.
 
-Once we have declared a value cursor we can load it with values using `FETCH` in
+#### Loading a Value Cursor
+
+Once we have declared a value cursor, we can load it with values using `FETCH` in
 its value form. Here are some examples:
 
-Fetch from compatible values:
+You can `fetch` into a cursor by providing compatible values:
 
 ```sql
 fetch C from values(1,2);
+```
+
+```sql
+fetch C(x,y) from values(1,2);
+```
+
+```sql
+-- this form makes it clear which field is getting which value
+fetch C using
+    1 x,
+    2 y;
 ```
 
 Fetch from a call to a procedure that returns a single row:
@@ -222,7 +249,7 @@ Fetch from another cursor:
 fetch C from D;
 ```
 
-In this last case if D is a statement cursor it must also be "automatic" (i.e.
+In this last case if `D` is a statement cursor it must also be "automatic" (i.e.
 it has the storage).  This form lets you copy a row and save it for later.  For
 instance, in a loop you could copy the current max-value row into a value cursor
 and use it after the loop, like so:
@@ -239,9 +266,10 @@ begin
 end;
 ```
 
-After the loop, D either empty because there were no rows (thus `if D` would
-fail) or else it has the row with the maximum value of `something`, whatever
-that is.
+After the loop, `D` is either empty because there were no rows (thus `if D`
+would fail) or else it has the row with the maximum value of `something`,
+whatever that is.  Note that you don't have to copy each field separately
+or nor change the code should new fields be added.
 
 Value cursors are always have their own storage, so you could say all value
 cursors are "automatic".
@@ -258,10 +286,10 @@ end if;
 When you call a procedure you may or may not get a row as we'll see below.
 
 The third type of cursor is a "result set" cursor but that won't make any sense
-until we've discussed result sets a little which requires `OUT` and/or `OUT
-UNION` and so we'll go on to those statements next.  As it happens, we are
-recapitulating the history of cursor features in the CQL language by exploring
-the system in this way.
+until we've discussed result sets which requires `OUT` and/or `OUT UNION` and so
+we'll go on to those statements next.  As it happens, we are recapitulating the
+history of cursor features in the CQL language by exploring the system in this
+way.
 
 #### Benefits of using named typed to declare a cursor
 
@@ -272,10 +300,11 @@ declare C cursor like ( id integer not null, val real, flag boolean );
 ```
 
 This wouldn't really give us much more than the other forms, however typed name
-lists can include LIKE in them again, as part of the list.  Which means you can
+lists can include `LIKE` in them again, as part of the list.  Which means you can
 do this kind of thing:
 
 ```sql
+-- make a cursor C just like D but also add the fields extra1 and extra2
 declare C cursor like (like D, extra1 real, extra2 bool)
 ```
 
@@ -285,9 +314,9 @@ You could then load that cursor like so:
 fetch C from values (from D, 2.5, false);
 ```
 
-and now you have D plus 2 more fields which maybe you want to output.
+and now you have `D` plus 2 more fields which maybe you want to output.
 
-Importantly this way of doing it means that C always includes D, even if D
+Importantly this way of doing it means that `C` always includes `D`, even if `D`
 changes over time.  As long as the `extra1` and `extra2` fields don't conflict
 names it will always work.
 
@@ -301,16 +330,15 @@ Suppose you want to return several variables, the "classic" way to do so would
 be a procedure like this:
 
 ```sql
-create proc get_a_row(
-  id_ integer not null,
-  out got_row bool not null,
-  out w integer not null,
-  out x integer,
-  out y text not null,
+proc get_a_row(
+  id_ integer!,
+  out got_row bool!,
+  out w int!,
+  out x int,
+  out y text!,
   out z real)
 begin
-  declare C cursor for
-    select w, x, y, z from somewhere where id = id_;
+  cursor C for select w, x, y, z from somewhere where id = id_;
   fetch C into w, x, y, z;
   set got_row := C;
 end;
@@ -318,26 +346,27 @@ end;
 
 This is already verbose, but you can imagine the situation gets very annoying if
 `get_a_row` has to produce a couple dozen column values.  And of course you have
-to get the types exactly right. And they might evolve over time. Joy.
+to get the types exactly right. And they might evolve over time. This is not
+very friendly to maintainers.
 
-On the receiving side you get to do something just as annoying:
+On the receiving side you must do something just as awkward:
 
 ```sql
-declare w integer not null
-declare x integer;
+declare got_row bool!;
+declare w int!;
+declare x int;
 declare y text;
 declare z real;
-declare got_row bool not null;
-call get_a_row(id, got_row, w, x, y, z);
+call get_a_row(some_id, got_row, w, x, y, z);
 ```
 
 Using the `out` statement we get the equivalent functionality with a much
 simplified pattern. It looks like this:
+
 ```sql
-create proc get_a_row(id_ integer not null)
+proc get_a_row(id_ integer not null)
 begin
-  declare C cursor for
-    select w, x, y, z from somewhere where id = id_;
+  cursor C for select w, x, y, z from somewhere where id = id_;
   fetch C;
   out C;
 end;
@@ -354,7 +383,7 @@ the only way to load a value cursor. Later, the calculus was generalized. The
 original form still works:
 
 ```sql
-declare C cursor fetch from call get_a_row(id);
+cursor C fetch from call get_a_row(id);
 ```
 
 The `OUT` statement lets you return a single row economically and lets you then
@@ -364,7 +393,7 @@ a lot less error prone than having a large number of `out` arguments to your
 procedure.
 
 Once you have the result in a value cursor you can do the usual cursor
-operations to move it around or otherwise work with it.
+operations to get values from it or pass pieces of it to other procedures.
 
 The use of the `LIKE` keyword to refer to groups of columns spread to other
 places in CQL as a very useful construct, but it began here with the need to
@@ -373,13 +402,15 @@ describe a cursor shape economically, by reference.
 ### OUT UNION Statement
 
 The semantics of the `OUT` statement are that it always produces one row of
-output (a procedure can produce no row if an `out` never actually rans but the
+output (a procedure can produce no row if an `OUT` never actually rans but the
 procedure does use `OUT`).
 
 If an `OUT` statement runs more than once, the most recent row becomes the
-result.  So the `OUT` statement really does mirror having one `out` variable for
-each output column.  This was its intent and procedures that return at most, or
-exactly, one row are very common so it works well enough.
+result, and all such statements must agree on the shape of the result.  So the
+`OUT` statement really does mirror having one `OUT` variable for each output
+column.  This was its intent and procedures that return at most one row are very
+common so it works well enough.  In most cases it's actually always exactly one row
+and not zero.
 
 However, in general, one row results do not suffice; you might want to produce a
 result set from various sources, possibly with some computation as part of the
@@ -391,9 +422,9 @@ Here's a (somewhat contrived) example of the kind of thing you can do with this
 form:
 
 ```sql
-create proc foo(n integer not null)
+proc foo(n integer not null)
 begin
-  declare C cursor like select 1 value;
+  cursor C like select 1 value;
   let i := 0;
   while i < n
   begin
@@ -415,7 +446,7 @@ we merge two different data streams.
 create table t1(id integer, stuff text, [other things too]);
 create table t2(id integer, stuff text, [other things too]);
 
-create proc bar()
+proc bar()
 begin
   declare C cursor for select * from t1 order by id;
   declare D cursor for select * from t2 order by id;
@@ -448,18 +479,22 @@ begin
 end;
 ```
 
-Just like `foo`, in `bar`, each time `OUT UNION` runs a new row is accumulated.
+Just like `foo`, in `bar`, each time `OUT UNION` runs a new row is accumulated
+creating the overall result set.
 
-Now, if you build a procedure that ends with a `SELECT` statement CQL
+The normal way to create a result set is to make a procedure that ends with a
+`SELECT` statement, or something else that returns rows. In that case CQL
 automatically creates a fetcher function that does something like an `OUT UNION`
 loop -- it loops over the SQLite statement for the `SELECT` and fetches each
-row, materializing a result.
+row, materializing a result.  This "fetcher" can be called from `C` or `Lua` directly
+to get a materialized result set and it is used by CQL itself as needed.
 
-With `OUT UNION` you take manual control of this process, allowing you to build
-arbitrary result sets.  Note that either of `C` or `D` above could have been
-modified, replaced, skipped, normalized, etc. with any kind of computation.
+With `OUT UNION` you take manual control of that same process creating identical
+result sets. This allows you to build arbitrary result sets using computations
+of your choice.  Note that the data from either of `C` or `D` above could have
+been modified, replaced, skipped, normalized, etc. with any kind of computation.
 Even entirely synthetic rows can be computed and inserted into the output as we
-saw in `foo`.
+saw in `foo`.  This is invaluable for mocking.
 
 ### Result Set Cursors
 
@@ -469,22 +504,22 @@ cursor.
 `OUT UNION` makes it possible to create arbitrary result sets using a mix of
 sources and filtering.  Unfortunately this result type is not a simple row, nor
 is it a SQLite statement.  This meant that neither of the existing types of
-cursors could hold the result of a procedure that used `OUT UNION`. -- CQL could
-not itself consume its own results.
+cursors could hold the result of a procedure that used `OUT UNION`. and then CQL
+could not itself consume its own results.
 
-To address this hole, we need an additional cursor type.  The syntax is exactly
+To address this hole, we need an additional cursor type. The syntax is exactly
 the same as the statement cursor cases described above but, instead of holding a
-SQLite statement, the cursor holds a result set pointer and the current and
-maximum row numbers. Stepping through the cursor simply increments the row
+SQLite statement, the cursor holds a result set pointer along with the current
+and maximum row numbers. Stepping through the cursor simply increments the row
 number and fetches the next row out of the rowset instead of from SQLite.
 
 Example:
 
 ```sql
 -- reading the above
-create proc reader()
+proc reader()
 begin
-  declare C cursor for call bar();
+  cursor C for call bar();
   loop fetch C
   begin
     call printf("%d %s\n", C.id, C.stuff);  -- or whatever fields you need
@@ -539,16 +574,16 @@ This example showcases several of the cursor and shape slicing features by emitt
 two related rows:
 
 ```sql
-create proc foo(id_ integer not null)
+proc foo(id_ integer not null)
 begin
   -- this is the shape of the result we want -- it's some of the columns of "big"
   -- note this query doesn't run, we just use its shape to create a cursor
   -- with those columns.
-  declare result cursor like select id, b, c, d from big;
+  cursor result like select id, b, c, d from big;
 
   -- fetch the main row, specified by id_
   -- main row has all the fields, including id2
-  declare main_row cursor for select * from big where id = id_;
+  cursor main_row for select * from big where id = id_;
   fetch main_row;
 
   -- now fetch the result columns out of the main row
@@ -562,7 +597,7 @@ begin
 
   -- now we want the related row, but we only need two columns
   -- from the related row, 'b' and 'c'
-  declare alt_row cursor for select b, c from big where big.id2 = main_row.id2;
+  cursor alt_row for select b, c from big where big.id2 = main_row.id2;
   fetch alt_row;
 
   -- update some of the fields in 'result' from the `alt_row`
@@ -598,7 +633,7 @@ Here is the rewritten version of the above procedure; this is what ultimately
 gets compiled into C.
 
 ```sql
-CREATE PROC foo (id_ INTEGER NOT NULL)
+PROC foo (id_ INTEGER NOT NULL)
 BEGIN
   DECLARE result CURSOR LIKE SELECT id, b, c, d FROM big;
   DECLARE main_row CURSOR FOR SELECT * FROM big WHERE id = id_;
@@ -617,8 +652,8 @@ END;
 ```
 
 Of course you could have typed the above directly but if there are 50 odd
-columns it gets old fast and is very error prone.  The sugar form is going to be
-100% correct and will require much less typing and maintenance.
+columns it gets old fast and is very error prone.  The sugared form is going to
+be 100% correct and will require much less typing and maintenance.
 
 Finally, while I've shown both `LIKE` forms separately, they can also be used
 together.  For instance:
@@ -641,8 +676,8 @@ the names of cursors.  Usually `C`;
 
 A cursor declared in one of these forms:
 
-* `declare C cursor for select * from foo;`
-* `declare C cursor for call foo();`  (foo might end with a `select` or use `out union`)
+* `cursor C for select * from foo;`
+* `cursor C for call foo();`  (foo might end with a `select` or use `out union`)
 
 is either a statement cursor or a result set cursor.  In either case the cursor
 moves through the results.  You load the next row with:
@@ -686,10 +721,10 @@ declared anyway.
 
  A value cursor is declared in one of these ways:
 
- * `declare C cursor fetch from call foo(args)`
+ * `cursor C fetch from call foo(args)`
    * `foo` must be a procedure that returns one row with `OUT`
- * `declare C cursor like select 1 id, "x" name;`
- * `declare C cursor like X;`
+ * `cursor C like select 1 id, "x" name;`
+ * `cursor C like X;`
    * where X is the name of a table, a view, another cursor, or a procedure that
      returns a structured result
 
@@ -810,9 +845,11 @@ very helpful for moving data between cursors, and the database. These can be
 rounded out with similar constructs for procedure definitions and procedure
 calls as follows.
 
-First we'll define some shapes to use in the examples.  Note that we made `U` using `T`.
+First we'll define some shapes to use in the examples.  Note that we made `U`
+using `T`.
 
 ```sql
+-- these tables appear in the following examples
 create table T(x integer not null, y integer not null,  z integer not null);
 create table U(like T, a integer not null, b integer not null);
 ```
@@ -827,7 +864,7 @@ a trailing underscore appended to them.  The arguments will be `x_`, `y_`, and
 `z_` as we can see if the following:
 
 ```sql
-create proc p1(like T)
+proc p1(like T)
 begin
   call printf("%d %d %d\n", x_, y_, z_);
 end;
@@ -838,7 +875,7 @@ is obviously contrived, but of course it generalizes. It is exactly equivalent
 to the above.
 
 ```sql
-create proc p2(like T)
+proc p2(like T)
 begin
   call printf("%d %d %d\n", from arguments);
 end;
@@ -848,7 +885,7 @@ Now we might want to chain these things together.  This next example uses a
 cursor to call `p1`.
 
 ```sql
-create proc q1()
+proc q1()
 begin
  declare C cursor for select * from T;
  loop fetch C
@@ -865,7 +902,7 @@ cursor to use as arguments.  This next procedure has more arguments than just
 still have the `T` arguments `x_`, `y_`, and `z_`.
 
 ```sql
-create proc q2(like U)
+proc q2(like U)
 begin
   /* just the args that match T: so this is still call p(x_, y_, z_) */
   call p1(from arguments like T);
@@ -875,7 +912,7 @@ end;
 Or similarly, using a cursor.
 
 ```sql
-create proc q3(like U)
+proc q3(like U)
 begin
  declare C cursor for select * from U;
  loop fetch C
@@ -930,7 +967,7 @@ create table Person (
 To manage this table we might need something like this:
 
 ```sql
-create proc insert_person(like Person)
+proc insert_person(like Person)
 begin
   insert into Person from arguments;
 end;
@@ -939,7 +976,7 @@ end;
 As we have seen, the above expands into:
 
 ```sql
-create proc insert_person(
+proc insert_person(
   id_ text not null,
   name_ text not null,
   address_ text not null,
@@ -962,7 +999,7 @@ To generalize this the language adds the notion of named argument bundles. The
 idea here is to name the bundles which provides a useful scoping.  Example:
 
 ```sql
-create proc insert_two_people(p1 like Person, p2 like Person)
+proc insert_two_people(p1 like Person, p2 like Person)
 begin
   -- using a procedure that takes a Person args
   call insert_person(from p1);
@@ -973,7 +1010,7 @@ end;
 or alternatively
 
 ```sql
-create proc insert_two_people(p1 like Person, p2 like Person)
+proc insert_two_people(p1 like Person, p2 like Person)
 begin
   -- inserting a Person directly
   insert into Person from p1;
@@ -984,7 +1021,7 @@ end;
 The above expands into:
 
 ```sql
-create proc insert_two_people(
+proc insert_two_people(
   p1_id text not null,
   p1_name text not null,
   p1_address text not null,
@@ -1011,7 +1048,7 @@ to the arguments by their expanded name such as `p1_address` or alternatively
 Here's another example showing a silly but illustrative thing you could do:
 
 ```sql
-create proc insert_lotsa_people(P like Person)
+proc insert_lotsa_people(P like Person)
 begin
   -- make a cursor to hold the arguments
   declare C cursor like P;
@@ -1369,7 +1406,7 @@ Example:
 
 ```sql
 -- consumes a cursor
-create proc cursor_user(box_obj object<my_shape cursor>)
+proc cursor_user(box_obj object<my_shape cursor>)
 begin
   -- the cursors shape will be my_shape, matching box_obj
   cursor C for box_obj;
@@ -1380,7 +1417,7 @@ begin
 end;
 
 -- captures a cursor and passes it on
-create proc cursor_boxer()
+proc cursor_boxer()
 begin
   declare C cursor for select * from something_like_my_shape;
   declare box_obj object<my_shape cursor>

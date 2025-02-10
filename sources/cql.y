@@ -445,7 +445,7 @@ program: top_level_stmts[stmts] {
    }
    ;
 
-include_section: BEGIN_INCLUDE top_level_stmts END_INCLUDE { $include_section = $top_level_stmts; }
+include_section: BEGIN_INCLUDE top_level_stmts END_INCLUDE { $$ = $top_level_stmts; }
    ;
 
 include_stmts:
@@ -468,8 +468,8 @@ include_stmts:
     ;
 
 opt_stmt_list:
-  /* nil */  { $opt_stmt_list = NULL; }
-  | stmt_list  { $opt_stmt_list = $stmt_list; }
+  /* nil */  { $$ = NULL; }
+  | stmt_list  { $$ = $stmt_list; }
   ;
 
 macro_ref:
@@ -518,9 +518,9 @@ stmt_list:
   ;
 
 stmt:
-  misc_attrs any_stmt ';' { $stmt = make_statement_node($misc_attrs, $any_stmt); }
-  | ifdef_stmt { $stmt = make_statement_node(NULL, $ifdef_stmt); }
-  | ifndef_stmt { $stmt = make_statement_node(NULL, $ifndef_stmt); }
+  misc_attrs any_stmt ';' { $$ = make_statement_node($misc_attrs, $any_stmt); }
+  | ifdef_stmt { $$ = make_statement_node(NULL, $ifdef_stmt); }
+  | ifndef_stmt { $$ = make_statement_node(NULL, $ifndef_stmt); }
   ;
 
 expr_stmt: expr {
@@ -528,7 +528,7 @@ expr_stmt: expr {
         $$ = $expr;
      }
      else {
-       $expr_stmt = new_ast_expr_stmt($expr);
+       $$ = new_ast_expr_stmt($expr);
      }
    }
   ;
@@ -621,12 +621,12 @@ any_stmt:
   ;
 
 explain_stmt:
-  EXPLAIN opt_query_plan explain_target  { $explain_stmt = new_ast_explain_stmt(new_ast_option($opt_query_plan), $explain_target); }
+  EXPLAIN opt_query_plan explain_target  { $$ = new_ast_explain_stmt(new_ast_option($opt_query_plan), $explain_target); }
   ;
 
 opt_query_plan:
-  /* nil */  { $opt_query_plan = EXPLAIN_NONE; }
-  | QUERY_PLAN  { $opt_query_plan = EXPLAIN_QUERY_PLAN; }
+  /* nil */  { $$ = EXPLAIN_NONE; }
+  | QUERY_PLAN  { $$ = EXPLAIN_QUERY_PLAN; }
   ;
 
 explain_target: select_stmt
@@ -643,77 +643,77 @@ explain_target: select_stmt
   ;
 
 previous_schema_stmt:
-  AT_PREVIOUS_SCHEMA  { $previous_schema_stmt = new_ast_previous_schema_stmt(); }
+  AT_PREVIOUS_SCHEMA  { $$ = new_ast_previous_schema_stmt(); }
   ;
 
 schema_upgrade_script_stmt:
-  AT_SCHEMA_UPGRADE_SCRIPT  { $schema_upgrade_script_stmt = new_ast_schema_upgrade_script_stmt(); }
+  AT_SCHEMA_UPGRADE_SCRIPT  { $$ = new_ast_schema_upgrade_script_stmt(); }
   ;
 
 schema_upgrade_version_stmt:
   AT_SCHEMA_UPGRADE_VERSION '(' INTLIT ')'  {
-    $schema_upgrade_version_stmt = new_ast_schema_upgrade_version_stmt(new_ast_option(atoi($INTLIT))); }
+    $$ = new_ast_schema_upgrade_version_stmt(new_ast_option(atoi($INTLIT))); }
   ;
 
 set_stmt:
-  SET sql_name ASSIGN expr  { $set_stmt = new_ast_assign($sql_name, $expr); }
-  | SET sql_name[id] FROM CURSOR name[cursor] { $set_stmt = new_ast_set_from_cursor($id, $cursor); }
-  | SET sql_name '[' arg_list ']' ASSIGN expr  { $set_stmt = new_ast_expr_stmt(new_ast_expr_assign(new_ast_array($sql_name, $arg_list), $expr)); }
+  SET sql_name ASSIGN expr  { $$ = new_ast_assign($sql_name, $expr); }
+  | SET sql_name[id] FROM CURSOR name[cursor] { $$ = new_ast_set_from_cursor($id, $cursor); }
+  | SET sql_name '[' arg_list ']' ASSIGN expr  { $$ = new_ast_expr_stmt(new_ast_expr_assign(new_ast_array($sql_name, $arg_list), $expr)); }
   ;
 
 let_stmt:
-  LET sql_name ASSIGN expr  { $let_stmt = new_ast_let_stmt($sql_name, $expr); }
+  LET sql_name ASSIGN expr  { $$ = new_ast_let_stmt($sql_name, $expr); }
   ;
 
 const_stmt:
-  CONST sql_name ASSIGN expr  { $const_stmt = new_ast_const_stmt($sql_name, $expr); }
+  CONST sql_name ASSIGN expr  { $$ = new_ast_const_stmt($sql_name, $expr); }
   ;
 
 version_attrs_opt_recreate:
-  /* nil */  { $version_attrs_opt_recreate = NULL; }
-  | AT_RECREATE  opt_delete_plain_attr { $version_attrs_opt_recreate = new_ast_recreate_attr(NULL, $opt_delete_plain_attr); }
-  | AT_RECREATE '(' name ')'  opt_delete_plain_attr { $version_attrs_opt_recreate = new_ast_recreate_attr($name, $opt_delete_plain_attr); }
-  | version_attrs  { $version_attrs_opt_recreate = $version_attrs; }
+  /* nil */  { $$ = NULL; }
+  | AT_RECREATE  opt_delete_plain_attr { $$ = new_ast_recreate_attr(NULL, $opt_delete_plain_attr); }
+  | AT_RECREATE '(' name ')'  opt_delete_plain_attr { $$ = new_ast_recreate_attr($name, $opt_delete_plain_attr); }
+  | version_attrs  { $$ = $version_attrs; }
   ;
 
 opt_delete_plain_attr:
-  /* nil */  {$opt_delete_plain_attr = NULL; }
-  | AT_DELETE { $opt_delete_plain_attr = new_ast_delete_attr(NULL, NULL); }
+  /* nil */  {$$ = NULL; }
+  | AT_DELETE { $$ = new_ast_delete_attr(NULL, NULL); }
   ;
 
 opt_version_attrs:
-  /* nil */  { $opt_version_attrs = NULL; }
-  | version_attrs  { $opt_version_attrs = $version_attrs; }
+  /* nil */  { $$ = NULL; }
+  | version_attrs  { $$ = $version_attrs; }
   ;
 
 version_attrs:
-  AT_CREATE version_annotation opt_version_attrs  { $version_attrs = new_ast_create_attr($version_annotation, $opt_version_attrs); }
-  | AT_DELETE version_annotation opt_version_attrs  { $version_attrs = new_ast_delete_attr($version_annotation, $opt_version_attrs); }
+  AT_CREATE version_annotation opt_version_attrs  { $$ = new_ast_create_attr($version_annotation, $opt_version_attrs); }
+  | AT_DELETE version_annotation opt_version_attrs  { $$ = new_ast_delete_attr($version_annotation, $opt_version_attrs); }
   ;
 
 opt_delete_version_attr:
-  /* nil */  {$opt_delete_version_attr = NULL; }
-  | AT_DELETE version_annotation  { $opt_delete_version_attr = new_ast_delete_attr($version_annotation, NULL); }
+  /* nil */  {$$ = NULL; }
+  | AT_DELETE version_annotation  { $$ = new_ast_delete_attr($version_annotation, NULL); }
   ;
 
 drop_table_stmt:
-  DROP TABLE IF EXISTS sql_name  { $drop_table_stmt = new_ast_drop_table_stmt(new_ast_option(1), $sql_name);  }
-  | DROP TABLE sql_name  { $drop_table_stmt = new_ast_drop_table_stmt(NULL, $sql_name);  }
+  DROP TABLE IF EXISTS sql_name  { $$ = new_ast_drop_table_stmt(new_ast_option(1), $sql_name);  }
+  | DROP TABLE sql_name  { $$ = new_ast_drop_table_stmt(NULL, $sql_name);  }
   ;
 
 drop_view_stmt:
-  DROP VIEW IF EXISTS sql_name  { $drop_view_stmt = new_ast_drop_view_stmt(new_ast_option(1), $sql_name);  }
-  | DROP VIEW sql_name  { $drop_view_stmt = new_ast_drop_view_stmt(NULL, $sql_name);  }
+  DROP VIEW IF EXISTS sql_name  { $$ = new_ast_drop_view_stmt(new_ast_option(1), $sql_name);  }
+  | DROP VIEW sql_name  { $$ = new_ast_drop_view_stmt(NULL, $sql_name);  }
   ;
 
 drop_index_stmt:
-  DROP INDEX IF EXISTS sql_name  { $drop_index_stmt = new_ast_drop_index_stmt(new_ast_option(1), $sql_name);  }
-  | DROP INDEX sql_name  { $drop_index_stmt = new_ast_drop_index_stmt(NULL, $sql_name);  }
+  DROP INDEX IF EXISTS sql_name  { $$ = new_ast_drop_index_stmt(new_ast_option(1), $sql_name);  }
+  | DROP INDEX sql_name  { $$ = new_ast_drop_index_stmt(NULL, $sql_name);  }
   ;
 
 drop_trigger_stmt:
-  DROP TRIGGER IF EXISTS sql_name  { $drop_trigger_stmt = new_ast_drop_trigger_stmt(new_ast_option(1), $sql_name);  }
-  | DROP TRIGGER sql_name  { $drop_trigger_stmt = new_ast_drop_trigger_stmt(NULL, $sql_name);  }
+  DROP TRIGGER IF EXISTS sql_name  { $$ = new_ast_drop_trigger_stmt(new_ast_option(1), $sql_name);  }
+  | DROP TRIGGER sql_name  { $$ = new_ast_drop_trigger_stmt(NULL, $sql_name);  }
   ;
 
 create_virtual_table_stmt: CREATE VIRTUAL TABLE opt_vtab_flags sql_name[table_name]
@@ -728,18 +728,18 @@ create_virtual_table_stmt: CREATE VIRTUAL TABLE opt_vtab_flags sql_name[table_na
     struct ast_node *table_name_flags = new_ast_create_table_name_flags(table_flags_attrs, name);
     struct ast_node *create_table_stmt =  new_ast_create_table_stmt(table_name_flags, col_key_list);
     struct ast_node *module_info = new_ast_module_info($module_name, $opt_module_args);
-    $create_virtual_table_stmt = new_ast_create_virtual_table_stmt(module_info, create_table_stmt);
+    $$ = new_ast_create_virtual_table_stmt(module_info, create_table_stmt);
   };
 
-opt_module_args: /* nil */ { $opt_module_args = NULL; }
-  | '(' misc_attr_value_list ')' { $opt_module_args = $misc_attr_value_list; }
-  | '(' ARGUMENTS FOLLOWING ')' { $opt_module_args = new_ast_following(); }
+opt_module_args: /* nil */ { $$ = NULL; }
+  | '(' misc_attr_value_list ')' { $$ = $misc_attr_value_list; }
+  | '(' ARGUMENTS FOLLOWING ')' { $$ = new_ast_following(); }
   ;
 
 create_table_prefix_opt_temp:
   CREATE opt_temp TABLE {
     /* This node only exists so that we can get an early reduce in the table flow to grab the doc comment */
-   $create_table_prefix_opt_temp = $opt_temp; table_comment_saved = get_last_doc_comment();
+   $$ = $opt_temp; table_comment_saved = get_last_doc_comment();
   };
 
 create_table_stmt:
@@ -750,31 +750,31 @@ create_table_stmt:
     struct ast_node *col_key_list = $col_key_list;
     struct ast_node *table_flags_attrs = new_ast_table_flags_attrs(flags_node, $version_attrs_opt_recreate);
     struct ast_node *table_name_flags = new_ast_create_table_name_flags(table_flags_attrs, name);
-    $create_table_stmt =  new_ast_create_table_stmt(table_name_flags, col_key_list);
+    $$ =  new_ast_create_table_stmt(table_name_flags, col_key_list);
   }
   ;
 
 opt_temp:
-  /* nil */  { $opt_temp = 0; }
-  | TEMP  { $opt_temp = GENERIC_IS_TEMP; }
+  /* nil */  { $$ = 0; }
+  | TEMP  { $$ = GENERIC_IS_TEMP; }
   ;
 
 opt_if_not_exists:
-  /* nil */  { $opt_if_not_exists = 0;  }
-  | IF NOT EXISTS  { $opt_if_not_exists = GENERIC_IF_NOT_EXISTS; }
+  /* nil */  { $$ = 0;  }
+  | IF NOT EXISTS  { $$ = GENERIC_IF_NOT_EXISTS; }
   ;
 
 opt_no_rowid:
-  /* nil */  { $opt_no_rowid = 0; }
-  | WITHOUT ROWID  { $opt_no_rowid = TABLE_IS_NO_ROWID; }
+  /* nil */  { $$ = 0; }
+  | WITHOUT ROWID  { $$ = TABLE_IS_NO_ROWID; }
   ;
 
 opt_vtab_flags:
-  /* nil */ { $opt_vtab_flags = 0; }
-  | IF NOT EXISTS  { $opt_vtab_flags = GENERIC_IF_NOT_EXISTS; }
-  | AT_EPONYMOUS { $opt_vtab_flags = VTAB_IS_EPONYMOUS; }
-  | AT_EPONYMOUS IF NOT EXISTS  { $opt_vtab_flags = VTAB_IS_EPONYMOUS | GENERIC_IF_NOT_EXISTS; }
-  | IF NOT EXISTS AT_EPONYMOUS { $opt_vtab_flags = VTAB_IS_EPONYMOUS | GENERIC_IF_NOT_EXISTS; }
+  /* nil */ { $$ = 0; }
+  | IF NOT EXISTS  { $$ = GENERIC_IF_NOT_EXISTS; }
+  | AT_EPONYMOUS { $$ = VTAB_IS_EPONYMOUS; }
+  | AT_EPONYMOUS IF NOT EXISTS  { $$ = VTAB_IS_EPONYMOUS | GENERIC_IF_NOT_EXISTS; }
+  | IF NOT EXISTS AT_EPONYMOUS { $$ = VTAB_IS_EPONYMOUS | GENERIC_IF_NOT_EXISTS; }
   ;
 
 col_key_list:
@@ -792,8 +792,8 @@ col_key_def:
   ;
 
 check_def:
-  CONSTRAINT name CHECK '(' expr ')' { $check_def = new_ast_check_def($name, $expr); }
-  | CHECK '(' expr ')'  { $check_def = new_ast_check_def(NULL, $expr); }
+  CONSTRAINT name CHECK '(' expr ')' { $$ = new_ast_check_def($name, $expr); }
+  | CHECK '(' expr ')'  { $$ = new_ast_check_def(NULL, $expr); }
   ;
 
 shape_exprs:
@@ -802,33 +802,33 @@ shape_exprs:
   ;
 
 shape_expr:
-  sql_name  { $shape_expr = new_ast_shape_expr($sql_name, $sql_name); }
-  | '-' sql_name  { $shape_expr = new_ast_shape_expr($sql_name, NULL); }
+  sql_name  { $$ = new_ast_shape_expr($sql_name, $sql_name); }
+  | '-' sql_name  { $$ = new_ast_shape_expr($sql_name, NULL); }
   ;
 
 shape_def:
-    shape_def_base  { $shape_def = new_ast_shape_def($shape_def_base, NULL); }
-  | shape_def_base '(' shape_exprs ')' { $shape_def = new_ast_shape_def($shape_def_base, $shape_exprs); }
+    shape_def_base  { $$ = new_ast_shape_def($shape_def_base, NULL); }
+  | shape_def_base '(' shape_exprs ')' { $$ = new_ast_shape_def($shape_def_base, $shape_exprs); }
   ;
 
 shape_def_base:
-    LIKE sql_name { $shape_def_base = new_ast_like($sql_name, NULL); }
-  | LIKE name ARGUMENTS { $shape_def_base = new_ast_like($name, $name); }
+    LIKE sql_name { $$ = new_ast_like($sql_name, NULL); }
+  | LIKE name ARGUMENTS { $$ = new_ast_like($name, $name); }
   ;
 
 sql_name:
-  name  { $sql_name = $name; }
-  | QID { $sql_name = new_ast_qstr_quoted($QID); }
+  name  { $$ = $name; }
+  | QID { $$ = new_ast_qstr_quoted($QID); }
   ;
 
 misc_attr_key:
-  name  { $misc_attr_key = $name; }
-  | name[lhs] ':' name[rhs]  { $misc_attr_key = new_ast_dot($lhs, $rhs); }
+  name  { $$ = $name; }
+  | name[lhs] ':' name[rhs]  { $$ = new_ast_dot($lhs, $rhs); }
   ;
 
 cql_attr_key:
-  name { $cql_attr_key = new_ast_dot(new_ast_str("cql"), $name); }
-  | name[lhs] ':' name[rhs]  { $cql_attr_key = new_ast_dot($lhs, $rhs); }
+  name { $$ = new_ast_dot(new_ast_str("cql"), $name); }
+  | name[lhs] ':' name[rhs]  { $$ = new_ast_dot($lhs, $rhs); }
   ;
 
 misc_attr_value_list:
@@ -837,19 +837,19 @@ misc_attr_value_list:
   ;
 
 misc_attr_value:
-  sql_name  { $misc_attr_value = $sql_name; }
-  | any_literal  { $misc_attr_value = $any_literal; }
-  | const_expr  { $misc_attr_value = $const_expr; }
-  | '(' misc_attr_value_list ')'  { $misc_attr_value = $misc_attr_value_list; }
-  | '-' num_literal  { $misc_attr_value = new_ast_uminus($num_literal);}
-  | '+' num_literal  { $misc_attr_value = $num_literal;}
+  sql_name  { $$ = $sql_name; }
+  | any_literal  { $$ = $any_literal; }
+  | const_expr  { $$ = $const_expr; }
+  | '(' misc_attr_value_list ')'  { $$ = $misc_attr_value_list; }
+  | '-' num_literal  { $$ = new_ast_uminus($num_literal);}
+  | '+' num_literal  { $$ = $num_literal;}
   ;
 
 misc_attr:
-  AT_ATTRIBUTE '(' misc_attr_key ')'  { $misc_attr = new_ast_misc_attr($misc_attr_key, NULL); }
-  | AT_ATTRIBUTE '(' misc_attr_key '=' misc_attr_value ')' { $misc_attr = new_ast_misc_attr($misc_attr_key, $misc_attr_value); }
-  | '[' '[' cql_attr_key ']' ']' { $misc_attr = new_ast_misc_attr($cql_attr_key, NULL); }
-  | '[' '[' cql_attr_key  '=' misc_attr_value ']' ']' { $misc_attr = new_ast_misc_attr($cql_attr_key, $misc_attr_value); }
+  AT_ATTRIBUTE '(' misc_attr_key ')'  { $$ = new_ast_misc_attr($misc_attr_key, NULL); }
+  | AT_ATTRIBUTE '(' misc_attr_key '=' misc_attr_value ')' { $$ = new_ast_misc_attr($misc_attr_key, $misc_attr_value); }
+  | '[' '[' cql_attr_key ']' ']' { $$ = new_ast_misc_attr($cql_attr_key, NULL); }
+  | '[' '[' cql_attr_key  '=' misc_attr_value ']' ']' { $$ = new_ast_misc_attr($cql_attr_key, $misc_attr_value); }
   ;
 
 misc_attrs:
@@ -861,104 +861,104 @@ col_def:
   misc_attrs sql_name data_type_any col_attrs  {
   struct ast_node *name_type = new_ast_col_def_name_type($sql_name, $data_type_any);
   struct ast_node *col_def_type_attrs = new_ast_col_def_type_attrs(name_type, $col_attrs);
-  $col_def = make_coldef_node(col_def_type_attrs, $misc_attrs);
+  $$ = make_coldef_node(col_def_type_attrs, $misc_attrs);
   }
   ;
 
 pk_def:
   CONSTRAINT sql_name PRIMARY KEY '(' indexed_columns ')' opt_conflict_clause {
     ast_node *indexed_columns_conflict_clause = new_ast_indexed_columns_conflict_clause($indexed_columns, $opt_conflict_clause);
-    $pk_def = new_ast_pk_def($sql_name, indexed_columns_conflict_clause);
+    $$ = new_ast_pk_def($sql_name, indexed_columns_conflict_clause);
   }
   | PRIMARY KEY '(' indexed_columns ')' opt_conflict_clause {
     ast_node *indexed_columns_conflict_clause = new_ast_indexed_columns_conflict_clause($indexed_columns, $opt_conflict_clause);
-    $pk_def = new_ast_pk_def(NULL, indexed_columns_conflict_clause);
+    $$ = new_ast_pk_def(NULL, indexed_columns_conflict_clause);
   }
   ;
 
 opt_conflict_clause:
-  /* nil */ { $opt_conflict_clause = NULL; }
-  | conflict_clause { $opt_conflict_clause = new_ast_option($conflict_clause); }
+  /* nil */ { $$ = NULL; }
+  | conflict_clause { $$ = new_ast_option($conflict_clause); }
   ;
 
 conflict_clause:
-  ON_CONFLICT ROLLBACK { $conflict_clause = ON_CONFLICT_ROLLBACK; }
-  | ON_CONFLICT ABORT { $conflict_clause = ON_CONFLICT_ABORT; }
-  | ON_CONFLICT FAIL { $conflict_clause = ON_CONFLICT_FAIL; }
-  | ON_CONFLICT IGNORE { $conflict_clause = ON_CONFLICT_IGNORE; }
-  | ON_CONFLICT REPLACE { $conflict_clause = ON_CONFLICT_REPLACE; }
+  ON_CONFLICT ROLLBACK { $$ = ON_CONFLICT_ROLLBACK; }
+  | ON_CONFLICT ABORT { $$ = ON_CONFLICT_ABORT; }
+  | ON_CONFLICT FAIL { $$ = ON_CONFLICT_FAIL; }
+  | ON_CONFLICT IGNORE { $$ = ON_CONFLICT_IGNORE; }
+  | ON_CONFLICT REPLACE { $$ = ON_CONFLICT_REPLACE; }
   ;
 
 opt_fk_options:
-  /* nil */  { $opt_fk_options = 0; }
-  | fk_options  { $opt_fk_options = $fk_options; }
+  /* nil */  { $$ = 0; }
+  | fk_options  { $$ = $fk_options; }
   ;
 
 fk_options:
-  fk_on_options  { $fk_options = $fk_on_options; }
-  | fk_deferred_options  { $fk_options = $fk_deferred_options; }
-  | fk_on_options fk_deferred_options  { $fk_options = $fk_on_options | $fk_deferred_options; }
+  fk_on_options  { $$ = $fk_on_options; }
+  | fk_deferred_options  { $$ = $fk_deferred_options; }
+  | fk_on_options fk_deferred_options  { $$ = $fk_on_options | $fk_deferred_options; }
   ;
 
 fk_on_options:
-  ON DELETE fk_action  { $fk_on_options = $fk_action; }
-  | ON UPDATE fk_action  { $fk_on_options = ($fk_action << 4); }
-  | ON UPDATE fk_action[lhs] ON DELETE fk_action[rhs]  { $fk_on_options = ($lhs << 4) | $rhs; }
-  | ON DELETE fk_action[lhs] ON UPDATE fk_action[rhs]  { $fk_on_options = ($rhs << 4) | $lhs; }
+  ON DELETE fk_action  { $$ = $fk_action; }
+  | ON UPDATE fk_action  { $$ = ($fk_action << 4); }
+  | ON UPDATE fk_action[lhs] ON DELETE fk_action[rhs]  { $$ = ($lhs << 4) | $rhs; }
+  | ON DELETE fk_action[lhs] ON UPDATE fk_action[rhs]  { $$ = ($rhs << 4) | $lhs; }
   ;
 
 fk_action:
-  SET NULL_  { $fk_action = FK_SET_NULL; }
-  | SET DEFAULT  { $fk_action = FK_SET_DEFAULT; }
-  | CASCADE  { $fk_action = FK_CASCADE; }
-  | RESTRICT  { $fk_action = FK_RESTRICT; }
-  | NO ACTION  { $fk_action = FK_NO_ACTION; }
+  SET NULL_  { $$ = FK_SET_NULL; }
+  | SET DEFAULT  { $$ = FK_SET_DEFAULT; }
+  | CASCADE  { $$ = FK_CASCADE; }
+  | RESTRICT  { $$ = FK_RESTRICT; }
+  | NO ACTION  { $$ = FK_NO_ACTION; }
   ;
 
 fk_deferred_options:
-  DEFERRABLE fk_initial_state  { $fk_deferred_options = FK_DEFERRABLE | $fk_initial_state; }
-  | NOT_DEFERRABLE fk_initial_state  { $fk_deferred_options = FK_NOT_DEFERRABLE | $fk_initial_state; }
+  DEFERRABLE fk_initial_state  { $$ = FK_DEFERRABLE | $fk_initial_state; }
+  | NOT_DEFERRABLE fk_initial_state  { $$ = FK_NOT_DEFERRABLE | $fk_initial_state; }
   ;
 
 fk_initial_state:
-  /* nil */  { $fk_initial_state = 0; }
-  | INITIALLY DEFERRED  { $fk_initial_state = FK_INITIALLY_DEFERRED; }
-  | INITIALLY IMMEDIATE  { $fk_initial_state = FK_INITIALLY_IMMEDIATE; }
+  /* nil */  { $$ = 0; }
+  | INITIALLY DEFERRED  { $$ = FK_INITIALLY_DEFERRED; }
+  | INITIALLY IMMEDIATE  { $$ = FK_INITIALLY_IMMEDIATE; }
   ;
 
 fk_def:
   CONSTRAINT sql_name FOREIGN KEY '(' sql_name_list ')' fk_target_options  {
     ast_node *fk_info = new_ast_fk_info($sql_name_list, $fk_target_options);
-    $fk_def = new_ast_fk_def($sql_name, fk_info); }
+    $$ = new_ast_fk_def($sql_name, fk_info); }
   | FOREIGN KEY '(' sql_name_list ')' fk_target_options  {
     ast_node *fk_info = new_ast_fk_info($sql_name_list, $fk_target_options);
-    $fk_def = new_ast_fk_def(NULL, fk_info); }
+    $$ = new_ast_fk_def(NULL, fk_info); }
   ;
 
 fk_target_options:
   REFERENCES sql_name '(' sql_name_list ')' opt_fk_options  {
-    $fk_target_options = new_ast_fk_target_options(new_ast_fk_target($sql_name, $sql_name_list), new_ast_option($opt_fk_options)); }
+    $$ = new_ast_fk_target_options(new_ast_fk_target($sql_name, $sql_name_list), new_ast_option($opt_fk_options)); }
   ;
 
 unq_def:
   CONSTRAINT sql_name UNIQUE '(' indexed_columns ')' opt_conflict_clause {
     ast_node *indexed_columns_conflict_clause = new_ast_indexed_columns_conflict_clause($indexed_columns, $opt_conflict_clause);
-    $unq_def = new_ast_unq_def($sql_name, indexed_columns_conflict_clause);
+    $$ = new_ast_unq_def($sql_name, indexed_columns_conflict_clause);
   }
   | UNIQUE '(' indexed_columns ')' opt_conflict_clause {
     ast_node *indexed_columns_conflict_clause = new_ast_indexed_columns_conflict_clause($indexed_columns, $opt_conflict_clause);
-    $unq_def = new_ast_unq_def(NULL, indexed_columns_conflict_clause);
+    $$ = new_ast_unq_def(NULL, indexed_columns_conflict_clause);
   }
   ;
 
 opt_unique:
-  /* nil */  { $opt_unique = 0; }
-  | UNIQUE  { $opt_unique = 1; }
+  /* nil */  { $$ = 0; }
+  | UNIQUE  { $$ = 1; }
   ;
 
 indexed_column:
   expr opt_asc_desc  {
-    $indexed_column = new_ast_indexed_column($expr, $opt_asc_desc); }
+    $$ = new_ast_indexed_column($expr, $opt_asc_desc); }
   ;
 
 indexed_columns:
@@ -976,77 +976,77 @@ create_index_stmt:
     ast_node *index_names_and_attrs = new_ast_index_names_and_attrs($indexed_columns, $opt_where);
     ast_node *connector = new_ast_connector(index_names_and_attrs, $opt_delete_version_attr);
     ast_node *flags_names_attrs = new_ast_flags_names_attrs(new_ast_option(flags), connector);
-    $create_index_stmt = new_ast_create_index_stmt(create_index_on_list, flags_names_attrs);
+    $$ = new_ast_create_index_stmt(create_index_on_list, flags_names_attrs);
   }
   ;
 
 name:
-  ID  { $name = new_ast_str($ID); }
-  | ABORT { $name = new_ast_str("abort"); }
-  | ACTION { $name = new_ast_str("action"); }
-  | ADD { $name = new_ast_str("add"); }
-  | AFTER { $name = new_ast_str("after"); }
-  | ALTER { $name = new_ast_str("alter"); }
-  | ASC { $name = new_ast_str("asc"); }
-  | AT_ID '(' text_args ')' { $name = new_ast_at_id($text_args); }
-  | AT_TMP '(' text_args ')' { $name = new_ast_at_id(new_ast_text_args(new_ast_str("@TMP"), $text_args)); }
-  | AUTOINCREMENT { $name = new_ast_str("autoincrement"); }
-  | BEFORE { $name = new_ast_str("before"); }
-  | CASCADE { $name = new_ast_str("cascade"); }
-  | COLUMN { $name = new_ast_str("column"); }
-  | CREATE { $name = new_ast_str("create"); }
-  | CTE_TABLES { $name = new_ast_str("cte_tables"); }
-  | DEFAULT { $name = new_ast_str("default"); }
-  | DEFERRABLE { $name = new_ast_str("deferrable"); }
-  | DEFERRED { $name = new_ast_str("deferred"); }
-  | DELETE { $name = new_ast_str("delete"); }
-  | DESC { $name = new_ast_str("desc"); }
-  | DROP { $name = new_ast_str("drop"); }
-  | ENCODE { $name = new_ast_str("encode"); }
-  | EXCLUSIVE { $name = new_ast_str("exclusive"); }
-  | EXPLAIN { $name = new_ast_str("explain"); }
-  | EXPR { $name = new_ast_str("expr"); }
-  | FAIL { $name = new_ast_str("fail"); }
-  | FETCH { $name = new_ast_str("fetch"); }
-  | FIRST { $name = new_ast_str("first"); }
-  | FOLLOWING { $name = new_ast_str("following"); }
-  | GROUPS { $name = new_ast_str("groups"); }
-  | HIDDEN { $name = new_ast_str("hidden"); }
-  | IGNORE { $name = new_ast_str("ignore"); }
-  | IMMEDIATE { $name = new_ast_str("immediate"); }
-  | INDEX { $name = new_ast_str("index"); }
-  | INITIALLY { $name = new_ast_str("initially"); }
-  | INSTEAD { $name = new_ast_str("instead"); }
-  | INTO { $name = new_ast_str("into"); }
-  | KEY  { $name = new_ast_str("key"); }
-  | LAST { $name = new_ast_str("last"); }
-  | NULLS { $name = new_ast_str("nulls"); }
-  | OUTER { $name = new_ast_str("outer"); }
-  | PARTITION { $name = new_ast_str("partition"); }
-  | PRECEDING { $name = new_ast_str("preceding"); }
-  | PRIVATE { $name = new_ast_str("private"); }
-  | QUERY_PARTS { $name = new_ast_str("query_parts"); }
-  | RANGE { $name = new_ast_str("range"); }
-  | REFERENCES { $name = new_ast_str("references"); }
-  | RELEASE { $name = new_ast_str("release"); }
-  | RENAME { $name = new_ast_str("rename"); }
-  | REPLACE  { $name = new_ast_str("replace"); }
-  | RESTRICT { $name = new_ast_str("restrict"); }
-  | ROWID  { $name = new_ast_str("rowid"); }
-  | SAVEPOINT { $name = new_ast_str("savepoint"); }
-  | SELECT_CORE { $name = new_ast_str("select_core"); }
-  | SELECT_EXPR { $name = new_ast_str("select_expr"); }
-  | STATEMENT { $name = new_ast_str("statement"); }
-  | STMT_LIST { $name = new_ast_str("stmt_list"); }
-  | TABLE { $name = new_ast_str("table"); }
-  | TEMP { $name = new_ast_str("temp"); }
-  | TEXT  { $name = new_ast_str("text"); }
-  | TRANSACTION { $name = new_ast_str("transaction"); }
-  | TRIGGER  { $name = new_ast_str("trigger"); }
-  | TYPE { $name = new_ast_str("type"); }
-  | VIEW { $name = new_ast_str("view"); }
-  | VIRTUAL { $name = new_ast_str("virtual"); }
-  | WITHOUT { $name = new_ast_str("without"); }
+  ID  { $$ = new_ast_str($ID); }
+  | ABORT { $$ = new_ast_str("abort"); }
+  | ACTION { $$ = new_ast_str("action"); }
+  | ADD { $$ = new_ast_str("add"); }
+  | AFTER { $$ = new_ast_str("after"); }
+  | ALTER { $$ = new_ast_str("alter"); }
+  | ASC { $$ = new_ast_str("asc"); }
+  | AT_ID '(' text_args ')' { $$ = new_ast_at_id($text_args); }
+  | AT_TMP '(' text_args ')' { $$ = new_ast_at_id(new_ast_text_args(new_ast_str("@TMP"), $text_args)); }
+  | AUTOINCREMENT { $$ = new_ast_str("autoincrement"); }
+  | BEFORE { $$ = new_ast_str("before"); }
+  | CASCADE { $$ = new_ast_str("cascade"); }
+  | COLUMN { $$ = new_ast_str("column"); }
+  | CREATE { $$ = new_ast_str("create"); }
+  | CTE_TABLES { $$ = new_ast_str("cte_tables"); }
+  | DEFAULT { $$ = new_ast_str("default"); }
+  | DEFERRABLE { $$ = new_ast_str("deferrable"); }
+  | DEFERRED { $$ = new_ast_str("deferred"); }
+  | DELETE { $$ = new_ast_str("delete"); }
+  | DESC { $$ = new_ast_str("desc"); }
+  | DROP { $$ = new_ast_str("drop"); }
+  | ENCODE { $$ = new_ast_str("encode"); }
+  | EXCLUSIVE { $$ = new_ast_str("exclusive"); }
+  | EXPLAIN { $$ = new_ast_str("explain"); }
+  | EXPR { $$ = new_ast_str("expr"); }
+  | FAIL { $$ = new_ast_str("fail"); }
+  | FETCH { $$ = new_ast_str("fetch"); }
+  | FIRST { $$ = new_ast_str("first"); }
+  | FOLLOWING { $$ = new_ast_str("following"); }
+  | GROUPS { $$ = new_ast_str("groups"); }
+  | HIDDEN { $$ = new_ast_str("hidden"); }
+  | IGNORE { $$ = new_ast_str("ignore"); }
+  | IMMEDIATE { $$ = new_ast_str("immediate"); }
+  | INDEX { $$ = new_ast_str("index"); }
+  | INITIALLY { $$ = new_ast_str("initially"); }
+  | INSTEAD { $$ = new_ast_str("instead"); }
+  | INTO { $$ = new_ast_str("into"); }
+  | KEY  { $$ = new_ast_str("key"); }
+  | LAST { $$ = new_ast_str("last"); }
+  | NULLS { $$ = new_ast_str("nulls"); }
+  | OUTER { $$ = new_ast_str("outer"); }
+  | PARTITION { $$ = new_ast_str("partition"); }
+  | PRECEDING { $$ = new_ast_str("preceding"); }
+  | PRIVATE { $$ = new_ast_str("private"); }
+  | QUERY_PARTS { $$ = new_ast_str("query_parts"); }
+  | RANGE { $$ = new_ast_str("range"); }
+  | REFERENCES { $$ = new_ast_str("references"); }
+  | RELEASE { $$ = new_ast_str("release"); }
+  | RENAME { $$ = new_ast_str("rename"); }
+  | REPLACE  { $$ = new_ast_str("replace"); }
+  | RESTRICT { $$ = new_ast_str("restrict"); }
+  | ROWID  { $$ = new_ast_str("rowid"); }
+  | SAVEPOINT { $$ = new_ast_str("savepoint"); }
+  | SELECT_CORE { $$ = new_ast_str("select_core"); }
+  | SELECT_EXPR { $$ = new_ast_str("select_expr"); }
+  | STATEMENT { $$ = new_ast_str("statement"); }
+  | STMT_LIST { $$ = new_ast_str("stmt_list"); }
+  | TABLE { $$ = new_ast_str("table"); }
+  | TEMP { $$ = new_ast_str("temp"); }
+  | TEXT  { $$ = new_ast_str("text"); }
+  | TRANSACTION { $$ = new_ast_str("transaction"); }
+  | TRIGGER  { $$ = new_ast_str("trigger"); }
+  | TYPE { $$ = new_ast_str("type"); }
+  | VIEW { $$ = new_ast_str("view"); }
+  | VIRTUAL { $$ = new_ast_str("virtual"); }
+  | WITHOUT { $$ = new_ast_str("without"); }
   ;
 
 loose_name:
@@ -1074,8 +1074,8 @@ loose_name_or_type[r]:
 
 
 opt_sql_name:
-  /* nil */  { $opt_sql_name = NULL; }
-  | sql_name  { $opt_sql_name = $sql_name; }
+  /* nil */  { $$ = NULL; }
+  | sql_name  { $$ = $sql_name; }
   ;
 
 name_list:
@@ -1089,13 +1089,13 @@ sql_name_list:
   ;
 
 opt_name_list:
-  /* nil */  { $opt_name_list = NULL; }
-  | name_list  { $opt_name_list = $name_list; }
+  /* nil */  { $$ = NULL; }
+  | name_list  { $$ = $name_list; }
   ;
 
 opt_sql_name_list:
-  /* nil */  { $opt_sql_name_list = NULL; }
-  | sql_name_list  { $opt_sql_name_list = $sql_name_list; }
+  /* nil */  { $$ = NULL; }
+  | sql_name_list  { $$ = $sql_name_list; }
   ;
 
 cte_binding_list:
@@ -1103,8 +1103,8 @@ cte_binding_list:
   | cte_binding ',' cte_binding_list[nl]  { $$ = new_ast_cte_binding_list($cte_binding, $nl); }
   ;
 
-cte_binding: name[formal] name[actual] { $cte_binding = new_ast_cte_binding($formal, $actual); }
-  | name[formal] AS name[actual] { $cte_binding = new_ast_cte_binding($formal, $actual); }
+cte_binding: name[formal] name[actual] { $$ = new_ast_cte_binding($formal, $actual); }
+  | name[formal] AS name[actual] { $$ = new_ast_cte_binding($formal, $actual); }
   ;
 
 col_attrs:
@@ -1135,59 +1135,59 @@ col_attrs:
 
 version_annotation:
   '(' INTLIT ',' name ')'  {
-    $version_annotation = new_ast_version_annotation(new_ast_option(atoi($INTLIT)), $name); }
+    $$ = new_ast_version_annotation(new_ast_option(atoi($INTLIT)), $name); }
   | '(' INTLIT ',' name[lhs] ':' name[rhs] ')'  {
     ast_node *dot = new_ast_dot($lhs, $rhs);
-    $version_annotation = new_ast_version_annotation(new_ast_option(atoi($INTLIT)), dot); }
+    $$ = new_ast_version_annotation(new_ast_option(atoi($INTLIT)), dot); }
   | '(' INTLIT ')'  {
-    $version_annotation = new_ast_version_annotation(new_ast_option(atoi($INTLIT)), NULL); }
+    $$ = new_ast_version_annotation(new_ast_option(atoi($INTLIT)), NULL); }
   ;
 
 opt_kind:
-  /* nil */ { $opt_kind = NULL; }
-  | '<' name '>' {$opt_kind = $name; }
+  /* nil */ { $$ = NULL; }
+  | '<' name '>' { $$ = $name; }
   ;
 
 data_type_numeric:
-  INT_ opt_kind { $data_type_numeric = new_ast_type_int($opt_kind); }
-  | INTEGER opt_kind { $data_type_numeric = new_ast_type_int($opt_kind); }
-  | REAL opt_kind { $data_type_numeric = new_ast_type_real($opt_kind); }
-  | LONG_ opt_kind { $data_type_numeric = new_ast_type_long($opt_kind); }
-  | BOOL_ opt_kind { $data_type_numeric = new_ast_type_bool($opt_kind); }
-  | LONG_ INTEGER opt_kind { $data_type_numeric = new_ast_type_long($opt_kind); }
-  | LONG_ INT_ opt_kind { $data_type_numeric = new_ast_type_long($opt_kind); }
-  | LONG_INT opt_kind { $data_type_numeric = new_ast_type_long($opt_kind); }
-  | LONG_INTEGER opt_kind { $data_type_numeric = new_ast_type_long($opt_kind); }
+  INT_ opt_kind { $$ = new_ast_type_int($opt_kind); }
+  | INTEGER opt_kind { $$ = new_ast_type_int($opt_kind); }
+  | REAL opt_kind { $$ = new_ast_type_real($opt_kind); }
+  | LONG_ opt_kind { $$ = new_ast_type_long($opt_kind); }
+  | BOOL_ opt_kind { $$ = new_ast_type_bool($opt_kind); }
+  | LONG_ INTEGER opt_kind { $$ = new_ast_type_long($opt_kind); }
+  | LONG_ INT_ opt_kind { $$ = new_ast_type_long($opt_kind); }
+  | LONG_INT opt_kind { $$ = new_ast_type_long($opt_kind); }
+  | LONG_INTEGER opt_kind { $$ = new_ast_type_long($opt_kind); }
   ;
 
 data_type_any:
-  data_type_numeric { $data_type_any = $data_type_numeric; }
-  | TEXT  opt_kind { $data_type_any = new_ast_type_text($opt_kind);  }
-  | BLOB  opt_kind { $data_type_any = new_ast_type_blob($opt_kind); }
-  | OBJECT opt_kind { $data_type_any = new_ast_type_object($opt_kind); }
+  data_type_numeric { $$ = $data_type_numeric; }
+  | TEXT  opt_kind { $$ = new_ast_type_text($opt_kind);  }
+  | BLOB  opt_kind { $$ = new_ast_type_blob($opt_kind); }
+  | OBJECT opt_kind { $$ = new_ast_type_object($opt_kind); }
   | OBJECT '<' name CURSOR '>' { /* special case for boxed cursor */
     CSTR type = dup_printf("%s CURSOR", AST_STR($name));
-    $data_type_any = new_ast_type_object(new_ast_str(type)); }
+    $$ = new_ast_type_object(new_ast_str(type)); }
   | OBJECT '<' name SET '>' { /* special case for result sets */
     CSTR type = dup_printf("%s SET", AST_STR($name));
-    $data_type_any = new_ast_type_object(new_ast_str(type)); }
-  | ID { $data_type_any = new_ast_str($ID); }
-  | AT_ID '(' text_args ')' { $data_type_any = new_ast_at_id($text_args); }
+    $$ = new_ast_type_object(new_ast_str(type)); }
+  | ID { $$ = new_ast_str($ID); }
+  | AT_ID '(' text_args ')' { $$ = new_ast_at_id($text_args); }
   ;
 
 not_null: NOT NULL_ | '!'
   ;
 
 data_type_with_options:
-  data_type_any { $data_type_with_options = $data_type_any; }
-  | data_type_any not_null { $data_type_with_options = new_ast_notnull($data_type_any); }
-  | data_type_any AT_SENSITIVE { $data_type_with_options = new_ast_sensitive_attr($data_type_any, NULL); }
-  | data_type_any AT_SENSITIVE not_null { $data_type_with_options = new_ast_sensitive_attr(new_ast_notnull($data_type_any), NULL); }
-  | data_type_any not_null AT_SENSITIVE { $data_type_with_options = new_ast_sensitive_attr(new_ast_notnull($data_type_any), NULL); }
+  data_type_any { $$ = $data_type_any; }
+  | data_type_any not_null { $$ = new_ast_notnull($data_type_any); }
+  | data_type_any AT_SENSITIVE { $$ = new_ast_sensitive_attr($data_type_any, NULL); }
+  | data_type_any AT_SENSITIVE not_null { $$ = new_ast_sensitive_attr(new_ast_notnull($data_type_any), NULL); }
+  | data_type_any not_null AT_SENSITIVE { $$ = new_ast_sensitive_attr(new_ast_notnull($data_type_any), NULL); }
   ;
 
 str_literal:
-  str_chain { $str_literal = reduce_str_chain($str_chain); }
+  str_chain { $$ = reduce_str_chain($str_chain); }
   ;
 
 str_chain:
@@ -1196,33 +1196,33 @@ str_chain:
   ;
 
 str_leaf:
-  STRLIT  { $str_leaf = new_ast_str($STRLIT);}
-  | CSTRLIT  { $str_leaf = new_ast_cstr($CSTRLIT); }
+  STRLIT  { $$ = new_ast_str($STRLIT);}
+  | CSTRLIT  { $$ = new_ast_cstr($CSTRLIT); }
   ;
 
 num_literal:
-  INTLIT  { $num_literal = new_ast_num(NUM_INT, $INTLIT); }
-  | LONGLIT  { $num_literal = new_ast_num(NUM_LONG, $LONGLIT); }
-  | REALLIT  { $num_literal = new_ast_num(NUM_REAL, $REALLIT); }
-  | TRUE_ { $num_literal = new_ast_num(NUM_BOOL, "1"); }
-  | FALSE_ { $num_literal = new_ast_num(NUM_BOOL, "0"); }
+  INTLIT  { $$ = new_ast_num(NUM_INT, $INTLIT); }
+  | LONGLIT  { $$ = new_ast_num(NUM_LONG, $LONGLIT); }
+  | REALLIT  { $$ = new_ast_num(NUM_REAL, $REALLIT); }
+  | TRUE_ { $$ = new_ast_num(NUM_BOOL, "1"); }
+  | FALSE_ { $$ = new_ast_num(NUM_BOOL, "0"); }
   ;
 
 const_expr:
-  CONST '(' expr ')' { $const_expr = new_ast_const($expr); }
+  CONST '(' expr ')' { $$ = new_ast_const($expr); }
   ;
 
 any_literal:
-  str_literal  { $any_literal = $str_literal; }
-  | num_literal  { $any_literal = $num_literal; }
-  | NULL_  { $any_literal = new_ast_null(); }
-  | AT_FILE '(' str_literal ')'  { $any_literal = file_literal($str_literal); }
-  | AT_LINE  { $any_literal = new_ast_num(NUM_INT, dup_printf("%d", yylineno)); }
-  | AT_MACRO_LINE { $any_literal = new_ast_str("@MACRO_LINE"); }
-  | AT_MACRO_FILE { $any_literal = new_ast_str("@MACRO_FILE"); }
-  | AT_PROC  { $any_literal = new_ast_str("@PROC"); }
-  | AT_TEXT '(' text_args ')' { $any_literal = new_ast_macro_text($text_args); }
-  | BLOBLIT  { $any_literal = new_ast_blob($BLOBLIT); }
+  str_literal  { $$ = $str_literal; }
+  | num_literal  { $$ = $num_literal; }
+  | NULL_  { $$ = new_ast_null(); }
+  | AT_FILE '(' str_literal ')'  { $$ = file_literal($str_literal); }
+  | AT_LINE  { $$ = new_ast_num(NUM_INT, dup_printf("%d", yylineno)); }
+  | AT_MACRO_LINE { $$ = new_ast_str("@MACRO_LINE"); }
+  | AT_MACRO_FILE { $$ = new_ast_str("@MACRO_FILE"); }
+  | AT_PROC  { $$ = new_ast_str("@PROC"); }
+  | AT_TEXT '(' text_args ')' { $$ = new_ast_macro_text($text_args); }
+  | BLOBLIT  { $$ = new_ast_blob($BLOBLIT); }
   ;
 
 text_args:
@@ -1233,15 +1233,15 @@ text_args:
 text_arg : expr ;
 
 raise_expr:
-  RAISE '(' IGNORE ')'  { $raise_expr = new_ast_raise(new_ast_option(RAISE_IGNORE), NULL); }
-  | RAISE '(' ROLLBACK ','  expr ')'  { $raise_expr = new_ast_raise(new_ast_option(RAISE_ROLLBACK), $expr); }
-  | RAISE '(' ABORT ','  expr ')'  { $raise_expr = new_ast_raise(new_ast_option(RAISE_ABORT), $expr); }
-  | RAISE '(' FAIL ','  expr ')'  { $raise_expr = new_ast_raise(new_ast_option(RAISE_FAIL), $expr); }
+  RAISE '(' IGNORE ')'  { $$ = new_ast_raise(new_ast_option(RAISE_IGNORE), NULL); }
+  | RAISE '(' ROLLBACK ','  expr ')'  { $$ = new_ast_raise(new_ast_option(RAISE_ROLLBACK), $expr); }
+  | RAISE '(' ABORT ','  expr ')'  { $$ = new_ast_raise(new_ast_option(RAISE_ABORT), $expr); }
+  | RAISE '(' FAIL ','  expr ')'  { $$ = new_ast_raise(new_ast_option(RAISE_FAIL), $expr); }
   ;
 
 opt_distinct:
-  /* nil */ { $opt_distinct = NULL; }
-  | DISTINCT { $opt_distinct = new_ast_distinct(); }
+  /* nil */ { $$ = NULL; }
+  | DISTINCT { $$ = new_ast_distinct(); }
   ;
 
 simple_call:
@@ -1249,24 +1249,24 @@ simple_call:
       YY_ERROR_ON_CQL_INFERRED_NOTNULL($name);
       struct ast_node *call_filter_clause = new_ast_call_filter_clause($opt_distinct, $opt_filter_clause);
       struct ast_node *call_arg_list = new_ast_call_arg_list(call_filter_clause, $arg_list);
-      $simple_call = new_ast_call($name, call_arg_list); }
+      $$ = new_ast_call($name, call_arg_list); }
   | GLOB '(' opt_distinct arg_list ')' opt_filter_clause  {
       ast_node *name = new_ast_str("glob");
       struct ast_node *call_filter_clause = new_ast_call_filter_clause($opt_distinct, $opt_filter_clause);
       struct ast_node *call_arg_list = new_ast_call_arg_list(call_filter_clause, $arg_list);
-      $simple_call = new_ast_call(name, call_arg_list); }
+      $$ = new_ast_call(name, call_arg_list); }
   | LIKE '(' opt_distinct arg_list ')' opt_filter_clause  {
       ast_node *name = new_ast_str("like");
       struct ast_node *call_filter_clause = new_ast_call_filter_clause($opt_distinct, $opt_filter_clause);
       struct ast_node *call_arg_list = new_ast_call_arg_list(call_filter_clause, $arg_list);
-      $simple_call = new_ast_call(name, call_arg_list); }
+      $$ = new_ast_call(name, call_arg_list); }
   ;
 
 call:
-  simple_call { $call = $simple_call; }
-  | basic_expr ':' simple_call { $call = new_ast_reverse_apply($basic_expr, $simple_call); }
-  | basic_expr ':' loose_name[name] { $call = new_ast_reverse_apply($basic_expr, new_simple_call_from_name($name)); }
-  | basic_expr ':' '(' arg_list ')' { $call = new_ast_reverse_apply_poly_args($basic_expr, $arg_list); }
+  simple_call { $$ = $simple_call; }
+  | basic_expr ':' simple_call { $$ = new_ast_reverse_apply($basic_expr, $simple_call); }
+  | basic_expr ':' loose_name[name] { $$ = new_ast_reverse_apply($basic_expr, new_simple_call_from_name($name)); }
+  | basic_expr ':' '(' arg_list ')' { $$ = new_ast_reverse_apply_poly_args($basic_expr, $arg_list); }
   | basic_expr ':' ID '!' {
      YY_ERROR_ON_MACRO_ARG($ID);
      $$ = new_macro_ref_node($ID, new_ast_macro_args(new_ast_expr_macro_arg($basic_expr), NULL)); }
@@ -1276,35 +1276,35 @@ call:
   ;
 
 basic_expr:
-  name  { $basic_expr = $name; }
-  | QID { $basic_expr = new_ast_qstr_quoted($QID); }
-  | macro_ref { $basic_expr = $macro_ref; }
-  | '*' { $basic_expr = new_ast_star(); }
-  | AT_RC { $basic_expr = new_ast_str("@RC"); }
+  name  { $$ = $name; }
+  | QID { $$ = new_ast_qstr_quoted($QID); }
+  | macro_ref { $$ = $macro_ref; }
+  | '*' { $$ = new_ast_star(); }
+  | AT_RC { $$ = new_ast_str("@RC"); }
   | basic_expr[lhs] '.' sql_name[rhs] { $$ = new_ast_dot($lhs, $rhs); }
   | basic_expr[lhs] '.' '*' { $$ = new_ast_table_star($lhs); }
-  | any_literal  { $basic_expr = $any_literal; }
-  | const_expr { $basic_expr = $const_expr; }
-  | '(' expr ')'  { $basic_expr = $expr; }
-  | call  { $basic_expr = $call; }
-  | window_func_inv  { $basic_expr = $window_func_inv; }
-  | raise_expr  { $basic_expr = $raise_expr; }
-  | '(' select_stmt ')'  { $basic_expr = $select_stmt; }
-  | '(' select_stmt IF NOTHING expr ')'  { $basic_expr = new_ast_select_if_nothing_expr($select_stmt, $expr); }
-  | '(' select_stmt IF NOTHING OR NULL_ expr ')'  { $basic_expr = new_ast_select_if_nothing_or_null_expr($select_stmt, $expr); }
-  | '(' select_stmt IF NOTHING OR NULL_ THEN expr ')'  { $basic_expr = new_ast_select_if_nothing_or_null_expr($select_stmt, $expr); }
-  | '(' select_stmt IF NOTHING OR NULL_ THEN THROW ')'  { $basic_expr = new_ast_select_if_nothing_or_null_throw_expr($select_stmt); }
-  | '(' select_stmt IF NOTHING OR NULL_ THROW ')'  { $basic_expr = new_ast_select_if_nothing_or_null_throw_expr($select_stmt); }
-  | '(' select_stmt IF NOTHING THEN expr ')'  { $basic_expr = new_ast_select_if_nothing_expr($select_stmt, $expr); }
-  | '(' select_stmt IF NOTHING THEN THROW')'  { $basic_expr = new_ast_select_if_nothing_throw_expr($select_stmt); }
-  | '(' select_stmt IF NOTHING THROW')'  { $basic_expr = new_ast_select_if_nothing_throw_expr($select_stmt); }
-  | EXISTS '(' select_stmt ')'  { $basic_expr = new_ast_exists_expr($select_stmt); }
-  | CASE expr[cond] case_list END  { $basic_expr = new_ast_case_expr($cond, new_ast_connector($case_list, NULL)); }
-  | CASE expr[cond1] case_list ELSE expr[cond2] END  { $basic_expr = new_ast_case_expr($cond1, new_ast_connector($case_list, $cond2));}
-  | CASE case_list END  { $basic_expr = new_ast_case_expr(NULL, new_ast_connector($case_list, NULL));}
-  | CASE case_list ELSE expr[cond] END  { $basic_expr = new_ast_case_expr(NULL, new_ast_connector($case_list, $cond));}
-  | CAST '(' expr[sexp] AS data_type_any ')'  { $basic_expr = new_ast_cast_expr($sexp, $data_type_any); }
-  | TYPE_CHECK '(' expr[sexp] AS data_type_with_options[type] ')' { $basic_expr = new_ast_type_check_expr($sexp, $type); }
+  | any_literal  { $$ = $any_literal; }
+  | const_expr { $$ = $const_expr; }
+  | '(' expr ')'  { $$ = $expr; }
+  | call  { $$ = $call; }
+  | window_func_inv  { $$ = $window_func_inv; }
+  | raise_expr  { $$ = $raise_expr; }
+  | '(' select_stmt ')'  { $$ = $select_stmt; }
+  | '(' select_stmt IF NOTHING expr ')'  { $$ = new_ast_select_if_nothing_expr($select_stmt, $expr); }
+  | '(' select_stmt IF NOTHING OR NULL_ expr ')'  { $$ = new_ast_select_if_nothing_or_null_expr($select_stmt, $expr); }
+  | '(' select_stmt IF NOTHING OR NULL_ THEN expr ')'  { $$ = new_ast_select_if_nothing_or_null_expr($select_stmt, $expr); }
+  | '(' select_stmt IF NOTHING OR NULL_ THEN THROW ')'  { $$ = new_ast_select_if_nothing_or_null_throw_expr($select_stmt); }
+  | '(' select_stmt IF NOTHING OR NULL_ THROW ')'  { $$ = new_ast_select_if_nothing_or_null_throw_expr($select_stmt); }
+  | '(' select_stmt IF NOTHING THEN expr ')'  { $$ = new_ast_select_if_nothing_expr($select_stmt, $expr); }
+  | '(' select_stmt IF NOTHING THEN THROW')'  { $$ = new_ast_select_if_nothing_throw_expr($select_stmt); }
+  | '(' select_stmt IF NOTHING THROW')'  { $$ = new_ast_select_if_nothing_throw_expr($select_stmt); }
+  | EXISTS '(' select_stmt ')'  { $$ = new_ast_exists_expr($select_stmt); }
+  | CASE expr[cond] case_list END  { $$ = new_ast_case_expr($cond, new_ast_connector($case_list, NULL)); }
+  | CASE expr[cond1] case_list ELSE expr[cond2] END  { $$ = new_ast_case_expr($cond1, new_ast_connector($case_list, $cond2));}
+  | CASE case_list END  { $$ = new_ast_case_expr(NULL, new_ast_connector($case_list, NULL));}
+  | CASE case_list ELSE expr[cond] END  { $$ = new_ast_case_expr(NULL, new_ast_connector($case_list, $cond));}
+  | CAST '(' expr[sexp] AS data_type_any ')'  { $$ = new_ast_cast_expr($sexp, $data_type_any); }
+  | TYPE_CHECK '(' expr[sexp] AS data_type_with_options[type] ')' { $$ = new_ast_type_check_expr($sexp, $type); }
   | basic_expr[array] '[' arg_list ']' { $$ = new_ast_array($array, $arg_list); }
   | basic_expr[lhs] '~' data_type_any '~' { $$ = new_ast_cast_expr($lhs, $data_type_any); }
   | basic_expr[lhs] JEX1 basic_expr[rhs]  { $$ = new_ast_jex1($lhs, $rhs); }
@@ -1381,8 +1381,8 @@ case_list:
   | WHEN expr[e1] THEN expr[e2] case_list[cl]  { $$ = new_ast_case_list(new_ast_when($e1, $e2), $cl);}
   ;
 
-arg_expr: expr { $arg_expr = $expr; }
-  | shape_arguments { $arg_expr = $shape_arguments; }
+arg_expr: expr { $$ = $expr; }
+  | shape_arguments { $$ = $shape_arguments; }
   ;
 
 arg_exprs:
@@ -1396,8 +1396,8 @@ arg_list:
   ;
 
 opt_expr_list:
-  /* nil */ { $opt_expr_list = NULL; }
-  | expr_list { $opt_expr_list = $expr_list; }
+  /* nil */ { $$ = NULL; }
+  | expr_list { $$ = $expr_list; }
   ;
 
 expr_list:
@@ -1406,17 +1406,17 @@ expr_list:
   ;
 
 shape_arguments:
-  FROM name  { $shape_arguments = new_ast_from_shape($name, NULL); }
-  | FROM name shape_def  { $shape_arguments = new_ast_from_shape($name, $shape_def); }
-  | FROM ARGUMENTS  { $shape_arguments = new_ast_from_shape(new_ast_str("ARGUMENTS"), NULL); }
-  | FROM ARGUMENTS shape_def  { $shape_arguments = new_ast_from_shape(new_ast_str("ARGUMENTS"), $shape_def); }
+  FROM name  { $$ = new_ast_from_shape($name, NULL); }
+  | FROM name shape_def  { $$ = new_ast_from_shape($name, $shape_def); }
+  | FROM ARGUMENTS  { $$ = new_ast_from_shape(new_ast_str("ARGUMENTS"), NULL); }
+  | FROM ARGUMENTS shape_def  { $$ = new_ast_from_shape(new_ast_str("ARGUMENTS"), $shape_def); }
   ;
 
 column_calculation:
   AT_COLUMNS '(' col_calcs ')' {
-    $column_calculation = new_ast_column_calculation($col_calcs, NULL); }
+    $$ = new_ast_column_calculation($col_calcs, NULL); }
   | AT_COLUMNS '(' DISTINCT col_calcs ')' {
-    $column_calculation = new_ast_column_calculation($col_calcs, new_ast_distinct()); }
+    $$ = new_ast_column_calculation($col_calcs, new_ast_distinct()); }
   ;
 
 col_calcs:
@@ -1425,10 +1425,10 @@ col_calcs:
   ;
 
 col_calc:
-  sql_name { $col_calc = new_ast_col_calc($sql_name, NULL); }
-  | shape_def { $col_calc = new_ast_col_calc(NULL, $shape_def); }
-  | sql_name shape_def { $col_calc = new_ast_col_calc($sql_name, $shape_def); }
-  | sql_name[n1] '.' sql_name[n2] { $col_calc = new_ast_col_calc(new_ast_dot($n1, $n2), NULL); }
+  sql_name { $$ = new_ast_col_calc($sql_name, NULL); }
+  | shape_def { $$ = new_ast_col_calc(NULL, $shape_def); }
+  | sql_name shape_def { $$ = new_ast_col_calc($sql_name, $shape_def); }
+  | sql_name[n1] '.' sql_name[n2] { $$ = new_ast_col_calc(new_ast_dot($n1, $n2), NULL); }
   ;
 
 cte_tables:
@@ -1437,52 +1437,52 @@ cte_tables:
   ;
 
 cte_decl:
-  name '(' sql_name_list ')'  { $cte_decl = new_ast_cte_decl($name, $sql_name_list); }
-  | name '(' '*' ')'  { $cte_decl = new_ast_cte_decl($name, new_ast_star()); }
-  | name { $cte_decl = new_ast_cte_decl($name, new_ast_star()); }
+  name '(' sql_name_list ')'  { $$ = new_ast_cte_decl($name, $sql_name_list); }
+  | name '(' '*' ')'  { $$ = new_ast_cte_decl($name, new_ast_star()); }
+  | name { $$ = new_ast_cte_decl($name, new_ast_star()); }
   ;
 
 shared_cte:
-  call_stmt { $shared_cte = new_ast_shared_cte($call_stmt, NULL); }
-  | call_stmt USING cte_binding_list { $shared_cte = new_ast_shared_cte($call_stmt, $cte_binding_list); }
+  call_stmt { $$ = new_ast_shared_cte($call_stmt, NULL); }
+  | call_stmt USING cte_binding_list { $$ = new_ast_shared_cte($call_stmt, $cte_binding_list); }
   ;
 
 cte_table:
-  cte_decl AS '(' select_stmt ')'  { $cte_table = new_ast_cte_table($cte_decl, $select_stmt); }
-  | cte_decl AS '(' shared_cte')' { $cte_table = new_ast_cte_table($cte_decl, $shared_cte); }
+  cte_decl AS '(' select_stmt ')'  { $$ = new_ast_cte_table($cte_decl, $select_stmt); }
+  | cte_decl AS '(' shared_cte')' { $$ = new_ast_cte_table($cte_decl, $shared_cte); }
   | '(' call_stmt ')' {
       ast_node *name = ast_clone_tree($call_stmt->left);
       ast_node *cte_decl =  new_ast_cte_decl(name, new_ast_star());
       ast_node *shared_cte = new_ast_shared_cte($call_stmt, NULL);
-      $cte_table = new_ast_cte_table(cte_decl, shared_cte); }
+      $$ = new_ast_cte_table(cte_decl, shared_cte); }
   | '(' call_stmt USING cte_binding_list ')' {
       ast_node *name = ast_clone_tree($call_stmt->left);
       ast_node *cte_decl =  new_ast_cte_decl(name, new_ast_star());
       ast_node *shared_cte = new_ast_shared_cte($call_stmt, $cte_binding_list);
-      $cte_table = new_ast_cte_table(cte_decl, shared_cte); }
+      $$ = new_ast_cte_table(cte_decl, shared_cte); }
   | cte_decl LIKE '(' select_stmt ')'  {
-      $cte_table = new_ast_cte_table($cte_decl, new_ast_like($select_stmt, NULL)); }
+      $$ = new_ast_cte_table($cte_decl, new_ast_like($select_stmt, NULL)); }
   | cte_decl LIKE sql_name  {
-      $cte_table = new_ast_cte_table($cte_decl, new_ast_like($sql_name, NULL)); }
-  | macro_ref[ref] { $cte_table = $ref; }
+      $$ = new_ast_cte_table($cte_decl, new_ast_like($sql_name, NULL)); }
+  | macro_ref[ref] { $$ = $ref; }
   ;
 
 with_prefix:
-  WITH cte_tables  { $with_prefix = new_ast_with($cte_tables); }
-  | WITH RECURSIVE cte_tables  { $with_prefix = new_ast_with_recursive($cte_tables); }
+  WITH cte_tables  { $$ = new_ast_with($cte_tables); }
+  | WITH RECURSIVE cte_tables  { $$ = new_ast_with_recursive($cte_tables); }
   ;
 
 with_select_stmt:
-  with_prefix select_stmt_no_with  { $with_select_stmt = new_ast_with_select_stmt($with_prefix, $select_stmt_no_with); }
+  with_prefix select_stmt_no_with  { $$ = new_ast_with_select_stmt($with_prefix, $select_stmt_no_with); }
   ;
 
 select_nothing_stmt:
-  SELECT NOTHING { $select_nothing_stmt = new_ast_select_nothing_stmt(); }
+  SELECT NOTHING { $$ = new_ast_select_nothing_stmt(); }
   ;
 
 select_stmt:
-  with_select_stmt  { $select_stmt = $with_select_stmt; }
-  | select_stmt_no_with  { $select_stmt = $select_stmt_no_with; }
+  with_select_stmt  { $$ = $with_select_stmt; }
+  | select_stmt_no_with  { $$ = $select_stmt_no_with; }
   ;
 
 select_stmt_no_with:
@@ -1490,7 +1490,7 @@ select_stmt_no_with:
       struct ast_node *select_offset = new_ast_select_offset($opt_offset, NULL);
       struct ast_node *select_limit = new_ast_select_limit($opt_limit, select_offset);
       struct ast_node *select_orderby = new_ast_select_orderby($opt_orderby, select_limit);
-       $select_stmt_no_with = new_ast_select_stmt($select_core_list, select_orderby);
+       $$ = new_ast_select_stmt($select_core_list, select_orderby);
   }
   ;
 
@@ -1517,19 +1517,19 @@ select_core:
     struct ast_node *select_where = new_ast_select_where($opt_where, select_groupby);
     struct ast_node *select_from_etc = new_ast_select_from_etc($opt_from_query_parts, select_where);
     struct ast_node *select_expr_list_con = new_ast_select_expr_list_con($select_expr_list, select_from_etc);
-     $select_core = new_ast_select_core($select_opts, select_expr_list_con);
+     $$ = new_ast_select_core($select_opts, select_expr_list_con);
   }
   | ROWS '(' macro_ref ')' { $$ = $macro_ref; }
   | VALUES values  {
-    $select_core = new_ast_select_core(new_ast_select_values(), $values);
+    $$ = new_ast_select_core(new_ast_select_values(), $values);
   }
   ;
 
 compound_operator:
-  UNION  { $compound_operator = COMPOUND_OP_UNION; }
-  | UNION_ALL  { $compound_operator = COMPOUND_OP_UNION_ALL; }
-  | INTERSECT  { $compound_operator = COMPOUND_OP_INTERSECT; }
-  | EXCEPT  { $compound_operator = COMPOUND_OP_EXCEPT; }
+  UNION  { $$ = COMPOUND_OP_UNION; }
+  | UNION_ALL  { $$ = COMPOUND_OP_UNION_ALL; }
+  | INTERSECT  { $$ = COMPOUND_OP_INTERSECT; }
+  | EXCEPT  { $$ = COMPOUND_OP_EXCEPT; }
   ;
 
 window_func_inv:
@@ -1539,13 +1539,13 @@ window_func_inv:
     EXTRACT_NOTNULL(call_filter_clause, call_arg_list->left);
     EXTRACT(distinct, call_filter_clause->left);
     YY_ERROR_ON_DISTINCT(distinct);
-    $window_func_inv = new_ast_window_func_inv($simple_call, $window_name_or_defn);
+    $$ = new_ast_window_func_inv($simple_call, $window_name_or_defn);
   }
   ;
 
 opt_filter_clause:
-  /* nil */  { $opt_filter_clause = NULL; }
-  | FILTER '(' opt_where ')'  { $opt_filter_clause = new_ast_opt_filter_clause($opt_where); }
+  /* nil */  { $$ = NULL; }
+  | FILTER '(' opt_where ')'  { $$ = new_ast_opt_filter_clause($opt_where); }
   ;
 
 window_name_or_defn: window_defn
@@ -1555,79 +1555,79 @@ window_name_or_defn: window_defn
 window_defn:
   '(' opt_partition_by opt_orderby opt_frame_spec ')'  {
     ast_node *window_defn_orderby = new_ast_window_defn_orderby($opt_orderby, $opt_frame_spec);
-    $window_defn = new_ast_window_defn($opt_partition_by, window_defn_orderby);
+    $$ = new_ast_window_defn($opt_partition_by, window_defn_orderby);
   }
   ;
 
 opt_frame_spec:
-  /* nil */  { $opt_frame_spec = NULL; }
+  /* nil */  { $$ = NULL; }
   | frame_type frame_boundary_opts frame_exclude  {
     int32_t frame_boundary_opts_flags = (int32_t)((int_ast_node *)($frame_boundary_opts)->left)->value;
     int32_t flags = $frame_type | frame_boundary_opts_flags | $frame_exclude;
     ast_node *expr_list = $frame_boundary_opts->right;
-    $opt_frame_spec = new_ast_opt_frame_spec(new_ast_option(flags), expr_list);
+    $$ = new_ast_opt_frame_spec(new_ast_option(flags), expr_list);
   }
   ;
 
 frame_type:
-  RANGE  { $frame_type = FRAME_TYPE_RANGE; }
-  | ROWS  { $frame_type = FRAME_TYPE_ROWS; }
-  | GROUPS  { $frame_type = FRAME_TYPE_GROUPS; }
+  RANGE  { $$ = FRAME_TYPE_RANGE; }
+  | ROWS  { $$ = FRAME_TYPE_ROWS; }
+  | GROUPS  { $$ = FRAME_TYPE_GROUPS; }
   ;
 
 frame_exclude:
-  /* nil */  { $frame_exclude = FRAME_EXCLUDE_NONE; }
-  | EXCLUDE_NO_OTHERS  { $frame_exclude = FRAME_EXCLUDE_NO_OTHERS; }
-  | EXCLUDE_CURRENT_ROW  { $frame_exclude = FRAME_EXCLUDE_CURRENT_ROW; }
-  | EXCLUDE_GROUP  { $frame_exclude = FRAME_EXCLUDE_GROUP; }
-  | EXCLUDE_TIES  { $frame_exclude = FRAME_EXCLUDE_TIES; }
+  /* nil */  { $$ = FRAME_EXCLUDE_NONE; }
+  | EXCLUDE_NO_OTHERS  { $$ = FRAME_EXCLUDE_NO_OTHERS; }
+  | EXCLUDE_CURRENT_ROW  { $$ = FRAME_EXCLUDE_CURRENT_ROW; }
+  | EXCLUDE_GROUP  { $$ = FRAME_EXCLUDE_GROUP; }
+  | EXCLUDE_TIES  { $$ = FRAME_EXCLUDE_TIES; }
   ;
 
 frame_boundary_opts:
   frame_boundary  {
     ast_node *ast_flags = $frame_boundary->left;
     ast_node *expr_list = new_ast_expr_list($frame_boundary->right, NULL);
-    $frame_boundary_opts = new_ast_frame_boundary_opts(ast_flags, expr_list);
+    $$ = new_ast_frame_boundary_opts(ast_flags, expr_list);
   }
   | BETWEEN frame_boundary_start AND frame_boundary_end  {
     int32_t flags = (int32_t)(((int_ast_node *)$frame_boundary_start->left)->value | ((int_ast_node *)$frame_boundary_end->left)->value);
     ast_node *expr_list = new_ast_expr_list($frame_boundary_start->right, $frame_boundary_end->right);
-    $frame_boundary_opts = new_ast_frame_boundary_opts(new_ast_option(flags), expr_list);
+    $$ = new_ast_frame_boundary_opts(new_ast_option(flags), expr_list);
   }
   ;
 
 frame_boundary_start:
-  UNBOUNDED PRECEDING  { $frame_boundary_start = new_ast_frame_boundary_start(new_ast_option(FRAME_BOUNDARY_START_UNBOUNDED), NULL); }
-  | expr PRECEDING  { $frame_boundary_start = new_ast_frame_boundary_start(new_ast_option(FRAME_BOUNDARY_START_PRECEDING), $expr); }
-  | CURRENT_ROW  { $frame_boundary_start = new_ast_frame_boundary_start(new_ast_option(FRAME_BOUNDARY_START_CURRENT_ROW), NULL); }
-  | expr FOLLOWING  { $frame_boundary_start = new_ast_frame_boundary_start(new_ast_option(FRAME_BOUNDARY_START_FOLLOWING), $expr); }
+  UNBOUNDED PRECEDING  { $$ = new_ast_frame_boundary_start(new_ast_option(FRAME_BOUNDARY_START_UNBOUNDED), NULL); }
+  | expr PRECEDING  { $$ = new_ast_frame_boundary_start(new_ast_option(FRAME_BOUNDARY_START_PRECEDING), $expr); }
+  | CURRENT_ROW  { $$ = new_ast_frame_boundary_start(new_ast_option(FRAME_BOUNDARY_START_CURRENT_ROW), NULL); }
+  | expr FOLLOWING  { $$ = new_ast_frame_boundary_start(new_ast_option(FRAME_BOUNDARY_START_FOLLOWING), $expr); }
   ;
 
 frame_boundary_end:
-  expr PRECEDING  { $frame_boundary_end = new_ast_frame_boundary_end(new_ast_option(FRAME_BOUNDARY_END_PRECEDING), $expr); }
-  | CURRENT_ROW  { $frame_boundary_end = new_ast_frame_boundary_end(new_ast_option(FRAME_BOUNDARY_END_CURRENT_ROW), NULL); }
-  | expr FOLLOWING  { $frame_boundary_end = new_ast_frame_boundary_end(new_ast_option(FRAME_BOUNDARY_END_FOLLOWING), $expr); }
-  | UNBOUNDED FOLLOWING  { $frame_boundary_end = new_ast_frame_boundary_end(new_ast_option(FRAME_BOUNDARY_END_UNBOUNDED), NULL); }
+  expr PRECEDING  { $$ = new_ast_frame_boundary_end(new_ast_option(FRAME_BOUNDARY_END_PRECEDING), $expr); }
+  | CURRENT_ROW  { $$ = new_ast_frame_boundary_end(new_ast_option(FRAME_BOUNDARY_END_CURRENT_ROW), NULL); }
+  | expr FOLLOWING  { $$ = new_ast_frame_boundary_end(new_ast_option(FRAME_BOUNDARY_END_FOLLOWING), $expr); }
+  | UNBOUNDED FOLLOWING  { $$ = new_ast_frame_boundary_end(new_ast_option(FRAME_BOUNDARY_END_UNBOUNDED), NULL); }
   ;
 
 frame_boundary:
-  UNBOUNDED PRECEDING  { $frame_boundary = new_ast_frame_boundary(new_ast_option(FRAME_BOUNDARY_UNBOUNDED), NULL); }
-  | expr PRECEDING  { $frame_boundary = new_ast_frame_boundary(new_ast_option(FRAME_BOUNDARY_PRECEDING), $expr); }
-  | CURRENT_ROW  { $frame_boundary = new_ast_frame_boundary(new_ast_option(FRAME_BOUNDARY_CURRENT_ROW), NULL); }
+  UNBOUNDED PRECEDING  { $$ = new_ast_frame_boundary(new_ast_option(FRAME_BOUNDARY_UNBOUNDED), NULL); }
+  | expr PRECEDING  { $$ = new_ast_frame_boundary(new_ast_option(FRAME_BOUNDARY_PRECEDING), $expr); }
+  | CURRENT_ROW  { $$ = new_ast_frame_boundary(new_ast_option(FRAME_BOUNDARY_CURRENT_ROW), NULL); }
   ;
 
 opt_partition_by:
-  /* nil */  { $opt_partition_by = NULL; }
-  | PARTITION BY expr_list  { $opt_partition_by = new_ast_opt_partition_by($expr_list); }
+  /* nil */  { $$ = NULL; }
+  | PARTITION BY expr_list  { $$ = new_ast_opt_partition_by($expr_list); }
   ;
 
 opt_select_window:
-  /* nil */  { $opt_select_window = NULL; }
-  | window_clause  { $opt_select_window = new_ast_opt_select_window($window_clause); }
+  /* nil */  { $$ = NULL; }
+  | window_clause  { $$ = new_ast_opt_select_window($window_clause); }
   ;
 
 window_clause:
-  WINDOW window_name_defn_list  { $window_clause = new_ast_window_clause($window_name_defn_list); }
+  WINDOW window_name_defn_list  { $$ = new_ast_window_clause($window_name_defn_list); }
   ;
 
 window_name_defn_list:
@@ -1636,12 +1636,12 @@ window_name_defn_list:
   ;
 
 window_name_defn:
-  name AS window_defn  { $window_name_defn = new_ast_window_name_defn($name, $window_defn); }
+  name AS window_defn  { $$ = new_ast_window_name_defn($name, $window_defn); }
   ;
 
 region_spec:
-    name  { $region_spec = new_ast_region_spec($name, new_ast_option(PUBLIC_REGION)); }
-  | name PRIVATE  { $region_spec = new_ast_region_spec($name, new_ast_option(PRIVATE_REGION)); }
+    name  { $$ = new_ast_region_spec($name, new_ast_option(PUBLIC_REGION)); }
+  | name PRIVATE  { $$ = new_ast_region_spec($name, new_ast_option(PRIVATE_REGION)); }
   ;
 
 region_list:
@@ -1650,59 +1650,59 @@ region_list:
   ;
 
 declare_schema_region_stmt:
-  AT_DECLARE_SCHEMA_REGION name  { $declare_schema_region_stmt = new_ast_declare_schema_region_stmt($name, NULL); }
-  | AT_DECLARE_SCHEMA_REGION name USING region_list  { $declare_schema_region_stmt = new_ast_declare_schema_region_stmt($name, $region_list); }
+  AT_DECLARE_SCHEMA_REGION name  { $$ = new_ast_declare_schema_region_stmt($name, NULL); }
+  | AT_DECLARE_SCHEMA_REGION name USING region_list  { $$ = new_ast_declare_schema_region_stmt($name, $region_list); }
   ;
 
 declare_deployable_region_stmt:
-  AT_DECLARE_DEPLOYABLE_REGION  name  { $declare_deployable_region_stmt = new_ast_declare_deployable_region_stmt($name, NULL); }
-  | AT_DECLARE_DEPLOYABLE_REGION name USING region_list  { $declare_deployable_region_stmt = new_ast_declare_deployable_region_stmt($name, $region_list); }
+  AT_DECLARE_DEPLOYABLE_REGION  name  { $$ = new_ast_declare_deployable_region_stmt($name, NULL); }
+  | AT_DECLARE_DEPLOYABLE_REGION name USING region_list  { $$ = new_ast_declare_deployable_region_stmt($name, $region_list); }
   ;
 
 begin_schema_region_stmt:
-  AT_BEGIN_SCHEMA_REGION name  {$begin_schema_region_stmt = new_ast_begin_schema_region_stmt($name); }
+  AT_BEGIN_SCHEMA_REGION name  {$$ = new_ast_begin_schema_region_stmt($name); }
   ;
 
 end_schema_region_stmt:
-  AT_END_SCHEMA_REGION  {$end_schema_region_stmt = new_ast_end_schema_region_stmt(); }
+  AT_END_SCHEMA_REGION  {$$ = new_ast_end_schema_region_stmt(); }
   ;
 
 schema_unsub_stmt:
-  AT_UNSUB  '(' sql_name ')' { $schema_unsub_stmt = new_ast_schema_unsub_stmt(new_ast_version_annotation(new_ast_option(1), $sql_name)); }
+  AT_UNSUB  '(' sql_name ')' { $$ = new_ast_schema_unsub_stmt(new_ast_version_annotation(new_ast_option(1), $sql_name)); }
   ;
 
 schema_ad_hoc_migration_stmt:
   AT_SCHEMA_AD_HOC_MIGRATION version_annotation
-    { $schema_ad_hoc_migration_stmt = new_ast_schema_ad_hoc_migration_stmt($version_annotation, NULL); }
+    { $$ = new_ast_schema_ad_hoc_migration_stmt($version_annotation, NULL); }
   | AT_SCHEMA_AD_HOC_MIGRATION FOR AT_RECREATE '(' name[group] ',' name[proc] ')'
-    { $schema_ad_hoc_migration_stmt = new_ast_schema_ad_hoc_migration_stmt($group, $proc); }
+    { $$ = new_ast_schema_ad_hoc_migration_stmt($group, $proc); }
   ;
 
 emit_enums_stmt:
-  AT_EMIT_ENUMS opt_name_list { $emit_enums_stmt = new_ast_emit_enums_stmt($opt_name_list); }
+  AT_EMIT_ENUMS opt_name_list { $$ = new_ast_emit_enums_stmt($opt_name_list); }
   ;
 
 emit_group_stmt:
-  AT_EMIT_GROUP opt_name_list { $emit_group_stmt = new_ast_emit_group_stmt($opt_name_list); }
+  AT_EMIT_GROUP opt_name_list { $$ = new_ast_emit_group_stmt($opt_name_list); }
   ;
 
 emit_constants_stmt:
-  AT_EMIT_CONSTANTS name_list { $emit_constants_stmt = new_ast_emit_constants_stmt($name_list); }
+  AT_EMIT_CONSTANTS name_list { $$ = new_ast_emit_constants_stmt($name_list); }
   ;
 
 opt_from_query_parts:
-  /* nil */  { $opt_from_query_parts = NULL; }
-  | FROM query_parts  { $opt_from_query_parts = $query_parts; }
+  /* nil */  { $$ = NULL; }
+  | FROM query_parts  { $$ = $query_parts; }
   ;
 
 opt_where:
-  /* nil */  { $opt_where = NULL; }
-  | WHERE expr  { $opt_where = new_ast_opt_where($expr); }
+  /* nil */  { $$ = NULL; }
+  | WHERE expr  { $$ = new_ast_opt_where($expr); }
   ;
 
 opt_groupby:
-  /* nil */  { $opt_groupby = NULL; }
-  | GROUP BY groupby_list  { $opt_groupby = new_ast_opt_groupby($groupby_list); }
+  /* nil */  { $$ = NULL; }
+  | GROUP BY groupby_list  { $$ = new_ast_opt_groupby($groupby_list); }
   ;
 
 groupby_list:
@@ -1711,29 +1711,29 @@ groupby_list:
   ;
 
 groupby_item:
-  expr  { $groupby_item = new_ast_groupby_item($expr); }
+  expr  { $$ = new_ast_groupby_item($expr); }
   ;
 
 opt_asc_desc:
-  /* nil */  { $opt_asc_desc = NULL; }
-  | ASC  opt_nullsfirst_nullslast { $opt_asc_desc = new_ast_asc($opt_nullsfirst_nullslast); }
-  | DESC  opt_nullsfirst_nullslast { $opt_asc_desc = new_ast_desc($opt_nullsfirst_nullslast); }
+  /* nil */  { $$ = NULL; }
+  | ASC  opt_nullsfirst_nullslast { $$ = new_ast_asc($opt_nullsfirst_nullslast); }
+  | DESC  opt_nullsfirst_nullslast { $$ = new_ast_desc($opt_nullsfirst_nullslast); }
   ;
 
 opt_nullsfirst_nullslast:
-  /* nil */  { $opt_nullsfirst_nullslast = NULL; }
-  | NULLS FIRST  { $opt_nullsfirst_nullslast = new_ast_nullsfirst(); }
-  | NULLS LAST  { $opt_nullsfirst_nullslast = new_ast_nullslast(); }
+  /* nil */  { $$ = NULL; }
+  | NULLS FIRST  { $$ = new_ast_nullsfirst(); }
+  | NULLS LAST  { $$ = new_ast_nullslast(); }
   ;
 
 opt_having:
-  /* nil */  { $opt_having = NULL; }
-  | HAVING expr  { $opt_having = new_ast_opt_having($expr); }
+  /* nil */  { $$ = NULL; }
+  | HAVING expr  { $$ = new_ast_opt_having($expr); }
   ;
 
 opt_orderby:
-  /* nil */  { $opt_orderby = NULL; }
-  | ORDER BY orderby_list  { $opt_orderby = new_ast_opt_orderby($orderby_list); }
+  /* nil */  { $$ = NULL; }
+  | ORDER BY orderby_list  { $$ = new_ast_opt_orderby($orderby_list); }
   ;
 
 orderby_list:
@@ -1742,24 +1742,24 @@ orderby_list:
   ;
 
 orderby_item:
-  expr opt_asc_desc  { $orderby_item = new_ast_orderby_item($expr, $opt_asc_desc); }
+  expr opt_asc_desc  { $$ = new_ast_orderby_item($expr, $opt_asc_desc); }
   ;
 
 opt_limit:
-  /* nil */  { $opt_limit = NULL; }
-  | LIMIT expr  { $opt_limit = new_ast_opt_limit($expr); }
+  /* nil */  { $$ = NULL; }
+  | LIMIT expr  { $$ = new_ast_opt_limit($expr); }
   ;
 
 opt_offset:
-  /* nil */  { $opt_offset = NULL; }
-  | OFFSET expr  { $opt_offset = new_ast_opt_offset($expr); }
+  /* nil */  { $$ = NULL; }
+  | OFFSET expr  { $$ = new_ast_opt_offset($expr); }
   ;
 
 select_opts:
-  /* nil */  { $select_opts = NULL; }
-  | ALL  { $select_opts = new_ast_select_opts(new_ast_all()); }
-  | DISTINCT  { $select_opts = new_ast_select_opts(new_ast_distinct()); }
-  | DISTINCTROW  { $select_opts = new_ast_select_opts(new_ast_distinctrow()); }
+  /* nil */  { $$ = NULL; }
+  | ALL  { $$ = new_ast_select_opts(new_ast_all()); }
+  | DISTINCT  { $$ = new_ast_select_opts(new_ast_distinct()); }
+  | DISTINCTROW  { $$ = new_ast_select_opts(new_ast_distinctrow()); }
   ;
 
 select_expr_list:
@@ -1774,28 +1774,28 @@ select_expr:
     }
     else if (is_ast_table_star($expr) || is_ast_star($expr)) {
       YY_ERROR_ON_ALIAS_PRESENT($opt_as_alias);
-      $select_expr = $expr;
+      $$ = $expr;
     }
     else {
-      $select_expr = new_ast_select_expr($expr, $opt_as_alias);
+      $$ = new_ast_select_expr($expr, $opt_as_alias);
     }
   }
-  | column_calculation  { $select_expr = $column_calculation; }
+  | column_calculation  { $$ = $column_calculation; }
   ;
 
 opt_as_alias:
-  /* nil */  { $opt_as_alias = NULL;  }
+  /* nil */  { $$ = NULL;  }
   | as_alias
   ;
 
 as_alias:
-  AS sql_name  { $as_alias = new_ast_opt_as_alias($sql_name); }
-  | sql_name  { $as_alias = new_ast_opt_as_alias($sql_name); }
+  AS sql_name  { $$ = new_ast_opt_as_alias($sql_name); }
+  | sql_name  { $$ = new_ast_opt_as_alias($sql_name); }
   ;
 
 query_parts:
-  table_or_subquery_list  { $query_parts = $table_or_subquery_list; }
-  | join_clause  { $query_parts = $join_clause; }
+  table_or_subquery_list  { $$ = $table_or_subquery_list; }
+  | join_clause  { $$ = $join_clause; }
   ;
 
 table_or_subquery_list:
@@ -1804,7 +1804,7 @@ table_or_subquery_list:
   ;
 
 join_clause:
-  table_or_subquery join_target_list  { $join_clause = new_ast_join_clause($table_or_subquery, $join_target_list); }
+  table_or_subquery join_target_list  { $$ = new_ast_join_clause($table_or_subquery, $join_target_list); }
   ;
 
 join_target_list:
@@ -1813,42 +1813,42 @@ join_target_list:
   ;
 
 table_or_subquery:
-  sql_name opt_as_alias  { $table_or_subquery = new_ast_table_or_subquery($sql_name, $opt_as_alias); }
-  | '(' select_stmt ')' opt_as_alias  { $table_or_subquery = new_ast_table_or_subquery($select_stmt, $opt_as_alias); }
-  | '(' shared_cte ')' opt_as_alias  { $table_or_subquery = new_ast_table_or_subquery($shared_cte, $opt_as_alias); }
-  | table_function opt_as_alias  { $table_or_subquery = new_ast_table_or_subquery($table_function, $opt_as_alias); }
-  | '(' query_parts ')'  { $table_or_subquery = new_ast_table_or_subquery($query_parts, NULL); }
-  |  macro_ref[qp] opt_as_alias { $table_or_subquery = new_ast_table_or_subquery($qp, $opt_as_alias); }
+  sql_name opt_as_alias  { $$ = new_ast_table_or_subquery($sql_name, $opt_as_alias); }
+  | '(' select_stmt ')' opt_as_alias  { $$ = new_ast_table_or_subquery($select_stmt, $opt_as_alias); }
+  | '(' shared_cte ')' opt_as_alias  { $$ = new_ast_table_or_subquery($shared_cte, $opt_as_alias); }
+  | table_function opt_as_alias  { $$ = new_ast_table_or_subquery($table_function, $opt_as_alias); }
+  | '(' query_parts ')'  { $$ = new_ast_table_or_subquery($query_parts, NULL); }
+  |  macro_ref[qp] opt_as_alias { $$ = new_ast_table_or_subquery($qp, $opt_as_alias); }
   ;
 
 join_type:
-  /* nil */      { $join_type = JOIN_INNER; }
-  | LEFT         { $join_type = JOIN_LEFT; }
-  | RIGHT        { $join_type = JOIN_RIGHT; }
-  | LEFT OUTER   { $join_type = JOIN_LEFT_OUTER; }
-  | RIGHT OUTER  { $join_type = JOIN_RIGHT_OUTER; }
-  | INNER        { $join_type = JOIN_INNER; }
-  | CROSS        { $join_type = JOIN_CROSS; }
+  /* nil */      { $$ = JOIN_INNER; }
+  | LEFT         { $$ = JOIN_LEFT; }
+  | RIGHT        { $$ = JOIN_RIGHT; }
+  | LEFT OUTER   { $$ = JOIN_LEFT_OUTER; }
+  | RIGHT OUTER  { $$ = JOIN_RIGHT_OUTER; }
+  | INNER        { $$ = JOIN_INNER; }
+  | CROSS        { $$ = JOIN_CROSS; }
   ;
 
 join_target: join_type JOIN table_or_subquery opt_join_cond  {
       struct ast_node *asti_join_type = new_ast_option($join_type);
       struct ast_node *table_join = new_ast_table_join($table_or_subquery, $opt_join_cond);
-      $join_target = new_ast_join_target(asti_join_type, table_join); }
+      $$ = new_ast_join_target(asti_join_type, table_join); }
   ;
 
 opt_join_cond:
-  /* nil */  { $opt_join_cond = NULL; }
+  /* nil */  { $$ = NULL; }
   | join_cond
   ;
 
 join_cond:
-  ON expr  { $join_cond = new_ast_join_cond(new_ast_on(), $expr); }
-  | USING '(' name_list ')'  { $join_cond = new_ast_join_cond(new_ast_using(), $name_list); }
+  ON expr  { $$ = new_ast_join_cond(new_ast_on(), $expr); }
+  | USING '(' name_list ')'  { $$ = new_ast_join_cond(new_ast_using(), $name_list); }
   ;
 
 table_function:
-  name '(' arg_list ')'  { $table_function = new_ast_table_function($name, $arg_list); }
+  name '(' arg_list ')'  { $$ = new_ast_table_function($name, $arg_list); }
   ;
 
 create_view_stmt:
@@ -1857,13 +1857,13 @@ create_view_stmt:
     ast_node *view_details = new_ast_view_details($sql_name, NULL);
     ast_node *view_details_select = new_ast_view_details_select(view_details, $select_stmt);
     ast_node *view_and_attrs = new_ast_view_and_attrs(view_details_select, $opt_delete_version_attr);
-  $create_view_stmt = new_ast_create_view_stmt(flags, view_and_attrs); }
+  $$ = new_ast_create_view_stmt(flags, view_and_attrs); }
   | CREATE opt_temp VIEW opt_if_not_exists sql_name '(' name_list ')' AS select_stmt opt_delete_version_attr  {
     ast_node *flags = new_ast_option($opt_temp | $opt_if_not_exists);
     ast_node *view_details = new_ast_view_details($sql_name, $name_list);
     ast_node *view_details_select = new_ast_view_details_select(view_details, $select_stmt);
     ast_node *view_and_attrs = new_ast_view_and_attrs(view_details_select, $opt_delete_version_attr);
-    $create_view_stmt = new_ast_create_view_stmt(flags, view_and_attrs); }
+    $$ = new_ast_create_view_stmt(flags, view_and_attrs); }
   ;
 
 delete_stmt:
@@ -1883,44 +1883,44 @@ delete_stmt_plain:
   ;
 
 opt_insert_dummy_spec:
-  /* nil */  { $opt_insert_dummy_spec = NULL; }
+  /* nil */  { $$ = NULL; }
   | AT_DUMMY_SEED '(' expr ')' dummy_modifier  {
-    $opt_insert_dummy_spec = new_ast_insert_dummy_spec($expr, new_ast_option($dummy_modifier)); }
+    $$ = new_ast_insert_dummy_spec($expr, new_ast_option($dummy_modifier)); }
   ;
 
 dummy_modifier:
-  /* nil */  { $dummy_modifier = 0; }
-  | AT_DUMMY_NULLABLES  { $dummy_modifier = INSERT_DUMMY_NULLABLES; }
-  | AT_DUMMY_DEFAULTS  { $dummy_modifier = INSERT_DUMMY_DEFAULTS; }
-  | AT_DUMMY_NULLABLES AT_DUMMY_DEFAULTS  { $dummy_modifier = INSERT_DUMMY_NULLABLES | INSERT_DUMMY_DEFAULTS; }
-  | AT_DUMMY_DEFAULTS AT_DUMMY_NULLABLES  { $dummy_modifier = INSERT_DUMMY_NULLABLES | INSERT_DUMMY_DEFAULTS; }
+  /* nil */  { $$ = 0; }
+  | AT_DUMMY_NULLABLES  { $$ = INSERT_DUMMY_NULLABLES; }
+  | AT_DUMMY_DEFAULTS  { $$ = INSERT_DUMMY_DEFAULTS; }
+  | AT_DUMMY_NULLABLES AT_DUMMY_DEFAULTS  { $$ = INSERT_DUMMY_NULLABLES | INSERT_DUMMY_DEFAULTS; }
+  | AT_DUMMY_DEFAULTS AT_DUMMY_NULLABLES  { $$ = INSERT_DUMMY_NULLABLES | INSERT_DUMMY_DEFAULTS; }
   ;
 
 insert_stmt_type:
-  INSERT INTO  { $insert_stmt_type = new_ast_insert_normal();  }
-  | INSERT OR REPLACE INTO  { $insert_stmt_type = new_ast_insert_or_replace(); }
-  | INSERT OR IGNORE INTO  { $insert_stmt_type = new_ast_insert_or_ignore(); }
-  | INSERT OR ROLLBACK INTO  { $insert_stmt_type = new_ast_insert_or_rollback(); }
-  | INSERT OR ABORT INTO  { $insert_stmt_type = new_ast_insert_or_abort(); }
-  | INSERT OR FAIL INTO  { $insert_stmt_type = new_ast_insert_or_fail(); }
-  | REPLACE INTO  { $insert_stmt_type = new_ast_insert_replace(); }
+  INSERT INTO  { $$ = new_ast_insert_normal();  }
+  | INSERT OR REPLACE INTO  { $$ = new_ast_insert_or_replace(); }
+  | INSERT OR IGNORE INTO  { $$ = new_ast_insert_or_ignore(); }
+  | INSERT OR ROLLBACK INTO  { $$ = new_ast_insert_or_rollback(); }
+  | INSERT OR ABORT INTO  { $$ = new_ast_insert_or_abort(); }
+  | INSERT OR FAIL INTO  { $$ = new_ast_insert_or_fail(); }
+  | REPLACE INTO  { $$ = new_ast_insert_replace(); }
   ;
 
 opt_column_spec:
-  /* nil */  { $opt_column_spec = NULL; }
-  | '(' opt_sql_name_list ')'  { $opt_column_spec = new_ast_column_spec($opt_sql_name_list); }
-  | '(' shape_def ')'  { $opt_column_spec = new_ast_column_spec($shape_def); }
+  /* nil */  { $$ = NULL; }
+  | '(' opt_sql_name_list ')'  { $$ = new_ast_column_spec($opt_sql_name_list); }
+  | '(' shape_def ')'  { $$ = new_ast_column_spec($shape_def); }
   ;
 
 column_spec:
-  '(' sql_name_list ')'  { $column_spec = new_ast_column_spec($sql_name_list); }
-  | '(' shape_def ')'  { $column_spec = new_ast_column_spec($shape_def); }
+  '(' sql_name_list ')'  { $$ = new_ast_column_spec($sql_name_list); }
+  | '(' shape_def ')'  { $$ = new_ast_column_spec($shape_def); }
   ;
 
 from_shape:
-  FROM CURSOR name opt_column_spec  { $from_shape = new_ast_from_shape($opt_column_spec, $name); }
-  | FROM name opt_column_spec  { $from_shape = new_ast_from_shape($opt_column_spec, $name); }
-  | FROM ARGUMENTS opt_column_spec  { $from_shape = new_ast_from_shape($opt_column_spec, new_ast_str("ARGUMENTS")); }
+  FROM CURSOR name opt_column_spec  { $$ = new_ast_from_shape($opt_column_spec, $name); }
+  | FROM name opt_column_spec  { $$ = new_ast_from_shape($opt_column_spec, $name); }
+  | FROM ARGUMENTS opt_column_spec  { $$ = new_ast_from_shape($opt_column_spec, new_ast_str("ARGUMENTS")); }
   ;
 
 insert_stmt_plain:
@@ -1962,8 +1962,8 @@ insert_stmt:
    ;
 
 insert_list_item:
-  expr { $insert_list_item = $expr; }
-  | shape_arguments  {$insert_list_item = $shape_arguments; }
+  expr { $$ = $expr; }
+  | shape_arguments  {$$ = $shape_arguments; }
   ;
 
 insert_list:
@@ -1978,7 +1978,7 @@ basic_update_stmt:
     struct ast_node *where = new_ast_update_where($opt_where, orderby);
     struct ast_node *from = new_ast_update_from($opt_from_query_parts, where);
     struct ast_node *list = new_ast_update_set($update_list, from);
-    $basic_update_stmt = new_ast_update_stmt($opt_sql_name, list); }
+    $$ = new_ast_update_stmt($opt_sql_name, list); }
   ;
 
 update_stmt:
@@ -2011,7 +2011,7 @@ update_stmt_plain:
   ;
 
 update_entry:
-  sql_name '=' expr  { $update_entry = new_ast_update_entry($sql_name, $expr); }
+  sql_name '=' expr  { $$ = new_ast_update_entry($sql_name, $expr); }
   ;
 
 update_list:
@@ -2041,18 +2041,18 @@ upsert_stmt_plain:
 update_cursor_stmt:
   UPDATE CURSOR name opt_column_spec FROM VALUES '(' insert_list ')'  {
     struct ast_node *columns_values = new_ast_columns_values($opt_column_spec, $insert_list);
-    $update_cursor_stmt = new_ast_update_cursor_stmt($name, columns_values); }
+    $$ = new_ast_update_cursor_stmt($name, columns_values); }
   | UPDATE CURSOR name opt_column_spec from_shape  {
     struct ast_node *columns_values = new_ast_columns_values($opt_column_spec, $from_shape);
-    $update_cursor_stmt = new_ast_update_cursor_stmt($name, columns_values); }
+    $$ = new_ast_update_cursor_stmt($name, columns_values); }
   | UPDATE CURSOR name USING expr_names {
-    $update_cursor_stmt = new_ast_update_cursor_stmt($name, $expr_names); }
+    $$ = new_ast_update_cursor_stmt($name, $expr_names); }
   ;
 
 conflict_target:
-  /* nil */  { $conflict_target = new_ast_conflict_target(NULL, NULL); }
+  /* nil */  { $$ = new_ast_conflict_target(NULL, NULL); }
   | '(' indexed_columns ')' opt_where  {
-    $conflict_target = new_ast_conflict_target($indexed_columns, $opt_where);
+    $$ = new_ast_conflict_target($indexed_columns, $opt_where);
   }
   ;
 
@@ -2060,13 +2060,13 @@ function: FUNC | FUNCTION
   ;
 
 declare_out_call_stmt:
-  DECLARE OUT call_stmt { $declare_out_call_stmt = new_ast_declare_out_call_stmt($call_stmt); }
+  DECLARE OUT call_stmt { $$ = new_ast_declare_out_call_stmt($call_stmt); }
   ;
 
 declare_enum_stmt:
   DECLARE ENUM name data_type_numeric '(' enum_values ')' {
      ast_node *typed_name = new_ast_typed_name($name, $data_type_numeric);
-     $declare_enum_stmt = new_ast_declare_enum_stmt(typed_name, $enum_values); }
+     $$ = new_ast_declare_enum_stmt(typed_name, $enum_values); }
   ;
 
 enum_values:
@@ -2075,18 +2075,18 @@ enum_values:
   ;
 
 enum_value:
-    name { $enum_value = new_ast_enum_value($name, NULL); }
-  | name '=' expr { $enum_value = new_ast_enum_value($name, $expr); }
+    name { $$ = new_ast_enum_value($name, NULL); }
+  | name '=' expr { $$ = new_ast_enum_value($name, $expr); }
   ;
 
 declare_const_stmt:
   DECLARE CONST GROUP name '(' const_values ')' {
-    $declare_const_stmt = new_ast_declare_const_stmt($name, $const_values); }
+    $$ = new_ast_declare_const_stmt($name, $const_values); }
   ;
 
 declare_group_stmt:
   DECLARE GROUP name BEGIN_ simple_variable_decls END {
-    $declare_group_stmt = new_ast_declare_group_stmt($name, $simple_variable_decls); }
+    $$ = new_ast_declare_group_stmt($name, $simple_variable_decls); }
   ;
 
 simple_variable_decls:
@@ -2099,7 +2099,7 @@ const_values:
   | const_value ',' const_values[next] { $$ = new_ast_const_values($const_value, $next); }
   ;
 
-const_value:  name '=' expr { $const_value = new_ast_const_value($name, $expr); }
+const_value:  name '=' expr { $$ = new_ast_const_value($name, $expr); }
   ;
 
 declare_select_func_stmt:
@@ -2115,15 +2115,15 @@ declare_select_func_stmt:
 
 declare_func_stmt:
   DECLARE function loose_name[name] '(' func_params ')' data_type_with_options  {
-      $declare_func_stmt = new_ast_declare_func_stmt($name, new_ast_func_params_return($func_params, $data_type_with_options)); }
+      $$ = new_ast_declare_func_stmt($name, new_ast_func_params_return($func_params, $data_type_with_options)); }
   | DECLARE function loose_name[name] '(' func_params ')' CREATE data_type_with_options  {
       ast_node *create_data_type = new_ast_create_data_type($data_type_with_options);
-      $declare_func_stmt = new_ast_declare_func_stmt($name, new_ast_func_params_return($func_params, create_data_type)); }
+      $$ = new_ast_declare_func_stmt($name, new_ast_func_params_return($func_params, create_data_type)); }
   | DECLARE function loose_name[name] NO CHECK data_type_with_options  {
-      $declare_func_stmt = new_ast_declare_func_no_check_stmt($name, new_ast_func_params_return(NULL, $data_type_with_options)); }
+      $$ = new_ast_declare_func_no_check_stmt($name, new_ast_func_params_return(NULL, $data_type_with_options)); }
   | DECLARE function loose_name[name] NO CHECK CREATE data_type_with_options  {
       ast_node *create_data_type = new_ast_create_data_type($data_type_with_options);
-      $declare_func_stmt = new_ast_declare_func_no_check_stmt($name, new_ast_func_params_return(NULL, create_data_type)); }
+      $$ = new_ast_declare_func_no_check_stmt($name, new_ast_func_params_return(NULL, create_data_type)); }
   ;
 
 procedure: PROC | PROCEDURE
@@ -2131,57 +2131,57 @@ procedure: PROC | PROCEDURE
 
 declare_proc_no_check_stmt:
   DECLARE procedure loose_name[name] NO CHECK {
-    $declare_proc_no_check_stmt = new_ast_declare_proc_no_check_stmt($name); }
+    $$ = new_ast_declare_proc_no_check_stmt($name); }
   ;
 
 declare_proc_stmt:
   DECLARE procedure loose_name[name] '(' func_params[params] ')'  {
       ast_node *proc_name_flags = new_ast_proc_name_type($name, new_ast_option(PROC_FLAG_BASIC));
-      $declare_proc_stmt = new_ast_declare_proc_stmt(proc_name_flags, new_ast_proc_params_stmts($params, NULL)); }
+      $$ = new_ast_declare_proc_stmt(proc_name_flags, new_ast_proc_params_stmts($params, NULL)); }
   | DECLARE procedure loose_name[name] '(' func_params[params] ')' '(' typed_names ')'  {
       ast_node *proc_name_flags = new_ast_proc_name_type($name, new_ast_option(PROC_FLAG_STRUCT_TYPE | PROC_FLAG_USES_DML));
-      $declare_proc_stmt = new_ast_declare_proc_stmt(proc_name_flags, new_ast_proc_params_stmts($params, $typed_names)); }
+      $$ = new_ast_declare_proc_stmt(proc_name_flags, new_ast_proc_params_stmts($params, $typed_names)); }
   | DECLARE procedure loose_name[name] '(' func_params[params] ')' USING TRANSACTION  {
       ast_node *proc_name_flags = new_ast_proc_name_type($name, new_ast_option(PROC_FLAG_USES_DML));
-      $declare_proc_stmt = new_ast_declare_proc_stmt(proc_name_flags, new_ast_proc_params_stmts($params, NULL)); }
+      $$ = new_ast_declare_proc_stmt(proc_name_flags, new_ast_proc_params_stmts($params, NULL)); }
   | DECLARE procedure loose_name[name] '(' func_params[params] ')' OUT '(' typed_names ')'  {
       ast_node *proc_name_flags = new_ast_proc_name_type($name, new_ast_option(PROC_FLAG_STRUCT_TYPE | PROC_FLAG_USES_OUT));
-      $declare_proc_stmt = new_ast_declare_proc_stmt(proc_name_flags, new_ast_proc_params_stmts($params, $typed_names)); }
+      $$ = new_ast_declare_proc_stmt(proc_name_flags, new_ast_proc_params_stmts($params, $typed_names)); }
   | DECLARE procedure loose_name[name] '(' func_params[params] ')' OUT '(' typed_names ')' USING TRANSACTION  {
       ast_node *proc_name_flags = new_ast_proc_name_type($name, new_ast_option(PROC_FLAG_STRUCT_TYPE | PROC_FLAG_USES_OUT | PROC_FLAG_USES_DML));
-      $declare_proc_stmt = new_ast_declare_proc_stmt(proc_name_flags, new_ast_proc_params_stmts($params, $typed_names)); }
+      $$ = new_ast_declare_proc_stmt(proc_name_flags, new_ast_proc_params_stmts($params, $typed_names)); }
   | DECLARE procedure loose_name[name] '(' func_params[params] ')' OUT UNION '(' typed_names ')'  {
       ast_node *proc_name_flags = new_ast_proc_name_type($name, new_ast_option(PROC_FLAG_STRUCT_TYPE | PROC_FLAG_USES_OUT_UNION));
-      $declare_proc_stmt = new_ast_declare_proc_stmt(proc_name_flags, new_ast_proc_params_stmts($params, $typed_names)); }
+      $$ = new_ast_declare_proc_stmt(proc_name_flags, new_ast_proc_params_stmts($params, $typed_names)); }
   | DECLARE procedure loose_name[name] '(' func_params[params] ')' OUT UNION '(' typed_names ')' USING TRANSACTION  {
       ast_node *proc_name_flags = new_ast_proc_name_type($name, new_ast_option(PROC_FLAG_STRUCT_TYPE | PROC_FLAG_USES_OUT_UNION | PROC_FLAG_USES_DML));
-      $declare_proc_stmt = new_ast_declare_proc_stmt(proc_name_flags, new_ast_proc_params_stmts($params, $typed_names)); }
+      $$ = new_ast_declare_proc_stmt(proc_name_flags, new_ast_proc_params_stmts($params, $typed_names)); }
   ;
 
 declare_interface_stmt:
   DECLARE INTERFACE name '(' typed_names ')'  {
-      $declare_interface_stmt = new_ast_declare_interface_stmt($name, new_ast_proc_params_stmts(NULL, $typed_names)); }
+      $$ = new_ast_declare_interface_stmt($name, new_ast_proc_params_stmts(NULL, $typed_names)); }
   | INTERFACE name '(' typed_names ')'  {
-      $declare_interface_stmt = new_ast_declare_interface_stmt($name, new_ast_proc_params_stmts(NULL, $typed_names)); }
+      $$ = new_ast_declare_interface_stmt($name, new_ast_proc_params_stmts(NULL, $typed_names)); }
   ;
 
 create_proc_stmt:
   CREATE procedure loose_name[name] '(' params ')' BEGIN_ opt_stmt_list END  {
-    $create_proc_stmt = new_ast_create_proc_stmt($name, new_ast_proc_params_stmts($params, $opt_stmt_list)); }
+    $$ = new_ast_create_proc_stmt($name, new_ast_proc_params_stmts($params, $opt_stmt_list)); }
   | procedure loose_name[name] '(' params ')' BEGIN_ opt_stmt_list END  {
-    $create_proc_stmt = new_ast_create_proc_stmt($name, new_ast_proc_params_stmts($params, $opt_stmt_list)); }
+    $$ = new_ast_create_proc_stmt($name, new_ast_proc_params_stmts($params, $opt_stmt_list)); }
   ;
 
 inout:
-  IN  { $inout = new_ast_in(); }
-  | OUT  { $inout = new_ast_out(); }
-  | INOUT  { $inout = new_ast_inout(); }
+  IN  { $$ = new_ast_in(); }
+  | OUT  { $$ = new_ast_out(); }
+  | INOUT  { $$ = new_ast_inout(); }
   ;
 
 typed_name:
-  sql_name data_type_with_options  { $typed_name = new_ast_typed_name($sql_name, $data_type_with_options); }
-  | shape_def  { $typed_name = new_ast_typed_name(NULL, $shape_def); }
-  | name shape_def  { $typed_name = new_ast_typed_name($name, $shape_def); }
+  sql_name data_type_with_options  { $$ = new_ast_typed_name($sql_name, $data_type_with_options); }
+  | shape_def  { $$ = new_ast_typed_name(NULL, $shape_def); }
+  | name shape_def  { $$ = new_ast_typed_name($name, $shape_def); }
   ;
 
 typed_names:
@@ -2190,8 +2190,8 @@ typed_names:
   ;
 
 func_param:
-  param { $func_param = $param; }
-  | name CURSOR { $func_param = new_ast_param(NULL, new_ast_param_detail($name, new_ast_type_cursor())); }
+  param { $$ = $param; }
+  | name CURSOR { $$ = new_ast_param(NULL, new_ast_param_detail($name, new_ast_type_cursor())); }
   ;
 
 func_params:
@@ -2201,10 +2201,10 @@ func_params:
   ;
 
 param:
-  sql_name data_type_with_options  { $param = new_ast_param(NULL, new_ast_param_detail($sql_name, $data_type_with_options)); }
-  | inout sql_name data_type_with_options  { $param = new_ast_param($inout, new_ast_param_detail($sql_name, $data_type_with_options)); }
-  | shape_def  { $param = new_ast_param(NULL, new_ast_param_detail(NULL, $shape_def)); }
-  | name shape_def  { $param = new_ast_param(NULL, new_ast_param_detail($name, $shape_def)); }
+  sql_name data_type_with_options  { $$ = new_ast_param(NULL, new_ast_param_detail($sql_name, $data_type_with_options)); }
+  | inout sql_name data_type_with_options  { $$ = new_ast_param($inout, new_ast_param_detail($sql_name, $data_type_with_options)); }
+  | shape_def  { $$ = new_ast_param(NULL, new_ast_param_detail(NULL, $shape_def)); }
+  | name shape_def  { $$ = new_ast_param(NULL, new_ast_param_detail($name, $shape_def)); }
   ;
 
 params:
@@ -2238,14 +2238,14 @@ declare_fetched_value_cursor_stmt:
   ;
 
 declare_type_stmt:
-  DECLARE name TYPE data_type_with_options { $declare_type_stmt = new_ast_declare_named_type($name, $data_type_with_options); }
-  | TYPE name data_type_with_options { $declare_type_stmt = new_ast_declare_named_type($name, $data_type_with_options); }
+  DECLARE name TYPE data_type_with_options { $$ = new_ast_declare_named_type($name, $data_type_with_options); }
+  | TYPE name data_type_with_options { $$ = new_ast_declare_named_type($name, $data_type_with_options); }
   ;
 
 declare_vars_stmt:
-  DECLARE sql_name_list data_type_with_options  { $declare_vars_stmt = new_ast_declare_vars_type($sql_name_list, $data_type_with_options); }
-  | VAR name_list data_type_with_options  { $declare_vars_stmt = new_ast_declare_vars_type($name_list, $data_type_with_options); }
-  | declare_value_cursor { $declare_vars_stmt = $declare_value_cursor; }
+  DECLARE sql_name_list data_type_with_options  { $$ = new_ast_declare_vars_type($sql_name_list, $data_type_with_options); }
+  | VAR name_list data_type_with_options  { $$ = new_ast_declare_vars_type($name_list, $data_type_with_options); }
+  | declare_value_cursor { $$ = $declare_value_cursor; }
   ;
 
 call_stmt: CALL loose_name[name] '(' arg_list ')'  {
@@ -2258,14 +2258,14 @@ for_stmt: FOR expr ';' stmt_list[step] BEGIN_ opt_stmt_list END {
   ;
 
 while_stmt:
-  WHILE expr BEGIN_ opt_stmt_list END  { $while_stmt = new_ast_while_stmt($expr, $opt_stmt_list); }
+  WHILE expr BEGIN_ opt_stmt_list END  { $$ = new_ast_while_stmt($expr, $opt_stmt_list); }
   ;
 
 switch_stmt:
   SWITCH expr switch_case switch_cases {
     ast_node *cases = new_ast_switch_case($switch_case, $switch_cases);
     ast_node *switch_body = new_ast_switch_body($expr, cases);
-    $switch_stmt = new_ast_switch_stmt(new_ast_option(0), switch_body);  }
+    $$ = new_ast_switch_stmt(new_ast_option(0), switch_body);  }
   | SWITCH expr ALL VALUES switch_case switch_cases {
     ast_node *cases = new_ast_switch_case($switch_case, $switch_cases);
     ast_node *switch_body = new_ast_switch_body($expr, cases);
@@ -2273,8 +2273,8 @@ switch_stmt:
   ;
 
 switch_case:
-  WHEN expr_list THEN stmt_list { $switch_case = new_ast_connector($expr_list, $stmt_list); }
-  | WHEN expr_list THEN NOTHING { $switch_case = new_ast_connector($expr_list, NULL); }
+  WHEN expr_list THEN stmt_list { $$ = new_ast_connector($expr_list, $stmt_list); }
+  | WHEN expr_list THEN NOTHING { $$ = new_ast_connector($expr_list, NULL); }
   ;
 
 switch_cases:
@@ -2349,23 +2349,23 @@ expr_name: expr as_alias { $$ = new_ast_expr_name($expr, $as_alias); }
 fetch_call_stmt:
   FETCH name opt_column_spec FROM call_stmt  {
     YY_ERROR_ON_COLUMNS($opt_column_spec);  // not really allowed, see macro for details.
-    $fetch_call_stmt = new_ast_fetch_call_stmt($name, $call_stmt); }
+    $$ = new_ast_fetch_call_stmt($name, $call_stmt); }
   ;
 
 close_stmt:
-  CLOSE name  { $close_stmt = new_ast_close_stmt($name); }
+  CLOSE name  { $$ = new_ast_close_stmt($name); }
   ;
 
 out_stmt:
-  OUT name  { $out_stmt = new_ast_out_stmt($name); }
+  OUT name  { $$ = new_ast_out_stmt($name); }
   ;
 
 out_union_stmt:
-  OUT UNION name  { $out_union_stmt = new_ast_out_union_stmt($name); }
+  OUT UNION name  { $$ = new_ast_out_union_stmt($name); }
   ;
 
 out_union_parent_child_stmt:
-  OUT UNION call_stmt JOIN child_results { $out_union_parent_child_stmt = new_ast_out_union_parent_child_stmt($call_stmt, $child_results); }
+  OUT UNION call_stmt JOIN child_results { $$ = new_ast_out_union_parent_child_stmt($call_stmt, $child_results); }
   ;
 
 child_results:
@@ -2374,8 +2374,8 @@ child_results:
    ;
 
 child_result:
-  call_stmt USING '(' name_list ')' { $child_result = new_ast_child_result($call_stmt, new_ast_named_result(NULL, $name_list)); }
-  | call_stmt USING '(' name_list ')' AS name { $child_result = new_ast_child_result($call_stmt, new_ast_named_result($name, $name_list)); }
+  call_stmt USING '(' name_list ')' { $$ = new_ast_child_result($call_stmt, new_ast_named_result(NULL, $name_list)); }
+  | call_stmt USING '(' name_list ')' AS name { $$ = new_ast_child_result($call_stmt, new_ast_named_result($name, $name_list)); }
   ;
 
 if_ending: END IF | END ;
@@ -2384,18 +2384,18 @@ if_stmt:
   IF expr THEN opt_stmt_list opt_elseif_list opt_else if_ending {
     struct ast_node *if_alt = new_ast_if_alt($opt_elseif_list, $opt_else);
     struct ast_node *cond_action = new_ast_cond_action($expr, $opt_stmt_list);
-    $if_stmt = new_ast_if_stmt(cond_action, if_alt); }
+    $$ = new_ast_if_stmt(cond_action, if_alt); }
   ;
 
 opt_else:
-  /* nil */  { $opt_else = NULL; }
-  | ELSE opt_stmt_list  { $opt_else = new_ast_else($opt_stmt_list); }
+  /* nil */  { $$ = NULL; }
+  | ELSE opt_stmt_list  { $$ = new_ast_else($opt_stmt_list); }
   ;
 
 elseif_item:
   ELSE_IF expr THEN opt_stmt_list  {
     struct ast_node *cond_action = new_ast_cond_action($expr, $opt_stmt_list);
-    $elseif_item = new_ast_elseif(cond_action, NULL); }
+    $$ = new_ast_elseif(cond_action, NULL); }
   ;
 
 elseif_list:
@@ -2404,97 +2404,97 @@ elseif_list:
   ;
 
 opt_elseif_list:
-  /* nil */  { $opt_elseif_list = NULL; }
-  | elseif_list  { $opt_elseif_list = $elseif_list; }
+  /* nil */  { $$ = NULL; }
+  | elseif_list  { $$ = $elseif_list; }
   ;
 
 control_stmt:
-  commit_return_stmt  { $control_stmt = $commit_return_stmt; }
-  | continue_stmt  { $control_stmt = $continue_stmt; }
-  | leave_stmt  { $control_stmt = $leave_stmt; }
-  | return_stmt  { $control_stmt = $return_stmt; }
-  | rollback_return_stmt  { $control_stmt = $rollback_return_stmt; }
-  | throw_stmt  { $control_stmt = $throw_stmt; }
+  commit_return_stmt  { $$ = $commit_return_stmt; }
+  | continue_stmt  { $$ = $continue_stmt; }
+  | leave_stmt  { $$ = $leave_stmt; }
+  | return_stmt  { $$ = $return_stmt; }
+  | rollback_return_stmt  { $$ = $rollback_return_stmt; }
+  | throw_stmt  { $$ = $throw_stmt; }
 
 guard_stmt:
-  IF expr control_stmt  { $guard_stmt = new_ast_guard_stmt($expr, $control_stmt); }
+  IF expr control_stmt  { $$ = new_ast_guard_stmt($expr, $control_stmt); }
   ;
 
 transaction_mode:
-  /* nil */ { $transaction_mode = TRANS_DEFERRED; }
-  | DEFERRED { $transaction_mode = TRANS_DEFERRED; }
-  | IMMEDIATE { $transaction_mode = TRANS_IMMEDIATE; }
-  | EXCLUSIVE { $transaction_mode = TRANS_EXCLUSIVE; }
+  /* nil */ { $$ = TRANS_DEFERRED; }
+  | DEFERRED { $$ = TRANS_DEFERRED; }
+  | IMMEDIATE { $$ = TRANS_IMMEDIATE; }
+  | EXCLUSIVE { $$ = TRANS_EXCLUSIVE; }
   ;
 
 begin_trans_stmt:
-  BEGIN_ transaction_mode TRANSACTION { $begin_trans_stmt = new_ast_begin_trans_stmt(new_ast_option($transaction_mode)); }
-  | BEGIN_ transaction_mode { $begin_trans_stmt = new_ast_begin_trans_stmt(new_ast_option($transaction_mode)); }
+  BEGIN_ transaction_mode TRANSACTION { $$ = new_ast_begin_trans_stmt(new_ast_option($transaction_mode)); }
+  | BEGIN_ transaction_mode { $$ = new_ast_begin_trans_stmt(new_ast_option($transaction_mode)); }
   ;
 
 rollback_trans_stmt:
   ROLLBACK  {
-      $rollback_trans_stmt = new_ast_rollback_trans_stmt(NULL); }
+      $$ = new_ast_rollback_trans_stmt(NULL); }
   | ROLLBACK TRANSACTION  {
-      $rollback_trans_stmt = new_ast_rollback_trans_stmt(NULL); }
+      $$ = new_ast_rollback_trans_stmt(NULL); }
   | ROLLBACK TO savepoint_name  {
-      $rollback_trans_stmt = new_ast_rollback_trans_stmt($savepoint_name); }
+      $$ = new_ast_rollback_trans_stmt($savepoint_name); }
   | ROLLBACK TRANSACTION TO savepoint_name  {
-      $rollback_trans_stmt = new_ast_rollback_trans_stmt($savepoint_name); }
+      $$ = new_ast_rollback_trans_stmt($savepoint_name); }
   | ROLLBACK TO SAVEPOINT savepoint_name  {
-      $rollback_trans_stmt = new_ast_rollback_trans_stmt($savepoint_name); }
+      $$ = new_ast_rollback_trans_stmt($savepoint_name); }
   | ROLLBACK TRANSACTION TO SAVEPOINT savepoint_name  {
-      $rollback_trans_stmt = new_ast_rollback_trans_stmt($savepoint_name); }
+      $$ = new_ast_rollback_trans_stmt($savepoint_name); }
   ;
 
 commit_trans_stmt:
-  COMMIT TRANSACTION  { $commit_trans_stmt = new_ast_commit_trans_stmt(); }
-  | COMMIT { $commit_trans_stmt = new_ast_commit_trans_stmt(); }
+  COMMIT TRANSACTION  { $$ = new_ast_commit_trans_stmt(); }
+  | COMMIT { $$ = new_ast_commit_trans_stmt(); }
   ;
 
 proc_savepoint_stmt:  procedure SAVEPOINT BEGIN_ opt_stmt_list END {
-    $proc_savepoint_stmt = new_ast_proc_savepoint_stmt($opt_stmt_list);
+    $$ = new_ast_proc_savepoint_stmt($opt_stmt_list);
   }
   ;
 
 savepoint_name:
-  AT_PROC { $savepoint_name = new_ast_str("@PROC"); }
-  | name { $savepoint_name = $name; }
+  AT_PROC { $$ = new_ast_str("@PROC"); }
+  | name { $$ = $name; }
   ;
 
 savepoint_stmt:
   SAVEPOINT savepoint_name  {
-    $savepoint_stmt = new_ast_savepoint_stmt($savepoint_name); }
+    $$ = new_ast_savepoint_stmt($savepoint_name); }
   ;
 
 release_savepoint_stmt:
   RELEASE savepoint_name  {
-    $release_savepoint_stmt = new_ast_release_savepoint_stmt($savepoint_name); }
+    $$ = new_ast_release_savepoint_stmt($savepoint_name); }
   | RELEASE SAVEPOINT savepoint_name  {
-    $release_savepoint_stmt = new_ast_release_savepoint_stmt($savepoint_name); }
+    $$ = new_ast_release_savepoint_stmt($savepoint_name); }
   ;
 
 echo_stmt:
-  AT_ECHO name ',' str_literal  { $echo_stmt = new_ast_echo_stmt($name, $str_literal); }
-  | AT_ECHO name ',' AT_TEXT '(' text_args ')' { $echo_stmt = new_ast_echo_stmt($name, new_ast_macro_text($text_args)); }
+  AT_ECHO name ',' str_literal  { $$ = new_ast_echo_stmt($name, $str_literal); }
+  | AT_ECHO name ',' AT_TEXT '(' text_args ')' { $$ = new_ast_echo_stmt($name, new_ast_macro_text($text_args)); }
   ;
 
 alter_table_add_column_stmt:
   ALTER TABLE sql_name ADD COLUMN col_def  {
-    $alter_table_add_column_stmt = new_ast_alter_table_add_column_stmt($sql_name, $col_def); }
+    $$ = new_ast_alter_table_add_column_stmt($sql_name, $col_def); }
   ;
 
 create_trigger_stmt:
   CREATE opt_temp TRIGGER opt_if_not_exists trigger_def opt_delete_version_attr  {
     int flags = $opt_temp | $opt_if_not_exists;
-    $create_trigger_stmt = new_ast_create_trigger_stmt(
+    $$ = new_ast_create_trigger_stmt(
         new_ast_option(flags),
         new_ast_trigger_body_vers($trigger_def, $opt_delete_version_attr)); }
   ;
 
 trigger_def:
   sql_name[n1] trigger_condition trigger_operation ON sql_name[n2] trigger_action  {
-  $trigger_def = new_ast_trigger_def(
+  $$ = new_ast_trigger_def(
         $n1,
         new_ast_trigger_condition(
           new_ast_option($trigger_condition),
@@ -2506,38 +2506,38 @@ trigger_def:
   ;
 
 trigger_condition:
-  /* nil */  { $trigger_condition = TRIGGER_BEFORE; /* before is the default per https://sqlite.org/lang_createtrigger.html */ }
-  | BEFORE  { $trigger_condition = TRIGGER_BEFORE; }
-  | AFTER  { $trigger_condition = TRIGGER_AFTER; }
-  | INSTEAD OF  { $trigger_condition = TRIGGER_INSTEAD_OF; }
+  /* nil */  { $$ = TRIGGER_BEFORE; /* before is the default per https://sqlite.org/lang_createtrigger.html */ }
+  | BEFORE  { $$ = TRIGGER_BEFORE; }
+  | AFTER  { $$ = TRIGGER_AFTER; }
+  | INSTEAD OF  { $$ = TRIGGER_INSTEAD_OF; }
  ;
 
 trigger_operation:
-  DELETE  { $trigger_operation = new_ast_trigger_operation(new_ast_option(TRIGGER_DELETE), NULL); }
-  | INSERT  { $trigger_operation = new_ast_trigger_operation(new_ast_option(TRIGGER_INSERT), NULL); }
-  | UPDATE opt_of  { $trigger_operation = new_ast_trigger_operation(new_ast_option(TRIGGER_UPDATE), $opt_of); }
+  DELETE  { $$ = new_ast_trigger_operation(new_ast_option(TRIGGER_DELETE), NULL); }
+  | INSERT  { $$ = new_ast_trigger_operation(new_ast_option(TRIGGER_INSERT), NULL); }
+  | UPDATE opt_of  { $$ = new_ast_trigger_operation(new_ast_option(TRIGGER_UPDATE), $opt_of); }
   ;
 
 opt_of:
-  /* nil */  { $opt_of = NULL; }
-  | OF name_list  { $opt_of = $name_list; }
+  /* nil */  { $$ = NULL; }
+  | OF name_list  { $$ = $name_list; }
   ;
 
 trigger_action:
   opt_foreachrow opt_when_expr BEGIN_ trigger_stmts END  {
-  $trigger_action = new_ast_trigger_action(
+  $$ = new_ast_trigger_action(
         new_ast_option($opt_foreachrow),
         new_ast_trigger_when_stmts($opt_when_expr, $trigger_stmts)); }
   ;
 
 opt_foreachrow:
-  /* nil */  { $opt_foreachrow = 0; }
-  | FOR_EACH_ROW  { $opt_foreachrow = TRIGGER_FOR_EACH_ROW; }
+  /* nil */  { $$ = 0; }
+  | FOR_EACH_ROW  { $$ = TRIGGER_FOR_EACH_ROW; }
   ;
 
 opt_when_expr:
-  /* nil */  { $opt_when_expr = NULL; }
-  | WHEN expr  { $opt_when_expr = $expr; }
+  /* nil */  { $$ = NULL; }
+  | WHEN expr  { $$ = $expr; }
   ;
 
 trigger_stmts:
@@ -2546,69 +2546,69 @@ trigger_stmts:
   ;
 
 trigger_stmt:
-  trigger_update_stmt ';'  { $trigger_stmt = $trigger_update_stmt; }
-  | trigger_insert_stmt ';'  { $trigger_stmt = $trigger_insert_stmt; }
-  | trigger_delete_stmt ';'  { $trigger_stmt = $trigger_delete_stmt; }
-  | trigger_select_stmt ';'  { $trigger_stmt = $trigger_select_stmt; }
+  trigger_update_stmt ';'  { $$ = $trigger_update_stmt; }
+  | trigger_insert_stmt ';'  { $$ = $trigger_insert_stmt; }
+  | trigger_delete_stmt ';'  { $$ = $trigger_delete_stmt; }
+  | trigger_select_stmt ';'  { $$ = $trigger_select_stmt; }
   ;
 
 trigger_select_stmt:
-  select_stmt_no_with  { $trigger_select_stmt = $select_stmt_no_with; }
+  select_stmt_no_with  { $$ = $select_stmt_no_with; }
   ;
 
 trigger_insert_stmt:
-  insert_stmt  { $trigger_insert_stmt = $insert_stmt; }
+  insert_stmt  { $$ = $insert_stmt; }
   ;
 
 trigger_delete_stmt:
-  delete_stmt  { $trigger_delete_stmt = $delete_stmt; }
+  delete_stmt  { $$ = $delete_stmt; }
   ;
 
 trigger_update_stmt:
-  basic_update_stmt  { $trigger_update_stmt = $basic_update_stmt; }
+  basic_update_stmt  { $$ = $basic_update_stmt; }
   ;
 
 enforcement_options:
-  FOREIGN KEY ON UPDATE  { $enforcement_options = new_ast_option(ENFORCE_FK_ON_UPDATE); }
-  | FOREIGN KEY ON DELETE  { $enforcement_options = new_ast_option(ENFORCE_FK_ON_DELETE); }
-  | JOIN  { $enforcement_options = new_ast_option(ENFORCE_STRICT_JOIN); }
-  | UPSERT STATEMENT  { $enforcement_options = new_ast_option(ENFORCE_UPSERT_STMT); }
-  | WINDOW function  { $enforcement_options = new_ast_option(ENFORCE_WINDOW_FUNC); }
-  | WITHOUT ROWID  { $enforcement_options = new_ast_option(ENFORCE_WITHOUT_ROWID); }
-  | TRANSACTION { $enforcement_options = new_ast_option(ENFORCE_TRANSACTION); }
-  | SELECT IF NOTHING { $enforcement_options = new_ast_option(ENFORCE_SELECT_IF_NOTHING); }
-  | INSERT SELECT { $enforcement_options = new_ast_option(ENFORCE_INSERT_SELECT); }
-  | TABLE FUNCTION { $enforcement_options = new_ast_option(ENFORCE_TABLE_FUNCTION); }
-  | IS_TRUE { $enforcement_options = new_ast_option(ENFORCE_IS_TRUE); }
-  | CAST { $enforcement_options = new_ast_option(ENFORCE_CAST); }
-  | SIGN_FUNCTION { $enforcement_options = new_ast_option(ENFORCE_SIGN_FUNCTION); }
-  | CURSOR_HAS_ROW { $enforcement_options = new_ast_option(ENFORCE_CURSOR_HAS_ROW); }
-  | UPDATE FROM { $enforcement_options = new_ast_option(ENFORCE_UPDATE_FROM); }
-  | AND OR NOT NULL_ CHECK { $enforcement_options = new_ast_option(ENFORCE_AND_OR_NOT_NULL_CHECK); }
+  FOREIGN KEY ON UPDATE  { $$ = new_ast_option(ENFORCE_FK_ON_UPDATE); }
+  | FOREIGN KEY ON DELETE  { $$ = new_ast_option(ENFORCE_FK_ON_DELETE); }
+  | JOIN  { $$ = new_ast_option(ENFORCE_STRICT_JOIN); }
+  | UPSERT STATEMENT  { $$ = new_ast_option(ENFORCE_UPSERT_STMT); }
+  | WINDOW function  { $$ = new_ast_option(ENFORCE_WINDOW_FUNC); }
+  | WITHOUT ROWID  { $$ = new_ast_option(ENFORCE_WITHOUT_ROWID); }
+  | TRANSACTION { $$ = new_ast_option(ENFORCE_TRANSACTION); }
+  | SELECT IF NOTHING { $$ = new_ast_option(ENFORCE_SELECT_IF_NOTHING); }
+  | INSERT SELECT { $$ = new_ast_option(ENFORCE_INSERT_SELECT); }
+  | TABLE FUNCTION { $$ = new_ast_option(ENFORCE_TABLE_FUNCTION); }
+  | IS_TRUE { $$ = new_ast_option(ENFORCE_IS_TRUE); }
+  | CAST { $$ = new_ast_option(ENFORCE_CAST); }
+  | SIGN_FUNCTION { $$ = new_ast_option(ENFORCE_SIGN_FUNCTION); }
+  | CURSOR_HAS_ROW { $$ = new_ast_option(ENFORCE_CURSOR_HAS_ROW); }
+  | UPDATE FROM { $$ = new_ast_option(ENFORCE_UPDATE_FROM); }
+  | AND OR NOT NULL_ CHECK { $$ = new_ast_option(ENFORCE_AND_OR_NOT_NULL_CHECK); }
   ;
 
 enforce_strict_stmt:
-  AT_ENFORCE_STRICT enforcement_options  { $enforce_strict_stmt = new_ast_enforce_strict_stmt($enforcement_options); }
+  AT_ENFORCE_STRICT enforcement_options  { $$ = new_ast_enforce_strict_stmt($enforcement_options); }
   ;
 
 enforce_normal_stmt:
-  AT_ENFORCE_NORMAL enforcement_options  { $enforce_normal_stmt = new_ast_enforce_normal_stmt($enforcement_options); }
+  AT_ENFORCE_NORMAL enforcement_options  { $$ = new_ast_enforce_normal_stmt($enforcement_options); }
   ;
 
 enforce_reset_stmt:
-  AT_ENFORCE_RESET { $enforce_reset_stmt = new_ast_enforce_reset_stmt(); }
+  AT_ENFORCE_RESET { $$ = new_ast_enforce_reset_stmt(); }
   ;
 
 enforce_push_stmt:
-  AT_ENFORCE_PUSH { $enforce_push_stmt = new_ast_enforce_push_stmt(); }
+  AT_ENFORCE_PUSH { $$ = new_ast_enforce_push_stmt(); }
   ;
 
 enforce_pop_stmt:
-  AT_ENFORCE_POP { $enforce_pop_stmt = new_ast_enforce_pop_stmt(); }
+  AT_ENFORCE_POP { $$ = new_ast_enforce_pop_stmt(); }
   ;
 
 keep_table_name_in_aliases_stmt:
-  AT_KEEP_TABLE_NAME_IN_ALIASES { $keep_table_name_in_aliases_stmt = new_ast_keep_table_name_in_aliases_stmt(); }
+  AT_KEEP_TABLE_NAME_IN_ALIASES { $$ = new_ast_keep_table_name_in_aliases_stmt(); }
 
 expr_macro_def:
   AT_MACRO '(' EXPR ')' name '!' '(' opt_macro_formals ')' {
@@ -2682,11 +2682,11 @@ select_expr_macro_def:
   ;
 
 op_stmt: AT_OP data_type_any ':' loose_name[op] loose_name_or_type[func] AS loose_name[targ] {
-    $op_stmt = new_ast_op_stmt($data_type_any, new_ast_op_vals($op, new_ast_op_vals($func, $targ))); }
+    $$ = new_ast_op_stmt($data_type_any, new_ast_op_vals($op, new_ast_op_vals($func, $targ))); }
   | AT_OP CURSOR ':' loose_name[op] loose_name_or_type[func] AS loose_name[targ] {
-    $op_stmt = new_ast_op_stmt(new_ast_str("CURSOR"), new_ast_op_vals($op, new_ast_op_vals($func, $targ))); }
+    $$ = new_ast_op_stmt(new_ast_str("CURSOR"), new_ast_op_vals($op, new_ast_op_vals($func, $targ))); }
   | AT_OP NULL_ ':' loose_name[op] loose_name_or_type[func] AS loose_name[targ] {
-    $op_stmt = new_ast_op_stmt(new_ast_str("NULL"), new_ast_op_vals($op, new_ast_op_vals($func, $targ))); }
+    $$ = new_ast_op_stmt(new_ast_str("NULL"), new_ast_op_vals($op, new_ast_op_vals($func, $targ))); }
   ;
 
 ifdef: AT_IFDEF name { $$ = do_ifdef($name); }
@@ -2717,43 +2717,43 @@ ifndef_stmt:
 
 macro_def_stmt:
   expr_macro_def BEGIN_ expr END {
-     $macro_def_stmt = $expr_macro_def;
+     $$ = $expr_macro_def;
      ast_set_right($macro_def_stmt, $expr);
      delete_macro_formals(); }
   | stmt_list_macro_def BEGIN_ stmt_list END {
-     $macro_def_stmt = $stmt_list_macro_def;
+     $$ = $stmt_list_macro_def;
      ast_set_right($macro_def_stmt, $stmt_list);
      delete_macro_formals(); }
   | query_parts_macro_def BEGIN_ query_parts END {
-     $macro_def_stmt = $query_parts_macro_def;
+     $$ = $query_parts_macro_def;
      ast_set_right($macro_def_stmt, $query_parts);
      delete_macro_formals(); }
   | cte_tables_macro_def BEGIN_ cte_tables END {
-     $macro_def_stmt = $cte_tables_macro_def;
+     $$ = $cte_tables_macro_def;
      ast_set_right($macro_def_stmt, $cte_tables);
      delete_macro_formals(); }
   | select_core_macro_def BEGIN_ select_core_list END {
-     $macro_def_stmt = $select_core_macro_def;
+     $$ = $select_core_macro_def;
      ast_set_right($macro_def_stmt, $select_core_list);
      delete_macro_formals(); }
   | select_expr_macro_def BEGIN_ select_expr_list END {
-     $macro_def_stmt = $select_expr_macro_def;
+     $$ = $select_expr_macro_def;
      ast_set_right($macro_def_stmt, $select_expr_list);
      delete_macro_formals(); }
   ;
 
 opt_macro_args:
-   /* nil */  { $opt_macro_args = NULL; }
-   | macro_args { $opt_macro_args = $macro_args; }
+   /* nil */  { $$ = NULL; }
+   | macro_args { $$ = $macro_args; }
    ;
 
 macro_arg:
- expr[arg] { $macro_arg = new_macro_arg_node($arg); }
- | BEGIN_ stmt_list[arg] END { $macro_arg = new_ast_stmt_list_macro_arg($arg); }
- | FROM '(' query_parts[arg] ')' { $macro_arg = new_ast_query_parts_macro_arg($arg); }
- | WITH '(' cte_tables[arg] ')' { $macro_arg = new_ast_cte_tables_macro_arg($arg); }
- | ROWS '(' select_core_list[arg] ')' { $macro_arg = new_ast_select_core_macro_arg($arg); }
- | SELECT '(' select_expr_list[arg] ')' { $macro_arg = new_ast_select_expr_macro_arg($arg); }
+ expr[arg] { $$ = new_macro_arg_node($arg); }
+ | BEGIN_ stmt_list[arg] END { $$ = new_ast_stmt_list_macro_arg($arg); }
+ | FROM '(' query_parts[arg] ')' { $$ = new_ast_query_parts_macro_arg($arg); }
+ | WITH '(' cte_tables[arg] ')' { $$ = new_ast_cte_tables_macro_arg($arg); }
+ | ROWS '(' select_core_list[arg] ')' { $$ = new_ast_select_core_macro_arg($arg); }
+ | SELECT '(' select_expr_list[arg] ')' { $$ = new_ast_select_expr_macro_arg($arg); }
  ;
 
 macro_args:
@@ -2762,8 +2762,8 @@ macro_args:
   ;
 
 opt_macro_formals:
-   /* nil */  { $opt_macro_formals = NULL; }
-   | macro_formals { $opt_macro_formals = $macro_formals; }
+   /* nil */  { $$ = NULL; }
+   | macro_formals { $$ = $macro_formals; }
    ;
 
 macro_formals:
@@ -2771,16 +2771,16 @@ macro_formals:
   | macro_formal ',' macro_formals[next] { $$ = new_ast_macro_formals($macro_formal, $next); }
   ;
 
-macro_formal: name '!' macro_type { $macro_formal = new_ast_macro_formal($name, $macro_type); }
+macro_formal: name '!' macro_type { $$ = new_ast_macro_formal($name, $macro_type); }
   ;
 
 macro_type:
-   EXPR { $macro_type = new_ast_str("EXPR"); }
-  | STMT_LIST { $macro_type = new_ast_str("STMT_LIST"); }
-  | QUERY_PARTS { $macro_type = new_ast_str("QUERY_PARTS"); }
-  | CTE_TABLES { $macro_type = new_ast_str("CTE_TABLES"); }
-  | SELECT_CORE { $macro_type = new_ast_str("SELECT_CORE"); }
-  | SELECT_EXPR { $macro_type = new_ast_str("SELECT_EXPR"); }
+   EXPR { $$ = new_ast_str("EXPR"); }
+  | STMT_LIST { $$ = new_ast_str("STMT_LIST"); }
+  | QUERY_PARTS { $$ = new_ast_str("QUERY_PARTS"); }
+  | CTE_TABLES { $$ = new_ast_str("CTE_TABLES"); }
+  | SELECT_CORE { $$ = new_ast_str("SELECT_CORE"); }
+  | SELECT_EXPR { $$ = new_ast_str("SELECT_EXPR"); }
   ;
 
 %%
@@ -3870,7 +3870,7 @@ static ast_node *make_coldef_node(
 {
   // This is the equivalent of:
   //
-  // $col_def = new_ast_col_def(col_def_type_attrs, $misc_attrs);
+  // $$ = new_ast_col_def(col_def_type_attrs, $misc_attrs);
   //
   // (with optional comment node)
 

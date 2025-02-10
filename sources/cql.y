@@ -428,19 +428,19 @@ program: top_level_stmts[stmts] {
   }
   ;
 
-  top_level_stmts[result]:
-    /* nil */  { $result = NULL; }
-    | include_stmts { $result = $include_stmts; }
-    | stmt_list { $result = $stmt_list; }
+  top_level_stmts:
+    /* nil */  { $$ = NULL; }
+    | include_stmts { $$ = $include_stmts; }
+    | stmt_list { $$ = $stmt_list; }
     | include_stmts[s1] stmt_list[s2] {
-       $result = $s2;
+       $$ = $s2;
        if ($s1) {
          // use our tail pointer invariant so we can add at the tail without searching
          // the re-stablish the invariant
          ast_node *tail = $s1->parent;
          $s1->parent = $s2->parent;
          ast_set_right(tail, $s2);
-         $result = $s1;
+         $$ = $s1;
       }
    }
    ;
@@ -448,14 +448,14 @@ program: top_level_stmts[stmts] {
 include_section: BEGIN_INCLUDE top_level_stmts END_INCLUDE { $include_section = $top_level_stmts; }
    ;
 
-include_stmts[result]:
-    include_section[s1] { $result = $s1; }
+include_stmts:
+    include_section[s1] { $$ = $s1; }
     | include_section[s1] include_stmts[s2] {
        if (!$s1) {
-         $result = $s2;
+         $$ = $s2;
        }
        else {
-         $result = $s1;
+         $$ = $s1;
          if ($s2) {
            // use our tail pointer invariant so we can add at the tail without searching
            // the re-establish the invariant
@@ -481,7 +481,7 @@ macro_ref:
      $$ = new_macro_ref_node($ID, $opt_macro_args); }
   ;
 
-stmt_list[result]:
+stmt_list:
   stmt {
      // We're going to do this cheesy thing with the stmt_list structures so that we can
      // code the stmt_list rules using left recursion.  We're doing this because it's
@@ -497,11 +497,11 @@ stmt_list[result]:
 
      // With this done we can handle several thousand statements without using much stack space.
 
-     $result = new_ast_stmt_list($stmt, NULL);
-     $result->lineno = $stmt->lineno;
+     $$ = new_ast_stmt_list($stmt, NULL);
+     $$->lineno = $stmt->lineno;
 
      // set up the tail pointer invariant to use later
-     $result->parent = $result;
+     $$->parent = $$;
      }
   | stmt_list[slist] stmt {
      ast_node *new_stmt = new_ast_stmt_list($stmt, NULL);
@@ -513,7 +513,7 @@ stmt_list[result]:
 
      // re-establish the tail invariant per the above
      $slist->parent = new_stmt;
-     $result = $slist;
+     $$ = $slist;
      }
   ;
 
@@ -777,9 +777,9 @@ opt_vtab_flags:
   | IF NOT EXISTS AT_EPONYMOUS { $opt_vtab_flags = VTAB_IS_EPONYMOUS | GENERIC_IF_NOT_EXISTS; }
   ;
 
-col_key_list[result]:
-  col_key_def  { $result = new_ast_col_key_list($col_key_def, NULL); }
-  | col_key_def ',' col_key_list[ckl]  { $result = new_ast_col_key_list($col_key_def, $ckl); }
+col_key_list:
+  col_key_def  { $$ = new_ast_col_key_list($col_key_def, NULL); }
+  | col_key_def ',' col_key_list[ckl]  { $$ = new_ast_col_key_list($col_key_def, $ckl); }
   ;
 
 col_key_def:
@@ -796,9 +796,9 @@ check_def:
   | CHECK '(' expr ')'  { $check_def = new_ast_check_def(NULL, $expr); }
   ;
 
-shape_exprs[result]:
-  shape_expr ',' shape_exprs[next] { $result = new_ast_shape_exprs($shape_expr, $next); }
-  | shape_expr { $result = new_ast_shape_exprs($shape_expr, NULL); }
+shape_exprs:
+  shape_expr ',' shape_exprs[next] { $$ = new_ast_shape_exprs($shape_expr, $next); }
+  | shape_expr { $$ = new_ast_shape_exprs($shape_expr, NULL); }
   ;
 
 shape_expr:
@@ -831,9 +831,9 @@ cql_attr_key:
   | name[lhs] ':' name[rhs]  { $cql_attr_key = new_ast_dot($lhs, $rhs); }
   ;
 
-misc_attr_value_list[result]:
-  misc_attr_value  { $result = new_ast_misc_attr_value_list($misc_attr_value, NULL); }
-  | misc_attr_value ',' misc_attr_value_list[mav]  { $result = new_ast_misc_attr_value_list($misc_attr_value, $mav); }
+misc_attr_value_list:
+  misc_attr_value  { $$ = new_ast_misc_attr_value_list($misc_attr_value, NULL); }
+  | misc_attr_value ',' misc_attr_value_list[mav]  { $$ = new_ast_misc_attr_value_list($misc_attr_value, $mav); }
   ;
 
 misc_attr_value:
@@ -852,9 +852,9 @@ misc_attr:
   | '[' '[' cql_attr_key  '=' misc_attr_value ']' ']' { $misc_attr = new_ast_misc_attr($cql_attr_key, $misc_attr_value); }
   ;
 
-misc_attrs[result]:
-  /* nil */ %prec BEGIN_ { $result = NULL; }
-  | misc_attr misc_attrs[ma] %prec BEGIN_ { $result = new_ast_misc_attrs($misc_attr, $ma); }
+misc_attrs:
+  /* nil */ %prec BEGIN_ { $$ = NULL; }
+  | misc_attr misc_attrs[ma] %prec BEGIN_ { $$ = new_ast_misc_attrs($misc_attr, $ma); }
   ;
 
 col_def:
@@ -961,9 +961,9 @@ indexed_column:
     $indexed_column = new_ast_indexed_column($expr, $opt_asc_desc); }
   ;
 
-indexed_columns[result]:
-  indexed_column  { $result = new_ast_indexed_columns($indexed_column, NULL); }
-  | indexed_column ',' indexed_columns[ic]  { $result = new_ast_indexed_columns($indexed_column, $ic); }
+indexed_columns:
+  indexed_column  { $$ = new_ast_indexed_columns($indexed_column, NULL); }
+  | indexed_column ',' indexed_columns[ic]  { $$ = new_ast_indexed_columns($indexed_column, $ic); }
   ;
 
 create_index_stmt:
@@ -1078,14 +1078,14 @@ opt_sql_name:
   | sql_name  { $opt_sql_name = $sql_name; }
   ;
 
-name_list[result]:
-  name  { $result = new_ast_name_list($name, NULL); }
-  |  name ',' name_list[nl]  { $result = new_ast_name_list($name, $nl); }
+name_list:
+  name  { $$ = new_ast_name_list($name, NULL); }
+  |  name ',' name_list[nl]  { $$ = new_ast_name_list($name, $nl); }
   ;
 
-sql_name_list[result]:
-  sql_name  { $result = new_ast_name_list($sql_name, NULL); }
-  |  sql_name ',' sql_name_list[nl]  { $result = new_ast_name_list($sql_name, $nl); }
+sql_name_list:
+  sql_name  { $$ = new_ast_name_list($sql_name, NULL); }
+  |  sql_name ',' sql_name_list[nl]  { $$ = new_ast_name_list($sql_name, $nl); }
   ;
 
 opt_name_list:
@@ -1098,39 +1098,39 @@ opt_sql_name_list:
   | sql_name_list  { $opt_sql_name_list = $sql_name_list; }
   ;
 
-cte_binding_list[result]:
-  cte_binding { $result = new_ast_cte_binding_list($cte_binding, NULL); }
-  | cte_binding ',' cte_binding_list[nl]  { $result = new_ast_cte_binding_list($cte_binding, $nl); }
+cte_binding_list:
+  cte_binding { $$ = new_ast_cte_binding_list($cte_binding, NULL); }
+  | cte_binding ',' cte_binding_list[nl]  { $$ = new_ast_cte_binding_list($cte_binding, $nl); }
   ;
 
 cte_binding: name[formal] name[actual] { $cte_binding = new_ast_cte_binding($formal, $actual); }
   | name[formal] AS name[actual] { $cte_binding = new_ast_cte_binding($formal, $actual); }
   ;
 
-col_attrs[result]:
-  /* nil */  { $result = NULL; }
-  | not_null opt_conflict_clause col_attrs[ca]  { $result = new_ast_col_attrs_not_null($opt_conflict_clause, $ca); }
+col_attrs:
+  /* nil */  { $$ = NULL; }
+  | not_null opt_conflict_clause col_attrs[ca]  { $$ = new_ast_col_attrs_not_null($opt_conflict_clause, $ca); }
   | PRIMARY KEY opt_conflict_clause col_attrs[ca]  {
     ast_node *autoinc_and_conflict_clause = new_ast_autoinc_and_conflict_clause(NULL, $opt_conflict_clause);
-    $result = new_ast_col_attrs_pk(autoinc_and_conflict_clause, $ca);
+    $$ = new_ast_col_attrs_pk(autoinc_and_conflict_clause, $ca);
   }
   | PRIMARY KEY opt_conflict_clause AUTOINCREMENT col_attrs[ca]  {
     ast_node *autoinc_and_conflict_clause = new_ast_autoinc_and_conflict_clause(new_ast_col_attrs_autoinc(), $opt_conflict_clause);
-    $result = new_ast_col_attrs_pk(autoinc_and_conflict_clause, $ca);
+    $$ = new_ast_col_attrs_pk(autoinc_and_conflict_clause, $ca);
   }
-  | DEFAULT '-' num_literal col_attrs[ca]  { $result = new_ast_col_attrs_default(new_ast_uminus($num_literal), $ca);}
-  | DEFAULT '+' num_literal col_attrs[ca]  { $result = new_ast_col_attrs_default($num_literal, $ca);}
-  | DEFAULT num_literal col_attrs[ca]  { $result = new_ast_col_attrs_default($num_literal, $ca);}
-  | DEFAULT const_expr col_attrs[ca]  { $result = new_ast_col_attrs_default($const_expr, $ca);}
-  | DEFAULT str_literal col_attrs[ca]  { $result = new_ast_col_attrs_default($str_literal, $ca);}
-  | COLLATE name col_attrs[ca]  { $result = new_ast_col_attrs_collate($name, $ca);}
-  | CHECK '(' expr ')' col_attrs[ca]  { $result = new_ast_col_attrs_check($expr, $ca);}
-  | UNIQUE opt_conflict_clause col_attrs[ca]  { $result = new_ast_col_attrs_unique($opt_conflict_clause, $ca);}
-  | HIDDEN col_attrs[ca]  { $result = new_ast_col_attrs_hidden(NULL, $ca);}
-  | AT_SENSITIVE col_attrs[ca]  { $result = new_ast_sensitive_attr(NULL, $ca); }
-  | AT_CREATE version_annotation col_attrs[ca]  { $result = new_ast_create_attr($version_annotation, $ca);}
-  | AT_DELETE version_annotation col_attrs[ca]  { $result = new_ast_delete_attr($version_annotation, $ca);}
-  | fk_target_options col_attrs[ca]  { $result = new_ast_col_attrs_fk($fk_target_options, $ca); }
+  | DEFAULT '-' num_literal col_attrs[ca]  { $$ = new_ast_col_attrs_default(new_ast_uminus($num_literal), $ca);}
+  | DEFAULT '+' num_literal col_attrs[ca]  { $$ = new_ast_col_attrs_default($num_literal, $ca);}
+  | DEFAULT num_literal col_attrs[ca]  { $$ = new_ast_col_attrs_default($num_literal, $ca);}
+  | DEFAULT const_expr col_attrs[ca]  { $$ = new_ast_col_attrs_default($const_expr, $ca);}
+  | DEFAULT str_literal col_attrs[ca]  { $$ = new_ast_col_attrs_default($str_literal, $ca);}
+  | COLLATE name col_attrs[ca]  { $$ = new_ast_col_attrs_collate($name, $ca);}
+  | CHECK '(' expr ')' col_attrs[ca]  { $$ = new_ast_col_attrs_check($expr, $ca);}
+  | UNIQUE opt_conflict_clause col_attrs[ca]  { $$ = new_ast_col_attrs_unique($opt_conflict_clause, $ca);}
+  | HIDDEN col_attrs[ca]  { $$ = new_ast_col_attrs_hidden(NULL, $ca);}
+  | AT_SENSITIVE col_attrs[ca]  { $$ = new_ast_sensitive_attr(NULL, $ca); }
+  | AT_CREATE version_annotation col_attrs[ca]  { $$ = new_ast_create_attr($version_annotation, $ca);}
+  | AT_DELETE version_annotation col_attrs[ca]  { $$ = new_ast_delete_attr($version_annotation, $ca);}
+  | fk_target_options col_attrs[ca]  { $$ = new_ast_col_attrs_fk($fk_target_options, $ca); }
   ;
 
 version_annotation:
@@ -1190,9 +1190,9 @@ str_literal:
   str_chain { $str_literal = reduce_str_chain($str_chain); }
   ;
 
-str_chain[result]:
-  str_leaf { $result = new_ast_str_chain($str_leaf, NULL); }
-  | str_leaf str_chain[next] { $result = new_ast_str_chain($str_leaf, $next); }
+str_chain:
+  str_leaf { $$ = new_ast_str_chain($str_leaf, NULL); }
+  | str_leaf str_chain[next] { $$ = new_ast_str_chain($str_leaf, $next); }
   ;
 
 str_leaf:
@@ -1311,88 +1311,88 @@ basic_expr:
   | basic_expr[lhs] JEX2 '~' data_type_any '~' basic_expr[rhs] { $$ = new_ast_jex2($lhs, new_ast_jex2($data_type_any,$rhs)); }
   ;
 
-math_expr[result]:
-  basic_expr  { $result = $basic_expr; }
-  | math_expr[lhs] '&' math_expr[rhs]  { $result = new_ast_bin_and($lhs, $rhs); }
-  | math_expr[lhs] '|' math_expr[rhs]  { $result = new_ast_bin_or($lhs, $rhs); }
-  | math_expr[lhs] LS math_expr[rhs]  { $result = new_ast_lshift($lhs, $rhs); }
-  | math_expr[lhs] RS  math_expr[rhs]  { $result = new_ast_rshift($lhs, $rhs); }
-  | math_expr[lhs] '+' math_expr[rhs]  { $result = new_ast_add($lhs, $rhs); }
-  | math_expr[lhs] '-' math_expr[rhs]  { $result = new_ast_sub($lhs, $rhs); }
-  | math_expr[lhs] '*' math_expr[rhs]  { $result = new_ast_mul($lhs, $rhs); }
-  | math_expr[lhs] '/' math_expr[rhs]  { $result = new_ast_div($lhs, $rhs); }
-  | math_expr[lhs] '%' math_expr[rhs]  { $result = new_ast_mod($lhs, $rhs); }
-  | math_expr[lhs] IS_NOT_TRUE  { $result = new_ast_is_not_true($lhs); }
-  | math_expr[lhs] IS_NOT_FALSE  { $result = new_ast_is_not_false($lhs); }
-  | math_expr[lhs] ISNULL  { $result = new_ast_is($lhs, new_ast_null()); }
-  | math_expr[lhs] NOTNULL  { $result = new_ast_is_not($lhs, new_ast_null()); }
-  | math_expr[lhs] IS_TRUE  { $result = new_ast_is_true($lhs); }
-  | math_expr[lhs] IS_FALSE  { $result = new_ast_is_false($lhs); }
-  | '-' math_expr[rhs] %prec UMINUS { $result = new_ast_uminus($rhs); }
-  | '+' math_expr[rhs] %prec UMINUS { $result = $rhs; }
-  | '~' math_expr[rhs] %prec UMINUS { $result = new_ast_tilde($rhs); }
-  | NOT math_expr[rhs]  { $result = new_ast_not($rhs); }
-  | math_expr[lhs] '=' math_expr[rhs]  { $result = new_ast_eq($lhs, $rhs); }
-  | math_expr[lhs] EQEQ math_expr[rhs]  { $result = new_ast_eq($lhs, $rhs); }
-  | math_expr[lhs] '<' math_expr[rhs]  { $result = new_ast_lt($lhs, $rhs); }
-  | math_expr[lhs] '>' math_expr[rhs]  { $result = new_ast_gt($lhs, $rhs); }
-  | math_expr[lhs] NE math_expr[rhs]  { $result = new_ast_ne($lhs, $rhs); }
-  | math_expr[lhs] NE_ math_expr[rhs]  { $result = new_ast_ne($lhs, $rhs); }
-  | math_expr[lhs] GE math_expr[rhs]  { $result = new_ast_ge($lhs, $rhs); }
-  | math_expr[lhs] LE math_expr[rhs]  { $result = new_ast_le($lhs, $rhs); }
-  | math_expr[lhs] NOT_IN '(' opt_expr_list ')'  { $result = new_ast_not_in($lhs, $opt_expr_list); }
-  | math_expr[lhs] NOT_IN '(' select_stmt ')'  { $result = new_ast_not_in($lhs, $select_stmt); }
-  | math_expr[lhs] IN '(' opt_expr_list ')'  { $result = new_ast_in_pred($lhs, $opt_expr_list); }
-  | math_expr[lhs] IN '(' select_stmt ')'  { $result = new_ast_in_pred($lhs, $select_stmt); }
-  | math_expr[lhs] LIKE math_expr[rhs]  { $result = new_ast_like($lhs, $rhs); }
-  | math_expr[lhs] NOT_LIKE math_expr[rhs] { $result = new_ast_not_like($lhs, $rhs); }
-  | math_expr[lhs] MATCH math_expr[rhs]  { $result = new_ast_match($lhs, $rhs); }
-  | math_expr[lhs] NOT_MATCH math_expr[rhs] { $result = new_ast_not_match($lhs, $rhs); }
-  | math_expr[lhs] REGEXP math_expr[rhs]  { $result = new_ast_regexp($lhs, $rhs); }
-  | math_expr[lhs] NOT_REGEXP math_expr[rhs] { $result = new_ast_not_regexp($lhs, $rhs); }
-  | math_expr[lhs] GLOB math_expr[rhs]  { $result = new_ast_glob($lhs, $rhs); }
-  | math_expr[lhs] NOT_GLOB math_expr[rhs] { $result = new_ast_not_glob($lhs, $rhs); }
-  | math_expr[lhs] BETWEEN math_expr[me1] %prec BETWEEN AND math_expr[me2]  { $result = new_ast_between($lhs, new_ast_range($me1,$me2)); }
-  | math_expr[lhs] NOT_BETWEEN math_expr[me1] %prec BETWEEN AND math_expr[me2]  { $result = new_ast_not_between($lhs, new_ast_range($me1,$me2)); }
-  | math_expr[lhs] IS_NOT math_expr[rhs]  { $result = new_ast_is_not($lhs, $rhs); }
-  | math_expr[lhs] IS math_expr[rhs]  { $result = new_ast_is($lhs, $rhs); }
-  | math_expr[lhs] CONCAT math_expr[rhs]  { $result = new_ast_concat($lhs, $rhs); }
-  | math_expr[lhs] COLLATE name { $result = new_ast_collate($lhs, $name); }
+math_expr:
+  basic_expr  { $$ = $basic_expr; }
+  | math_expr[lhs] '&' math_expr[rhs]  { $$ = new_ast_bin_and($lhs, $rhs); }
+  | math_expr[lhs] '|' math_expr[rhs]  { $$ = new_ast_bin_or($lhs, $rhs); }
+  | math_expr[lhs] LS math_expr[rhs]  { $$ = new_ast_lshift($lhs, $rhs); }
+  | math_expr[lhs] RS  math_expr[rhs]  { $$ = new_ast_rshift($lhs, $rhs); }
+  | math_expr[lhs] '+' math_expr[rhs]  { $$ = new_ast_add($lhs, $rhs); }
+  | math_expr[lhs] '-' math_expr[rhs]  { $$ = new_ast_sub($lhs, $rhs); }
+  | math_expr[lhs] '*' math_expr[rhs]  { $$ = new_ast_mul($lhs, $rhs); }
+  | math_expr[lhs] '/' math_expr[rhs]  { $$ = new_ast_div($lhs, $rhs); }
+  | math_expr[lhs] '%' math_expr[rhs]  { $$ = new_ast_mod($lhs, $rhs); }
+  | math_expr[lhs] IS_NOT_TRUE  { $$ = new_ast_is_not_true($lhs); }
+  | math_expr[lhs] IS_NOT_FALSE  { $$ = new_ast_is_not_false($lhs); }
+  | math_expr[lhs] ISNULL  { $$ = new_ast_is($lhs, new_ast_null()); }
+  | math_expr[lhs] NOTNULL  { $$ = new_ast_is_not($lhs, new_ast_null()); }
+  | math_expr[lhs] IS_TRUE  { $$ = new_ast_is_true($lhs); }
+  | math_expr[lhs] IS_FALSE  { $$ = new_ast_is_false($lhs); }
+  | '-' math_expr[rhs] %prec UMINUS { $$ = new_ast_uminus($rhs); }
+  | '+' math_expr[rhs] %prec UMINUS { $$ = $rhs; }
+  | '~' math_expr[rhs] %prec UMINUS { $$ = new_ast_tilde($rhs); }
+  | NOT math_expr[rhs]  { $$ = new_ast_not($rhs); }
+  | math_expr[lhs] '=' math_expr[rhs]  { $$ = new_ast_eq($lhs, $rhs); }
+  | math_expr[lhs] EQEQ math_expr[rhs]  { $$ = new_ast_eq($lhs, $rhs); }
+  | math_expr[lhs] '<' math_expr[rhs]  { $$ = new_ast_lt($lhs, $rhs); }
+  | math_expr[lhs] '>' math_expr[rhs]  { $$ = new_ast_gt($lhs, $rhs); }
+  | math_expr[lhs] NE math_expr[rhs]  { $$ = new_ast_ne($lhs, $rhs); }
+  | math_expr[lhs] NE_ math_expr[rhs]  { $$ = new_ast_ne($lhs, $rhs); }
+  | math_expr[lhs] GE math_expr[rhs]  { $$ = new_ast_ge($lhs, $rhs); }
+  | math_expr[lhs] LE math_expr[rhs]  { $$ = new_ast_le($lhs, $rhs); }
+  | math_expr[lhs] NOT_IN '(' opt_expr_list ')'  { $$ = new_ast_not_in($lhs, $opt_expr_list); }
+  | math_expr[lhs] NOT_IN '(' select_stmt ')'  { $$ = new_ast_not_in($lhs, $select_stmt); }
+  | math_expr[lhs] IN '(' opt_expr_list ')'  { $$ = new_ast_in_pred($lhs, $opt_expr_list); }
+  | math_expr[lhs] IN '(' select_stmt ')'  { $$ = new_ast_in_pred($lhs, $select_stmt); }
+  | math_expr[lhs] LIKE math_expr[rhs]  { $$ = new_ast_like($lhs, $rhs); }
+  | math_expr[lhs] NOT_LIKE math_expr[rhs] { $$ = new_ast_not_like($lhs, $rhs); }
+  | math_expr[lhs] MATCH math_expr[rhs]  { $$ = new_ast_match($lhs, $rhs); }
+  | math_expr[lhs] NOT_MATCH math_expr[rhs] { $$ = new_ast_not_match($lhs, $rhs); }
+  | math_expr[lhs] REGEXP math_expr[rhs]  { $$ = new_ast_regexp($lhs, $rhs); }
+  | math_expr[lhs] NOT_REGEXP math_expr[rhs] { $$ = new_ast_not_regexp($lhs, $rhs); }
+  | math_expr[lhs] GLOB math_expr[rhs]  { $$ = new_ast_glob($lhs, $rhs); }
+  | math_expr[lhs] NOT_GLOB math_expr[rhs] { $$ = new_ast_not_glob($lhs, $rhs); }
+  | math_expr[lhs] BETWEEN math_expr[me1] %prec BETWEEN AND math_expr[me2]  { $$ = new_ast_between($lhs, new_ast_range($me1,$me2)); }
+  | math_expr[lhs] NOT_BETWEEN math_expr[me1] %prec BETWEEN AND math_expr[me2]  { $$ = new_ast_not_between($lhs, new_ast_range($me1,$me2)); }
+  | math_expr[lhs] IS_NOT math_expr[rhs]  { $$ = new_ast_is_not($lhs, $rhs); }
+  | math_expr[lhs] IS math_expr[rhs]  { $$ = new_ast_is($lhs, $rhs); }
+  | math_expr[lhs] CONCAT math_expr[rhs]  { $$ = new_ast_concat($lhs, $rhs); }
+  | math_expr[lhs] COLLATE name { $$ = new_ast_collate($lhs, $name); }
   ;
 
-expr[result]:
-  math_expr { $result = $math_expr; }
-  | expr[lhs] AND expr[rhs]  { $result = new_ast_and($lhs, $rhs); }
-  | expr[lhs] OR expr[rhs]  { $result = new_ast_or($lhs, $rhs); }
-  | expr[lhs] ASSIGN expr[rhs] { $result = new_ast_expr_assign($lhs, $rhs); }
-  | expr[lhs] ADD_EQ expr[rhs] { $result = new_ast_add_eq($lhs, $rhs); }
-  | expr[lhs] SUB_EQ expr[rhs] { $result = new_ast_sub_eq($lhs, $rhs); }
-  | expr[lhs] DIV_EQ expr[rhs] { $result = new_ast_div_eq($lhs, $rhs); }
-  | expr[lhs] MUL_EQ expr[rhs] { $result = new_ast_mul_eq($lhs, $rhs); }
-  | expr[lhs] MOD_EQ expr[rhs] { $result = new_ast_mod_eq($lhs, $rhs); }
-  | expr[lhs] AND_EQ expr[rhs] { $result = new_ast_and_eq($lhs, $rhs); }
-  | expr[lhs] OR_EQ expr[rhs] { $result = new_ast_or_eq($lhs, $rhs); }
-  | expr[lhs] LS_EQ expr[rhs] { $result = new_ast_ls_eq($lhs, $rhs); }
-  | expr[lhs] RS_EQ expr[rhs] { $result = new_ast_rs_eq($lhs, $rhs); }
+expr:
+  math_expr { $$ = $math_expr; }
+  | expr[lhs] AND expr[rhs]  { $$ = new_ast_and($lhs, $rhs); }
+  | expr[lhs] OR expr[rhs]  { $$ = new_ast_or($lhs, $rhs); }
+  | expr[lhs] ASSIGN expr[rhs] { $$ = new_ast_expr_assign($lhs, $rhs); }
+  | expr[lhs] ADD_EQ expr[rhs] { $$ = new_ast_add_eq($lhs, $rhs); }
+  | expr[lhs] SUB_EQ expr[rhs] { $$ = new_ast_sub_eq($lhs, $rhs); }
+  | expr[lhs] DIV_EQ expr[rhs] { $$ = new_ast_div_eq($lhs, $rhs); }
+  | expr[lhs] MUL_EQ expr[rhs] { $$ = new_ast_mul_eq($lhs, $rhs); }
+  | expr[lhs] MOD_EQ expr[rhs] { $$ = new_ast_mod_eq($lhs, $rhs); }
+  | expr[lhs] AND_EQ expr[rhs] { $$ = new_ast_and_eq($lhs, $rhs); }
+  | expr[lhs] OR_EQ expr[rhs] { $$ = new_ast_or_eq($lhs, $rhs); }
+  | expr[lhs] LS_EQ expr[rhs] { $$ = new_ast_ls_eq($lhs, $rhs); }
+  | expr[lhs] RS_EQ expr[rhs] { $$ = new_ast_rs_eq($lhs, $rhs); }
   ;
 
-case_list[result]:
-  WHEN expr[e1] THEN expr[e2]  { $result = new_ast_case_list(new_ast_when($e1, $e2), NULL); }
-  | WHEN expr[e1] THEN expr[e2] case_list[cl]  { $result = new_ast_case_list(new_ast_when($e1, $e2), $cl);}
+case_list:
+  WHEN expr[e1] THEN expr[e2]  { $$ = new_ast_case_list(new_ast_when($e1, $e2), NULL); }
+  | WHEN expr[e1] THEN expr[e2] case_list[cl]  { $$ = new_ast_case_list(new_ast_when($e1, $e2), $cl);}
   ;
 
 arg_expr: expr { $arg_expr = $expr; }
   | shape_arguments { $arg_expr = $shape_arguments; }
   ;
 
-arg_exprs[result]:
-  arg_expr  { $result = new_ast_arg_list($arg_expr, NULL); }
-  | arg_expr ',' arg_exprs[al]  { $result = new_ast_arg_list($arg_expr, $al); }
+arg_exprs:
+  arg_expr  { $$ = new_ast_arg_list($arg_expr, NULL); }
+  | arg_expr ',' arg_exprs[al]  { $$ = new_ast_arg_list($arg_expr, $al); }
   ;
 
-arg_list[result]:
-  /* nil */  { $result = NULL; }
-  | arg_exprs { $result = $arg_exprs; }
+arg_list:
+  /* nil */  { $$ = NULL; }
+  | arg_exprs { $$ = $arg_exprs; }
   ;
 
 opt_expr_list:
@@ -1400,9 +1400,9 @@ opt_expr_list:
   | expr_list { $opt_expr_list = $expr_list; }
   ;
 
-expr_list[result]:
-  expr  { $result = new_ast_expr_list($expr, NULL); }
-  | expr ',' expr_list[el]  { $result = new_ast_expr_list($expr, $el); }
+expr_list:
+  expr  { $$ = new_ast_expr_list($expr, NULL); }
+  | expr ',' expr_list[el]  { $$ = new_ast_expr_list($expr, $el); }
   ;
 
 shape_arguments:
@@ -1419,9 +1419,9 @@ column_calculation:
     $column_calculation = new_ast_column_calculation($col_calcs, new_ast_distinct()); }
   ;
 
-col_calcs[result]:
-  col_calc  { $result = new_ast_col_calcs($col_calc, NULL); }
-  | col_calc ',' col_calcs[list] { $result = new_ast_col_calcs($col_calc, $list); }
+col_calcs:
+  col_calc  { $$ = new_ast_col_calcs($col_calc, NULL); }
+  | col_calc ',' col_calcs[list] { $$ = new_ast_col_calcs($col_calc, $list); }
   ;
 
 col_calc:
@@ -1431,9 +1431,9 @@ col_calc:
   | sql_name[n1] '.' sql_name[n2] { $col_calc = new_ast_col_calc(new_ast_dot($n1, $n2), NULL); }
   ;
 
-cte_tables[result]:
-  cte_table  { $result = new_ast_cte_tables($cte_table, NULL); }
-  | cte_table ',' cte_tables[ct]  { $result = new_ast_cte_tables($cte_table, $ct); }
+cte_tables:
+  cte_table  { $$ = new_ast_cte_tables($cte_table, NULL); }
+  | cte_table ',' cte_tables[ct]  { $$ = new_ast_cte_tables($cte_table, $ct); }
   ;
 
 cte_decl:
@@ -1494,19 +1494,19 @@ select_stmt_no_with:
   }
   ;
 
-select_core_list[result]:
-  select_core { $result = new_ast_select_core_list($select_core, NULL); }
+select_core_list:
+  select_core { $$ = new_ast_select_core_list($select_core, NULL); }
   | select_core compound_operator select_core_list[list] {
      ast_node *select_core_compound = new_ast_select_core_compound(new_ast_option($compound_operator), $list);
-     $result = new_ast_select_core_list($select_core, select_core_compound); }
+     $$ = new_ast_select_core_list($select_core, select_core_compound); }
   ;
 
-values[result]:
+values:
   '(' insert_list ')'  {
-    $result = new_ast_values($insert_list, NULL);
+    $$ = new_ast_values($insert_list, NULL);
   }
   | '(' insert_list ')' ',' values[ov]  {
-    $result = new_ast_values($insert_list, $ov);
+    $$ = new_ast_values($insert_list, $ov);
   }
   ;
 
@@ -1630,9 +1630,9 @@ window_clause:
   WINDOW window_name_defn_list  { $window_clause = new_ast_window_clause($window_name_defn_list); }
   ;
 
-window_name_defn_list[result]:
-  window_name_defn  { $result = new_ast_window_name_defn_list($window_name_defn, NULL); }
-  | window_name_defn ',' window_name_defn_list[wndl]  { $result = new_ast_window_name_defn_list($window_name_defn, $wndl); }
+window_name_defn_list:
+  window_name_defn  { $$ = new_ast_window_name_defn_list($window_name_defn, NULL); }
+  | window_name_defn ',' window_name_defn_list[wndl]  { $$ = new_ast_window_name_defn_list($window_name_defn, $wndl); }
   ;
 
 window_name_defn:
@@ -1644,9 +1644,9 @@ region_spec:
   | name PRIVATE  { $region_spec = new_ast_region_spec($name, new_ast_option(PRIVATE_REGION)); }
   ;
 
-region_list[result]:
-  region_spec ',' region_list[rl]  { $result = new_ast_region_list($region_spec, $rl); }
-  | region_spec  { $result = new_ast_region_list($region_spec, NULL); }
+region_list:
+  region_spec ',' region_list[rl]  { $$ = new_ast_region_list($region_spec, $rl); }
+  | region_spec  { $$ = new_ast_region_list($region_spec, NULL); }
   ;
 
 declare_schema_region_stmt:
@@ -1705,9 +1705,9 @@ opt_groupby:
   | GROUP BY groupby_list  { $opt_groupby = new_ast_opt_groupby($groupby_list); }
   ;
 
-groupby_list[result]:
-  groupby_item  { $result = new_ast_groupby_list($groupby_item, NULL); }
-  | groupby_item ',' groupby_list[gl]  { $result = new_ast_groupby_list($groupby_item, $gl); }
+groupby_list:
+  groupby_item  { $$ = new_ast_groupby_list($groupby_item, NULL); }
+  | groupby_item ',' groupby_list[gl]  { $$ = new_ast_groupby_list($groupby_item, $gl); }
   ;
 
 groupby_item:
@@ -1736,9 +1736,9 @@ opt_orderby:
   | ORDER BY orderby_list  { $opt_orderby = new_ast_opt_orderby($orderby_list); }
   ;
 
-orderby_list[result]:
-  orderby_item  { $result = new_ast_orderby_list($orderby_item, NULL); }
-  | orderby_item ',' orderby_list[gl]  { $result = new_ast_orderby_list($orderby_item, $gl); }
+orderby_list:
+  orderby_item  { $$ = new_ast_orderby_list($orderby_item, NULL); }
+  | orderby_item ',' orderby_list[gl]  { $$ = new_ast_orderby_list($orderby_item, $gl); }
   ;
 
 orderby_item:
@@ -1762,9 +1762,9 @@ select_opts:
   | DISTINCTROW  { $select_opts = new_ast_select_opts(new_ast_distinctrow()); }
   ;
 
-select_expr_list[result]:
-  select_expr  { $result = new_ast_select_expr_list($select_expr, NULL); }
-  | select_expr ',' select_expr_list[sel]  { $result = new_ast_select_expr_list($select_expr, $sel); }
+select_expr_list:
+  select_expr  { $$ = new_ast_select_expr_list($select_expr, NULL); }
+  | select_expr ',' select_expr_list[sel]  { $$ = new_ast_select_expr_list($select_expr, $sel); }
   ;
 
 select_expr:
@@ -1798,18 +1798,18 @@ query_parts:
   | join_clause  { $query_parts = $join_clause; }
   ;
 
-table_or_subquery_list[result]:
-  table_or_subquery  { $result = new_ast_table_or_subquery_list($table_or_subquery, NULL); }
-  | table_or_subquery ',' table_or_subquery_list[tsl]  { $result = new_ast_table_or_subquery_list($table_or_subquery, $tsl); }
+table_or_subquery_list:
+  table_or_subquery  { $$ = new_ast_table_or_subquery_list($table_or_subquery, NULL); }
+  | table_or_subquery ',' table_or_subquery_list[tsl]  { $$ = new_ast_table_or_subquery_list($table_or_subquery, $tsl); }
   ;
 
 join_clause:
   table_or_subquery join_target_list  { $join_clause = new_ast_join_clause($table_or_subquery, $join_target_list); }
   ;
 
-join_target_list[result]:
-  join_target  { $result = new_ast_join_target_list($join_target, NULL); }
-  | join_target join_target_list[jtl]  { $result = new_ast_join_target_list($join_target, $jtl); }
+join_target_list:
+  join_target  { $$ = new_ast_join_target_list($join_target, NULL); }
+  | join_target join_target_list[jtl]  { $$ = new_ast_join_target_list($join_target, $jtl); }
   ;
 
 table_or_subquery:
@@ -1966,10 +1966,10 @@ insert_list_item:
   | shape_arguments  {$insert_list_item = $shape_arguments; }
   ;
 
-insert_list[result]:
-  /* nil */  { $result = NULL; }
-  | insert_list_item { $result = new_ast_insert_list($insert_list_item, NULL); }
-  | insert_list_item ',' insert_list[il]  { $result = new_ast_insert_list($insert_list_item, $il); }
+insert_list:
+  /* nil */  { $$ = NULL; }
+  | insert_list_item { $$ = new_ast_insert_list($insert_list_item, NULL); }
+  | insert_list_item ',' insert_list[il]  { $$ = new_ast_insert_list($insert_list_item, $il); }
   ;
 
 basic_update_stmt:
@@ -2014,9 +2014,9 @@ update_entry:
   sql_name '=' expr  { $update_entry = new_ast_update_entry($sql_name, $expr); }
   ;
 
-update_list[result]:
-  update_entry  { $result = new_ast_update_list($update_entry, NULL); }
-  | update_entry ',' update_list[ul]  { $result = new_ast_update_list($update_entry, $ul); }
+update_list:
+  update_entry  { $$ = new_ast_update_list($update_entry, NULL); }
+  | update_entry ',' update_list[ul]  { $$ = new_ast_update_list($update_entry, $ul); }
   ;
 
 upsert_stmt:
@@ -2069,9 +2069,9 @@ declare_enum_stmt:
      $declare_enum_stmt = new_ast_declare_enum_stmt(typed_name, $enum_values); }
   ;
 
-enum_values[result]:
-    enum_value { $result = new_ast_enum_values($enum_value, NULL); }
-  | enum_value ',' enum_values[next] { $result = new_ast_enum_values($enum_value, $next); }
+enum_values:
+    enum_value { $$ = new_ast_enum_values($enum_value, NULL); }
+  | enum_value ',' enum_values[next] { $$ = new_ast_enum_values($enum_value, $next); }
   ;
 
 enum_value:
@@ -2089,28 +2089,28 @@ declare_group_stmt:
     $declare_group_stmt = new_ast_declare_group_stmt($name, $simple_variable_decls); }
   ;
 
-simple_variable_decls[result]:
-  declare_vars_stmt[cur] ';' { $result = new_ast_stmt_list($cur, NULL); }
-  | declare_vars_stmt[cur] ';' simple_variable_decls[next] { $result = new_ast_stmt_list($cur, $next); }
+simple_variable_decls:
+  declare_vars_stmt[cur] ';' { $$ = new_ast_stmt_list($cur, NULL); }
+  | declare_vars_stmt[cur] ';' simple_variable_decls[next] { $$ = new_ast_stmt_list($cur, $next); }
   ;
 
-const_values[result]:
-   const_value { $result = new_ast_const_values($const_value, NULL);  }
-  | const_value ',' const_values[next] { $result = new_ast_const_values($const_value, $next); }
+const_values:
+   const_value { $$ = new_ast_const_values($const_value, NULL);  }
+  | const_value ',' const_values[next] { $$ = new_ast_const_values($const_value, $next); }
   ;
 
 const_value:  name '=' expr { $const_value = new_ast_const_value($name, $expr); }
   ;
 
-declare_select_func_stmt[result]:
+declare_select_func_stmt:
    DECLARE SELECT function name '(' params ')' data_type_with_options  {
-      $result = new_ast_declare_select_func_stmt($name, new_ast_func_params_return($params, $data_type_with_options)); }
+      $$ = new_ast_declare_select_func_stmt($name, new_ast_func_params_return($params, $data_type_with_options)); }
   | DECLARE SELECT function name '(' params ')' '(' typed_names ')'  {
-      $result = new_ast_declare_select_func_stmt($name, new_ast_func_params_return($params, $typed_names)); }
+      $$ = new_ast_declare_select_func_stmt($name, new_ast_func_params_return($params, $typed_names)); }
   | DECLARE SELECT function name NO CHECK data_type_with_options {
-      $result  = new_ast_declare_select_func_no_check_stmt($name, new_ast_func_params_return(NULL, $data_type_with_options)); }
+      $$  = new_ast_declare_select_func_no_check_stmt($name, new_ast_func_params_return(NULL, $data_type_with_options)); }
   | DECLARE SELECT function name NO CHECK '(' typed_names ')' {
-      $result = new_ast_declare_select_func_no_check_stmt($name, new_ast_func_params_return(NULL, $typed_names)); }
+      $$ = new_ast_declare_select_func_no_check_stmt($name, new_ast_func_params_return(NULL, $typed_names)); }
   ;
 
 declare_func_stmt:
@@ -2184,9 +2184,9 @@ typed_name:
   | name shape_def  { $typed_name = new_ast_typed_name($name, $shape_def); }
   ;
 
-typed_names[result]:
-  typed_name  { $result = new_ast_typed_names($typed_name, NULL); }
-  | typed_name ',' typed_names[tn]  { $result = new_ast_typed_names($typed_name, $tn);}
+typed_names:
+  typed_name  { $$ = new_ast_typed_names($typed_name, NULL); }
+  | typed_name ',' typed_names[tn]  { $$ = new_ast_typed_names($typed_name, $tn);}
   ;
 
 func_param:
@@ -2194,10 +2194,10 @@ func_param:
   | name CURSOR { $func_param = new_ast_param(NULL, new_ast_param_detail($name, new_ast_type_cursor())); }
   ;
 
-func_params[result]:
-  /* nil */  { $result = NULL; }
-  | func_param  { $result = new_ast_params($func_param, NULL); }
-  |  func_param ',' func_params[par]  { $result = new_ast_params($func_param, $par); }
+func_params:
+  /* nil */  { $$ = NULL; }
+  | func_param  { $$ = new_ast_params($func_param, NULL); }
+  |  func_param ',' func_params[par]  { $$ = new_ast_params($func_param, $par); }
   ;
 
 param:
@@ -2207,34 +2207,34 @@ param:
   | name shape_def  { $param = new_ast_param(NULL, new_ast_param_detail($name, $shape_def)); }
   ;
 
-params[result]:
-  /* nil */  { $result = NULL; }
-  | param  { $result = new_ast_params($param, NULL); }
-  |  param ',' params[par]  { $result = new_ast_params($param, $par); }
+params:
+  /* nil */  { $$ = NULL; }
+  | param  { $$ = new_ast_params($param, NULL); }
+  |  param ',' params[par]  { $$ = new_ast_params($param, $par); }
   ;
 
-declare_value_cursor[result]:
-  DECLARE name CURSOR shape_def  { $result = new_ast_declare_cursor_like_name($name, $shape_def); }
-  | CURSOR name shape_def  { $result = new_ast_declare_cursor_like_name($name, $shape_def); }
-  | DECLARE name CURSOR LIKE select_stmt  { $result = new_ast_declare_cursor_like_select($name, $select_stmt); }
-  | CURSOR name LIKE select_stmt  { $result = new_ast_declare_cursor_like_select($name, $select_stmt); }
-  | DECLARE name CURSOR LIKE '(' typed_names ')' { $result = new_ast_declare_cursor_like_typed_names($name, $typed_names); }
-  | CURSOR name LIKE '(' typed_names ')' { $result = new_ast_declare_cursor_like_typed_names($name, $typed_names); }
+declare_value_cursor:
+  DECLARE name CURSOR shape_def  { $$ = new_ast_declare_cursor_like_name($name, $shape_def); }
+  | CURSOR name shape_def  { $$ = new_ast_declare_cursor_like_name($name, $shape_def); }
+  | DECLARE name CURSOR LIKE select_stmt  { $$ = new_ast_declare_cursor_like_select($name, $select_stmt); }
+  | CURSOR name LIKE select_stmt  { $$ = new_ast_declare_cursor_like_select($name, $select_stmt); }
+  | DECLARE name CURSOR LIKE '(' typed_names ')' { $$ = new_ast_declare_cursor_like_typed_names($name, $typed_names); }
+  | CURSOR name LIKE '(' typed_names ')' { $$ = new_ast_declare_cursor_like_typed_names($name, $typed_names); }
   ;
 
 row_source: select_stmt | explain_stmt | insert_stmt | delete_stmt | update_stmt | upsert_stmt | call_stmt 
   ;
 
-declare_forward_read_cursor_stmt[result]:
-  DECLARE name CURSOR FOR row_source  { $result = new_ast_declare_cursor($name, $row_source); }
-  | CURSOR name FOR row_source  { $result = new_ast_declare_cursor($name, $row_source); }
-  | DECLARE name[id] CURSOR FOR expr { $result = new_ast_declare_cursor($id, $expr); }
-  | CURSOR name[id] FOR expr { $result = new_ast_declare_cursor($id, $expr); }
+declare_forward_read_cursor_stmt:
+  DECLARE name CURSOR FOR row_source  { $$ = new_ast_declare_cursor($name, $row_source); }
+  | CURSOR name FOR row_source  { $$ = new_ast_declare_cursor($name, $row_source); }
+  | DECLARE name[id] CURSOR FOR expr { $$ = new_ast_declare_cursor($id, $expr); }
+  | CURSOR name[id] FOR expr { $$ = new_ast_declare_cursor($id, $expr); }
   ;
 
-declare_fetched_value_cursor_stmt[result]:
-  DECLARE name CURSOR FETCH FROM call_stmt  { $result = new_ast_declare_value_cursor($name, $call_stmt); }
-  | CURSOR name FETCH FROM call_stmt  { $result = new_ast_declare_value_cursor($name, $call_stmt); }
+declare_fetched_value_cursor_stmt:
+  DECLARE name CURSOR FETCH FROM call_stmt  { $$ = new_ast_declare_value_cursor($name, $call_stmt); }
+  | CURSOR name FETCH FROM call_stmt  { $$ = new_ast_declare_value_cursor($name, $call_stmt); }
   ;
 
 declare_type_stmt:
@@ -2338,9 +2338,9 @@ fetch_values_stmt:
     $$ = new_ast_fetch_values_stmt($opt_insert_dummy_spec, name_columns_values); }
   ;
 
-expr_names[result]:
-  expr_name  { $result = new_ast_expr_names($expr_name, NULL); }
-  |  expr_name ',' expr_names[sel]  { $result = new_ast_expr_names($expr_name, $sel); }
+expr_names:
+  expr_name  { $$ = new_ast_expr_names($expr_name, NULL); }
+  |  expr_name ',' expr_names[sel]  { $$ = new_ast_expr_names($expr_name, $sel); }
   ;
 
 expr_name: expr as_alias { $$ = new_ast_expr_name($expr, $as_alias); }
@@ -2368,9 +2368,9 @@ out_union_parent_child_stmt:
   OUT UNION call_stmt JOIN child_results { $out_union_parent_child_stmt = new_ast_out_union_parent_child_stmt($call_stmt, $child_results); }
   ;
 
-child_results[result]:
-   child_result { $result = new_ast_child_results($child_result, NULL); }
-   | child_result AND child_results[next] { $result = new_ast_child_results($child_result, $next); }
+child_results:
+   child_result { $$ = new_ast_child_results($child_result, NULL); }
+   | child_result AND child_results[next] { $$ = new_ast_child_results($child_result, $next); }
    ;
 
 child_result:
@@ -2398,9 +2398,9 @@ elseif_item:
     $elseif_item = new_ast_elseif(cond_action, NULL); }
   ;
 
-elseif_list[result]:
-  elseif_item  { $result = $elseif_item; }
-  | elseif_item elseif_list[el2]  { ast_set_right($elseif_item, $el2); $result = $elseif_item; }
+elseif_list:
+  elseif_item  { $$ = $elseif_item; }
+  | elseif_item elseif_list[el2]  { ast_set_right($elseif_item, $el2); $$ = $elseif_item; }
   ;
 
 opt_elseif_list:
@@ -2540,9 +2540,9 @@ opt_when_expr:
   | WHEN expr  { $opt_when_expr = $expr; }
   ;
 
-trigger_stmts[result]:
-  trigger_stmt  { $result = new_ast_stmt_list($trigger_stmt, NULL); }
-  | trigger_stmt  trigger_stmts[ts]  { $result = new_ast_stmt_list($trigger_stmt, $ts); }
+trigger_stmts:
+  trigger_stmt  { $$ = new_ast_stmt_list($trigger_stmt, NULL); }
+  | trigger_stmt  trigger_stmts[ts]  { $$ = new_ast_stmt_list($trigger_stmt, $ts); }
   ;
 
 trigger_stmt:
@@ -2756,9 +2756,9 @@ macro_arg:
  | SELECT '(' select_expr_list[arg] ')' { $macro_arg = new_ast_select_expr_macro_arg($arg); }
  ;
 
-macro_args[result]:
-   macro_arg { $result = new_ast_macro_args($macro_arg, NULL); }
-  | macro_arg ',' macro_args[next] { $result = new_ast_macro_args($macro_arg, $next); }
+macro_args:
+   macro_arg { $$ = new_ast_macro_args($macro_arg, NULL); }
+  | macro_arg ',' macro_args[next] { $$ = new_ast_macro_args($macro_arg, $next); }
   ;
 
 opt_macro_formals:
@@ -2766,9 +2766,9 @@ opt_macro_formals:
    | macro_formals { $opt_macro_formals = $macro_formals; }
    ;
 
-macro_formals[result]:
-   macro_formal { $result = new_ast_macro_formals($macro_formal, NULL); }
-  | macro_formal ',' macro_formals[next] { $result = new_ast_macro_formals($macro_formal, $next); }
+macro_formals:
+   macro_formal { $$ = new_ast_macro_formals($macro_formal, NULL); }
+  | macro_formal ',' macro_formals[next] { $$ = new_ast_macro_formals($macro_formal, $next); }
   ;
 
 macro_formal: name '!' macro_type { $macro_formal = new_ast_macro_formal($name, $macro_type); }

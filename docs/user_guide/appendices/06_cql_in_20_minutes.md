@@ -50,7 +50,7 @@ And with no further delay, CQL in 20 minutes...
 7 % -3   --> 1
 -7 % 3   --> -1
 
--- Bitwise operators bind left to right like in SQLite
+-- Bitwise operators bind left to right like in SQLite not like in C
 1 | 4 & 3  -->  1  (not 0)
 
 -- Enforce precedence with parentheses
@@ -143,100 +143,107 @@ null <> null --> null
 -- CQL can call simple libc methods with a no-check declaration
 -- we'll need this for later examples so we can do something
 -- with our expressions (i.e. print them)
-declare procedure printf no check;
+
+declare procedure printf no check;  -- any args
 
 call printf("I'm CQL. Nice to meet you!\n");
 
--- Variables are declared with DECLARE.
+-- or simply
+
+printf("I'm CQL. Nice to meet you!\n");
+
+-- Variables are declared with VAR.
 -- Keywords and identifiers are not case sensitive.
-declare x integer not null;
+var x int!;  -- ! means 'not null'
 
 -- You can call it X, it is the same thing.
-set X := 0;
+X := 0;
 
 -- All variables begin with a null value if allowed, else a zero value.
-declare y integer not null;
+var y int!;
 if y == 0 then
-  call printf("Yes, this will run.\n");
+  printf("Yes, this will run.\n");
 end if;
 
 -- A nullable variable (i.e. not marked with not null) is initialized to null
-declare z real;
+var z real;
 if z is null then
-  call printf("Yes, this will run.\n");
+  printf("Yes, this will run.\n");
 end if;
 
 -- The various types
-declare a_blob blob;
-declare a_string text;
-declare a_real real;
-declare an_int integer;
-declare a_long long;
-declare an_object object;
+var a_blob blob;
+var a_string text;
+var a_real real;
+var an_int integer;
+var a_long long;
+var an_object object;
 
 -- There are some typical SQL synonyms
-declare an_int int;
-declare a_long long integer;
-declare a_long long int;
-declare a_long long_int;
+var an_int int;
+var a_long long integer;
+var a_long long int;
+var a_long long_int;
 
 -- The basic types can be tagged to make them less miscible
-declare m real<meters>;
-declare kg real<kilos>;
+var m real<meters>;
+var kg real<kilos>;
 
-set m := kg;  -- error!
+m := kg;  -- error!
 
 -- Object variables can also be tagged so that they are not mixed-up easily
-declare dict object<dict> not null;
-declare list object<list> not null;
-set dict := create_dict();  -- an external function that creates a dict
-set dict := create_list();  -- error
-set list := create_list();  -- ok
-set list := dict;           -- error
+var dict object<dict> not null;
+var list object<list> not null;
+
+dict := create_dict();  -- an external function that creates a dict
+dict := create_list();  -- error
+list := create_list();  -- ok
+list := dict;           -- error
 
 -- Implied type initialization
-LET i := 1;      -- integer not null
-LET l := 1L;     -- long not null
-LET t := "x";    -- text not null
-LET b := x IS y; -- bool not null
-LET b := x = y;  -- bool (maybe not null depending on x/y)
+let i := 1;      -- int!
+let l := 1L;     -- long not null
+let t := "x";    -- text not null
+let b := x IS y; -- bool not null
+let b := x = y;  -- bool (maybe not null depending on x/y)
 
 -- The psuedo function "nullable" converts the type of its arg to the nullable
 -- version of the same thing.
 
-LET n_i := nullable(1);   -- nullable integer variable initialized to 1
-LET l_i := nullable(1L);  -- nullable long variable initialized to 1
+let n_i := nullable(1);   -- nullable integer variable initialized to 1
+let l_i := nullable(1L);  -- nullable long variable initialized to 1
+
+-- most operators have a side-effect assignment version
+i += 1;
+i *= 2;
 
 /**********************************************************
  * 3. Control Flow
  *********************************************************/
 
 -- Just make a variable
-declare some_var integer not null;
-set some_var := 5
+let some_var := 5
 
 -- Here is an IF statement
 if some_var > 10 then
-    call printf("some_var is totally bigger than 10.\n")
+    printf("some_var is totally bigger than 10.\n")
 else if some_var < 10 then  -- else if is optional
-    call printf("some_var is smaller than 10.\n")
+    printf("some_var is smaller than 10.\n")
 else -- else is optional
-    call printf("some_var is indeed 10.\n")
+    printf("some_var is indeed 10.\n")
 end if;
 
 
 -- WHILE loops iterate as usual
-declare i integer not null;
-set i := 0;
+let i := 0;
 while i < 5
 begin
-   call printf("%d\n", i);
-   set i := i + 1;
+   printf("%d\n", i);
+   i += 1;
 end;
 
 -- Use LEAVE to end a loop early
-declare i integer not null;
-set i := 0;
+let i := 0;
 while i < 500
 begin
    if i >= 5 then
@@ -244,16 +251,15 @@ begin
      leave;
    end if;
 
-   call printf("%d\n", i);
-   set i := i + 1;
+   printf("%d\n", i);
+   i += 1;
 end;
 
 -- Use CONTINUE to go back to the loop test
-declare i integer not null;
-set i := 0;
+let i := 0;
 while i < 500
 begin
-   set i := i + 1;
+   i += 1;
    if i % 2 then
      -- Note: we to do this after "i" is incremented!
      -- to avoid an infinite loop
@@ -261,7 +267,16 @@ begin
    end if;
 
    -- odd numbers will not be printed because of continue above
-   call printf("%d\n", i);
+   printf("%d\n", i);
+end;
+
+-- Use FOR to do normal iteration, any number of update statements
+-- may come after the condition.  They need not be +=, they can be anything
+let i := 0;
+let j := 0;
+for i < 500; i += 1; j += 2;
+begin
+  printf("%d %d\n", i, j);
 end;
 
  /**********************************************************
@@ -326,30 +341,30 @@ null is 1     -> 0
 -- COALESCE returns the first non null arg, or the last arg if all were null.
 -- If the last arg is not null, you get a non null result for sure.
 -- The following is never null, but it's false if either x or y is null
-COALESCE(x==y, false) -> thought excercise: how is this different than x IS y?
+coalesce(x==y, false) -> thought excercise: how is this different than x IS y?
 
 -- IFNULL is coalesce with 2 args only (COALESCE is more general)
-IFNULL(x, -1) --> use -1 if x is null
+ifnull(x, -1) --> use -1 if x is null
 
 -- The reverse, NULLIF, converts a sentinel value to unknown, more exotic
-NULLIF(x, -1) --> if x is -1 then use null
+nullif(x, -1) --> if x is -1 then use null
 
--- the else part of a case can get rid of nulls
-CASE when x == y then 1 else 0 end;  --> true iff x = y and neither is null
+-- the ELSE part of a CASE can get rid of nulls
+case when x == y then 1 else 0 end;  --> true iff x = y and neither is null
 
 -- CASE can be used to give you a default value after various tests
 -- The following expression is never null; "other" is returned if x is null.
-CASE when x > 0 then "pos" when x < 0 then "neg" else "other" end;
+case when x > 0 then "pos" when x < 0 then "neg" else "other" end;
 
 -- You can "throw" out of the current procedure (see exceptions below)
-declare x integer not null;
-set x := ifnull_throw(nullable_int_expr); -- returns non null, throws if null
+var x int!;
+x := ifnull_throw(nullable_int_expr); -- returns non null, throws if null
 
 -- If you have already tested the expression then control flow analysis
 -- improves its type to "not null".  Many common check patterns are recognized.
 if nullable_int_expr is not null then
   -- nullable_int_expression is known to be not null in this context
-  set x := nullable_int_expr;
+  x := nullable_int_expr;
 end if;
 
 /**********************************************************
@@ -380,7 +395,7 @@ create table T2(
 -- To actually create tables and other schema you need
 -- procedures that look like the below:
 
-create proc make_tables()
+proc make_tables()
 begin
   create table T1 if not exists (
     id integer primary key,
@@ -417,17 +432,17 @@ drop table T1;
  *********************************************************/
 
 -- We will use this scratch variable in the following examples
-declare rr real;
+var rr real;
 
 -- First observe CQL is a two-headed language
-set rr := 1+1;           -- this is evaluated in generated C code
-set rr := (select 1+1);  -- this expresion goes to SQLite; SQLite does the addition
+rr := 1+1;           -- this is evaluated in generated C code
+rr := (select 1+1);  -- this expresion goes to SQLite; SQLite does the addition
 
 -- CQL tries to do most things the same as SQLite in the C context
 -- but some things are exceedingly hard to emulate correctly.
 -- Even simple looking things such as:
-set rr := (select cast("1.23" as real));   -->  rr := 1.23
-set rr := cast("1.23" as real);            -->  error (not safe to emulate SQLite)
+rr := (select cast("1.23" as real));   -->  rr := 1.23
+rr := cast("1.23" as real);            -->  error (not safe to emulate SQLite)
 
 -- In general, numeric/text conversions have to happen in SQLite context
 -- because the specific library that does the conversion could be and usually
@@ -436,43 +451,43 @@ set rr := cast("1.23" as real);            -->  error (not safe to emulate SQLit
 
 -- Loose concatenation is not supported because of the implied conversions.
 -- Loose means "not in the context of a SQL statement".
-set r := 1.23;
-set r := (select cast("100"||r as real));  --> 1001.23 (a number)
-set r := cast("100"||r as real);  --> error, concat not supported in loose expr
+r := 1.23;
+r := (select cast("100"||r as real));  --> 1001.23 (a number)
+r := cast("100"||r as real);  --> error, concat not supported in loose expr
 
 -- A simple insertion
 insert into T1 values (1, "foo", 3.14);
 
 -- Finally, reading from the database
-set r := (select r from T1 where id = 1);  --> r = 3.14
+r := (select r from T1 where id = 1);  --> r = 3.14
 
 -- The (select ...) form requires the result to have at least one row.
 -- You can use IF NOTHING forms to handle other cases such as:
-set r := (select r from T1
-          where id = 2
-          if nothing -1);  --> r = -1
+r := (select r from T1
+        where id = 2
+        if nothing -1);  --> r = -1
 
 -- If the SELECT statement might return a null result you can handle that as well
-set r := (select r from T1
-          where id = 2
-          if nothing or null -1);  --> r = -1
+r := (select r from T1
+      where id = 2
+      if nothing or null -1);  --> r = -1
 
 -- With no IF NOTHING clause, lack of a row will cause the SELECT expression to throw
 -- an exception.  IF NOTHING THROW merely makes this explicit.
-set r := (select r from T1 where id = 2 if nothing throw);  --> will throw
+r := (select r from T1 where id = 2 if nothing throw);  --> will throw
 
 /**********************************************************
  * 6. Procedures, Results, Exceptions
  *********************************************************/
 
 -- Procedures are a list of statements that can be executed, with arguments.
-create proc hello()
+proc hello()
 begin
-  call printf("Hello, world\n");
+  printf("Hello, world\n");
 end;
 
 -- IN, OUT, and INOUT parameters are possible
-create proc swizzle(x integer, inout y integer, out z real not null)
+proc swizzle(x integer, inout y integer, out z real not null)
 begin
   set y := x + y;  -- any computation you like
 
@@ -485,7 +500,7 @@ end;
 -- can return an error code if there is a problem.
 -- "will_fail" (below)  will always return SQLITE_CONSTRAINT, the second insert
 -- is said to "throw".  In CQL exceptions are just result codes.
-create proc will_fail()
+proc will_fail()
 begin
    insert into T1 values (1, "x", 1);
    insert into T1 values (1, "x", 1);  --> duplicate key
@@ -493,11 +508,10 @@ end;
 
 -- DML that fails generates an exception and
 -- exceptions can be caught. Here is a example:
-create proc upsert_t1(
+proc upsert_t1(
   id_ integer primary key,
   t_ text,
-  r_ real
-)
+  r_ real)
 begin
   try
     -- try to insert
@@ -511,7 +525,7 @@ end;
 -- Shapes can be very useful in avoiding boilerplate code
 -- the following is equivalent to the above.
 -- More on shapes later.
-create proc upsert_t1(LIKE t1) -- my args are the same as the columns of T1
+proc upsert_t1(LIKE t1) -- my args are the same as the columns of T1
 begin
   try
     insert into T1 from arguments
@@ -522,16 +536,17 @@ end;
 
 -- You can (re)throw an error explicitly.
 -- If there is no current error you get SQLITE_ERROR
-create proc upsert_wrapper(LIKE t1) -- my args are the same as the columns of T1
+-- THROW, CONTINUE, LEAVE, and RETURN may be used without begin/end in an IF
+proc upsert_wrapper(LIKE t1) -- my args are the same as the columns of T1
 begin
-  if r_ > 10 then throw end if; -- throw if r_ is too big
-  call upsert_t1(from arguments);
+  if r_ > 10 throw; -- throw if r_ is too big
+  upsert_t1(from arguments);
 end;
 
 -- Procedures can also produce a result set.
 -- The compiler generates the code to create this result set
 -- and helper functions to read rows out of it.
-create proc get_low_r(r_ real)
+proc get_low_r(r_ real)
 begin
    -- optionally insert some rows or do other things
    select * from T1 where T1.r <= r_;
@@ -539,7 +554,7 @@ end;
 
 -- A procedure can choose between various results, the choices must be compatible.
 -- The last "select" to run controls the ultimate result.
-create proc get_hi_or_low(r_ real, hi_not_low bool not null)
+proc get_hi_or_low(r_ real, hi_not_low bool!)
 begin
   -- trying to do this with one query would result in a poor plan, so
   -- instead we use two economical queries.
@@ -558,7 +573,7 @@ select * from T1 where case hi_not_low then T1.r >= r_ else T1.r <= r_ end;
 
 -- You can get the current return code and use it in your CATCH logic.
 -- This upsert is a bit better than the first:
-create proc upsert_t1(LIKE t1) -- my args are the same as the columns of T1
+proc upsert_t1(LIKE t1) -- my args are the same as the columns of T1
 begin
   try
     insert into T1 from arguments
@@ -576,9 +591,9 @@ end;
 -- is used as the return value.   If the called procedure uses the
 -- database then it could throw which causes the caller to throw
 -- as usual.
-create proc fib(n integer not null, out result integer not null)
+proc fib(n int!, out result int!)
 begin
-   set result := case n <= 2 then 1 else fib(n-1) + fib(n-2) end;
+  result := case n <= 2 then 1 else fib(n-1) + fib(n-2) end;
 end;
 
 /**********************************************************
@@ -587,34 +602,32 @@ end;
 
 -- Statement cursors let you iterate over a select result.
 -- Here we introduce cursors, LOOP and FETCH.
-create proc count_t1(r_ real, out rows_ integer not null)
+proc count_t1(r_ real, out rows_ int!)
 begin
-  declare rows integer not null;  -- starts at zero guaranteed
-  declare C cursor for select * from T1 where r < r_;
+  rows_ := 0; -- this is redundant, rows_ is set to zero for sure
+  cursor C for select * from T1 where r < r_;
   loop fetch C -- iterate until fetch returns no row
   begin
     -- goofy code to illustrate you can process the cursor
     -- in whatever way you deem appropriate
     if C.r < 5 then
-      rows := rows + 1; -- count rows with C.r < 5
+      _rows += 1; -- count rows with C.r < 5
     end if;
   end;
-  set rows_ := rows;
 end;
 
 -- Cursors can be tested for presence of a row
 -- and they can be closed before the enumeration is finished.
 -- As before the below is somewhat goofy example code.
-create proc peek_t1(r_ real, out rows_ integer not null)
+proc peek_t1(r_ real, out rows_ int!)
 begin
    /* rows_ is set to zero for sure! */
-   declare C cursor for select * from T1 where r < r_ limit 2;
-   open C;  -- this is no-op, present because other systems have it
+   cursor C for select * from T1 where r < r_ limit 2;
    fetch C;  -- fetch might find a row or not
    if C then  -- cursor name as bool indicates presence of a row
-     set rows_ = rows_ + (C.r < 5);
+     rows_ += C.r < 5;
      fetch C;
-     set rows_ = rows_ + (C and C.r < 5);
+     rows_ += (C and C.r < 5);
    end if;
    close C;  -- cursors auto-closed at end of method but early close possible
 end;
@@ -623,12 +636,12 @@ end;
 fetch C into id_, t_, r_;  --> loads named locals instead of C.id, C.t, C.r
 
 -- A procedure can be the source of a cursor
-declare C cursor for call get_low_r(3.2);  -- valid cursor source
+cursor C for call get_low_r(3.2);  -- valid cursor source
 
 -- OUT can be used to create a result set that is just one row
-create proc one_t1(r_ real)
+proc one_t1(r_ real)
 begin
-   declare C cursor for select * from T1 where r < r_ limit 1;
+   cursor C for select * from T1 where r < r_ limit 1;
    fetch C;
    out C;  -- emits a row if we have one, no row is ok too, empty result set.
 end;
@@ -641,27 +654,27 @@ end;
 -- By itself such as cursor does not imply use of the database, but often
 -- the source of the cursor uses the database.  In this example
 -- consume_one_t1 uses the database because of the call to one_t1.
-create proc consume_one_t1()
+proc consume_one_t1()
 begin
   -- a cursor whose shape matches the one_t1 "out" statement
-  declare C cursor like one_t1;
+  cursor C like one_t1;
 
   -- load it from the call
   fetch C from call one_t1(7);
   if C.r > 10 then
     -- use values as you see fit
-    call printf("woohoo");
+    printf("woohoo");
   end if;
 end;
 
 -- You can do the above in one step with the compound form:
-declare C cursor fetch from call one_t1(7); -- declare and fetch
+cursor C fetch from call one_t1(7); -- declare and fetch
 
 -- Value cursors can come from anywhere and can be a procedure result
-create proc use_t1_a_lot()
+proc use_t1_a_lot()
 begin
   -- T1 is the same shape as one_t1, this will work, too
-  declare C cursor like T1;
+  cursor C like T1;
   fetch C from call one_t1(7);  -- load it from the call
 
   -- some arbitrary logic might be here
@@ -682,10 +695,10 @@ begin
 end;
 
 -- Make a complex result set one row at a time
-create proc out_union_example()
+proc out_union_example()
 begin
   -- T1 is the same shape as one_t1, this will work, too
-  declare C cursor like T1;
+  cursor C like T1;
 
   -- load it from the call
   fetch C from call one_t1(7);
@@ -708,13 +721,13 @@ begin
 end;
 
 -- Consume the above
-create proc consume_result()
+proc consume_result()
 begin
-  declare C cursor for call out_union_example();
+  cursor C for call out_union_example();
   loop fetch C
   begin
     -- use builtin cql_cursor_format to make the cursor into a string
-    call printf("%s\n", cql_cursor_format(C)); --> prints every column and value
+    printf("%s\n", cql_cursor_format(C)); --> prints every column and value
   end;
 end;
 
@@ -723,14 +736,14 @@ end;
  *********************************************************/
 
 -- Create a simple named types
-declare my_type type integer not null;   -- make an alias for integer not null
-declare i my_type;  -- use it, "i" is an integer
+type my_type int!;   -- make an alias for int!
+var i my_type;  -- use it, "i" is an integer
 
 -- Mixing in type kinds is helpful
-declare distance type real<meters>;  -- e.g., distances to be measured in meters
-declare time type real<seconds>;     -- e.g., time to be measured in seconds
-declare job_id type long<job_id>;
-declare person_id type long<person_id>;
+type distance real<meters>;  -- e.g., distances to be measured in meters
+type time real<seconds>;     -- e.g., time to be measured in seconds
+tppe job_id long<job_id>;
+type person_id long<person_id>;
 
 -- With the above done
 --  * vars/cols of type "distance" are incompatible with those of type "time"
@@ -745,7 +758,7 @@ declare enum implement integer (
 );
 
 -- The above also implicitly does this
-declare implement type integer<implement> not null;
+type implement integer<implement>!;  -- not needed
 
 -- Using the enum -- simply use dot notation
 declare impl implement;
@@ -764,32 +777,32 @@ set impl := implement.pen;  -- value "2"
 -- Shapes first appeared to help define value cursors like so:
 
 -- A table or view name defines a shape
-declare C cursor like T1;
+cursor C like T1;
 
 -- The result of a proc defines a shape
-declare D cursor like one_t1;
+cursor D like one_t1;
 
 -- A dummy select statement defines a shape (the select does not run)
--- this one is the same as (x integer not null, y text not null)
-declare E cursor like select 1 x, "2" y;
+-- this one is the same as (x int!, y text not null)
+cursor E like select 1 x, "2" y;
 
 -- Another cursor defines a shape
 declare F cursor like C;
 
 -- The arguments of a procedure define a shape. If you have
--- create proc count_t1(r_ real, out rows_ integer not null) ...
+-- proc count_t1(r_ real, out rows_ int!) ...
 -- the shape will be:
---  (r_ real, rows_ integer not null)
-declare G cursor like count_t1 arguments;
+--  (r_ real, rows_ int!)
+cursor G like count_t1 arguments;
 
 -- A loaded cursor can be used to make a call
-call count_t1(from G);  -- the args become G.r_, G.rows_
+count_t1(from G);  -- the args become G.r_, G.rows_
 
 -- A shape can be used to define a procedures args, or some of the args
 -- In the following "p" will have arguments:s id_, t_, and r_ with types
 -- matching table T1.
 -- Note: To avoid ambiguity, an _ was added to each name!
-create proc p(like T1)
+proc p(like T1)
 begin
   -- do whatever you like
 end;
@@ -797,22 +810,22 @@ end;
 -- The arguments of the current procedure are a synthetic shape
 -- called "arguments" and can used where other shapes can appear.
 -- For instance, you can have "q" shim to "p" using this form:
-create proc q(like T1, print bool not null)
+proc q(like T1, print bool not null)
 begin
   -- maybe pre-process, silly example
-  set id_ := id_ + 1;
+  id_ += 1;
 
   -- shim to p
-  call p(from arguments); -- pass my args through, whatever they are
+  p(from arguments); -- pass my args through, whatever they are
 
   -- maybe post-process, silly example
-  set r_ := r_ - 1;
+  r_ -= 1;
 
   if print then
     -- convert args to cursor
-    declare C like q arguments;
+    cursor C like q arguments;
     fetch C from arguments;
-    call printf("%s\n", cql_cursor_format(C)); --> prints every column and value
+    printf("%s\n", cql_cursor_format(C)); --> prints every column and value
   end if;
 
   -- insert a row based on the args
@@ -821,16 +834,16 @@ end;
 
 -- You an use a given shape more than once if you name each use.
 -- This would be more exciting if T1 was like a "person" or something.
-create proc r(a like T1, b like T1)
+proc r(a like T1, b like T1)
 begin
   call p(from a);
   call p(from b);
   -- you can refer to a.id, b.id etc.
-  declare C like a;
+  cursor C like a;
   fetch C from a;
-  call printf("%s\n", cql_cursor_format(C));
+  printf("%s\n", cql_cursor_format(C));
   fetch C from b;
-  call printf("%s\n", cql_cursor_format(C));
+  printf("%s\n", cql_cursor_format(C));
 end;
 
 -- Shapes can be subsetted, for instance in the following example
@@ -861,13 +874,13 @@ insert into T1(like Z) from D(like Z) @dummy_seed(11) @dummy_nullables;
 -- value in the examples that follow.  We will never actual create this
 -- proc, we only declare it to define the shape, so this is kind of like
 -- a typedef.
-declare proc some_shape() (x integer not null, y integer not null, z integer not null);
+declare proc some_shape() (x int!, y int!, z int!);
 
 -- You can make a helper procedure to create test args that are mostly constant
 -- or computable.
-create get_foo_args(X like some_shape, seed_ integer not null)
+create get_foo_args(X like some_shape, seed_ int!)
 begin
-  declare C cursor like foo arguments;
+  cursor C like foo arguments;
   -- any way of loading C could work this is one
   fetch C(like X) from X @dummy_seed(seed_);
   out C;
@@ -887,16 +900,16 @@ call foo(from foo_args);
  * 11. INSERT USING and FETCH USING
  *********************************************************/
 
- -- This kind of thing is a pain
- insert into foo(a, b, c, d, e, f, g)
-    values(1, 2, 3, null, null, 5, null);
+-- This kind of thing is a pain
+insert into foo(a, b, c, d, e, f, g)
+  values(1, 2, 3, null, null, 5, null);
 
 -- Instead, write this form:
 insert into foo USING
-    1 a, 2 b, 3 c, null d, null e, 5 f, null g;
+  1 a, 2 b, 3 c, null d, null e, 5 f, null g;
 
 -- The FETCH statement can also be "fetch using"
-declare C cursor like foo;
+cursor C like foo;
 fetch C USING
     1 a, 2 b, 3 c, null d, null e, 5 f, null g;
 ```

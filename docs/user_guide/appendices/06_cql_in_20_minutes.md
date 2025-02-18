@@ -775,6 +775,7 @@ begin
     end if;
   end;
 end;
+```
 
 Cursors can be tested for presence of a row
 and they can be closed before the enumeration is finished.
@@ -959,8 +960,7 @@ type implement integer<implement>!;  -- not needed
 Using the enum -- simply use dot notation
 
 ```
-declare impl implement;
-impl := implement.pen;  -- value 2
+let impl := implement.pen;  -- value 2
 ```
 
 You can emit an emum into the current .h file we are going to generate (or .lua).
@@ -969,6 +969,7 @@ Instead, pick one compiland that will "own" the emission of the enum.
 C code can then #include the one .h file.  Lua code gets to use the constansts
 to initialize a dictionary.
 
+```
 @emit_enums implement;
 ```
 

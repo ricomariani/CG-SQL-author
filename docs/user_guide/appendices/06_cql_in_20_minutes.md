@@ -1147,13 +1147,14 @@ call foo(from foo_args);
 ```
 
 
-### 11. INSERT USING and FETCH USING
+### 11. The USING clause for INSERT and FETCH
 
-This kind of thing is a pain
+This kind of thing is error prone:
 
 ```
 -- which variable is getting '5', are you sure it's 'f', you have to read
 -- carefully... it gets worse if there are more columns with longer names
+
 insert into foo(a, b, c, d, e, f, g)
   values(1, 2, 3, null, null, 5, null);
 ```
@@ -1174,7 +1175,7 @@ fetch C using
 ```
 
 
-### 12. PIPELINE FORMS
+### 12. Pipeline Forms
 
 Borrowing from Lua, it is possible to invoke functions using a postfix notation.
 
@@ -1226,7 +1227,7 @@ Fluent syntax is easily achieved like this:
 let l := cql_long_list_create():add(5):add(3):add(2);
 ```
 
-### 13. PRE-PROCESSING
+### 13. Pre-procesing
 
 The below includes the text from the incidated path, these directives must come
 before any other statements. Any given path is included only once. Use
@@ -1249,8 +1250,7 @@ directive is optional.
 @endif
 ```
 
-
-### 14. MACROS
+### 14. Macros
 
 Macros have a form of typing, in that we know what kind of macro we're talking
 about and likewise we know the type of any macro argument.  These types are a
@@ -1286,7 +1286,12 @@ begin
   let @tmp(x) := x!;
   let @tmp(y) := y!;
   if @tmp(x) != @tmp(y) then
-    printf("Assertion failed: %s != %s at %s:%d", @TEXT(x!), @TEXT(y!), @MACRO_FILE, @MACRO_LINE);
+    printf("Assertion failed: %s != %s at %s:%d",
+      @TEXT(x!),
+      @TEXT(y!),
+      @MACRO_FILE,
+      @MACRO_LINE);
+
     printf("left: %s, right %s\n", @tmp(x!):fmt, @tmp(y!):fmt);
     throw;
   end if;
@@ -1334,7 +1339,7 @@ Then you can write:
 ```
 a[x] := b[y];
 
--- equivalent to the following: 
+-- equivalent to the following:
 cql_long_list_set_at(a, x, cql_long_list_get_at(b, y));
 ```
 
@@ -1353,7 +1358,7 @@ let c := a.count;
 let c := cql_long_list_count(a);
 ```
 
-Here `count` is a read only property but 
+Here `count` is a read only property but
 
 ```
 @op cql_long_list : set length as cql_set_length;

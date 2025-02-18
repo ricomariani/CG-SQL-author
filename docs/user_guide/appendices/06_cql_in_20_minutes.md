@@ -1254,13 +1254,19 @@ directive is optional.
 
 Macros have a form of typing, in that we know what kind of macro we're talking
 about and likewise we know the type of any macro argument.  These types are a
-piece of syntax which can be understood from the grammar.  The most common
-type by far is an expression macro.
+piece of syntax which can be understood from the grammar.  The most common type
+by far is an expression macro.  Importantly, we know that the macro is an
+expression and we know the types of its arguments so we can parse it without
+using it thereby finding errors sooner and more clearly.  Syntax errors are not
+possible when a macro is invoked, but other errors such as argument mismatch are
+possible.  Macro names and arguments alway end in `!`.  Such as `a!`, `b!`, and
+`min!`.
 
 ```
+-- this macro may be used anywhere an expression is valid
 @macro(expr) min!(a! expr, b! expr)
 begin
-  case when a < b then a else b end
+  case when a! < b! then a! else b! end
 end;
 
 let m := min!(1+2, 3+4);
@@ -1274,13 +1280,14 @@ no matter what operators were in the macro.
 The next most common type of macro is the statement list
 
 ```
+-- this macro may be used anywhere a statement list is valid
 @macro(stmt_list) expect_eq!(x! expr, y! expr)
 begin
   let @tmp(x) := x!;
   let @tmp(y) := y!;
   if @tmp(x) != @tmp(y) then
     printf("Assertion failed: %s != %s at %s:%d", @TEXT(x!), @TEXT(y!), @MACRO_FILE, @MACRO_LINE);
-    printf("left: %s, right %s\n", @tmp(x):fmt, @tmp(y):fmt);
+    printf("left: %s, right %s\n", @tmp(x!):fmt, @tmp(y!):fmt);
     throw;
   end if;
 end;
@@ -1288,18 +1295,18 @@ end;
 
 Lots is going on here:
 
- * @tmp(x) is a unique name for the macro expansion it turns into something like
-   x_12345
- * the values were captured into locals so that they are evaluated exactly one
-   time
- * if the assertion fails we use @TEXT to get a text representation of the
-   expressions x and y for the diagnostic
- * we use @MACRO_FILE and @MACRO_LINE to get the file and line number of macro
-   invocation, the current file and line would be useless
- * we use :fmt to get a string represenation of the values of the variables so
-   we can show what values we got
- * in the event of a failure we use throw to escape from the current procedure
-   (other techniques could be used)
+* @tmp(x) is a unique name for the macro expansion it turns into something like
+  x_12345
+* the values were captured into locals so that they are evaluated exactly one
+  time
+* if the assertion fails we use @TEXT to get a text representation of the
+  expressions x and y for the diagnostic
+* we use @MACRO_FILE and @MACRO_LINE to get the file and line number of macro
+  invocation, the current file and line would be useless
+* we use :fmt to get a string represenation of the values of the variables so
+  we can show what values we got
+* in the event of a failure we use throw to escape from the current procedure
+  (other techniques could be used)
 
 This is a big bag of tricks to get a cool macro which is known to accept expressions
 and can be used anywhere a statement list could appear.

@@ -378,7 +378,7 @@ null not in (null, 3) --> null
 ```
 
 
-### 4. Working with and "getting rid of" null
+### 5. Working with and "getting rid of" null
 
 
 Null can be annoying, you might need a not null value.
@@ -451,7 +451,7 @@ end if;
 ```
 
 
-### 5. Tables, Views, Indices, Triggers
+### 6. Tables, Views, Indices, Triggers
 
 Most forms of data definition language DDL are supported.
 "Loose" DDL (outside of any procedure) simply declares
@@ -527,7 +527,7 @@ drop trigger trigger1;
 
 A complete discussion of DDL is out of scope, refer to sqlite.org
 
-### 6. Selecting Data
+### 7. Selecting Data
 
  We will use this scratch variable in the following examples
 
@@ -598,7 +598,7 @@ throw an exception.  IF NOTHING THROW merely makes this explicit.
 r := (select r from sample_table where id = 2 if nothing throw);  --> will throw
 ```
 
-### 6. Procedures, Results, Exceptions
+### 8. Procedures, Results, Exceptions
 
 Procedures are a list of statements that can be executed, with arguments.
 
@@ -756,7 +756,7 @@ begin
 end;
 ```
 
-### 7. Statement Cursors
+### 9. Statement Cursors
 
 Statement cursors let you iterate over a select result.
 Here we introduce cursors, LOOP and FETCH.
@@ -819,7 +819,7 @@ begin
 end;
 ```
 
-### 8. Value Cursors, Out, and Out Union
+### 10. Value Cursors, Out, and Out Union
 
 To consume a procedure that uses "out" you can declare a value cursor.
 By itself such as cursor does not imply use of the database, but often
@@ -917,7 +917,7 @@ end;
 ```
 
 
-### 9. Named Types and Enumerations
+### 11. Named Types and Enumerations
 
 Create a simple named types using `type`
 
@@ -973,7 +973,7 @@ to initialize a dictionary.
 @emit_enums implement;
 ```
 
-### 10. Shapes and Their Uses
+### 12. Shapes and Their Uses
 
 Shapes first appeared to help define value cursors like so:
 
@@ -1148,7 +1148,7 @@ call foo(from foo_args);
 ```
 
 
-### 11. The USING clause for INSERT and FETCH
+### 13. The USING clause for INSERT and FETCH
 
 This kind of thing is error prone:
 
@@ -1176,7 +1176,7 @@ fetch C using
 ```
 
 
-### 12. Pipeline Forms
+### 14. Pipeline Forms
 
 Borrowing from Lua, it is possible to invoke functions using a postfix notation.
 
@@ -1228,7 +1228,7 @@ Fluent syntax is easily achieved like this:
 let l := cql_long_list_create():add(5):add(3):add(2);
 ```
 
-### 13. Pre-procesing
+### 15. Pre-procesing
 
 The below includes the text from the incidated path, these directives must come
 before any other statements. Any given path is included only once. Use
@@ -1251,7 +1251,7 @@ directive is optional.
 @endif
 ```
 
-### 14. Macros
+### 16. Macros
 
 Macros have a form of typing, in that we know what kind of macro we're talking
 about and likewise we know the type of any macro argument.  These types are a
@@ -1322,7 +1322,7 @@ you can join, something you can union, a piece of a select list.  These are also
 useful but come up less often.
 
 
-### 15. Properties, Arrays, and Custom Operators
+### 17. Properties, Arrays, and Custom Operators
 
 Property syntax and array syntax can be converted to function calls using the `@op`
 directive.

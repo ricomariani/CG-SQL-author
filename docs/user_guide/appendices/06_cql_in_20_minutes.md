@@ -914,4 +914,123 @@ fetch C USING
     1 a, 2 b, 3 c, null d, null e, 5 f, null g;
 ```
 
+/**********************************************************
+ * 12. PIPELINE FORMS
+ *********************************************************/
+
+ Borrowing from Lua, it is possible to invoke functions using
+ a postfix notation.
+
+ select x:ifnull(0) x;
+
+ Is exactly the same as:
+
+ select ifnull(x, 0) x;
+
+The postfix form is often much more convenient and clear to write and
+it chains more naturally to create fluent forms.
+
+The CAST operator may also be written in a postfix form using ~type~.  Special
+syntax is required for type casts because types can be tricky.  ~real<meters> not null~
+is a valid type for instance.  A simple example might look like this.
+
+select x:substr(2)~int~:ifnull(0) x;
+
+Which is much clearer than:
+
+select ifnull(cast(substr(x, 2) as int), 0) x;
+
+Shorthand may be used, the @op directive defines aliases, this is common
+to allow overloaded names.
+
+@op real<meters> call dist as metric_distance;
+
+x:dist -- becomes  metric_distance(x) if x is of type real<meters>
+
+This can be quite useful, for instance the builtin fmt is defined for all types
+such that x:fmt renders x into some debug string regardless of what x is by
+calling a suitable format function (different ones for different types).  @op
+may be used to redefine/override the expansion as many times as desired.
+
+let l := create_long_list():add(5):add(3):add(2);
+
+/**********************************************************
+ * 13. PRE-PROCESSING
+ *********************************************************/
+
+-- This include the text from the incidated path, these must come before
+-- any other statements. Any given path is included only once.
+-- Use --include_paths to specify prefixes to use with the @include directive
+
+@include "path"
+
+-- conditional processing can be done at the statement level
+-- use --defines to define symbols for use with @ifdef and @ifndef
+-- @ifndef selects if the symbol is not defined
+-- @else is optional
+
+@ifdef foo
+  -- some code
+@else
+  -- other code
+@endif
+
+/**********************************************************
+ * 14. MACROS
+ *********************************************************/
+
+Macros have a form of typing, in that we know what kind of macro we're talking
+about and likewise we know the type of any macro argument.  These types are a
+piece of syntax which can be understood from the grammar.  The most common
+type by far is an expression macro.
+
+@macro(expr) min!(a! expr, b! expr)
+begin
+  case when a < b then a else b end
+end;
+
+let m := min!(1+2, 3+4);
+
+Importantly there is no need to add extra parens like we do in C.  The Macros
+are expanded by copying in the AST into the indicated location, not by inserting
+text. The AST shape remains as defined so in the above we certainly get (1+2) < (3+4)
+no matter what operators were in the macro.
+
+The next most common type of macro is the statement list
+
+@macro(stmt_list) expect_eq!(x! expr, y! expr)
+begin
+  let @tmp(x) := x!;
+  let @tmp(y) := y!;
+  if @tmp(x) != @tmp(y) then
+    printf("Assersion failed: %s != %s at %s:%d", @TEXT(x!), @TEXT(y!), @MACRO_FILE, @MACRO_LINE);
+    printf("left: %s, right %s\n", @tmp(x):fmt, @tmp(y):fmt);
+    throw;
+  end if;
+end;
+
+Lots is going on here:
+
+ * @tmp(x) is a unique name for the macro expansion it turns into something like
+   x_12345
+ * the values were captured into locals so that they are evaluated exactly one
+   time
+ * if the assertion fails we use @TEXT to get a text representation of the
+   expressions x and y for the diagnostic
+ * we use @MACRO_FILE and @MACRO_LINE to get the file and line number of macro
+   invocation, the current file and line would be useless
+ * we use :fmt to get a string represenation of the values of the variables so
+   we can show what values we got
+ * in the event of a failure we use throw to escape from the current procedure
+   (other techniques could be used)
+
+This is a big bag of tricks to get a cool macro which is known to accept expressions
+and can be used anywhere a statement list could appear.
+
+The other macro types are for important pieces of a select statement.  Something
+you can join, something you can union, a piece of a select list.  These are also
+useful but come up less often.
+
+
+
 If you've read this far you know more than most now.  :)

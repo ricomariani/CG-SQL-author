@@ -32,6 +32,11 @@
 #include <string.h>
 #include <limits.h>
 #include <float.h>
+#ifndef _MSC_VER
+#include <libgen.h>
+#else
+#define PATH_MAX 255
+#endif
 
 #endif
 
@@ -161,6 +166,13 @@ typedef const char *CSTR;
 #endif
 
 #endif
+
+#ifdef _MSC_VER
+#define _printf_checking_(x,y)
+#define _Noreturn
+#else
+#define _printf_checking_(x,y) __attribute__ (( format( printf, x, y ) ))
+#endif
 #endif
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
@@ -229,8 +241,8 @@ cql_noexport void bclose(charbuf *b);
 cql_noexport void bclear(charbuf *b);
 cql_noexport void release_open_charbufs(void);
 cql_noexport void vbprintf(charbuf *b, const char *format, va_list args);
-cql_noexport void bprintf(charbuf *b, const char *format, ...) __attribute__ (( format( printf, 2, 3 ) ));
-cql_noexport CSTR dup_printf(const char *format, ...) __attribute__ (( format( printf, 1, 2 ) ));
+cql_noexport void bprintf(charbuf *b, const char *format, ...) _printf_checking_(2, 3);
+cql_noexport CSTR dup_printf(const char *format, ...) _printf_checking_(1, 2);
 cql_noexport void bputc(charbuf *b, char c);
 cql_noexport void bindent(charbuf *output, charbuf *input, int32_t indent);
 cql_noexport bool_t breadline(charbuf *output, CSTR *data);
@@ -1422,8 +1434,7 @@ AST1(with_recursive)
 
 #ifndef _MSC_VER
 #pragma clang diagnostic pop
-#endif
-/*
+#endif/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -2002,10 +2013,10 @@ cql_data_decl( rtdata *rt );
 cql_noexport void cql_cleanup_and_exit(int32_t code);
 
 // output to "stderr"
-cql_noexport void cql_error(const char *format, ...) __attribute__ (( format( printf, 1, 2 ) ));
+cql_noexport void cql_error(const char *format, ...) _printf_checking_(1, 2);
 
 // output to "stdout"
-cql_noexport void cql_output(const char *format, ...) __attribute__ (( format( printf, 1, 2 ) ));
+cql_noexport void cql_output(const char *format, ...) _printf_checking_(1, 2);
 
 // Creates a file in write mode. Aborts if there's any error.
 cql_export FILE *cql_open_file_for_write(CSTR file_name);
@@ -2114,7 +2125,7 @@ cql_data_decl( int32_t gen_stmt_level );
 
 cql_noexport void gen_init(void);
 cql_noexport void gen_cleanup(void);
-cql_noexport void gen_printf(const char *_Nonnull format, ...) __attribute__ (( format( printf, 1, 2 ) ));
+cql_noexport void gen_printf(const char *_Nonnull format, ...) _printf_checking_(1, 2);
 cql_noexport void gen_set_output_buffer(struct charbuf *_Nonnull buffer);
 
 typedef void (*_Nonnull gen_func)(ast_node *_Nonnull ast);
@@ -23922,7 +23933,7 @@ static void emit_print_query_plan_graph_proc(charbuf *output) {
     "  CALL printf(\"   \\\"plan\\\" : \\\"\");\n"
     "  LOOP FETCH C\n"
     "  BEGIN\n"
-    "    CALL printf(\"\%s%s\", IIF(C.level, \"\\\\n\", \"\"), C.graph_line);\n"
+    "    CALL printf(\"%s%s\", IIF(C.level, \"\\\\n\", \"\"), C.graph_line);\n"
     "  END;\n"
     "  CALL printf(\"\\\"\\n\");\n"
     "END;\n"
@@ -38503,7 +38514,7 @@ static void jfind_cleanup(jfind_t *jfind) {
 
 // This will check if the indicated column of the required sptr is a type match
 // for the same column name (maybe different index) in the actual column.  We
-// have to do this because we want to make sure that when you say COLUMNS(X like foo)
+// have to do this because we want to make sure that when you say @COLUMNS(X like foo)
 // that the foo columns of X are the same type as those in foo.
 static bool_t verify_matched_column(
   ast_node *ast,
@@ -38546,7 +38557,7 @@ cleanup:
 }
 
 // Here we've found one column_calculation node, this corresponds to a single
-// instance of COLUMNS(...) in the select list.  When we process this, we
+// instance of @COLUMNS(...) in the select list.  When we process this, we
 // will replace it with its expansion.  Note that each one is independent
 // so often you really only need one (distinct is less powerful if you have two or more).
 static void rewrite_column_calculation(ast_node *column_calculation, jfind_t *jfind) {
@@ -38715,18 +38726,18 @@ cleanup:
 }
 
 // At this point we're going to walk the select expression list looking for
-// the construct COLUMNS(...) with its various forms.  This is a generalization
+// the construct @COLUMNS(...) with its various forms.  This is a generalization
 // of the T.* syntax that allows you to pull slices of the tables and to
 // get distinct columns where there are duplicates due to joins.  Ultimately
 // this is just sugar but the point is that there could be dozens of such columns
 // and if you have to type it all yourself it is very easy to get it wrong. So
-// here we're going to expand out the COLUMNS(...) operator into the actual
+// here we're going to expand out the @COLUMNS(...) operator into the actual
 // tables/columns you requested.  SQLite, has no support for this sort of thing
 // so it, and indeed the rest of the compilation chain, will just see the result
 // of the expansion.
 cql_noexport void rewrite_select_expr_list(ast_node *select_expr_list, sem_join *jptr_from) {
 
-  // change * and T.* to COLUMNS(T) or COLUMNS(A, B, C) as appropriate
+  // change * and T.* to @COLUMNS(T) or @COLUMNS(A, B, C) as appropriate
   rewrite_star_and_table_star_as_columns_calc(select_expr_list, jptr_from);
 
   jfind_t jfind = {0};
@@ -38734,11 +38745,11 @@ cql_noexport void rewrite_select_expr_list(ast_node *select_expr_list, sem_join 
   for (ast_node *item = select_expr_list; item; item = item->right) {
     Contract(is_ast_select_expr_list(item));
 
-    // all star and table star will be rewritten to columns(...) by now so any left will indicate
+    // all star and table star will be rewritten to @columns(...) by now so any left will indicate
     // jptr_from is null like a select with no from clause.
     if (is_ast_column_calculation(item->left) || is_ast_star(item->left) || is_ast_table_star(item->left)) {
       if (!jptr_from) {
-        report_error(select_expr_list, "CQL0052: select *, T.*, or columns(...) cannot be used with no FROM clause", NULL);
+        report_error(select_expr_list, "CQL0052: select *, T.*, or @columns(...) cannot be used with no FROM clause", NULL);
         record_error(item->left);
         record_error(select_expr_list);
         return;
@@ -41133,7 +41144,7 @@ cql_noexport void rewrite_star_and_table_star_as_columns_calc(
       // if we have * then we need to expand it to the full list of columns
       // we need to do this first because it could include backed columns
       // the usual business of delaying this until codegen time doesn't work
-      // fortunately we have a rewrite ready for this case, COLUMNS(T)
+      // fortunately we have a rewrite ready for this case, @COLUMNS(T)
       // so we'll swap that in for the * right here before we go any further.
       // As it is there is an invariant that * never applies to backed tables
       // because in the select form the backed table is instantly replaced with
@@ -48716,7 +48727,7 @@ static void sem_func_concat(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
-  return sem_func_concat_helper(ast, arg_count, false);
+  sem_func_concat_helper(ast, arg_count, false);
 }
 
 static void sem_func_concat_ws(ast_node *ast, uint32_t arg_count) {
@@ -48725,7 +48736,7 @@ static void sem_func_concat_ws(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
-  return sem_func_concat_helper(ast, arg_count, true);
+  sem_func_concat_helper(ast, arg_count, true);
 }
 
 // Coalesce requires type compatibility between all of its arguments.  The result
@@ -50294,7 +50305,7 @@ static void sem_func_randomblob(ast_node *ast, uint32_t arg_count) {
 }
 
 static void sem_func_zeroblob(ast_node *ast, uint32_t arg_count) {
-  return sem_func_randomblob(ast, arg_count);
+  sem_func_randomblob(ast, arg_count);
 }
 
 static void sem_func_sign(ast_node *ast, uint32_t arg_count) {
@@ -51430,7 +51441,7 @@ static void sem_func_printf(ast_node *ast, uint32_t arg_count) {
 }
 
 static void sem_func_format(ast_node *ast, uint32_t arg_count) {
-  return sem_func_printf(ast, arg_count);
+  sem_func_printf(ast, arg_count);
 }
 
 // Compute the semantic type of each argument, this is minimally necessary
@@ -58179,7 +58190,7 @@ static void sem_returning_clause(
 
   sem_join join = *table_ast->sem->jptr;
 
-  // change * and T.* to COLUMNS(T)
+  // change * and T.* to @COLUMNS(T)
   rewrite_star_and_table_star_as_columns_calc(select_expr_list, &join);
 
   // expand those (there may be some there in the source too)
@@ -63727,13 +63738,11 @@ static void sem_for_stmt(ast_node *ast) {
     return;
   }
 
-  Contract(is_ast_stmt_list(for_info->left));
-  sem_stmt_list(for_info->left);
-  if (is_error(for_info->left)) {
-    record_error(ast);
-    return;
-  }
-
+  // the loop body has to go first, anything potentially
+  // declared in the update statements is logically after
+  // the loop body.  For instance if there is a let
+  // statement in those statements in must not be visible
+  // in the loop.
   if (for_info->right) {
     loop_depth++;
 
@@ -63746,6 +63755,17 @@ static void sem_for_stmt(ast_node *ast) {
       return;
     }
   }
+
+  // this has to go second, it might declare stuff
+  // that the main body should not have access to.
+  // those declarations are ok to use after the loop
+  Contract(is_ast_stmt_list(for_info->left));
+  sem_stmt_list(for_info->left);
+  if (is_error(for_info->left)) {
+    record_error(ast);
+    return;
+  }
+
 
   record_ok(ast);
 }
@@ -76653,7 +76673,7 @@ yyreduce:
     break;
 
   case 356: /* opt_kind: '<' name '>'  */
-                 {(yyval.aval) = (yyvsp[-1].aval); }
+                 { (yyval.aval) = (yyvsp[-1].aval); }
     break;
 
   case 357: /* data_type_numeric: INT_ opt_kind  */
@@ -80675,6 +80695,8 @@ static void cql_usage() {
     "  any number of output files may be needed for a particular result type, two is common\n"
     "--defines\n"
     "  define symbols for use with @ifdef and @ifndef\n"
+    "--include_paths\n"
+    "  specify prefixes to use with the @include directive\n"
     "--nolines\n"
     "  suppress the #line directives for lines; useful if you need to debug the C code\n"
     "--global_proc name\n"
@@ -80777,7 +80799,7 @@ static ast_node *make_coldef_node(
 {
   // This is the equivalent of:
   //
-  // $col_def = new_ast_col_def(col_def_type_attrs, $misc_attrs);
+  // $$ = new_ast_col_def(col_def_type_attrs, $misc_attrs);
   //
   // (with optional comment node)
 
@@ -82585,6 +82607,46 @@ char *yytext;
 // the code flex generates from it.
 
 
+#ifndef _MSC_VER
+
+#else
+
+static char *realpath(const char *relpath, char *absPathBuffer) {
+    // Check if the file exists before resolving
+    if (_access(relpath, 0) != 0) {
+        return NULL;  // File does not exist
+    }
+
+    // Resolve absolute path
+    return _fullpath(absPathBuffer, relpath, _MAX_PATH);
+}
+
+static char *dirname(char *path) {
+    if (path == NULL || *path == '\0') {
+        return ".";  // Return current directory for empty paths
+    }
+
+    // Find last backslash or forward slash
+    char *lastSlash = strrchr(path, '\\');
+    if (!lastSlash) {
+        lastSlash = strrchr(path, '/');
+    }
+
+    if (lastSlash) {
+        if (lastSlash == path) {  // If the only slash is at the start (e.g., "/home")
+            *(lastSlash + 1) = '\0';
+        } else {
+            *lastSlash = '\0';  // Truncate path at last slash
+        }
+    } else {
+        return ".";  // No slash found, return current directory
+    }
+
+    return path;
+}
+
+#endif
+
 void yyerror(const char *s, ...);
 void line_directive(const char *);
 char *Strdup(const char *);
@@ -82601,11 +82663,13 @@ int fileno(FILE *);
 // the lexer has unused functions and implicit conversions, not easily removed
 
 #ifndef _MSC_VER
+
 #pragma clang diagnostic ignored "-Wunused-function"
 #pragma clang diagnostic ignored "-Wconversion"
+#pragma clang diagnostic ignored "-Wmisleading-indentation"
+
 #endif
 
-#pragma clang diagnostic ignored "-Wmisleading-indentation"
 
 cql_noexport CSTR get_last_doc_comment() {
   CSTR result = last_doc_comment;
@@ -82616,6 +82680,10 @@ cql_noexport CSTR get_last_doc_comment() {
 static bool cql_builtins_processing = false;
 static bool cql_delete_main_buffer = false;
 static YY_BUFFER_STATE cql_main_buffer;
+
+// this remembers the directory in which we found the most recent file
+// later paths are relative to this by default
+static char ambient_path[PATH_MAX];
 
 cql_noexport void cql_setup_for_builtins() {
   // stash a buffer for the main input, note that we might already have a buffer
@@ -82633,6 +82701,16 @@ cql_noexport void cql_setup_for_builtins() {
   // add the builtin declares before we process the real input
   yy_scan_string(cql_builtin_text());
   cql_builtins_processing = true;
+
+  // use the path part of the initial input file as the starting ambient path
+  if (!strcmp("<stdin>", current_file)) {
+     ambient_path[0] = '\0';
+  }
+  else {
+    strncpy(ambient_path, current_file, sizeof(ambient_path));
+    ambient_path[sizeof(ambient_path)-1] = 0;
+    dirname(ambient_path);
+  }
 }
 
 #define MAX_INCLUDES 10
@@ -82641,6 +82719,7 @@ typedef struct {
   YY_BUFFER_STATE buf;
   int32_t line_saved;
   char *filename_saved;
+  char *ambient_saved;
 } cql_include_state;
 
 static cql_include_state cql_includes[MAX_INCLUDES];
@@ -82649,6 +82728,7 @@ static int cql_include_index = 0;
 static symtab *processed_files;
 
 cql_noexport void cql_reset_open_includes() {
+  ambient_path[0] = '\0';
   cql_include_index = 0;
   memset(cql_includes, 0, sizeof(cql_includes));
   if (processed_files) {
@@ -82680,6 +82760,7 @@ static void cql_setup_for_include(CSTR str) {
   inc->buf = YY_CURRENT_BUFFER;
   inc->line_saved = yylineno;
   inc->filename_saved = current_file;
+  inc->ambient_saved = Strdup(ambient_path);
   cql_include_index++;
 
   CHARBUF_OPEN(name);
@@ -82690,15 +82771,25 @@ static void cql_setup_for_include(CSTR str) {
 
   yyin = NULL;
 
-  CSTR opened_name = name.ptr;
-
   // Call realpath to resolve the pathname
-  char *abspath = realpath(name.ptr, resolved_path);
+  bclear(&path);
+  if (ambient_path[0]) {
+    bprintf(&path, "%s/%s", ambient_path, name.ptr);
+  }
+  else {
+    bprintf(&path, "%s", name.ptr);
+  }
+
+  CSTR opened_name = path.ptr;
+
+  char *abspath = realpath(path.ptr, resolved_path);
   if (abspath) {
     if (cql_already_processed_file(abspath)) {
       yy_switch_to_buffer(yy_scan_string(""));
       goto done;
     }
+    strcpy(ambient_path, path.ptr);
+    dirname(ambient_path);
     yyin = fopen(abspath, "r");
   }
 
@@ -82713,6 +82804,8 @@ static void cql_setup_for_include(CSTR str) {
             goto done;
           }
 
+          strcpy(ambient_path, path.ptr);
+          dirname(ambient_path);
           yyin = fopen(path.ptr, "r");
           if (yyin) {
             opened_name = path.ptr;
@@ -82755,9 +82848,6 @@ static bool_t cql_already_processed_file(CSTR str) {
   Contract(processed_files);
   return !!symtab_find(processed_files, str);
 }
-
-/*
-*/
 
 
 #define INITIAL 0
@@ -84395,6 +84485,7 @@ case YY_STATE_EOF(at_inc):
                                      yy_switch_to_buffer(inc->buf);
                                      yylineno = inc->line_saved;
                                      current_file = inc->filename_saved;
+                                     strcpy(ambient_path, inc->ambient_saved);
                                      return END_INCLUDE;
                                    }
                                  }

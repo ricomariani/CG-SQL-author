@@ -13,6 +13,10 @@
 #include <math.h>
 #include <sqlite3.h>
 
+#ifdef CQLRT_DIAG
+#include "diags.h"
+#endif
+
 #ifndef __clang__
 #ifndef _Nonnull
     /* Hide Clang-only nullability specifiers if not Clang */
@@ -100,7 +104,7 @@ typedef struct cql_blob *cql_blob_ref;
 typedef struct cql_blob {
   cql_type base;
   const void *_Nonnull ptr;
-  cql_uint32 size;
+  cql_int32 size;
 } cql_blob;
 
 // Adds a reference count to the blob.
@@ -118,7 +122,7 @@ typedef struct cql_blob {
 // @param size the number of bytes of the data.
 // @return A blob object of the type defined by cql_blob_ref.
 // cql_blob_ref cql_blob_ref_new(const void *data, cql_uint32 size);
-cql_blob_ref _Nonnull cql_blob_ref_new(const void *_Nonnull data, cql_uint32 size);
+cql_blob_ref _Nonnull cql_blob_ref_new(const void *_Nonnull data, cql_int32 size);
 
 // Get the bytes of the blob object.  This is not null, even if the blob is zero
 // size and in general the memory allocated might be larger than the size of the blob.
@@ -362,6 +366,7 @@ cql_result_set_ref _Nonnull cql_result_set_create(
 // @param result_set The cql result set object.
 // @return The count that was previous stored on the result set.
 // cql_int32 cql_result_set_get_count(** result_set);
+// CQLABI
 #define cql_result_set_get_count(result_set) ((cql_result_set_ref)result_set)->count
 
 #ifdef CQL_RUN_TEST

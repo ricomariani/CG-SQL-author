@@ -15,7 +15,7 @@ cql_data_decl( int32_t gen_stmt_level );
 
 cql_noexport void gen_init(void);
 cql_noexport void gen_cleanup(void);
-cql_noexport void gen_printf(const char *_Nonnull format, ...) __attribute__ (( format( printf, 1, 2 ) ));
+cql_noexport void gen_printf(const char *_Nonnull format, ...) _printf_checking_(1, 2);
 cql_noexport void gen_set_output_buffer(struct charbuf *_Nonnull buffer);
 
 typedef void (*_Nonnull gen_func)(ast_node *_Nonnull ast);

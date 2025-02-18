@@ -207,10 +207,10 @@ cql_data_decl( rtdata *rt );
 cql_noexport void cql_cleanup_and_exit(int32_t code);
 
 // output to "stderr"
-cql_noexport void cql_error(const char *format, ...) __attribute__ (( format( printf, 1, 2 ) ));
+cql_noexport void cql_error(const char *format, ...) _printf_checking_(1, 2);
 
 // output to "stdout"
-cql_noexport void cql_output(const char *format, ...) __attribute__ (( format( printf, 1, 2 ) ));
+cql_noexport void cql_output(const char *format, ...) _printf_checking_(1, 2);
 
 // Creates a file in write mode. Aborts if there's any error.
 cql_export FILE *cql_open_file_for_write(CSTR file_name);

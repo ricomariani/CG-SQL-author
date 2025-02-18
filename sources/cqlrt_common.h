@@ -31,6 +31,12 @@
 #define CQL_EXTERN_C_END
 #endif // __cplusplus
 
+#ifdef _MSC_VER
+#define _printf_checking_(x,y)
+#else
+#define _printf_checking_(x,y) __attribute__ (( format( printf, x, y ) ))
+#endif
+
 #define CQL_C_ASSERT(e) void __CQL_C_ASSERT__(char x[(e)?1:-1]);
 
 #if LONG_MAX > 0x7fffffff
@@ -376,7 +382,7 @@ CQL_EXPORT void cql_bytebuf_append(
 CQL_EXPORT void cql_bprintf(
   cql_bytebuf *_Nonnull buffer,
   const char *_Nonnull format, ...)
-  __attribute__ (( format( printf, 2, 3 ) ));
+  _printf_checking_(2, 3);
 
 CQL_EXPORT void cql_bytebuf_append_null(cql_bytebuf *_Nonnull buffer);
 

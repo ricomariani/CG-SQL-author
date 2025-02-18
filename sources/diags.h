@@ -59,3 +59,10 @@
 #endif
 
 #endif
+
+#ifdef _MSC_VER
+#define _printf_checking_(x,y)
+#define _Noreturn
+#else
+#define _printf_checking_(x,y) __attribute__ (( format( printf, x, y ) ))
+#endif

@@ -22,7 +22,47 @@
 #include <charbuf.h>
 #include <encoders.h>
 #include <symtab.h>
+
+#ifndef _MSC_VER
 #include <libgen.h>
+
+#else
+
+static char *realpath(const char *relpath, char *absPathBuffer) {
+    // Check if the file exists before resolving
+    if (_access(relpath, 0) != 0) {
+        return NULL;  // File does not exist
+    }
+
+    // Resolve absolute path
+    return _fullpath(absPathBuffer, relpath, _MAX_PATH);
+}
+
+static char *dirname(char *path) {
+    if (path == NULL || *path == '\0') {
+        return ".";  // Return current directory for empty paths
+    }
+
+    // Find last backslash or forward slash
+    char *lastSlash = strrchr(path, '\\');
+    if (!lastSlash) {
+        lastSlash = strrchr(path, '/');
+    }
+
+    if (lastSlash) {
+        if (lastSlash == path) {  // If the only slash is at the start (e.g., "/home")
+            *(lastSlash + 1) = '\0';
+        } else {
+            *lastSlash = '\0';  // Truncate path at last slash
+        }
+    } else {
+        return ".";  // No slash found, return current directory
+    }
+
+    return path;
+}
+
+#endif
 
 void yyerror(const char *s, ...);
 void line_directive(const char *);
@@ -40,11 +80,13 @@ int fileno(FILE *);
 // the lexer has unused functions and implicit conversions, not easily removed
 
 #ifndef _MSC_VER
+
 #pragma clang diagnostic ignored "-Wunused-function"
 #pragma clang diagnostic ignored "-Wconversion"
+#pragma clang diagnostic ignored "-Wmisleading-indentation"
+
 #endif
 
-#pragma clang diagnostic ignored "-Wmisleading-indentation"
 
 cql_noexport CSTR get_last_doc_comment() {
   CSTR result = last_doc_comment;

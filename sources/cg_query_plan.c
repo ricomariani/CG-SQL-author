@@ -831,7 +831,7 @@ static void emit_print_query_plan_graph_proc(charbuf *output) {
     "  CALL printf(\"   \\\"plan\\\" : \\\"\");\n"
     "  LOOP FETCH C\n"
     "  BEGIN\n"
-    "    CALL printf(\"\%s%s\", IIF(C.level, \"\\\\n\", \"\"), C.graph_line);\n"
+    "    CALL printf(\"%s%s\", IIF(C.level, \"\\\\n\", \"\"), C.graph_line);\n"
     "  END;\n"
     "  CALL printf(\"\\\"\\n\");\n"
     "END;\n"

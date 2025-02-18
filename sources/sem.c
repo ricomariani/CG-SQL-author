@@ -7544,7 +7544,7 @@ static void sem_func_concat(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
-  return sem_func_concat_helper(ast, arg_count, false);
+  sem_func_concat_helper(ast, arg_count, false);
 }
 
 static void sem_func_concat_ws(ast_node *ast, uint32_t arg_count) {
@@ -7553,7 +7553,7 @@ static void sem_func_concat_ws(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
-  return sem_func_concat_helper(ast, arg_count, true);
+  sem_func_concat_helper(ast, arg_count, true);
 }
 
 // Coalesce requires type compatibility between all of its arguments.  The result
@@ -9122,7 +9122,7 @@ static void sem_func_randomblob(ast_node *ast, uint32_t arg_count) {
 }
 
 static void sem_func_zeroblob(ast_node *ast, uint32_t arg_count) {
-  return sem_func_randomblob(ast, arg_count);
+  sem_func_randomblob(ast, arg_count);
 }
 
 static void sem_func_sign(ast_node *ast, uint32_t arg_count) {
@@ -10258,7 +10258,7 @@ static void sem_func_printf(ast_node *ast, uint32_t arg_count) {
 }
 
 static void sem_func_format(ast_node *ast, uint32_t arg_count) {
-  return sem_func_printf(ast, arg_count);
+  sem_func_printf(ast, arg_count);
 }
 
 // Compute the semantic type of each argument, this is minimally necessary

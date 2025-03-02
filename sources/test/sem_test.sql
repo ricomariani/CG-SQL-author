@@ -11916,13 +11916,13 @@ select id, row_number() over bogus
   from foo;
 
 -- TEST: test invalid window definition
+-- + error: % name not found 'bogus'
 -- + {select_stmt}: err
 -- + {opt_select_window}: err
 -- + {window_clause}: err
 -- + {window_name_defn}: err
 -- + {window_defn}: err
 -- + {name bogus}: err
--- * error: % name not found 'bogus'
 -- +1 error:
 select id, row_number() over win
   from foo
@@ -11930,13 +11930,13 @@ select id, row_number() over win
     win as (order by bogus);
 
 -- TEST: test window name definition not used
+-- + error: % Window name definition is not used 'win'
 -- + {select_stmt}: err
 -- + {opt_select_window}: err
 -- + {window_clause}: err
 -- + {window_name_defn}: err
 -- + {name win}: err
 -- + {window_defn}
--- * error: % Window name definition is not used 'win'
 -- +1 error:
 select id
   from foo
@@ -12141,13 +12141,13 @@ select id, cume_dist() over () from foo;
 select id, ntile(7) over () from foo;
 
 -- TEST: test ntile() window function with a non integer param
+-- + error: % Argument must be an integer (between 1 and max integer) in function 'ntile'
 -- + {select_stmt}: err
 -- + {select_expr}: err
 -- + {window_func_inv}: err
 -- + {call}: err
 -- + {name ntile}
 -- + {longint 9898989889989}: longint notnull
--- * error: % Argument must be an integer (between 1 and max integer) in function 'ntile'
 -- +1 error:
 select id, ntile(9898989889989) over () from foo;
 
@@ -12177,13 +12177,13 @@ select id, ntile(0) over () from foo;
 select id, ntile(1, 2) over () from foo;
 
 -- TEST: test ntile() window function outside window context
+-- + error: % function may not appear in this context 'ntile'
 -- + {select_stmt}: err
 -- + {select_where}
 -- + {opt_where}: err
 -- + {call}: err
 -- + {name ntile}
 -- + {int 7}: integer notnull
--- * error: % function may not appear in this context 'ntile'
 -- +1 error:
 select id from foo where ntile(7);
 
@@ -12255,24 +12255,24 @@ select id, lag(info, 1) over () from with_sensitive;
 select id, lag(id * 3, 1, info) over () from with_sensitive;
 
 -- TEST: test lag() window function with negative integer param
+-- + error: % Argument must be an integer (between 0 and max integer) in function 'lag'
 -- + {select_stmt}: err
 -- + {select_expr}: err
 -- + {window_func_inv}: err
 -- + {call}: err
 -- + {name lag}
 -- + {arg_list}: err
--- * error: % Argument must be an integer (between 0 and max integer) in function 'lag'
 -- +1 error:
 select id, lag(id, -1) over () from foo;
 
 -- TEST: test lag() window function with invalid first param
+-- + error: % right operand cannot be a string in '|'
 -- + {select_stmt}: err
 -- + {select_expr}: err
 -- + {window_func_inv}: err
 -- + {call}: err
 -- + {name lag}
 -- + {arg_list}: err
--- * error: % right operand cannot be a string in '|'
 -- +1 error:
 select id, lag(id | " ") over () from foo;
 
@@ -12340,13 +12340,13 @@ select last_value(id) over () as last from with_kind;
 select nth_value(id, 5) over () as nth from with_kind;
 
 -- TEST: test first_value() window function outside window context
+-- + error: % function may not appear in this context 'first_value'
 -- + {select_stmt}: err
 -- + {select_where}
 -- + {opt_where}: err
 -- + {call}: err
 -- + {name first_value}
 -- + {int 7}: integer notnull
--- * error: % function may not appear in this context 'first_value'
 -- +1 error:
 select id from foo where first_value(7);
 
@@ -12373,13 +12373,13 @@ select id, last_value(id) over () as last from foo;
 select id, nth_value(id, 1) over () as nth from foo;
 
 -- TEST: test nth_value() window function outside window context
+-- + error: % function may not appear in this context 'nth_value'
 -- + {select_stmt}: err
 -- + {select_where}
 -- + {opt_where}: err
 -- + {call}: err
 -- + {name nth_value}
 -- + {int 7}: integer notnull
--- * error: % function may not appear in this context 'nth_value'
 -- +1 error:
 select id from foo where nth_value(7, 1);
 
@@ -13180,13 +13180,13 @@ begin
 end;
 
 -- TEST: test list of value for ok_scan_table attribution
+-- + error: % ok_table_scan attribute must be a name
 -- + {stmt_and_attr}: err
 -- + {misc_attrs}: err
 -- + {name cql}
 -- + {name ok_table_scan}
 -- + {name foo}: ok
 -- + {int 1}: err
--- * error: % ok_table_scan attribute must be a name
 -- +1 error:
 [[ok_table_scan=(foo, 1)]]
 proc ok_table_scan_value()

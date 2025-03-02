@@ -996,7 +996,7 @@ The statement ending at line XXXX
 
 SELECT 'foo' < 1;
 
-test/sem_test.sql:XXXX:1: error: in lt : CQL0009: incompatible types in expression '<'
+test/sem_test.sql:XXXX:1: error: in lt : CQL0009: required 'TEXT' not compatible with found 'INT' context '<'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -1019,7 +1019,7 @@ The statement ending at line XXXX
 
 SELECT 1 > 'foo';
 
-test/sem_test.sql:XXXX:1: error: in gt : CQL0012: incompatible types in expression '>'
+test/sem_test.sql:XXXX:1: error: in gt : CQL0009: required 'INT' not compatible with found 'TEXT' context '>'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -1063,7 +1063,7 @@ The statement ending at line XXXX
 
 SELECT 1 > 'foo' > 2;
 
-test/sem_test.sql:XXXX:1: error: in gt : CQL0012: incompatible types in expression '>'
+test/sem_test.sql:XXXX:1: error: in gt : CQL0009: required 'INT' not compatible with found 'TEXT' context '>'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -1216,7 +1216,7 @@ The statement ending at line XXXX
 
 SELECT 'x' IS 1.2;
 
-test/sem_test.sql:XXXX:1: error: in is : CQL0009: incompatible types in expression 'IS'
+test/sem_test.sql:XXXX:1: error: in is : CQL0009: required 'TEXT' not compatible with found 'REAL' context 'IS'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -2551,7 +2551,7 @@ The statement ending at line XXXX
 
 SELECT NOT 'x' = 1;
 
-test/sem_test.sql:XXXX:1: error: in eq : CQL0009: incompatible types in expression '='
+test/sem_test.sql:XXXX:1: error: in eq : CQL0009: required 'TEXT' not compatible with found 'INT' context '='
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -2643,7 +2643,7 @@ SELECT CASE
   WHEN 3 = 4 THEN 2
 END;
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0009: incompatible types in expression 'then'
+test/sem_test.sql:XXXX:1: error: in num : CQL0009: required 'TEXT' not compatible with found 'INT' context 'then'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -2679,7 +2679,7 @@ SELECT CASE
   WHEN 'x' THEN 'foo'
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'when'
+test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'BOOL' not compatible with found 'TEXT' context 'when'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -2848,7 +2848,7 @@ SELECT CASE 3
   WHEN 'x' THEN 1
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'when'
+test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'INT' not compatible with found 'TEXT' context 'when'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -2999,7 +2999,7 @@ SELECT CASE 8
   ELSE 'bar'
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'else'
+test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'INT' not compatible with found 'TEXT' context 'else'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -3103,7 +3103,7 @@ The statement ending at line XXXX
 
 SELECT 'x' BETWEEN 2 AND 3;
 
-test/sem_test.sql:XXXX:1: error: in between : CQL0009: incompatible types in expression 'BETWEEN'
+test/sem_test.sql:XXXX:1: error: in between : CQL0009: required 'TEXT' not compatible with found 'INT' context 'BETWEEN'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -3128,7 +3128,7 @@ The statement ending at line XXXX
 
 SELECT 'x' BETWEEN NULL AND 3;
 
-test/sem_test.sql:XXXX:1: error: in between : CQL0009: incompatible types in expression 'BETWEEN'
+test/sem_test.sql:XXXX:1: error: in between : CQL0009: required 'TEXT' not compatible with found 'INT' context 'BETWEEN'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -3176,7 +3176,7 @@ The statement ending at line XXXX
 
 SELECT NULL BETWEEN 1 AND 'x';
 
-test/sem_test.sql:XXXX:1: error: in between : CQL0012: incompatible types in expression 'BETWEEN/AND'
+test/sem_test.sql:XXXX:1: error: in between : CQL0009: required 'INT' not compatible with found 'TEXT' context 'BETWEEN/AND'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -3273,7 +3273,7 @@ The statement ending at line XXXX
 
 SELECT 'x' NOT BETWEEN 2 AND 3;
 
-test/sem_test.sql:XXXX:1: error: in not_between : CQL0009: incompatible types in expression 'NOT BETWEEN'
+test/sem_test.sql:XXXX:1: error: in not_between : CQL0009: required 'TEXT' not compatible with found 'INT' context 'NOT BETWEEN'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -3298,7 +3298,7 @@ The statement ending at line XXXX
 
 SELECT 'x' NOT BETWEEN NULL AND 3;
 
-test/sem_test.sql:XXXX:1: error: in not_between : CQL0009: incompatible types in expression 'NOT BETWEEN'
+test/sem_test.sql:XXXX:1: error: in not_between : CQL0009: required 'TEXT' not compatible with found 'INT' context 'NOT BETWEEN'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -3346,7 +3346,7 @@ The statement ending at line XXXX
 
 SELECT NULL NOT BETWEEN 1 AND 'x';
 
-test/sem_test.sql:XXXX:1: error: in not_between : CQL0012: incompatible types in expression 'NOT BETWEEN/AND'
+test/sem_test.sql:XXXX:1: error: in not_between : CQL0009: required 'INT' not compatible with found 'TEXT' context 'NOT BETWEEN/AND'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -4064,7 +4064,7 @@ The statement ending at line XXXX
 
 SELECT 1 IN ('x', 2);
 
-test/sem_test.sql:XXXX:1: error: in in_pred : CQL0012: incompatible types in expression 'IN'
+test/sem_test.sql:XXXX:1: error: in in_pred : CQL0009: required 'INT' not compatible with found 'TEXT' context 'IN'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -4116,7 +4116,7 @@ The statement ending at line XXXX
 
 SELECT 'x' IN ('x', 1);
 
-test/sem_test.sql:XXXX:1: error: in in_pred : CQL0009: incompatible types in expression 'IN'
+test/sem_test.sql:XXXX:1: error: in in_pred : CQL0009: required 'TEXT' not compatible with found 'INT' context 'IN'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -4192,7 +4192,7 @@ The statement ending at line XXXX
 
 SELECT NULL IN (1, 'x');
 
-test/sem_test.sql:XXXX:1: error: in in_pred : CQL0012: incompatible types in expression 'IN'
+test/sem_test.sql:XXXX:1: error: in in_pred : CQL0009: required 'INT' not compatible with found 'TEXT' context 'IN'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -4302,7 +4302,7 @@ The statement ending at line XXXX
 
 SELECT 1 NOT IN ('x', 2);
 
-test/sem_test.sql:XXXX:1: error: in not_in : CQL0012: incompatible types in expression 'NOT IN'
+test/sem_test.sql:XXXX:1: error: in not_in : CQL0009: required 'INT' not compatible with found 'TEXT' context 'NOT IN'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -4354,7 +4354,7 @@ The statement ending at line XXXX
 
 SELECT 'x' NOT IN ('x', 1);
 
-test/sem_test.sql:XXXX:1: error: in not_in : CQL0009: incompatible types in expression 'NOT IN'
+test/sem_test.sql:XXXX:1: error: in not_in : CQL0009: required 'TEXT' not compatible with found 'INT' context 'NOT IN'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -4430,7 +4430,7 @@ The statement ending at line XXXX
 
 SELECT NULL NOT IN (1, 'x');
 
-test/sem_test.sql:XXXX:1: error: in not_in : CQL0012: incompatible types in expression 'NOT IN'
+test/sem_test.sql:XXXX:1: error: in not_in : CQL0009: required 'INT' not compatible with found 'TEXT' context 'NOT IN'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -8130,7 +8130,7 @@ The statement ending at line XXXX
 INSERT INTO bar(id, name, rate)
   VALUES ('string is wrong', 'string', 1);
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'id'
+test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'INT' not compatible with found 'TEXT' context 'id'
 
   {insert_stmt}: err
   | {insert_normal}
@@ -8164,7 +8164,7 @@ The statement ending at line XXXX
 INSERT INTO bar(id, name, rate)
   VALUES (1, 2, 3);
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0009: incompatible types in expression 'name'
+test/sem_test.sql:XXXX:1: error: in num : CQL0009: required 'TEXT' not compatible with found 'INT' context 'name'
 
   {insert_stmt}: err
   | {insert_normal}
@@ -8346,7 +8346,7 @@ The statement ending at line XXXX
 
 SET X := 'x';
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'X'
+test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'INT' not compatible with found 'TEXT' context 'X'
 
   {assign}: err
   | {name X}: err
@@ -8500,7 +8500,7 @@ The statement ending at line XXXX
 
 FETCH fetch_cursor INTO a_string2, a_string, a_nullable;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0009: incompatible types in expression 'a_string2'
+test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'TEXT' not compatible with found 'INT' context 'a_string2'
 
   {fetch_stmt}: err
   | {name fetch_cursor}: fetch_cursor: _select_: { _anon: integer notnull, _anon: text notnull, _anon: null } variable dml_proc fetch_into
@@ -8515,7 +8515,7 @@ The statement ending at line XXXX
 
 FETCH fetch_cursor INTO an_int, an_int2, a_nullable;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'an_int2'
+test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'INT' not compatible with found 'TEXT' context 'an_int2'
 
   {fetch_stmt}: err
   | {name fetch_cursor}: fetch_cursor: _select_: { _anon: integer notnull, _anon: text notnull, _anon: null } variable dml_proc fetch_into
@@ -8927,7 +8927,7 @@ The statement ending at line XXXX
 UPDATE foo
   SET id = 'x';
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'id'
+test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'INT' not compatible with found 'TEXT' context 'id'
 test/sem_test.sql:XXXX:1: error: in str : additional info: in update table 'foo' the column with the problem is 'id'
 
   {update_stmt}: err
@@ -8970,7 +8970,7 @@ The statement ending at line XXXX
 UPDATE bar
   SET name = 2;
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0009: incompatible types in expression 'name'
+test/sem_test.sql:XXXX:1: error: in num : CQL0009: required 'TEXT' not compatible with found 'INT' context 'name'
 test/sem_test.sql:XXXX:1: error: in num : additional info: in update table 'bar' the column with the problem is 'name'
 
   {update_stmt}: err
@@ -9608,7 +9608,7 @@ The statement ending at line XXXX
 
 CALL proc2('bar', 'foo');
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'arg1'
+test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'INT' not compatible with found 'TEXT' context 'arg1'
 test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'proc2' argument #1 intended for parameter 'arg1' has the problem
 
   {call_stmt}: err
@@ -9622,7 +9622,7 @@ The statement ending at line XXXX
 
 CALL proc2(1, 2);
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0009: incompatible types in expression 'arg2'
+test/sem_test.sql:XXXX:1: error: in num : CQL0009: required 'TEXT' not compatible with found 'INT' context 'arg2'
 test/sem_test.sql:XXXX:1: error: in num : additional info: calling 'proc2' argument #2 intended for parameter 'arg2' has the problem
 
   {call_stmt}: err
@@ -13281,7 +13281,7 @@ The statement ending at line XXXX
 
 SELECT ifnull(X, 'hello');
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'ifnull'
+test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'INT' not compatible with found 'TEXT' context 'ifnull'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -15987,7 +15987,7 @@ SELECT id
   WHERE id IN (SELECT name
   FROM bar);
 
-test/sem_test.sql:XXXX:1: error: in in_pred : CQL0012: incompatible types in expression 'IN'
+test/sem_test.sql:XXXX:1: error: in in_pred : CQL0009: required 'INT' not compatible with found 'TEXT' context 'IN'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -16079,7 +16079,7 @@ SELECT id
   WHERE id NOT IN (SELECT name
   FROM bar);
 
-test/sem_test.sql:XXXX:1: error: in not_in : CQL0012: incompatible types in expression 'NOT IN'
+test/sem_test.sql:XXXX:1: error: in not_in : CQL0009: required 'INT' not compatible with found 'TEXT' context 'NOT IN'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -22254,7 +22254,7 @@ WITH
 SELECT *
   FROM x;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'z'
+test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'REAL' not compatible with found 'TEXT' context 'z'
 test/sem_test.sql:XXXX:1: error: in str : additional info: provided table column 'some_cte.z' is not compatible with target 'source.z'
 
   {with_select_stmt}: err
@@ -24133,7 +24133,7 @@ The statement ending at line XXXX
 
 SET real_result := simple_func('xx');
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'arg1'
+test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'INT' not compatible with found 'TEXT' context 'arg1'
 test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'simple_func' argument #1 intended for parameter 'arg1' has the problem
 
   {assign}: err
@@ -24291,7 +24291,7 @@ The statement ending at line XXXX
 
 SET a_string := obj_var;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0009: incompatible types in expression 'a_string'
+test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'TEXT' not compatible with found 'OBJECT' context 'a_string'
 
   {assign}: err
   | {name a_string}: err
@@ -24301,7 +24301,7 @@ The statement ending at line XXXX
 
 SET obj_var := a_string;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0010: incompatible types in expression 'obj_var'
+test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'OBJECT' not compatible with found 'TEXT' context 'obj_var'
 
   {assign}: err
   | {name obj_var}: err
@@ -24386,7 +24386,7 @@ The statement ending at line XXXX
 
 SET X := obj_var IN (obj_var, 1);
 
-test/sem_test.sql:XXXX:1: error: in in_pred : CQL0010: incompatible types in expression 'IN'
+test/sem_test.sql:XXXX:1: error: in in_pred : CQL0009: required 'OBJECT' not compatible with found 'INT' context 'IN'
 
   {assign}: err
   | {name X}: X: integer variable was_set
@@ -24401,7 +24401,7 @@ The statement ending at line XXXX
 
 SET X := obj_var IN ('foo', obj_var);
 
-test/sem_test.sql:XXXX:1: error: in in_pred : CQL0010: incompatible types in expression 'IN'
+test/sem_test.sql:XXXX:1: error: in in_pred : CQL0009: required 'OBJECT' not compatible with found 'TEXT' context 'IN'
 
   {assign}: err
   | {name X}: X: integer variable was_set
@@ -24416,7 +24416,7 @@ The statement ending at line XXXX
 
 SET X := 'foo' IN ('foo', obj_var);
 
-test/sem_test.sql:XXXX:1: error: in in_pred : CQL0009: incompatible types in expression 'IN'
+test/sem_test.sql:XXXX:1: error: in in_pred : CQL0009: required 'TEXT' not compatible with found 'OBJECT' context 'IN'
 
   {assign}: err
   | {name X}: X: integer variable was_set
@@ -24481,7 +24481,7 @@ The statement ending at line XXXX
 
 SET X := 2 BETWEEN obj_var AND 3;
 
-test/sem_test.sql:XXXX:1: error: in between : CQL0012: incompatible types in expression 'BETWEEN'
+test/sem_test.sql:XXXX:1: error: in between : CQL0009: required 'INT' not compatible with found 'OBJECT' context 'BETWEEN'
 
   {assign}: err
   | {name X}: X: integer variable was_set
@@ -24495,7 +24495,7 @@ The statement ending at line XXXX
 
 SET X := 2 BETWEEN 1 AND obj_var;
 
-test/sem_test.sql:XXXX:1: error: in between : CQL0012: incompatible types in expression 'BETWEEN'
+test/sem_test.sql:XXXX:1: error: in between : CQL0009: required 'INT' not compatible with found 'OBJECT' context 'BETWEEN'
 
   {assign}: err
   | {name X}: X: integer variable was_set
@@ -24523,7 +24523,7 @@ The statement ending at line XXXX
 
 SET X := 2 NOT BETWEEN obj_var AND 3;
 
-test/sem_test.sql:XXXX:1: error: in not_between : CQL0012: incompatible types in expression 'NOT BETWEEN'
+test/sem_test.sql:XXXX:1: error: in not_between : CQL0009: required 'INT' not compatible with found 'OBJECT' context 'NOT BETWEEN'
 
   {assign}: err
   | {name X}: X: integer variable was_set
@@ -24537,7 +24537,7 @@ The statement ending at line XXXX
 
 SET X := 2 NOT BETWEEN 1 AND obj_var;
 
-test/sem_test.sql:XXXX:1: error: in not_between : CQL0012: incompatible types in expression 'NOT BETWEEN'
+test/sem_test.sql:XXXX:1: error: in not_between : CQL0009: required 'INT' not compatible with found 'OBJECT' context 'NOT BETWEEN'
 
   {assign}: err
   | {name X}: X: integer variable was_set
@@ -25260,7 +25260,7 @@ The statement ending at line XXXX
 INSERT INTO bar(id)
   VALUES ('x');
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'id'
+test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'INT' not compatible with found 'TEXT' context 'id'
 
   {insert_stmt}: err
   | {insert_normal}
@@ -27196,7 +27196,7 @@ The statement ending at line XXXX
 
 SET a_string := blob_var;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0009: incompatible types in expression 'a_string'
+test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'TEXT' not compatible with found 'BLOB' context 'a_string'
 
   {assign}: err
   | {name a_string}: err
@@ -27206,7 +27206,7 @@ The statement ending at line XXXX
 
 SET blob_var := a_string;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0011: incompatible types in expression 'blob_var'
+test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'BLOB' not compatible with found 'TEXT' context 'blob_var'
 
   {assign}: err
   | {name blob_var}: err
@@ -27345,7 +27345,7 @@ The statement ending at line XXXX
 
 SET X := blob_var IN (blob_var, 1);
 
-test/sem_test.sql:XXXX:1: error: in in_pred : CQL0011: incompatible types in expression 'IN'
+test/sem_test.sql:XXXX:1: error: in in_pred : CQL0009: required 'BLOB' not compatible with found 'INT' context 'IN'
 
   {assign}: err
   | {name X}: X: integer variable was_set
@@ -27360,7 +27360,7 @@ The statement ending at line XXXX
 
 SET X := blob_var IN ('foo', blob_var);
 
-test/sem_test.sql:XXXX:1: error: in in_pred : CQL0011: incompatible types in expression 'IN'
+test/sem_test.sql:XXXX:1: error: in in_pred : CQL0009: required 'BLOB' not compatible with found 'TEXT' context 'IN'
 
   {assign}: err
   | {name X}: X: integer variable was_set
@@ -27375,7 +27375,7 @@ The statement ending at line XXXX
 
 SET X := 'foo' IN ('foo', blob_var);
 
-test/sem_test.sql:XXXX:1: error: in in_pred : CQL0009: incompatible types in expression 'IN'
+test/sem_test.sql:XXXX:1: error: in in_pred : CQL0009: required 'TEXT' not compatible with found 'BLOB' context 'IN'
 
   {assign}: err
   | {name X}: X: integer variable was_set
@@ -27440,7 +27440,7 @@ The statement ending at line XXXX
 
 SET X := 2 BETWEEN blob_var AND 3;
 
-test/sem_test.sql:XXXX:1: error: in between : CQL0012: incompatible types in expression 'BETWEEN'
+test/sem_test.sql:XXXX:1: error: in between : CQL0009: required 'INT' not compatible with found 'BLOB' context 'BETWEEN'
 
   {assign}: err
   | {name X}: X: integer variable was_set
@@ -27454,7 +27454,7 @@ The statement ending at line XXXX
 
 SET X := 2 BETWEEN 1 AND blob_var;
 
-test/sem_test.sql:XXXX:1: error: in between : CQL0012: incompatible types in expression 'BETWEEN'
+test/sem_test.sql:XXXX:1: error: in between : CQL0009: required 'INT' not compatible with found 'BLOB' context 'BETWEEN'
 
   {assign}: err
   | {name X}: X: integer variable was_set
@@ -27482,7 +27482,7 @@ The statement ending at line XXXX
 
 SET X := 2 NOT BETWEEN blob_var AND 3;
 
-test/sem_test.sql:XXXX:1: error: in not_between : CQL0012: incompatible types in expression 'NOT BETWEEN'
+test/sem_test.sql:XXXX:1: error: in not_between : CQL0009: required 'INT' not compatible with found 'BLOB' context 'NOT BETWEEN'
 
   {assign}: err
   | {name X}: X: integer variable was_set
@@ -27496,7 +27496,7 @@ The statement ending at line XXXX
 
 SET X := 2 NOT BETWEEN 1 AND blob_var;
 
-test/sem_test.sql:XXXX:1: error: in not_between : CQL0012: incompatible types in expression 'NOT BETWEEN'
+test/sem_test.sql:XXXX:1: error: in not_between : CQL0009: required 'INT' not compatible with found 'BLOB' context 'NOT BETWEEN'
 
   {assign}: err
   | {name X}: X: integer variable was_set
@@ -27517,7 +27517,7 @@ BEGIN
   FETCH C INTO o1, o2, o3;
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0010: incompatible types in expression 'o1'
+test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'OBJECT' not compatible with found 'INT' context 'o1'
 
   {create_proc_stmt}: err
   | {name bogus_object_read}: err
@@ -29189,7 +29189,7 @@ BEGIN
   FETCH C(A, B) FROM VALUES (1, 'x');
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'B'
+test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'INT' not compatible with found 'TEXT' context 'B'
 
   {create_proc_stmt}: err
   | {name fetch_values_bogus_type}: err
@@ -31144,7 +31144,7 @@ INSERT INTO bar(id, name, rate)
   SELECT name, id, rate
     FROM bar;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'id'
+test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'INT' not compatible with found 'TEXT' context 'id'
 
   {insert_stmt}: err
   | {insert_normal}
@@ -34332,7 +34332,7 @@ SELECT 1 AS A, 2 AS B
 UNION ALL
 SELECT 'x' AS A, 4 AS B;
 
-test/sem_test.sql:XXXX:1: error: in select_core : CQL0012: incompatible types in expression 'A'
+test/sem_test.sql:XXXX:1: error: in select_core : CQL0009: required 'INT' not compatible with found 'TEXT' context 'A'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -36655,7 +36655,7 @@ BEGIN
     FROM x);
 END;
 
-test/sem_test.sql:XXXX:1: error: in select_core : CQL0012: incompatible types in expression '_anon'
+test/sem_test.sql:XXXX:1: error: in select_core : CQL0009: required 'INT' not compatible with found 'TEXT' context '_anon'
 
   {create_proc_stmt}: err
   | {name with_delete_form_bogus_cte}: err
@@ -36896,7 +36896,7 @@ BEGIN
       FROM x);
 END;
 
-test/sem_test.sql:XXXX:1: error: in select_core : CQL0012: incompatible types in expression '_anon'
+test/sem_test.sql:XXXX:1: error: in select_core : CQL0009: required 'INT' not compatible with found 'TEXT' context '_anon'
 
   {create_proc_stmt}: err
   | {name with_update_form_bogus_cte}: err
@@ -40813,7 +40813,7 @@ BEGIN
     FROM tvf('x');
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'id'
+test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'INT' not compatible with found 'TEXT' context 'id'
 test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'tvf' argument #1 intended for parameter 'id' has the problem
 
   {create_proc_stmt}: err
@@ -41442,7 +41442,7 @@ The statement ending at line XXXX
 
 SELECT min(1, 'x');
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0012: incompatible types in expression 'min'
+test/sem_test.sql:XXXX:1: error: in call : CQL0009: required 'INT' not compatible with found 'TEXT' context 'min'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -47606,7 +47606,7 @@ The statement ending at line XXXX
 
 UPDATE CURSOR small_cursor(x) FROM VALUES ('x');
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'x'
+test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'INT' not compatible with found 'TEXT' context 'x'
 
   {update_cursor_stmt}: err
   | {name small_cursor}: small_cursor: _select_: { x: integer notnull } variable shape_storage value_cursor
@@ -48881,7 +48881,7 @@ The statement ending at line XXXX
 SELECT id, nullif(name, 1)
   FROM bar;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0009: incompatible types in expression 'NULLIF'
+test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'TEXT' not compatible with found 'INT' context 'NULLIF'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -50681,7 +50681,7 @@ VALUES
   ("ok"),
   (1);
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0009: incompatible types in expression 'VALUES clause'
+test/sem_test.sql:XXXX:1: error: in num : CQL0009: required 'TEXT' not compatible with found 'INT' context 'VALUES clause'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -50977,7 +50977,7 @@ The statement ending at line XXXX
 
 INSERT INTO foo(id) VALUES ("k") @DUMMY_SEED(1);
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'id'
+test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'INT' not compatible with found 'TEXT' context 'id'
 
   {insert_stmt}: err
   | {insert_normal}
@@ -55347,7 +55347,7 @@ SELECT CASE
   ELSE 3
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'iif'
+test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'BOOL' not compatible with found 'TEXT' context 'iif'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -55377,7 +55377,7 @@ SELECT CASE
   ELSE x'23'
 END;
 
-test/sem_test.sql:XXXX:1: error: in blb : CQL0012: incompatible types in expression 'iif'
+test/sem_test.sql:XXXX:1: error: in blb : CQL0009: required 'INT' not compatible with found 'BLOB' context 'iif'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -56620,7 +56620,7 @@ BEGIN
   INSERT INTO AB(a, b) VALUES (a1.b, a1.a);
 END;
 
-test/sem_test.sql:XXXX:1: error: in dot : CQL0012: incompatible types in expression 'a'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0009: required 'INT' not compatible with found 'TEXT' context 'a'
 
   {create_proc_stmt}: err
   | {name arg_bundle_5}: err
@@ -56772,7 +56772,7 @@ BEGIN
   INSERT INTO AB(b, a) VALUES (a1.a, a1.b);
 END;
 
-test/sem_test.sql:XXXX:1: error: in dot : CQL0009: incompatible types in expression 'b'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0009: required 'TEXT' not compatible with found 'INT' context 'b'
 
   {create_proc_stmt}: err
   | {name arg_bundle_8}: err
@@ -56824,7 +56824,7 @@ BEGIN
   INSERT INTO AB(b, a) VALUES (a2.c, a2.d);
 END;
 
-test/sem_test.sql:XXXX:1: error: in dot : CQL0009: incompatible types in expression 'b'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0009: required 'TEXT' not compatible with found 'INT' context 'b'
 
   {create_proc_stmt}: err
   | {name arg_bundle_9}: err
@@ -61035,7 +61035,7 @@ The statement ending at line XXXX
 
 SET price_d := ( SELECT "x" IF NOTHING OR NULL THEN price_e );
 
-test/sem_test.sql:XXXX:1: error: in select_if_nothing_or_null_expr : CQL0009: incompatible types in expression 'IF NOTHING OR NULL'
+test/sem_test.sql:XXXX:1: error: in select_if_nothing_or_null_expr : CQL0009: required 'TEXT' not compatible with found 'REAL' context 'IF NOTHING OR NULL'
 
   {assign}: err
   | {name price_d}: price_d: real<dollars> variable was_set
@@ -71972,7 +71972,7 @@ The statement ending at line XXXX
 
 SELECT 'x' NOT LIKE ('y' = 1);
 
-test/sem_test.sql:XXXX:1: error: in eq : CQL0009: incompatible types in expression '='
+test/sem_test.sql:XXXX:1: error: in eq : CQL0009: required 'TEXT' not compatible with found 'INT' context '='
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -72523,7 +72523,7 @@ The statement ending at line XXXX
 
 SELECT printf("%s %s", "hello", 42);
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0009: incompatible types in expression 'printf'
+test/sem_test.sql:XXXX:1: error: in num : CQL0009: required 'TEXT' not compatible with found 'INT' context 'printf'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -72553,7 +72553,7 @@ The statement ending at line XXXX
 
 SELECT format("%s %s", "hello", 42);
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0009: incompatible types in expression 'format'
+test/sem_test.sql:XXXX:1: error: in num : CQL0009: required 'TEXT' not compatible with found 'INT' context 'format'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -76204,7 +76204,7 @@ The statement ending at line XXXX
 SELECT @COLUMNS(two_col_v3 LIKE two_col_v1)
   FROM two_col_v3;
 
-test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0012: incompatible types in expression 'two_col_v3.r'
+test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0009: required 'REAL' not compatible with found 'TEXT' context 'two_col_v3.r'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -76264,7 +76264,7 @@ The statement ending at line XXXX
 SELECT @COLUMNS(LIKE two_col_v1)
   FROM two_col_v3;
 
-test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0012: incompatible types in expression 'two_col_v3.r'
+test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0009: required 'REAL' not compatible with found 'TEXT' context 'two_col_v3.r'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -81000,7 +81000,7 @@ BEGIN
   LET z := ( SELECT cql_blob_get_type(basic_table2, 1) );
 END;
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0012: incompatible types in expression 'cql_blob_get_type'
+test/sem_test.sql:XXXX:1: error: in num : CQL0009: required 'BLOB' not compatible with found 'INT' context 'cql_blob_get_type arg2'
 
   {create_proc_stmt}: err
   | {name blob_get_type_wrong_arg_type}: err
@@ -81343,7 +81343,7 @@ BEGIN
   LET z := ( SELECT cql_blob_get(1, basic_table.id) );
 END;
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0012: incompatible types in expression 'cql_blob_get'
+test/sem_test.sql:XXXX:1: error: in num : CQL0009: required 'INT' not compatible with found 'BLOB' context 'cql_blob_get arg1'
 
   {create_proc_stmt}: err
   | {name blob_get_column_wrong_arg_type}: err
@@ -81605,7 +81605,7 @@ BEGIN
   LET z := ( SELECT cql_blob_update(not_a_blob, 1, basic_table.id) );
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'cql_blob_update'
+test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'BLOB' not compatible with found 'INT' context 'cql_blob_update arg1'
 
   {create_proc_stmt}: err
   | {name blob_update_arg_one_error}: err
@@ -81960,7 +81960,7 @@ BEGIN
   LET z := ( SELECT cql_blob_update(b, "x", basic_table.id) );
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0009: incompatible types in expression 'cql_blob_update'
+test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'TEXT' not compatible with found 'INT' context 'cql_blob_update value'
 
   {create_proc_stmt}: err
   | {name blob_update_column_wrong_arg_type}: err
@@ -83147,7 +83147,7 @@ BEGIN
   LET z := ( SELECT cql_blob_create(basic_table, "x", basic_table.id) );
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0009: incompatible types in expression 'cql_blob_create'
+test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'TEXT' not compatible with found 'INT' context 'cql_blob_create'
 
   {create_proc_stmt}: err
   | {name blob_create_column_wrong_arg_type}: err
@@ -88609,7 +88609,7 @@ BEGIN
     SET name = ARGUMENTS.id, id = ARGUMENTS.name;
 END;
 
-test/sem_test.sql:XXXX:1: error: in dot : CQL0009: incompatible types in expression 'name'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0009: required 'TEXT' not compatible with found 'INT' context 'name'
 test/sem_test.sql:XXXX:1: error: in dot : additional info: in update table 'update_test_1' the column with the problem is 'name'
 
   {create_proc_stmt}: err

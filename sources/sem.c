@@ -2720,6 +2720,29 @@ static bool_t error_any_text_types(
   return false;
 }
 
+// Provide additional semantic information about the nature of the failure in
+// type compatible cases, this is used for most operators and for including
+// assignment.
+static void report_compat_error(
+  ast_node *ast,
+  sem_t sem_type_needed,
+  sem_t sem_type_found,
+  CSTR subject)
+{
+  CSTR needed = coretype_string(sem_type_needed);
+  CSTR found = coretype_string(sem_type_found);
+  
+  CSTR msg = dup_printf(
+    "CQL0009: required '%s' not compatible with found '%s' context '%s'",
+    needed,
+    found,
+    subject);
+  
+  report_error(ast, msg, NULL);
+  record_error(ast);
+}
+
+
 // This is the work horse of semantic analysis, it checks if sem_type_needed is
 // compatible with core_type_found and generates an error if it is not.
 static bool_t sem_verify_compat(
@@ -2743,24 +2766,21 @@ static bool_t sem_verify_compat(
   switch (core_type_needed) {
     case SEM_TYPE_TEXT:
       if (!is_string_compat(core_type_found)) {
-        report_error(ast, "CQL0009: incompatible types in expression", subject);
-        record_error(ast);
+        report_compat_error(ast, core_type_needed, core_type_found, subject);
         return false;
       }
       break;
 
     case SEM_TYPE_OBJECT:
       if (!is_object_compat(core_type_found)) {
-        report_error(ast, "CQL0010: incompatible types in expression", subject);
-        record_error(ast);
+        report_compat_error(ast, core_type_needed, core_type_found, subject);
         return false;
       }
       break;
 
     case SEM_TYPE_BLOB:
       if (!is_blob_compat(core_type_found)) {
-        report_error(ast, "CQL0011: incompatible types in expression", subject);
-        record_error(ast);
+        report_compat_error(ast, core_type_needed, core_type_found, subject);
         return false;
       }
       break;
@@ -2770,8 +2790,7 @@ static bool_t sem_verify_compat(
     case SEM_TYPE_LONG_INTEGER:
     case SEM_TYPE_REAL:
       if (!is_numeric_compat(core_type_found)) {
-        report_error(ast, "CQL0012: incompatible types in expression", subject);
-        record_error(ast);
+        report_compat_error(ast, core_type_needed, core_type_found, subject);
         return false;
       }
       break;
@@ -7896,7 +7915,7 @@ static void sem_special_func_cql_blob_get_type(ast_node *ast, uint32_t arg_count
     return;
   }
 
-  if (!sem_verify_compat(blob_expr, blob_expr->sem->sem_type, SEM_TYPE_BLOB, name)) {
+  if (!sem_verify_compat(blob_expr, SEM_TYPE_BLOB, blob_expr->sem->sem_type, "cql_blob_get_type arg2")) {
     record_error(ast);
     return;
   }
@@ -8063,10 +8082,13 @@ static void sem_special_func_cql_blob_update(ast_node *ast, uint32_t arg_count, 
     return;
   }
 
-  if (!sem_verify_compat(blob_expr, blob_expr->sem->sem_type, SEM_TYPE_BLOB, "cql_blob_update")) {
+  if (!sem_verify_compat(blob_expr, SEM_TYPE_BLOB, blob_expr->sem->sem_type, "cql_blob_update arg1")) {
     record_error(ast);
     return;
   }
+
+  // we're going to check the arguments again but we want to give a better error message if the table is not found
+  // we'll give a different error if the table names are not consistent
 
   ast_node *dot = third_arg(arg_list);
 
@@ -8138,7 +8160,7 @@ static void sem_special_func_cql_blob_update(ast_node *ast, uint32_t arg_count, 
       return;
     }
 
-    if (!sem_verify_compat(val_expr, val_expr->sem->sem_type, sem_type, "cql_blob_update")) {
+    if (!sem_verify_compat(val_expr, val_expr->sem->sem_type, sem_type, "cql_blob_update value")) {
       record_error(ast);
       return;
     }
@@ -8180,7 +8202,7 @@ static void sem_special_func_cql_blob_get(ast_node *ast, uint32_t arg_count, boo
     return;
   }
 
-  if (!sem_verify_compat(blob_expr, blob_expr->sem->sem_type, SEM_TYPE_BLOB, "cql_blob_get")) {
+  if (!sem_verify_compat(blob_expr, blob_expr->sem->sem_type, SEM_TYPE_BLOB, "cql_blob_get arg1")) {
     record_error(ast);
     return;
   }

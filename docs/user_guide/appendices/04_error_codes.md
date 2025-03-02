@@ -58,39 +58,29 @@ comparison is all you can do.
 
 -----
 
-### CQL0009: incompatible types in expression 'subject'
+### CQL0009: required 'needed' not compatible with found 'actual' context 'subject'
 
-The expression type indicated by subject required a TEXT as the next item and
-found something else. This could be a binary operator, part of a CASE
-expression, the parts of an IN expression or any other place where several
-expressions might need to be compatible with each other.
-
------
-
-### CQL0010: incompatible types in expression 'subject'
-
-The expression type indicated by subject required an OBJECT as the next item and
-found something else. This could be a binary operator, part of a CASE
-expression, the parts of an IN expression or any other place where several
-expressions might need to be compatible with each other.
+The indicated subject required the type 'needed' and instead found type
+'actual'.  For instance in this expression `1 == 'foo'` the left operand is of
+type integer and so the right operator must be compatible with that.  Instead
+there is a string, so needed would be 'INT' and found would be 'TEXT'.  Now
+actually any numeric type would do.  So the needed type in the error is the type
+that would be an exact match.  Usually it's the type of one of the operands.
+The subject could be an operator, or it could be a field name, or any other kind
+of situation where compatability has to be checked.
 
 -----
 
-### CQL0011: incompatible types in expression 'subject'
+### CQL0010 available for reuse
 
-The expression type indicated by subject required a BLOB as the next item and
-found something else. This could be a binary operator, part of a CASE
-expression, the parts of an IN expression or any other place where several
-expressions might need to be compatible with each other.
 
 -----
 
-### CQL0012: incompatible types in expression 'subject'
+### CQL0011 available for reuse
 
-The expression type indicated by subject required a numeric as the next item and
-found something else. This could be a binary operator, part of a CASE
-expression, the parts of an IN expression or any other place where several
-expressions might need to be compatible with each other.
+-----
+
+### CQL0012 available for reuse
 
 -----
 

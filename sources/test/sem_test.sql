@@ -2075,20 +2075,20 @@ loop fetch my_cursor into X, Y begin
 end;
 
 -- TEST: try to loop over a scalar
+-- + error: % not a cursor 'X'
 -- + {loop_stmt}: err
 -- + {fetch_stmt}: err
 -- + {name X}: err
--- * error: % not a cursor 'X'
 -- +1 error:
 loop fetch X into y begin
   leave;
 end;
 
 -- TEST: try to loop over something that isn't present
+-- + error: % name not found 'not_a_variable'
 -- + {loop_stmt}: err
 -- + {fetch_stmt}: err
 -- + {name not_a_variable}: err
--- * error: % name not found 'not_a_variable'
 -- +1 error:
 loop fetch not_a_variable into x
 begin
@@ -2257,10 +2257,10 @@ delete from bogus_table;
 delete from MyView;
 
 -- TEST: delete with bogus expression
+-- + error: % name not found 'missing_column'
 -- + {delete_stmt}: err
 -- + {name foo}: foo: { id: integer notnull primary_key autoinc }
 -- + {name missing_column}: err
--- * error: % name not found 'missing_column'
 -- +1 error:
 delete from foo where missing_column = 1;
 
@@ -2338,10 +2338,10 @@ insert into bogus_table values (1);
 insert into MyView values (1);
 
 -- TEST: insert with errors -- note that id is a field name of bar but it must not be found
+-- + error: % name not found 'id'
 -- + {insert_stmt}: err
 -- + {name bar}: bar: { id: integer notnull, name: text, rate: longint }
 -- + {name id}: err
--- * error: % name not found 'id'
 -- +1 error:
 insert into bar values (id, 'bazzle', 3);
 
@@ -2620,10 +2620,10 @@ update myView set id = 1;
 update foo set id = 1 where not 'x';
 
 -- TEST: update with bogus limit
+-- + error: % expected numeric expression 'LIMIT'
 -- + {update_stmt}: err
 -- + {opt_limit}: err
 -- + {strlit 'x'}: err
--- * error: % expected numeric expression 'LIMIT'
 -- +1 error:
 update foo set id = 1 limit 'x';
 
@@ -2683,10 +2683,10 @@ update bar set name = 2;
 update bar set id = null;
 
 -- TEST: try to use a variable in an update
+-- + error: % name not found 'X'
 -- + {update_stmt}: err
 -- + {update_entry}: err
 -- + {name X}: err
--- * error: % name not found 'X'
 -- +1 error:
 update bar set X = 1;
 
@@ -3076,10 +3076,10 @@ select count(distinct id) c from foo;
 select count(distinct id) filter (where id = 0) as c from foo;
 
 -- TEST: try count distinct function with star
+-- + error: % DISTINCT may only be used with one explicit argument in an aggregate function 'count'
 -- + {select_stmt}: err
 -- + {call}: err
 -- + {name count}
--- * error: % DISTINCT may only be used with one explicit argument in an aggregate function 'count'
 -- +1 error:
 select count(distinct *) from foo;
 
@@ -3102,10 +3102,10 @@ select total(id) t from foo;
 select total(id, rate) from bar;
 
 -- TEST: try sum functions with star -- bogus
+-- + error: % argument can only be used in count(*) '*'
 -- + {select_stmt}: err
 -- + {name sum}
 -- + {star}: err
--- * error: % argument can only be used in count(*) '*'
 -- +1 error:
 select sum(*) from foo;
 
@@ -3608,10 +3608,10 @@ select * from foo where not exists (select not 'x' from foo);
 set X := exists(select * from foo);
 
 -- TEST: try to use not exists in a bogus place
+-- + error: % function may not appear in this context 'exists'
 -- + {assign}: err
 -- + {not}: err
 -- + {exists_expr}: err
--- * error: % function may not appear in this context 'exists'
 -- +1 error:
 set X := not exists(select * from foo);
 
@@ -6591,10 +6591,10 @@ select id from hides_id_not_name;
 select name from hides_id_not_name;
 
 -- TEST: duplicate procedure annotation
+-- + error: % a procedure can appear in only one annotation 'creator'
 -- + {create_table_stmt}: err
 -- + {col_def}: err
 -- + {create_attr}: err
--- * error: % a procedure can appear in only one annotation 'creator'
 -- +1 error:
 create table migrate_test(
   id int!,
@@ -8236,26 +8236,26 @@ select SqlUserFunc(distinct id) from foo;
 select SqlUserFunc(distinct id) filter (where 1) from foo;
 
 -- TEST: now try to use the select user function loose
+-- + error: % User function may only appear in the context of a SQL statement 'SqlUserFunc'
 -- + {assign}: err
 -- + {name my_real}: my_real: real variable
 -- + {call}: err
--- * error: % User function may only appear in the context of a SQL statement 'SqlUserFunc'
 -- +1 error:
 set my_real := SqlUserFunc(1);
 
 -- TEST: now try to use the select user function loose with distinct
+-- + error: % User function may only appear in the context of a SQL statement 'SqlUserFunc'
 -- + {assign}: err
 -- + {name my_real}: my_real: real variable
 -- + {call}: err
--- * error: % User function may only appear in the context of a SQL statement 'SqlUserFunc'
 -- +1 error:
 set my_real := SqlUserFunc(distinct 1);
 
 -- TEST: now try to use the select user function loose with filter clause
+-- + error: % User function may only appear in the context of a SQL statement 'SqlUserFunc'
 -- + {assign}: err
 -- + {name my_real}: my_real: real variable
 -- + {call}: err
--- * error: % User function may only appear in the context of a SQL statement 'SqlUserFunc'
 -- +1 error:
 set my_real := SqlUserFunc(1) filter (where 0);
 
@@ -8901,10 +8901,10 @@ begin
 end;
 
 -- TEST: specify a bogus executed statement
+-- + error: % name not found 'old.id'
 -- + {create_trigger_stmt}: err
 -- + {stmt_list}: err
 -- + {select_stmt}: err
--- * error: % name not found 'old.id'
 -- +1 error:
 create trigger trigger4d
   before insert on bar
@@ -11298,10 +11298,10 @@ begin
 end;
 
 -- TEST: substr error -- arg1 is not a string
+-- + error: % argument 1 'integer' is an invalid type; valid types are: 'text' in 'substr'
 -- + {create_proc_stmt}: err
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' in 'substr'
 -- +1 error:
 proc substr_test_notstring()
 begin
@@ -11309,10 +11309,10 @@ begin
 end;
 
 -- TEST: substr error -- arg2 is not a number
+-- + error: % argument 2 'text' is an invalid type; valid types are: 'bool' 'integer' 'long' 'real' in 'substr'
 -- + {create_proc_stmt}: err
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % argument 2 'text' is an invalid type; valid types are: 'bool' 'integer' 'long' 'real' in 'substr'
 -- +1 error:
 proc substr_test_arg2string()
 begin
@@ -11320,10 +11320,10 @@ begin
 end;
 
 -- TEST: substr error -- arg3 is not a number
+-- + error: % argument 3 'text' is an invalid type; valid types are: 'bool' 'integer' 'long' 'real' in 'substr'
 -- + {create_proc_stmt}: err
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % argument 3 'text' is an invalid type; valid types are: 'bool' 'integer' 'long' 'real' in 'substr'
 -- +1 error:
 proc substr_test_arg3string()
 begin
@@ -11331,10 +11331,10 @@ begin
 end;
 
 -- TEST: substr error -- too few arguments
+-- + error: % too few arguments in function 'substr'
 -- + {create_proc_stmt}: err
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % too few arguments in function 'substr'
 -- +1 error:
 proc substr_test_toofew()
 begin
@@ -11342,10 +11342,10 @@ begin
 end;
 
 -- TEST: substr error -- too many arguments
+-- + error: % too many arguments in function 'substr'
 -- + {create_proc_stmt}: err
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % too many arguments in function 'substr'
 -- +1 error:
 proc substr_test_toomany()
 begin
@@ -11750,10 +11750,10 @@ explain query plan select * from foo inner join bar where foo.id = 1;
 explain query plan update bar set id = 1 where name = 'Stella';
 
 -- TEST: explain query plan with incorrect select stmt
+-- + error: % name not found 'bogus'
 -- + {explain_stmt}: err
 -- + {int 2}
 -- + {select_stmt}: err
--- * error: % name not found 'bogus'
 -- +1 error:
 explain query plan select bogus;
 
@@ -11854,10 +11854,10 @@ end;
 select id, row_number() over () as row_num from foo;
 
 -- TEST: window function invocation like regular function
+-- + error: % function may not appear in this context 'row_number'
 -- + {select_stmt}: err
 -- + {select_expr}: err
 -- + {call}: err
--- * error: % function may not appear in this context 'row_number'
 -- +1 error:
 select id, row_number() as row_num from foo;
 
@@ -12819,18 +12819,18 @@ declare select function nullif(value INT, defaultValue int!) int;
 select upper(name) from with_sensitive;
 
 -- TEST: test upper with incompatible param type
+-- + error: % argument 1 'integer' is an invalid type; valid types are: 'text' in 'upper'
 -- + {select_stmt}: err
 -- + {call}: err
 -- + {name upper}
--- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' in 'upper'
 -- +1 error:
 select upper(id) from bar;
 
 -- TEST: test upper with incompatible param count
+-- + error: % too many arguments in function 'upper'
 -- + {select_stmt}: err
 -- + {call}: err
 -- + {name upper}
--- * error: % too many arguments in function 'upper'
 -- +1 error:
 select upper(name, 1) from bar;
 
@@ -12891,10 +12891,10 @@ set price_d := (select abs(price_d));
 select abs() from bar;
 
 -- TEST: test abs with non numeric param
+-- + error: % argument 1 'text' is an invalid type; valid types are: 'integer' 'long' 'real' in 'abs'
 -- + {select_stmt}: err
 -- + {call}: err
 -- + {name abs}
--- * error: % argument 1 'text' is an invalid type; valid types are: 'integer' 'long' 'real' in 'abs'
 -- +1 error:
 select abs('Horty');
 
@@ -12933,10 +12933,10 @@ select instr(name, 'a') as x from with_sensitive;
 select instr('a', 'a');
 
 -- TEST: test instr with all param not null
+-- + error: % argument 1 'integer' is an invalid type; valid types are: 'text' in 'instr'
 -- + {select_stmt}: err
 -- + {call}: err
 -- + {name instr}
--- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' in 'instr'
 -- +1 error:
 select instr(1, 'a');
 
@@ -13227,10 +13227,10 @@ end;
 select * from foo;
 
 -- TEST: no_scan_table attribution is not on create table node
+-- + error: % no_table_scan attribute may only be added to a create table statement
 -- + {stmt_and_attr}: err
 -- + {misc_attrs}: err
 -- + {select_stmt}: err
--- * error: % no_table_scan attribute may only be added to a create table statement
 -- +1 error:
 [[no_table_scan]]
 select * from foo;
@@ -13277,10 +13277,10 @@ values (1), (5);
 values (1), (_sens);
 
 -- TEST: number of column values not identical in values clause
+-- + error: % number of columns values for each row should be identical in VALUES clause
 -- + {select_stmt}: err
 -- + {values}: err
 -- + {dbl 4.5}: err
--- * error: % number of columns values for each row should be identical in VALUES clause
 -- +1 error:
 values (1), (3, 4.5);
 
@@ -13365,10 +13365,10 @@ insert into foo values (1) union all select 2 column1;
 insert into foo (id) values (1), (2) @dummy_seed(1);
 
 -- TEST: number of column in second row is not correct in values clause
+-- + error: % number of columns values for each row should be identical in VALUES clause
 -- + {select_stmt}: err
 -- + {values}: err
 -- + {int 10}: err
--- * error: % number of columns values for each row should be identical in VALUES clause
 -- +1 error:
 values (1, 2), (10);
 
@@ -13966,10 +13966,10 @@ begin
 end;
 
 -- TEST: call cql_cursor_format in select context
+-- + error: % user function may not appear in the context of a SQL statement 'cql_cursor_format'
 -- + {create_proc_stmt}: err
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % user function may not appear in the context of a SQL statement 'cql_cursor_format'
 -- +1 error:
 proc select_cql_cursor_format()
 begin
@@ -14200,18 +14200,18 @@ set an_long := cql_get_blob_size(blob_var);
 set an_long := cql_get_blob_size(blob_var, 0);
 
 -- TEST: test cql_get_blob_size with invalid argument type
+-- + error: % argument 1 'integer' is an invalid type; valid types are: 'blob' in 'cql_get_blob_size'
 -- + {assign}: err
 -- + {call}: err
 -- + {name cql_get_blob_size}
--- * error: % argument 1 'integer' is an invalid type; valid types are: 'blob' in 'cql_get_blob_size'
 -- +1 error:
 set an_long := cql_get_blob_size(an_int);
 
 -- TEST: test cql_get_blob_size used in SQL context
+-- + error: % function may not appear in this context 'cql_get_blob_size'
 -- + {assign}: err
 -- + {call}: err
 -- + {name cql_get_blob_size}
--- * error: % function may not appear in this context 'cql_get_blob_size'
 -- +1 error:
 set an_long := (select cql_get_blob_size(an_int));
 
@@ -14316,10 +14316,10 @@ create table with_check
 );
 
 -- TEST: simple check expression -> bogus identifier
+-- + error: % name not found 'hip'
 -- + {create_table_stmt}: err
 -- + {col_attrs_check}: err
 -- + {le}: err
--- * error: % name not found 'hip'
 -- +1 error:
 create table with_check_bogus_column
 (
@@ -14527,10 +14527,10 @@ begin
 end;
 
 -- TEST: may not use a return statement inside of a savepoint block
+-- + error: % use COMMIT RETURN or ROLLBACK RETURN in within a proc savepoint block
 -- + {create_proc_stmt}: err
 -- + {proc_savepoint_stmt}: err
 -- + {return_stmt}: err
--- * error: % use COMMIT RETURN or ROLLBACK RETURN in within a proc savepoint block
 -- +1 error:
 proc regular_return_invalid()
 begin
@@ -14633,10 +14633,10 @@ declare rt real_things;
 set rt := real_things.pen;
 
 -- TEST: not ok to assign integer_things.pen because it's the wrong kind
+-- + error: % expressions of different kinds can't be mixed: 'real_things' vs. 'integer_things'
 -- + {assign}: err
 -- + {name rt}: rt: real<real_things> notnull variable
 -- + {int 1}: integer<integer_things> notnull
--- * error: % expressions of different kinds can't be mixed: 'real_things' vs. 'integer_things'
 -- +1 error:
 set rt := integer_things.pen;
 
@@ -15554,10 +15554,10 @@ set x1 := y1;
 set x1 := y1;
 
 -- TEST: try to add and x and a y
+-- + error: % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 -- + {add}: err
 -- + {name x1}: x1: integer<x_coord> variable
 -- + {name y1}: err
--- * error: % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 -- +1 error:
 set x1 := x1 + y1;
 
@@ -16357,30 +16357,30 @@ switch not 'x'
 end;
 
 -- TEST: switch statement with bogus switch expression
+-- + error: % case expression must be a not-null integral type
 -- + {switch_stmt}: err
 -- + {int 0}
 -- + {switch_body}
--- * error: % case expression must be a not-null integral type
 -- +1 error:
 switch 1.5
   when 1 then nothing
 end;
 
 -- TEST: switch statement with when expression of the wrong type
+-- + error: % type of a WHEN expression is bigger than the type of the SWITCH expression
 -- + {switch_stmt}: err
 -- + {int 0}
 -- + {switch_body}
--- * error: % type of a WHEN expression is bigger than the type of the SWITCH expression
 -- +1 error:
 switch z
   when 1L then nothing
 end;
 
 -- TEST: switch statement with not constant when expression
+-- + error: % WHEN expression cannot be evaluated to a constant
 -- + {switch_stmt}: err
 -- + {int 0}
 -- + {switch_body}
--- * error: % WHEN expression cannot be evaluated to a constant
 -- +1 error:
 switch z
   when 1+x then nothing
@@ -16456,10 +16456,10 @@ switch z
 end;
 
 -- TEST: switch statement with nullable switch expr
+-- + error: % case expression must be a not-null integral type
 -- + {switch_stmt}: err
 -- + {int 0}
 -- + {switch_body}
--- * error: % case expression must be a not-null integral type
 -- +1 error:
 switch x
   when 1 then nothing
@@ -18878,10 +18878,10 @@ begin
 end;
 
 -- TEST: try_is_proc_body catches parameter initialization errors in the TRY.
+-- + error: % nonnull reference OUT parameter possibly not always initialized 'a'
 -- + {create_proc_stmt}: err
 -- + {stmt_and_attr}: err
 -- + {trycatch_stmt}: err
--- * error: % nonnull reference OUT parameter possibly not always initialized 'a'
 -- +1 error:
 proc try_blocks_can_fail_to_verify_initialization(out a text not null, out rc int!)
 begin
@@ -18898,10 +18898,10 @@ begin
 end;
 
 -- TEST: try_is_proc_body may only appear once.
+-- + error: % [[try_is_proc_body]] cannot be used more than once per procedure
 -- + {create_proc_stmt}: err
 -- + {stmt_and_attr}: err
 -- + {trycatch_stmt}: err
--- * error: % [[try_is_proc_body]] cannot be used more than once per procedure
 -- +1 error:
 proc try_is_proc_body_may_only_appear_once()
 begin
@@ -18916,10 +18916,10 @@ begin
 end;
 
 -- TEST: try_is_proc_body accepts no values.
+-- + error: % [[try_is_proc_body]] accepts no values
 -- + {create_proc_stmt}: err
 -- + {stmt_and_attr}: err
 -- + {trycatch_stmt}: err
--- * error: % [[try_is_proc_body]] accepts no values
 -- +1 error:
 proc try_is_proc_body_accepts_no_values()
 begin
@@ -19613,10 +19613,10 @@ select printf("%-!8s %!-16s", "hello", "world");
 select printf("%%s%%%-#123.0194llX%%%.241o.%!.32s% -0,14.234llds%#-!1.000E", 0x0, 00, "str", 0, 0.0);
 
 -- TEST: substr uses zero based indices
+-- + error: % substr uses 1 based indices, the 2nd argument of substr may not be zero
 -- + {select_stmt}: err
 -- + {call}: err
 -- + {int 0}: err
--- * error: % substr uses 1 based indices, the 2nd argument of substr may not be zero
 -- +1 error:
 select substr("123", 0, 2);
 
@@ -22413,10 +22413,10 @@ create table self_ref_table(
 declare proc broken_thing(LIKE does_not_exist arguments);
 
 -- TEST: attempting to use a proc with errors for the arg list has to fail
+-- + error: % name not found (proc had errors, cannot be used) 'broken_thing'
 -- + {declare_proc_stmt}: err
 -- + {typed_name}: err
 -- + {like}: err
--- * error: % name not found (proc had errors, cannot be used) 'broken_thing'
 -- +1 error:
 declare proc uses_broken_thing() (LIKE broken_thing arguments);
 
@@ -23086,10 +23086,10 @@ begin
 end;
 
 -- TEST: update from_shape sugar error handling, FROM invalid
+-- + error: % name not found 'cursor_not_exist'
 -- + {update_stmt}: err
 -- + {insert_list}: err
 -- + {name cursor_not_exist}: err
--- * error: % name not found 'cursor_not_exist'
 -- +1 error:
 proc test_update_from_shape_errors1(like update_test_1)
 begin
@@ -23144,19 +23144,19 @@ declare function an_alias_func(x int!) int!;
 declare proc an_alias_proc(x int!);
 
 -- TEST: cql:alias_of attribution on invalid statement
+-- + error: % alias_of attribute may only be added to a declare function or declare proc statement
 -- + {stmt_and_attr}: err
 -- + {misc_attrs}: err
 -- + {declare_select_func_stmt}: err
--- * error: % alias_of attribute may only be added to a declare function or declare proc statement
 -- +1 error:
 [[alias_of=barfoo]]
 declare select function foobaz(x int!) int!;
 
 -- TEST: cql:alias_of attribution invalid value
+-- + error: % alias_of attribute must be a non-empty string argument
 -- + {stmt_and_attr}: err
 -- + {misc_attrs}: err
 -- + {declare_func_stmt}: err
--- * error: % alias_of attribute must be a non-empty string argument
 -- +1 error:
 [[alias_of]]
 declare function an_alias_func_bad(x int!) int!;

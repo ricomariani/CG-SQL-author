@@ -1443,8 +1443,8 @@ create table baz_expr_uk (
 
 -- TEST: unique key expression is bogus
 -- + CONSTRAINT ak1 UNIQUE (random())
+-- + error: % function may not appear in this context 'random'
 -- + {create_table_stmt}: err
--- * error: % function may not appear in this context 'random'
 -- +1 error:
 create table baz_expr_uk_bogus (
   id integer PRIMARY KEY AUTOINCREMENT not null,
@@ -1463,8 +1463,8 @@ create table baz_expr_pk (
 
 -- TEST: primary key expression is bogus
 -- + CONSTRAINT pk1 PRIMARY KEY (random())
+-- + error: % function may not appear in this context 'random'
 -- + {create_table_stmt}: err
--- * error: % function may not appear in this context 'random'
 -- +1 error:
 create table baz_expr_uk_bogus (
   id integer,
@@ -1832,8 +1832,8 @@ set bool_x := const(null is false);
 
 -- TEST: eval error bubbles up
 -- + SET bool_x := CONST(1 / 0 IS FALSE);
+-- + error: % evaluation of constant failed
 -- + {assign}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 set bool_x := const(1/0 is false);
 
@@ -4672,15 +4672,15 @@ select const(~1.3);
 
 -- TEST: error should flow through
 -- + SELECT CONST(~(1 / 0));
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(~(1/0));
 
 -- TEST: error should flow through
 -- + SELECT CONST(-(1 / 0));
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(-(1/0));
 
@@ -8777,8 +8777,8 @@ end;
 -- + CREATE TRIGGER trigger1a
 -- +   BEFORE DELETE ON bar
 -- +   WHEN new.id = 3
+-- + error: % name not found 'new.id'
 -- + {create_trigger_stmt}: err
--- * error: % name not found 'new.id'
 -- +1 error:
 create trigger trigger1a
   before delete on bar
@@ -8806,8 +8806,8 @@ end;
 -- + CREATE TRIGGER trigger2a
 -- +   AFTER INSERT ON bar
 -- +   WHEN old.id = 3
+-- + error: % name not found 'old.id'
 -- + {create_trigger_stmt}: err
--- * error: % name not found 'old.id'
 -- +1 error:
 create trigger trigger2a
   after insert on bar
@@ -9386,8 +9386,8 @@ order by sort_key, key_;
 
 -- TEST: compound select name lookup using something other than the select list
 -- + ORDER BY a_key_
+-- + error: % name not found 'a_key_'
 -- + {opt_orderby}: err
--- * error: % name not found 'a_key_'
 -- +1 error:
 select a.key_, a.sort_key
   from a
@@ -9401,8 +9401,8 @@ offset 3;
 
 -- TEST: compound select name lookup using something other than the select list (explicit)
 -- + ORDER BY b.a_key_;
+-- + error: % name not found 'b.a_key_'
 -- + {opt_orderby}: err
--- * error: % name not found 'b.a_key_'
 -- +1 error:
 select a.key_, a.sort_key
   from a
@@ -13208,9 +13208,9 @@ begin
 end;
 
 -- TEST: bogus integer in ok_scan_table attribution
--- + misc_attrs}: err
+-- + error: % ok_table_scan attribute must be a name
+-- + {misc_attrs}: err
 -- + {int 1}: err
--- * error: % ok_table_scan attribute must be a name
 -- +1 error:
 [[ok_table_scan=1]]
 proc ok_table_scan_value_int()
@@ -13219,9 +13219,9 @@ begin
 end;
 
 -- TEST: ok_scan_table attribution not on a create proc statement
--- + misc_attrs}: err
+-- + error: % ok_table_scan attribute can only be used in a create procedure statement
+-- + {misc_attrs}: err
 -- + {select_stmt}: err
--- * error: % ok_table_scan attribute can only be used in a create procedure statement
 -- +1 error:
 [[ok_table_scan=foo]]
 select * from foo;
@@ -15368,8 +15368,8 @@ select cast(1 as my_type);
 
 -- TEST: declared type in cast expr with error
 -- + SELECT CAST(1 AS bogus_type);
+-- + error: % unknown type 'bogus_type'
 -- + {name bogus_type}: err
--- * error: % unknown type 'bogus_type'
 -- +1 error:
 select cast(1 as bogus_type);
 
@@ -16638,8 +16638,8 @@ CREATE INDEX deleted_index ON this_table_is_deleted (xyx) @DELETE(1);
 -- + BEGIN
 -- + SELECT 1;
 -- + END @DELETE(1);
+-- + error: % object is an orphan because its table is deleted. Remove rather than @delete 'trigger_deleted'
 -- + {create_trigger_stmt}: err
--- * error: % object is an orphan because its table is deleted. Remove rather than @delete 'trigger_deleted'
 -- +1 error:
 create trigger trigger_deleted
   before delete on this_table_is_deleted
@@ -21099,8 +21099,8 @@ end;
 
 -- TEST: blob type not specified, this cannot do this store
 -- + CALL cql_cursor_to_blob(C, a_blob);
+-- + error: % blob variable must have a type-kind for type safety 'a_blob'
 -- + {call_stmt}: err
--- * error: % blob variable must have a type-kind for type safety 'a_blob'
 -- +1 error:
 proc use_direct_to_blob_badly()
 begin
@@ -21113,8 +21113,8 @@ end;
 
 -- TEST: blob type not specified, this cannot do this store
 -- + CALL cql_cursor_from_blob(C, a_blob);
+-- + error: % blob variable must have a type-kind for type safety 'a_blob'
 -- + {call_stmt}: err
--- * error: % blob variable must have a type-kind for type safety 'a_blob'
 -- +1 error:
 proc use_direct_from_blob_badly()
 begin
@@ -22499,8 +22499,8 @@ end;
 
 -- TEST: this procedure returns NOT NULL id column instead of NULLABLE
 -- + PROC test_interface1_implementation_wrong_nullability (id_ INT!)
+-- + error: % column types returned by proc need to be the same as defined on the interface (expected integer; found integer notnull) 'id'
 -- + {create_proc_stmt}: err
--- * error: % column types returned by proc need to be the same as defined on the interface (expected integer; found integer notnull) 'id'
 -- +1 error:
 [[implements=interface1]]
 proc test_interface1_implementation_wrong_nullability(id_ INT not null)
@@ -22510,8 +22510,8 @@ end;
 
 -- TEST: this procedure returns TEXT NOT NULL id column instead of INT NOT NULL
 -- + PROC test_interface1_implementation_wrong_type (id_ TEXT!)
+-- + error: % column types returned by proc need to be the same as defined on the interface (expected integer; found text notnull) 'id'
 -- + {create_proc_stmt}: err
--- * error: % column types returned by proc need to be the same as defined on the interface (expected integer; found text notnull) 'id'
 -- +1 error:
 [[implements=interface1]]
 proc test_interface1_implementation_wrong_type(id_ TEXT not null)
@@ -22531,8 +22531,8 @@ end;
 
 -- TEST: first returned column has incorrect name
 -- + PROC test_interface1_implementation_wrong_name (id_ INT, name_ TEXT)
+-- + error: % procedure 'test_interface1_implementation_wrong_name' is missing column 'id' of interface 'interface1'
 -- + {create_proc_stmt}: err
--- * error: % procedure 'test_interface1_implementation_wrong_name' is missing column 'id' of interface 'interface1'
 -- +1 error:
 [[implements=interface1]]
 proc test_interface1_implementation_wrong_name(id_ INT, name_ TEXT)
@@ -22542,8 +22542,8 @@ end;
 
 -- TEST: procedure does not return all columns from the interface
 -- + PROC test_interface1_missing_column (id_ INT, name_ TEXT)
+-- + error: % procedure 'test_interface1_missing_column' is missing column 'name' of interface 'interface2'
 -- + {create_proc_stmt}: err
--- * error: % procedure 'test_interface1_missing_column' is missing column 'name' of interface 'interface2'
 -- +1 error:
 [[implements=interface2]]
 proc test_interface1_missing_column(id_ INT, name_ TEXT)
@@ -22565,8 +22565,8 @@ end;
 
 -- TEST: redefining interface as proc (declare)
 -- + DECLARE PROC interface1 (id_ INT, name_ TEXT)
+-- + error: % proc name conflicts with interface name 'interface1'
 -- + {declare_proc_stmt}: err
--- * error: % proc name conflicts with interface name 'interface1'
 -- +1 error:
 declare proc interface1(id_ INT, name_ TEXT);
 
@@ -23112,8 +23112,8 @@ end;
 
 -- TEST: update from_shape sugar error handling, missing count
 -- + SET (id, name) = (ARGUMENTS.id);
+-- + error: % count of columns differs from count of values
 -- + {update_stmt}: err
--- * error: % count of columns differs from count of values
 -- +1 error:
 proc test_update_from_shape_errors3(id int!)
 begin

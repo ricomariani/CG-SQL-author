@@ -1535,12 +1535,12 @@ create table fk_table (
 );
 
 -- TEST: make a valid FK
+-- + error: % duplicate constraint name in table 'x'
 -- + {create_table_stmt}: err
 -- + {fk_def}: ok
 -- + {name x}
 -- + {fk_def}
 -- + {name x}
--- * error: % duplicate constraint name in table 'x'
 -- +1 error:
 create table fk_table_dup (
   id integer,
@@ -1649,11 +1649,11 @@ else
 end if;
 
 -- TEST: if with else if clause bogus expression type
+-- + error: % expected numeric expression in IF predicate
 -- + {if_stmt}: err
 -- + {cond_action}: integer notnull
 -- + {if_alt}: err
 -- + {cond_action}: err
--- * error: % expected numeric expression in IF predicate
 -- +1 error:
 if 1 then
  select 1;
@@ -3824,11 +3824,11 @@ create table join_clause_2 (
 );
 
 -- TEST: join using syntax with column type mismatch test
+-- + error: % left/right column types in join USING(...) do not match exactly 'id'
 -- + {select_stmt}: err
 -- + {join_clause}: err
 -- + {table_or_subquery}: TABLE { join_clause_1: join_clause_1 }
 -- + {table_or_subquery}: TABLE { join_clause_2: join_clause_2 }
--- * error: % left/right column types in join USING(...) do not match exactly 'id'
 -- +1 error:
 select * from join_clause_1 inner join join_clause_2 using(id);
 
@@ -5334,22 +5334,22 @@ with
 select * from another_cte join some_cte;
 
 -- TEST: a CTE may not shadow an existing table
+-- + error: % common table name shadows previously declared table or view 'foo'
 -- + {with_select_stmt}: err
 -- + {cte_tables}: err
 -- + {cte_table}: err
 -- + {cte_decl}: err
--- * error: % common table name shadows previously declared table or view 'foo'
 -- +1 error:
 with
   foo(*) as (select 1 x)
 select * from foo;
 
 -- TEST: a CTE may not shadow an existing view
+-- + error: % common table name shadows previously declared table or view 'MyView'
 -- + {with_select_stmt}: err
 -- + {cte_tables}: err
 -- + {cte_table}: err
 -- + {cte_decl}: err
--- * error: % common table name shadows previously declared table or view 'MyView'
 -- +1 error:
 with
   MyView(*) as (select 1 x)
@@ -7494,11 +7494,11 @@ begin
 end;
 
 -- TEST: Use distinct in a procedure used as a function
+-- + error: % procedure as function call is not compatible with DISTINCT or filter clauses 'proc_func'
 -- + {assign}: err
 -- + {call}: err
 -- + {distinct}
 -- + {arg_list}: ok
--- * error: % procedure as function call is not compatible with DISTINCT or filter clauses 'proc_func'
 -- +1 error:
 SET an_int := proc_func(distinct 1);
 
@@ -7577,12 +7577,12 @@ begin
 end;
 
 -- TEST: fetch cursor from call to proc with invalid arguments
+-- + error: % too many arguments provided to procedure 'out_cursor_proc'
 -- + {create_proc_stmt}: err
 -- + {name fetch_from_call_to_proc_with_invalid_arguments}: err
 -- + {stmt_list}: err
 -- + {fetch_call_stmt}: err
 -- + {call_stmt}: err
--- * error: % too many arguments provided to procedure 'out_cursor_proc'
 -- +1 error:
 proc fetch_from_call_to_proc_with_invalid_arguments()
 begin
@@ -7732,12 +7732,12 @@ begin
 end;
 
 -- TEST: fetch to a cursor from an invalid cursor
+-- + error: % not a cursor 'C0'
 -- + {create_proc_stmt}: err
 -- + {name fetch_to_cursor_from_invalid_cursor}: err
 -- + {stmt_list}: err
 -- + {fetch_values_stmt}: err
 -- + {name C0}: err
--- * error: % not a cursor 'C0'
 -- +1 error:
 proc fetch_to_cursor_from_invalid_cursor()
 begin
@@ -7748,12 +7748,12 @@ begin
 end;
 
 -- TEST: fetch to an invalid cursor from a cursor
+-- + error: % not a cursor 'C1'
 -- + {create_proc_stmt}: err
 -- + {name fetch_to_invalid_cursor_from_cursor}: err
 -- + {stmt_list}: err
 -- + {fetch_values_stmt}: err
 -- + {name C1}: err
--- * error: % not a cursor 'C1'
 -- +1 error:
 proc fetch_to_invalid_cursor_from_cursor()
 begin
@@ -7764,11 +7764,11 @@ begin
 end;
 
 -- TEST: fetch to a statement cursor from another cursor
+-- + error: % fetch values is only for value cursors, not for sqlite cursors 'C1'
 -- + {create_proc_stmt}: err
 -- + {name fetch_to_statement_cursor_from_cursor}: err
 -- + {stmt_list}: err
 -- + {fetch_values_stmt}: err
--- * error: % fetch values is only for value cursors, not for sqlite cursors 'C1'
 -- +1 error:
 proc fetch_to_statement_cursor_from_cursor()
 begin
@@ -7779,11 +7779,11 @@ begin
 end;
 
 -- TEST: fetch to a cursor from a cursor with different columns
+-- + error: % [shape] has too few fields 'C0'
 -- + {create_proc_stmt}: err
 -- + {name fetch_to_cursor_from_cursor_with_different_columns}: err
 -- + {stmt_list}: err
 -- + {fetch_values_stmt}: err
--- * error: % [shape] has too few fields 'C0'
 -- +1 error:
 proc fetch_to_cursor_from_cursor_with_different_columns()
 begin
@@ -7794,12 +7794,12 @@ begin
 end;
 
 -- TEST: fetch to a cursor from a cursor without fields
+-- + error: % cannot read from a cursor without fields 'C0'
 -- + {create_proc_stmt}: err
 -- + {name fetch_to_cursor_from_cursor_without_fields}: err
 -- + {stmt_list}: err
 -- + {fetch_values_stmt}: err
 -- + {name C0}: err
--- * error: % cannot read from a cursor without fields 'C0'
 -- +1 error:
 proc fetch_to_cursor_from_cursor_without_fields()
 begin
@@ -7824,12 +7824,12 @@ begin
 end;
 
 -- TEST: cursor a like a variable that's not a cursor
+-- + error: % not a cursor 'C0'
 -- + {create_proc_stmt}: err
 -- + {name declare_cursor_like_non_cursor_variable}: err
 -- + {stmt_list}: err
 -- + {declare_cursor_like_name}: err
 -- + {name C0}: err
--- * error: % not a cursor 'C0'
 -- +1 error:
 proc declare_cursor_like_non_cursor_variable()
 begin
@@ -7838,12 +7838,12 @@ begin
 end;
 
 -- TEST: cursor a with the same name as an existing variable
+-- + error: % duplicate variable name in the same scope 'C0'
 -- + {create_proc_stmt}: err
 -- + {name declare_cursor_like_cursor_with_same_name}: err
 -- + {stmt_list}: err
 -- + {declare_cursor_like_name}: err
 -- + {name C0}: err
--- * error: % duplicate variable name in the same scope 'C0'
 -- +1 error:
 proc declare_cursor_like_cursor_with_same_name()
 begin
@@ -7852,12 +7852,12 @@ begin
 end;
 
 -- TEST: cursor a like something that's not defined
+-- + error: % must be a cursor, proc, table, or view 'C0'
 -- + {create_proc_stmt}: err
 -- + {name declare_cursor_like_undefined_variable}: err
 -- + {stmt_list}: err
 -- + {declare_cursor_like_name}: err
 -- + {name C0}: err
--- * error: % must be a cursor, proc, table, or view 'C0'
 -- +1 error:
 proc declare_cursor_like_undefined_variable()
 begin
@@ -7877,12 +7877,12 @@ begin
 end;
 
 -- TEST: cursor a like a proc with no result
+-- + error: % proc has no result 'decl1'
 -- + {create_proc_stmt}: err
 -- + {name declare_cursor_like_proc_with_no_result}: err
 -- + {stmt_list}: err
 -- + {declare_cursor_like_name}: err
 -- + {name decl1}: err
--- * error: % proc has no result 'decl1'
 -- +1 error:
 proc declare_cursor_like_proc_with_no_result()
 begin
@@ -11122,11 +11122,11 @@ begin
 end;
 
 -- TEST: update statement without table name
+-- + error: % update statement requires a table name
 -- + {create_proc_stmt}: err
 -- + {name update_without_table_name}: err
 -- + {create_trigger_stmt}: err
 -- + {update_stmt}: err
--- * error: % update statement requires a table name
 -- +1 error:
 proc update_without_table_name()
 begin
@@ -11138,11 +11138,11 @@ begin
 end;
 
 -- TEST: upsert statement. The unique column in conflict target is not a unique key
+-- + error: % columns referenced in an UPSERT conflict target must exactly match a unique key the target table
 -- + {create_proc_stmt}: err
 -- + {name upsert_conflict_target_column_not_unique_key}: err
 -- + {upsert_stmt}: err
 -- + {conflict_target}: err
--- * error: % columns referenced in an UPSERT conflict target must exactly match a unique key the target table
 -- +1 error:
 proc upsert_conflict_target_column_not_unique_key()
 begin
@@ -11862,22 +11862,22 @@ select id, row_number() over () as row_num from foo;
 select id, row_number() as row_num from foo;
 
 -- TEST: window function invocation outside [SELECT expr] statement
+-- + error: % Window function invocations can only appear in the select list of a select statement
 -- + {select_stmt}: err
 -- + {select_from_etc}: err
 -- + {opt_where}: err
 -- + {window_func_inv}: err
 -- + {call}
--- * error: % Window function invocations can only appear in the select list of a select statement
 -- +1 error:
 select 1 where row_number() over ();
 
 -- TEST: test invalid number of argument on window function row_number()
+-- + error: % function got incorrect number of arguments 'row_number'
 -- + {select_stmt}: err
 -- + {window_func_inv}: err
 -- + {call}: err
 -- + {name row_number}: err
 -- + {select_from_etc}: TABLE { foo: foo }
--- * error: % function got incorrect number of arguments 'row_number'
 -- +1 error:
 select id, row_number(1) over () as row_num from foo;
 
@@ -11906,11 +11906,11 @@ select id, row_number() over win1, row_number() over win2
 order by id;
 
 -- TEST: test invalid window name
+-- + error: % Window name is not defined 'bogus'
 -- + {select_stmt}: err
 -- + {window_func_inv}: err
 -- + {call_filter_clause}
 -- + {name bogus}: err
--- * error: % Window name is not defined 'bogus'
 -- +1 error:
 select id, row_number() over bogus
   from foo;
@@ -12083,12 +12083,12 @@ select id,
   from foo;
 
 -- TEST: test frame spec grammar with bogus expr
+-- + error: % name not found 'bogus'
 -- + {select_stmt}: err
 -- + {select_expr}: err
 -- + {window_func_inv}: err
 -- + {opt_frame_spec}: err
 -- + {name bogus}: err
--- * error: % name not found 'bogus'
 -- +1 error:
 select id,
        row_number() over (rows bogus = null preceding exclude ties)
@@ -12288,12 +12288,12 @@ select id, lag(id | " ") over () from foo;
 select id, lag(id, 0, 0.7) over () from foo;
 
 -- TEST: test lag() window function with no param
+-- + error: % function got incorrect number of arguments 'lag'
 -- + {select_stmt}: err
 -- + {select_expr}: err
 -- + {window_func_inv}: err
 -- + {call}: err
 -- + {name lag}
--- * error: % function got incorrect number of arguments 'lag'
 -- +1 error:
 select id, lag() over () from foo;
 
@@ -12384,12 +12384,12 @@ select id, nth_value(id, 1) over () as nth from foo;
 select id from foo where nth_value(7, 1);
 
 -- TEST: test nth_value() window function with incorrect number of param
+-- + error: % function got incorrect number of arguments 'nth_value'
 -- + {select_stmt}: err
 -- + {select_expr}: err
 -- + {window_func_inv}: err
 -- + {call}: err
 -- + {name nth_value}
--- * error: % function got incorrect number of arguments 'nth_value'
 -- +1 error:
 select id, nth_value(id) over () from foo;
 
@@ -13243,11 +13243,11 @@ select * from foo;
 create table no_table_scan(id text);
 
 -- TEST: no_scan_table attribution with a value
+-- + error: % a value should not be assigned to no_table_scan attribute
 -- + {stmt_and_attr}: err
 -- + {misc_attrs}: err
 -- + {int 1}: err
 -- + {select_stmt}: err
--- * error: % a value should not be assigned to no_table_scan attribute
 -- +1 error:
 [[no_table_scan=1]]
 select * from foo;
@@ -13373,11 +13373,11 @@ insert into foo (id) values (1), (2) @dummy_seed(1);
 values (1, 2), (10);
 
 -- TEST: test invalid value in second row in values clause
+-- + error: % name not found 'bogus'
 -- + {select_stmt}: err
 -- + {values}: err
 -- + {strlit 'ok'}: text notnull
 -- + {name bogus}: err
--- * error: % name not found 'bogus'
 -- +1 error:
 values ("ok"), (bogus);
 
@@ -15352,11 +15352,11 @@ end;
 create table t(id my_type_sens_not);
 
 -- TEST: declared type in column definition with error
+-- + error: % unknown type 'bogus_type'
 -- + {create_table_stmt}: err
 -- + {col_def}: err
 -- + {col_def_type_attrs}: err
 -- + {name bogus_type}
--- * error: % unknown type 'bogus_type'
 -- +1 error:
 create table t(id bogus_type);
 
@@ -15766,11 +15766,11 @@ set b0 := x1 in (x1, y2, x3);
 set b0 := (select x1 in (select x2));
 
 -- TEST: in expression using select, but select result is the wrong kind
+-- + error: % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 -- + {assign}: err
 -- + {in_pred}: err
 -- + {select_stmt}: err
 -- + {select_core_list}: _select_: { y1: integer<y_coord> variable }
--- * error: % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 -- +1 error:
 set b0 := (select x1 in (select y1));
 
@@ -16108,20 +16108,20 @@ set price_d := (select 1 if nothing then 2.0);
 set price_d := (select 3.0 if nothing then 4);
 
 -- TEST: simple select with else (upgrade from the left)
+-- + error: % expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
 -- + {assign}: err
 -- + {select_if_nothing_expr}: err
 -- + {select_stmt}: _anon: real notnull
 -- + {name price_e}: price_e: real<euros> variable
--- * error: % expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
 -- +1 error:
 set price_d := (select 3.0 if nothing then price_e);
 
 -- TEST: simple select with else (upgrade from the left)
+-- + error: % expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
 -- + {assign}: err
 -- + {select_if_nothing_expr}: err
 -- + {select_stmt}: price_d: real<dollars> variable
 -- + {name price_e}: err
--- * error: % expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
 -- +1 error:
 set my_real := (select price_d if nothing then price_e);
 
@@ -16135,11 +16135,11 @@ set my_real := (select price_d if nothing then price_e);
 set price_d := (select "x" if nothing or null then price_e);
 
 -- TEST: simple select with else (upgrade from the left)
+-- + error: % right operand cannot be an object in 'IF NOTHING OR NULL'
 -- + {assign}: err
 -- + {select_if_nothing_or_null_expr}: err
 -- + {select_stmt}: _anon: text notnull
 -- + {name obj_var}: obj_var: object variable
--- * error: % right operand cannot be an object in 'IF NOTHING OR NULL'
 -- +1 error:
 set price_d := (select "x" if nothing or null then obj_var);
 
@@ -16409,11 +16409,11 @@ switch z
 end;
 
 -- TEST: switch statement with no actual code in it
+-- + error: % switch statement did not have any actual statements in it
 -- + {switch_stmt}: err
 -- + {int 0}
 -- + {switch_body}
 -- + {switch_case}: err
--- * error: % switch statement did not have any actual statements in it
 -- +1 error:
 switch z
   when 1 then nothing -- no cases with statements
@@ -21887,11 +21887,11 @@ create table recreate_blob_storage(
 ) @recreate;
 
 -- TEST: structured storage cannot appear inside a FROM clause
+-- + error: % the indicated table may only be used for blob storage 'structured_storage'
 -- + {select_stmt}: err
 -- + {select_from_etc}: err
 -- + {table_or_subquery_list}: err
 -- + {table_or_subquery}: err
--- * error: % the indicated table may only be used for blob storage 'structured_storage'
 -- +1 error:
 select * from structured_storage;
 
@@ -21954,12 +21954,12 @@ begin
 end;
 
 -- TEST: the fetch values form does not require a check because it cannot fail
+-- + error: % field of a nonnull reference type accessed before verifying that the cursor has a row 'c3.a'
 -- + {create_proc_stmt}: err
 -- + {let_stmt}: x0: text notnull variable
 -- + {let_stmt}: x1: text notnull variable
 -- + {let_stmt}: x2: text notnull variable
 -- + {let_stmt}: err
--- * error: % field of a nonnull reference type accessed before verifying that the cursor has a row 'c3.a'
 -- +1 error:
 proc fetch_values_requires_no_has_row_check(like has_row_check_table)
 begin
@@ -21986,11 +21986,11 @@ begin
 end;
 
 -- TEST: re-fetching a cursor requires another has-row check
+-- + error: % field of a nonnull reference type accessed before verifying that the cursor has a row 'c.a'
 -- + {create_proc_stmt}: err
 -- + {let_stmt}: x0: text notnull variable
 -- + {let_stmt}: err
 -- + {let_stmt}: x2: text notnull variable
--- * error: % field of a nonnull reference type accessed before verifying that the cursor has a row 'c.a'
 -- +1 error:
 proc fetching_again_requires_another_check()
 begin
@@ -23098,11 +23098,11 @@ begin
 end;
 
 -- TEST: update from_shape sugar error handling invalid like shape
+-- + error: % must be a cursor, proc, table, or view 'cursor_not_exist'
 -- + {update_stmt}: err
 -- + {columns_values}: err
 -- + {shape_def}: err
 -- + {name cursor_not_exist}: err
--- * error: % must be a cursor, proc, table, or view 'cursor_not_exist'
 -- +1 error:
 proc test_update_from_shape_errors2(like update_test_1)
 begin

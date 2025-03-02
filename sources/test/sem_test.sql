@@ -1503,9 +1503,9 @@ create table baz_2 (
 );
 
 -- TEST: validate unique key columns
+-- + error: % name not found 'ak_col_not_exist'
 -- + {create_table_stmt}: err
 -- + {name ak_col_not_exist}: err
--- * error: % name not found 'ak_col_not_exist'
 -- +1 error:
 create table baz (
   id integer PRIMARY KEY AUTOINCREMENT not null,
@@ -1513,9 +1513,9 @@ create table baz (
 );
 
 -- TEST: validate group of unique key columns
+-- + error: % name not found 'ak_col_not_exist'
 -- + {create_table_stmt}: err
 -- + {name ak_col_not_exist}: err
--- * error: % name not found 'ak_col_not_exist'
 -- +1 error:
 create table baz_3 (
   id integer PRIMARY KEY AUTOINCREMENT not null,
@@ -1863,18 +1863,18 @@ declare proc bad_constants_proc();
 declare proc bad_constants_nested_proc();
 
 -- TEST: try to use a NULL default value on a non nullable column
+-- + error: % cannot assign/copy possibly null expression to not null target 'default value'
 -- + {create_table_stmt}: err
 -- + {col_def}: err
--- * error: % cannot assign/copy possibly null expression to not null target 'default value'
 -- +1 error:
 create table bad_conversions(
   data int! default const(NULL)
 );
 
 -- TEST: try to use a lossy conversion in a const expr default value
+-- + error: % lossy conversion from type 'REAL' in 2.200000e+00
 -- + {create_table_stmt}: err
 -- + {col_def}: err
--- * error: % lossy conversion from type 'REAL' in 2.200000e+00
 -- +1 error:
 create table bad_conversions(
   data int! default const(1 + 1.2)
@@ -1935,9 +1935,9 @@ declare X integer;
 set X := @RC;
 
 -- TEST: try to declare a variable that hides a table
+-- + error: % global variable hides table/view name 'foo'
 -- + {declare_vars_type}: err
 -- + {name foo}: err
--- * error: % global variable hides table/view name 'foo'
 -- +1 error:
 declare foo integer;
 
@@ -1991,9 +1991,9 @@ cursor reduced_cursor like extended_cursor(id, not_a_valid_name);
 cursor reduced_cursor like extended_cursor(id, cost);
 
 -- TEST: try to make a shape with both additive and subtractive form
+-- + error: % mixing adding and removing columns from a shape 'cost'
 -- + {declare_cursor_like_name}: err
 -- + {shape_def}: err
--- * error: % mixing adding and removing columns from a shape 'cost'
 -- +1 error:
 cursor reduced_cursor2 like extended_cursor(-id, cost);
 
@@ -2009,9 +2009,9 @@ cursor reduced_cursor3 like extended_cursor(-id);
 cursor reduced_cursor4 like extended_cursor(-id, -xx, -yy, -value, -cost);
 
 -- TEST: try to create a duplicate cursor
+-- + error: % duplicate variable name in the same scope 'my_cursor'
 -- + {declare_cursor}: err
 -- + {name my_cursor}: err
--- * error: % duplicate variable name in the same scope 'my_cursor'
 -- +1 error:
 cursor my_cursor for select 1;
 
@@ -2177,9 +2177,9 @@ end;
 return;
 
 -- TEST: return at top level, that's just goofy
+-- + error: % return statement should be in a procedure and not at the top level
 -- + {create_proc_stmt}: err
 -- + {return_stmt}: err
--- * error: % return statement should be in a procedure and not at the top level
 -- +1 error:
 proc return_at_top_level()
 begin
@@ -2201,9 +2201,9 @@ end;
 close my_cursor;
 
 -- TEST: close invalid cursor
+-- + error: % not a cursor 'X'
 -- + {close_stmt}: err
 -- + {name X}: err
--- * error: % not a cursor 'X'
 -- +1 error:
 close X;
 
@@ -2324,16 +2324,16 @@ insert into foo default values;
 insert into bar default values;
 
 -- TEST: insert into a table that isn't there
+-- + error: % table in insert statement does not exist 'bogus_table'
 -- + {insert_stmt}: err
 -- + {name bogus_table}
--- * error: % table in insert statement does not exist 'bogus_table'
 -- +1 error:
 insert into bogus_table values (1);
 
 -- TEST: insert into a view
+-- + error: % cannot insert into a view 'MyView'
 -- + {insert_stmt}: err
 -- + {name MyView}: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull }
--- * error: % cannot insert into a view 'MyView'
 -- +1 error:
 insert into MyView values (1);
 
@@ -2716,9 +2716,9 @@ begin
 end;
 
 -- TEST: duplicate proc name
+-- + error: % duplicate stored proc name 'proc1'
 -- + {create_proc_stmt}: err
 -- + {name proc1}
--- * error: % duplicate stored proc name 'proc1'
 -- +1 error:
 procedure proc1()
 begin
@@ -2756,9 +2756,9 @@ select arg1;
 select arg2;
 
 -- TEST: procedure with duplicate arguments
+-- + error: % duplicate parameter name 'arg1'
 -- + {create_proc_stmt}: err
 -- + {params}: err
--- * error: % duplicate parameter name 'arg1'
 -- +1 error:
 procedure proc3(arg1 INT, arg1 text)
 begin
@@ -2920,16 +2920,16 @@ call proc2('bar', 'foo');
 call proc2(1, 2);
 
 -- TEST: call known method with too many args
+-- + error: % too many arguments provided to procedure 'proc2'
 -- + {call_stmt}: err
 -- + {name proc2}: ok dml_proc
--- * error: % too many arguments provided to procedure 'proc2'
 -- +1 error:
 call proc2(1, 'foo', 1);
 
 -- TEST: call known method with too few args
+-- + error: % too few arguments provided to procedure 'proc2'
 -- + {call_stmt}: err
 -- + {name proc2}: ok dml_proc
--- * error: % too few arguments provided to procedure 'proc2'
 -- +1 error:
 call proc2(1);
 
@@ -3122,37 +3122,37 @@ select avg(id) a from foo;
 select min(id) m from foo;
 
 -- TEST: bogus number of arguments in count
+-- + error: % function got incorrect number of arguments 'count'
 -- + {assign}: err
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'count'
 -- +1 error:
 set X := (select count(1,2) from foo);
 
 -- TEST: bogus number of arguments in max
+-- + error: % too few arguments in function 'max'
 -- + {assign}: err
 -- + {call}: err
--- * error: % too few arguments in function 'max'
 -- +1 error:
 set X := (select max() from foo);
 
 -- TEST: bogus number of arguments in sign
+-- + error: % too few arguments in function 'sign'
 -- + {assign}: err
 -- + {call}: err
--- * error: % too few arguments in function 'sign'
 -- +1 error:
 set X := (select sign());
 
 -- TEST: bogus number of arguments in sign
+-- + error: % too many arguments in function 'sign'
 -- + {assign}: err
 -- + {call}: err
--- * error: % too many arguments in function 'sign'
 -- +1 error:
 set X := (select sign(1,2));
 
 -- TEST: argument in sign is not numeric
+-- + error: % argument 1 'text' is an invalid type; valid types are: 'integer' 'long' 'real' in 'sign'
 -- + {assign}: err
 -- + {call}: err
--- * error: % argument 1 'text' is an invalid type; valid types are: 'integer' 'long' 'real' in 'sign'
 -- +1 error:
 set X := (select sign('x'));
 
@@ -3172,9 +3172,9 @@ let nl := (select sign(nullable(-1.0)));
 let ssnl := (select sign(sensitive(nullable(1))));
 
 -- TEST: bogus number of arguments in round
+-- + error: % too few arguments in function 'round'
 -- + {assign}: err
 -- + {call}: err
--- * error: % too few arguments in function 'round'
 -- +1 error:
 set X := (select round());
 
@@ -3185,23 +3185,23 @@ set X := (select round());
 set X := round(1.3) ~int~;
 
 -- TEST: bogus number of arguments in round
+-- + error: % too many arguments in function 'round'
 -- + {assign}: err
 -- + {call}: err
--- * error: % too many arguments in function 'round'
 -- +1 error:
 set X := (select round(1.0,2,3));
 
 -- TEST: round second arg not numeric
+-- + error: % argument 2 'text' is an invalid type; valid types are: 'bool' 'integer' 'long' in 'round'
 -- + {assign}: err
 -- + {call}: err
--- * error: % argument 2 'text' is an invalid type; valid types are: 'bool' 'integer' 'long' in 'round'
 -- +1 error:
 set X := (select round(1.5, 'x'));
 
 -- TEST: round must get a real arg in position 1
+-- + error: % CQL0084: argument 1 'integer' is an invalid type; valid types are: 'real' in 'round'
 -- + {assign}: err
 -- + {call}: err
--- * error: % CQL0084: argument 1 'integer' is an invalid type; valid types are: 'real' in 'round'
 -- +1 error:
 set X := (select round(1,2));
 
@@ -3242,23 +3242,23 @@ let SNR := (select round(nullable(1.0), sensitive(1)));
 set ll := (select round(1.0, 2.0));
 
 -- TEST: bogus number of arguments in average
+-- + error: % too many arguments in function 'avg'
 -- + {assign}: err
 -- + {call}: err
--- * error: % too many arguments in function 'avg'
 -- +1 error:
 set X := (select avg(1,2) from foo);
 
 -- TEST: bogus string type in average
+-- + error: % argument 1 'text' is an invalid type; valid types are: 'bool' 'integer' 'long' 'real' in 'avg'
 -- + {assign}: err
 -- + {call}: err
--- * error: % argument 1 'text' is an invalid type; valid types are: 'bool' 'integer' 'long' 'real' in 'avg'
 -- +1 error:
 set X := (select avg('foo') from foo);
 
 -- TEST: bogus null literal in average
+-- + error: % argument 1 is a NULL literal; useless in 'avg'
 -- + {assign}: err
 -- + {call}: err
--- * error: % argument 1 is a NULL literal; useless in 'avg'
 -- +1 error:
 set X := (select avg(null) from foo);
 
@@ -3504,9 +3504,9 @@ limit 5
 offset 7;
 
 -- TEST: full join with all expression options and bogus offset
+-- + error: % expected numeric expression 'OFFSET'
 -- + {select_stmt}: err
 -- + {opt_offset}: err
--- * error: % expected numeric expression 'OFFSET'
 -- +1 error:
 select * from foo as T1
 inner join bar as T2 on T1.id = T2.id
@@ -3601,9 +3601,9 @@ select * from foo where exists (select not 'x' from foo);
 select * from foo where not exists (select not 'x' from foo);
 
 -- TEST: try to use exists in a bogus place
+-- + error: % exists_expr % function may not appear in this context 'exists'
 -- + {assign}: err
 -- + {exists_expr}: err
--- * error: % exists_expr % function may not appear in this context 'exists'
 -- +1 error:
 set X := exists(select * from foo);
 
@@ -3791,9 +3791,9 @@ select ifnull(X, 'hello');
 select ifnull(not 'x', not 'hello');
 
 -- TEST: make make an FK with the column count wrong
+-- + error: % number of columns on both sides of a foreign key must match
 -- + {create_table_stmt}: err
 -- + {fk_def}: err
--- * error: % number of columns on both sides of a foreign key must match
 -- +1 error:
 create table fk_table_2 (
   id1 integer,
@@ -3802,9 +3802,9 @@ create table fk_table_2 (
 );
 
 -- TEST: make make an FK with the column types not matching
+-- + error: % exact type of both sides of a foreign key must match (expected real; found integer notnull) 'id'
 -- + {create_table_stmt}: err
 -- + {fk_def}: err
--- * error: % exact type of both sides of a foreign key must match (expected real; found integer notnull) 'id'
 -- +1 error:
 create table fk_table_2 (
   id REAL,
@@ -3839,16 +3839,16 @@ select * from join_clause_1 inner join join_clause_2 using(id);
 select last_insert_rowid();
 
 -- TEST: last_insert_row doesn't take args
+-- + error: % too many arguments in function 'last_insert_rowid'
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % too many arguments in function 'last_insert_rowid'
 -- +1 error:
 select last_insert_rowid(1);
 
 -- TEST: last_insert_rowid is not ok in a limit
+-- + error: % function may not appear in this context 'last_insert_rowid'
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % function may not appear in this context 'last_insert_rowid'
 -- +1 error:
 select * from foo limit last_insert_rowid();
 
@@ -3870,16 +3870,16 @@ set rowid_result := last_insert_rowid();
 select changes();
 
 -- TEST: changes doesn't take args
+-- + error: % too many arguments in function 'changes'
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % too many arguments in function 'changes'
 -- +1 error:
 select changes(1);
 
 -- TEST: changes is not ok in a limit
+-- + error: % function may not appear in this context 'changes'
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % function may not appear in this context 'changes'
 -- +1 error:
 select * from foo limit changes();
 
@@ -4316,9 +4316,9 @@ let idx := cast(1 as integer<x>);
 let idy := cast(idx as integer<y>);
 
 -- TEST: type and kind match, this is a no-op therefore an error
+-- + error: % cast is redundant, remove to reduce code size 'CAST(idy AS INT<y>
 -- + {assign}: err
 -- + {cast_expr}: err
--- * error: % cast is redundant, remove to reduce code size 'CAST(idy AS INT<y>
 -- +1 error:
 set idy := cast(idy as integer<y>);
 
@@ -5456,9 +5456,9 @@ begin
 end;
 
 -- TEST: try to use select nothing in an illegal context
+-- + error: % SELECT NOTHING may only appear in the ELSE clause of a shared fragment
 -- + {create_proc_stmt}: err
 -- + {select_nothing_stmt}: err
--- * error: % SELECT NOTHING may only appear in the ELSE clause of a shared fragment
 -- +1 error:
 proc not_valid_proc_for_select_nothing()
 begin
@@ -5847,9 +5847,9 @@ begin
 end;
 
 -- TEST: shared_fragment attribute (incorrect usage)
+-- + error: % shared fragments must consist of exactly one top level statement 'test_shared_fragment_wrong_form'
 -- + {stmt_and_attr}: err
 -- + {create_proc_stmt}: err
--- * error: % shared fragments must consist of exactly one top level statement 'test_shared_fragment_wrong_form'
 -- +1 error:
 [[shared_fragment]]
 proc test_shared_fragment_wrong_form()
@@ -5859,9 +5859,9 @@ begin
 end;
 
 -- TEST: shared_fragment attribute (incorrect usage)
+-- + error: % shared fragments cannot have any out or in/out parameters 'x'
 -- + {stmt_and_attr}: err
 -- + {create_proc_stmt}: err
--- * error: % shared fragments cannot have any out or in/out parameters 'x'
 -- +1 error:
 [[shared_fragment]]
 proc test_shared_fragment_bad_args(out x integer)
@@ -5870,9 +5870,9 @@ begin
 end;
 
 -- TEST: shared_fragment attribute (incorrect usage)
+-- + error: % shared fragments may only have IF, SELECT, or WITH...SELECT at the top level 'test_shared_fragment_wrong_form_not_select'
 -- + {stmt_and_attr}: err
 -- + {create_proc_stmt}: err
--- * error: % shared fragments may only have IF, SELECT, or WITH...SELECT at the top level 'test_shared_fragment_wrong_form_not_select'
 -- +1 error:
 [[shared_fragment]]
 proc test_shared_fragment_wrong_form_not_select()
@@ -6068,9 +6068,9 @@ set real_result := simple_func('xx');
 set real_result := simple_func(not 'xx');
 
 -- TEST: try to use user func in a sql statement
+-- + error: % User function may not appear in the context of a SQL statement 'simple_func'
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % User function may not appear in the context of a SQL statement 'simple_func'
 -- +1 error:
 select simple_func(1);
 
@@ -6816,9 +6816,9 @@ create table neg_default (
 alter table neg_default add column id int! default -1;
 
 -- TEST: try to validate previous schema in a proc
+-- + error: % switching to previous schema validation mode must be outside of any proc
 -- + {create_proc_stmt}: err
 -- + {previous_schema_stmt}: err
--- * error: % switching to previous schema validation mode must be outside of any proc
 -- +1 error:
 proc bogus_validate()
 begin
@@ -6826,9 +6826,9 @@ begin
 end;
 
 -- TEST: make a select * with a duplicate result column name and try to fetch the fields
+-- + error: % duplicate column name in result not allowed 'id'
 -- + {fetch_stmt}: err
 -- + {name C}: err
--- * error: % duplicate column name in result not allowed 'id'
 -- +1 error:
 proc bogus_fetch()
 begin
@@ -6899,16 +6899,16 @@ create table trickier_alter_target(
 );
 
 -- TEST: try to add id --> doesn't work
+-- + error: % added column must already be reflected in declared schema, with @create, exact name match required 'id'
 -- + {alter_table_add_column_stmt}: err
 -- + {name trickier_alter_target}: trickier_alter_target: { id: integer notnull partial_pk, added: text }
--- * error: % added column must already be reflected in declared schema, with @create, exact name match required 'id'
 -- +1 error:
 alter table trickier_alter_target add column id integer;
 
 -- TEST: try to add something_deleted --> doesn't work
+-- + error: % added column must already be reflected in declared schema, with @create, exact name match required 'something_deleted'
 -- + {alter_table_add_column_stmt}: err
 -- + {name trickier_alter_target}: trickier_alter_target: { id: integer notnull partial_pk, added: text }
--- * error: % added column must already be reflected in declared schema, with @create, exact name match required 'something_deleted'
 -- +1 error:
 alter table trickier_alter_target add column something_deleted text;
 
@@ -7321,9 +7321,9 @@ begin
 end;
 
 -- TEST: use mixed select and out union
+-- + error: % can't mix and match out, out union, or select/call for return values 'out_cursor_proc_mixed_cursor_select_then_union'
 -- + {create_proc_stmt}: err
 -- + {out_union_stmt}: err
--- * error: % can't mix and match out, out union, or select/call for return values 'out_cursor_proc_mixed_cursor_select_then_union'
 -- +1 error:
 proc out_cursor_proc_mixed_cursor_select_then_union()
 begin
@@ -7371,9 +7371,9 @@ begin
 end;
 
 -- TEST: calling out union for pass through not compatible with regular out union
+-- + error: % can't mix and match out, out union, or select/call for return values 'out_union_call_and_out_union'
 -- + {create_proc_stmt}: err
 -- + {out_union_stmt}: C: _select_: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
--- * error: % can't mix and match out, out union, or select/call for return values 'out_union_call_and_out_union'
 -- +1 error:
 proc out_union_call_and_out_union()
 begin
@@ -7384,9 +7384,9 @@ begin
 end;
 
 -- TEST: calling out union for pass through not compatible with regular out union
+-- + error: % can't mix and match out, out union, or select/call for return values 'out_union_call_and_out_union_other_order'
 -- + {create_proc_stmt}: err
 -- + {out_union_stmt}: err
--- * error: % can't mix and match out, out union, or select/call for return values 'out_union_call_and_out_union_other_order'
 -- +1 error:
 proc out_union_call_and_out_union_other_order()
 begin
@@ -7397,9 +7397,9 @@ begin
 end;
 
 -- TEST: use out statement with non cursor
+-- + error: % not a cursor 'C'
 -- + {create_proc_stmt}: err
 -- + {out_stmt}: err
--- * error: % not a cursor 'C'
 -- +1 error:
 proc out_not_cursor()
 begin
@@ -8350,9 +8350,9 @@ begin
 end;
 
 -- TEST: bogus name in the like part of from arguments
+-- + error: % must be a cursor, proc, table, or view 'bogus_name_here'
 -- + {create_proc_stmt}: err
 -- + {insert_stmt}: err
--- * error: % must be a cursor, proc, table, or view 'bogus_name_here'
 -- +1 error:
 proc insert_bar_from_bogus(extra integer, like bar)
 begin
@@ -8566,18 +8566,18 @@ create temp table table_like_proc(
 );
 
 -- TEST: try to create a table with a proc with no result
+-- + error: % proc has no result 'proc1'
 -- + {create_table_stmt}: err
 -- + {col_key_list}: err
--- * error: % proc has no result 'proc1'
 -- +1 error:
 create temp table table_like_proc_with_no_result(
   like proc1
 );
 
 -- TEST: try to create a table with non existent view/proc/view
+-- + error: % must be a cursor, proc, table, or view 'this_thing_doesnt_exist'
 -- + {create_table_stmt}: err
 -- + {col_key_list}: err
--- * error: % must be a cursor, proc, table, or view 'this_thing_doesnt_exist'
 -- +1 error:
 create temp table table_like_nonexistent_view(
   like this_thing_doesnt_exist
@@ -8662,9 +8662,9 @@ create temp table bogus_temp_with_versioning_in_column(
 select 'x' match 'y';
 
 -- TEST: try to use match not in a select statement
+-- + error: % operator may only appear in the context of a SQL statement 'MATCH'
 -- + {assign}: err
 -- + {match}: err
--- * error: % operator may only appear in the context of a SQL statement 'MATCH'
 -- +1 error:
 set X := 'x' match 'y';
 
@@ -8677,23 +8677,23 @@ set X := 'x' match 'y';
 select 'x' glob 'y';
 
 -- TEST: try to use glob not in a select statement
+-- + error: % operator may only appear in the context of a SQL statement 'GLOB'
 -- + {assign}: err
 -- + {glob}: err
--- * error: % operator may only appear in the context of a SQL statement 'GLOB'
 -- +1 error:
 set X := 'x' GLOB 'y';
 
 -- TEST: try to use match not in a select statement
+-- + error: % operator may only appear in the context of a SQL statement 'MATCH'
 -- + {assign}: err
 -- + {match}: err
--- * error: % operator may only appear in the context of a SQL statement 'MATCH'
 -- +1 error:
 set X := 'x' MATCH 'y';
 
 -- TEST: try to use regexp not in a select statement
+-- + error: % operator may only appear in the context of a SQL statement 'REGEXP'
 -- + {assign}: err
 -- + {regexp}: err
--- * error: % operator may only appear in the context of a SQL statement 'REGEXP'
 -- +1 error:
 set X := 'x' REGEXP 'y';
 
@@ -8715,16 +8715,16 @@ set X := (select 'x' REGEXP 'y');
 set X := 1 << 2 | 1 << 4 & 1 >> 8;
 
 -- TEST: try a integer operator with a real
+-- + error: % operands must be an integer type, not real '&'
 -- + {assign}: err
 -- + {bin_and}: err
--- * error: % operands must be an integer type, not real '&'
 -- +1 error:
 set X := 3.0 & 2;
 
 -- TEST: try a integer unary operator with a real
+-- + error: % operands must be an integer type, not real '~'
 -- + {assign}: err
 -- + {tilde}: err
--- * error: % operands must be an integer type, not real '~'
 -- +1 error:
 set X := ~3.0;
 
@@ -8957,16 +8957,16 @@ begin
 end;
 
 -- TEST: try to use raise in a non trigger context
+-- + error: % RAISE may only be used in a trigger statement
 -- + {select_stmt}: err
 -- + {raise}: err
--- * error: % RAISE may only be used in a trigger statement
 -- +1 error:
 select RAISE(ignore);
 
 -- TEST: try to use raise with a bogus string
+-- + error: % RAISE 2nd argument must be a string
 -- + {create_trigger_stmt}: err
 -- + {raise}: err
--- * error: % RAISE 2nd argument must be a string
 -- +1 error:
 create temp trigger if not exists trigger6
   before delete on bar
@@ -9360,9 +9360,9 @@ select key_, sort_key from b
 order by 2, key_;
 
 -- TEST: compound select ordered by an arbitrary expression
+-- + error: % compound select cannot be ordered by the result of an expression
 -- + {select_stmt}: err
 -- + {select_orderby}: err
--- * error: % compound select cannot be ordered by the result of an expression
 -- +1 error:
 select key_, sort_key from a
 union
@@ -9562,9 +9562,9 @@ begin
 end;
 
 -- TEST: basic delete stmt with CTE form (delete bogus)
+-- + error: % table in delete statement does not exist 'not_valid_table'
 -- + {create_proc_stmt}: err
 -- + {with_delete_stmt}: err
--- * error: % table in delete statement does not exist 'not_valid_table'
 -- +1 error:
 proc with_delete_form_bogus_delete()
 begin
@@ -11353,16 +11353,16 @@ begin
 end;
 
 -- TEST: The replace function requires exactly three arguments, not two.
+-- + error: % too few arguments in function 'replace'
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % too few arguments in function 'replace'
 -- +1 error:
 select replace('a', 'b');
 
 -- TEST: The replace function requires exactly three arguments, not four.
+-- + error: % too many arguments in function 'replace'
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % too many arguments in function 'replace'
 -- +1 error:
 select replace('a', 'b', 'c', 'd');
 
@@ -11374,23 +11374,23 @@ select replace('a', 'b', 'c', 'd');
 let replace_dummy := replace('a', 'b', 'c');
 
 -- TEST: The first argument to replace must be a string.
+-- + error: % argument 1 'integer' is an invalid type; valid types are: 'text' in 'replace'
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' in 'replace'
 -- +1 error:
 select replace(0, 'b', 'c');
 
 -- TEST: The second argument to replace must be a string.
+-- + error: % argument 2 'integer' is an invalid type; valid types are: 'text' in 'replace'
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % argument 2 'integer' is an invalid type; valid types are: 'text' in 'replace'
 -- +1 error:
 select replace('a', 0, 'c');
 
 -- TEST: The third argument to replace must be a string.
+-- + error: % argument 3 'integer' is an invalid type; valid types are: 'text' in 'replace'
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % argument 3 'integer' is an invalid type; valid types are: 'text' in 'replace'
 -- +1 error:
 select replace('a', 'b', 0);
 
@@ -11427,23 +11427,23 @@ select replace('a', nullable('b'), 'c');
 select replace('a', 'b', nullable('c'));
 
 -- TEST: The first argument to replace must not be the literal NULL.
+-- + error: % argument 1 'real' is an invalid type; valid types are: 'text' in 'replace'
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % argument 1 'real' is an invalid type; valid types are: 'text' in 'replace'
 -- +1 error:
 select replace(2.0, 'b', 'c');
 
 -- TEST: The second argument to replace must not be the literal NULL.
+-- + error: % argument 2 'integer' is an invalid type; valid types are: 'text' in 'replace'
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % argument 2 'integer' is an invalid type; valid types are: 'text' in 'replace'
 -- +1 error:
 select replace('a', 1, 'c');
 
 -- TEST: The third argument to replace must not be the literal NULL.
+-- + error: % argument 3 is a NULL literal; useless in 'replace'
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % argument 3 is a NULL literal; useless in 'replace'
 -- +1 error:
 select replace('a', 'b', null);
 
@@ -11729,9 +11729,9 @@ create table client_region_table_2(id integer primary key references containing_
 @end_schema_region;
 
 -- TEST: explain not supported
+-- + error: % Only [EXPLAIN QUERY PLAN ...] statement is supported
 -- + {explain_stmt}: err
 -- + {int 1}
--- * error: % Only [EXPLAIN QUERY PLAN ...] statement is supported
 -- +1 error:
 explain select 1;
 
@@ -12850,16 +12850,16 @@ set a_string := upper('x');
 select char(id, info) as c from with_sensitive;
 
 -- TEST: test char with incompatible param type
+-- + error: % argument 1 'text' is an invalid type; valid types are: 'bool' 'integer' 'long' in 'char'
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % argument 1 'text' is an invalid type; valid types are: 'bool' 'integer' 'long' in 'char'
 -- +1 error:
 select char(name) from bar;
 
 -- TEST: test char with incompatible param count
+-- + error: % too few arguments in function 'char'
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % too few arguments in function 'char'
 -- +1 error:
 select char() from bar;
 
@@ -12884,9 +12884,9 @@ select abs(info) from with_sensitive;
 set price_d := (select abs(price_d));
 
 -- TEST: test abs with incompatible param count
+-- + error: % too few arguments in function 'abs'
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % too few arguments in function 'abs'
 -- +1 error:
 select abs() from bar;
 
@@ -12912,9 +12912,9 @@ select abs(null);
 set an_int := instr("x", "y");
 
 -- TEST: test instr with incompatible param count
+-- + error: % too few arguments in function 'instr'
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % too few arguments in function 'instr'
 -- +1 error:
 select instr();
 
@@ -13645,9 +13645,9 @@ begin
 end;
 
 -- TEST: try to do from arguments with a type but there is no such type
+-- + error: % must be a cursor, proc, table, or view 'no_such_type_dude'
 -- + {call_stmt}: err
 -- + {arg_list}: err
--- * error: % must be a cursor, proc, table, or view 'no_such_type_dude'
 -- +1 error:
 proc call_from_arguments_bogus_type(x integer)
 begin
@@ -14339,9 +14339,9 @@ create table with_collate
 );
 
 -- TEST: simple collate, bogus column type
+-- + error: % collate applied to a non-text column 'i'
 -- + {create_table_stmt}: err
 -- + {col_attrs_collate}: err
--- * error: % collate applied to a non-text column 'i'
 -- +1 error:
 create table with_collate
 (
@@ -14645,9 +14645,9 @@ set rt := integer_things.pen;
 select real_things.pencil;
 
 -- TEST: try to use an enum value, invalid name
+-- + error: % enum does not contain 'nope'
 -- + {select_stmt}: err
 -- + {dot}: err
--- * error: % enum does not contain 'nope'
 -- +1 error:
 select real_things.nope;
 
@@ -14731,9 +14731,9 @@ declare enum misc real (
 );
 
 -- TEST: enum declarations must be top level
+-- + error: % declared enums must be top level 'bogus_inside_proc'
 -- + {create_proc_stmt}: err
 -- + {declare_enum_stmt}: err
--- * error: % declared enums must be top level 'bogus_inside_proc'
 -- +1 error:
 proc enum_in_proc_bogus()
 begin
@@ -14946,9 +14946,9 @@ create virtual table basic_virtual using module_name(this, that, the_other) as (
 );
 
 -- TEST: virtual table error case
+-- + error: % duplicate column name 'id'
 -- + {create_virtual_table_stmt}: err
 -- + {create_table_stmt}: err
--- * error: % duplicate column name 'id'
 -- +1 error:
 create virtual table broken_virtual_table using module_name as (
   id integer,
@@ -15165,9 +15165,9 @@ create table with_check_expr_date(
 );
 
 -- TEST: check expression error
+-- + error: % name not found 'q'
 -- + {create_table_stmt}: err
 -- + {check_def}: err
--- * error: % name not found 'q'
 -- +1 error:
 create table with_bogus_check_expr(
   v integer,
@@ -15256,9 +15256,9 @@ type my_type integer;
 declare my_var my_type;
 
 -- TEST: use bogus declared type in variable declaration
+-- + error: % unknown type 'bogus_type'
 -- + {declare_vars_type}: err
 -- + {name bogus_type}: err
--- * error: % unknown type 'bogus_type'
 -- +1 error:
 declare my_var bogus_type;
 
@@ -15382,9 +15382,9 @@ begin
 end;
 
 -- TEST: declared type in param with error
+-- + error: % unknown type 'bogus_type'
 -- + {create_proc_stmt}: err
 -- + {name bogus_type}: err
--- * error: % unknown type 'bogus_type'
 -- +1 error:
 proc decl_type_err(label bogus_type)
 begin
@@ -15468,23 +15468,23 @@ declare function maybe_create_func_blob() create blob not null;
 declare function maybe_create_func_text() create text;
 
 -- TEST: make a function that creates int
+-- + error: % Return data type in a create function declaration can only be Text, Blob or Object
 -- + {declare_func_stmt}: err
 -- + {create_data_type}: err
--- * error: % Return data type in a create function declaration can only be Text, Blob or Object
 -- +1 error:
 declare function maybe_create_func_int() create int;
 
 -- TEST: make a function that creates bool
+-- + error: % Return data type in a create function declaration can only be Text, Blob or Object
 -- + {declare_func_stmt}: err
 -- + {create_data_type}: err
--- * error: % Return data type in a create function declaration can only be Text, Blob or Object
 -- +1 error:
 declare function maybe_create_func_bool() create bool;
 
 -- TEST: make a function that creates long
+-- + error: % Return data type in a create function declaration can only be Text, Blob or Object
 -- + {declare_func_stmt}: err
 -- + {create_data_type}: err
--- * error: % Return data type in a create function declaration can only be Text, Blob or Object
 -- +1 error:
 declare function maybe_create_func_long() create long not null @sensitive;
 
@@ -15504,9 +15504,9 @@ type type_obj_foo object<Foo> not null @sensitive;
 declare function type_func_return_create_obj() create type_obj_foo;
 
 -- TEST: declared function that return create bogus object
+-- + error: % unknown type 'bogus_type'
 -- + {declare_func_stmt}: err
 -- + {create_data_type}: err
--- * error: % unknown type 'bogus_type'
 -- +1 error:
 declare function type_func_return_create_bogus_obj() create bogus_type;
 
@@ -15753,9 +15753,9 @@ declare b0 bool;
 set b0 := x1 in (x1, x2, x3);
 
 -- TEST: in expression has mixed kinds
+-- + error: % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 -- + {assign}: err
 -- + {in_pred}: err
--- * error: % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 -- +1 error:
 set b0 := x1 in (x1, y2, x3);
 
@@ -15781,23 +15781,23 @@ set b0 := (select x1 in (select y1));
 set b0 := x1 between x2 and x3;
 
 -- TEST: left between operand is of the wrong kind
+-- + error: % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 -- + {assign}: err
 -- + {between}: err
--- * error: % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 -- +1 error:
 set b0 := x1 between y2 and 12;
 
 -- TEST: right between operand is of the wrong kind
+-- + error: % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 -- + {assign}: err
 -- + {between}: err
--- * error: % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 -- +1 error:
 set b0 := x1 between 34 and y3;
 
 -- TEST: left and right could be used but they don't match each other
+-- + error: % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 -- + {assign}: err
 -- + {between}: err
--- * error: % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 -- +1 error:
 set b0 := 56 between x2 and y3;
 
@@ -15808,9 +15808,9 @@ set b0 := 56 between x2 and y3;
 set x1 := -x2;
 
 -- TEST: negation preserves the kind, hence we get an error
+-- + error: % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 -- + {assign}: err
 -- + {uminus}: err
--- * error: % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 -- +1 error:
 set x1 := -y1;
 
@@ -15821,9 +15821,9 @@ set x1 := -y1;
 set x1 := coalesce(x1, x2, x3);
 
 -- TEST: coalesce incompatible kinds (should preserve kind)
+-- + error: % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 -- + {assign}: err
 -- + {call}: err
--- * error: % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 -- +1 error:
 set x1 := coalesce(x1, y2, x3);
 
@@ -15851,9 +15851,9 @@ set x1 := cast(y1 as _x);
 set x1 := cast(y1 as integer);
 
 -- TEST: cast bad, kinds don't match now
+-- + error: % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 -- + {assign}: err
 -- + {name x1}: x1: integer<x_coord> variable
--- * error: % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 -- +1 error:
 set x1 := cast(x1 as integer<y_coord>);
 
@@ -15974,9 +15974,9 @@ begin transaction;
 @enforce_strict select if nothing;
 
 -- TEST: normal select is disallowed
+-- + error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
 -- + {assign}: err
 -- + {select_stmt}: err
--- * error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
 -- +1 error:
 set price_d := (select id from foo);
 
@@ -15996,9 +15996,9 @@ set price_d := (select 1 if nothing then -1);
 set price_d := (select 1 if nothing or null then -1);
 
 -- TEST: select nothing or null null is redundant
+-- + error: % SELECT ... IF NOTHING OR NULL THEN NULL is redundant; use SELECT ... IF NOTHING THEN NULL instead
 -- + {assign}: err
 -- + {select_if_nothing_or_null_expr}: err
--- * error: % SELECT ... IF NOTHING OR NULL THEN NULL is redundant; use SELECT ... IF NOTHING THEN NULL instead
 -- +1 error:
 set price_d := (select 1 if nothing or null then null);
 
@@ -16008,9 +16008,9 @@ set price_d := (select 1 if nothing or null then null);
 set price_d := (select 1 if nothing or null then (select null or 1));
 
 -- TEST: nested select is not allowed either
+-- + error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
 -- + {assign}: err
 -- + {select_stmt}: err
--- * error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
 -- +1 error:
 set price_d := (select 1 if nothing then (select id from foo));
 
@@ -16325,9 +16325,9 @@ LET null_alias := NULL;
 let rewritten_null := price_d is null_alias;
 
 -- TEST: no reassignment of a null alias, it's moot
+-- + error: % variable of type NULL cannot be assigned 'null_alias'
 -- + {assign}: err
 -- + {name null_alias}: err
--- * error: % variable of type NULL cannot be assigned 'null_alias'
 -- +1 error:
 null_alias := null;
 
@@ -16442,9 +16442,9 @@ switch thing all values
 end;
 
 -- TEST: switch statement with duplicate values
+-- + error: % WHEN clauses contain duplicate values '2'
 -- + {switch_stmt}: err
 -- + {int 1}
--- * error: % WHEN clauses contain duplicate values '2'
 -- +1 error:
 switch z
   when 1, 2 then
@@ -16597,16 +16597,16 @@ end;
 declare out call decl_test_err(1, 2, 3);
 
 -- TEST: try to call a proc but an OUT arg is aliased by an IN arg
+-- + error: % OUT or INOUT argument cannot be used again in same call 'u'
 -- + {declare_out_call_stmt}: err
 -- + {call_stmt}: err
--- * error: % OUT or INOUT argument cannot be used again in same call 'u'
 -- +1 error:
 declare out call out2_proc(u, u, v);
 
 -- TEST: try to call a proc but an OUT arg is aliased by another OUT arg
+-- + error: % OUT or INOUT argument cannot be used again in same call 'u'
 -- + {declare_out_call_stmt}: err
 -- + {call_stmt}: err
--- * error: % OUT or INOUT argument cannot be used again in same call 'u'
 -- +1 error:
 declare out call out2_proc(1, u, u);
 
@@ -16720,18 +16720,18 @@ create table moving_to_recreate (
 ) @create(1, cql:from_recreate);
 
 -- TEST: try to use some bogus migrator
+-- + error: % unknown built-in migration procedure 'cql:fxom_recreate'
 -- + {create_table_stmt}: err
 -- + {dot}: err
--- * error: % unknown built-in migration procedure 'cql:fxom_recreate'
 -- +1 error:
 create table bogus_builtin_migrator (
  id integer
 ) @create(1, cql:fxom_recreate);
 
 -- TEST: try to use valid migrator in a column entry instead of the table entry
+-- + error: % built-in migration procedure not valid in this context 'cql:from_recreate'
 -- + {create_table_stmt}: err
 -- + {dot}: err
--- * error: % built-in migration procedure not valid in this context 'cql:from_recreate'
 -- +1 error:
 create table bogus_builtin_migrator_placement (
  id integer,
@@ -16755,9 +16755,9 @@ LET pr := proc_as_func("t");
 DECLARE pr2 text;
 
 -- TEST: test sensitive flag on pr variable for SET stmt
+-- + error: % cannot assign/copy sensitive expression to non-sensitive target 'pr2'
 -- + {assign}: err
 -- + {call}: text notnull sensitive
--- * error: % cannot assign/copy sensitive expression to non-sensitive target 'pr2'
 -- +1 error:
 SET pr2 := proc_as_func("t");
 
@@ -18733,9 +18733,9 @@ begin
 end;
 
 -- TEST: Initialization of OUT args is required before the end of the procedure.
+-- + error: % nonnull reference OUT parameter possibly not always initialized 'a'
 -- + {create_proc_stmt}: err
 -- + {param}: a: text notnull variable init_required out
--- * error: % nonnull reference OUT parameter possibly not always initialized 'a'
 -- +1 error:
 proc nonnull_reference_out_args_require_initialization(out a text not null)
 begin
@@ -18750,9 +18750,9 @@ begin
 end;
 
 -- TEST: Initialization must be complete before all returns.
+-- + error: % nonnull reference OUT parameter possibly not always initialized 'a'
 -- + {create_proc_stmt}: err
 -- + {param}: a: text notnull variable init_required out
--- * error: % nonnull reference OUT parameter possibly not always initialized 'a'
 -- +1 error:
 proc out_args_must_be_initialized_before_return(out a text not null)
 begin
@@ -19636,9 +19636,9 @@ begin
 end;
 
 -- TEST: proc-as-func requires a trailing OUT parameter
+-- + error: % procedure without trailing OUT parameter used as function 'proc_inout_text'
 -- + {let_stmt}: err
 -- + {call}: err
--- * error: % procedure without trailing OUT parameter used as function 'proc_inout_text'
 -- +1 error:
 let dummy_proc_inout_text := proc_inout_text();
 
@@ -19654,9 +19654,9 @@ begin
 end;
 
 -- TEST: proc-as-func disallows INOUT parameters
+-- + error: % procedure with INOUT parameter used as function 'proc_inout_text_out_text'
 -- + {let_stmt}: err
 -- + {call}: err
--- * error: % procedure with INOUT parameter used as function 'proc_inout_text_out_text'
 -- +1 error:
 let dummy_inout_text := proc_inout_text_out_text(a_string);
 
@@ -19673,9 +19673,9 @@ begin
 end;
 
 -- TEST: proc-as-func disallows non-trailing OUT parameters
+-- + error: % procedure with non-trailing OUT parameter used as function 'proc_out_text_out_text'
 -- + {let_stmt}: err
 -- + {call}: err
--- * error: % procedure with non-trailing OUT parameter used as function 'proc_out_text_out_text'
 -- +1 error:
 let dummy_proc_out := proc_out_text_out_text(a_string);
 
@@ -20068,23 +20068,23 @@ select @columns(distinct T1) from simple_shape2 T1 join simple_shape2 T2;
 select @columns(distinct T1, T2) from simple_shape2 T1 join simple_shape2 T2;
 
 -- TEST: attempt to extract a bogus table from the join
+-- + error: % table not found 'not_correct'
 -- + {select_stmt}: err
 -- + {select_expr_list_con}: err
--- * error: % table not found 'not_correct'
 -- +1 error:
 select @columns(not_correct) from simple_shape;
 
 -- TEST: attempt to extract a bogus column shape
+-- + error: % must be a cursor, proc, table, or view 'this_is_not_a_shape'
 -- + {select_stmt}: err
 -- + {select_expr_list_con}: err
--- * error: % must be a cursor, proc, table, or view 'this_is_not_a_shape'
 -- +1 error:
 select @columns(simple_shape like this_is_not_a_shape) from simple_shape;
 
 -- TEST: attempt to extract a bogus column shape with no table qualification
+-- + error: % must be a cursor, proc, table, or view 'this_is_not_a_shape'
 -- + {select_stmt}: err
 -- + {select_expr_list_con}: err
--- * error: % must be a cursor, proc, table, or view 'this_is_not_a_shape'
 -- +1 error:
 select @columns(like this_is_not_a_shape) from simple_shape;
 
@@ -20107,9 +20107,9 @@ select @columns(like with_kind) from simple_shape;
 select @columns(simple_shape like with_kind) from simple_shape;
 
 -- TEST: can't use the columns construct if there is no from clause
+-- + error: % select *, T.*, or @columns(...) cannot be used with no FROM clause
 -- + {select_stmt}: err
 -- + {select_expr_list_con}: err
--- * error: % select *, T.*, or @columns(...) cannot be used with no FROM clause
 -- +1 error:
 select @columns(like foo);
 
@@ -20150,9 +20150,9 @@ select @COLUMNS(two_col_v3 like two_col_v2) from two_col_v3;
 select @COLUMNS(like two_col_v1) from two_col_v3;
 
 -- TEST: v3 has r text but v2 requires t real
+-- + error: % name not found 't'
 -- + {select_stmt}: err
 -- + {column_calculation}: err
--- * error: % name not found 't'
 -- +1 error:
 select @COLUMNS(like two_col_v2) from two_col_v3;
 
@@ -20196,9 +20196,9 @@ begin
 end;
 
 -- TEST: try to use a bogus fragment as an inline function
+-- + error: % a shared fragment used like a function must be a simple SELECT with no FROM clause 'inline_math_bad'
 -- + {create_proc_stmt}: err
 -- + {call}: err
--- * error: % a shared fragment used like a function must be a simple SELECT with no FROM clause 'inline_math_bad'
 -- +1 error:
 proc do_inline_math_bad()
 begin
@@ -20216,9 +20216,9 @@ begin
 end;
 
 -- TEST: try to use a bogus fragment as an inline function
+-- + error: % a shared fragment used like a function must be a simple SELECT with no FROM clause 'inline_math_bad2'
 -- + {create_proc_stmt}: err
 -- + {call}: err
--- * error: % a shared fragment used like a function must be a simple SELECT with no FROM clause 'inline_math_bad2'
 -- +1 error:
 proc do_inline_math_bad2()
 begin
@@ -20233,9 +20233,9 @@ begin
 end;
 
 -- TEST: try to use a bogus fragment as an inline function
+-- + error: % procedure had errors, can't call 'inline_math_bad3'
 -- + {create_proc_stmt}: err
 -- + {call}: err
--- * error: % procedure had errors, can't call 'inline_math_bad3'
 -- +1 error:
 proc do_inline_math_bad3()
 begin
@@ -20251,9 +20251,9 @@ begin
 end;
 
 -- TEST: try to use a bogus fragment as an inline function
+-- + error: % nested select expression must return exactly one column 'inline_math_bad4'
 -- + {create_proc_stmt}: err
 -- + {call}: err
--- * error: % nested select expression must return exactly one column 'inline_math_bad4'
 -- +1 error:
 proc do_inline_math_bad4()
 begin
@@ -20261,9 +20261,9 @@ begin
 end;
 
 -- TEST: invoke a shared fragment as an expression
+-- + error: % too few arguments provided to procedure 'inline_math'
 -- + {create_proc_stmt}: err
 -- + {call}: err
--- * error: % too few arguments provided to procedure 'inline_math'
 -- +1 error:
 proc do_inline_math_bad5()
 begin
@@ -20277,9 +20277,9 @@ begin
 end;
 
 -- TEST: invoke a shared fragment as an expression, try to use distinct
+-- + error: % procedure as function call is not compatible with DISTINCT or filter clauses 'inline_frag'
 -- + {create_proc_stmt}: err
 -- + {call}: err
--- * error: % procedure as function call is not compatible with DISTINCT or filter clauses 'inline_frag'
 -- +1 error:
 proc do_inline_math_bad6()
 begin
@@ -20290,9 +20290,9 @@ end;
 declare proc declared_shared_fragment() (x integer);
 
 -- TEST: try declare a fragment and use it without doing create proc
+-- + error: % [[shared_fragment]] may only be placed on a CREATE PROC statement 'declared_shared_fragment'
 -- + {create_proc_stmt}: err
 -- + {shared_cte}: err
--- * error: % [[shared_fragment]] may only be placed on a CREATE PROC statement 'declared_shared_fragment'
 -- +1 error:
 proc uses_declared_shared_fragment()
 begin
@@ -20302,9 +20302,9 @@ begin
 end;
 
 -- TEST: invoke a shared fragment as an expression, try to use filter clause
+-- + error: % procedure as function call is not compatible with DISTINCT or filter clauses 'inline_frag'
 -- + {create_proc_stmt}: err
 -- + {call}: err
--- * error: % procedure as function call is not compatible with DISTINCT or filter clauses 'inline_frag'
 -- +1 error:
 proc do_inline_math_bad7()
 begin
@@ -21071,9 +21071,9 @@ begin
 end;
 
 -- TEST: verify basic analysis of structure storage, correct case
+-- + error: % cursor not declared with 'LIKE table_name', blob type can't be inferred 'C'
 -- + {let_stmt}: err
 -- + {call}: err
--- * error: % cursor not declared with 'LIKE table_name', blob type can't be inferred 'C'
 -- +1 error:
 proc cannot_infer_blob_type()
 begin
@@ -22091,9 +22091,9 @@ begin
 end;
 
 -- TEST: variable group must be top level
+-- + error: % group declared variables must be top level 'var_group'
 -- + {create_proc_stmt}: err
 -- + {declare_group_stmt}: err
--- * error: % group declared variables must be top level 'var_group'
 -- +1 error:
 proc proc_contains_var_group()
 begin
@@ -22406,9 +22406,9 @@ create table self_ref_table(
 @unsub(self_ref_table);
 
 -- TEST: this generates an error and creates an unresolved arg list
+-- + error: % name not found 'does_not_exist'
 -- + {declare_proc_stmt}: err
 -- + {like}: err
--- * error: % name not found 'does_not_exist'
 -- +1 error:
 declare proc broken_thing(LIKE does_not_exist arguments);
 
@@ -22587,9 +22587,9 @@ declare interface interface_foo1 (id int!, name text not null);
 declare interface interface_foo2 (id2 int!, name text not null);
 
 -- TEST: two interfaces, one not supported
+-- + error: % procedure 'interface_proc1' is missing column 'id2' of interface 'interface_foo2'
 -- + {misc_attrs}: err
 -- + {create_proc_stmt}: err
--- * error: % procedure 'interface_proc1' is missing column 'id2' of interface 'interface_foo2'
 -- +1 error:
 [[implements=interface_foo1]]
 [[implements=interface_foo2]]

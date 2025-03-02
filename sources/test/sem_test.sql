@@ -11,8 +11,8 @@
 declare procedure printf no check;
 
 -- TEST: try to declare printf as a normal proc too
+-- + error: % procedure cannot be both a normal procedure and an unchecked procedure 'printf'
 -- + {declare_proc_stmt}: err
--- * error: % procedure cannot be both a normal procedure and an unchecked procedure 'printf'
 -- +1 error:
 declare proc printf();
 
@@ -56,14 +56,14 @@ create table bar(
 );
 
 -- TEST: duplicate table name, creates error, will be ignored -- types will not be resolved due to early out
--- * error: % duplicate table/view
+-- + error: % duplicate table/view
 -- + {create_table_stmt}: err
 create table foo(
   id integer
 );
 
 -- TEST: duplicate column names, creates error will be ignored
--- * error: % duplicate column name 'id'
+-- + error: % duplicate column name 'id'
 -- + {create_table_stmt}: err
 -- +1 error:
 create table baz(
@@ -109,18 +109,18 @@ select * from foo T1 cross join foo T2 on T1.id = T2.id;
 select name from foo, bar;
 
 -- TEST: duplicate table alias in the join, error
--- * error: % duplicate table name in join 'T1'
+-- + error: % duplicate table name in join 'T1'
 -- + {select_stmt}: err
 -- +1 error:
 select name from foo T1, bar T1, bar T1;
 
 -- TEST: ambiguous id in foo and bar
--- * error: % identifier is ambiguous 'id'
+-- + error: % identifier is ambiguous 'id'
 -- +1 error:
 select id from foo, bar;
 
 -- TEST: column not present
--- * error: % name not found 'not_found'
+-- + error: % name not found 'not_found'
 -- +1 error:
 select not_found from foo, bar;
 
@@ -130,7 +130,7 @@ select not_found from foo, bar;
 select 'foo';
 
 -- TEST: string add not valid, further adding 3 does not create new errors
--- * error: % left operand cannot be a string in '+'
+-- + error: % left operand cannot be a string in '+'
 -- + {select_stmt}: err
 -- +1 error:
 select 'foo' + 'bar' + 3;
@@ -148,20 +148,20 @@ select 'foo' like 'baz';
 select 'foo' not like 'baz';
 
 -- TEST: 1 is not a string
+-- + error: % left operand must be a string in 'LIKE'
 -- + {select_stmt}: err
--- * error: % left operand must be a string in 'LIKE'
 -- +1 error:
 select 1 like 'baz';
 
 -- TEST: 1 is not a string in a "NOT LIKE" expr
+-- + error: % left operand must be a string in 'NOT LIKE'
 -- + {select_stmt}: err
--- * error: % left operand must be a string in 'NOT LIKE'
 -- +1 error:
 select 1 not like 'baz';
 
 -- TEST: 2 is not a string
+-- + error: % right operand must be a string in 'LIKE'
 -- + {select_stmt}: err
--- * error: % right operand must be a string in 'LIKE'
 -- +1 error:
 select 'foo' like 2;
 
@@ -200,14 +200,14 @@ select 1 + 2.0;
 select 3 + 4;
 
 -- TEST: invalid addition of string to id
+-- + error: % right operand cannot be a string in '+'
 -- + {select_stmt}: err
--- * error: % right operand cannot be a string in '+'
 -- +1 error:
 select T1.id + 'foo' from foo T1;
 
 -- TEST: invalid addition of id to string
+-- + error: % left operand cannot be a string in '+'
 -- {select_stmt}: err
--- * error: % left operand cannot be a string in '+'
 -- +1 error:
 select 'foo' + T1.id from foo T1;
 
@@ -293,8 +293,8 @@ select foo like 'bar';
 select -1;
 
 -- TEST: can't do unary minus on string
+-- + error: % string operand not allowed in '-'
 -- + {uminus}: err
--- * error: % string operand not allowed in '-'
 select - 'x';
 
 -- TEST: can't do NOT on strings
@@ -316,8 +316,8 @@ select NOT 1.2;
 select null is null;
 
 -- TEST: incompatible types: is
+-- + error: % required 'TEXT' not compatible with found 'REAL' context 'IS'
 -- + {is}: err
--- * error: % required 'TEXT' not compatible with found 'REAL' context 'IS'
 -- +1 error:
 select 'x' is 1.2;
 
@@ -334,8 +334,8 @@ select null is not null;
 select  - NOT 'x';
 
 -- TEST: unary logical does not double report errors
+-- + error: % string operand not allowed in '-'
 -- + {not}: err
--- * error: % string operand not allowed in '-'
 -- +1 error:
 select NOT - 'x';
 
@@ -386,14 +386,14 @@ declare real_result4 real;
 SET real_result4 := 1:simple_func3():simple_func2(2,3);
 
 -- TEST: failure when the wrong number of arguments for a function are provided
+-- + error: in call : CQL0212: too few arguments provided to procedure 'simple_func2'
 -- + {call}: err
--- * error: in call : CQL0212: too few arguments provided to procedure 'simple_func2'
 -- +1 error:
 SET real_result4 := 1:simple_func2(2);
 
 -- TEST: unary is null or is not null does not double report errors
+-- + error: % string operand not allowed in '-'
 -- + {is}: err
--- * error: % string operand not allowed in '-'
 -- exactly one error
 -- +1 error:
 select (- 'x') is null;
@@ -489,40 +489,40 @@ select c where 1;
 select * from foo where id > 1000;
 
 -- TEST: a WHERE clause cannot refer to the SELECT list
+-- + error: % alias referenced from WHERE, GROUP BY, HAVING, or WINDOW clause 'x'
 -- + {select_stmt}: err
 -- + {opt_where}: err
--- * error: % alias referenced from WHERE, GROUP BY, HAVING, or WINDOW clause 'x'
 -- +1 error:
 select id as x from foo where x > 1000;
 
 -- TEST: a GROUP BY clause cannot refer to the SELECT list
+-- + error: % alias referenced from WHERE, GROUP BY, HAVING, or WINDOW clause 'y'
 -- + {select_stmt}: err
 -- + {opt_groupby}: err
--- * error: % alias referenced from WHERE, GROUP BY, HAVING, or WINDOW clause 'y'
 -- +1 error:
 select id, name as y from bar group by y having count(name) > 10;
 
 -- TEST: a HAVING clause cannot refer to the SELECT list
+-- + error: % alias referenced from WHERE, GROUP BY, HAVING, or WINDOW clause 'y'
 -- + {select_stmt}: err
 -- + {opt_having}: err
--- * error: % alias referenced from WHERE, GROUP BY, HAVING, or WINDOW clause 'y'
 -- +1 error:
 select id, name as y from bar group by name having count(y) > 10;
 
 -- TEST: a WINDOW clause cannot refer to the SELECT list
+-- + error: % alias referenced from WHERE, GROUP BY, HAVING, or WINDOW clause 'y'
 -- + {select_stmt}: err
 -- + {opt_select_window}: err
--- * error: % alias referenced from WHERE, GROUP BY, HAVING, or WINDOW clause 'y'
 -- +1 error:
 select id, name as y, row_number() over w
 from bar
 window w as (order by y);
 
 -- TEST: GROUP BY should not be able to have aggregate functions
+-- + error: % function may not appear in this context 'count'
 -- + {select_stmt}: err
 -- + {opt_groupby}: err
 -- + {groupby_list}: err
--- * error: % function may not appear in this context 'count'
 -- +1 error:
 select * from foo group by count(id);
 
@@ -535,9 +535,9 @@ select * from foo order by count(id);
 
 -- TEST: a WHERE clause cannot refer to the FROM if what it refers to in the
 -- FROM shadows an alias in the SELECT list
+-- + error: % must use qualified form to avoid ambiguity with alias 'name'
 -- + {select_stmt}: err
 -- + {opt_where}: err
--- * error: % must use qualified form to avoid ambiguity with alias 'name'
 -- +1 error:
 select id as name from bar where name like "%foo%";
 
@@ -549,9 +549,9 @@ select id as name from bar where bar.name like "%foo%";
 
 -- TEST: a WHERE clause cannot refer to the FROM if what it refers to in the
 -- FROM shadows an alias in any enclosing SELECT list
+-- + error: % must use qualified form to avoid ambiguity with alias 'name'
 -- + {select_stmt}: err
 -- + {opt_where}: err
--- * error: % must use qualified form to avoid ambiguity with alias 'name'
 -- +1 error:
 select id as name
 from bar
@@ -917,10 +917,10 @@ on ItemBrand.id2 = Item.id1;
 select (select 1 as unused) as result;
 
 -- TEST: nested select expression with wrong # of items
+-- + error: % nested select expression must return exactly one column
 -- + {select_stmt}: err
 -- + {select_expr}: err
 -- + {select_expr_list_con}: _select_: { _anon: integer notnull, _anon: integer notnull }
--- * error: % nested select expression must return exactly one column
 -- +1 error:
 select (select 1, 2);
 
@@ -943,11 +943,11 @@ select (select 1) || (select 2);
 select * from (foo, bar);
 
 -- TEST: duplicate table refs
+-- + error: % duplicate table name in join 'foo'
 -- + {select_stmt}: err
 -- + {select_from_etc}: err
 -- + {table_or_subquery}: TABLE { foo: foo }
 -- + {table_or_subquery}: TABLE { foo: foo }
--- * error: % duplicate table name in join 'foo'
 -- +1 error:
 select * from (foo, foo);
 
@@ -968,9 +968,9 @@ order by T2.rate
 limit 5;
 
 -- TEST: join with bogus ON expression type
+-- + error: % expected numeric expression 'ON'
 -- + {select_stmt}: err
 -- + {on}: err
--- * error: % expected numeric expression 'ON'
 -- +1 error:
 select * from foo
 inner join bar as T2 on 'v'
@@ -1208,8 +1208,8 @@ create view MyView as select 1 y;
 -- + SELECT 2 AS x
 -- + The above must be identical.
 --
+-- + error: % duplicate table/view name 'foo'
 -- + {create_view_stmt}: err
--- * error: % duplicate table/view name 'foo'
 -- +3 error:
 create view foo as select 2 x;
 
@@ -1228,10 +1228,10 @@ create view MyView as select NOT 'x';
 create view V as select NOT 'x';
 
 -- TEST: can't select from V, it failed.
+-- + error: % table/view not defined 'V'
 -- + {select_stmt}: err
 -- + {select_from_etc}: err
 -- + {table_or_subquery}: err
--- * error: % table/view not defined 'V'
 -- +1 error:
 select * from V;
 
@@ -1248,26 +1248,26 @@ create index index_1 on foo(id);
 create index index_1 on foo(id);
 
 -- TEST: exact duplicate index is ok
+-- + error: % migration proc not allowed on object 'index_4'
 -- + {create_index_stmt}: err
--- * error: % migration proc not allowed on object 'index_4'
 -- +1 error:
 create index index_4 on foo(id) @delete(1, AMigrateProc);
 
 -- TEST: try to create a duplicate index
+-- + error: % duplicate index name 'index_1'
 -- + {create_index_stmt}: err
--- * error: % duplicate index name 'index_1'
 create index index_1 on bar(id);
 
 -- TEST: try to create an index on a table that doesn't exist
+-- + error: % create index table name not found 'doesNotExist'
 -- + {create_index_stmt}: err
--- * error: % create index table name not found 'doesNotExist'
 -- +1 error:
 create index index_2 on doesNotExist(id);
 
 -- TEST: try to create an index on columns that do not exist
+-- + error: % name not found 'doesNotExist'
 -- + {create_index_stmt}: err
 -- + {name doesNotExist}: err
--- * error: % name not found 'doesNotExist'
 -- +1 error:
 create index index_3 on foo(doesNotExist);
 
@@ -1285,8 +1285,8 @@ create index index_5 on foo(not 'x');
 
 -- TEST: duplicate expressions still give an error
 -- + CREATE INDEX index_6 ON foo (id + id, id + id);
+-- + error: % name list has duplicate name 'id + id'
 -- + {create_index_stmt}: err
--- * error: % name list has duplicate name 'id + id'
 -- +1 error:
 create index index_6 on foo(id+id, id+id);
 
@@ -1306,16 +1306,16 @@ create index index_7 on foo(id+id) where id < 100;
 create index index_8 on foo(id) where not 'x';
 
 -- TEST: partial index with invalid expression (x not in scope)
+-- + error: % name not found 'x'
 -- + {create_index_stmt}: err
 -- + {opt_where}: err
--- * error: % name not found 'x'
 -- +1 error:
 create index index_9 on foo(id) where x = 5;
 
 -- TEST: partial index with invalid expression (not numeric)
+-- + error: % expected numeric expression 'WHERE'
 -- + {create_index_stmt}: err
 -- + {opt_where}: err
--- * error: % expected numeric expression 'WHERE'
 -- +1 error:
 create index index_10 on foo(id) where 'hi';
 
@@ -1328,9 +1328,9 @@ create table simple_pk_table(
 );
 
 -- TEST: validate primary key columns, bogus name
+-- + error: % name not found 'pk_col_not_exist'
 -- + {create_table_stmt}: err
 -- + {name pk_col_not_exist}: err
--- * error: % name not found 'pk_col_not_exist'
 -- +1 error:
 create table baz(
   id int!,
@@ -1338,8 +1338,8 @@ create table baz(
 );
 
 -- TEST: validate PK not duplicated
+-- + error: % more than one primary key in table 'baz'
 -- + {create_table_stmt}: err
--- * error: % more than one primary key in table 'baz'
 -- +1 error:
 create table baz(
   id int!,
@@ -1382,8 +1382,8 @@ create table simple_ak_table_3 (
 );
 
 -- TEST: invalidate unique key that is the subset (in order) of another, (a, b, c) is invalid because (a, b) is already unique key
+-- + error: % at least part of this unique key is redundant with previous unique keys
 -- + {create_table_stmt}: err
--- * error: % at least part of this unique key is redundant with previous unique keys
 -- +1 error:
 create table simple_ak_table_4 (
   a int!,
@@ -1394,8 +1394,8 @@ create table simple_ak_table_4 (
 );
 
 -- TEST: invalidate same column in two unique key, (b, a) is invalid because (a, b) is already unique key
+-- + error: % at least part of this unique key is redundant with previous unique keys
 -- + {create_table_stmt}: err
--- * error: % at least part of this unique key is redundant with previous unique keys
 -- +1 error:
 create table simple_ak_table_5 (
   a int!,
@@ -1407,8 +1407,8 @@ create table simple_ak_table_5 (
 );
 
 -- TEST: invalidate unique key that is the subset (at end) of another, (c, d, b, a) is invalid because subset (a, b) is already unique key
+-- + error: % at least part of this unique key is redundant with previous unique keys
 -- + {create_table_stmt}: err
--- * error: % at least part of this unique key is redundant with previous unique keys
 -- +1 error:
 create table simple_ak_table_6 (
   a int!,
@@ -1420,8 +1420,8 @@ create table simple_ak_table_6 (
 );
 
 -- TEST: invalidate unique key that is the subset (at start) of another, (a, b) is invalid because (a) is unique key
+-- + error: % at least part of this unique key is redundant with previous unique keys
 -- + {create_table_stmt}: err
--- * error: % at least part of this unique key is redundant with previous unique keys
 -- +1 error:
 create table simple_ak_table_7 (
   a int!,
@@ -1472,8 +1472,8 @@ create table baz_expr_uk_bogus (
 );
 
 -- TEST: validate duplicate unique key
+-- + error: % duplicate constraint name in table 'ak1'
 -- + {create_table_stmt}: err
--- * error: % duplicate constraint name in table 'ak1'
 -- +1 error:
 create table baz_dup_uk (
   id integer PRIMARY KEY AUTOINCREMENT not null,
@@ -1482,8 +1482,8 @@ create table baz_dup_uk (
 );
 
 -- TEST: validate duplicate primary unique key
+-- + error: % duplicate constraint name in table 'pk1'
 -- + {create_table_stmt}: err
--- * error: % duplicate constraint name in table 'pk1'
 -- +1 error:
 create table baz_dup_pk (
   id int!,
@@ -1492,8 +1492,8 @@ create table baz_dup_pk (
 );
 
 -- TEST: validate duplicate in group of unique key
+-- + error: % at least part of this unique key is redundant with previous unique keys
 -- + {create_table_stmt}: err
--- * error: % at least part of this unique key is redundant with previous unique keys
 -- +1 error:
 create table baz_2 (
   id integer PRIMARY KEY AUTOINCREMENT not null,
@@ -1549,8 +1549,8 @@ create table fk_table_dup (
 );
 
 -- TEST: make an FK that refers to a bogus column in the current table
+-- + error: % name not found 'bogus'
 -- + {create_table_stmt}: err
--- * error: % name not found 'bogus'
 -- +1 error:
 create table baz (
   id integer,
@@ -1558,8 +1558,8 @@ create table baz (
 );
 
 -- TEST: make an FK that refers to a bogus column in the reference table
+-- + error: % name not found 'bogus'
 -- + {create_table_stmt}: err
--- * error: % name not found 'bogus'
 -- +1 error:
 create table baz (
   id integer,
@@ -1731,26 +1731,26 @@ let bool_x := const(1==1);
 @enforce_strict is true;
 
 -- TEST: strict mode for is true disables is true
+-- + error: % Operator may not be used because it is not supported on old versions of SQLite 'IS TRUE'
 -- + {assign}: err
--- * error: % Operator may not be used because it is not supported on old versions of SQLite 'IS TRUE'
 -- +1 error:
 set bool_x := 1 is true;
 
 -- TEST: strict mode for is true disables is false
+-- + error: % Operator may not be used because it is not supported on old versions of SQLite 'IS FALSE'
 -- + {assign}: err
--- * error: % Operator may not be used because it is not supported on old versions of SQLite 'IS FALSE'
 -- +1 error:
 set bool_x := 1 is false;
 
 -- TEST: strict mode for is true disables is not true
+-- + error: % Operator may not be used because it is not supported on old versions of SQLite 'IS NOT TRUE'
 -- + {assign}: err
--- * error: % Operator may not be used because it is not supported on old versions of SQLite 'IS NOT TRUE'
 -- +1 error:
 set bool_x := 1 is not true;
 
 -- TEST: strict mode for is true disables is not false
+-- + error: % Operator may not be used because it is not supported on old versions of SQLite 'IS NOT FALSE'
 -- + {assign}: err
--- * error: % Operator may not be used because it is not supported on old versions of SQLite 'IS NOT FALSE'
 -- +1 error:
 set bool_x := 1 is not false;
 
@@ -1972,14 +1972,14 @@ cursor kind_value_cursor like kind_cursor;
 cursor extended_cursor like ( like kind_value_cursor, xx real, yy text);
 
 -- TEST: restriction syntax with duplicate name
+-- + error: % duplicate name in list 'id'
 -- + {declare_cursor_like_name}: err
--- * error: % duplicate name in list 'id'
 -- +1 error:
 cursor reduced_cursor like extended_cursor(id, id);
 
 -- TEST: restriction syntax with bogus name
+-- + error: % name not found 'not_a_valid_name'
 -- + {declare_cursor_like_name}: err
--- * error: % name not found 'not_a_valid_name'
 -- +1 error:
 cursor reduced_cursor like extended_cursor(id, not_a_valid_name);
 
@@ -2003,8 +2003,8 @@ cursor reduced_cursor2 like extended_cursor(-id, cost);
 cursor reduced_cursor3 like extended_cursor(-id);
 
 -- TEST: try to make a cursor by removing columns but remove everything
+-- + error: % no columns were selected in the LIKE expression
 -- + {declare_cursor_like_name}: err
--- * error: % no columns were selected in the LIKE expression
 -- +1 error:
 cursor reduced_cursor4 like extended_cursor(-id, -xx, -yy, -value, -cost);
 
@@ -2096,14 +2096,14 @@ begin
 end;
 
 -- TEST: try to leave outside of a loop
+-- + error: % leave must be inside of a 'loop', 'while', or 'switch' statement
 -- + {leave_stmt}: err
--- * error: % leave must be inside of a 'loop', 'while', or 'switch' statement
 -- +1 error:
 leave;
 
 -- TEST: try to continue outside of a loop
+-- + error: % continue must be inside of a 'loop' or 'while' statement
 -- + {continue_stmt}: err
--- * error: % continue must be inside of a 'loop' or 'while' statement
 -- +1 error:
 continue;
 
@@ -2171,8 +2171,8 @@ begin
 end;
 
 -- TEST: return outside of any proc
+-- + error: % return statement should be in a procedure and not at the top level
 -- + {return_stmt}: err
--- * error: % return statement should be in a procedure and not at the top level
 -- +1 error:
 return;
 
@@ -2208,8 +2208,8 @@ close my_cursor;
 close X;
 
 -- TEST: close boxed cursor
+-- + error: % CLOSE cannot be used on a boxed cursor 'C'
 -- + {close_stmt}: err
--- * error: % CLOSE cannot be used on a boxed cursor 'C'
 -- +1 error:
 proc close_boxed_cursor(in box object<foo cursor>)
 begin
@@ -2245,14 +2245,14 @@ end;
 delete from foo where id = 33;
 
 -- TEST: delete from bogus table
+-- + error: % table in delete statement does not exist 'bogus_table'
 -- + {delete_stmt}: err
--- * error: % table in delete statement does not exist 'bogus_table'
 -- +1 error:
 delete from bogus_table;
 
 -- TEST: delete from a view
+-- + error: % cannot delete from a view 'MyView'
 -- + {delete_stmt}: err
--- * error: % cannot delete from a view 'MyView'
 -- +1 error:
 delete from MyView;
 
@@ -2318,8 +2318,8 @@ insert or abort into bar values (1, 'bazzle', 3);
 insert into foo default values;
 
 -- TEST: insert default values
+-- + error: % mandatory column with no default value in INSERT INTO name DEFAULT VALUES statement 'id'
 -- + {insert_stmt}: err
--- * error: % mandatory column with no default value in INSERT INTO name DEFAULT VALUES statement 'id'
 -- +1 error:
 insert into bar default values;
 
@@ -2744,14 +2744,14 @@ begin
 end;
 
 -- TEST: try to use locals that are gone
+-- + error: % name not found 'arg1'
 -- + {select_stmt}: err
--- * error: % name not found 'arg1'
 -- +1 error:
 select arg1;
 
 -- TEST: try to use locals that are gone
+-- + error: % name not found 'arg2'
 -- + {select_stmt}: err
--- * error: % name not found 'arg2'
 -- +1 error:
 select arg2;
 
@@ -2766,8 +2766,8 @@ begin
 end;
 
 -- TEST: proc name no longer available even though there were errors
+-- + error: % duplicate stored proc name 'proc3'
 -- + {create_proc_stmt}: err
--- * error: % duplicate stored proc name 'proc3'
 -- +1 error:
 procedure proc3()
 begin
@@ -2775,8 +2775,8 @@ begin
 end;
 
 -- TEST: throw not at the end of a block
+-- + error: % statement should be the last thing in a statement list
 -- + {create_proc_stmt}: err
--- * error: % statement should be the last thing in a statement list
 -- +1 error:
 procedure proc_throw_not_at_end()
 begin
@@ -2875,8 +2875,8 @@ select foo.id from foo as T1;
 declare int_nn int!;
 
 -- TEST: bogus assignment
+-- + error: % cannot assign/copy possibly null expression to not null target 'int_nn'
 -- + {assign}: err
--- * error: % cannot assign/copy possibly null expression to not null target 'int_nn'
 -- +1 error:
 set int_nn := NULL;
 
@@ -2997,14 +2997,14 @@ end;
 call proc_with_output(1, X, X);
 
 -- TEST: a variable may not be passed as both an IN and INOUT argument
+-- + error: % OUT or INOUT argument cannot be used again in same call 'X'
 -- + {call_stmt}: err
--- * error: % OUT or INOUT argument cannot be used again in same call 'X'
 -- +1 error:
 call proc_with_output(X, X, Y);
 
 -- TEST: a variable may not be passed as both an IN and OUT argument
+-- + error: % OUT or INOUT argument cannot be used again in same call 'X'
 -- + {call_stmt}: err
--- * error: % OUT or INOUT argument cannot be used again in same call 'X'
 -- +1 error:
 call proc_with_output(X, Y, X);
 
@@ -3096,8 +3096,8 @@ select sum(id) s from foo;
 select total(id) t from foo;
 
 -- TEST: try sum functions with too many param
+-- + error: % too many arguments in function 'total'
 -- + {select_stmt}: err
--- * error: % too many arguments in function 'total'
 -- +1 error:
 select total(id, rate) from bar;
 
@@ -3236,8 +3236,8 @@ let SNL := (select round(sensitive(nullable(1.0))));
 let SNR := (select round(nullable(1.0), sensitive(1)));
 
 -- TEST: The precision must be a numeric type but not real
+-- + error: % argument 2 'real' is an invalid type; valid types are: 'bool' 'integer' 'long' in 'round'
 -- + {assign}: err
--- * error: % argument 2 'real' is an invalid type; valid types are: 'bool' 'integer' 'long' in 'round'
 -- +1 error:
 set ll := (select round(1.0, 2.0));
 
@@ -3291,7 +3291,7 @@ begin
 end;
 
 -- TEST: not numeric while
--- * error: % expected numeric expression 'WHILE'
+-- + error: % expected numeric expression 'WHILE'
 -- + {strlit 'X'}: err
 -- +1 error:
 while 'X'
@@ -3469,8 +3469,8 @@ end;
 cursor curs for call with_result_set();
 
 -- TEST: bad args to the function -> error path
+-- + error: % too many arguments provided to procedure 'with_result_set'
 -- + {declare_cursor}: err
--- * error: % too many arguments provided to procedure 'with_result_set'
 -- +1 error:
 cursor curs2 for call with_result_set(1);
 
@@ -3518,26 +3518,26 @@ limit 5
 offset 'x';
 
 -- TEST: You can't aggregate if there is no FROM clause, try that out for count
+-- + error: % aggregates only make sense if there is a FROM clause 'count'
 -- + {select_stmt}: err
--- * error: % aggregates only make sense if there is a FROM clause 'count'
 -- +1 error:
 select count(1);
 
 -- TEST: checking use of aggregates in the wrong context (not allowed in where)
+-- + error: % function may not appear in this context 'count'
 -- + {select_stmt}: err
--- * error: % function may not appear in this context 'count'
 -- +1 error:
 select * from foo where count(*) == 1;
 
 -- TEST: You can't aggregate if there is no FROM clause, try that out for max
+-- + error: % aggregates only make sense if there is a FROM clause 'max'
 -- + {select_stmt}: err
--- * error: % aggregates only make sense if there is a FROM clause 'max'
 -- +1 error:
 select max(1);
 
 -- TEST: You can't aggregate if there is no FROM clause, try that out for avg
+-- + error: % aggregates only make sense if there is a FROM clause 'avg'
 -- + {select_stmt}: err
--- * error: % aggregates only make sense if there is a FROM clause 'avg'
 -- +1 error:
 select avg(1);
 
@@ -4006,20 +4006,20 @@ select strftime('%YYYY-%mm-%DDT%HH:%MM:%SS.SSS', 'now', '+1 month');
 select strftime('%W', 'now', '+1 month', 'start of month', '-3 minutes', 'weekday 4');
 
 -- TEST: strftime with non-string modifier
+-- + error: % argument 3 'integer' is an invalid type; valid types are: 'text' in 'strftime'
 -- + {select_stmt}: err
--- * error: % argument 3 'integer' is an invalid type; valid types are: 'text' in 'strftime'
 -- +1 error:
 select strftime('%s', 'now', 3);
 
 -- TEST: strftime with bogus format
+-- + error: % argument 1 'integer' is an invalid type; valid types are: 'text' in 'strftime'
 -- + {select_stmt}: err
--- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' in 'strftime'
 -- +1 error:
 select strftime(42, 'now');
 
 -- TEST: strftime with bogus timestring
+-- + error: % argument 2 'integer' is an invalid type; valid types are: 'text' in 'strftime'
 -- + {select_stmt}: err
--- * error: % argument 2 'integer' is an invalid type; valid types are: 'text' in 'strftime'
 -- +1 error:
 select strftime('%s', 42);
 
@@ -4030,8 +4030,8 @@ select strftime('%s', 42);
 set a_string := strftime('%s', 'now');
 
 -- TEST: strftime without enough arguments
+-- + error: % too few arguments in function 'strftime'
 -- + {select_stmt}: err
--- * error: % too few arguments in function 'strftime'
 -- +1 error:
 select strftime('now');
 
@@ -4054,14 +4054,14 @@ select date('now', '+1 month');
 select date('now', '+1 month', 'start of month', '-3 minutes', 'weekday 4');
 
 -- TEST: date with non-string modifier
+-- + error: % argument 2 'integer' is an invalid type; valid types are: 'text' in 'date'
 -- + {select_stmt}: err
--- * error: % argument 2 'integer' is an invalid type; valid types are: 'text' in 'date'
 -- +1 error:
 select date('now', 3);
 
 -- TEST: date with bogus timestring
+-- + error: % argument 1 'integer' is an invalid type; valid types are: 'text' in 'date'
 -- + {select_stmt}: err
--- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' in 'date'
 -- +1 error:
 select date(42);
 
@@ -4072,8 +4072,8 @@ select date(42);
 set a_string := date('now');
 
 -- TEST: date without enough arguments
+-- + error: % too few arguments in function 'date'
 -- + {select_stmt}: err
--- * error: % too few arguments in function 'date'
 -- +1 error:
 select date();
 
@@ -4096,14 +4096,14 @@ select time('now', '+1 month');
 select time('now', '+1 month', 'start of month', '-3 minutes', 'weekday 4');
 
 -- TEST: time with non-string modifier
+-- + error: % argument 2 'integer' is an invalid type; valid types are: 'text' in 'time'
 -- + {select_stmt}: err
--- * error: % argument 2 'integer' is an invalid type; valid types are: 'text' in 'time'
 -- +1 error:
 select time('now', 3);
 
 -- TEST: time with bogus timestring
+-- + error: % argument 1 'integer' is an invalid type; valid types are: 'text' in 'time'
 -- + {select_stmt}: err
--- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' in 'time'
 -- +1 error:
 select time(42);
 
@@ -4115,8 +4115,8 @@ select time(42);
 set a_string := time('now');
 
 -- TEST: time without enough arguments
+-- + error: % too few arguments in function 'time'
 -- + {select_stmt}: err
--- * error: % too few arguments in function 'time'
 -- +1 error:
 select time();
 
@@ -4139,14 +4139,14 @@ select datetime('now', '+1 month');
 select datetime('now', '+1 month', 'start of month', '-3 minutes', 'weekday 4');
 
 -- TEST: datetime with non-string modifier
+-- + error: % argument 2 'integer' is an invalid type; valid types are: 'text' in 'datetime'
 -- + {select_stmt}: err
--- * error: % argument 2 'integer' is an invalid type; valid types are: 'text' in 'datetime'
 -- +1 error:
 select datetime('now', 3);
 
 -- TEST: datetime with bogus timestring
+-- + error: % argument 1 'integer' is an invalid type; valid types are: 'text' in 'datetime'
 -- + {select_stmt}: err
--- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' in 'datetime'
 -- +1 error:
 select datetime(42);
 
@@ -4246,38 +4246,38 @@ let int_foo := type_check(cast(1 as integer<foo>) as integer<foo> not null);
 set int_foo := type_check(not "x" as goo);
 
 -- TEST: invalid type name
+-- + error: % unknown type 'goo'
 -- + {type_check_expr}: err
--- * error: % unknown type 'goo'
 -- +1 error:
 set int_foo := type_check(1 as goo);
 
 -- TEST: correct check_type kind must exact match (different name)
+-- + error: % expressions of different kinds can't be mixed: 'bar' vs. 'foo'
 -- + {type_check_expr}: err
--- * error: % expressions of different kinds can't be mixed: 'bar' vs. 'foo'
 -- +1 error:
 set int_foo := type_check(cast(1 as integer<bar>) as integer<foo> not null);
 
 -- TEST: correct check_type kind must exact match (nil left)
+-- + error: % expressions of different kinds can't be mixed: '[none]' vs. 'foo'
 -- + {type_check_expr}: err
--- * error: % expressions of different kinds can't be mixed: '[none]' vs. 'foo'
 -- +1 error:
 set int_foo := type_check(1 as integer<foo> not null);
 
 -- TEST: correct check_type kind must exact match (nil right)
+-- + error: % expressions of different kinds can't be mixed: 'bar' vs. '[none]'
 -- + {type_check_expr}: err
--- * error: % expressions of different kinds can't be mixed: 'bar' vs. '[none]'
 -- +1 error:
 set int_foo := type_check(cast(1 as integer<bar>) as int!);
 
 -- TEST: correct check_type (not null mismatch)
+-- + error: % incompatible types in expression (expected integer; found integer notnull) '1'
 -- + {type_check_expr}: err
--- * error: % incompatible types in expression (expected integer; found integer notnull) '1'
 -- +1 error:
 set int_foo := type_check(1 as integer);
 
 -- TEST: correct check_type (sensitive mismatch)
+-- + error: % incompatible types in expression (expected integer notnull sensitive; found integer notnull) '1'
 -- + {type_check_expr}: err
--- * error: % incompatible types in expression (expected integer notnull sensitive; found integer notnull) '1'
 -- +1 error:
 set int_foo := type_check(1 as integer<foo> not null @sensitive);
 
@@ -4569,8 +4569,8 @@ select nullable(sens_notnull);
 select nullable(price_e);
 
 -- TEST: affirmative error generated after nullable with kind
+-- + error: % expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
 -- + {assign}: err
--- * error: % expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
 -- +1 error:
 set price_d := (select nullable(price_e));
 
@@ -4587,86 +4587,86 @@ select sensitive(1, 2);
 -- try some const cases especially those with errors
 
 -- TEST: variables not allowed in constant expressions (duh)
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(x);
 
 -- TEST: divide by zero yields error in all forms (integer)
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(1/0);
 
 -- TEST: divide by zero yields error in all forms (real)
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(1/0.0);
 
 -- TEST: divide by zero yields error in all forms (long)
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(1/0L);
 
 -- TEST: divide by zero yields error in all forms (bool)
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(1 / not 1);
 
 -- TEST: divide by zero yields error in all forms (integer)
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(1 % 0);
 
 -- TEST: divide by zero yields error in all forms (long)
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(1 % 0L);
 
 -- TEST: divide by zero yields error in all forms (bool)
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(1 % not 1);
 
 -- TEST: not handles error prop
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(not x);
 
 -- TEST: variables not allowed in constant expressions (duh)
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(case x when 1 then 2 end);
 
 -- TEST: variables not allowed in constant expressions (duh)
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(case 1 when x then 2 end);
 
 -- TEST: variables not allowed in constant expressions (duh)
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(case 1 when 1 then x end);
 
 -- TEST: variables not allowed in constant expressions (duh)
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(case when x then 2 end);
 
 -- TEST: non integer arguments not allowed
+-- + error: % operands must be an integer type, not real '~'
 -- + {const}: err
--- * error: % operands must be an integer type, not real '~'
 -- +1 error:
 select const(~1.3);
 
@@ -4697,26 +4697,26 @@ select const(~null);
 select const(-null);
 
 -- TEST: forcing errors in binary operators to make them prop:  comparison type
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(x == x);
 
 -- TEST: forcing errors in binary operators to make them prop:  is/is_not comparison type
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(x is x);
 
 -- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(x + 0);
 
 -- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(0 + x);
 
@@ -4739,14 +4739,14 @@ select const(0 + null);
 select const(true + false);
 
 -- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(x - 0);
 
 -- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(0 - x);
 
@@ -4769,14 +4769,14 @@ select const(0 - null);
 select const(true - false);
 
 -- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(x * 0);
 
 -- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(0 * x);
 
@@ -4799,14 +4799,14 @@ select const(0 * null);
 select const(true * false);
 
 -- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(x / 1);
 
 -- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(1 / x);
 
@@ -4829,14 +4829,14 @@ select const(1 / null);
 select const(false / true);
 
 -- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(x % 1);
 
 -- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(1 % x);
 
@@ -4859,14 +4859,14 @@ select const(1 % null);
 select const(false % true);
 
 -- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(x == 1);
 
 -- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(1 == x);
 
@@ -4895,14 +4895,14 @@ select const(0 + null);
 select const(false == true);
 
 -- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(x != 1);
 
 -- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(1 != x);
 
@@ -4925,14 +4925,14 @@ select const(0 != not null);
 select const(false != true);
 
 -- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(x <= 1);
 
 -- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(1 <= x);
 
@@ -4955,14 +4955,14 @@ select const(0 <= not null);
 select const(false <= true);
 
 -- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(x >= 1);
 
 -- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(1 >= x);
 
@@ -4985,14 +4985,14 @@ select const(0 >= not null);
 select const(false >= true);
 
 -- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(x > 1);
 
 -- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(1 > x);
 
@@ -5015,14 +5015,14 @@ select const(1 > null);
 select const(false > true);
 
 -- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(x < 1);
 
 -- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(1 < x);
 
@@ -5045,14 +5045,14 @@ select const(1 < null);
 select const(false < true);
 
 -- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(x << 1);
 
 -- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(1 << x);
 
@@ -5075,14 +5075,14 @@ select const(0 << null);
 select const(false << true);
 
 -- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(x >> 1);
 
 -- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(1 >> x);
 
@@ -5105,14 +5105,14 @@ select const(0 >> null);
 select const(false >> true);
 
 -- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(x | 1);
 
 -- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(1 | x);
 
@@ -5135,14 +5135,14 @@ select const(0 | null);
 select const(false | true);
 
 -- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(x & 1);
 
 -- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(1 & x);
 
@@ -5165,62 +5165,62 @@ select const(0 & null);
 select const(false & true);
 
 -- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(x is 1);
 
 -- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(1 is x);
 
 -- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(x is not 1);
 
 -- TEST: forcing errors in binary operators to make them prop:  normal binary
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(1 is not x);
 
 -- TEST: forcing errors in binary operators to make them prop:  and error in first arg
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(x and 0);
 
 -- TEST: forcing errors in binary operators to make them prop:  and error in second arg
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(1 and x);
 
 -- TEST: forcing errors in binary operators to make them prop:  or: error in first arg
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(x or 0);
 
 -- TEST: forcing errors in binary operators to make them prop:  or: force error in second arg
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(0 or x);
 
 -- TEST: forcing errors in binary operators to make them prop:  and: force error in 2nd arg
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(1 and x);
 
 -- TEST: forcing errors in cast
+-- + error: % evaluation of constant failed
 -- + {const}: err
--- * error: % evaluation of constant failed
 -- +1 error:
 select const(cast(x as real));
 
@@ -5405,8 +5405,8 @@ with
 select * from does_not_shadow_an_existing_table;
 
 -- TEST: empty fragments are invalid for all fragment types
+-- + error: % fragments may not have an empty body 'empty_fragment'
 -- + {create_proc_stmt}: err
--- * error: % fragments may not have an empty body 'empty_fragment'
 -- +1 error:
 [[shared_fragment]]
 proc empty_fragment()
@@ -5432,14 +5432,14 @@ end;
 select * from (call a_shared_frag(1, 2));
 
 -- TEST: use the fragment in a nested select : easiest option but with error
+-- + error: % too few arguments provided to procedure 'a_shared_frag'
 -- + {shared_cte}: err
--- * error: % too few arguments provided to procedure 'a_shared_frag'
 -- +1 error:
 select * from (call a_shared_frag());
 
 -- TEST: fragment in nested select cannot be referred to without explict alias
+-- + error: % table not found 'a_shared_frag'
 -- + {select_expr_list}: err
--- * error: % table not found 'a_shared_frag'
 -- +1 error:
 select a_shared_frag.* from (call a_shared_frag(1, 2));
 
@@ -5516,8 +5516,8 @@ begin
 end;
 
 -- TEST: create a conditional fragment with no else
+-- + error: % shared fragments with conditionals must have exactly one SELECT, or WITH...SELECT in each statement list 'bogus_conditional_two_selects'
 -- + {create_proc_stmt}: err
--- * error: % shared fragments with conditionals must have exactly one SELECT, or WITH...SELECT in each statement list 'bogus_conditional_two_selects'
 -- +1 error:
 [[shared_fragment]]
 proc bogus_conditional_two_selects()
@@ -5531,8 +5531,8 @@ begin
 end;
 
 -- TEST: create a conditional fragment with a non-select statement
+-- + error: % shared fragments with conditionals must have exactly SELECT, or WITH...SELECT in each statement list 'bogus_conditional_non_select'
 -- + {create_proc_stmt}: err
--- * error: % shared fragments with conditionals must have exactly SELECT, or WITH...SELECT in each statement list 'bogus_conditional_non_select'
 -- +1 error:
 [[shared_fragment]]
 proc bogus_conditional_non_select()
@@ -5545,8 +5545,8 @@ begin
 end;
 
 -- TEST: create a conditional fragment with an empty if clause
+-- + error: % shared fragments with conditionals must have exactly one SELECT, or WITH...SELECT in each statement list 'bogus_conditional_empty_clause'
 -- + {create_proc_stmt}: err
--- * error: % shared fragments with conditionals must have exactly one SELECT, or WITH...SELECT in each statement list 'bogus_conditional_empty_clause'
 -- +1 error:
 [[shared_fragment]]
 proc bogus_conditional_empty_clause()
@@ -5558,8 +5558,8 @@ begin
 end;
 
 -- TEST: create a conditional fragment with an empty else clause
+-- + error: % shared fragments with conditionals must have exactly one SELECT, or WITH...SELECT in each statement list 'bogus_conditional_empty_else_clause'
 -- + {create_proc_stmt}: err
--- * error: % shared fragments with conditionals must have exactly one SELECT, or WITH...SELECT in each statement list 'bogus_conditional_empty_else_clause'
 -- +1 error:
 [[shared_fragment]]
 proc bogus_conditional_empty_else_clause()
@@ -5571,8 +5571,8 @@ begin
 end;
 
 -- TEST: cannot call shared fragments outside of a SQL context
+-- + error: % shared fragments may not be called outside of a SQL statement 'a_shared_frag'
 -- + {call_stmt}: err
--- * error: % shared fragments may not be called outside of a SQL statement 'a_shared_frag'
 -- +1 error:
 call a_shared_frag();
 
@@ -5591,8 +5591,8 @@ begin
 end;
 
 -- TEST: try to use the shared frag without the needed USING clause
+-- + error: % no actual table was provided for the table parameter 'source'
 -- + {with_select_stmt}: err
--- * error: % no actual table was provided for the table parameter 'source'
 -- +1 error:
 with (call shared_frag2(1,2))
 select * from a_shared_frag;
@@ -5742,8 +5742,8 @@ with
   select * from x;
 
 -- TEST: try to use LIKE in a procedure that is a shared fragment but not at the top level
+-- + error: % LIKE CTE form may only be used inside a shared fragment at the top level i.e. [[shared_fragment]] 'bogus_like_in_shared'
 -- + {with_select_stmt}: err
--- * error: % LIKE CTE form may only be used inside a shared fragment at the top level i.e. [[shared_fragment]] 'bogus_like_in_shared'
 -- +1 error:
 [[shared_fragment]]
 proc bogus_like_in_shared()
@@ -5756,8 +5756,8 @@ begin
 end;
 
 -- TEST: create a shared fragment with an unbound table but botch the CTE decl
+-- + error: % too few column names specified in common table expression 'source'
 -- + {with_select_stmt}: err
--- * error: % too few column names specified in common table expression 'source'
 -- +1 error:
 [[shared_fragment]]
 proc shared_frag_bad_like_decl()
@@ -5767,8 +5767,8 @@ begin
 end;
 
 -- TEST: create a shared fragment but use a bogus CTE declaration
+-- + error: % duplicate name in list 'id'
 -- + {with_select_stmt}: err
--- * error: % duplicate name in list 'id'
 -- +1 error:
 [[shared_fragment]]
 proc shared_frag_bogus_cte_columns()
@@ -5778,15 +5778,15 @@ begin
 end;
 
 -- TEST: use a shared fragment but with a bad CTE declaration
+-- + error: % duplicate name in list 'id'
 -- + {with_select_stmt}: err
--- * error: % duplicate name in list 'id'
 -- +1 error:
 with some_cte(id, id) as (call a_shared_frag(1,2))
 select * from some_cte;
 
 -- TEST: use the general form of the with CTE but with an error
+-- + error: % duplicate name in list 'goo'
 -- + {with_select_stmt}: err
--- * error: % duplicate name in list 'goo'
 -- +1 error:
 with some_cte(*) as (
   with garbonzo(goo, goo) as (select 1 x, 2 y)
@@ -5794,8 +5794,8 @@ with some_cte(*) as (
 select * from some_cte;
 
 -- TEST: use the general form of the with CTE but with an error in the outer cte_decl
+-- + error: % duplicate name in list 'goo'
 -- + {with_select_stmt}: err
--- * error: % duplicate name in list 'goo'
 -- +1 error:
 with some_cte(goo, goo) as (
   with garbonzo(*) as (select 1 x, 2 y)
@@ -5812,15 +5812,15 @@ with some_cte(*) as (call a_shared_frag(1,2))
 select * from some_cte;
 
 -- TEST: the call form must call a shared fragment
+-- + error: % a CALL statement inside SQL may call only a shared fragment i.e. [[shared_fragment]] 'return_with_attr'
 -- + {with_select_stmt}: err
--- * error: % a CALL statement inside SQL may call only a shared fragment i.e. [[shared_fragment]] 'return_with_attr'
 -- +1 error:
 with some_cte(*) as (call return_with_attr())
 select * from some_cte;
 
 -- TEST: the call form must make a valid call
+-- + error: % calls to undeclared procedures are forbidden; declaration missing or typo 'this_is_not_even_a_proc'
 -- + {with_select_stmt}: err
--- * error: % calls to undeclared procedures are forbidden; declaration missing or typo 'this_is_not_even_a_proc'
 -- +1 error:
 with some_cte(*) as (call this_is_not_even_a_proc())
 select * from some_cte;
@@ -6266,32 +6266,32 @@ set not_null_object := ifnull_throw(obj_var);
 set price_d := ifnull_crash(price_d);
 
 -- TEST: attest should copy the semantic info including kind, hence can produce errors
+-- + error: % expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
 -- + {assign}: err
--- * error: % expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
 -- +1 error:
 set price_d := ifnull_crash(price_e);
 
 -- TEST: convert to not null -- fails already not null
+-- + error: % argument must be a nullable type (but not constant NULL) in 'ifnull_crash'
 -- + {call}: err
--- * error: % argument must be a nullable type (but not constant NULL) in 'ifnull_crash'
 -- +1 error:
 set not_null_object := ifnull_crash(not_null_object);
 
 -- TEST: convert to not null -- fails can't do this to 'null'
+-- + error: % argument 1 is a NULL literal; useless in 'ifnull_crash'
 -- + {call}: err
--- * error: % argument 1 is a NULL literal; useless in 'ifnull_crash'
 -- +1 error:
 set not_null_object := ifnull_crash(null);
 
 -- TEST: convert to not null -- fails wrong arg count
+-- + error: % too many arguments in function 'ifnull_crash'
 -- + {call}: err
--- * error: % too many arguments in function 'ifnull_crash'
 -- +1 error:
 set not_null_object := ifnull_crash(1, 7);
 
 -- TEST: convert to not null -- fails in SQL context
+-- + error: % function may not appear in this context 'ifnull_crash'
 -- + {call}: err
--- * error: % function may not appear in this context 'ifnull_crash'
 -- +1 error:
 set not_null_object := (select ifnull_crash(1));
 
@@ -6401,8 +6401,8 @@ insert into bar(name) values ('x');
 insert into bar(garbonzo) values ('x');
 
 -- TEST: insert duplicate column name
+-- + error: % name list has duplicate name 'id'
 -- + {insert_stmt}: err
--- * error: % name list has duplicate name 'id'
 -- +1 error:
 insert into bar(id, id) values ('x');
 
@@ -6420,8 +6420,8 @@ insert into booly(id) values (1);
 insert into MyView(id) values (1);
 
 -- TEST: insert into non existent table
+-- + error: % table in insert statement does not exist 'garbonzo'
 -- + {insert_stmt}: err
--- * error: % table in insert statement does not exist 'garbonzo'
 -- +1 error:
 insert into garbonzo(id) values ('x');
 
@@ -6445,8 +6445,8 @@ set a_string := goo_func(bar_obj);
 set a_string := goo_func(not 'x');
 
 -- TEST: insert columns with mismatched count
+-- + error: % count of columns differs from count of values
 -- + {insert_stmt}: err
--- * error: % count of columns differs from count of values
 -- +1 error:
 insert into foo(id) values (NULL, NULL);
 
@@ -6580,8 +6580,8 @@ create table hides_id_not_name(
 );
 
 -- TEST: try to use id from the above
+-- + error: % name not found 'id'
 -- + {name id}: err
--- * error: % name not found 'id'
 -- +1 error:
 select id from hides_id_not_name;
 
@@ -6603,8 +6603,8 @@ create table migrate_test(
 );
 
 -- TEST: try to declare 'creator' in the wrong version (it should be in 4)
+-- + error: % @schema_upgrade_version not declared or doesn't match upgrade version 4 for proc 'creator'
 -- + {create_proc_stmt}: err
--- * error: % @schema_upgrade_version not declared or doesn't match upgrade version 4 for proc 'creator'
 -- +1 error:
 proc creator()
 begin
@@ -6680,8 +6680,8 @@ create table versioned_table_double_delete(
 ) @delete(1) @delete(1);
 
 -- TEST: try to create an index on deprecated table
+-- + error: % create index table name not found (hidden by @delete) 'versioned_table'
 -- + {create_index_stmt}: err
--- * error: % create index table name not found (hidden by @delete) 'versioned_table'
 -- +1 error:
 create index index_broken on versioned_table(id);
 
@@ -6837,8 +6837,8 @@ begin
 end;
 
 -- TEST: make a select * with a duplicate result column name and use that as a proc result set
+-- + error: % duplicate column name in result not allowed 'id'
 -- + {create_proc_stmt}: err
--- * error: % duplicate column name in result not allowed 'id'
 -- +1 error:
 proc bogus_result_duplicate_names()
 begin
@@ -6938,14 +6938,14 @@ create view view_with_version as select * from bar @delete(2);
 set ll := 3147483647L;
 
 -- TEST: try to drop a view that doesn't exist
+-- + error: % view in drop statement does not exist 'view_not_present'
 -- + {drop_view_stmt}: err
--- * error: % view in drop statement does not exist 'view_not_present'
 -- +1 error:
 drop view view_not_present;
 
 -- TEST: try to drop a view that is a table
+-- + error: % cannot drop a table with drop view 'foo'
 -- + {drop_view_stmt}: err
--- * error: % cannot drop a table with drop view 'foo'
 -- +1 error:
 drop view foo;
 
@@ -6968,16 +6968,16 @@ drop index index_1;
 drop index if exists I_dont_see_no_steekin_index;
 
 -- TEST: specify a column attribute twice (put something in between)
+-- + error: % a column attribute was specified twice on the same column
 -- + {create_table_stmt}: err
--- * error: % a column attribute was specified twice on the same column
 -- +1 error:
 create table two_not_null(
   id int! unique not null
 );
 
 -- TEST: specify incompatible constraints
+-- + error: % column can't be primary key and also unique key 'id'
 -- + {create_table_stmt}: err
--- * error: % column can't be primary key and also unique key 'id'
 -- +1 error:
 create table mixed_pk_uk(
   id integer primary key unique
@@ -6991,8 +6991,8 @@ create table table_with_uk(
 );
 
 -- TEST: validate PK not duplicated (mixed metho)
+-- + error: % more than one primary key in table 'baz'
 -- + {create_table_stmt}: err
--- * error: % more than one primary key in table 'baz'
 -- +1 error:
 create table baz(
   id integer primary key AUTOINCREMENT not null,
@@ -7000,8 +7000,8 @@ create table baz(
 );
 
 -- TEST: seed value is a string -- error
+-- + error: % seed expression must be a non-nullable integer
 -- + {insert_stmt}: err
--- * error: % seed expression must be a non-nullable integer
 -- +1 error:
 insert into bar (id, name, rate) values (1, 'bazzle', 3) @dummy_seed('x');
 
@@ -7408,8 +7408,8 @@ begin
 end;
 
 -- TEST: out cursor outside of a proc
+-- + error: % out cursor statement only makes sense inside of a procedure
 -- + {out_stmt}: err
--- * error: % out cursor statement only makes sense inside of a procedure
 -- +1 error:
 out curs;
 
@@ -7424,8 +7424,8 @@ begin
 end;
 
 -- TEST: read the result of a proc with an out cursor
+-- + error: % value cursors are not used with FETCH C, or FETCH C INTO 'C'
 -- + {fetch_stmt}: err
--- * error: % value cursors are not used with FETCH C, or FETCH C INTO 'C'
 -- +1 error:
 proc fails_result_reader()
 begin
@@ -7454,8 +7454,8 @@ begin
 end;
 
 -- TEST: call a procedure that is just all wrong
+-- + error: % cursor requires a procedure that returns a cursor with OUT 'C'
 -- + {create_proc_stmt}: err
--- * error: % cursor requires a procedure that returns a cursor with OUT 'C'
 -- +1 error:
 proc invalid_proc_fetch()
 begin
@@ -7503,8 +7503,8 @@ end;
 SET an_int := proc_func(distinct 1);
 
 -- TEST: use proc_with_single_output like it was a function, too many args
+-- + error: % too many arguments provided to procedure 'proc_with_single_output'
 -- + {call}: err
--- * error: % too many arguments provided to procedure 'proc_with_single_output'
 -- +1 error:
 set an_int := proc_with_single_output(1, an_int, an_int2);
 
@@ -7516,14 +7516,14 @@ set an_int := proc_with_single_output(1, an_int, an_int2);
 let out_result_set := out_cursor_proc();
 
 -- TEST: this proc has no out arg that can be used as a result
+-- + error: % procedure without trailing OUT parameter used as function 'proc2'
 -- + {call}: err
--- * error: % procedure without trailing OUT parameter used as function 'proc2'
 -- +1 error:
 set an_int := proc2(1);
 
 -- TEST: user proc calls can't happen inside of SQL
+-- + error: % a function call to a procedure inside SQL may call only a shared fragment i.e. [[shared_fragment]] 'proc_with_single_output'
 -- + {call}: err
--- * error: % a function call to a procedure inside SQL may call only a shared fragment i.e. [[shared_fragment]] 'proc_with_single_output'
 -- +1 error:
 set an_int := (select proc_with_single_output(1, an_int, an_int));
 
@@ -7623,14 +7623,14 @@ begin
 end;
 
 -- TEST: fetch non cursor
+-- + error: % name not found 'not_a_cursor'
 -- + {fetch_values_stmt}: err
--- * error: % name not found 'not_a_cursor'
 -- +1 error:
 fetch not_a_cursor from values (1,2,3);
 
 -- TEST: try to use fetch values on a statement cursor
+-- + error: % fetch values is only for value cursors, not for sqlite cursors 'my_cursor'
 -- + {fetch_values_stmt}: err
--- * error: % fetch values is only for value cursors, not for sqlite cursors 'my_cursor'
 -- +1 error:
 fetch my_cursor from values (1,2,3);
 
@@ -7645,8 +7645,8 @@ begin
 end;
 
 -- TEST: missing columns in fetch values
+-- + error: % count of columns differs from count of values
 -- + {fetch_values_stmt}: err
--- * error: % count of columns differs from count of values
 -- +1 error:
 proc fetch_values_missing_value()
 begin
@@ -7935,8 +7935,8 @@ end;
 cursor some_cursor like select 1 A, 2.5 B, not 'x' C;
 
 -- TEST: duplicate cursor name
+-- + error: % duplicate variable name in the same scope 'X'
 -- + {declare_cursor_like_select}: err
--- * error: % duplicate variable name in the same scope 'X'
 -- +1 error:
 cursor X like select 1 A, 2.5 B, 'x' C;
 
@@ -7952,8 +7952,8 @@ select rowid from foo;
 select T1.rowid from foo T1, bar T2;
 
 -- TEST: name not unique, not found
+-- + error: % name not found 'T1.rowid'
 -- + {select_stmt}: err
--- * error: % name not found 'T1.rowid'
 -- +1 error:
 select T1.rowid from foo T2, foo T3;
 
@@ -8006,16 +8006,16 @@ create table misc_attr_table
 create unique index if not exists my_unique_index on bar(id/2 asc, name desc, rate);
 
 -- TEST: there is no index that covers id so this is an error, the index covers id/2
+-- + error: % columns referenced in the foreign key statement should match exactly a unique key in the parent table 'bar'
 -- + {create_table_stmt}: err
--- * error: % columns referenced in the foreign key statement should match exactly a unique key in the parent table 'bar'
 -- +1 error:
 create table ref_bar(
  id int! references bar(id) -- index is on id/2
 );
 
 -- TEST: try to update a table that does not exist
+-- + error: % table in update statement does not exist 'This_Table_Does_Not_Exist'
 -- + {update_stmt}: err
--- * error: % table in update statement does not exist 'This_Table_Does_Not_Exist'
 -- +1 error:
 update This_Table_Does_Not_Exist set x = 1;
 
@@ -8030,46 +8030,46 @@ create table fk_on_col(
 );
 
 -- TEST: create a table with a bogus FK : too many cols
+-- + error: % FK reference must be exactly one column with the correct type 'fk_src'
 -- + {create_table_stmt}: err
--- * error: % FK reference must be exactly one column with the correct type 'fk_src'
 -- +1 error:
 create table bogus_fk_on_col_1(
   fk_src integer references bar ( id, name ) on update cascade on delete set null
 );
 
 -- TEST: create a table with a bogus FK : wrong type
+-- + error: % FK reference must be exactly one column with the correct type 'fk_src'
 -- + {create_table_stmt}: err
--- * error: % FK reference must be exactly one column with the correct type 'fk_src'
 -- +1 error:
 create table bogus_fk_on_col_1(
   fk_src integer references bar ( name )
 );
 
 -- TEST: create a table with a bogus FK : no such table
+-- + error: % foreign key refers to non-existent table 'no_such_table'
 -- + {create_table_stmt}: err
--- * error: % foreign key refers to non-existent table 'no_such_table'
 -- +1 error:
 create table bogus_fk_on_col_1(
   fk_src integer references no_such_table ( name )
 );
 
 -- TEST: create a table with a bogus FK : no such column
+-- + error: % name not found 'no_such_column'
 -- + {create_table_stmt}: err
--- * error: % name not found 'no_such_column'
 -- +1 error:
 create table bogus_fk_on_col_1(
   fk_src integer references bar ( no_such_column )
 );
 
 -- TEST: create a table with a non-integer autoinc
+-- + error: % autoincrement column must be [LONG|INT] PRIMARY KEY 'id'
 -- + {create_table_stmt}: err
--- * error: % autoincrement column must be [LONG|INT] PRIMARY KEY 'id'
 -- +1 error:
 create table bogus_autoinc_type(id bool primary key autoincrement);
 
 -- TEST: create a table an autoinc and without rowid
+-- + error: % table has an AUTOINCREMENT column; it cannot also be WITHOUT ROWID 'bogus_without_rowid'
 -- + {create_table_stmt}: err
--- * error: % table has an AUTOINCREMENT column; it cannot also be WITHOUT ROWID 'bogus_without_rowid'
 -- +1 error:
 create table bogus_without_rowid(id integer primary key autoincrement) without rowid;
 
@@ -8362,14 +8362,14 @@ end;
 cursor val_cursor like my_cursor;
 
 -- TEST: try to fetch a cursor from arguments but not in a procedure
+-- + error: % FROM ARGUMENTS construct is only valid inside a procedure
 -- + {fetch_values_stmt}: err
--- * error: % FROM ARGUMENTS construct is only valid inside a procedure
 -- +1 error:
 fetch val_cursor from arguments;
 
 -- TEST: try to fetch a cursor but not enough arguments
+-- + error: % [shape] has too few fields 'ARGUMENTS'
 -- + {fetch_values_stmt}: err
--- * error: % [shape] has too few fields 'ARGUMENTS'
 -- +1 error:
 proc arg_fetcher_not_enough_args(arg1 text not null)
 begin
@@ -8451,8 +8451,8 @@ begin
 end;
 
 -- TEST: try to rewrite args on a bogus table
+-- + error: % must be a cursor, proc, table, or view 'garbonzo'
 -- + {create_proc_stmt}: err
--- * error: % must be a cursor, proc, table, or view 'garbonzo'
 -- +1 error:
 proc rewrite_args_fails(like garbonzo)
 begin
@@ -8529,8 +8529,8 @@ begin
 end;
 
 -- TEST: create a proc using another proc that doesn't have a result type
+-- + error: % proc has no result 'proc1'
 -- + {create_proc_stmt}: err
--- * error: % proc has no result 'proc1'
 -- +1 error:
 procedure bogus_like_proc(like proc1)
 begin
@@ -8598,22 +8598,22 @@ create temp table table_like_mixed(
 );
 
 -- TEST: try to create a temp table but there is a duplicate column after expanding like
+-- + error: % duplicate column name 'f1'
 -- + {create_table_stmt}: err
--- * error: % duplicate column name 'f1'
 -- +1 error:
 create temp table table_with_dup_col(
   f1 text, like MyView
 );
 
 -- TEST: try to create a temp view with versioning -- not allowed
+-- + error: % temp objects may not have versioning annotations 'bogus_temp_view_with_versioning'
 -- + {create_view_stmt}: err
--- * error: % temp objects may not have versioning annotations 'bogus_temp_view_with_versioning'
 -- +1 error:
 create temp view bogus_temp_view_with_versioning as select 1 x @delete(1);
 
 -- TEST: try to create a temp trigger with versioning -- not allowed
+-- + error: % temp objects may not have versioning annotations 'bogus_temp_trigger'
 -- + {create_trigger_stmt}: err
--- * error: % temp objects may not have versioning annotations 'bogus_temp_trigger'
 -- +1 error:
 create temp trigger if not exists bogus_temp_trigger
   before delete on bar
@@ -8622,32 +8622,32 @@ begin
 end @delete(2);
 
 -- TEST: try to create a temp table with versioning -- not allowed
+-- + error: % temp objects may not have versioning annotations 'bogus_temp_with_create_versioning'
 -- + {create_table_stmt}: err
--- * error: % temp objects may not have versioning annotations 'bogus_temp_with_create_versioning'
 -- +1 error:
 create temp table bogus_temp_with_create_versioning(
   id integer
 ) @create(1);
 
 -- TEST: try to create a temp table with versioning -- not allowed
+-- + error: % temp objects may not have versioning annotations 'bogus_temp_with_delete_versioning'
 -- + {create_table_stmt}: err
--- * error: % temp objects may not have versioning annotations 'bogus_temp_with_delete_versioning'
 -- +1 error:
 create temp table bogus_temp_with_delete_versioning(
   id integer
 ) @delete(1);
 
 -- TEST: try to create a temp table with recreate versioning -- not allowed
+-- + error: % temp objects may not have versioning annotations 'bogus_temp_with_recreate_versioning'
 -- + {create_table_stmt}: err
--- * error: % temp objects may not have versioning annotations 'bogus_temp_with_recreate_versioning'
 -- +1 error:
 create temp table bogus_temp_with_recreate_versioning(
   id integer
 ) @recreate;
 
 -- TEST: try to create a temp table with versioning in a column -- not allowed
+-- + error: % columns in a temp table may not have versioning attributes 'id'
 -- + {create_table_stmt}: err
--- * error: % columns in a temp table may not have versioning attributes 'id'
 -- +1 error:
 create temp table bogus_temp_with_versioning_in_column(
   id integer @create(2)
@@ -8871,8 +8871,8 @@ begin
 end;
 
 -- TEST: specify update columns
+-- + error: % name list has duplicate name 'a'
 -- + {create_trigger_stmt}: err
--- * error: % name list has duplicate name 'a'
 -- +1 error:
 create trigger trigger4a
   instead of update of a, a, c on ViewShape
@@ -8881,8 +8881,8 @@ begin
 end;
 
 -- TEST: specify a view where one is not allowed
+-- + error: % a trigger on a view must be the INSTEAD OF form 'ViewShape'
 -- + {create_trigger_stmt}: err
--- * error: % a trigger on a view must be the INSTEAD OF form 'ViewShape'
 -- +1 error:
 create trigger trigger4b
   before update on ViewShape
@@ -8891,8 +8891,8 @@ begin
 end;
 
 -- TEST: specify a bogus table name
+-- + error: % table/view not found 'no_such_table_dude'
 -- + {create_trigger_stmt}: err
--- * error: % table/view not found 'no_such_table_dude'
 -- +1 error:
 create trigger trigger4c
   before update on no_such_table_dude
@@ -8929,8 +8929,8 @@ begin
 end;
 
 -- TEST: try to drop a trigger (bogus)
+-- + error: % trigger in drop statement was not declared 'this_trigger_does_not_exist'
 -- + {drop_trigger_stmt}: err
--- * error: % trigger in drop statement was not declared 'this_trigger_does_not_exist'
 -- +1 error:
 drop trigger this_trigger_does_not_exist;
 
@@ -8941,8 +8941,8 @@ drop trigger this_trigger_does_not_exist;
 drop trigger if exists trigger1;
 
 -- TEST: try to delete  a table before it was created
+-- + error: % delete version can't be <= create version 'retro_deleted_table'
 -- + {create_table_stmt}: err
--- * error: % delete version can't be <= create version 'retro_deleted_table'
 -- +1 error:
 create table retro_deleted_table( id integer) @create(3) @delete(1);
 
@@ -8986,8 +8986,8 @@ begin
 end;
 
 -- TEST: try to create a trigger with a migrate proc
+-- + error: % migration proc not allowed on object 'trigger8'
 -- + {create_trigger_stmt}: err
--- * error: % migration proc not allowed on object 'trigger8'
 -- +1 error:
 create trigger if not exists trigger8
   before delete on bar
@@ -9043,8 +9043,8 @@ union all
 select 1 as A, 2 as B;
 
 -- TEST: try to return untyped NULL
+-- + error: % NULL expression has no type to imply the type of the select result 'n'
 -- + {create_proc_stmt}: err
--- * error: % NULL expression has no type to imply the type of the select result 'n'
 -- +1 error:
 proc returns_bogus_null()
 begin
@@ -9052,8 +9052,8 @@ begin
 end;
 
 -- TEST: try to declare cursor for untyped NULL
+-- + error: % NULL expression has no type to imply the type of the select result 'n'
 -- + {create_proc_stmt}: err
--- * error: % NULL expression has no type to imply the type of the select result 'n'
 -- +1 error:
 proc fetch_null_column()
 begin
@@ -11170,8 +11170,8 @@ end;
 @enforce_strict upsert statement;
 
 -- TEST: upsert statement failed validation in strict mode
+-- + error: % upsert statement are forbidden if strict upsert statement mode is enabled
 -- + {upsert_stmt}: err
--- * error: % upsert statement are forbidden if strict upsert statement mode is enabled
 -- +1 error:
 insert into bar(id) values (1) on conflict do nothing;
 
@@ -11194,8 +11194,8 @@ insert into bar(id) values (1) on conflict do nothing;
 @enforce_strict window function;
 
 -- TEST: window function invocaction failed validation in strict mode
+-- + error: % window function invocation are forbidden if strict window function mode is enabled
 -- + {window_func_inv}: err
--- * error: % window function invocation are forbidden if strict window function mode is enabled
 -- +1 error:
 select id, rank() over () from foo;
 
@@ -11529,14 +11529,14 @@ declare proc InvalidAdHocMigration(y integer);
 @schema_ad_hoc_migration(5, not_allowed_crc);
 
 -- TEST: create ad hoc version migration -- duplicate proc
+-- + error: % a procedure can appear in only one annotation 'MyAdHocMigration'
 -- + {schema_ad_hoc_migration_stmt}: err
--- * error: % a procedure can appear in only one annotation 'MyAdHocMigration'
 -- +1 error:
 @schema_ad_hoc_migration(5, MyAdHocMigration);
 
 -- TEST: create ad hoc version migration -- missing proc
+-- + error: % ad hoc schema migration directive must provide a procedure to run
 -- + {schema_ad_hoc_migration_stmt}: err
--- * error: % ad hoc schema migration directive must provide a procedure to run
 -- +1 error:
 @schema_ad_hoc_migration(2);
 
@@ -11584,8 +11584,8 @@ DECLARE PROC val_fetch_dml (seed INT!) OUT (id TEXT) USING TRANSACTION;
 @declare_deployable_region root_deployable_region;
 
 -- TEST: create an error in a deployoable region (duplicate name)
+-- + error: % schema region already defined 'root_deployable_region'
 -- + {declare_deployable_region_stmt}: err
--- * error: % schema region already defined 'root_deployable_region'
 -- +1 error:
 @declare_deployable_region root_deployable_region;
 
@@ -12454,14 +12454,14 @@ cursor c_bar like referenceable;
 insert into referenceable from cursor c_bar;
 
 -- TEST: try to use no columns from the cursor
+-- + error: % FROM [shape] is redundant if column list is empty
 -- + {insert_stmt}: err
--- * error: % FROM [shape] is redundant if column list is empty
 -- +1 error:
 insert into referenceable() from cursor c_bar;
 
 -- TEST: try to use a cursor that has no storage (a non automatic cursor)
+-- + error: % cannot read from a cursor without fields 'fetch_cursor'
 -- + {insert_stmt}: err
--- * error: % cannot read from a cursor without fields 'fetch_cursor'
 -- +1 error:
 insert into referenceable from cursor fetch_cursor;
 
@@ -12469,14 +12469,14 @@ insert into referenceable from cursor fetch_cursor;
 cursor small_cursor like select 1 x;
 
 -- TEST: try to use a cursor that has not enough fields
+-- + error: % [shape] has too few fields 'small_cursor'
 -- + {insert_stmt}: err
--- * error: % [shape] has too few fields 'small_cursor'
 -- +1 error:
 insert into referenceable from cursor small_cursor;
 
 -- TEST: try to use something that isn't a cursor
+-- + error: % not a cursor 'X'
 -- + {insert_stmt}: err
--- * error: % not a cursor 'X'
 -- +1 error:
 insert into referenceable from cursor X;
 
@@ -12584,8 +12584,8 @@ update cursor nully_cursor(like c1c7) from values (c1c7.c1, c1c7.c7);
 update cursor nully_cursor(like c1c7) from cursor c1c7;
 
 -- TEST: try to update cursor from a bogus symbol
+-- + error: % name not found 'not_a_symbol'
 -- + {update_cursor_stmt}: err
--- * error: % name not found 'not_a_symbol'
 -- +1 error:
 update cursor nully_cursor(like c1c7) from cursor not_a_symbol;
 
@@ -12603,14 +12603,14 @@ fetch nully_cursor(like c1c7) from values (c1c7.c1, c1c7.c7);
 fetch nully_cursor(like c1c7) from cursor c1c7;
 
 -- TEST: fetch cursor form bogus cursor
+-- + error: % name not found 'not_a_symbol'
 -- + {fetch_values_stmt}: err
--- * error: % name not found 'not_a_symbol'
 -- +1 error:
 fetch nully_cursor(like c1c7) from cursor not_a_symbol;
 
 -- TEST: fetch using like form -- bogus symbol
+-- + error: % must be a cursor, proc, table, or view 'not_a_symbol'
 -- + {fetch_values_stmt}: err
--- * error: % must be a cursor, proc, table, or view 'not_a_symbol'
 -- +1 error:
 fetch nully_cursor(like not_a_symbol) from values (1, 2);
 
@@ -12625,8 +12625,8 @@ cursor id_name_cursor like select 1 id, 'x' name;
 insert into bar(like id_name_cursor) values (1, 'x');
 
 -- TEST: insert using the like form, bogus symbol
+-- + error: % must be a cursor, proc, table, or view 'not_a_symbol'
 -- + {insert_stmt}: err
--- * error: % must be a cursor, proc, table, or view 'not_a_symbol'
 -- +1 error:
 insert into bar(like not_a_symbol) values (1, 'x');
 
@@ -12639,8 +12639,8 @@ insert into bar(like not_a_symbol) values (1, 'x');
 fetch c1c7 from cursor nully_cursor(like c1c7);
 
 -- TEST: fetch from cursor using the like form, bogus symbol
+-- + error: % must be a cursor, proc, table, or view 'not_a_symbol'
 -- + {fetch_values_stmt}: err
--- * error: % must be a cursor, proc, table, or view 'not_a_symbol'
 -- +1 error:
 fetch c1c7 from cursor nully_cursor(like not_a_symbol);
 
@@ -12698,8 +12698,8 @@ select * from bar
 order by name collate nocase;
 
 -- TEST: verify collate cannot be used in a loose expression
+-- + error: % COLLATE may only appear in the context of a SQL statement
 -- + {collate}: err
--- * error: % COLLATE may only appear in the context of a SQL statement
 -- +1 error:
 set a_string := 'x' collate nocase;
 
@@ -12805,8 +12805,8 @@ set a_string := nullif('x', 1);
 select nullif(name, 'a') as n from with_sensitive;
 
 -- TEST: declare a select function with name match SQLite function.
+-- + error: % select function does not require a declaration, it is a CQL built-in 'nullif'
 -- + {declare_select_func_stmt}: err
--- * error: % select function does not require a declaration, it is a CQL built-in 'nullif'
 -- +1 error:
 declare select function nullif(value INT, defaultValue int!) int;
 
@@ -12899,8 +12899,8 @@ select abs() from bar;
 select abs('Horty');
 
 -- TEST: test abs with null param
+-- + error: % argument 1 is a NULL literal; useless in 'abs'
 -- + {call}: err
--- * error: % argument 1 is a NULL literal; useless in 'abs'
 -- +1 error:
 select abs(null);
 
@@ -12941,8 +12941,8 @@ select instr('a', 'a');
 select instr(1, 'a');
 
 -- TEST: refer to non-existent table in an fk
+-- + error: % foreign key refers to non-existent table 'this_table_does_not_exist'
 -- + {create_table_stmt}: err
--- * error: % foreign key refers to non-existent table 'this_table_does_not_exist'
 -- +1 error:
 -- the @delete is necessary so that there will be table flags
 create table bogus_reference_in_fk(
@@ -13054,8 +13054,8 @@ create table from_the_future(
 ) @create(5);
 
 -- TEST: trying to reference the future in an FK is an error
+-- + error: % referenced table was created in a later version so it cannot be used in a foreign key 'from_the_future'
 -- + {create_table_stmt}: err
--- * error: % referenced table was created in a later version so it cannot be used in a foreign key 'from_the_future'
 -- +1 error:
 create table in_the_past(
   col1 text,
@@ -13115,8 +13115,8 @@ create table self_ref2(
 );
 
 -- TEST: refer to a column in myself -- column does not exist
+-- + error: % name not found 'idx'
 -- + {create_table_stmt}: err
--- * error: % name not found 'idx'
 -- +1 error:
 create table self_ref3(
  id integer primary key,
@@ -13124,8 +13124,8 @@ create table self_ref3(
 );
 
 -- TEST: refer to a column in myself -- column does not exist -- via constraint
+-- + error: % name not found 'idx'
 -- + {create_table_stmt}: err
--- * error: % name not found 'idx'
 -- +1 error:
 create table self_ref4(
  id integer primary key,
@@ -13134,8 +13134,8 @@ create table self_ref4(
 );
 
 -- TEST: refer to a column in myself -- column not a key -- via constraint
+-- + error: % columns referenced in the foreign key statement should match exactly a unique key in the parent table 'self_ref5'
 -- + {create_table_stmt}: err
--- * error: % columns referenced in the foreign key statement should match exactly a unique key in the parent table 'self_ref5'
 -- +1 error:
 create table self_ref5(
  id integer primary key,
@@ -13144,8 +13144,8 @@ create table self_ref5(
 );
 
 -- TEST: refer to a table id that isn't a part of a PK/UK via the attribute
+-- + error: % columns referenced in the foreign key statement should match exactly a unique key in the parent table 'self_ref2'
 -- + {create_table_stmt}: err
--- * error: % columns referenced in the foreign key statement should match exactly a unique key in the parent table 'self_ref2'
 -- +1 error:
 create table fk_to_non_key(
  id integer references self_ref2(id2)
@@ -13359,8 +13359,8 @@ values (l);
 insert into foo values (1) union all select 2 column1;
 
 -- TEST: test multi row values in values clause with dummy_seed
+-- + error: % @dummy_seed @dummy_nullables @dummy_defaults many only be used with a single VALUES row
 -- + {insert_stmt}: err
--- * error: % @dummy_seed @dummy_nullables @dummy_defaults many only be used with a single VALUES row
 -- +1 error:
 insert into foo (id) values (1), (2) @dummy_seed(1);
 
@@ -13400,8 +13400,8 @@ insert into values_table(name, id) values ("ok", null);
 @enforce_strict without rowid;
 
 -- TEST: without rowid failed validation in strict mode
+-- + error: % WITHOUT ROWID tables are forbidden if strict without rowid mode is enabled 'table_with_invalid_without_rowid_mode'
 -- + {create_table_stmt}: err
--- * error: % WITHOUT ROWID tables are forbidden if strict without rowid mode is enabled 'table_with_invalid_without_rowid_mode'
 -- +1 error:
 create table table_with_invalid_without_rowid_mode(
   id integer primary key
@@ -13902,26 +13902,26 @@ set a_string := (select ltrim("x", "y"));
 set a_string := (select rtrim("x", "y"));
 
 -- TEST: trim failure: no args
+-- + error: % too few arguments in function 'trim'
 -- + {call}: err
--- * error: % too few arguments in function 'trim'
 -- +1 error:
 set a_string := (select trim());
 
 -- TEST: trim failure: three args
+-- + error: % too many arguments in function 'trim'
 -- + {call}: err
--- * error: % too many arguments in function 'trim'
 -- +1 error:
 set a_string := (select trim('x','y','z'));
 
 -- TEST: trim failure: arg 1 is not a string
+-- + error: % argument 1 'integer' is an invalid type; valid types are: 'text' in 'trim'
 -- + {call}: err
--- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' in 'trim'
 -- +1 error:
 set a_string := (select trim(1,"x"));
 
 -- TEST: trim failure: arg 2 is not a string
+-- + error: % argument 2 'integer' is an invalid type; valid types are: 'text' in 'trim'
 -- + {call}: err
--- * error: % argument 2 'integer' is an invalid type; valid types are: 'text' in 'trim'
 -- +1 error:
 set a_string := (select trim("x", 1));
 
@@ -13994,38 +13994,38 @@ begin
 end;
 
 -- TEST: assigning an int64 to an int is not ok
+-- + error: % lossy conversion from type 'LONG'
 -- + {assign}: err
--- * error: % lossy conversion from type 'LONG'
 -- +1 error:
 set an_int := 1L;
 
 -- TEST: assigning a real to an int is not ok
+-- + error: % lossy conversion from type 'REAL'
 -- + {assign}: err
--- * error: % lossy conversion from type 'REAL'
 -- +1 error:
 set an_int := 1.0;
 
 -- TEST: assigning a real to a long int is not ok
+-- + error: % lossy conversion from type 'REAL'
 -- + {assign}: err
--- * error: % lossy conversion from type 'REAL'
 -- +1 error:
 set ll := 1.0;
 
 -- TEST: length failure: no args
+-- + error: % too few arguments in function 'length'
 -- + {call}: err
--- * error: % too few arguments in function 'length'
 -- +1 error:
 set an_int := (select length());
 
 -- TEST: length failure: no args
+-- + error: % too few arguments in function 'octet_length'
 -- + {call}: err
--- * error: % too few arguments in function 'octet_length'
 -- +1 error:
 set an_int := (select octet_length());
 
 -- TEST: length failure: arg is not a string
+-- + error: % argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'length'
 -- + {call}: err
--- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'length'
 -- +1 error:
 set an_int := (select length(1));
 
@@ -14042,14 +14042,14 @@ set an_int := length("x");
 set _sens := (select length(name) from with_sensitive);
 
 -- TEST: unicode failure: no args
+-- + error: % too few arguments in function 'unicode'
 -- + {call}: err
--- * error: % too few arguments in function 'unicode'
 -- +1 error:
 set an_int := (select unicode());
 
 -- TEST: unicode failure: arg is not a string
+-- + error: % 'integer' is an invalid type; valid types are: 'text' in 'unicode'
 -- + {call}: err
--- * error: % 'integer' is an invalid type; valid types are: 'text' in 'unicode'
 -- +1 error:
 set an_int := (select unicode(1));
 
@@ -14194,8 +14194,8 @@ end;
 set an_long := cql_get_blob_size(blob_var);
 
 -- TEST: test cql_get_blob_size with too many arguments
+-- + error: % too many arguments in function 'cql_get_blob_size'
 -- + {assign}: err
--- * error: % too many arguments in function 'cql_get_blob_size'
 -- +1 error:
 set an_long := cql_get_blob_size(blob_var, 0);
 
@@ -14296,8 +14296,8 @@ begin
 end;
 
 -- TEST: try to return object from a select function
+-- + error: % select function may not return type OBJECT 'returns_object_is_bogus'
 -- + {declare_select_func_stmt}: err
--- * error: % select function may not return type OBJECT 'returns_object_is_bogus'
 -- +1 error:
 declare select function returns_object_is_bogus() object;
 
@@ -14350,8 +14350,8 @@ create table with_collate
 );
 
 -- TEST: make sure all constraints come after all columns
+-- + error: % column definitions may not come after constraints 'id'
 -- + {create_table_stmt}: err
--- * error: % column definitions may not come after constraints 'id'
 -- +1 error:
 create table bad_order(
  id integer,
@@ -14401,8 +14401,8 @@ end;
 select iif(an_int is null, 3, 2);
 
 -- TEST: test rewrite for IIF func with invalid argument count
+-- + error: % function got incorrect number of arguments 'iif'
 -- + {select_stmt}: err
--- * error: % function got incorrect number of arguments 'iif'
 -- +1 error:
 select iif(an_int is null, 2, 3, 4);
 
@@ -14488,14 +14488,14 @@ begin
 end;
 
 -- TEST: proc savepoint invalid outside of a proc
+-- + error: % should be in a procedure and at the top level
 -- + {proc_savepoint_stmt}: err
--- * error: % should be in a procedure and at the top level
 -- +1 error:
 proc savepoint begin end;
 
 -- TEST: proc savepoint invalid outside of a proc
+-- + error: % should be in a procedure and at the top level
 -- + {proc_savepoint_stmt}: err
--- * error: % should be in a procedure and at the top level
 -- +1 error:
 proc savepoint_nested()
 begin
@@ -14505,8 +14505,8 @@ begin
 end;
 
 -- TEST: rollback return invalid outside of proc savepoint
+-- + error: % statement must appear inside of a PROC SAVEPOINT block
 -- + {rollback_return_stmt}: err
--- * error: % statement must appear inside of a PROC SAVEPOINT block
 -- +1 error:
 proc rollback_return_invalid()
 begin
@@ -14516,8 +14516,8 @@ begin
 end;
 
 -- TEST: commit return invalid outside of proc savepoint
+-- + error: % statement must appear inside of a PROC SAVEPOINT block
 -- + {commit_return_stmt}: err
--- * error: % statement must appear inside of a PROC SAVEPOINT block
 -- +1 error:
 proc commit_return_invalid()
 begin
@@ -14683,8 +14683,8 @@ declare enum long_things integer (
 );
 
 -- TEST: duplicate enum member name
+-- + error: % duplicate enum member 'two'
 -- + {declare_enum_stmt}: err
--- * error: % duplicate enum member 'two'
 -- +1 error:
 declare enum duplicated_things integer (
   two,
@@ -14692,8 +14692,8 @@ declare enum duplicated_things integer (
 );
 
 -- TEST: invalid enum member
+-- + error: % evaluation failed 'boo'
 -- + {declare_enum_stmt}: err
--- * error: % evaluation failed 'boo'
 -- +1 error:
 declare enum invalid_things integer (
   boo = 1/0
@@ -14956,14 +14956,14 @@ create virtual table broken_virtual_table using module_name as (
 );
 
 -- TEST: no indices on virtual tables
+-- + error: % cannot add an index to a virtual table 'basic_virtual'
 -- + {create_index_stmt}: err
--- * error: % cannot add an index to a virtual table 'basic_virtual'
 -- +1 error:
 create index some_index on basic_virtual(id);
 
 -- TEST: no triggers on virtual tables
+-- + error: % cannot add a trigger to a virtual table 'basic_virtual'
 -- + {create_trigger_stmt}: err
--- * error: % cannot add a trigger to a virtual table 'basic_virtual'
 -- +1 error:
 create trigger no_triggers_on_virtual
   before delete on basic_virtual
@@ -14972,14 +14972,14 @@ begin
 end;
 
 -- TEST: no alters on virtual tables
+-- + error: % cannot use ALTER TABLE on a virtual table 'basic_virtual'
 -- + {alter_table_add_column_stmt}: err
--- * error: % cannot use ALTER TABLE on a virtual table 'basic_virtual'
 -- +1 error:
 alter table basic_virtual add column xname text;
 
 -- TEST: must specify appropriate delete attribute
+-- + error: % when deleting a virtual table you must specify @delete(nn, cql:module_must_not_be_deleted_see_docs_for_CQL0392) as a reminder not to delete the module for this virtual table 'deleting_virtual'
 -- + {create_virtual_table_stmt}: err
--- * error: % when deleting a virtual table you must specify @delete(nn, cql:module_must_not_be_deleted_see_docs_for_CQL0392) as a reminder not to delete the module for this virtual table 'deleting_virtual'
 -- +1 error:
 create virtual table deleting_virtual using module_name(this, that, the_other) as (
   id integer,
@@ -14987,8 +14987,8 @@ create virtual table deleting_virtual using module_name(this, that, the_other) a
 ) @delete(1);
 
 -- TEST: using module attribute in an invalid location
+-- + error: % built-in migration procedure not valid in this context 'cql:module_must_not_be_deleted_see_docs_for_CQL0392'
 -- + {create_table_stmt}: err
--- * error: % built-in migration procedure not valid in this context 'cql:module_must_not_be_deleted_see_docs_for_CQL0392'
 -- +1 error:
 create table any_table_at_all(
   id integer,
@@ -15009,8 +15009,8 @@ create virtual table deleting_virtual_correctly using module_name(this, that, th
 @emit_enums ints;
 
 -- TEST: emit an enum (failed case)
+-- + error: % enum not found 'bogus_enum_name'
 -- + {emit_enums_stmt}: err
--- * error: % enum not found 'bogus_enum_name'
 -- +1 error:
 @emit_enums bogus_enum_name;
 
@@ -15028,8 +15028,8 @@ create table with_check_expr(
 );
 
 -- TEST: can't use random in a constraint expression
+-- + error: % function may not appear in this context 'random'
 -- + {create_table_stmt}: err
--- * error: % function may not appear in this context 'random'
 -- +1 error:
 create table with_check_expr_random(
   v integer,
@@ -15037,8 +15037,8 @@ create table with_check_expr_random(
 );
 
 -- TEST: can't use changes in a constraint expression
+-- + error: % function may not appear in this context 'changes'
 -- + {create_table_stmt}: err
--- * error: % function may not appear in this context 'changes'
 -- +1 error:
 create table with_check_expr_changes(
   v integer,
@@ -15046,8 +15046,8 @@ create table with_check_expr_changes(
 );
 
 -- TEST: can't use UDF in a constraint expression
+-- + error: % User function cannot appear in a constraint expression  'SqlUserFunc'
 -- + {create_table_stmt}: err
--- * error: % User function cannot appear in a constraint expression  'SqlUserFunc'
 -- +1 error:
 create table with_check_expr_udf(
   v integer,
@@ -15055,8 +15055,8 @@ create table with_check_expr_udf(
 );
 
 -- TEST: random takes no args
+-- + error: % function got incorrect number of arguments 'random'
 -- + {select_stmt}: err
--- * error: % function got incorrect number of arguments 'random'
 -- +1 error:
 select random(5);
 
@@ -15073,14 +15073,14 @@ select random();
 select sqlite_offset(true);
 
 -- TEST: sqlite_offset is only allowed in SQL
+-- + error: % function may not appear in this context 'sqlite_offset'
 -- + {call}: err
--- * error: % function may not appear in this context 'sqlite_offset'
 -- +1 error:
 sqlite_offset(1);
 
 -- TEST: sqlite_offset doesn't work on NULL
+-- + error: % argument 1 is a NULL literal; useless in 'sqlite_offset'
 -- + {call}: err
--- * error: % argument 1 is a NULL literal; useless in 'sqlite_offset'
 -- +1 error:
 select sqlite_offset(null);
 
@@ -15103,14 +15103,14 @@ select likely(42);
 select unlikely(42);
 
 -- TEST: likely fails with incorrect number of arguments
+-- + error: % too few arguments in function 'likely'
 -- + {select_stmt}: err
--- * error: % too few arguments in function 'likely'
 -- +1 error:
 select likely();
 
 -- TEST: likely fails with null arg
+-- + error: % argument 1 is a NULL literal; useless in 'likely'
 -- + {select_stmt}: err
--- * error: % argument 1 is a NULL literal; useless in 'likely'
 -- +1 error:
 select likely(null);
 
@@ -15120,26 +15120,26 @@ select likely(null);
 select likelihood('x', 0.2);
 
 -- TEST: likelihood bogus second arg
+-- + error: % argument 2 is a NULL literal; useless in 'likelihood'
 -- + {select_stmt}: err
--- * error: % argument 2 is a NULL literal; useless in 'likelihood'
 -- +1 error:
 select likelihood('x', NULL);
 
 -- TEST: invalid context
+-- + error: % function may not appear in this context 'likelihood'
 -- + {expr_stmt}: err
--- * error: % function may not appear in this context 'likelihood'
 -- +1 error:
 likelihood('x', 1.2);
 
 -- TEST: likely fails when used outside a SQL statement
+-- + error: % function may not appear in this context 'likely'
 -- + {let_stmt}: err
--- * error: % function may not appear in this context 'likely'
 -- +1 error:
 let test := likely(true);
 
 -- TEST: can't use nested select in a constraint expression
+-- + error: % Nested select expressions may not appear inside of a constraint expression
 -- + {create_table_stmt}: err
--- * error: % Nested select expressions may not appear inside of a constraint expression
 -- +1 error:
 create table with_check_expr_select(
   v integer,
@@ -15147,8 +15147,8 @@ create table with_check_expr_select(
 );
 
 -- TEST: can't use 'now' in strftime in a constraint expression
+-- + error: % function may not appear in this context 'strftime'
 -- + {create_table_stmt}: err
--- * error: % function may not appear in this context 'strftime'
 -- +1 error:
 create table with_check_expr_strftime(
   t text
@@ -15156,8 +15156,8 @@ create table with_check_expr_strftime(
 );
 
 -- TEST: can't use 'now' in time in a constraint expression
+-- + error: % function may not appear in this context 'date'
 -- + {create_table_stmt}: err
--- * error: % function may not appear in this context 'date'
 -- +1 error:
 create table with_check_expr_date(
   t text
@@ -15196,8 +15196,8 @@ declare redundant_sensitive my_type @sensitive;
 declare adding_notnull my_type not null;
 
 -- TEST: verify the check in the context of func create
+-- + error: % an attribute was specified twice '@sensitive'
 -- + {declare_func_stmt}: err
--- * error: % an attribute was specified twice '@sensitive'
 -- +1 error:
 declare function adding_attr_to_func_redundant() create my_type @sensitive;
 
@@ -15215,8 +15215,8 @@ type text_nn text not null;
 type type_short_form text not null;
 
 -- TEST: try to add not null more than once, force the error inside of sensitive ast
+-- + error: % an attribute was specified twice 'not null'
 -- + {declare_vars_type}: err
--- * error: % an attribute was specified twice 'not null'
 -- +1 error:
 declare nn_var_redundant text_nn not null @sensitive;
 
@@ -15237,8 +15237,8 @@ type my_type_1 my_type;
 type my_type_2 my_type_1;
 
 -- TEST: declare type using another declared type
+-- + error: % unknown type 'bogus_type'
 -- + {declare_named_type}: err
--- * error: % unknown type 'bogus_type'
 -- +1 error:
 type my_type bogus_type;
 
@@ -15584,14 +15584,14 @@ set bb := x1 = x2;
 set bb := x1 < x2;
 
 -- TEST: comparison of two incompatible types (equality)
+-- + error: % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 -- + {eq}: err
--- * error: % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 -- +1 error:
 set bb := x1 = y1;
 
 -- TEST: comparison of two incompatible types (inequality)
+-- + error: % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 -- + {lt}: err
--- * error: % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 -- +1 error:
 set bb := x1 < y1;
 
@@ -15641,8 +15641,8 @@ create table xy(
 insert into xy using x1 x, y1 y;
 
 -- TEST: invalid insert the kinds don't match (y1 is not an xcoord)
+-- + error: % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 -- + {insert_stmt}: err
--- * error: % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 -- +1 error:
 insert into xy using y1 x, x1 y;
 
@@ -15652,8 +15652,8 @@ insert into xy using y1 x, x1 y;
 insert into xy select xy.x, xy.y from xy where xy.x = 1;
 
 -- TEST: insert into the table with coordinates reversed (error)
+-- + error: % expressions of different kinds can't be mixed: 'y_coord' vs. 'x_coord'
 -- + {insert_stmt}: err
--- * error: % expressions of different kinds can't be mixed: 'y_coord' vs. 'x_coord'
 -- +1 error:
 insert into xy select xy.y, xy.x from xy where xy.x = 1;
 
@@ -15679,8 +15679,8 @@ select y2 as x, x2 as y;
 insert into xy values (x1, y1), (x2, y2);
 
 -- TEST: insert into xy with values, kinds are ok
+-- + error: % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 -- + {insert_stmt}: err
--- * error: % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 -- +1 error:
 insert into xy values
   (x1, y1),
@@ -15714,8 +15714,8 @@ declare v1, v2, v3 integer<v>;
 set x1 := case when 1 then x1 else x1 end;
 
 -- TEST: when with non-matching variable x and y mixed
+-- + error: % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 -- + {case_expr}: err
--- * error: % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 -- +1 error:
 set x1 := case when 1 then x1 else y1 end;
 
@@ -15943,8 +15943,8 @@ create table fk_strict_err_2 (
 @enforce_pop;
 
 -- TEST: pop too many enforcement options off the stack
+-- + error: % @enforce_pop used but there is nothing to pop
 -- + {enforce_pop_stmt}: err
--- * error: % @enforce_pop used but there is nothing to pop
 -- +1 error:
 @enforce_pop;
 
@@ -16155,8 +16155,8 @@ declare real_nn real!;
 set real_nn := (select my_real if nothing or null then 1.0);
 
 -- TEST: if nothing then does NOT get not null result if only right side is not null
+-- + error: % cannot assign/copy possibly null expression to not null target 'real_nn'
 -- + {assign}: err
--- * error: % cannot assign/copy possibly null expression to not null target 'real_nn'
 -- +1 error:
 set real_nn := (select my_real if nothing then 1.0);
 
@@ -16168,14 +16168,14 @@ set real_nn := (select my_real if nothing then 1.0);
 set real_nn := (select not 'x' if nothing then 1.0);
 
 -- TEST: error inside of any other DML
+-- + error: % (SELECT ... IF NOTHING) construct is for use in top level expressions, not inside of other DML
 -- + {select_stmt}: err
--- * error: % (SELECT ... IF NOTHING) construct is for use in top level expressions, not inside of other DML
 -- +1 error:
 select (select 0 if nothing then -1);
 
 -- TEST: error inside of any other DML
+-- + error: % (SELECT ... IF NOTHING) construct is for use in top level expressions, not inside of other DML
 -- + {delete_stmt}: err
--- * error: % (SELECT ... IF NOTHING) construct is for use in top level expressions, not inside of other DML
 -- +1 error:
 delete from foo where id = (select 33 if nothing then 0);
 
@@ -16218,15 +16218,15 @@ insert into foo(id)
   select 1;
 
 -- TEST: top level compound select not ok
+-- + error: % due to a memory leak bug in old SQLite versions,
 -- + {insert_stmt}: err
--- * error: % due to a memory leak bug in old SQLite versions,
 -- +1 error:
 insert into foo(id)
   select 1 union all select 1;
 
 -- TEST: top level join not ok
+-- + error: % due to a memory leak bug in old SQLite versions,
 -- + {insert_stmt}: err
--- * error: % due to a memory leak bug in old SQLite versions,
 -- +1 error:
 insert into foo(id)
   select 1 from
@@ -16255,8 +16255,8 @@ insert into foo(id)
 select * from foo inner join tvf(1);
 
 -- TEST: TVF on right of left join is an error
+-- + error: % table valued function used in a left/right/cross context; this would hit a SQLite bug.  Wrap it in a CTE instead.
 -- + {select_stmt}: err
--- * error: % table valued function used in a left/right/cross context; this would hit a SQLite bug.  Wrap it in a CTE instead.
 -- +1 error:
 select * from foo left join tvf(1);
 
@@ -16338,8 +16338,8 @@ null_alias := null;
 LET bad_result := NOT 'x';
 
 -- TEST: LET error cases: duplicate variable
+-- + error: % duplicate variable name in the same scope 'created_obj'
 -- + {let_stmt}: err
--- * error: % duplicate variable name in the same scope 'created_obj'
 -- +1 error:
 LET created_obj := 1;
 
@@ -16500,68 +16500,68 @@ switch three_things.zero all values
 end;
 
 -- TEST: all values used but the expression isn't an enum
+-- + error: % SWITCH ... ALL VALUES is used but the switch expression is not an enum type
 -- + {switch_stmt}: err
--- * error: % SWITCH ... ALL VALUES is used but the switch expression is not an enum type
 -- +1 error:
 switch 1 all values
   when three_things.one, three_things.two then set x := 1;
 end;
 
 -- TEST: switch with all values test: three_things.zero is missing
+-- + error: % a value exists in the enum that is not present in the switch 'zero'
 -- + {switch_stmt}: err
--- * error: % a value exists in the enum that is not present in the switch 'zero'
 -- +1 error:
 switch three_things.zero all values
   when three_things.one, three_things.two then set x := 1;
 end;
 
 -- TEST: switch with all values test: three_things.one is missing
+-- + error: % a value exists in the enum that is not present in the switch 'one'
 -- + {switch_stmt}: err
--- * error: % a value exists in the enum that is not present in the switch 'one'
 -- +1 error:
 switch three_things.zero all values
   when three_things.zero, three_things.two then set x := 1;
 end;
 
 -- TEST: switch with all values test: three_things.two is missing
+-- + error: % a value exists in the enum that is not present in the switch 'two'
 -- + {switch_stmt}: err
--- * error: % a value exists in the enum that is not present in the switch 'two'
 -- +1 error:
 switch three_things.zero all values
   when three_things.zero, three_things.one then set x := 1;
 end;
 
 -- TEST: switch with all values test: -1 is extra
+-- + error: % a value exists in the switch that is not present in the enum '-1'
 -- + {switch_stmt}: err
--- * error: % a value exists in the switch that is not present in the enum '-1'
 -- +1 error:
 switch three_things.zero all values
   when -1, three_things.zero, three_things.one, three_things.two then set x := 1;
 end;
 
 -- TEST: switch with all values test: 5 is extra
+-- + error: % a value exists in the switch that is not present in the enum '5'
 -- + {switch_stmt}: err
--- * error: % a value exists in the switch that is not present in the enum '5'
 -- +1 error:
 switch three_things.zero all values
   when three_things.zero, three_things.one, three_things.two, 5 then set x := 1;
 end;
 
 -- TEST: checking if something is NULL with '=' is an error
+-- + error: % Comparing against NULL always yields NULL; use IS and IS NOT instead
 -- + {eq}: err
--- * error: % Comparing against NULL always yields NULL; use IS and IS NOT instead
 -- +1 error:
 select (1 = NULL);
 
 -- TEST: checking if something is not null with '<>' is an error
+-- + error: % Comparing against NULL always yields NULL; use IS and IS NOT instead
 -- + {ne}: err
--- * error: % Comparing against NULL always yields NULL; use IS and IS NOT instead
 -- +1 error:
 select (1 <> NULL);
 
 -- TEST: a select expression with a null type is an error
+-- + error: % SELECT expression is equivalent to NULL
 -- + {select_expr}: err
--- * error: % SELECT expression is equivalent to NULL
 -- +1 error:
 select (1 + (SELECT NULL));
 
@@ -16569,14 +16569,14 @@ select (1 + (SELECT NULL));
 declare proc out2_proc(x integer, out y int!, out z int!);
 
 -- TEST: try to do declare out on a non-existent procedure
+-- + error: % DECLARE OUT requires that the procedure be already declared 'not_defined'
 -- + {declare_out_call_stmt}: err
--- * error: % DECLARE OUT requires that the procedure be already declared 'not_defined'
 -- +1 error:
 declare out call not_defined();
 
 -- TEST: try to call a proc with no out args
+-- + error: % DECLARE OUT CALL used on a procedure with no missing OUT arguments 'decl1'
 -- + {declare_out_call_stmt}: err
--- * error: % DECLARE OUT CALL used on a procedure with no missing OUT arguments 'decl1'
 -- +1 error:
 declare out call decl1(1);
 
@@ -16591,8 +16591,8 @@ begin
 end;
 
 -- TEST: try to call a proc but the proc had errors
+-- + error: % procedure had errors, can't call 'decl_test_err'
 -- + {declare_out_call_stmt}: err
--- * error: % procedure had errors, can't call 'decl_test_err'
 -- +1 error:
 declare out call decl_test_err(1, 2, 3);
 
@@ -17666,8 +17666,8 @@ begin
 end;
 
 -- TEST: Bad conditions in guards are handled as in if statements.
+-- + error: % name not found 'some_undefined_variable'
 -- + {if_stmt}: err
--- * error: % name not found 'some_undefined_variable'
 -- +1 error:
 proc guard_improvements_handle_semantic_issues_like_if()
 begin
@@ -19300,44 +19300,44 @@ SET fal := 'x' is true;
 SET fal := ( not 'x') is false;
 
 -- TEST: printf must be called with at least one argument
+-- + error: % function got incorrect number of arguments 'printf'
 -- + {select_expr}: err
--- * error: % function got incorrect number of arguments 'printf'
 -- +1 error:
 select printf();
 
 -- TEST: format must be called with at least one argument
+-- + error: % function got incorrect number of arguments 'format'
 -- + {select_expr}: err
--- * error: % function got incorrect number of arguments 'format'
 -- +1 error:
 select format();
 
 -- TEST: printf requires a string literal for its first argument
+-- + error: % first argument must be a string literal 'printf'
 -- + {select_expr}: err
--- * error: % first argument must be a string literal 'printf'
 -- +1 error:
 select printf(a_string);
 
 -- TEST: format requires a string literal for its first argument
+-- + error: % first argument must be a string literal 'format'
 -- + {select_expr}: err
--- * error: % first argument must be a string literal 'format'
 -- +1 error:
 select format(a_string);
 
 -- TEST: printf disallows excess arguments
+-- + error: % more arguments provided than expected by format string 'printf'
 -- + {select_expr}: err
--- * error: % more arguments provided than expected by format string 'printf'
 -- +1 error:
 select printf("%d %f", 0, 0.0, "str");
 
 -- TEST: format disallows excess arguments
+-- + error: % more arguments provided than expected by format string 'format'
 -- + {select_expr}: err
--- * error: % more arguments provided than expected by format string 'format'
 -- +1 error:
 select format("%d %f", 0, 0.0, "str");
 
 -- TEST: printf disallows insufficient arguments
+-- + error: % fewer arguments provided than expected by format string 'printf'
 -- + {select_expr}: err
--- * error: % fewer arguments provided than expected by format string 'printf'
 -- +1 error:
 select printf("%d %f %s", 0, 0.0);
 
@@ -19369,8 +19369,8 @@ select printf("%s %s", "hello", 42);
 select format("%s %s", "hello", 42);
 
 -- TEST: printf disallows loss of precision
+-- + error: % lossy conversion from type 'LONG' in 0L
 -- + {select_expr}: err
--- * error: % lossy conversion from type 'LONG' in 0L
 -- +1 error:
 select printf("%d", 0L);
 
@@ -19385,38 +19385,38 @@ select printf("%s %d", null, null);
 select printf("%d %i %u %f %e %E %g %G %x %X %o %s", 0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0, "str");
 
 -- TEST: printf does not allow %c
+-- + error: % type specifier not allowed in CQL 'c'
 -- + {select_expr}: err
--- * error: % type specifier not allowed in CQL 'c'
 -- +1 error:
 select printf("%c", "x");
 
 -- TEST: printf does not allow %p
+-- + error: % type specifier not allowed in CQL 'p'
 -- + {select_expr}: err
--- * error: % type specifier not allowed in CQL 'p'
 -- +1 error:
 select printf("%p", 0x123456789L);
 
 -- TEST: printf does not allow %n
+-- + error: % type specifier not allowed in CQL 'n'
 -- + {select_expr}: err
--- * error: % type specifier not allowed in CQL 'n'
 -- +1 error:
 select printf("%n", 0x123456789L);
 
 -- TEST: printf does not allow %q
+-- + error: % type specifier not allowed in CQL 'q'
 -- + {select_expr}: err
--- * error: % type specifier not allowed in CQL 'q'
 -- +1 error:
 select printf("%q", "hello");
 
 -- TEST: printf does not allow %Q
+-- + error: % type specifier not allowed in CQL 'Q'
 -- + {select_expr}: err
--- * error: % type specifier not allowed in CQL 'Q'
 -- +1 error:
 select printf("%Q", "hello");
 
 -- TEST: printf does not allow %w
+-- + error: % type specifier not allowed in CQL 'w'
 -- + {select_expr}: err
--- * error: % type specifier not allowed in CQL 'w'
 -- +1 error:
 select printf("%w", "hello");
 
@@ -19426,14 +19426,14 @@ select printf("%w", "hello");
 select printf("%lld %lli %llu %llx %llX %llo", 0L, 0L, 0L, 0L, 0L, 0L);
 
 -- TEST: printf disallows the use of the 'l'
+-- + error: % 'l' length specifier has no effect; consider 'll' instead
 -- + {select_expr}: err
--- * error: % 'l' length specifier has no effect; consider 'll' instead
 -- +1 error:
 select printf("%ld", 0L);
 
 -- TEST: printf disallows use of 'll' with non-integer type specifiers
+-- + error: % type specifier cannot be combined with length specifier 's'
 -- + {select_expr}: err
--- * error: % type specifier cannot be combined with length specifier 's'
 -- +1 error:
 select printf("%lls", "hello");
 
@@ -19449,20 +19449,20 @@ select printf("%12d %12i %12u %12f %12e %12E %12g %12G %12x %12X %12o %12s", 0, 
 select printf("%*s %*f", 10, "hello", 20, 3.14);
 
 -- TEST: printf disallows following a numeric width with '*'
+-- + error: % unrecognized type specifier '*'
 -- + {select_expr}: err
--- * error: % unrecognized type specifier '*'
 -- +1 error:
 select printf("%10*s", 10, "hello");
 
 -- TEST: printf disallows following '*' with a numeric width
+-- + error: % unrecognized type specifier '1'
 -- + {select_expr}: err
--- * error: % unrecognized type specifier '1'
 -- +1 error:
 select printf("%*10s", 10, "hello");
 
 -- TEST: printf disallows incomplete substitutions containing '*'
+-- + error: % incomplete substitution in format string
 -- + {select_expr}: err
--- * error: % incomplete substitution in format string
 -- +1 error:
 select printf("%*", 10);
 
@@ -19482,14 +19482,14 @@ select printf("%9.12d %9.12i %9.12u %9.12f %9.12e %9.12E %9.12g %9.12G %9.12x %9
 select printf("%-16d %-16i %-16u %-16f %-16e %-16E %-16g %-16G %-16x %-16X %-16o %-16s", 0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0, "str");
 
 -- TEST: printf requires that '-' be used with a width
+-- + error: % width required when using flag in substitution '-'
 -- + {select_expr}: err
--- * error: % width required when using flag in substitution '-'
 -- +1 error:
 select printf("%-s", "hello");
 
 -- TEST: printf disallows the same flag appearing twice
+-- + error: % duplicate flag in substitution '-'
 -- + {select_expr}: err
--- * error: % duplicate flag in substitution '-'
 -- +1 error:
 select printf("%--10s", "hello");
 
@@ -19499,8 +19499,8 @@ select printf("%--10s", "hello");
 select printf("%+d %+i", 42, -100);
 
 -- TEST: printf disallows '+' for other type specifiers
+-- + error: % type specifier combined with inappropriate flags 'u'
 -- + {select_expr}: err
--- * error: % type specifier combined with inappropriate flags 'u'
 -- +1 error:
 select printf("%+u", 42);
 
@@ -19510,20 +19510,20 @@ select printf("%+u", 42);
 select printf("% d % i", 42, -100);
 
 -- TEST: printf disallows the space flag for other type specifiers
+-- + error: % type specifier combined with inappropriate flags 'u'
 -- + {select_expr}: err
--- * error: % type specifier combined with inappropriate flags 'u'
 -- +1 error:
 select printf("% u", 42);
 
 -- TEST: printf disallows the '+' and space flags being used together
+-- + error: % cannot combine '+' flag with space flag
 -- + {select_expr}: err
--- * error: % cannot combine '+' flag with space flag
 -- +1 error:
 select printf("%+ u", 42);
 
 -- TEST: printf disallows combining a length specifier and the '!' flag
+-- + error: % length specifier cannot be combined with '!' flag
 -- + {select_expr}: err
--- * error: % length specifier cannot be combined with '!' flag
 -- +1 error:
 select printf("%!lld", 0);
 
@@ -19533,14 +19533,14 @@ select printf("%!lld", 0);
 select printf("%09d", 42);
 
 -- TEST: printf disallows the '0' flag with non-numeric type specifiers
+-- + error: % type specifier combined with inappropriate flags 's'
 -- + {select_expr}: err
--- * error: % type specifier combined with inappropriate flags 's'
 -- +1 error:
 select printf("%09s", "hello");
 
 -- TEST: printf requires that '0' be used with a width
+-- + error: % width required when using flag in substitution '0'
 -- + {select_expr}: err
--- * error: % width required when using flag in substitution '0'
 -- +1 error:
 select printf("%0d", 42);
 
@@ -19550,8 +19550,8 @@ select printf("%0d", 42);
 select printf("%#g %#G %#o %#x %#X", 0.0, 0.0, 00, 0x0, 0x0);
 
 -- TEST: printf disallows the '#' flag with other type specifiers
+-- + error: % type specifier combined with inappropriate flags 's'
 -- + {select_expr}: err
--- * error: % type specifier combined with inappropriate flags 's'
 -- +1 error:
 select printf("%#s", "hello");
 
@@ -19561,8 +19561,8 @@ select printf("%#s", "hello");
 select printf("%,d %,i", 0, 0);
 
 -- TEST: printf disallows the ',' flag with other type specifiers
+-- + error: % type specifier combined with inappropriate flags 'u'
 -- + {select_expr}: err
--- * error: % type specifier combined with inappropriate flags 'u'
 -- +1 error:
 select printf("%,u", 0);
 
@@ -19573,8 +19573,8 @@ select printf("%,u", 0);
 select printf("%!f %!e %!E %!g %!G %!s", 0.0, 0.0, 0.0, 0.0, 0.0, "str");
 
 -- TEST: printf disallows the '!' flag with other type specifiers
+-- + error: % type specifier combined with inappropriate flags 'd'
 -- + {select_expr}: err
--- * error: % type specifier combined with inappropriate flags 'd'
 -- +1 error:
 select printf("%!d", 0);
 
@@ -19775,24 +19775,24 @@ declare const group err1 (
 );
 
 -- TEST: bad evaluation
+-- + error: % global constants must be either constant numeric expressions or string literals 'const_err2 = 1 / 0'
 -- + {declare_const_stmt}: err
--- * error: % global constants must be either constant numeric expressions or string literals 'const_err2 = 1 / 0'
 -- +1 error:
 declare const group err2 (
   const_err2 = 1 / 0
 );
 
 -- TEST: not a string literal
+-- + error: % global constants must be either constant numeric expressions or string literals 'const_err3 = printf("bar")'
 -- + {declare_const_stmt}: err
--- * error: % global constants must be either constant numeric expressions or string literals 'const_err3 = printf("bar")'
 -- +1 error:
 declare const group err3 (
   const_err3 = printf("bar")
 );
 
 -- TEST: duplicate constant
+-- + error: % duplicate constant name 'const_v'
 -- + {declare_const_stmt}: err
--- * error: % duplicate constant name 'const_v'
 -- +1 error:
 declare const group err4 (
   const_v = false
@@ -19818,8 +19818,8 @@ declare const group foo (
 );
 
 -- TEST: nested constants not allowed
+-- + error: % declared constants must be top level 'err5'
 -- + {declare_const_stmt}: err
--- * error: % declared constants must be top level 'err5'
 -- +1 error:
 proc try_to_nest_constants()
 begin
@@ -19834,8 +19834,8 @@ end;
 @emit_constants foo;
 
 -- TEST: try to emit constants for a bogus name
+-- + error: % constant group not found 'not_found'
 -- + {emit_constants_stmt}: err
--- * error: % constant group not found 'not_found'
 -- +1 error:
 @emit_constants not_found;
 
@@ -20465,8 +20465,8 @@ end;
 @enforce_strict sign function;
 
 -- TEST: sign cannot be used in SQL after `@enforce_strict sign function`
+-- + error: % function may not be used in SQL because it is not supported on old versions of SQLite 'sign'
 -- + {select_stmt}: err
--- * error: % function may not be used in SQL because it is not supported on old versions of SQLite 'sign'
 -- +1 error:
 select sign(-1);
 
@@ -20497,8 +20497,8 @@ create table simple_backing_table(
 );
 
 -- TEST: simple backing table with no pk
+-- + error: % table is not suitable for use as backing storage: it does not have a primary key 'simple_backing_table_missing_pk'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as backing storage: it does not have a primary key 'simple_backing_table_missing_pk'
 -- +1 error:
 [[backing_table]]
 create table simple_backing_table_missing_pk(
@@ -20507,8 +20507,8 @@ create table simple_backing_table_missing_pk(
 );
 
 -- TEST: simple backing table with only pk
+-- + error: % table is not suitable for use as backing storage: it has only primary key columns 'simple_backing_table_only_pk'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as backing storage: it has only primary key columns 'simple_backing_table_only_pk'
 -- +1 error:
 [[backing_table]]
 create table simple_backing_table_only_pk(
@@ -20518,8 +20518,8 @@ create table simple_backing_table_only_pk(
 );
 
 -- TEST: simple backing table loose pk with expression (error)
+-- + error: % table is not suitable for use as backing storage: it has an expression in its primary key 'length(k)'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as backing storage: it has an expression in its primary key 'length(k)'
 -- +1 error:
 [[backing_table]]
 create table simple_backing_table_expr_key(
@@ -20567,8 +20567,8 @@ BEGIN
 END;
 
 -- TEST: backed tables may not appear in a procedure
+-- + error: % table is not suitable for use as backed storage: backed table must appear outside of any procedure 'backed_error'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as backed storage: backed table must appear outside of any procedure 'backed_error'
 -- +1 error:
 proc backed_decl()
 begin
@@ -20580,8 +20580,8 @@ begin
 end;
 
 -- TEST: can't put triggers on backed tables
+-- + error: % backed storage tables may not be used in indexes/triggers/drop 'simple_backed_table'
 -- + {create_trigger_stmt}: err
--- * error: % backed storage tables may not be used in indexes/triggers/drop 'simple_backed_table'
 -- +1 error:
 create trigger bogus_backed_trigger
   before delete on simple_backed_table
@@ -20590,20 +20590,20 @@ begin
 end;
 
 -- TEST: can't drop backed tables
+-- + error: % backed storage tables may not be used in indexes/triggers/drop 'simple_backed_table'
 -- + {drop_table_stmt}: err
--- * error: % backed storage tables may not be used in indexes/triggers/drop 'simple_backed_table'
 -- +1 error:
 drop table simple_backed_table;
 
 -- TEST: can't put an index on backed tables
+-- + error: % backed storage tables may not be used in indexes/triggers/drop 'simple_backed_table'
 -- + {create_index_stmt}: err
--- * error: % backed storage tables may not be used in indexes/triggers/drop 'simple_backed_table'
 -- +1 error:
 create index oh_no_you_dont on simple_backed_table(id);
 
 -- TEST: no primary key
+-- + error: % table is not suitable for use as backed storage: it does not have a primary key 'no_pk_backed_table'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as backed storage: it does not have a primary key 'no_pk_backed_table'
 -- +1 error:
 [[backed_by=simple_backing_table]]
 create table no_pk_backed_table(
@@ -20612,8 +20612,8 @@ create table no_pk_backed_table(
 );
 
 -- TEST: only primary key
+-- + error: % table is not suitable for use as backed storage: it has only primary key columns 'only_pk_backed_table'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as backed storage: it has only primary key columns 'only_pk_backed_table'
 -- +1 error:
 [[backed_by=simple_backing_table]]
 create table only_pk_backed_table(
@@ -20631,8 +20631,8 @@ create table simple_backed_table_2(
 );
 
 -- TEST: simple backed table loose pk with expression (error)
+-- + error: % table is not suitable for use as backed storage: it has an expression in its primary key 'id / 2'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as backed storage: it has an expression in its primary key 'id / 2'
 -- +1 error:
 [[backed_by=simple_backing_table]]
 create table simple_backed_table_expr_key(
@@ -20662,8 +20662,8 @@ create table has_non_blob_columns(
 );
 
 -- TEST: virtual tables cannot be backing storage
+-- + error: % table is not suitable for use as backing storage: it is a virtual table 'virtual_backing_illegal'
 -- + {create_virtual_table_stmt}: err
--- * error: % table is not suitable for use as backing storage: it is a virtual table 'virtual_backing_illegal'
 -- +1 error:
 [[backing_table]]
 create virtual table virtual_backing_illegal using module_name(args) as (
@@ -20672,8 +20672,8 @@ create virtual table virtual_backing_illegal using module_name(args) as (
 );
 
 -- TEST: temp tables cannot be backing storage
+-- + error: % table is not suitable for use as backing storage: it is redundantly marked TEMP 'temp_backing'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as backing storage: it is redundantly marked TEMP 'temp_backing'
 -- +1 error:
 [[backing_table]]
 create temp table temp_backing(
@@ -20682,8 +20682,8 @@ create temp table temp_backing(
 );
 
 -- TEST: without rowid tables cannot be backing storage
+-- + error: % table is not suitable for use as backing storage: it is redundantly marked WITHOUT ROWID 'norowid_backing'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as backing storage: it is redundantly marked WITHOUT ROWID 'norowid_backing'
 -- +1 error:
 [[backing_table]]
 create table norowid_backing(
@@ -20692,8 +20692,8 @@ create table norowid_backing(
 ) without rowid;
 
 -- TEST: tables with constraints cannot be backing storage
+-- + error: % table is not suitable for use as backing storage: it has at least one invalid constraint 'constraint_backing'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as backing storage: it has at least one invalid constraint 'constraint_backing'
 -- +1 error:
 [[backing_table]]
 create table constraint_backing(
@@ -20712,8 +20712,8 @@ create table pk_col_backing(
 );
 
 -- TEST: table with column with foreign key cannot be backing store
+-- + error: % table is not suitable for use as backing storage: column 'id' has a foreign key in 'fk_col_backing'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as backing storage: column 'id' has a foreign key in 'fk_col_backing'
 -- +1 error:
 [[backing_table]]
 create table fk_col_backing(
@@ -20722,8 +20722,8 @@ create table fk_col_backing(
 );
 
 -- TEST: table with column with unique key cannot be backing store
+-- + error: % table is not suitable for use as backing storage: column 'id' has a unique key in 'uk_col_backing'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as backing storage: column 'id' has a unique key in 'uk_col_backing'
 -- +1 error:
 [[backing_table]]
 create table uk_col_backing(
@@ -20732,8 +20732,8 @@ create table uk_col_backing(
 );
 
 -- TEST: table with hidden column cannot be backing store
+-- + error: % table is not suitable for use as backing storage: column 'v' is a hidden column in 'hidden_col_backing'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as backing storage: column 'v' is a hidden column in 'hidden_col_backing'
 -- +1 error:
 [[backing_table]]
 create table hidden_col_backing(
@@ -20742,8 +20742,8 @@ create table hidden_col_backing(
 );
 
 -- TEST: table with autoinc column cannot be backing store
+-- + error: % table is not suitable for use as backing storage: column 'id' specifies auto increment in 'autoinc_col_backing'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as backing storage: column 'id' specifies auto increment in 'autoinc_col_backing'
 -- +1 error:
 [[backing_table]]
 create table autoinc_col_backing(
@@ -20761,8 +20761,8 @@ create table conflict_clause_col_backing(
 );
 
 -- TEST: table with check constraint on column cannot be backing store
+-- + error: % table is not suitable for use as backing storage: column 'id' has a check expression in 'check_col_backing'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as backing storage: column 'id' has a check expression in 'check_col_backing'
 -- +1 error:
 [[backing_table]]
 create table check_col_backing(
@@ -20771,8 +20771,8 @@ create table check_col_backing(
 );
 
 -- TEST: table with collate on column cannot be backing store
+-- + error: % table is not suitable for use as backing storage: column 't' specifies collation order in 'collate_col_backing'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as backing storage: column 't' specifies collation order in 'collate_col_backing'
 -- +1 error:
 [[backing_table]]
 create table collate_col_backing(
@@ -20781,8 +20781,8 @@ create table collate_col_backing(
 );
 
 -- TEST: table with default value on column cannot be backing store
+-- + error: % table is not suitable for use as backing storage: column 'id' has a default value in 'default_value_col_backing'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as backing storage: column 'id' has a default value in 'default_value_col_backing'
 -- +1 error:
 [[backing_table]]
 create table default_value_col_backing(
@@ -20791,8 +20791,8 @@ create table default_value_col_backing(
 );
 
 -- TEST: table with deleted column cannot be backing store
+-- + error: % table is not suitable for use as backing storage: column 'v' has delete attribute in 'deleted_col_backing'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as backing storage: column 'v' has delete attribute in 'deleted_col_backing'
 -- +1 error:
 [[backing_table]]
 create table deleted_col_backing(
@@ -20801,8 +20801,8 @@ create table deleted_col_backing(
 );
 
 -- TEST: table with create column cannot be backing store
+-- + error: % table is not suitable for use as backing storage: column 'v' has create attribute in 'created_col_backing'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as backing storage: column 'v' has create attribute in 'created_col_backing'
 -- +1 error:
 [[backing_table]]
 create table created_col_backing(
@@ -20820,8 +20820,8 @@ create table recreate_backing(
 ) @recreate;
 
 -- TEST: table with @recreate is not valid
+-- + error: % table is not suitable for use as backing storage: it does not have exactly two blob columns 'one_col_backing'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as backing storage: it does not have exactly two blob columns 'one_col_backing'
 -- +1 error:
 [[backing_table]]
 create table one_col_backing(
@@ -20829,8 +20829,8 @@ create table one_col_backing(
 );
 
 -- TEST: simple backed table with versions
+-- + error: % table is not suitable for use as backed storage: it is declared using schema directives (@create or @delete 'simple_backed_table_versions'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as backed storage: it is declared using schema directives (@create or @delete 'simple_backed_table_versions'
 -- +1 error:
 [[backed_by=simple_backing_table]]
 create table simple_backed_table_versions(
@@ -20839,8 +20839,8 @@ create table simple_backed_table_versions(
 ) @create(2) @delete(12);
 
 -- TEST: virtual tables cannot be backed storage
+-- + error: % table is not suitable for use as backed storage: it is a virtual table 'virtual_backed_illegal'
 -- + {create_virtual_table_stmt}: err
--- * error: % table is not suitable for use as backed storage: it is a virtual table 'virtual_backed_illegal'
 -- +1 error:
 [[backed_by=simple_backing_table]]
 create virtual table virtual_backed_illegal using module_name(args) as (
@@ -20849,8 +20849,8 @@ create virtual table virtual_backed_illegal using module_name(args) as (
 );
 
 -- TEST: temp tables cannot be backed storage
+-- + error: % table is not suitable for use as backed storage: it is redundantly marked TEMP 'temp_backed'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as backed storage: it is redundantly marked TEMP 'temp_backed'
 -- +1 error:
 [[backed_by=simple_backing_table]]
 create temp table temp_backed(
@@ -20859,8 +20859,8 @@ create temp table temp_backed(
 );
 
 -- TEST: table is backed by a table that does not exist
+-- + error: % table is not suitable for use as backed storage: backing table does not exist 'not_exists_table'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as backed storage: backing table does not exist 'not_exists_table'
 -- +1 error:
 [[backed_by=not_exists_table]]
 create table backed_by_not_exists(
@@ -20869,8 +20869,8 @@ create table backed_by_not_exists(
 );
 
 -- TEST: table is backed by a table that is not backing storage
+-- + error: % table is not suitable for use as backed storage: table exists but is not a valid backing table 'foo'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as backed storage: table exists but is not a valid backing table 'foo'
 -- +1 error:
 [[backed_by=foo]]
 create table backed_by_non_backing(
@@ -20879,8 +20879,8 @@ create table backed_by_non_backing(
 );
 
 -- TEST: without rowid tables cannot be backed storage
+-- + error: % table is not suitable for use as backed storage: it is redundantly marked WITHOUT ROWID 'norowid_backed'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as backed storage: it is redundantly marked WITHOUT ROWID 'norowid_backed'
 -- +1 error:
 [[backed_by=simple_backing_table]]
 create table norowid_backed(
@@ -20889,8 +20889,8 @@ create table norowid_backed(
 ) without rowid;
 
 -- TEST: tables with constraints cannot be backed storage
+-- + error: % table is not suitable for use as backed storage: it has at least one invalid constraint 'constraint_backed'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as backed storage: it has at least one invalid constraint 'constraint_backed'
 -- +1 error:
 [[backed_by=simple_backing_table]]
 create table constraint_backed(
@@ -20909,8 +20909,8 @@ create table pk_col_backed(
 );
 
 -- TEST: table with column with foreign key cannot be backed store
+-- + error: % table is not suitable for use as backed storage: column 'id' has a foreign key in 'fk_col_backed'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as backed storage: column 'id' has a foreign key in 'fk_col_backed'
 -- +1 error:
 [[backed_by=simple_backing_table]]
 create table fk_col_backed(
@@ -20919,8 +20919,8 @@ create table fk_col_backed(
 );
 
 -- TEST: table with column with unique key cannot be backed store
+-- + error: % table is not suitable for use as backed storage: column 'id' has a unique key in 'uk_col_backed'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as backed storage: column 'id' has a unique key in 'uk_col_backed'
 -- +1 error:
 [[backed_by=simple_backing_table]]
 create table uk_col_backed(
@@ -20929,8 +20929,8 @@ create table uk_col_backed(
 );
 
 -- TEST: table with hidden column cannot be backed store
+-- + error: % table is not suitable for use as backed storage: column 'id' is a hidden column in 'hidden_col_backed'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as backed storage: column 'id' is a hidden column in 'hidden_col_backed'
 -- +1 error:
 [[backed_by=simple_backing_table]]
 create table hidden_col_backed(
@@ -20939,8 +20939,8 @@ create table hidden_col_backed(
 );
 
 -- TEST: table with autoinc column cannot be backed store
+-- + error: % table is not suitable for use as backed storage: column 'id' specifies auto increment in 'autoinc_col_backed'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as backed storage: column 'id' specifies auto increment in 'autoinc_col_backed'
 -- +1 error:
 [[backed_by=simple_backing_table]]
 create table autoinc_col_backed(
@@ -20958,8 +20958,8 @@ create table conflict_clause_col_backed(
 );
 
 -- TEST: table with check constraint on column cannot be backed store
+-- + error: % table is not suitable for use as backed storage: column 'id' has a check expression in 'check_col_backed'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as backed storage: column 'id' has a check expression in 'check_col_backed'
 -- +1 error:
 [[backed_by=simple_backing_table]]
 create table check_col_backed(
@@ -20968,8 +20968,8 @@ create table check_col_backed(
 );
 
 -- TEST: table with collate on column cannot be backed store
+-- + error: % table is not suitable for use as backed storage: column 't' specifies collation order in 'collate_col_backed'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as backed storage: column 't' specifies collation order in 'collate_col_backed'
 -- +1 error:
 [[backed_by=simple_backing_table]]
 create table collate_col_backed(
@@ -20988,8 +20988,8 @@ create table default_value_col_backed(
 );
 
 -- TEST: table with deleted column cannot be backed store
+-- + error: % table is not suitable for use as backed storage: column 't' has delete attribute in 'deleted_col_backed'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as backed storage: column 't' has delete attribute in 'deleted_col_backed'
 -- +1 error:
 [[backed_by=simple_backing_table]]
 create table deleted_col_backed(
@@ -20998,8 +20998,8 @@ create table deleted_col_backed(
 );
 
 -- TEST: table with create column cannot be backed store
+-- + error: % table is not suitable for use as backed storage: column 't' has create attribute in 'created_col_backed'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as backed storage: column 't' has create attribute in 'created_col_backed'
 -- +1 error:
 [[backed_by=simple_backing_table]]
 create table created_col_backed(
@@ -21008,8 +21008,8 @@ create table created_col_backed(
 );
 
 -- TEST: table with non matching @recreate is not valid
+-- + error: % table is not suitable for use as backed storage: @recreate attribute doesn't match the backing table 'recreate_backed'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as backed storage: @recreate attribute doesn't match the backing table 'recreate_backed'
 -- +1 error:
 [[backed_by=simple_backing_table]]
 create table recreate_backed(
@@ -21018,8 +21018,8 @@ create table recreate_backed(
 ) @recreate;
 
 -- TEST: table with non matching @recreate is not valid
+-- + error: % table is not suitable for use as backed storage: @recreate group doesn't match the backing table 'recreate_backed_wrong_group'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as backed storage: @recreate group doesn't match the backing table 'recreate_backed_wrong_group'
 -- +1 error:
 [[backed_by=recreate_backing]]
 create table recreate_backed_wrong_group(
@@ -21146,8 +21146,8 @@ begin
 end;
 
 -- TEST: incorrect call to blob_get_type, not even a name
+-- + error: % argument 1 must be a table name that is a backed table 'cql_blob_get_type'
 -- + {select_stmt}: err
--- * error: % argument 1 must be a table name that is a backed table 'cql_blob_get_type'
 -- +1 error:
 proc blob_get_type_not_a_table()
 begin
@@ -21156,8 +21156,8 @@ begin
 end;
 
 -- TEST: incorrect call to blob_get_type, invalid table name
+-- + error: % table/view not defined 'not_a_table_name'
 -- + {select_stmt}: err
--- * error: % table/view not defined 'not_a_table_name'
 -- +1 error:
 proc blob_get_type_not_a_table_name()
 begin
@@ -21166,8 +21166,8 @@ begin
 end;
 
 -- TEST: incorrect call to blob_get_type, table is not backed/backing
+-- + error: % the indicated table is not declared for backed or backing storage 'foo'
 -- + {select_stmt}: err
--- * error: % the indicated table is not declared for backed or backing storage 'foo'
 -- +1 error:
 proc blob_get_type_not_a_backed_table_name()
 begin
@@ -21176,8 +21176,8 @@ begin
 end;
 
 -- TEST: blob get type wrong argument count
+-- + error: % function got incorrect number of arguments 'cql_blob_get_type'
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'cql_blob_get_type'
 -- +1 error:
 proc blob_get_type_wrong_arg_count()
 begin
@@ -21204,8 +21204,8 @@ begin
 end;
 
 -- TEST: blob get type called outside of SQL context
+-- + error: % function may not appear in this context 'cql_blob_get_type'
 -- + {call}: err
--- * error: % function may not appear in this context 'cql_blob_get_type'
 -- +1 error:
 proc blob_get_type_context_wrong()
 begin
@@ -21224,8 +21224,8 @@ begin
 end;
 
 -- TEST: blob get table not using a table.column as the 2nd arg
+-- + error: % argument must be table.column where table is a backed table
 -- + {call}: err
--- * error: % argument must be table.column where table is a backed table
 -- +1 error:
 proc blob_get_not_dot_operator()
 begin
@@ -21234,8 +21234,8 @@ begin
 end;
 
 -- TEST: blob get table doesn't exist
+-- + error: % table/view not defined 'table_not_exists'
 -- + {call}: err
--- * error: % table/view not defined 'table_not_exists'
 -- +1 error:
 proc blob_get_table_wrong()
 begin
@@ -21244,8 +21244,8 @@ begin
 end;
 
 -- TEST: blob get column doesn't exist
+-- + error: % the indicated column is not present in the named backed storage 'basic_table.col_not_exists'
 -- + {call}: err
--- * error: % the indicated column is not present in the named backed storage 'basic_table.col_not_exists'
 -- +1 error:
 proc blob_get_column_wrong()
 begin
@@ -21254,8 +21254,8 @@ begin
 end;
 
 -- TEST: blob get wrong argument count
+-- + error: % function got incorrect number of arguments 'cql_blob_get'
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'cql_blob_get'
 -- +1 error:
 proc blob_get_column_wrong_arg_count()
 begin
@@ -21264,8 +21264,8 @@ begin
 end;
 
 -- TEST: blob get called outside of SQL context
+-- + error: % function may not appear in this context 'cql_blob_get'
 -- + {call}: err
--- * error: % function may not appear in this context 'cql_blob_get'
 -- +1 error:
 proc blob_get_column_context_wrong()
 begin
@@ -21292,8 +21292,8 @@ begin
 end;
 
 -- TEST: blob get table expression is not a backing table
+-- + error: % the indicated table is not declared for backed storage 'simple_backing_table'
 -- + {call}: err
--- * error: % the indicated table is not declared for backed storage 'simple_backing_table'
 -- +1 error:
 proc blob_get_not_backed_table()
 begin
@@ -21321,8 +21321,8 @@ begin
 end;
 
 -- TEST: cql blob update mixed tables
+-- + error: % the indicated table is not consistently used through all of cql_blob_update 'basic_table2'
 -- + {call}: err
--- * error: % the indicated table is not consistently used through all of cql_blob_update 'basic_table2'
 -- +1 error:
 proc blob_update_different_tables()
 begin
@@ -21361,8 +21361,8 @@ begin
 end;
 
 -- TEST: blob update table doesn't exist
+-- + error: % table/view not defined 'table_not_exists'
 -- + {call}: err
--- * error: % table/view not defined 'table_not_exists'
 -- +1 error:
 proc blob_update_table_wrong()
 begin
@@ -21371,8 +21371,8 @@ begin
 end;
 
 -- TEST: blob update table doesn't exist
+-- + error: % table/view not defined 'table_not_exists'
 -- + {call}: err
--- * error: % table/view not defined 'table_not_exists'
 -- +1 error:
 proc blob_update_table_wrong_later_arg()
 begin
@@ -21381,8 +21381,8 @@ begin
 end;
 
 -- TEST: blob update column doesn't exist
+-- + error: % the indicated column is not present in the named backed storage 'basic_table.col_not_exists'
 -- + {call}: err
--- * error: % the indicated column is not present in the named backed storage 'basic_table.col_not_exists'
 -- +1 error:
 proc blob_update_column_wrong()
 begin
@@ -21391,8 +21391,8 @@ begin
 end;
 
 -- TEST: blob update wrong argument count
+-- + error: % function got incorrect number of arguments 'cql_blob_update'
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'cql_blob_update'
 -- +1 error:
 proc blob_update_column_wrong_arg_count()
 begin
@@ -21401,8 +21401,8 @@ begin
 end;
 
 -- TEST: blob update called outside of SQL context
+-- + error: % function may not appear in this context 'cql_blob_update'
 -- + {call}: err
--- * error: % function may not appear in this context 'cql_blob_update'
 -- +1 error:
 proc blob_update_column_context_wrong()
 begin
@@ -21431,8 +21431,8 @@ begin
 end;
 
 -- TEST: blob update table expression is not a backing table
+-- + error: % the indicated table is not declared for backed storage 'simple_backing_table'
 -- + {call}: err
--- * error: % the indicated table is not declared for backed storage 'simple_backing_table'
 -- +1 error:
 proc blob_update_not_backed_table()
 begin
@@ -21501,8 +21501,8 @@ INSERT INTO basic_table
   do UPDATE SET id = id + 1 WHERE id < 100;
 
 -- TEST: upsert form, bogus table
+-- + error: % table in insert statement does not exist 'bogus_table_not_present'
 -- + {upsert_stmt}: err
--- * error: % table in insert statement does not exist 'bogus_table_not_present'
 -- +1 error:
 INSERT INTO bogus_table_not_present VALUES (1,2) on conflict(id) do nothing;
 
@@ -21543,8 +21543,8 @@ begin
 end;
 
 -- TEST: cql_blob_create arg 1 is not even a string
+-- + error: % argument 1 must be a table name that is a backed table 'cql_blob_create'
 -- + {call}: err
--- * error: % argument 1 must be a table name that is a backed table 'cql_blob_create'
 -- +1 error:
 proc blob_create_not_a_string()
 begin
@@ -21552,8 +21552,8 @@ begin
 end;
 
 -- TEST: cql blob create mixed tables
+-- + error: % the indicated table is not consistently used through all of cql_blob_create 'basic_table2'
 -- + {call}: err
--- * error: % the indicated table is not consistently used through all of cql_blob_create 'basic_table2'
 -- +1 error:
 proc blob_create_different_tables()
 begin
@@ -21561,8 +21561,8 @@ begin
 end;
 
 -- TEST: cql_blob_create first arg not a table
+-- + error: % table/view not defined 'not_a_table'
 -- + {call}: err
--- * error: % table/view not defined 'not_a_table'
 -- +1 error:
 proc blob_create_arg_one_error()
 begin
@@ -21570,8 +21570,8 @@ begin
 end;
 
 -- TEST: blob create not using a table.column as the 3nd arg
+-- + error: % argument must be table.column where table is a backed table
 -- + {call}: err
--- * error: % argument must be table.column where table is a backed table
 -- +1 error:
 proc blob_create_not_dot_operator()
 begin
@@ -21579,8 +21579,8 @@ begin
 end;
 
 -- TEST: blob create table doesn't exist
+-- + error: % table/view not defined 'table_not_exists'
 -- + {call}: err
--- * error: % table/view not defined 'table_not_exists'
 -- +1 error:
 proc blob_create_table_wrong()
 begin
@@ -21588,8 +21588,8 @@ begin
 end;
 
 -- TEST: blob create column doesn't exist
+-- + error: % the indicated column is not present in the named backed storage 'basic_table.col_not_exists'
 -- + {call}: err
--- * error: % the indicated column is not present in the named backed storage 'basic_table.col_not_exists'
 -- +1 error:
 proc blob_create_column_wrong()
 begin
@@ -21598,8 +21598,8 @@ begin
 end;
 
 -- TEST: blob create wrong argument count
+-- + error: % function got incorrect number of arguments 'cql_blob_create'
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'cql_blob_create'
 -- +1 error:
 proc blob_create_column_wrong_arg_count()
 begin
@@ -21608,8 +21608,8 @@ begin
 end;
 
 -- TEST: blob create called outside of SQL context
+-- + error: % function may not appear in this context 'cql_blob_create'
 -- + {call}: err
--- * error: % function may not appear in this context 'cql_blob_create'
 -- +1 error:
 proc blob_create_column_context_wrong()
 begin
@@ -21636,8 +21636,8 @@ begin
 end;
 
 -- TEST: blob create table expression is not a backing table
+-- + error: % the indicated table is not declared for backed storage 'simple_backing_table'
 -- + {call}: err
--- * error: % the indicated table is not declared for backed storage 'simple_backing_table'
 -- +1 error:
 proc blob_create_not_backed_table()
 begin
@@ -21717,8 +21717,8 @@ begin
 end;
 
 -- TEST: blob storage types must use cql:blob_storage
+-- + error: % the indicated table is not marked with [[blob_storage]] 'foo'
 -- + {call_stmt}: err
--- * error: % the indicated table is not marked with [[blob_storage]] 'foo'
 -- +1 error:
 proc blob_serialization_not_storage_table()
 begin
@@ -21728,8 +21728,8 @@ begin
 end;
 
 -- TEST: can't put triggers on structured storage
+-- + error: % the indicated table may only be used for blob storage 'structured_storage'
 -- + {create_trigger_stmt}: err
--- * error: % the indicated table may only be used for blob storage 'structured_storage'
 -- +1 error:
 create trigger storage_trigger
   before delete on structured_storage
@@ -21738,26 +21738,26 @@ begin
 end;
 
 -- TEST: can't drop structured storage
+-- + error: % the indicated table may only be used for blob storage 'structured_storage'
 -- + {drop_table_stmt}: err
--- * error: % the indicated table may only be used for blob storage 'structured_storage'
 -- +1 error:
 drop table structured_storage;
 
 -- TEST: can't delete from structured storage
+-- + error: % the indicated table may only be used for blob storage 'structured_storage'
 -- + {delete_stmt}: err
--- * error: % the indicated table may only be used for blob storage 'structured_storage'
 -- +1 error:
 delete from structured_storage where 1;
 
 -- TEST: can't put an index on structured storage
+-- + error: % the indicated table may only be used for blob storage 'structured_storage'
 -- + {create_index_stmt}: err
--- * error: % the indicated table may only be used for blob storage 'structured_storage'
 -- +1 error:
 create index oh_no_you_dont on structured_storage(id);
 
 -- TEST: virtual tables cannot be blob storage
+-- + error: % table is not suitable for use as blob storage: it is a virtual table 'virtual_blob_storage_illegal'
 -- + {create_virtual_table_stmt}: err
--- * error: % table is not suitable for use as blob storage: it is a virtual table 'virtual_blob_storage_illegal'
 -- +1 error:
 [[blob_storage]]
 create virtual table virtual_blob_storage_illegal using module_name(args) as (
@@ -21766,8 +21766,8 @@ create virtual table virtual_blob_storage_illegal using module_name(args) as (
 );
 
 -- TEST: temp tables cannot be blob storage
+-- + error: % table is not suitable for use as blob storage: it is redundantly marked TEMP 'temp_blob_storage'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as blob storage: it is redundantly marked TEMP 'temp_blob_storage'
 -- +1 error:
 [[blob_storage]]
 create temp table temp_blob_storage(
@@ -21776,8 +21776,8 @@ create temp table temp_blob_storage(
 );
 
 -- TEST: without rowid tables cannot be blob storage
+-- + error: % table is not suitable for use as blob storage: it is redundantly marked WITHOUT ROWID 'norowid_blob_storage'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as blob storage: it is redundantly marked WITHOUT ROWID 'norowid_blob_storage'
 -- +1 error:
 [[blob_storage]]
 create table norowid_blob_storage(
@@ -21786,8 +21786,8 @@ create table norowid_blob_storage(
 ) without rowid;
 
 -- TEST: tables with constraints cannot be blob storage
+-- + error: % table is not suitable for use as blob storage: it has at least one constraint 'constraint_blob_storage'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as blob storage: it has at least one constraint 'constraint_blob_storage'
 -- +1 error:
 [[blob_storage]]
 create table constraint_blob_storage(
@@ -21797,8 +21797,8 @@ create table constraint_blob_storage(
 );
 
 -- TEST: table with column with primary key cannot be blob
+-- + error: % table is not suitable for use as blob storage: column 'id' has a primary key in 'pk_col_blob_storage'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as blob storage: column 'id' has a primary key in 'pk_col_blob_storage'
 -- +1 error:
 [[blob_storage]]
 create table pk_col_blob_storage(
@@ -21807,8 +21807,8 @@ create table pk_col_blob_storage(
 );
 
 -- TEST: table with column with foreign key cannot be blob
+-- + error: % table is not suitable for use as blob storage: column 'id' has a foreign key in 'fk_col_blob_storage'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as blob storage: column 'id' has a foreign key in 'fk_col_blob_storage'
 -- +1 error:
 [[blob_storage]]
 create table fk_col_blob_storage(
@@ -21817,8 +21817,8 @@ create table fk_col_blob_storage(
 );
 
 -- TEST: table with column with unique key cannot be blob
+-- + error: % table is not suitable for use as blob storage: column 'id' has a unique key in 'uk_col_blob_storage'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as blob storage: column 'id' has a unique key in 'uk_col_blob_storage'
 -- +1 error:
 [[blob_storage]]
 create table uk_col_blob_storage(
@@ -21827,8 +21827,8 @@ create table uk_col_blob_storage(
 );
 
 -- TEST: table with hidden column cannot be blob
+-- + error: % table is not suitable for use as blob storage: column 'id' is a hidden column in 'hidden_col_blob_storage'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as blob storage: column 'id' is a hidden column in 'hidden_col_blob_storage'
 -- +1 error:
 [[blob_storage]]
 create table hidden_col_blob_storage(
@@ -21837,8 +21837,8 @@ create table hidden_col_blob_storage(
 );
 
 -- TEST: table with check constraint on column cannot be blob
+-- + error: % table is not suitable for use as blob storage: column 'id' has a check expression in 'check_col_blob_storage'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as blob storage: column 'id' has a check expression in 'check_col_blob_storage'
 -- +1 error:
 [[blob_storage]]
 create table check_col_blob_storage(
@@ -21847,8 +21847,8 @@ create table check_col_blob_storage(
 );
 
 -- TEST: table with collate on column cannot be blob
+-- + error: % table is not suitable for use as blob storage: column 't' specifies collation order in 'collate_col_blob_storage'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as blob storage: column 't' specifies collation order in 'collate_col_blob_storage'
 -- +1 error:
 [[blob_storage]]
 create table collate_col_blob_storage(
@@ -21857,8 +21857,8 @@ create table collate_col_blob_storage(
 );
 
 -- TEST: table with default value on column cannot be blob
+-- + error: % table is not suitable for use as blob storage: column 'id' has a default value in 'default_value_col_blob_storage'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as blob storage: column 'id' has a default value in 'default_value_col_blob_storage'
 -- +1 error:
 [[blob_storage]]
 create table default_value_col_blob_storage(
@@ -21867,8 +21867,8 @@ create table default_value_col_blob_storage(
 );
 
 -- TEST: table with deleted column cannot be blob
+-- + error: % table is not suitable for use as blob storage: column 't' has been deleted in 'deleted_col_blob_storage'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as blob storage: column 't' has been deleted in 'deleted_col_blob_storage'
 -- +1 error:
 [[blob_storage]]
 create table deleted_col_blob_storage(
@@ -21877,8 +21877,8 @@ create table deleted_col_blob_storage(
 );
 
 -- TEST: table with @recreate is not valid
+-- + error: % table is not suitable for use as blob storage: it is declared using @recreate 'recreate_blob_storage'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as blob storage: it is declared using @recreate 'recreate_blob_storage'
 -- +1 error:
 [[blob_storage]]
 create table recreate_blob_storage(
@@ -22104,8 +22104,8 @@ begin
 end;
 
 -- TEST: variable group may contain errors
+-- + error: % duplicate variable name in the same scope 'var_group_var_dup'
 -- + {declare_group_stmt}: err
--- * error: % duplicate variable name in the same scope 'var_group_var_dup'
 -- +1 error:
 declare group var_group_error
 begin
@@ -22119,8 +22119,8 @@ end;
 @emit_group var_group;
 
 -- TEST: not ok to emit
+-- + error: % group not found 'not_a_var_group'
 -- + {emit_group_stmt}: err
--- * error: % group not found 'not_a_var_group'
 -- +1 error:
 @emit_group not_a_var_group;
 
@@ -22131,14 +22131,14 @@ create table unsub_test_table_deleted(id integer) @delete(2);
 create table unsub_test_table_late_create(id integer) @create(7);
 
 -- TEST: unsub on non physical tables makes no sense
+-- + error: % unsubscribe does not make sense on non-physical tables 'structured_storage'
 -- + {schema_unsub_stmt}: err
--- * error: % unsubscribe does not make sense on non-physical tables 'structured_storage'
 -- +1 error:
 @unsub(structured_storage);
 
 -- TEST: unsub directive invalid table
+-- + error: % the table/view named in an @unsub directive does not exist 'not_a_table'
 -- + {schema_unsub_stmt}: err
--- * error: % the table/view named in an @unsub directive does not exist 'not_a_table'
 -- +1 error:
 @unsub(not_a_table);
 
@@ -22159,8 +22159,8 @@ select * from unsub_test_table;
 select * from unsub_test_table;
 
 -- TEST: duplicate unsub
+-- + error: % table/view is already unsubscribed 'unsub_test_table'
 -- + {schema_unsub_stmt}: err
--- * error: % table/view is already unsubscribed 'unsub_test_table'
 -- +1 error:
 @unsub(unsub_test_table);
 
@@ -22170,8 +22170,8 @@ select * from unsub_test_table;
 @unsub(unsub_test_table_late_create);
 
 -- TEST: already deleted table
+-- + error: % table/view is already deleted 'unsub_test_table_deleted'
 -- + {schema_unsub_stmt}: err
--- * error: % table/view is already deleted 'unsub_test_table_deleted'
 -- +1 error:
 @unsub(unsub_test_table_deleted);
 
@@ -22188,8 +22188,8 @@ create table unsub_test_table2(id integer primary key);
 create table sub_test_dependency2(id integer references unsub_test_table2(id));
 
 -- TEST: can't do this, unsub_test_table still refers to this table
+-- + error: % @unsub is invalid because the table/view is still used by 'sub_test_dependency2'
 -- + {schema_unsub_stmt}: err
--- * error: % @unsub is invalid because the table/view is still used by 'sub_test_dependency2'
 -- +1 error:
 @unsub (unsub_test_table2);
 
@@ -22224,8 +22224,8 @@ create table used_by_a_deleted_view(
 create view uses_a_table_but_deleted as select * from used_by_a_deleted_view @delete(2);
 
 -- TEST: can't delete this table, a view still uses it
+-- + error: % @unsub is invalid because the table/view is still used by 'uses_a_table'
 -- + {schema_unsub_stmt}: err
--- * error: % @unsub is invalid because the table/view is still used by 'uses_a_table'
 -- +1 error:
 @unsub(used_by_a_view);
 
@@ -22268,8 +22268,8 @@ begin
 end @delete(5);
 
 -- TEST: can't delete this table, a trigger still uses it
+-- + error: % @unsub is invalid because the table/view is still used by 'trigger_uses_a_table'
 -- + {schema_unsub_stmt}: err
--- * error: % @unsub is invalid because the table/view is still used by 'trigger_uses_a_table'
 -- +1 error:
 @unsub(used_by_a_trigger);
 
@@ -22311,8 +22311,8 @@ end;
 @unsub(unsub_with_views_v1);
 
 -- TEST: can't unsub v3 because of annoying trigger
+-- + error: % @unsub is invalid because the table/view is still used by 'unsub_with_views_annoying_trigger'
 -- + {schema_unsub_stmt}: err
--- * error: % @unsub is invalid because the table/view is still used by 'unsub_with_views_annoying_trigger'
 -- +1 error:
 @unsub(unsub_with_views_v3);
 
@@ -22346,8 +22346,8 @@ begin
 end;
 
 -- TEST: bogus scoped local
+-- + error: % expanding FROM LOCALS, there is no local matching 'xyzzy'
 -- + {call_stmt}: err
--- * error: % expanding FROM LOCALS, there is no local matching 'xyzzy'
 -- +1 error:
 proc bogus_local_usage()
 begin
@@ -22355,14 +22355,14 @@ begin
 end;
 
 -- TEST: there are no locals
+-- + error: % expanding FROM LOCALS, there is no local matching 'xyzzy'
 -- + {let_stmt}: err
--- * error: % expanding FROM LOCALS, there is no local matching 'xyzzy'
 -- +1 error:
 let no_chance_of_this_working := locals.xyzzy;
 
 -- TEST: try to use locals scope with no locals
+-- + error: % name not found 'locals'
 -- + {call_stmt}: err
--- * error: % name not found 'locals'
 -- +1 error:
 call any_args_at_all(from locals);
 
@@ -22460,8 +22460,8 @@ DECLARE INTERFACE interface1 (id INT);
 DECLARE INTERFACE interface1 (id INT);
 
 -- TEST: attempting to redefine column with the same name
+-- + error: % duplicate column name 'id'
 -- + {declare_interface_stmt}: err
--- * error: % duplicate column name 'id'
 -- +1 error:
 DECLARE INTERFACE interface1 (id INT, id TEXT);
 
@@ -22811,14 +22811,14 @@ let compressed_string := cql_compressed("foo foo");
 set compressed_string := (select cql_compressed('hello hello'));
 
 -- TEST: verify semantic types of cql_compressed (too many args)
+-- + error: % function got incorrect number of arguments 'cql_compressed'
 -- + {assign}: err
--- * error: % function got incorrect number of arguments 'cql_compressed'
 -- +1 error:
 set compressed_string := cql_compressed("foo foo", 1);
 
 -- TEST: verify semantic types of cql_compressed (not a string)
+-- + error: % first argument must be a string literal 'cql_compressed'
 -- + {assign}: err
--- * error: % first argument must be a string literal 'cql_compressed'
 -- +1 error:
 set compressed_string := cql_compressed(1);
 
@@ -22876,22 +22876,22 @@ set name = update_test_2.name from update_test_1
   where update_test_1.name = 'x' and update_from_target.id = update_test_1.id;
 
 -- TEST: update with from clause
+-- + error: % table/view not defined 'table_does_not_exist'
 -- + {update_stmt}: err
--- * error: % table/view not defined 'table_does_not_exist'
 -- +1 error:
 update update_from_target set name = update_test_2.name from table_does_not_exist;
 
 -- TEST: update backed table with from clause -- not supported
+-- + error: % FROM clause not supported when updating backed table 'simple_backed_table'
 -- + {update_stmt}: err
--- * error: % FROM clause not supported when updating backed table 'simple_backed_table'
 -- +1 error:
 update simple_backed_table set id = 5 from update_test_1;
 
 @ENFORCE_STRICT UPDATE FROM;
 
 -- TEST: update with from clause
+-- + error: % strict UPDATE ... FROM validation requires that the UPDATE statement not include a FROM clause
 -- + {update_stmt}: err
--- * error: % strict UPDATE ... FROM validation requires that the UPDATE statement not include a FROM clause
 -- +1 error:
 UPDATE update_from_target SET name = update_test_2.name FROM update_test_1;
 
@@ -23389,8 +23389,8 @@ int_result := 701;
 1 := 7;
 
 -- TEST: use := in a place other than the simplest
+-- + error: % operator found in an invalid position ':='
 -- + {expr_assign}: err
--- * error: % operator found in an invalid position ':='
 -- +1 error:
 int_result := int_result := 2;
 
@@ -23515,8 +23515,8 @@ begin
 end;
 
 -- TEST: try to use a . op but no helper functions
+-- + error: % name not found 'q.id'
 -- + {dot}: err
--- * error: % name not found 'q.id'
 -- +1 error:
 proc dot_fail_no_funcs()
 begin
@@ -23526,8 +23526,8 @@ begin
 end;
 
 -- TEST: try to use a . op but no helper functions
+-- + error: % name not found 'q.id'
 -- + {dot}: err
--- * error: % name not found 'q.id'
 -- +1 error:
 proc dot_fail_no_kind()
 begin
@@ -23598,8 +23598,8 @@ storage.id2 := storage.id + storage.id2;
 storage[(select 'id' union all select 'id' limit 1)] += 1;
 
 -- TEST: friends don't let friends put = at the top level
+-- + error: % a top level equality is almost certainly an error. ':=' is assignment, not '='
 -- + {expr_stmt}: err
--- * error: % a top level equality is almost certainly an error. ':=' is assignment, not '='
 -- +1 error:
 x = 5;
 
@@ -23698,14 +23698,14 @@ type an_integer_type integer!;
 type an_integer_type int!;
 
 -- TEST: select functions cannot have out arguments -- inout form
+-- + error: % select functions cannot have out parameters 'inout_param'
 -- + {declare_select_func_stmt}: err
--- * error: % select functions cannot have out parameters 'inout_param'
 -- +1 error:
 declare select func select_func_with_out_arg1(inout inout_param int!) int;
 
 -- TEST: select functions cannot have out arguments -- out form
+-- + error: % select functions cannot have out parameters 'out_param'
 -- + {declare_select_func_stmt}: err
--- * error: % select functions cannot have out parameters 'out_param'
 -- +1 error:
 declare select func select_func_with_out_arg2(out out_param int!) int;
 
@@ -24171,14 +24171,14 @@ end;
 select 1 a_col order by a_col;
 
 -- TEST: empty join scope looking for rowid (this will fail)
+-- + error: % name not found 'foo.rowid'
 -- + {select_stmt}: err
--- * error: % name not found 'foo.rowid'
 -- +1 error:
 select 1 a_col order by foo.rowid;
 
 -- TEST: blocked access to tables
+-- + error: % name not found 'foo.rowid'
 -- + {select_stmt}: err
--- * error: % name not found 'foo.rowid'
 -- +1 error:
 select * from foo limit foo.rowid;
 
@@ -24387,14 +24387,14 @@ select json_extract('{"x":0}', '$.x');
 a_string := json_extract('{"x":0}', '$.x');
 
 -- TEST: only json types allowed
+-- + error: % argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'json_extract'
 -- + {call}: err
--- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'json_extract'
 -- +1 error:
 select json_extract(1, '1');
 
 -- TEST: only text paths allowed
+-- + error: % argument 2 'integer' is an invalid type; valid types are: 'text' in 'json_extract'
 -- + {call}: err
--- * error: % argument 2 'integer' is an invalid type; valid types are: 'text' in 'json_extract'
 -- +1 error:
 select json_extract('[]', 1);
 
@@ -24443,26 +24443,26 @@ select json_insert(nullable('{"x":0}'), '$.x', 1, '$.y', 2);
 a_string := json_insert('{"x":0}', '$.x', 2);
 
 -- TEST: only json types allowed
+-- + error: % argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'json_insert'
 -- + {call}: err
--- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'json_insert'
 -- +1 error:
 select json_insert(1, '$.x', 2);
 
 -- TEST: only json types allowed
+-- + error: % starting at argument 2, arguments must come in groups of 2 in 'json_insert'
 -- + {call}: err
--- * error: % starting at argument 2, arguments must come in groups of 2 in 'json_insert'
 -- +1 error:
 select json_insert(1, '$.x', 2, 3);
 
 -- TEST: no blob types allowed
+-- + error: % argument 3 'blob' is an invalid type; valid types are: 'bool' 'integer' 'long' 'real' 'text' in 'json_insert'
 -- + {call}: err
--- * error: % argument 3 'blob' is an invalid type; valid types are: 'bool' 'integer' 'long' 'real' 'text' in 'json_insert'
 -- +1 error:
 select json_insert('{"x":0}', '$.x', blob_var);
 
 -- TEST: only text paths allowed
+-- + error: % argument 2 'integer' is an invalid type; valid types are: 'text' in 'json_insert'
 -- + {call}: err
--- * error: % argument 2 'integer' is an invalid type; valid types are: 'text' in 'json_insert'
 -- +1 error:
 select json_insert('[]', 1, 1);
 
@@ -24530,8 +24530,8 @@ select json_object(nullable('x'), 1, 'y', 2);
 a_string := json_object('x', 1, 'y', 2);
 
 -- TEST: no blob types allowed
+-- + error: % argument 2 'blob' is an invalid type; valid types are: 'bool' 'integer' 'long' 'real' 'text' in 'json_object'
 -- + {call}: err
--- * error: % argument 2 'blob' is an invalid type; valid types are: 'bool' 'integer' 'long' 'real' 'text' in 'json_object'
 -- +1 error:
 select json_object('x', blob_var);
 
@@ -24573,8 +24573,8 @@ select json_patch(nullable('{ "name" : "John" }'), '{ "age" : 22 }');
 a_string := json_patch('{ "name" : "John" }', '{ "age" : 22 }');
 
 -- TEST: no blob types allowed
+-- + error: % argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'json_patch'
 -- + {call}: err
--- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'json_patch'
 -- +1 error:
 select json_patch(1, blob_var);
 
@@ -24597,8 +24597,8 @@ select jsonb_patch(1);
 select json_pretty('[1]');
 
 -- TEST: json normalization basic case with pretty, wrong arg types
+-- + error: % argument 2 'integer' is an invalid type; valid types are: 'text' in 'json_pretty'
 -- + {call}: err
--- * error: % argument 2 'integer' is an invalid type; valid types are: 'text' in 'json_pretty'
 -- +1 error:
 select json_pretty('[1]', 5);
 
@@ -24746,8 +24746,8 @@ var wrong_object object<wrong>;
 set list_result := wrong_object:(5);
 
 -- TEST: no kind specified in the left arg
+-- + error: % left argument must have a type kind
 -- + reverse_apply_poly_args}: err
--- * error: % left argument must have a type kind
 -- +1 error:
 let r := 1:();
 
@@ -24780,8 +24780,8 @@ select 'x' -> 'y' ~int~ as U;
 1 IS 3 ~int~;
 
 -- TEST: bogus type in op statement
+-- + error: % must be a cursor, proc, table, or view 'not_a_proc_at_all'
 -- + {op_stmt}: err
--- * error: % must be a cursor, proc, table, or view 'not_a_proc_at_all'
 -- +1 error:
 @op object<not_a_proc_at_all set> : call foo as foofoo;
 
@@ -24913,32 +24913,32 @@ set concat_func_result := concat_ws(' ', 1, 2, "x");
 let concat_func_result2 := concat_ws(a_string, 1, 2, "x");
 
 -- TEST: concat_ws with too few args
+-- + error: % too few arguments in function 'concat_ws'
 -- + {assign}: err
--- * error: % too few arguments in function 'concat_ws'
 -- +1 error:
 set concat_func_result2 := concat_ws(a_string);
 
 -- TEST: concat_ws with too few args
+-- + error: % too few arguments in function 'concat'
 -- + {assign}: err
--- * error: % too few arguments in function 'concat'
 -- +1 error:
 set concat_func_result2 := concat();
 
 -- TEST: concat with too few args
+-- + error: % argument 1 'integer' is an invalid type; valid types are: 'text' in 'concat_ws'
 -- + {assign}: err
--- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' in 'concat_ws'
 -- +1 error:
 set concat_func_result2 := concat_ws(7, 'x');
 
 -- TEST: concat with NULL arg
+-- + error: % argument 3 is a NULL literal; useless in 'concat_ws'
 -- + {assign}: err
--- * error: % argument 3 is a NULL literal; useless in 'concat_ws'
 -- +1 error:
 set concat_func_result2 := concat_ws(' ', 2, NULL, 4);
 
 -- TEST: concat with NULL arg
+-- + error: % argument 3 is a NULL literal; useless in 'concat'
 -- + {assign}: err
--- * error: % argument 3 is a NULL literal; useless in 'concat'
 -- +1 error:
 set concat_func_result2 := concat(' ', 2, NULL, 4);
 
@@ -25001,8 +25001,8 @@ set glob_func := glob();
 let sql_vers := (select sqlite_version());
 
 -- TEST: sqlite version normal call
+-- + error: % too many arguments in function 'sqlite_version'
 -- + {call}: err
--- * error: % too many arguments in function 'sqlite_version'
 -- +1 error:
 set sql_vers := (select sqlite_version(1));
 
@@ -25013,8 +25013,8 @@ set sql_vers := (select sqlite_version(1));
 let sql_option := sqlite_compileoption_get(1);
 
 -- TEST: sqlite compile option no args
+-- + error: % too few arguments in function 'sqlite_compileoption_get'
 -- + {assign}: err
--- * error: % too few arguments in function 'sqlite_compileoption_get'
 -- +1 error:
 set sql_option := sqlite_compileoption_get();
 
@@ -25025,8 +25025,8 @@ set sql_option := sqlite_compileoption_get();
 let sql_bool_option := "foo":sqlite_compileoption_used;
 
 -- TEST: sqlite compile option used no args
+-- + error: % too few arguments in function 'sqlite_compileoption_used'
 -- + {assign}: err
--- * error: % too few arguments in function 'sqlite_compileoption_used'
 -- +1 error:
 set sql_bool_option := sqlite_compileoption_used();
 
@@ -25037,8 +25037,8 @@ set sql_bool_option := sqlite_compileoption_used();
 let t_changes := (select total_changes());
 
 -- TEST: sqlite version normal call
+-- + error: % too many arguments in function 'total_changes'
 -- + {call}: err
--- * error: % too many arguments in function 'total_changes'
 -- +1 error:
 set t_changes := (select total_changes(1));
 
@@ -25137,8 +25137,8 @@ let zero_blob := (select zeroblob(1));
 set zero_blob := zeroblob(1);
 
 -- TEST: zero blob invalid args
+-- + error: % too few arguments in function 'zeroblob'
 -- + {assign}: err
--- * error: % too few arguments in function 'zeroblob'
 -- +1 error:
 set zero_blob := (select zeroblob());
 
@@ -25153,14 +25153,14 @@ let random_blob := (select randomblob(1));
 let type_string := (select typeof('foo'));
 
 -- TEST: typeof error usage
+-- + error: % argument 1 is a NULL literal; useless in 'typeof'
 -- + {assign}: err
--- * error: % argument 1 is a NULL literal; useless in 'typeof'
 -- +1 error:
 set type_string := (select typeof(null));
 
 -- TEST: typeof error usage
+-- + error: % function may not appear in this context 'typeof'
 -- + {assign}: err
--- * error: % function may not appear in this context 'typeof'
 -- +1 error:
 set type_string := typeof(null);
 
@@ -25177,14 +25177,14 @@ let loaded := (select load_extension('foo', 'bar'));
 set loaded := (select load_extension('foo'));
 
 -- TEST: try to load extension, no args
+-- + error: % too few arguments in function 'load_extension'
 -- + {call}: err
--- * error: % too few arguments in function 'load_extension'
 -- +1 error:
 set loaded := (select load_extension());
 
 -- TEST: try to load extension, wrong context
+-- + error: % function may not appear in this context 'load_extension'
 -- + {call}: err
--- * error: % function may not appear in this context 'load_extension'
 -- +1 error:
 set loaded := load_extension('foo');
 

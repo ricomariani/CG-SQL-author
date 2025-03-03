@@ -88,6 +88,10 @@ static llint_t crc_stmt(ast_node *stmt) {
   return result;
 }
 
+// emit either a normal name or quoted name into the output stream
+// If the name is a qid `like so` we have to "unquote" it before we emit it
+// This means converting the hex form to normal ascii including and then
+// requoting it for json with the appropriate escape sequences.
 static void cg_json_sql_name_ex(charbuf *output, CSTR name, bool qid) {
   if (qid) {
     CHARBUF_OPEN(sql_name);
@@ -100,16 +104,27 @@ static void cg_json_sql_name_ex(charbuf *output, CSTR name, bool qid) {
   }
 }
 
+// This is a helper function to emit a name into the JSON output stream.
+// The origin is a structure member.
+// The name is either a quoted identifier or a plain identifier.
+// The quoted identifier info comes from the semantic type on the column.
 static void cg_json_sptr_sql_name(charbuf *output, sem_struct *sptr, int32_t i) {
   CSTR name = sptr->names[i];
   cg_json_sql_name_ex(output, name, !!(sptr->semtypes[i] & SEM_TYPE_QID));
 }
 
+// This is a helper function to emit a name into the JSON output stream.
+// The origin is an ast node
+// The name is either a quoted identifier or a plain identifier.
+// The quoted identifier info comes from the semantic type ast node
 static void cg_json_sql_name(charbuf *output, ast_node *ast) {
   EXTRACT_STRING(name, ast);
   cg_json_sql_name_ex(output, name, is_qid(ast));
 }
 
+// This is a helper function to emit a name into the JSON output stream.
+// We use the sql name helper above to emit the name and we add commas as needed
+// so here we're building a list.
 static void add_name_to_output(charbuf* output, ast_node *ast) {
   Contract(output);
   ast_node *name_ast = sem_get_name_ast(ast);
@@ -156,6 +171,8 @@ static void cg_found_table(CSTR table_name, ast_node *table_ast, void* pvContext
   add_name_to_output(context->used_tables, table_ast);
 }
 
+// we found a table that is used in an insert context, add it to the list
+// this is part of the dependency analysis
 static void cg_found_insert(CSTR table_name, ast_node *table_ast, void *pvContext)
 {
   json_context *context = (json_context *)pvContext;
@@ -164,6 +181,8 @@ static void cg_found_insert(CSTR table_name, ast_node *table_ast, void *pvContex
   add_name_to_output(context->insert_tables, table_ast);
 }
 
+// we found a table that is used in an update context, add it to the list
+// this is part of the dependency analysis
 static void cg_found_update(CSTR table_name, ast_node *table_ast, void *pvContext)
 {
   json_context *context = (json_context *)pvContext;
@@ -172,6 +191,8 @@ static void cg_found_update(CSTR table_name, ast_node *table_ast, void *pvContex
   add_name_to_output(context->update_tables, table_ast);
 }
 
+// we found a table that is used in an delete context, add it to the list
+// this is part of the dependency analysis
 static void cg_found_delete(CSTR table_name, ast_node *table_ast, void *pvContext)
 {
   json_context *context = (json_context *)pvContext;
@@ -180,6 +201,8 @@ static void cg_found_delete(CSTR table_name, ast_node *table_ast, void *pvContex
   add_name_to_output(context->delete_tables, table_ast);
 }
 
+// we found a table that is used in an "from" context, add it to the list
+// this is part of the dependency analysis
 static void cg_found_from(CSTR table_name, ast_node *table_ast, void *pvContext)
 {
   json_context *context = (json_context *)pvContext;
@@ -187,6 +210,8 @@ static void cg_found_from(CSTR table_name, ast_node *table_ast, void *pvContext)
   add_name_to_output(context->from_tables, table_ast);
 }
 
+// we found a procedure, add it to the list
+// this is part of the dependency analysis
 static void cg_found_proc(CSTR proc_name, ast_node *name_ast, void *pvContext)
 {
   json_context *context = (json_context *)pvContext;
@@ -211,6 +236,9 @@ static bool_t cg_json_record_var(struct ast_node *_Nonnull ast, void *_Nullable 
   return true;
 }
 
+// In test mode the JSON output is contaminated with test info so that we can
+// tell where the output came from.  This allows us to use the normal verifier
+// to match JSON fragments.
 static void cg_json_test_details(charbuf *output, ast_node *ast, ast_node *misc_attrs) {
   if (options.test) {
     bprintf(output, "\nThe statement ending at line %d\n", ast->lineno);
@@ -517,31 +545,31 @@ static void cg_json_const_values(ast_node *const_values, charbuf *output) {
   BEGIN_LIST;
 
   while (const_values) {
-     EXTRACT_NOTNULL(const_value, const_values->left);
-     EXTRACT_NAME_AST(const_name_ast, const_value->left);
-     EXTRACT_STRING(const_name, const_name_ast);
-     EXTRACT_ANY_NOTNULL(const_expr, const_value->right);
+    EXTRACT_NOTNULL(const_value, const_values->left);
+    EXTRACT_NAME_AST(const_name_ast, const_value->left);
+    EXTRACT_STRING(const_name, const_name_ast);
+    EXTRACT_ANY_NOTNULL(const_expr, const_value->right);
 
-     COMMA;
-     bprintf(output, "{\n");
+    COMMA;
+    bprintf(output, "{\n");
 
-     bprintf(output, "  \"name\" : \"%s\",\n", const_name);
-     BEGIN_INDENT(type, 2);
-       cg_json_data_type(output, const_expr->sem->sem_type, const_expr->sem->kind);
-     END_INDENT(type);
-     bprintf(output, ",\n");
-     bprintf(output, "  \"value\" : ");
+    bprintf(output, "  \"name\" : \"%s\",\n", const_name);
+    BEGIN_INDENT(type, 2);
+      cg_json_data_type(output, const_expr->sem->sem_type, const_expr->sem->kind);
+    END_INDENT(type);
+    bprintf(output, ",\n");
+    bprintf(output, "  \"value\" : ");
 
-     if (is_strlit(const_expr)) {
-       cg_json_emit_string(output, const_expr);
-     }
-     else {
-       eval_format_number(const_expr->sem->value, EVAL_FORMAT_NORMAL, output);
-     }
+    if (is_strlit(const_expr)) {
+      cg_json_emit_string(output, const_expr);
+    }
+    else {
+      eval_format_number(const_expr->sem->value, EVAL_FORMAT_NORMAL, output);
+    }
 
-     bprintf(output, "\n}");
+    bprintf(output, "\n}");
 
-     const_values = const_values->right;
+    const_values = const_values->right;
   }
 
   END_LIST;
@@ -618,6 +646,12 @@ static void cg_json_subscriptions(charbuf* output) {
   bprintf(output, "]");
 }
 
+// Emits a migration procedure name into the output
+// it can be a vanilla name or it can be a dot name, i.e. foo.bar.
+// The dot name is emitted into the json as "foo:bar".  These are
+// "special" builting migration notes. The canonical one is
+// cql:from_recreate which indicates a table transitioned
+// to normal schema from recreate schema.
 static void cg_migration_proc(ast_node *ast, charbuf *output) {
   if (is_ast_dot(ast)) {
     EXTRACT_NOTNULL(dot, ast);
@@ -958,6 +992,7 @@ static void cg_json_fk_target_options(charbuf *output, ast_node *ast) {
   cg_json_fk_flags(output, flags);
 }
 
+// optional constraint name, very boring.
 static void cg_json_opt_constraint_name(charbuf *output, ast_node *def) {
   if (def->left) {
     EXTRACT_NAME_AST(constraint_name_ast, def->left);
@@ -1160,7 +1195,7 @@ static void cg_json_col_key_list(charbuf *output, ast_node *ast) {
 
 // Here we walk all the indices, extract out the key info for each index and
 // emit it.  The indices have a few flags plus columns and a sort order for
-// each column.
+// each column.  Other entries reference this list by name.
 static void cg_json_indices(charbuf *output) {
   bprintf(output, "\"indices\" : [\n");
   BEGIN_INDENT(indices, 2);
@@ -1243,6 +1278,7 @@ static void cg_json_indices(charbuf *output) {
   bprintf(output, "]");
 }
 
+// optional bool, which is "1" if present else absent
 static void cg_json_opt_bool(charbuf *output, int32_t flag, CSTR desc) {
   if (flag) {
     bprintf(output, ",\n\"%s\" : 1", desc);
@@ -1351,6 +1387,13 @@ static void cg_json_triggers(charbuf *output) {
   bprintf(output, "]");
 }
 
+// This creates the map of regions and how they depend on each other
+// regions have a list of regions they depend on, they can use
+// that region directly or privately.  This is discussed elsewhere
+// but generally items in a region R can use other things in R
+// anything R depends on. If R depends on things privately then
+// things in R can use those things things that depend on R cannot.
+// This is like private inheritance in C++.
 static void cg_json_region_deps(charbuf *output, CSTR sym) {
   // Every name we encounter has already been validated!
   ast_node *region = find_region(sym);
@@ -1418,7 +1461,6 @@ static void cg_json_emit_region_info(charbuf *output, ast_node *ast) {
 
 // Here we walk all the regions, we get the dependency information for
 // that region and emit it.
-//
 static void cg_json_regions(charbuf *output) {
   bprintf(output, "\"regions\" : [\n");
   BEGIN_INDENT(regout, 2);
@@ -1541,6 +1583,7 @@ static void cg_json_views(charbuf *output) {
   bprintf(output, "]");
 }
 
+// This is the list of indices that are defined a the table.
 static void cg_json_table_indices(list_item *head, charbuf *output) {
   bprintf(output, "\"indices\" : [ ");
 

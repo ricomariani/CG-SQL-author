@@ -1815,6 +1815,7 @@ set bool_x := const(null is not false);
 -- + SET bool_x := CONST(1 / 0 IS NOT FALSE);
 -- + {assign}: err
 -- * error: % evaluation of constant failed
+
 set bool_x := const(1/0 is not false);
 
 -- TEST: 1/0 is not false -> error
@@ -6489,41 +6490,49 @@ alter table bar add column name text;
 -- TEST: alter a table, adding a nullable column
 -- {alter_table_add_column_stmt}: err
 -- * error: % adding a not nullable column with no default value is not allowed 'name'
+-- +1 error:
 alter table bar add column name text not null;
 
 -- TEST: alter a table, adding a column whose declared type does not match
 -- {alter_table_add_column_stmt}: err
 -- * error: % added column must be an exact match for the column type declared in the table 'name'
+-- +1 error:
 alter table bar add column name integer;
 
 -- TEST: alter a table, adding a column that was not declared
 -- {alter_table_add_column_stmt}: err
 -- * error: % added column must already be reflected in declared schema, with @create, exact name match required 'goo'
+-- +1 error:
 alter table bar add column goo integer;
 
 -- TEST: alter a table, adding a column that was not declared
 -- {alter_table_add_column_stmt}: err
 -- * error: % added column must already be reflected in declared schema, with @create, exact name match required 'NAME'
+-- +1 error:
 alter table bar add column NAME text;
 
 -- TEST: alter a table, adding a nullable column
 -- {alter_table_add_column_stmt}: err
 -- * error: % tables cannot have object columns 'foo'
+-- +1 error:
 alter table bar add column foo object;
 
 -- TEST: alter a table, adding an autoinc column
 -- {alter_table_add_column_stmt}: err
 -- * error: % adding an auto increment column is not allowed 'id'
+-- +1 error:
 alter table bar add column id integer primary key autoincrement;
 
 -- TEST: alter a table, table doesn't exist
 -- {alter_table_add_column_stmt}: err
 -- * error: % table in alter statement does not exist 'garbonzo'
+-- +1 error:
 alter table garbonzo add column id integer primary key autoincrement;
 
 -- TEST: alter a table, table is a view
 -- {alter_table_add_column_stmt}: err
 -- * error: % cannot alter a view 'MyView'
+-- +1 error:
 alter table MyView add column id integer primary key autoincrement;
 
 -- TEST: try to declare a schema version inside of a proc
@@ -6719,8 +6728,13 @@ insert into versioned_table(id) values (1);
 
 -- TEST: try to create a view with the same name as the versioned table
 -- note: the name is found even though the table is deleted
+-- + Incompatible declarations found
+-- + error: % CREATE TABLE versioned_table(
+-- + error: % CREATE VIEW versioned_table AS
+-- + The above must be identical.
+-- + error: % duplicate table/view name 'versioned_table'
 -- + {create_view_stmt}: err
--- * error: % duplicate table/view name 'versioned_table'
+-- +3 error:
 create view versioned_table as select 1 x;
 
 -- TEST: try to create a global variable with the same name as the versioned table
@@ -6732,8 +6746,13 @@ declare versioned_table integer;
 
 -- TEST: try to create a table with the same name as the versioned table
 -- note: the name is found even though the table is deleted
+-- + Incompatible declarations found
+-- + error: % CREATE TABLE versioned_table(
+-- + error: % CREATE TABLE versioned_table(
+-- + The above must be identical.
+-- + error: % duplicate table/view name 'versioned_table'
 -- + {create_table_stmt}: err
--- * error: % duplicate table/view name 'versioned_table'
+-- +3 error:
 create table versioned_table(id2 integer);
 
 -- TEST: drop the table (note that DDL works on any version)
@@ -7959,6 +7978,7 @@ select T1.rowid from foo T2, foo T3;
 -- TEST: rowid name ambiguous
 -- + {select_stmt}: err
 -- * error: % identifier is ambiguous 'rowid'
+-- +1 error:
 select rowid from foo T1, foo T2;
 
 -- TEST: read the result of a non-dml proc;  we must not become a dml proc for doing so
@@ -8089,6 +8109,7 @@ create table recreatable(
 -- + {create_table_stmt}: err
 -- + {recreate_attr}
 -- * error: % columns in a table marked @recreate cannot have @create or @delete 'id'
+-- +1 error:
 create table column_marked_delete_on_recreate_table(
   id integer primary key @create(2),
   name text
@@ -8408,6 +8429,7 @@ end;
 -- + INSERT INTO bar() FROM ARGUMENTS
 -- + {insert_stmt}: err
 -- * error: % FROM [shape] is redundant if column list is empty
+-- +1 error:
 proc bar_auto_inserter_no_columns(id int!, name text, rate LONG INT)
 begin
  insert into bar() from arguments @dummy_seed(1);
@@ -8417,6 +8439,7 @@ end;
 -- + INSERT INTO bar(id, name, rate) FROM ARGUMENTS(id);
 -- + {insert_stmt}: err
 -- * error: % [shape] has too few fields 'ARGUMENTS'
+-- +1 error:
 proc bar_auto_inserter_missing_columns(id integer)
 begin
  insert into bar from arguments;
@@ -8848,9 +8871,13 @@ begin
 end;
 
 -- TEST: duplicate trigger
+-- + error: % CREATE TRIGGER trigger3
+-- + error: % CREATE TRIGGER trigger3
+-- + The above must be identical.
+-- + error: % trigger already exists 'trigger3'
 -- + {create_trigger_stmt}: err
 -- + {name ViewShape}
--- * error: % trigger already exists 'trigger3'
+-- +3 error:
 create trigger trigger3
   instead of update on ViewShape
 begin
@@ -9329,6 +9356,7 @@ set _sens := (select id from with_sensitive group by info having info = 1);
 -- TEST: assign sensitive column value to a non-sensitive colunm
 -- + {insert_stmt}: err
 -- * error: % cannot assign/copy sensitive expression to non-sensitive target 'name'
+-- +1 error:
 insert into without_sensitive select name from with_sensitive;
 
 create table a (
@@ -11215,6 +11243,7 @@ select id, rank() over () from foo;
 -- + {assign}: err
 -- + {call}: err
 -- * error: % function may not appear in this context 'max'
+-- +1 error:
 set X := max(1,2);
 
 -- TEST: substr is rewritten to the SQL context
@@ -11480,8 +11509,8 @@ select replace('a', 'b', sensitive('c'));
 -- + error: % DECLARE PROC MyAdHocMigration () USING TRANSACTION
 -- + error: % DECLARE PROC MyAdHocMigration (x INT)
 -- + The above must be identical.
+-- + error: % procedure declarations/definitions do not match 'MyAdHocMigration'
 -- + {declare_proc_stmt}: err
--- * error: % procedure declarations/definitions do not match 'MyAdHocMigration'
 -- +3 error:
 declare proc MyAdHocMigration(x integer);
 
@@ -11495,8 +11524,9 @@ declare proc InvalidAdHocMigration(y integer);
 -- + error: % DECLARE PROC InvalidAdHocMigration (y INT)
 -- + error: % DECLARE PROC InvalidAdHocMigration () USING TRANSACTION
 -- + The above must be identical.
+-- + error: % procedure declarations/definitions do not match 'InvalidAdHocMigration'
 -- + schema_ad_hoc_migration_stmt}: err
--- * error: % procedure declarations/definitions do not match 'InvalidAdHocMigration'
+-- +3 error:
 @schema_ad_hoc_migration(5, InvalidAdHocMigration);
 
 -- TEST: ok to go, simiple recreate migration
@@ -11511,8 +11541,9 @@ declare proc InvalidAdHocMigration(y integer);
 -- + error: % DECLARE PROC foo ()
 -- + error: % DECLARE PROC foo () USING TRANSACTION
 -- + The above must be identical.
+-- + error: % procedure declarations/definitions do not match 'foo'
 -- + {schema_ad_hoc_migration_stmt}: err
--- * error: % procedure declarations/definitions do not match 'foo'
+-- +3 error:
 @schema_ad_hoc_migration for @recreate(group_something, foo);
 
 -- TEST: duplicate group/proc in recreate migration
@@ -11520,6 +11551,7 @@ declare proc InvalidAdHocMigration(y integer);
 -- + {name group_foo}
 -- + {name proc_bar}
 -- * error: % indicated procedure or group already has a recreate action 'group_foo'
+-- +1 error:
 @schema_ad_hoc_migration for @recreate(group_foo, proc_bar);
 
 -- TEST: create ad hoc version migration -- bogus name
@@ -11994,18 +12026,22 @@ select id, group_concat(id, '.') filter (where id >= 99) over () as row_num from
 select id as alias, avg(id) filter (where alias = 0) over () from foo;
 
 -- TEST: test FILTER clause may only be used with aggregate window functions
+-- + error: % function may not appear in this context 'row_number'
+-- + error: % FILTER clause may only be used in function that are aggregated or user defined 'row_number'
 -- + {select_stmt}: err
 -- + {window_func_inv}: err
 -- + {call}: err
 -- + {name row_number}
--- * error: % function may not appear in this context 'row_number'
+-- +2 error:
 select 1, row_number() filter (where 1) over ();
 
 -- TEST: test DISTINCT clause may only be used with aggregates
+-- + error: % function may not appear in this context 'row_number'
+-- + error: % DISTINCT may only be used in function that are aggregated or user defined 'row_number'
 -- + {select_stmt}: err
 -- + {call}: err
 -- + {name row_number}
--- * error: % DISTINCT may only be used in function that are aggregated or user defined 'row_number'
+-- +2 error:
 select 1, row_number(distinct 1);
 
 -- TEST: test partition by grammar
@@ -12966,9 +13002,9 @@ call some_external_thing('x', 5.0);
 
 -- TEST: unchecked procs cannot be used in expressions (unless re-declared with
 -- DECLARE FUNCTION or DECLARE SELECT FUNCTION)
+-- + error: % procedure of an unknown type used in an expression 'some_external_thing'
 -- + {call}: err
--- * error: % procedure of an unknown type used in an expression
---   'some_external_thing' +1 error:
+-- +1 error:
 let result_of_some_external_thing := some_external_thing('x', 5.0);
 
 -- TEST: re-declare an unchecked proc with DECLARE FUNCTION
@@ -16052,26 +16088,32 @@ let val_min := (select min(1) from foo where 0);
 
 --- TEST: IF NOTHING requirement is enforced for multi-argument scalar function max
 -- * error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
+-- +1 error:
 set val_max := (select max(1, 2, 3) from foo where 0);
 
 --- TEST: IF NOTHING requirement is enforced for multi-argument scalar function min
 -- * error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
+-- +1 error:
 set val_min := (select min(1, 2, 3) from foo where 0);
 
 --- TEST: IF NOTHING requirement is enforced for built-in aggregate functions when GROUP BY is used - min
 -- * error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
+-- +1 error:
 set val_min := (select min(1) from foo where 0 group by id);
 
 --- TEST: IF NOTHING requirement is enforced for built-in aggregate functions when GROUP BY is used - sum
 -- * error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
+-- +1 error:
 set val_sum := (select sum(1) from foo where 0 group by id);
 
 --- TEST: IF NOTHING requirement is enforced for built-in aggregate functions when a LIMIT less than one is used (and expression within LIMIT is evaluated)
 -- * error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
+-- +1 error:
 set val_avg := (select avg(id) col from foo limit 1 - 1);
 
 --- TEST: IF NOTHING requirement is enforced for built-in aggregate functions when a  LIMIT using a variable (and expression within LIMIT is evaluated)
 -- * error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
+-- +1 error:
 proc val_avg_proc(lim integer)
 begin
   let val_avg := (select avg(id) col from foo limit lim);
@@ -16083,6 +16125,7 @@ set val_avg := (select avg(id) col from foo limit (2 + 4 * 10));
 
 --- TEST: IF NOTHING requirement is enforced for built-in aggregate functions when OFFSET is used
 -- * error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
+-- +1 error:
 set val_avg := (select avg(id) col from foo limit (2 + 4 * 10) offset 1);
 
 -- TEST: normal if nothing then
@@ -16612,6 +16655,7 @@ declare out call out2_proc(1, u, u);
 -- TEST: non-variable out arg in declare out
 -- + {declare_out_call_stmt}: err
 -- * error: % expected a variable name for OUT or INOUT argument 'y'
+-- +1 error:
 proc out_decl_test_2(x integer)
 begin
   declare out call out2_proc(x, 1+3, v);
@@ -18176,6 +18220,8 @@ declare proc requires_int_notnull(a int!);
 
 -- TEST: Improvements that are unset within a loop affect all preceding
 -- statements within the loop.
+-- + error: % cannot assign/copy possibly null expression to not null target 'a'
+-- + error: % additional info: calling 'requires_int_notnull' argument #1 intended for parameter 'a' has the problem
 -- + {create_proc_stmt}: err
 -- + {name x0}: x0: integer notnull variable
 -- + {name y0}: y0: integer notnull variable
@@ -18192,7 +18238,7 @@ declare proc requires_int_notnull(a int!);
 -- + {name y5}: y5: integer notnull variable
 -- + {name x6}: x6: integer variable
 -- + {name y6}: y6: integer notnull variable
--- * error: % cannot assign/copy possibly null expression to not null target 'a'
+-- +2 error:
 proc unimprovements_in_loops_affect_earlier_statements()
 begin
   declare a int;
@@ -19104,6 +19150,7 @@ select (~ 1)||2; --> -22
 ---- TILDE is stronger than CONCAT , parens must stay
 -- + SELECT ~(1 || 2);
 -- * error: % string operand not allowed in '~'
+-- +1 error:
 select ~ (1||2); --> -13
 
 -- TEST: order of operations, verifying gen_sql agrees with tree parse
@@ -19122,6 +19169,7 @@ select (-0)||1; --> 01
 --- NEGATION is stronger than CONCAT, parens must stay
 -- + SELECT -(0 || 1);
 -- * error: % string operand not allowed in '-'
+-- +1 error:
 select -(0||1); --> -1
 
 -- TEST: order of operations, verifying gen_sql agrees with tree parse
@@ -19290,6 +19338,7 @@ select 1 < (5 is true);
 -- + {assign}: err
 -- + {is_true}: err
 -- * error: % string operand not allowed in 'IS TRUE'
+-- +1 error:
 SET fal := 'x' is true;
 
 -- TEST: is false should fail on bogus args
@@ -19798,8 +19847,11 @@ declare const group err4 (
 );
 
 -- TEST: duplicate constant group that's different
+-- + error: % DECLARE CONST GROUP foo
+-- + error: % DECLARE CONST GROUP foo
+-- + error: % const definitions do not match 'foo'
 -- + {declare_const_stmt}: err
--- * error: % const definitions do not match 'foo'
+-- +3 error:
 declare const group foo (
   const_v = false
 );
@@ -20012,6 +20064,7 @@ as (
 -- TEST: semantic check of eponymous virtual table that doesn't have matching module name
 -- + {create_virtual_table_stmt}: err
 -- * error: % virtual table 'epony' claims to be eponymous but its module name 'epono' differs from its table name
+-- +1 error:
 create virtual table @eponymous epony using epono
 as (
   id integer @sensitive,
@@ -22155,6 +22208,7 @@ select * from unsub_test_table;
 -- TEST: table is not visible
 -- + {select_stmt}: err
 -- * error: % table/view not defined (hidden by @unsub) 'unsub_test_table'
+-- +1 error:
 select * from unsub_test_table;
 
 -- TEST: duplicate unsub
@@ -22438,9 +22492,11 @@ declare function external_cursor_func(x cursor) integer;
 let result := external_cursor_func(shape_storage);
 
 -- TEST: bogus arg to cursor func
+-- + error: % not a cursor '1'
+-- + error: % additional info: calling 'external_cursor_func' argument #1 intended for parameter 'x' has the problem
 -- +  {assign}: err
 -- +  | {call}: err
--- * error: % not a cursor '1'
+-- +2 error:
 set result := external_cursor_func(1);
 DECLARE PROC uses_broken_thing() (LIKE broken_thing ARGUMENTS);
 
@@ -22468,8 +22524,9 @@ DECLARE INTERFACE interface1 (id INT, id TEXT);
 -- + error: % DECLARE INTERFACE interface1 (id INT)
 -- + error: % DECLARE INTERFACE interface1 (id INT, name TEXT)
 -- + The above must be identical.
+-- + error: % interface declarations do not match 'interface1'
 -- + {declare_interface_stmt}: err
--- * error: % interface declarations do not match 'interface1'
+-- +3 error:
 DECLARE INTERFACE interface1 (id INT, name TEXT);
 
 -- TEST: attempting to define interface with two columns
@@ -22685,6 +22742,7 @@ select no_check_select_fun(0, "hello");
 
 -- TEST: calling unchecked select function with invalid argument fails
 -- * error: in star : CQL0051: argument can only be used in count(*) '*'
+-- +1 error:
 select no_check_select_fun(*);
 
 -- TEST: declaring unchecked table valued select function
@@ -22717,6 +22775,7 @@ select t, i from no_check_select_table_valued_fun(0, "hello");
 
 -- TEST: calling unchecked table valued function with invalid argument fails
 -- * error: in star : CQL0051: argument can only be used in count(*) '*'
+-- +1 error:
 select t, i from no_check_select_table_valued_fun(*);
 
 -- TEST: redefining interface as proc (declare ... no check)
@@ -22789,6 +22848,7 @@ end;
 -- + {declare_vars_type}: object<test_parent_child SET>
 -- * error: % must be a cursor, proc, table, or view 'goo'
 -- * error: % object<T SET> has a T that is not a procedure with a result set 'C SET'
+-- +2 error:
 proc test_object_types()
 begin
   cursor C like (id integer);
@@ -23444,7 +23504,7 @@ op_assign >>= 11;
 -- + {expr_stmt}: err
 -- + {expr_assign}: err
 -- * error: % left operand of assignment operator must be a name ':='
--- * error:
+-- +1 error:
 1 += 7;
 
 declare function get_from_object_foo(array object<foo>, index text) text not null;
@@ -24189,6 +24249,7 @@ select '{ "x" : 1}' -> '$.x' as X;
 -- TEST: basic extraction operator: non SQL context
 -- + {jex1}: err
 -- * error: % operator may only appear in the context of a SQL statement '->'
+-- +1 error:
 '{ "x" : 1}' -> '$.x';
 
 -- TEST: basic extraction operator: invalid expression
@@ -24199,11 +24260,13 @@ select '{ "x" : 1}' -> '$.x' as X;
 -- TEST: basic extraction operator, invalid right type
 -- + {jex1}: err
 -- * error: % right operand must be json text path or integer '->'
+-- +1 error:
 select '{ "x" : 1}' -> 1.5 as X;
 
 -- TEST: basic extraction operator, invalid left type
 -- + {jex1}: err
 -- * error: % left operand must be json text or json blob
+-- +1 error:
 select 1 -> '$.x' as X;
 
 -- TEST: extended extraction operator
@@ -24214,6 +24277,7 @@ select '{ "x" : 1}' ->> ~int~ '$.x' as X;
 -- TEST: extended extraction operator: non SQL context
 -- + {jex2}: err
 -- * error: % operator may only appear in the context of a SQL statement '->>'
+-- +1 error:
 '{ "x" : 1}' ->> ~int~ '$.x';
 
 -- TEST: extended extraction operator: invalid expression
@@ -24224,16 +24288,19 @@ select '{ "x" : 1}' ->> ~int~ '$.x' as X;
 -- TEST: extended extraction operator: invalid type
 -- + {jex2}: err
 -- * error: % unknown type 'not_a_type'
+-- +1 error:
 select 'x' ->> ~not_a_type~ '$.x' as X;
 
 -- TEST: extended extraction operator, invalid right type
 -- + {jex2}: err
 -- * error: % right operand must be json text path or integer '->>'
+-- +1 error:
 select '{ "x" : 1}' ->> ~int~ 1.5 as X;
 
 -- TEST: extended extraction operator, invalid left type
 -- + {jex2}: err
 -- * error: % left operand must be json text or json blob
+-- +1 error:
 select 1 ->> ~int~ '$.x' as X;
 
 -- TEST: json normalization basic case
@@ -24245,6 +24312,7 @@ select json('[1]');
 -- TEST: json wrong number of args
 -- + {call}: err
 -- * error: % too few arguments in function 'json'
+-- +1 error:
 select json();
 
 -- TEST json function in non SQL-context
@@ -24256,6 +24324,7 @@ a_string := json('[1]');
 -- TEST json function in non SQL-context
 -- + {call}: err
 -- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'json'
+-- +1 error:
 select json(1);
 
 -- TEST: jsonb normalization basic case
@@ -24267,6 +24336,7 @@ select jsonb('[1]');
 -- TEST: jsonb wrong number of args
 -- + {call}: err
 -- * error: % too few arguments in function 'jsonb'
+-- +1 error:
 select jsonb();
 
 -- TEST json function in non SQL-context
@@ -24278,6 +24348,7 @@ blob_var := jsonb('[1]');
 -- TEST json function in non SQL-context
 -- + {call}: err
 -- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'jsonb'
+-- +1 error:
 select jsonb(1);
 
 -- TEST json function for JSON array creation
@@ -24303,6 +24374,7 @@ a_string := json_array();
 -- TEST: no blobs allowed
 -- + {call}: err
 -- * error: % argument 2 'blob' is an invalid type; valid types are: 'bool' 'integer' 'long' 'real' 'text' in 'json_array'
+-- +1 error:
 select json_array(1, blob_var, 3);
 
 -- TEST json function for JSON array creation
@@ -24330,6 +24402,7 @@ select json_array_length('', '$.x');
 -- TEST json function for JSON array_length with too many args
 -- + {call}: err
 -- * error: % too many arguments in function 'json_array_length'
+-- +1 error:
 select json_array_length('', '$.x', '');
 
 -- TEST: json function outside of SQL
@@ -24341,11 +24414,13 @@ an_int := json_array_length('x');
 -- TEST json function for JSON array_length with wrong arg type
 -- + {call}: err
 -- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'json_array_length'
+-- +1 error:
 select json_array_length(1);
 
 -- TEST json function for JSON array_length with wrong arg type
 -- + {call}: err
 -- * error: % argument 2 'integer' is an invalid type; valid types are: 'text' in 'json_array_length'
+-- +1 error:
 select json_array_length('x', 1);
 
 -- TEST json function for JSON error_position with 1 args

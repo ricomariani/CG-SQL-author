@@ -207,7 +207,7 @@ select T1.id + 'foo' from foo T1;
 
 -- TEST: invalid addition of id to string
 -- + error: % left operand cannot be a string in '+'
--- {select_stmt}: err
+-- + {select_stmt}: err
 -- +1 error:
 select 'foo' + T1.id from foo T1;
 
@@ -734,8 +734,8 @@ select case 3
 end;
 
 -- TEST: int combines with real to give real
--- {select_stmt}: _select_: { _anon: real notnull }
--- {case_expr}: real notnull
+-- + {select_stmt}: _select_: { _anon: real notnull }
+-- + {case_expr}: real notnull
 -- - error:
 select case 4
   when 1 then 1
@@ -1568,7 +1568,7 @@ create table baz (
 
 -- TEST: make an FK that refers to a bogus table
 -- + error: % foreign key refers to non-existent table 'bogus'
--- {create_table_stmt}: err
+-- + {create_table_stmt}: err
 -- +1 error:
 create table baz (
   id integer,
@@ -2189,7 +2189,7 @@ end;
 
 -- TEST: loop must prop errors inside it up so the overall loop is a semantic failure
 -- + error: % string operand not allowed in 'NOT'
--- {loop_stmt}: err
+-- + {loop_stmt}: err
 -- +1 error:
 loop fetch my_cursor into X, Y
 begin
@@ -2231,7 +2231,7 @@ end;
 
 -- TEST: use boxed cursor from a bogus expression
 -- + error: % expression must be of type object<T cursor> where T is a valid shape name '12'
--- {declare_cursor}: err
+-- + {declare_cursor}: err
 -- +1 error:
 proc bogus_boxed_cursor_expr()
 begin
@@ -3276,7 +3276,7 @@ set X_not_null := (select 1 where 0);
 
 -- TEST: bogus function
 -- + error: % function not builtin and not declared 'some_unknown_function'
--- {select_stmt}: err
+-- + {select_stmt}: err
 -- +1 error:
 set X := (select some_unknown_function(null));
 
@@ -3476,7 +3476,7 @@ cursor curs2 for call with_result_set(1);
 
 -- TEST: bad invocation, needs cursor
 -- + error: % procedures with results can only be called using a cursor in global context 'with_result_set'
--- {call_stmt}: err
+-- + {call_stmt}: err
 call with_result_set();
 
 -- TEST: bad invocation, this method doesn't return a result set
@@ -3685,16 +3685,16 @@ select * from bar as T1 inner join foo as T2 using(id, name);
 
 -- helper tables for different join types
 
--- {create_table_stmt}: payload1: { id: integer notnull, data1: integer notnull }
+-- + {create_table_stmt}: payload1: { id: integer notnull, data1: integer notnull }
 -- - error:
 create table payload1 (id int!, data1 int!);
 
--- {create_table_stmt}: payload2: { id: integer notnull, data2: integer notnull }
+-- + {create_table_stmt}: payload2: { id: integer notnull, data2: integer notnull }
 -- - error:
 create table payload2 (id int!, data2 int!);
 
 -- TEST: all not null
--- {select_stmt}: _select_: { id: integer notnull, data1: integer notnull, id: integer notnull, data2: integer notnull }
+-- + {select_stmt}: _select_: { id: integer notnull, data1: integer notnull, id: integer notnull, data2: integer notnull }
 -- - error:
 select * from payload1 inner join payload2 using (id);
 
@@ -3818,7 +3818,8 @@ create table join_clause_1 (
 );
 
 -- TEST: helper table for join/using test
--- {create_table_stmt}: join_clause_1: { id: integer }
+-- + {create_table_stmt}: join_clause_2: { id: integer }
+-- - error:
 create table join_clause_2 (
   id integer
 );
@@ -6481,57 +6482,57 @@ insert into bar(id) values ('x');
 create temp view temp_view as select 1 A, 2 B;
 
 -- TEST: alter a table, adding a nullable column
--- {alter_table_add_column_stmt}: ok
--- {name bar}: bar: { id: integer notnull, name: text, rate: longint }
--- {col_def}: name: text
+-- + {alter_table_add_column_stmt}: ok
+-- + {name bar}: bar: { id: integer notnull, name: text, rate: longint }
+-- + {col_def}: name: text
 -- - error:
 alter table bar add column name text;
 
 -- TEST: alter a table, adding a nullable column
--- {alter_table_add_column_stmt}: err
--- * error: % adding a not nullable column with no default value is not allowed 'name'
+-- + error: % adding a not nullable column with no default value is not allowed 'name'
+-- + {alter_table_add_column_stmt}: err
 -- +1 error:
 alter table bar add column name text not null;
 
 -- TEST: alter a table, adding a column whose declared type does not match
--- {alter_table_add_column_stmt}: err
--- * error: % added column must be an exact match for the column type declared in the table 'name'
+-- + error: % added column must be an exact match for the column type declared in the table 'name'
+-- + {alter_table_add_column_stmt}: err
 -- +1 error:
 alter table bar add column name integer;
 
 -- TEST: alter a table, adding a column that was not declared
--- {alter_table_add_column_stmt}: err
--- * error: % added column must already be reflected in declared schema, with @create, exact name match required 'goo'
+-- + error: % added column must already be reflected in declared schema, with @create, exact name match required 'goo'
+-- + {alter_table_add_column_stmt}: err
 -- +1 error:
 alter table bar add column goo integer;
 
 -- TEST: alter a table, adding a column that was not declared
--- {alter_table_add_column_stmt}: err
--- * error: % added column must already be reflected in declared schema, with @create, exact name match required 'NAME'
+-- + error: % added column must already be reflected in declared schema, with @create, exact name match required 'NAME'
+-- + {alter_table_add_column_stmt}: err
 -- +1 error:
 alter table bar add column NAME text;
 
 -- TEST: alter a table, adding a nullable column
--- {alter_table_add_column_stmt}: err
--- * error: % tables cannot have object columns 'foo'
+-- + error: % tables cannot have object columns 'foo'
+-- + {alter_table_add_column_stmt}: err
 -- +1 error:
 alter table bar add column foo object;
 
 -- TEST: alter a table, adding an autoinc column
--- {alter_table_add_column_stmt}: err
--- * error: % adding an auto increment column is not allowed 'id'
+-- + error: % adding an auto increment column is not allowed 'id'
+-- + {alter_table_add_column_stmt}: err
 -- +1 error:
 alter table bar add column id integer primary key autoincrement;
 
 -- TEST: alter a table, table doesn't exist
--- {alter_table_add_column_stmt}: err
--- * error: % table in alter statement does not exist 'garbonzo'
+-- + error: % table in alter statement does not exist 'garbonzo'
+-- + {alter_table_add_column_stmt}: err
 -- +1 error:
 alter table garbonzo add column id integer primary key autoincrement;
 
 -- TEST: alter a table, table is a view
--- {alter_table_add_column_stmt}: err
--- * error: % cannot alter a view 'MyView'
+-- + error: % cannot alter a view 'MyView'
+-- + {alter_table_add_column_stmt}: err
 -- +1 error:
 alter table MyView add column id integer primary key autoincrement;
 
@@ -6827,9 +6828,10 @@ create table neg_default (
 );
 
 -- TEST: alter a table, adding a nullable column
--- {alter_table_add_column_stmt}: ok
--- {name bar}: bar: { id: integer notnull, name: text, rate: longint }
--- {col_def}: name: text
+-- + ALTER TABLE neg_default ADD COLUMN id INT! DEFAULT -1;
+-- + {alter_table_add_column_stmt}: ok
+-- + {name neg_default}: neg_default: { id: integer notnull has_default }
+-- + {col_def}: id: integer notnull has_default
 -- - error:
 alter table neg_default add column id int! default -1;
 
@@ -6886,13 +6888,13 @@ select text2 as text, text as other_text from table_with_text_as_name;
 
 -- TEST: try to start a schema upgrade after there are tables
 -- + error: % schema upgrade declaration must come before any tables are declared
--- {schema_upgrade_script_stmt}: err
+-- + {schema_upgrade_script_stmt}: err
 -- +1 error:
 @schema_upgrade_script;
 
 -- TEST: try to start a schema upgrade inside a proc
 -- + error: % schema upgrade declaration must be outside of any proc
--- {schema_upgrade_script_stmt}: err
+-- + {schema_upgrade_script_stmt}: err
 -- +1 error:
 proc schema_upgrade_you_wish()
 begin
@@ -6975,13 +6977,13 @@ drop view if exists MyView;
 
 -- TEST: drop an index that exists
 -- + DROP INDEX index_1;
--- {drop_index_stmt}: ok
+-- + {drop_index_stmt}: ok
 -- - error:
 drop index index_1;
 
 -- TEST: drop an index that exists
 -- + error: % index in drop statement was not declared 'I_dont_see_no_steekin_index'
--- {drop_index_stmt}: err
+-- + {drop_index_stmt}: err
 -- +1 error:
 drop index if exists I_dont_see_no_steekin_index;
 
@@ -7263,8 +7265,8 @@ end;
 cursor QQ like out_cursor_proc;
 
 -- TEST: force an error on the out cursor path, bad args
--- {declare_cursor}: err
 -- + error: % too many arguments provided to procedure 'out_cursor_proc'
+-- + {fetch_call_stmt}: err
 -- +1 error:
 fetch QQ from call out_cursor_proc(1);
 
@@ -7275,8 +7277,8 @@ begin
 end;
 
 -- TEST: force an error on the out cursor path, the proc isn't actually an out cursor proc
--- {fetch_call_stmt}: err
 -- + error: % cursor requires a procedure that returns a cursor with OUT 'QQ'
+-- + {fetch_call_stmt}: err
 -- +1 error:
 fetch QQ from call not_out_cursor_proc();
 
@@ -7976,8 +7978,8 @@ select T1.rowid from foo T1, bar T2;
 select T1.rowid from foo T2, foo T3;
 
 -- TEST: rowid name ambiguous
+-- + error: % identifier is ambiguous 'rowid'
 -- + {select_stmt}: err
--- * error: % identifier is ambiguous 'rowid'
 -- +1 error:
 select rowid from foo T1, foo T2;
 
@@ -8427,8 +8429,8 @@ end;
 
 -- TEST: rewrite insert statement but no columns, bogus
 -- + INSERT INTO bar() FROM ARGUMENTS
+-- + error: % FROM [shape] is redundant if column list is empty
 -- + {insert_stmt}: err
--- * error: % FROM [shape] is redundant if column list is empty
 -- +1 error:
 proc bar_auto_inserter_no_columns(id int!, name text, rate LONG INT)
 begin
@@ -8437,8 +8439,8 @@ end;
 
 -- TEST: rewrite insert statement but not enough columns
 -- + INSERT INTO bar(id, name, rate) FROM ARGUMENTS(id);
+-- + error: % [shape] has too few fields 'ARGUMENTS'
 -- + {insert_stmt}: err
--- * error: % [shape] has too few fields 'ARGUMENTS'
 -- +1 error:
 proc bar_auto_inserter_missing_columns(id integer)
 begin
@@ -8499,7 +8501,7 @@ create table args2(
 --       have the id_ column;  we should only emit it once
 -- note that id_ was skipped the second time
 -- + PROC two_arg_sources (id_ INT!, name_ TEXT, data_ BLOB, name2_ TEXT, rate_ REAL)
--- {create_proc_stmt): ok
+-- + {create_proc_stmt}: ok
 -- - error:
 proc two_arg_sources(like args1, like args2)
 begin
@@ -8507,7 +8509,7 @@ end;
 
 -- TEST: test the case where 2nd and subsequent like forms do nothing
 -- + PROC two_arg_sources_fully_redundant (id_ INT!, name_ TEXT, data_ BLOB)
--- {create_proc_stmt): ok
+-- + {create_proc_stmt}: ok
 -- - error:
 proc two_arg_sources_fully_redundant(like args1, like args1, like args1)
 begin
@@ -8516,10 +8518,10 @@ end;
 create view ViewShape as select TRUE a, 2.5 b, 'xyz' c;
 
 -- + PROC like_a_view (a_ BOOL!, b_ REAL!, c_ TEXT!)
--- +   SELECT v.a, v.b, v.c
--- +     FROM ViewShape AS v
--- +   WHERE v.a = a_ AND v.b = b_ AND v.c > c_;
--- +   {create_proc_stmt}: like_a_view: { a: bool notnull, b: real notnull, c: text notnull } dml_proc
+-- + SELECT v.a, v.b, v.c
+-- +   FROM ViewShape AS v
+-- + WHERE v.a = a_ AND v.b = b_ AND v.c > c_;
+-- + {create_proc_stmt}: like_a_view: { a: bool notnull, b: real notnull, c: text notnull } dml_proc
 proc like_a_view(like ViewShape)
 begin
   select * from ViewShape v where v.a = a_ and v.b = b_ and v.c > c_;
@@ -9354,8 +9356,8 @@ set _sens := (select id from with_sensitive where id = 1);
 set _sens := (select id from with_sensitive group by info having info = 1);
 
 -- TEST: assign sensitive column value to a non-sensitive colunm
+-- + error: % cannot assign/copy sensitive expression to non-sensitive target 'name'
 -- + {insert_stmt}: err
--- * error: % cannot assign/copy sensitive expression to non-sensitive target 'name'
 -- +1 error:
 insert into without_sensitive select name from with_sensitive;
 
@@ -10092,7 +10094,7 @@ begin
 end;
 
 -- TEST: table to test referenceable (primary key, unique key) column
--- {create_table_stmt}: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text unique_index_key, d: text }
+-- + {create_table_stmt}: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint }
 -- - error:
 create table referenceable (
   a int primary key,
@@ -10103,7 +10105,7 @@ create table referenceable (
 );
 
 -- TEST: table to test referenceable group of columns
--- {create_table_stmt}: referenceable: { a: integer notnull, b: real }
+-- + {create_table_stmt}: referenceable_2: { a: integer notnull partial_pk, b: real notnull partial_pk }
 -- - error:
 create table referenceable_2 (
   a int,
@@ -13044,7 +13046,7 @@ declare proc _stuff3() ( h2 integer, like _stuff2, t2 integer);
 
 -- TEST: try to make a name list from a bogus type
 -- + error: % must be a cursor, proc, table, or view 'invalid_type_name'
--- {declare_proc_stmt}: err
+-- + {declare_proc_stmt}: err
 -- +1 error:
 declare proc _stuff4() (like invalid_type_name);
 
@@ -14278,7 +14280,7 @@ end;
 
 -- TEST: there is no some_proc3 -- error
 -- + PROC some_proc3_proxy (LIKE some_proc3 ARGUMENTS)
--- * error: % name not found 'some_proc3'
+-- + error: % name not found 'some_proc3'
 -- +1 error:
 proc some_proc3_proxy(like some_proc3 arguments)
 begin
@@ -16653,8 +16655,8 @@ declare out call out2_proc(u, u, v);
 declare out call out2_proc(1, u, u);
 
 -- TEST: non-variable out arg in declare out
+-- + error: % expected a variable name for OUT or INOUT argument 'y'
 -- + {declare_out_call_stmt}: err
--- * error: % expected a variable name for OUT or INOUT argument 'y'
 -- +1 error:
 proc out_decl_test_2(x integer)
 begin
@@ -16716,30 +16718,29 @@ end;
 
 -- TEST: try the select using form
 -- we only need to verify the rewrite, all else is normal processing
--- {insert_stmt}: ok
 -- + INSERT INTO with_kind(id, cost, value)
 -- +   SELECT 1 AS id, 3.5 AS cost, 4.8 AS value;
+-- + {insert_stmt}: ok
 -- - error:
 insert into with_kind using
   select 1 id, 3.5 cost, 4.8 value;
 
 -- TEST: try the select using form -- anonymous columns not allowed in this form
 -- + error: % all columns in the select must have a name
--- {insert_stmt}: err
+-- + {insert_stmt}: err
 -- +1 error:
 insert into with_kind using
   select 1, 3.5 cost, 4.8 value;
 
 -- TEST: try the select using form -- errors in the select must prop up
 -- + error: % string operand not allowed in 'NOT'
--- {insert_stmt}: err
+-- + {insert_stmt}: err
 -- +1 error:
 insert into with_kind using
   select not 'x', 3.5 cost, 4.8 value;
 
 -- TEST: try the select using form (and with clause)
 -- we only need to verify the rewrite, all else is normal processing
--- {insert_stmt}: ok
 -- + INSERT INTO with_kind(id, cost, value)
 -- + WITH
 -- +   goo (x) AS (
@@ -16747,6 +16748,7 @@ insert into with_kind using
 -- +   )
 -- +   SELECT goo.x AS id, 3.5 AS cost, 4.8 AS value
 -- +   FROM goo;
+-- + {insert_stmt}: ok
 -- - error:
 insert into with_kind using
    with goo(x) as (select 1)
@@ -19335,9 +19337,9 @@ select (1 < 5) is true;
 select 1 < (5 is true);
 
 -- TEST: is true doesn't work on non numerics
+-- + error: % string operand not allowed in 'IS TRUE'
 -- + {assign}: err
 -- + {is_true}: err
--- * error: % string operand not allowed in 'IS TRUE'
 -- +1 error:
 SET fal := 'x' is true;
 
@@ -20062,8 +20064,8 @@ as (
 );
 
 -- TEST: semantic check of eponymous virtual table that doesn't have matching module name
+-- + error: % virtual table 'epony' claims to be eponymous but its module name 'epono' differs from its table name
 -- + {create_virtual_table_stmt}: err
--- * error: % virtual table 'epony' claims to be eponymous but its module name 'epono' differs from its table name
 -- +1 error:
 create virtual table @eponymous epony using epono
 as (
@@ -20695,7 +20697,7 @@ create table simple_backed_table_expr_key(
 
 -- TEST: simple backed table with versions
 -- + error: % table is not suitable for use as backed storage: it is declared using schema directives (@create or @delete 'simple_backed_table_with_versions'
--- {create_table_stmt}: err
+-- + {create_table_stmt}: err
 -- +1 error:
 [[backed_by=simple_backing_table]]
 create table simple_backed_table_with_versions(
@@ -22206,8 +22208,8 @@ select * from unsub_test_table;
 @unsub(unsub_test_table);
 
 -- TEST: table is not visible
+-- + error: % table/view not defined (hidden by @unsub) 'unsub_test_table'
 -- + {select_stmt}: err
--- * error: % table/view not defined (hidden by @unsub) 'unsub_test_table'
 -- +1 error:
 select * from unsub_test_table;
 
@@ -22219,7 +22221,7 @@ select * from unsub_test_table;
 
 -- TEST: table order doesn't matter, you can unsub regardless of when it was created
 -- + {schema_unsub_stmt}: ok
--- +- error:
+-- - error:
 @unsub(unsub_test_table_late_create);
 
 -- TEST: already deleted table
@@ -22229,8 +22231,8 @@ select * from unsub_test_table;
 @unsub(unsub_test_table_deleted);
 
 -- TEST: can't add a dependency on an unsubscribed table
--- {create_table_stmt} : err
--- * error: % foreign key refers to non-existent table (hidden by @unsub) 'unsub_test_table'
+-- + error: % foreign key refers to non-existent table (hidden by @unsub) 'unsub_test_table'
+-- + {create_table_stmt}: err
 -- +1 error
 create table sub_test_dependency(
   id integer references unsub_test_table(id)
@@ -23501,9 +23503,9 @@ op_assign <<= 8;
 op_assign >>= 11;
 
 -- TEST: += (they are the same) on not an identifier
+-- + error: % left operand of assignment operator must be a name ':='
 -- + {expr_stmt}: err
 -- + {expr_assign}: err
--- * error: % left operand of assignment operator must be a name ':='
 -- +1 error:
 1 += 7;
 
@@ -24247,8 +24249,8 @@ select * from foo limit foo.rowid;
 select '{ "x" : 1}' -> '$.x' as X;
 
 -- TEST: basic extraction operator: non SQL context
+-- + error: % operator may only appear in the context of a SQL statement '->'
 -- + {jex1}: err
--- * error: % operator may only appear in the context of a SQL statement '->'
 -- +1 error:
 '{ "x" : 1}' -> '$.x';
 
@@ -24258,14 +24260,14 @@ select '{ "x" : 1}' -> '$.x' as X;
 (not 'x') -> '$.x';
 
 -- TEST: basic extraction operator, invalid right type
+-- + error: % right operand must be json text path or integer '->'
 -- + {jex1}: err
--- * error: % right operand must be json text path or integer '->'
 -- +1 error:
 select '{ "x" : 1}' -> 1.5 as X;
 
 -- TEST: basic extraction operator, invalid left type
+-- + error: % left operand must be json text or json blob
 -- + {jex1}: err
--- * error: % left operand must be json text or json blob
 -- +1 error:
 select 1 -> '$.x' as X;
 
@@ -24275,8 +24277,8 @@ select 1 -> '$.x' as X;
 select '{ "x" : 1}' ->> ~int~ '$.x' as X;
 
 -- TEST: extended extraction operator: non SQL context
+-- + error: % operator may only appear in the context of a SQL statement '->>'
 -- + {jex2}: err
--- * error: % operator may only appear in the context of a SQL statement '->>'
 -- +1 error:
 '{ "x" : 1}' ->> ~int~ '$.x';
 
@@ -24286,20 +24288,20 @@ select '{ "x" : 1}' ->> ~int~ '$.x' as X;
 (not 'x') ->> ~int~ '$.x';
 
 -- TEST: extended extraction operator: invalid type
+-- + error: % unknown type 'not_a_type'
 -- + {jex2}: err
--- * error: % unknown type 'not_a_type'
 -- +1 error:
 select 'x' ->> ~not_a_type~ '$.x' as X;
 
 -- TEST: extended extraction operator, invalid right type
+-- + error: % right operand must be json text path or integer '->>'
 -- + {jex2}: err
--- * error: % right operand must be json text path or integer '->>'
 -- +1 error:
 select '{ "x" : 1}' ->> ~int~ 1.5 as X;
 
 -- TEST: extended extraction operator, invalid left type
+-- + error: % left operand must be json text or json blob
 -- + {jex2}: err
--- * error: % left operand must be json text or json blob
 -- +1 error:
 select 1 ->> ~int~ '$.x' as X;
 
@@ -24310,8 +24312,8 @@ select 1 ->> ~int~ '$.x' as X;
 select json('[1]');
 
 -- TEST: json wrong number of args
+-- + error: % too few arguments in function 'json'
 -- + {call}: err
--- * error: % too few arguments in function 'json'
 -- +1 error:
 select json();
 
@@ -24334,8 +24336,8 @@ select json(1);
 select jsonb('[1]');
 
 -- TEST: jsonb wrong number of args
+-- + error: % too few arguments in function 'jsonb'
 -- + {call}: err
--- * error: % too few arguments in function 'jsonb'
 -- +1 error:
 select jsonb();
 
@@ -24372,8 +24374,8 @@ select json_array();
 a_string := json_array();
 
 -- TEST: no blobs allowed
+-- + error: % argument 2 'blob' is an invalid type; valid types are: 'bool' 'integer' 'long' 'real' 'text' in 'json_array'
 -- + {call}: err
--- * error: % argument 2 'blob' is an invalid type; valid types are: 'bool' 'integer' 'long' 'real' 'text' in 'json_array'
 -- +1 error:
 select json_array(1, blob_var, 3);
 

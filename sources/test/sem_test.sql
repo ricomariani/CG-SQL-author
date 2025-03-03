@@ -12005,6 +12005,7 @@ select id
 select id, group_concat(id, '.') filter (where id >= 99) over () as row_num from foo;
 
 -- TEST: test filter clause do not support referencing on alias column
+-- + error: % name not found 'alias'
 -- + {select_stmt}: err
 -- + {select_expr_list}: err
 -- + {select_expr}: alias: integer notnull
@@ -12024,7 +12025,6 @@ select id, group_concat(id, '.') filter (where id >= 99) over () as row_num from
 -- + {window_defn}: ok
 -- + {window_defn_orderby}
 -- + {select_from_etc}: TABLE { foo: foo }
--- * error: % name not found 'alias'
 -- +1 error:
 select id as alias, avg(id) filter (where alias = 0) over () from foo;
 
@@ -12070,6 +12070,7 @@ select id, row_number() over (partition by id) from foo;
 select id, row_number() over (order by id asc) from foo;
 
 -- TEST: test order by bogus value
+-- + error: % name not found 'bogus'
 -- + {select_stmt}: err
 -- + {window_func_inv}: err
 -- + {call_filter_clause}
@@ -12077,7 +12078,6 @@ select id, row_number() over (order by id asc) from foo;
 -- + {opt_orderby}: err
 -- + {orderby_list}: err
 -- + {name bogus}: err
--- * error: % name not found 'bogus'
 -- +1 error:
 select id, row_number() over (order by bogus asc) from foo;
 
@@ -12190,6 +12190,7 @@ select id, ntile(7) over () from foo;
 select id, ntile(9898989889989) over () from foo;
 
 -- TEST: test ntile() window function with invalid int param
+-- + error: % Argument must be an integer (between 1 and max integer) in function 'ntile'
 -- + {select_stmt}: err
 -- + {select_expr}: err
 -- + {window_func_inv}: err
@@ -12197,11 +12198,11 @@ select id, ntile(9898989889989) over () from foo;
 -- + {name ntile}
 -- + {arg_list}: err
 -- + {int 0}: integer notnull
--- * error: % Argument must be an integer (between 1 and max integer) in function 'ntile'
 -- +1 error:
 select id, ntile(0) over () from foo;
 
 -- TEST: test ntile() window function with too many params
+-- + error: % function got incorrect number of arguments 'ntile'
 -- + {select_stmt}: err
 -- + {select_expr}: err
 -- + {window_func_inv}: err
@@ -12210,7 +12211,6 @@ select id, ntile(0) over () from foo;
 -- + {arg_list}:
 -- + {int 1}: integer notnull
 -- + {int 2}: integer notnull
--- * error: % function got incorrect number of arguments 'ntile'
 -- +1 error:
 select id, ntile(1, 2) over () from foo;
 
@@ -12239,9 +12239,9 @@ select id from foo where ntile(7);
 select id, lag(id, 1, 0) over () from foo;
 
 -- TEST: kind not compatible in lag between arg3 and arg1
+-- + error: % expressions of different kinds can't be mixed: 'dollars' vs. 'some_key'
+-- + error: % first and third arguments must be compatible in function 'lag'
 -- + {select_stmt}: err
--- * error: % expressions of different kinds can't be mixed: 'dollars' vs. 'some_key'
--- * error: % first and third arguments must be compatible in function 'lag'
 -- +2 error:
 select lag(cost, 1, id) over () from with_kind;
 
@@ -12315,13 +12315,14 @@ select id, lag(id, -1) over () from foo;
 select id, lag(id | " ") over () from foo;
 
 -- TEST: test lag() window function with first and third param are not same type
+-- + error: % lossy conversion from type 'REAL' in 0.7
+-- + error: % first and third arguments must be compatible in function 'lag'
 -- + {select_stmt}: err
 -- + {select_expr}: err
 -- + {window_func_inv}: err
 -- + {call}: err
 -- + {name lag}
 -- + {arg_list}: err
--- * error: % first and third arguments must be compatible in function 'lag'
 -- +2 error:
 select id, lag(id, 0, 0.7) over () from foo;
 
@@ -12432,6 +12433,7 @@ select id from foo where nth_value(7, 1);
 select id, nth_value(id) over () from foo;
 
 -- TEST: test nth_value() window function with invalid value on second param
+-- + error: % second argument must be an integer between 1 and max integer in function 'nth_value'
 -- + {select_stmt}: err
 -- + {select_expr}: err
 -- + {window_func_inv}: err
@@ -12439,7 +12441,6 @@ select id, nth_value(id) over () from foo;
 -- + {name nth_value}: ok
 -- + {name id}: id: integer notnull
 -- + {int 0}: integer notnull
--- * error: % second argument must be an integer between 1 and max integer in function 'nth_value'
 -- +1 error:
 select id, nth_value(id, 0) over () as nth from foo;
 
@@ -13381,9 +13382,9 @@ insert into foo values (null) @dummy_seed(1);
 insert into foo values ("k") @dummy_seed(1);
 
 -- TEST: test invalid expr in values clause
+-- + error: % name not found 'l'
 -- + {select_stmt}: err
 -- + {values}: err
--- * error: % name not found 'l'
 -- + {name l}: err
 -- +1 error:
 values (l);
@@ -13525,9 +13526,9 @@ end;
 
 -- TEST: try to call shape_consumer from not a cursor...
 -- This is strictly a rewrite so all we have to do here is make sure that we are calling the proc correctly
+-- + error: % name not found 'not_a_cursor'
 -- + {create_proc_stmt}: err
 -- + {call_stmt}: err
--- * error: % name not found 'not_a_cursor'
 -- +1 error:
 proc shape_thing_bogus_cursor()
 begin
@@ -13707,12 +13708,12 @@ begin
 end;
 
 -- TEST: use argument expansion in a function call context
+-- + error: % must be a cursor, proc, table, or view 'not_a_shape'
 -- + {call}: err
 -- + {arg_list}: err
 -- from arguments not replaced because the rewrite failed
 -- + {from_shape}
 -- + {name not_a_shape}: err
--- * error: % must be a cursor, proc, table, or view 'not_a_shape'
 -- +1 error:
 proc arg_caller_bogus_shape(like shape, out z int!)
 begin
@@ -13773,11 +13774,11 @@ end;
 -- neither storage type has been specified by the time
 -- we get to the if statement.  The error indicates the
 -- most probable mistake.
+-- + error: % cursor was not used with 'fetch [cursor]' 'C'
 -- + {create_proc_stmt}: err
 -- + {declare_cursor}: C: _select_: { x: integer notnull } variable dml_proc
 -- + {if_stmt}: err
 -- +  {name C}: err
--- * error: % cursor was not used with 'fetch [cursor]' 'C'
 -- +1 error:
 proc cql_cursor_unfetched()
 begin
@@ -13786,13 +13787,13 @@ begin
 end;
 
 -- TEST: call cql_cursor_diff_col with incompatible cursor types
+-- + error: % in cql_cursor_diff_col, all columns must be an exact type match (expected integer notnull; found text notnull) 'x'
 -- + {create_proc_stmt}: err
 -- + {assign}: err
 -- + {call}: err
 -- the expected type does not get error marking
 -- - {name c1}: err
 -- + {name c2}: err
--- * error: % in cql_cursor_diff_col, all columns must be an exact type match (expected integer notnull; found text notnull) 'x'
 -- +1 error:
 proc cql_cursor_diff_col_wrong_cursor_type()
 begin
@@ -13822,10 +13823,10 @@ begin
 end;
 
 -- TEST: call cql_cursor_diff_col with valid cursor param but different column name
+-- + error: % in cql_cursor_diff_col, all column names must be identical so they have unambiguous names; error in column 1: 'x' vs. 'z'
 -- + {create_proc_stmt}: err
 -- + {assign}: err
 -- + {call}: err
--- * error: % in cql_cursor_diff_col, all column names must be identical so they have unambiguous names; error in column 1: 'x' vs. 'z'
 -- diagnostics also present
 -- +4 error:
 proc cql_cursor_diff_col_compatible_cursor_with_diff_col_name()
@@ -14421,8 +14422,8 @@ end;
 -- it is rewritten so this is a test for printing the "before" SQL
 -- not a semantic test of the rewrite.  gen_sql code is exercised here.
 -- + INSERT INTO foo USING 1 AS bogus;
+-- + error: % duplicate stored proc name 'test_insert_using'
 -- + {create_proc_stmt}: err
--- * error: % duplicate stored proc name 'test_insert_using'
 -- +1 error:
 proc test_insert_using()
 begin
@@ -14712,8 +14713,8 @@ declare enum long_things long_int (
 );
 
 -- TEST: duplicate enum name
+-- + error: % enum definitions do not match 'long_things'
 -- + {declare_enum_stmt}: err
--- * error: % enum definitions do not match 'long_things'
 -- there will be three reports, 1 each for the two versions and one overall error
 -- +3 error:
 declare enum long_things integer (
@@ -15281,8 +15282,8 @@ type my_type_2 my_type_1;
 type my_type bogus_type;
 
 -- TEST: duplicate declare type definition
+-- + error: % conflicting type declaration 'my_type'
 -- + {declare_named_type}: err
--- * error: % conflicting type declaration 'my_type'
 -- extra error line for the two conflicting types
 -- +3 error:
 type my_type integer;
@@ -15369,7 +15370,7 @@ end;
 -- + Incompatible declarations found
 -- +2 error: % DECLARE GROUP some_group_with_a_var_of_a_named_type
 -- + The above must be identical.
--- * error: % variable definitions do not match in group 'some_group_with_a_var_of_a_named_type'
+-- + error: % variable definitions do not match in group 'some_group_with_a_var_of_a_named_type'
 -- +3 error:
 declare group some_group_with_a_var_of_a_named_type
 begin
@@ -15562,8 +15563,8 @@ declare function type_func_return_obj() type_obj_foo;
 type my_enum_type ints;
 
 -- TEST: used a named type's name to declare an enum
+-- + error: % conflicting type declaration 'my_type'
 -- + {declare_enum_stmt}: err
--- * error: % conflicting type declaration 'my_type'
 -- additional errors for the two conflicting lines
 -- +3 error:
 declare enum my_type integer (
@@ -15704,8 +15705,8 @@ select x2 as x, y2 as y;
 
 -- TEST: compound select with not matching object kinds (as makes the name match)
 -- but the kind is wrong so you still get an error (!)
+-- + error: % expressions of different kinds can't be mixed: 'y_coord' vs. 'x_coord'
 -- + {select_stmt}: err
--- * error: % expressions of different kinds can't be mixed: 'y_coord' vs. 'x_coord'
 -- +1 error:
 select x1 as x, y1 as y
 union all
@@ -15765,8 +15766,8 @@ set v1 := case x1 when x2 then v1 else v2 end;
 
 -- TEST: invalid mixing of x and y in the when expression
 -- note extra line breaks to ensure any reported errors are on different lines for help with diagnosis
+-- + error: % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 -- + {case_expr}: err
--- * error: % expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 -- +1 error:
 set v1 := case x1
                when x2
@@ -15957,7 +15958,7 @@ create table fk_strict_err_0 (
 @enforce_strict foreign key on update;
 
 -- TEST: enforcement should be on
--- * error: % strict FK validation requires that some ON UPDATE option be selected for every foreign key
+-- + error: % strict FK validation requires that some ON UPDATE option be selected for every foreign key
 -- +1 error:
 create table fk_strict_err_1 (
   id integer REFERENCES foo(id)
@@ -15991,7 +15992,8 @@ create table fk_strict_err_2 (
 -- - error:
 @enforce_strict transaction;
 
--- * error: % transaction operations disallowed while STRICT TRANSACTION enforcement is on.
+-- TEST: transactions disallowed in strict mode
+-- + error: % transaction operations disallowed while STRICT TRANSACTION enforcement is on.
 -- +1 error:
 -- + {begin_trans_stmt}: err
 begin transaction;
@@ -16090,32 +16092,32 @@ let val_max := (select max(1) from foo where 0);
 let val_min := (select min(1) from foo where 0);
 
 --- TEST: IF NOTHING requirement is enforced for multi-argument scalar function max
--- * error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
+-- + error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
 -- +1 error:
 set val_max := (select max(1, 2, 3) from foo where 0);
 
 --- TEST: IF NOTHING requirement is enforced for multi-argument scalar function min
--- * error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
+-- + error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
 -- +1 error:
 set val_min := (select min(1, 2, 3) from foo where 0);
 
 --- TEST: IF NOTHING requirement is enforced for built-in aggregate functions when GROUP BY is used - min
--- * error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
+-- + error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
 -- +1 error:
 set val_min := (select min(1) from foo where 0 group by id);
 
 --- TEST: IF NOTHING requirement is enforced for built-in aggregate functions when GROUP BY is used - sum
--- * error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
+-- + error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
 -- +1 error:
 set val_sum := (select sum(1) from foo where 0 group by id);
 
 --- TEST: IF NOTHING requirement is enforced for built-in aggregate functions when a LIMIT less than one is used (and expression within LIMIT is evaluated)
--- * error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
+-- + error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
 -- +1 error:
 set val_avg := (select avg(id) col from foo limit 1 - 1);
 
 --- TEST: IF NOTHING requirement is enforced for built-in aggregate functions when a  LIMIT using a variable (and expression within LIMIT is evaluated)
--- * error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
+-- + error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
 -- +1 error:
 proc val_avg_proc(lim integer)
 begin
@@ -16127,7 +16129,7 @@ end;
 set val_avg := (select avg(id) col from foo limit (2 + 4 * 10));
 
 --- TEST: IF NOTHING requirement is enforced for built-in aggregate functions when OFFSET is used
--- * error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
+-- + error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
 -- +1 error:
 set val_avg := (select avg(id) col from foo limit (2 + 4 * 10) offset 1);
 
@@ -16307,8 +16309,8 @@ select * from foo left join tvf(1);
 
 -- TEST: TVF on left of right join is an error
 -- note SQLite doesn't support right join yet so this won't ever run
+-- + error: % table valued function used in a left/right/cross context; this would hit a SQLite bug.  Wrap it in a CTE instead.
 -- + {select_stmt}: err
--- * error: % table valued function used in a left/right/cross context; this would hit a SQLite bug.  Wrap it in a CTE instead.
 -- +1 error:
 select * from tvf(1) right join foo;
 
@@ -16468,12 +16470,12 @@ end;
 let thing := integer_things.pen;
 
 -- TEST: switch statement combining ALL VALUES and ELSE is a joke
+-- + error: % switch ... ALL VALUES is useless with an ELSE clause
 -- + {switch_stmt}: err
 -- + {int 1}
 -- + {switch_body}
 -- - {expr_list}: err
 -- 2 {expr_list}: ok
--- * error: % switch ... ALL VALUES is useless with an ELSE clause
 -- +1 error:
 switch thing all values
   when
@@ -16673,8 +16675,8 @@ CREATE TABLE this_table_is_deleted(
 -- the index now refers to a stub column, that's ok because we're only generating
 -- a drop for this index
 -- + CREATE INDEX deleted_index ON this_table_is_deleted (xyx) @DELETE(1);
+-- + error: % object is an orphan because its table is deleted. Remove rather than @delete 'deleted_index'
 -- + {create_index_stmt}: err
--- * error: % object is an orphan because its table is deleted. Remove rather than @delete 'deleted_index'
 -- +1 error:
 CREATE INDEX deleted_index ON this_table_is_deleted (xyx) @DELETE(1);
 
@@ -18849,9 +18851,9 @@ end;
 
 -- TEST: Initialization of OUT args can be done within IF and SWITCH branches,
 -- but all cases must be covered.
+-- + error: % nonnull reference OUT parameter possibly not always initialized 'a'
 -- + {create_proc_stmt}: err
 -- + {name a}: a: text notnull variable init_required
--- * error: % nonnull reference OUT parameter possibly not always initialized 'a'
 -- +1 error:
 proc out_arg_initialization_in_branches_must_cover_all_cases(out a text not null)
 begin
@@ -19152,7 +19154,7 @@ select (~ 1)||2; --> -22
 -- TEST: order of operations, verifying gen_sql agrees with tree parse
 ---- TILDE is stronger than CONCAT , parens must stay
 -- + SELECT ~(1 || 2);
--- * error: % string operand not allowed in '~'
+-- + error: % string operand not allowed in '~'
 -- +1 error:
 select ~ (1||2); --> -13
 
@@ -19171,7 +19173,7 @@ select (-0)||1; --> 01
 -- TEST: order of operations, verifying gen_sql agrees with tree parse
 --- NEGATION is stronger than CONCAT, parens must stay
 -- + SELECT -(0 || 1);
--- * error: % string operand not allowed in '-'
+-- + error: % string operand not allowed in '-'
 -- +1 error:
 select -(0||1); --> -1
 
@@ -19297,7 +19299,7 @@ select nullable(5) notnull + 3;
 -- TEST: order of operations, verifying gen_sql agrees with tree parse
 -- no parens needed left to right works
 -- + SELECT 5 IS NOT NULL IS NULL;
--- * error: % Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '5'
+-- + error: % Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '5'
 -- +1 error:
 select 5 notnull isnull;
 
@@ -19960,7 +19962,7 @@ end;
 
 -- TEST: try to use fragtest_0_2 with 'possible_conflict' as the source -> error
 -- this is going to fail because possible_conflict is already used deep inside this function
--- * error: % this use of the named shared fragment is not legal because of a name conflict 'fragtest_0_2'
+-- + error: % this use of the named shared fragment is not legal because of a name conflict 'fragtest_0_2'
 -- + Procedure 'fragtest_0_0' has a different CTE that is also named 'possible_conflict'
 -- + The above originated from CALL fragtest_0_0 USING possible_conflict AS source
 -- + The above originated from CALL fragtest_0_1 USING possible_conflict AS source
@@ -19988,7 +19990,7 @@ end;
 
 -- TEST: this shared fragment includes a call that conflicts, we don't even have to use it
 -- we already know it's wrong
--- * error: % this use of the named shared fragment is not legal because of a name conflict 'fragtest_1_0'
+-- + error: % this use of the named shared fragment is not legal because of a name conflict 'fragtest_1_0'
 -- + Procedure 'fragtest_1_0' has a different CTE that is also named 'possible_conflict'
 -- + The above originated from CALL fragtest_1_0 USING possible_conflict AS source
 -- +1 error:
@@ -20144,20 +20146,20 @@ select @columns(simple_shape like this_is_not_a_shape) from simple_shape;
 select @columns(like this_is_not_a_shape) from simple_shape;
 
 -- TEST: these columns don't exist, but the shapes are valid...
+-- errors during expansion, the columns node stays in the tree
 -- + SELECT @COLUMNS(LIKE with_kind)
+-- + error: % name not found 'cost'
 -- + {select_stmt}: err
 -- + {select_expr_list_con}: err
--- errors during expansion, the columns node stays in the tree
--- * error: % name not found 'cost'
 -- +1 error:
 select @columns(like with_kind) from simple_shape;
 
 -- TEST: these columns don't exist, but the shapes are valid...
 -- expansion failed so the COLUMNS node is not replaced
 -- + SELECT @COLUMNS(simple_shape LIKE with_kind)
+-- + error: % name not found 'simple_shape.cost'
 -- + {select_stmt}: err
 -- + {select_expr_list_con}: err
--- * error: % name not found 'simple_shape.cost'
 -- +1 error:
 select @columns(simple_shape like with_kind) from simple_shape;
 
@@ -20707,8 +20709,8 @@ create table simple_backed_table_with_versions(
 ) @create(2) @delete(12);
 
 -- TEST: non blob columns are not valid in backing storage during stage 1
+-- + error: % table is not suitable for use as backing storage: column 'id' has a column that is not a blob in 'has_non_blob_columns'
 -- + {create_table_stmt}: err
--- * error: % table is not suitable for use as backing storage: column 'id' has a column that is not a blob in 'has_non_blob_columns'
 -- +1 error
 [[backing_table]]
 create table has_non_blob_columns(
@@ -21965,10 +21967,10 @@ create table has_row_check_blob (a text not null, b text);
 
 -- TEST: accessing an auto cursor field of a nonnull reference type is not
 -- possible before verifying that the cursor has a row
+-- + error: % field of a nonnull reference type accessed before verifying that the cursor has a row 'c.a'
 -- + {create_proc_stmt}: err
 -- + {let_stmt}: err
 -- + {let_stmt}: y: text variable
--- * error: % field of a nonnull reference type accessed before verifying that the cursor has a row 'c.a'
 -- +1 error:
 proc has_row_check_required_before_using_nonnull_reference_field()
 begin
@@ -22065,10 +22067,10 @@ end;
 
 -- TEST: the loop form does not require a has-row check because the loop only
 -- executes when the cursor has a row
+-- + error: % field of a nonnull reference type accessed before verifying that the cursor has a row 'c.a'
 -- + {create_proc_stmt}: err
 -- + {let_stmt}: x0: text notnull variable
 -- + {let_stmt}: err
--- * error: % field of a nonnull reference type accessed before verifying that the cursor has a row 'c.a'
 -- +1 error:
 proc fetching_with_loop_requires_no_check()
 begin
@@ -22084,10 +22086,10 @@ end;
 
 -- TEST: fetching a cursor within a loop unimproves it earlier in the loop
 -- unless the cursor was improved by the loop condition
+-- + error: % field of a nonnull reference type accessed before verifying that the cursor has a row 'c0.a'
 -- + {create_proc_stmt}: err
 -- +1 {let_stmt}: err
 -- + {let_stmt}: x1: text notnull variable
--- * error: % field of a nonnull reference type accessed before verifying that the cursor has a row 'c0.a'
 -- +1 error:
 proc refetching_within_loop_may_unimprove_cursor_earlier_in_loop()
 begin
@@ -22136,8 +22138,8 @@ begin
 end;
 
 -- TEST: non-duplicate var group = error
+-- + error: % variable definitions do not match in group 'var_group'
 -- + {declare_group_stmt}: err
--- * error: % variable definitions do not match in group 'var_group'
 -- additional error lines (for the difference report)
 -- +3 error:
 declare group var_group
@@ -22744,7 +22746,7 @@ declare select function no_check_select_fun() text;
 select no_check_select_fun(0, "hello");
 
 -- TEST: calling unchecked select function with invalid argument fails
--- * error: in star : CQL0051: argument can only be used in count(*) '*'
+-- + error: in star : CQL0051: argument can only be used in count(*) '*'
 -- +1 error:
 select no_check_select_fun(*);
 
@@ -22777,7 +22779,7 @@ declare select function no_check_select_table_valued_fun no check (t text, i int
 select t, i from no_check_select_table_valued_fun(0, "hello");
 
 -- TEST: calling unchecked table valued function with invalid argument fails
--- * error: in star : CQL0051: argument can only be used in count(*) '*'
+-- + error: in star : CQL0051: argument can only be used in count(*) '*'
 -- +1 error:
 select t, i from no_check_select_table_valued_fun(*);
 
@@ -22847,10 +22849,10 @@ begin
 end;
 
 -- TEST: verify that type kinds that require particular shapes are getting them
+-- + error: % must be a cursor, proc, table, or view 'goo'
+-- + error: % object<T SET> has a T that is not a procedure with a result set 'C SET'
 -- + {declare_vars_type}: object<C CURSOR>
 -- + {declare_vars_type}: object<test_parent_child SET>
--- * error: % must be a cursor, proc, table, or view 'goo'
--- * error: % object<T SET> has a T that is not a procedure with a result set 'C SET'
 -- +2 error:
 proc test_object_types()
 begin
@@ -22867,8 +22869,8 @@ end;
 let compressed_string := cql_compressed("foo foo");
 
 -- TEST: verify cql_compressed fails in sql context
+-- + error: % function may not appear in this context 'cql_compressed'
 -- + {assign}: err
--- * error: % function may not appear in this context 'cql_compressed'
 -- +1 error
 set compressed_string := (select cql_compressed('hello hello'));
 
@@ -23395,9 +23397,9 @@ end;
 -- TEST: one error, not two, even though rewrite attemnt
 -- rewrite did not succeed
 -- + not_found_variable:foo();
+-- + error: % name not found 'not_found_variable'
 -- + {expr_stmt}: err
 -- + {reverse_apply}
--- * error: % name not found 'not_found_variable'
 -- exactly one error
 -- +1 error:
 not_found_variable:foo();
@@ -23435,7 +23437,7 @@ end;
 
 -- TEST: try to expand a top level proc using a bogus FROM
 -- + dump_int(FROM this_name_does_not_exist);
--- * error: % name not found 'this_name_does_not_exist'
+-- + error: % name not found 'this_name_does_not_exist'
 -- +1 error
 dump_int(from this_name_does_not_exist);
 
@@ -23533,17 +23535,17 @@ end;
 
 -- TEST: left of array does not have a type kind
 -- it has to have an object kind
+-- + error: % operation is only available for types with a declared type kind like object<something> '[]'
 -- + {expr_stmt}: err
 -- + {array}: err
--- * error: % operation is only available for types with a declared type kind like object<something> '[]'
 -- +1 error
 1['x'];
 
 -- TEST: left of array does not have a type kind (in set context)
 -- it has to have an object kind
+-- + error: % operation is only available for types with a declared type kind like object<something> '[]'
 -- + {expr_stmt}: err
 -- + {array}: err
--- * error: % operation is only available for types with a declared type kind like object<something> '[]'
 -- +1 error
 1['x'] := 'x';
 
@@ -23604,8 +23606,8 @@ declare function make_dot_one() create object<dot_one>;
 -- TEST: try to use a . op but no helper functions (computed version)
 -- one successful rewrite
 -- + LET u := get_object_dot_one_id(make_dot_one());
+-- + error: % function not builtin and not declared 'object<dot_one>:get:id2'
 -- + {call}: err
--- * error: % function not builtin and not declared 'object<dot_one>:get:id2'
 -- +1 error:
 proc dot_fail_no_missing_helper_computed()
 begin
@@ -23616,9 +23618,9 @@ begin
 end;
 
 -- TEST: bogus attempt -- no kind
+-- + error: % operation is only available for types with a declared type kind like object<something> '.'
 -- + {expr_stmt}: err
 -- + {dot}: err
--- * error: % operation is only available for types with a declared type kind like object<something> '.'
 -- +1 error
 (1+1).foo;
 
@@ -25126,8 +25128,8 @@ set t_changes := (select total_changes(1));
 let sql_src := (select sqlite_source_id());
 
 -- TEST: sqlite version normal call
--- +{call}: err
--- * error: % too many arguments in function 'sqlite_source_id'
+-- + error: % too many arguments in function 'sqlite_source_id'
+-- + {call}: err
 -- +1 error:
 set sql_src := (select sqlite_source_id(1));
 

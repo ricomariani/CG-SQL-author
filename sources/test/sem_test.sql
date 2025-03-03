@@ -1813,16 +1813,17 @@ set bool_x := const(null is not false);
 -- TEST: 1/0 is not false -> error
 -- not rewritten due to error
 -- + SET bool_x := CONST(1 / 0 IS NOT FALSE);
+-- + error: % evaluation of constant failed
 -- + {assign}: err
--- * error: % evaluation of constant failed
-
+-- +1 error:
 set bool_x := const(1/0 is not false);
 
 -- TEST: 1/0 is not false -> error
 -- not rewritten due to error
 -- + SET bool_x := CONST(1 / 0 IS NOT TRUE);
+-- + error: % evaluation of constant failed
 -- + {assign}: err
--- * error: % evaluation of constant failed
+-- +1 error:
 set bool_x := const(1/0 is not true);
 
 -- TEST: null is not false
@@ -2032,8 +2033,8 @@ cursor extended_cursor like ( x integer );
 cursor my_cursor for select not 'x';
 
 -- TEST: the type list is bogus, this fails before the duplicate name detection
+-- + error: % duplicate column name 'x'
 -- + {declare_cursor_like_typed_names}: err
--- * error: % duplicate column name 'x'
 -- +1 error
 cursor extended_cursor like ( x integer, x integer );
 
@@ -2046,9 +2047,9 @@ loop fetch my_cursor into X, Y begin
 end;
 
 -- TEST: loop with leave, leave not the last statement
+-- + error: in leave_stmt % statement should be the last thing in a statement list
 -- + {leave_stmt}: err
 -- + {leave_stmt}: ok
--- * error: in leave_stmt % statement should be the last thing in a statement list
 -- +1 error:
 while 1
 begin
@@ -2057,9 +2058,9 @@ begin
 end;
 
 -- TEST: loop with continue, continue not the last statement
+-- + error: in continue_stmt % statement should be the last thing in a statement list
 -- + {continue_stmt}: err
 -- + {leave_stmt}: ok
--- * error: in continue_stmt % statement should be the last thing in a statement list
 -- +1 error:
 while 1
 begin
@@ -2143,10 +2144,10 @@ begin
 end;
 
 -- TEST: return must be the last statement (attr form)
+-- + error: in return_stmt % statement should be the last thing in a statement list
 -- + {create_proc_stmt}: err
 -- + {return_stmt}: err
 -- + {return_stmt}: ok
--- * error: in return_stmt % statement should be the last thing in a statement list
 -- +1 error:
 proc return_not_last_with_attr()
 begin
@@ -2158,10 +2159,10 @@ begin
 end;
 
 -- TEST: return must be the last statement (no attr form)
+-- + error: in return_stmt % statement should be the last thing in a statement list
 -- + {create_proc_stmt}: err
 -- + {return_stmt}: err
 -- + {return_stmt}: ok
--- * error: in return_stmt % statement should be the last thing in a statement list
 -- +1 error:
 proc return_not_last_no_attr()
 begin
@@ -2934,10 +2935,10 @@ call proc2(1, 'foo', 1);
 call proc2(1);
 
 -- TEST: call on a method that had errors
+-- + error: % procedure had errors, can't call 'proc3'
 -- + {call_stmt}: err
 -- + {name proc3}
 -- - {name proc3}: ok
--- * error: % procedure had errors, can't call 'proc3'
 -- +1 error:
 call proc3(1, 'foo');
 
@@ -3051,9 +3052,9 @@ select count(*) from foo;
 
 -- TEST: verify that analysis of the special function `count` can deal with
 -- bogus arguments
+-- + error: % name not found 'this_does_not_exist'
 -- + {call}: err
 -- + {name this_does_not_exist}: err
--- * error: % name not found 'this_does_not_exist'
 -- +1 error:
 select count(this_does_not_exist) from foo;
 
@@ -3909,9 +3910,10 @@ select printf('%s %d', 'x', 5);
 set a_string := printf('Hello');
 
 -- TEST: printf is not ok in a limit
+-- + error: % function may not appear in this context 'printf'
 -- + {select_stmt}: err
 -- + {opt_limit}: err
--- * error: % function may not appear in this context 'printf'
+-- +1 error:
 select 1 from (select 1) limit printf('%s %d', 'x', 5) == 'x';
 
 -- TEST: update with duplicate columns
@@ -4294,19 +4296,19 @@ let int_sql_val := (select type_check(1 as int!));
 -- enforce strict cast and verify
 @enforce_strict cast;
 
--- TEST 1 is already an int
+-- TEST: 1 is already an int
+-- + error: % cast is redundant, remove to reduce code size 'CAST(1 AS INT)'
 -- + {let_stmt}: err
 -- + {cast_expr}: err
--- * error: % cast is redundant, remove to reduce code size 'CAST(1 AS INT)'
 -- +1 error:
 let idx := cast(1 as integer);
 
--- TEST 1.5 is not an integer, the type doesn't match, ok cast
+-- TEST: 1.5 is not an integer, the type doesn't match, ok cast
 -- + {let_stmt}: idr: integer notnull variable
 -- - error:
 let idr := cast(1.5 as integer);
 
--- TEST integer conversion but adding a kind, this is ok
+-- TEST: integer conversion but adding a kind, this is ok
 -- + {let_stmt}: idx: integer<x> notnull variable
 -- - error:
 let idx := cast(1 as integer<x>);
@@ -5358,14 +5360,14 @@ select * from MyView;
 
 -- TEST: a CTE within a shared fragment may not shadow an existing table or
 -- view; this applies to all procs, not just those that are shared fragments
+-- + error: % common table name shadows previously declared table or view 'foo'
+-- + error: % common table name shadows previously declared table or view 'MyView'
 -- + {stmt_and_attr}: err
 -- + {create_proc_stmt}: err
 -- +2 {with_select_stmt}: err
 -- +2 {cte_tables}: err
 -- +2 {cte_table}: err
 -- +2 {cte_decl}: err
--- * error: % common table name shadows previously declared table or view 'foo'
--- * error: % common table name shadows previously declared table or view 'MyView'
 -- +2 error:
 [[shared_fragment]]
 proc shadows_an_existing_table()
@@ -5495,8 +5497,8 @@ begin
 end;
 
 -- TEST: create a conditional fragment with not matching like clauses
+-- + error: % bogus_cte, all must have the same column count
 -- + {create_proc_stmt}: err
--- * error: % bogus_cte, all must have the same column count
 -- diagnostics also present
 -- +4 error:
 [[shared_fragment]]
@@ -6004,7 +6006,7 @@ declare function simple_func(arg1 int!) real!;
 -- TEST: error duplicate function
 -- + error: % DECLARE FUNC simple_func (arg1 INT) REAL!
 -- + error: % DECLARE FUNC simple_func (arg1 INT!) REAL!
--- * error: % duplicate function name 'simple_func'
+-- + error: % duplicate function name 'simple_func'
 -- +3 error:
 declare function simple_func(arg1 integer) real!;
 
@@ -6740,8 +6742,8 @@ create view versioned_table as select 1 x;
 
 -- TEST: try to create a global variable with the same name as the versioned table
 -- note: the name is found even though the table is deleted
+-- + error: % global variable hides table/view name 'versioned_table'
 -- + {declare_vars_type}: err
--- * error: % global variable hides table/view name 'versioned_table'
 -- +1 error:
 declare versioned_table integer;
 
@@ -7354,7 +7356,7 @@ begin
   out union C;
 end;
 
--- TEST simple out union proc with dml
+-- TEST: simple out union proc with dml
 -- + {create_proc_stmt}: C: out_union_dml: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union
 -- - error:
 proc out_union_dml()
@@ -7364,7 +7366,7 @@ begin
   out union C;
 end;
 
--- TEST simple out union proc no DML
+-- TEST: simple out union proc no DML
 -- + {create_proc_stmt}: C: out_union: { A: integer notnull, B: integer notnull } variable shape_storage uses_out_union
 -- - error:
 proc out_union()
@@ -7483,9 +7485,9 @@ begin
 end;
 
 -- TEST: read the result of a proc with an out cursor, use same var twice
+-- + error: % duplicate variable name in the same scope 'C'
 -- +1 {declare_value_cursor}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
 -- +1 {declare_value_cursor}: err
--- * error: % duplicate variable name in the same scope 'C'
 -- +1 error:
 proc fails_result_reader_double_decl()
 begin
@@ -7625,6 +7627,7 @@ begin
 end;
 
 -- TEST: fetch cursor from call to proc with different column names
+-- + error: % receiving cursor from call, all column names must be identical so they have unambiguous names; error in column 2: 'C' vs. 'B'
 -- + {create_proc_stmt}: err
 -- + {name fetch_from_call_to_proc_with_different_column_names}: err
 -- + {stmt_list}: err
@@ -7632,7 +7635,6 @@ end;
 -- + {call_stmt}: err
 -- expected type is not marked as an error
 -- - {name C}: err
--- * error: % receiving cursor from call, all column names must be identical so they have unambiguous names; error in column 2: 'C' vs. 'B'
 -- diagnostics also present
 -- +4 error:
 proc fetch_from_call_to_proc_with_different_column_names()
@@ -7673,7 +7675,6 @@ begin
   cursor C fetch from call out_cursor_proc();
   fetch C from values ();
 end;
-
 
 -- TEST: helper proc that returns a blob
 -- + {create_proc_stmt}: C: blob_out: { B: blob } variable dml_proc shape_storage uses_out
@@ -8108,9 +8109,9 @@ create table recreatable(
 -- TEST: create a table that is going to be on the recreate plan, try to version a column in it
 -- + CREATE TABLE column_marked_delete_on_recreate_table(
 -- + @RECREATE;
+-- + error: % columns in a table marked @recreate cannot have @create or @delete 'id'
 -- + {create_table_stmt}: err
 -- + {recreate_attr}
--- * error: % columns in a table marked @recreate cannot have @create or @delete 'id'
 -- +1 error:
 create table column_marked_delete_on_recreate_table(
   id integer primary key @create(2),
@@ -8363,8 +8364,8 @@ end;
 
 -- TEST: use the arguments like "bar" but some args are missing
 -- AST rewritten, note some have _ and some do not
+-- + error: % expanding FROM ARGUMENTS, there is no argument matching 'name'
 -- + {create_proc_stmt}: err
--- * error: % expanding FROM ARGUMENTS, there is no argument matching 'name'
 -- +1 error:
 proc insert_bar_missing(extra integer, id int!)
 begin
@@ -9298,8 +9299,8 @@ set _sens := coalesce(_sens, 0);
 set _sens := coalesce(nullable(1), 0);
 
 -- TEST: coalesce control not null
+-- + error: % encountered arg known to be not null before the end of the list, rendering the rest useless. '7'
 -- - {call}: % sensitive
--- * error: % encountered arg known to be not null before the end of the list, rendering the rest useless. '7'
 -- +1 error:
 set _sens := coalesce(7, 0);
 
@@ -11136,6 +11137,7 @@ begin
 end;
 
 -- TEST: upsert with bogus column where statement
+-- + error: % name not found 'bogus'
 -- + {create_proc_stmt}: err
 -- + {name upsert_with_bogus_where_stmt}: err
 -- + {upsert_stmt}: err
@@ -11143,7 +11145,6 @@ end;
 -- + {upsert_update}: err
 -- + {conflict_target}: err
 -- + {name bogus}: err
--- * error: % name not found 'bogus'
 -- +1 error:
 proc upsert_with_bogus_where_stmt()
 begin
@@ -11242,9 +11243,9 @@ select id, rank() over () from foo;
 -- TEST: min/max may not appear outside of a SQL statement
 -- (there is no codegen support for this, though it could be added)
 -- the code path for min an max is identical so one test suffices
+-- + error: % function may not appear in this context 'max'
 -- + {assign}: err
 -- + {call}: err
--- * error: % function may not appear in this context 'max'
 -- +1 error:
 set X := max(1,2);
 
@@ -11549,10 +11550,10 @@ declare proc InvalidAdHocMigration(y integer);
 @schema_ad_hoc_migration for @recreate(group_something, foo);
 
 -- TEST: duplicate group/proc in recreate migration
+-- + error: % indicated procedure or group already has a recreate action 'group_foo'
 -- + {schema_ad_hoc_migration_stmt}: err
 -- + {name group_foo}
 -- + {name proc_bar}
--- * error: % indicated procedure or group already has a recreate action 'group_foo'
 -- +1 error:
 @schema_ad_hoc_migration for @recreate(group_foo, proc_bar);
 
@@ -11598,14 +11599,14 @@ on conflict(id) do update set name = excluded.name, rate = id+1;
 -- +1 error:
 insert into foo default values on conflict do nothing;
 
--- TEST declare a value fetcher that doesn't use DML
+-- TEST: declare a value fetcher that doesn't use DML
 -- + DECLARE PROC val_fetch (seed INT!) OUT (id TEXT);
 -- + {declare_proc_stmt}: val_fetch: { id: text } uses_out
 -- - dml_proc
 -- - USING TRANSACTION
 DECLARE PROC val_fetch (seed INT!) OUT (id TEXT);
 
--- TEST declare a value fetcher that does use DML
+-- TEST: declare a value fetcher that does use DML
 -- + DECLARE PROC val_fetch_dml (seed INT!) OUT (id TEXT) USING TRANSACTION;
 -- + {declare_proc_stmt}: val_fetch_dml: { id: text } dml_proc uses_out
 DECLARE PROC val_fetch_dml (seed INT!) OUT (id TEXT) USING TRANSACTION;
@@ -11642,9 +11643,9 @@ DECLARE PROC val_fetch_dml (seed INT!) OUT (id TEXT) USING TRANSACTION;
 -- - error:
 @declare_schema_region pending_leaf_user using leaf3;
 
--- TEST leaf region is claimed, this makes pending_leaf_user in error
+-- TEST: leaf region is claimed, this makes pending_leaf_user in error
+-- + error: % region links into the middle of a deployable region; you must point to the root of 'uses_leaf_3' not into the middle: 'pending_leaf_user'
 -- + {declare_deployable_region_stmt}: err
--- * error: % region links into the middle of a deployable region; you must point to the root of 'uses_leaf_3' not into the middle: 'pending_leaf_user'
 -- +1 error:
 @declare_deployable_region uses_leaf_3  using leaf3;
 
@@ -11744,9 +11745,9 @@ create table containing_region_table(id integer primary key references private_r
 -- - error:
 @begin_schema_region client_region;
 
--- TEST : not able to access private region
+-- TEST: not able to access private region
+-- + error: % (object is in schema region 'private_region' not accessible from region 'client_region') 'private_region_table'
 -- + {create_table_stmt}: err
--- * error: % (object is in schema region 'private_region' not accessible from region 'client_region') 'private_region_table'
 -- +1 error:
 create table client_region_table_1(id integer primary key references private_region_table(id));
 
@@ -12244,9 +12245,9 @@ select id, lag(id, 1, 0) over () from foo;
 -- +2 error:
 select lag(cost, 1, id) over () from with_kind;
 
--- TEST lag with non integer offset
+-- TEST: lag with non integer offset
+-- + error: % second argument must be an integer (between 0 and max integer) in function 'lag'
 -- + {select_stmt}: err
--- * error: % second argument must be an integer (between 0 and max integer) in function 'lag'
 -- +1 error:
 select id, lag(id, 1.3, 0) over () from foo;
 
@@ -12517,7 +12518,7 @@ insert into referenceable from cursor small_cursor;
 -- +1 error:
 insert into referenceable from cursor X;
 
--- TEST -- simple use of update cursor statement
+-- TEST: -- simple use of update cursor statement
 -- + {update_cursor_stmt}: ok
 -- + | {name small_cursor}: small_cursor: _select_: { x: integer notnull } variable shape_storage value_cursor
 -- + | {columns_values}
@@ -12529,42 +12530,42 @@ insert into referenceable from cursor X;
 -- - error:
 update cursor small_cursor(x) from values (2);
 
--- TEST -- wrong type
+-- TEST: -- wrong type
 -- + error: % required 'INT' not compatible with found 'TEXT' context 'x'
 -- + {update_cursor_stmt}: err
 -- +1 error:
 update cursor small_cursor(x) from values ('x');
 
--- TEST -- wrong number of columns
+-- TEST: -- wrong number of columns
 -- + error: % count of columns differs from count of values
 -- + {update_cursor_stmt}: err
 -- +1 error:
 update cursor small_cursor(x) from values (1, 2);
 
--- TEST -- invalid column
+-- TEST: -- invalid column
 -- + error: % name not found 'w'
 -- + {update_cursor_stmt}: err
 -- +1 error:
 update cursor small_cursor(w) from values (1);
 
--- TEST -- not an auto cursor
+-- TEST: -- not an auto cursor
 -- + error: % cursor was not used with 'fetch [cursor]' 'my_cursor'
 -- + {update_cursor_stmt}: err
 -- +1 error:
 update cursor my_cursor(one) from values (2);
 
--- TEST -- like statement can't be resolved in an update statement
+-- TEST: -- like statement can't be resolved in an update statement
 -- + error: % must be a cursor, proc, table, or view 'not_a_symbol'
 -- +1 error:
 update cursor small_cursor(like not_a_symbol) from values (1);
 
--- TEST -- not a cursor
+-- TEST: -- not a cursor
 -- + error: % not a cursor 'X'
 -- + {update_cursor_stmt}: err
 -- +1 error:
 update cursor X(one) from values (2);
 
--- TEST -- CTE * rewrite
+-- TEST: -- CTE * rewrite
 -- This is just sugar so all we have to do is verify that we
 -- did the rewrite correctly
 -- + some_cte (a, b, c) AS (
@@ -12575,7 +12576,7 @@ update cursor X(one) from values (2);
 with some_cte(*) as (select 1 a, 'b' b, 3.0 c)
   select * from some_cte;
 
--- TEST -- CTE * rewrite but some columns were anonymous
+-- TEST: -- CTE * rewrite but some columns were anonymous
 -- + error: % all columns in the select must have a name
 -- + {with_select_stmt}: err
 -- +1 error:
@@ -12700,7 +12701,7 @@ create table sens_table(t text @sensitive);
 -- - error:
 declare proc sens_result_proc () (t text @sensitive);
 
--- TEST this is compatible with the above declaration, it won't be if SENSITIVE is not preserved.
+-- TEST: this is compatible with the above declaration, it won't be if SENSITIVE is not preserved.
 -- + {create_proc_stmt}: sens_result_proc: { t: text sensitive } dml_proc
 -- - error:
 [[autotest=(dummy_test)]]
@@ -13075,7 +13076,7 @@ begin
   call printf("%s\n", x.xyzzy);
 end;
 
--- TEST try to pass some of my args along
+-- TEST: try to pass some of my args along
 -- + PROC arg_shape_forwarder (args_arg1 INT, args_arg2 TEXT, extra_args_id INT, extra_args_name TEXT)
 -- + CALL proc2(args.arg1, args.arg2);
 -- - error:
@@ -14494,7 +14495,7 @@ begin
   update cursor small_cursor using 2 x;
 end;
 
--- TEST basic use of proc savepoint rollback return and commit return
+-- TEST: basic use of proc savepoint rollback return and commit return
 -- + {create_proc_stmt}: ok dml_proc
 -- + {name proc_savepoint_basic}: ok dml_proc
 -- + {proc_savepoint_stmt}: ok
@@ -14512,7 +14513,7 @@ begin
   end;
 end;
 
--- TEST proc savepoint with an error, the outer statement should be marked error
+-- TEST: proc savepoint with an error, the outer statement should be marked error
 -- + error: % string operand not allowed in 'NOT'
 -- + {create_proc_stmt}: err
 -- + {proc_savepoint_stmt}: err
@@ -15941,7 +15942,7 @@ create virtual table virtual_with_hidden_wrong using module_name as (
 -- - error:
 @enforce_reset;
 
--- TEST fk enforcement should be off
+-- TEST: fk enforcement should be off
 -- + {create_table_stmt}: fk_strict_err_0: { id: integer foreign_key }
 -- - error:
 create table fk_strict_err_0 (
@@ -15955,7 +15956,7 @@ create table fk_strict_err_0 (
 
 @enforce_strict foreign key on update;
 
--- TEST enforcement should be on
+-- TEST: enforcement should be on
 -- * error: % strict FK validation requires that some ON UPDATE option be selected for every foreign key
 -- +1 error:
 create table fk_strict_err_1 (
@@ -15967,7 +15968,7 @@ create table fk_strict_err_1 (
 -- - error:
 @enforce_pop;
 
--- TEST enforcement should be off
+-- TEST: enforcement should be off
 -- + {create_table_stmt}: fk_strict_err_2: { id: integer foreign_key }
 -- - error:
 create table fk_strict_err_2 (
@@ -15985,7 +15986,7 @@ create table fk_strict_err_2 (
 -- +1 error:
 @enforce_pop;
 
--- TEST verify strict mode
+-- TEST: verify strict mode
 -- + {enforce_strict_stmt}: ok
 -- - error:
 @enforce_strict transaction;
@@ -15995,12 +15996,12 @@ create table fk_strict_err_2 (
 -- + {begin_trans_stmt}: err
 begin transaction;
 
--- TEST verify back to normal mode
+-- TEST: verify back to normal mode
 -- + {enforce_normal_stmt}: ok
 -- - error:
 @enforce_normal transaction;
 
--- TEST transactions ok again
+-- TEST: transactions ok again
 -- + {begin_trans_stmt}: ok
 -- - error:
 begin transaction;
@@ -21090,7 +21091,7 @@ create table json_backing(
   v blob
 );
 
--- TEST json backed tables may not hold blobs
+-- TEST: json backed tables may not hold blobs
 -- + error: % table is not suitable for use as backed storage: column 'x' is a blob column, but blobs cannot appear in tables backed by JSON in 'backed_with_blobs'
 -- + {create_table_stmt}: err
 -- +1 error:
@@ -24317,15 +24318,15 @@ select json('[1]');
 -- +1 error:
 select json();
 
--- TEST json function in non SQL-context
+-- TEST: json function in non SQL-context
 -- verify rewrite
 -- + SET a_string := ( SELECT json('[1]') IF NOTHING THEN THROW );
 -- - error:
 a_string := json('[1]');
 
--- TEST json function in non SQL-context
+-- TEST: json function in non SQL-context
+-- + error: % argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'json'
 -- + {call}: err
--- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'json'
 -- +1 error:
 select json(1);
 
@@ -24341,26 +24342,26 @@ select jsonb('[1]');
 -- +1 error:
 select jsonb();
 
--- TEST json function in non SQL-context
+-- TEST: json function in non SQL-context
 -- verify rewrite
 -- + SET blob_var := ( SELECT jsonb('[1]') IF NOTHING THEN THROW );
 -- - error:
 blob_var := jsonb('[1]');
 
--- TEST json function in non SQL-context
+-- TEST: json function in non SQL-context
+-- + error: % argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'jsonb'
 -- + {call}: err
--- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'jsonb'
 -- +1 error:
 select jsonb(1);
 
--- TEST json function for JSON array creation
+-- TEST: json function for JSON array creation
 -- + {select_stmt}: _select_: { _anon: text }
 -- + {call}: text
 -- + {name json_array}: text
 -- - error:
 select json_array(1,2);
 
--- TEST json function for JSON array creation empty args
+-- TEST: json function for JSON array creation empty args
 -- + {select_stmt}: _select_: { _anon: text }
 -- + {call}: text
 -- + {name json_array}: text
@@ -24379,21 +24380,21 @@ a_string := json_array();
 -- +1 error:
 select json_array(1, blob_var, 3);
 
--- TEST json function for JSON array creation
+-- TEST: json function for JSON array creation
 -- + {select_stmt}: _select_: { _anon: blob }
 -- + {call}: blob
 -- + {name jsonb_array}: blob
 -- - error:
 select jsonb_array(1,2);
 
--- TEST json function for JSON array_length
+-- TEST: json function for JSON array_length
 -- + {select_stmt}: _select_: { _anon: integer notnull }
 -- + {call}: integer notnull
 -- + {name json_array_length}: integer notnull
 -- - error:
 select json_array_length('');
 
--- TEST json function for JSON array_length with 2 args
+-- TEST: json function for JSON array_length with 2 args
 -- + {select_stmt}: _select_: { _anon: integer }
 -- + {call}: integer
 -- - {call}: integer notnull
@@ -24401,9 +24402,9 @@ select json_array_length('');
 -- - error:
 select json_array_length('', '$.x');
 
--- TEST json function for JSON array_length with too many args
+-- TEST: json function for JSON array_length with too many args
+-- + error: % too many arguments in function 'json_array_length'
 -- + {call}: err
--- * error: % too many arguments in function 'json_array_length'
 -- +1 error:
 select json_array_length('', '$.x', '');
 
@@ -24413,34 +24414,34 @@ select json_array_length('', '$.x', '');
 -- - error:
 an_int := json_array_length('x');
 
--- TEST json function for JSON array_length with wrong arg type
+-- TEST: json function for JSON array_length with wrong arg type
+-- + error: % argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'json_array_length'
 -- + {call}: err
--- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'json_array_length'
 -- +1 error:
 select json_array_length(1);
 
--- TEST json function for JSON array_length with wrong arg type
+-- TEST: json function for JSON array_length with wrong arg type
+-- + error: % argument 2 'integer' is an invalid type; valid types are: 'text' in 'json_array_length'
 -- + {call}: err
--- * error: % argument 2 'integer' is an invalid type; valid types are: 'text' in 'json_array_length'
 -- +1 error:
 select json_array_length('x', 1);
 
--- TEST json function for JSON error_position with 1 args
+-- TEST: json function for JSON error_position with 1 args
 -- + {select_stmt}: _select_: { _anon: integer notnull }
 -- + {call}: integer notnull
 -- + {name json_error_position}: integer notnull
 -- - error:
 select json_error_position('');
 
--- TEST json function for JSON error_position with too many args
+-- TEST: json function for JSON error_position with too many args
+-- + error: % too many arguments in function 'json_error_position'
 -- + {call}: err
--- * error: % too many arguments in function 'json_error_position'
 -- +1 error:
 select json_error_position('', '');
 
--- TEST json function for JSON error_position with wrong arg type
+-- TEST: json function for JSON error_position with wrong arg type
+-- + error: % argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'json_error_position'
 -- + {call}: err
--- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'json_error_position'
 -- +1 error:
 select json_error_position(1);
 
@@ -24449,7 +24450,7 @@ select json_error_position(1);
 -- - error:
 an_int := json_error_position('x');
 
--- TEST json function for JSON extraction
+-- TEST: json function for JSON extraction
 -- + {select_stmt}: _select_: { _anon: text }
 -- + {call}: text
 -- + {name json_extract}: text
@@ -24474,38 +24475,38 @@ select json_extract(1, '1');
 -- +1 error:
 select json_extract('[]', 1);
 
--- TEST json function for JSON extraction wrong arg count
+-- TEST: json function for JSON extraction wrong arg count
+-- + error: % too few arguments in function 'json_extract'
 -- + {call}: err
--- * error: % too few arguments in function 'json_extract'
 -- +1 error:
 select json_extract();
 
--- TEST json function for JSON extraction wrong arg count
+-- TEST: json function for JSON extraction wrong arg count
+-- + error: % too few arguments in function 'jsonb_extract'
 -- + {call}: err
--- * error: % too few arguments in function 'jsonb_extract'
 -- +1 error:
 select jsonb_extract();
 
--- TEST json function for JSON extraction wrong arg count
+-- TEST: json function for JSON extraction wrong arg count
+-- + error: % too few arguments in function 'json_remove'
 -- + {call}: err
--- * error: % too few arguments in function 'json_remove'
 -- +1 error:
 select json_remove();
 
--- TEST json function for JSON extraction wrong arg count
+-- TEST: json function for JSON extraction wrong arg count
+-- + error: % too few arguments in function 'jsonb_remove'
 -- + {call}: err
--- * error: % too few arguments in function 'jsonb_remove'
 -- +1 error:
 select jsonb_remove();
 
--- TEST json function for JSON insert
+-- TEST: json function for JSON insert
 -- + {select_stmt}: _select_: { _anon: text notnull }
 -- + {call}: text notnull
 -- + {name json_insert}: text notnull
 -- - error:
 select json_insert('{"x":0}', '$.x', 1, '$.y', 2);
 
--- TEST json function for JSON insert nullable value
+-- TEST: json function for JSON insert nullable value
 -- + {select_stmt}: _select_: { _anon: text }
 -- + {call}: text
 -- + {name json_insert}: text
@@ -24542,57 +24543,57 @@ select json_insert('{"x":0}', '$.x', blob_var);
 -- +1 error:
 select json_insert('[]', 1, 1);
 
--- TEST json function for JSON insert wrong arg count
+-- TEST: json function for JSON insert wrong arg count
+-- + error: % too few arguments in function 'json_insert'
 -- + {call}: err
--- * error: % too few arguments in function 'json_insert'
 -- +1 error:
 select json_insert();
 
--- TEST json function for JSON insert wrong arg count
+-- TEST: json function for JSON insert wrong arg count
+-- + error: % too few arguments in function 'jsonb_insert'
 -- + {call}: err
--- * error: % too few arguments in function 'jsonb_insert'
 -- +1 error:
 select jsonb_insert();
 
--- TEST json function for JSON replace wrong arg count
+-- TEST: json function for JSON replace wrong arg count
+-- + error: % too few arguments in function 'json_replace'
 -- + {call}: err
--- * error: % too few arguments in function 'json_replace'
 -- +1 error:
 select json_replace();
 
--- TEST json function for JSON insert wrong arg count
+-- TEST: json function for JSON insert wrong arg count
+-- + error: % too few arguments in function 'jsonb_replace'
 -- + {call}: err
--- * error: % too few arguments in function 'jsonb_replace'
 -- +1 error:
 select jsonb_replace();
 
--- TEST json function for JSON set wrong arg count
+-- TEST: json function for JSON set wrong arg count
+-- + error: % too few arguments in function 'json_set'
 -- + {call}: err
--- * error: % too few arguments in function 'json_set'
 -- +1 error:
 select json_set();
 
--- TEST json function for JSON sst wrong arg count
+-- TEST: json function for JSON sst wrong arg count
+-- + error: % too few arguments in function 'jsonb_set'
 -- + {call}: err
--- * error: % too few arguments in function 'jsonb_set'
 -- +1 error:
 select jsonb_set();
 
--- TEST json function for JSON object
+-- TEST: json function for JSON object
 -- + {select_stmt}: _select_: { _anon: text notnull }
 -- + {call}: text notnull
 -- + {name json_object}: text notnull
 -- - error:
 select json_object('x', 1, 'y', 2);
 
--- TEST json function for JSON object, no args
+-- TEST: json function for JSON object, no args
 -- + {select_stmt}: _select_: { _anon: text notnull }
 -- + {call}: text notnull
 -- + {name json_object}: text notnull
 -- - error:
 select json_object();
 
--- TEST json function for JSON object nullable value
+-- TEST: json function for JSON object nullable value
 -- + {select_stmt}: _select_: { _anon: text notnull }
 -- + {call}: text
 -- + {name json_object}: text
@@ -24616,26 +24617,26 @@ select json_object('x', blob_var);
 -- - error:
 select json_object('1', null);
 
--- TEST json function for JSON object wrong arg count
+-- TEST: json function for JSON object wrong arg count
+-- + error: % starting at argument 1, arguments must come in groups of 2 in 'json_object'
 -- + {call}: err
--- * error: % starting at argument 1, arguments must come in groups of 2 in 'json_object'
 -- +1 error:
 select json_object(1);
 
--- TEST json function for JSON object wrong arg count
+-- TEST: json function for JSON object wrong arg count
+-- + error: % starting at argument 1, arguments must come in groups of 2 in 'jsonb_object'
 -- + {call}: err
--- * error: % starting at argument 1, arguments must come in groups of 2 in 'jsonb_object'
 -- +1 error:
 select jsonb_object(1);
 
--- TEST json function for JSON object
+-- TEST: json function for JSON object
 -- + {select_stmt}: _select_: { _anon: text notnull }
 -- + {call}: text notnull
 -- + {name json_patch}: text notnull
 -- - error:
 select json_patch('{ "name" : "John" }', '{ "age" : 22 }');
 
--- TEST json function for JSON object nullable value
+-- TEST: json function for JSON object nullable value
 -- + {select_stmt}: _select_: { _anon: text }
 -- + {call}: text
 -- + {name json_patch}: text
@@ -24654,15 +24655,15 @@ a_string := json_patch('{ "name" : "John" }', '{ "age" : 22 }');
 -- +1 error:
 select json_patch(1, blob_var);
 
--- TEST json function for JSON patch wrong arg count
+-- TEST: json function for JSON patch wrong arg count
+-- + error: % too few arguments in function 'json_patch'
 -- + {call}: err
--- * error: % too few arguments in function 'json_patch'
 -- +1 error:
 select json_patch('x');
 
--- TEST json function for JSON patch wrong arg count
+-- TEST: json function for JSON patch wrong arg count
+-- + error: % argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'jsonb_patch'
 -- + {call}: err
--- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'jsonb_patch'
 -- +1 error:
 select jsonb_patch(1);
 
@@ -24678,14 +24679,14 @@ select json_pretty('[1]');
 -- +1 error:
 select json_pretty('[1]', 5);
 
--- TEST json function for JSON json_type
+-- TEST: json function for JSON json_type
 -- + {select_stmt}: _select_: { _anon: text notnull }
 -- + {call}: text notnull
 -- + {name json_type}: text notnull
 -- - error:
 select json_type('[]');
 
--- TEST json function for JSON array_length with 2 args
+-- TEST: json function for JSON array_length with 2 args
 -- + {select_stmt}: _select_: { _anon: text }
 -- + {call}: text
 -- - {call}: text notnull
@@ -24693,35 +24694,35 @@ select json_type('[]');
 -- - error:
 select json_type('[]', '$.x');
 
--- TEST json function for json_valid()
+-- TEST: json function for json_valid()
 -- + {select_stmt}: _select_: { _anon: bool notnull }
 -- + {call}: bool notnull
 -- + {name json_valid}: bool notnull
 -- - error:
 select json_valid('{ "name" : "John" }', 6);
 
--- TEST json function for json_valid()
+-- TEST: json function for json_valid()
 -- + {select_stmt}: _select_: { _anon: bool }
 -- + {call}: bool
 -- + {name json_valid}: bool
 -- - error:
 select json_valid('{ "name" : "John" }', nullable(6));
 
--- TEST json_valid wrong arg count
+-- TEST: json_valid wrong arg count
+-- + error: % too few arguments in function 'json_valid'
 -- + {call}: err
--- * error: % too few arguments in function 'json_valid'
 -- +1 error:
 select json_valid();
 
--- TEST json_valid invalid arg 1
+-- TEST: json_valid invalid arg 1
+-- + error: % argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'json_valid'
 -- + {call}: err
--- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'json_valid'
 -- +1 error:
 select json_valid(1, 1);
 
--- TEST json_valid invalid arg 2
+-- TEST: json_valid invalid arg 2
+-- + error: % argument 2 'text' is an invalid type; valid types are: 'bool' 'integer' 'long' 'real' in 'json_valid'
 -- + {call}: err
--- * error: % argument 2 'text' is an invalid type; valid types are: 'bool' 'integer' 'long' 'real' in 'json_valid'
 -- +1 error:
 select json_valid('[]', '2');
 
@@ -24742,63 +24743,63 @@ select json_quote(1);
 -- - error:
 select json_quote(nullable(1));
 
--- TEST json_quote wrong arg count
+-- TEST: json_quote wrong arg count
+-- + error: % too few arguments in function 'json_quote'
 -- + {call}: err
--- * error: % too few arguments in function 'json_quote'
 -- +1 error:
 select json_quote();
 
--- TEST json_quote wrong arg count
+-- TEST: json_quote wrong arg count
 -- verify rewrite
 -- + SET a_string := ( SELECT json_quote(1) IF NOTHING THEN THROW );
 -- - error:
 a_string := json_quote(1);
 
--- TEST json_group_array
+-- TEST: json_group_array
 -- + {select_stmt}: _select_: { _anon: text notnull }
 -- + {name json_group_array}: text notnull
 -- - error:
 select json_group_array(foo.id) from foo;
 
--- TEST json_group_array with wrong args
+-- TEST: json_group_array with wrong args
+-- + error: % too few arguments in function 'json_group_array'
 -- + {call}: err
--- * error: % too few arguments in function 'json_group_array'
 -- +1 error:
 select json_group_array() from foo;
 
--- TEST json_group_array in non aggregate context
+-- TEST: json_group_array in non aggregate context
+-- + error: % aggregates only make sense if there is a FROM clause 'json_group_array'
 -- + {call}: err
--- * error: % aggregates only make sense if there is a FROM clause 'json_group_array'
 -- +1 error:
 select json_group_array();
 
--- TEST jsonb_group_array in non aggregate context
+-- TEST: jsonb_group_array in non aggregate context
+-- + error: % aggregates only make sense if there is a FROM clause 'jsonb_group_array'
 -- + {call}: err
--- * error: % aggregates only make sense if there is a FROM clause 'jsonb_group_array'
 -- +1 error:
 select jsonb_group_array();
 
--- TEST json_group_object
+-- TEST: json_group_object
 -- + {select_stmt}: _select_: { _anon: text notnull }
 -- + {name json_group_object}: text notnull
 -- - error:
 select json_group_object(foo.id, foo.id) from foo;
 
--- TEST json_group_object with wrong args
+-- TEST: json_group_object with wrong args
+-- + error: % too few arguments in function 'json_group_object'
 -- + {call}: err
--- * error: % too few arguments in function 'json_group_object'
 -- +1 error:
 select json_group_object() from foo;
 
--- TEST json_group_object in non aggregate context
+-- TEST: json_group_object in non aggregate context
+-- + error: % aggregates only make sense if there is a FROM clause 'json_group_object'
 -- + {call}: err
--- * error: % aggregates only make sense if there is a FROM clause 'json_group_object'
 -- +1 error:
 select json_group_object();
 
--- TEST jsonb_group_object in non aggregate context
+-- TEST: jsonb_group_object in non aggregate context
+-- + error: % aggregates only make sense if there is a FROM clause 'jsonb_group_object'
 -- + {call}: err
--- * error: % aggregates only make sense if there is a FROM clause 'jsonb_group_object'
 -- +1 error:
 select jsonb_group_object();
 
@@ -24834,7 +24835,7 @@ let r := 1:();
 -- +1 error:
 let r := new_builder():(not 'x');
 
--- TEST order of operations binary ~
+-- TEST: order of operations binary ~
 -- verify rewrite, stronger than *
 -- + 1 * CAST(2 AS REAL);
 1 * 2 ~real~;
@@ -24861,9 +24862,9 @@ select 'x' -> 'y' ~int~ as U;
 -- +1 error:
 @op object<not_a_proc_at_all set> : call foo as foofoo;
 
--- TEST use array access where none is defined
+-- TEST: use array access where none is defined
+-- + error: % function not builtin and not declared 'object<list>:array:get'
 -- + {call}: err
--- * error: % function not builtin and not declared 'object<list>:array:get'
 -- +1 error:
 let uu  := list_result[5];
 
@@ -25028,45 +25029,45 @@ let like_func := like('a', 'b', 'c');
 -- - error:
 let glob_func := glob('a', 'b');
 
--- TEST bogus arg in matcher
+-- TEST: bogus arg in matcher
+-- + error: % argument 1 'integer' is an invalid type; valid types are: 'text' in 'like'
 -- + {assign}: err
--- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' in 'like'
 -- +1 error:
 set like_func := like(0, 'b', 'c');
 
--- TEST bogus arg in matcher
+-- TEST: bogus arg in matcher
+-- + error: % argument 2 'integer' is an invalid type; valid types are: 'text' in 'like'
 -- + {assign}: err
--- * error: % argument 2 'integer' is an invalid type; valid types are: 'text' in 'like'
 -- +1 error:
 set like_func := like('a', 0, 'c');
 
--- TEST bogus arg in matcher
+-- TEST: bogus arg in matcher
+-- + error: % argument 3 'integer' is an invalid type; valid types are: 'text' in 'like'
 -- + {assign}: err
--- * error: % argument 3 'integer' is an invalid type; valid types are: 'text' in 'like'
 -- +1 error:
 set like_func := like('a', 'b', 0);
 
--- TEST bogus arg in matcher
+-- TEST: bogus arg in matcher
+-- + error: % argument 1 'integer' is an invalid type; valid types are: 'text' in 'glob'
 -- + {assign}: err
--- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' in 'glob'
 -- +1 error:
 set glob_func := glob(0, 'b');
 
--- TEST bogus arg in matcher
+-- TEST: bogus arg in matcher
+-- + error: % argument 2 'integer' is an invalid type; valid types are: 'text' in 'glob'
 -- + {assign}: err
--- * error: % argument 2 'integer' is an invalid type; valid types are: 'text' in 'glob'
 -- +1 error:
 set glob_func := glob('a', 0);
 
--- TEST bogus arg in matcher
+-- TEST: bogus arg in matcher
+-- + error: % too few arguments in function 'like'
 -- + {assign}: err
--- * error: % too few arguments in function 'like'
 -- +1 error:
 set like_func := like();
 
--- TEST bogus arg in matcher
+-- TEST: bogus arg in matcher
+-- + error: % too few arguments in function 'glob'
 -- + {assign}: err
--- * error: % too few arguments in function 'glob'
 -- +1 error:
 set glob_func := glob();
 
@@ -25264,7 +25265,7 @@ set loaded := (select load_extension());
 -- +1 error:
 set loaded := load_extension('foo');
 
--- TEST ifdef with an error in the interior statement list
+-- TEST: ifdef with an error in the interior statement list
 -- + error: % string operand not allowed in 'NOT'
 -- + {ifndef_stmt}: err
 -- + | {is_true}

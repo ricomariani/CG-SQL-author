@@ -2970,6 +2970,93 @@ cql_code cql_cursor_to_blob(
   return SQLITE_OK;
 }
 
+// This lets us build a blob array out of blobs
+typedef struct cql_blob_array_builder {
+  uint32_t count;
+  cql_bytebuf data;
+  cql_bytebuf offsets;
+} cql_blob_array_builder;
+
+// When we tear down, we simply close the buffers and free the structure
+// the rest is handled by the generic object code.
+static void cql_blob_array_builder_finalize(void *_Nonnull data) {
+  // recover self
+  cql_blob_array_builder *_Nonnull self = data;
+
+  // clean up the buffers
+
+  cql_bytebuf_close(&self->data);
+  cql_bytebuf_close(&self->offsets);
+
+  free(self);
+}
+
+void cql_blob_array_builder_init(cql_blob_array_builder *_Nonnull self) {
+  // initialize main storage
+  self->count = 0;
+  cql_bytebuf_open(&self->data);
+  cql_bytebuf_open(&self->offsets);
+
+  // reserve space for the count in the offsets buffer, we'll change it
+  // when we make the blob.
+  const uint32_t count = 0;
+  cql_append_value(&self->offsets, count);
+
+}
+
+// This makes an empty blob array builder, it holds the bytebuffers
+// that accumulate the data and the offsets.  The offsets indicate the
+// end offset of the ith blob, the first blob starts at 0 which is not recorded.
+// CQLABI
+cql_object_ref _Nonnull cql_blob_array_builder_create(void) {
+
+  cql_blob_array_builder *_Nonnull self = calloc(1, sizeof(cql_blob_array_builder));
+  cql_object_ref obj = _cql_generic_object_create(self, cql_blob_array_builder_finalize);
+  cql_blob_array_builder_init(self);
+
+  return obj;
+}
+
+void cql_blob_array_builder_add_blob(
+  cql_object_ref _Nonnull builder,
+  cql_blob_ref _Nonnull blob)
+{
+  cql_contract(builder);
+  cql_contract(blob);
+
+  cql_blob_array_builder *_Nonnull self = _cql_generic_object_get_data(builder);
+
+  const uint8_t *bytes = (const uint8_t *)cql_get_blob_bytes(blob);
+  const uint32_t len = (uint32_t)cql_get_blob_size(blob);
+  cql_bytebuf_append(&self->data, bytes, len);
+
+  const uint32_t offset = self->data.used;
+  cql_append_value(&self->offsets, offset);
+  self->count++;
+}
+
+cql_blob_ref _Nonnull cql_blob_array_builder_make_blob(
+  cql_object_ref _Nonnull builder)
+{
+  cql_contract(builder);
+  cql_blob_array_builder *_Nonnull self = _cql_generic_object_get_data(builder);
+
+  *(uint32_t *)self->offsets.ptr = self->count; // set the count in the buffer
+  cql_bytebuf_append(&self->offsets, self->data.ptr, self->data.used);
+
+  const uint8_t *bytes = (const uint8_t *)self->offsets.ptr;
+  const cql_int32 len = (cql_int32)self->offsets.used;
+
+  cql_blob_ref result = cql_blob_ref_new(bytes, len);
+
+  // reset the builder
+  cql_bytebuf_close(&self->data);
+  cql_bytebuf_close(&self->offsets);
+  cql_blob_array_builder_init(self);
+
+  return result;
+}
+
 // Generic method to hash a dynamic cursor: Note this code takes advantage of
 // the fact that null valued primitives are normalized to "isnull = 1" and
 // "value = 0" so the whole thing can be hashed with impunity even when it is in
@@ -5785,7 +5872,7 @@ void bupdatekey(
     if (!compat) {
       goto cql_error;
     }
-  
+
     // add the variable size of the replacement data if any
     variable_size_adjustment += field_variable_size;
 
@@ -6209,7 +6296,7 @@ void bcreateval(
 
     uint64_t field_id = (uint64_t)sqlite3_value_int64(field_id_arg);
     cql_write_big_endian_u64(b + field_ids_offset, field_id);
-    field_ids_offset  += sizeof(uint64_t);
+    field_ids_offset += sizeof(uint64_t);
 
     switch (blob_column_type) {
       // Boolean values are stored in the int64 storage, but are normalized

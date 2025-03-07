@@ -3412,6 +3412,57 @@ error:
   return SQLITE_ERROR;
 }
 
+// cql friendly wrapper for blob deserialization from blob array
+// CQLABI
+cql_code cql_cursor_from_blob_array(
+  sqlite3 *_Nonnull db,
+  cql_dynamic_cursor *_Nonnull dyn_cursor,
+  cql_blob_ref _Nullable b,
+  cql_int32 index)
+{
+  cql_bool *has_row = dyn_cursor->cursor_has_row;
+
+  if (!b) {
+    goto error;
+  }
+
+  const uint8_t *bytes = (const uint8_t *)cql_get_blob_bytes(b);
+  const uint32_t len = (uint32_t)cql_get_blob_size(b);
+
+  if (len < 4) {
+    goto error;
+  }
+
+  // the first 4 bytes are the count of blobs
+  uint32_t count = *(uint32_t *)bytes;
+
+  if (index < 0 || index >= count || (index + 1) * 4 >= len) {
+    goto error;
+  }
+
+  uint32_t end = *(uint32_t *)(bytes + (index + 1) * 4);
+  if (end > len) {
+    goto error;
+  }
+
+  uint32_t start = 0;
+
+  if (index > 0) {
+    // the first blob starts at 0 which is not recorded
+    start = *(uint32_t *)(bytes + index * 4);
+  }
+
+  if (start > end) {
+    goto error;
+  }
+
+  return cql_cursor_from_bytes(dyn_cursor, bytes + start, end - start);
+
+error:
+  *has_row = false;
+  cql_clear_references_before_deserialization(dyn_cursor);
+  return SQLITE_ERROR;
+}
 
 // The outside world does not need to know the details of the partitioning
 // so it's defined locally.

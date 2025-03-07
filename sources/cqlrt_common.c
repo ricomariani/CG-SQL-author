@@ -3022,12 +3022,13 @@ static void cql_clear_references_before_deserialization(
      goto error; \
    }
 
-// CQLABI
-cql_code cql_cursor_from_blob(
-  sqlite3 *_Nonnull db,
+cql_code cql_cursor_from_bytes(
   cql_dynamic_cursor *_Nonnull dyn_cursor,
-  cql_blob_ref _Nullable b)
+  const uint8_t *bytes,
+  cql_int32 size)
 {
+  cql_invariant(bytes);
+
   cql_bool *has_row = dyn_cursor->cursor_has_row;
   uint16_t *offsets = dyn_cursor->cursor_col_offsets;
   uint8_t *types = dyn_cursor->cursor_data_types;
@@ -3039,15 +3040,9 @@ cql_code cql_cursor_from_blob(
   *has_row = false;
   cql_clear_references_before_deserialization(dyn_cursor);
 
-  if (!b) {
-    goto error;
-  }
-
-  const uint8_t *bytes = (const uint8_t *)cql_get_blob_bytes(b);
-
   cql_input_buf input;
   input.data = bytes;
-  input.remaining = (cql_uint32)cql_get_blob_size(b);
+  input.remaining = size;
 
   uint16_t needed_count = offsets[0];  // the first index is the count of fields
 
@@ -3291,6 +3286,30 @@ error:
   cql_clear_references_before_deserialization(dyn_cursor);
   return SQLITE_ERROR;
 }
+
+// cql friendly wrapper for blob deserialization
+// CQLABI
+cql_code cql_cursor_from_blob(
+  sqlite3 *_Nonnull db,
+  cql_dynamic_cursor *_Nonnull dyn_cursor,
+  cql_blob_ref _Nullable b)
+{
+  cql_bool *has_row = dyn_cursor->cursor_has_row;
+
+  if (!b) {
+    goto error;
+  }
+
+  const uint8_t *bytes = (const uint8_t *)cql_get_blob_bytes(b);
+  const cql_uint32 len = (cql_uint32)cql_get_blob_size(b);
+  return cql_cursor_from_bytes(dyn_cursor, bytes, len);
+
+error:
+  *has_row = false;
+  cql_clear_references_before_deserialization(dyn_cursor);
+  return SQLITE_ERROR;
+}
+
 
 // The outside world does not need to know the details of the partitioning
 // so it's defined locally.

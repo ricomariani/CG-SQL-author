@@ -10795,9 +10795,9 @@ additional_checks:
 static void sem_infer_result_blob_type(ast_node *ast, ast_node *arg_list) {
   EXTRACT_ANY_NOTNULL(cursor, arg_list->left);
 
-  CSTR sname = cursor->sem->sptr->struct_name;
+  CSTR struct_name = cursor->sem->sptr->struct_name;
 
-  if (!sname || !find_table_or_view_even_deleted(sname)) {
+  if (!struct_name || !find_table_or_view_even_deleted(struct_name)) {
      record_error(ast);
      report_error(cursor,
        "CQL0024: cursor not declared with 'LIKE table_name', blob type can't be inferred",
@@ -10810,7 +10810,7 @@ static void sem_infer_result_blob_type(ast_node *ast, ast_node *arg_list) {
   ast_node *blob = new_ast_str("$");
   blob->sem = new_sem(SEM_TYPE_BLOB|SEM_TYPE_NOTNULL);
   blob->sem->name = "$";
-  blob->sem->kind = cursor->sem->sptr->struct_name;
+  blob->sem->kind = struct_name;
 
   AST_REWRITE_INFO_RESET();
 

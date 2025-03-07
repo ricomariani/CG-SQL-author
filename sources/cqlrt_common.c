@@ -2602,7 +2602,7 @@ cql_bool cql_facet_upsert(
   return result;
 }
 
-#define cql_append_value(b, var) cql_bytebuf_append(&b, &var, sizeof(var))
+#define cql_append_value(b, var) cql_bytebuf_append(b, &var, sizeof(var))
 
 #define cql_append_nullable_value(b, var) \
   if (!var.is_null) { \
@@ -2750,7 +2750,7 @@ static void cql_write_varint_32(cql_bytebuf *_Nonnull buf, cql_int32 si) {
     if (i) {
       byte |= 0x80;
     }
-    cql_append_value(*buf, byte);
+    cql_append_value(buf, byte);
   } while (i);
 }
 
@@ -2764,7 +2764,7 @@ static void cql_write_varint_64(cql_bytebuf *_Nonnull buf, int64_t si) {
     if (i) {
       byte |= 0x80;
     }
-    cql_append_value(*buf, byte);
+    cql_append_value(buf, byte);
   } while (i);
 }
 
@@ -2773,23 +2773,17 @@ static void cql_write_varint_64(cql_bytebuf *_Nonnull buf, int64_t si) {
 // about the cursor.  By the time this is called many checks have been made
 // about the suitability of this cursor for serialization (e.g. no OBJECT
 // fields). As a consequence we get a nice simple strategy that is flexible.
-// CQLABI
-cql_code cql_cursor_to_blob(
-  sqlite3 *_Nonnull db,
+void cql_cursor_to_bytebuf(
   cql_dynamic_cursor *_Nonnull dyn_cursor,
-  cql_blob_ref _Nullable *_Nonnull blob)
+  cql_bytebuf *_Nonnull b)
 {
-  if (!*dyn_cursor->cursor_has_row) {
-    return SQLITE_ERROR;
-  }
+  cql_invariant(b);
+  cql_invariant(*dyn_cursor->cursor_has_row);
 
   uint16_t *offsets = dyn_cursor->cursor_col_offsets;
   uint8_t *types = dyn_cursor->cursor_data_types;
   uint16_t count = offsets[0];  // the first index is the count of fields
   uint8_t *cursor = dyn_cursor->cursor_data;  // we will be using char offsets
-
-  cql_bytebuf b;
-  cql_bytebuf_open(&b);
 
   uint8_t code = 0;
   uint16_t nullable_count = 0;
@@ -2827,7 +2821,7 @@ cql_code cql_cursor_to_blob(
   cql_append_value(b, code);
 
   uint16_t bitvector_bytes_needed = (nullable_count + bool_count + 7) / 8;
-  uint8_t *bits = cql_bytebuf_alloc(&b, bitvector_bytes_needed);
+  uint8_t *bits = cql_bytebuf_alloc(b, bitvector_bytes_needed);
   memset(bits, 0, bitvector_bytes_needed);
   uint16_t nullable_index = 0;
   uint16_t bool_index = 0;
@@ -2842,12 +2836,12 @@ cql_code cql_cursor_to_blob(
       switch (core_data_type) {
         case CQL_DATA_TYPE_INT32: {
           cql_int32 int32_data = *(cql_int32 *)(cursor + offset);
-          cql_write_varint_32(&b, int32_data);
+          cql_write_varint_32(b, int32_data);
           break;
         }
         case CQL_DATA_TYPE_INT64: {
           cql_int64 int64_data = *(cql_int64 *)(cursor + offset);
-          cql_write_varint_64(&b, int64_data);
+          cql_write_varint_64(b, int64_data);
           break;
         }
         case CQL_DATA_TYPE_DOUBLE: {
@@ -2869,7 +2863,7 @@ cql_code cql_cursor_to_blob(
         case CQL_DATA_TYPE_STRING: {
           cql_string_ref str_ref = *(cql_string_ref *)(cursor + offset);
           cql_alloc_cstr(temp, str_ref);
-          cql_bytebuf_append(&b, temp, (uint32_t)(strlen(temp) + 1));
+          cql_bytebuf_append(b, temp, (uint32_t)(strlen(temp) + 1));
           cql_free_cstr(temp, str_ref);
           break;
         }
@@ -2877,8 +2871,8 @@ cql_code cql_cursor_to_blob(
           cql_blob_ref blob_ref = *(cql_blob_ref *)(cursor + offset);
           const void *bytes = cql_get_blob_bytes(blob_ref);
           cql_int32 size = cql_get_blob_size(blob_ref);
-          cql_write_varint_32(&b, size);
-          cql_bytebuf_append(&b, bytes, (cql_uint32)size);
+          cql_write_varint_32(b, size);
+          cql_bytebuf_append(b, bytes, (cql_uint32)size);
           break;
         }
       }
@@ -2889,7 +2883,7 @@ cql_code cql_cursor_to_blob(
           cql_nullable_int32 int32_data = *(cql_nullable_int32 *)(cursor + offset);
           if (!int32_data.is_null) {
             cql_setbit(bits, nullable_index);
-            cql_write_varint_32(&b, int32_data.value);
+            cql_write_varint_32(b, int32_data.value);
           }
           break;
         }
@@ -2897,7 +2891,7 @@ cql_code cql_cursor_to_blob(
           cql_nullable_int64 int64_data = *(cql_nullable_int64 *)(cursor + offset);
           if (!int64_data.is_null) {
             cql_setbit(bits, nullable_index);
-            cql_write_varint_64(&b, int64_data.value);
+            cql_write_varint_64(b, int64_data.value);
           }
           break;
         }
@@ -2925,7 +2919,7 @@ cql_code cql_cursor_to_blob(
           if (str_ref) {
             cql_setbit(bits, nullable_index);
             cql_alloc_cstr(temp, str_ref);
-            cql_bytebuf_append(&b, temp, (uint32_t)(strlen(temp) + 1));
+            cql_bytebuf_append(b, temp, (uint32_t)(strlen(temp) + 1));
             cql_free_cstr(temp, str_ref);
           }
           break;
@@ -2936,8 +2930,8 @@ cql_code cql_cursor_to_blob(
             cql_setbit(bits, nullable_index);
             const void *bytes = cql_get_blob_bytes(blob_ref);
             cql_int32 size = cql_get_blob_size(blob_ref);
-            cql_write_varint_32(&b, size);
-            cql_bytebuf_append(&b, bytes, (cql_uint32)size);
+            cql_write_varint_32(b, size);
+            cql_bytebuf_append(b, bytes, (cql_uint32)size);
           }
           break;
         }
@@ -2946,6 +2940,27 @@ cql_code cql_cursor_to_blob(
     }
   }
   cql_invariant(nullable_index == nullable_count);
+}
+
+// This standard helper walks any cursor and creates a versionable encoding of
+// it in a blob.  The dynamic cursor structure has all the necessary metadata
+// about the cursor.  By the time this is called many checks have been made
+// about the suitability of this cursor for serialization (e.g. no OBJECT
+// fields). As a consequence we get a nice simple strategy that is flexible.
+// CQLABI
+cql_code cql_cursor_to_blob(
+  sqlite3 *_Nonnull db,
+  cql_dynamic_cursor *_Nonnull dyn_cursor,
+  cql_blob_ref _Nullable *_Nonnull blob)
+{
+  if (!*dyn_cursor->cursor_has_row) {
+    return SQLITE_ERROR;
+  }
+
+  cql_bytebuf b;
+  cql_bytebuf_open(&b);
+
+  cql_cursor_to_bytebuf(dyn_cursor, &b);
 
   cql_blob_ref new_blob = cql_blob_ref_new((const uint8_t *)b.ptr, (cql_int32)b.used);
   cql_blob_release(*blob);
@@ -3024,8 +3039,8 @@ static void cql_clear_references_before_deserialization(
 
 cql_code cql_cursor_from_bytes(
   cql_dynamic_cursor *_Nonnull dyn_cursor,
-  const uint8_t *bytes,
-  cql_int32 size)
+  const uint8_t *_Nonnull bytes,
+  uint32_t size)
 {
   cql_invariant(bytes);
 
@@ -3301,7 +3316,7 @@ cql_code cql_cursor_from_blob(
   }
 
   const uint8_t *bytes = (const uint8_t *)cql_get_blob_bytes(b);
-  const cql_uint32 len = (cql_uint32)cql_get_blob_size(b);
+  const uint32_t len = (uint32_t)cql_get_blob_size(b);
   return cql_cursor_from_bytes(dyn_cursor, bytes, len);
 
 error:

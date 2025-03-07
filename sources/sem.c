@@ -2731,13 +2731,13 @@ static void report_compat_error(
 {
   CSTR needed = coretype_string(sem_type_needed);
   CSTR found = coretype_string(sem_type_found);
-  
+
   CSTR msg = dup_printf(
     "CQL0009: required '%s' not compatible with found '%s' context '%s'",
     needed,
     found,
     subject);
-  
+
   report_error(ast, msg, NULL);
   record_error(ast);
 }
@@ -18077,8 +18077,8 @@ static void sem_upsert_stmt(ast_node *stmt) {
   }
 
   // deep copy from the table for the excluded columns, strip nothing extra
-  sem_struct *sptr = new_sem_struct_strip_table_flags(table_ast->sem->sptr); 
-  
+  sem_struct *sptr = new_sem_struct_strip_table_flags(table_ast->sem->sptr);
+
   // we get the backed status from the tables jptr directly
   sptr->is_backed = table_ast->sem->jptr->tables[0]->is_backed;
 
@@ -20630,7 +20630,7 @@ static void sem_create_proc_stmt(ast_node *ast) {
 
     // no errors at this point
     Invariant(!is_error(misc_attrs));
-   
+
     annotation_target = NULL;
 
     // If a stored proc is marked with the identity annotation then we generate the
@@ -21056,8 +21056,18 @@ static void sem_declare_enum_stmt(ast_node *ast) {
      }
 
      if (expr) {
+       // we have to do these separately because they are not yet
+       // in the enum table
        sem_replace_seen_enum_values(expr, names);
+
+       ast_node *parent = expr->parent;
+       bool_t left = parent->left == expr;
        sem_root_expr(expr, SEM_EXPR_CONTEXT_NONE);
+
+       // the above might rewrite, so we have to refetch
+       expr = left ? parent->left : parent->right;
+
+       // we're ready to evaluate constants having replaced enums and consts
        eval(expr, &result);
 
        if (result.sem_type == SEM_TYPE_ERROR || result.sem_type == SEM_TYPE_NULL) {

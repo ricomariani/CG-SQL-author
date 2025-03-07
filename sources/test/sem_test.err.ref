@@ -1841,4 +1841,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 test/sem_test.sql:XXXX:1: error: in str : CQL0197: duplicate variable name in the same scope 'i'
 test/sem_test.sql:XXXX:1: error: in str : CQL0197: duplicate variable name in the same scope 'i'
 test/sem_test.sql:XXXX:1: error: in assign : CQL0173: variable not found 'not_visible'
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'doo'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0357: enum does not contain 'garbonzo'
+test/sem_test.sql:XXXX:1: error: in enum_value : CQL0355: evaluation failed 'stew'
 semantic errors present; no code gen.

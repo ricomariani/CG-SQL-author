@@ -25941,3 +25941,36 @@ begin
     not_visible := 5;
   end;
 end;
+
+declare const group some_constants (
+  bazzle = 5
+);
+
+declare enum HarmonyTint integer (
+  orange
+);
+
+-- TEST: declare an enum that uses constant names outside of itself
+-- + DECLARE ENUM GoalTint INT (
+-- +   boo = 1,
+-- +   coo = 5,
+-- +   doo = 1 + 5,
+-- +   foo = 6
+-- + );
+-- + {declare_enum_stmt}: GoalTint: integer<GoalTint> notnull
+-- - error:
+declare enum GoalTint integer (
+  boo = HarmonyTint.orange,
+  coo = bazzle,
+  doo = HarmonyTint.orange + bazzle,
+  foo = doo
+);
+
+-- TEST: an invalid constant
+-- + error: % enum does not contain 'garbonzo'
+-- + error: % evaluation failed 'stew'
+-- + {declare_enum_stmt}: err
+-- +2 error:
+declare enum ErroneousEnum integer (
+  stew = HarmonyTint.garbonzo
+);

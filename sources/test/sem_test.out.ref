@@ -100561,3 +100561,82 @@ test/sem_test.sql:XXXX:1: error: in assign : CQL0173: variable not found 'not_vi
               | {name not_visible}
               | {int 5}
 
+The statement ending at line XXXX
+
+DECLARE CONST GROUP some_constants (
+  bazzle = 5
+);
+
+  {declare_const_stmt}: ok
+  | {name some_constants}
+  | {const_values}
+    | {const_value}: integer = 5 notnull
+      | {name bazzle}: integer = 5 notnull
+      | {int 5}: integer = 5 notnull
+
+The statement ending at line XXXX
+
+DECLARE ENUM HarmonyTint INT (
+  orange
+);
+
+  {declare_enum_stmt}: HarmonyTint: integer<HarmonyTint> notnull
+  | {typed_name}: HarmonyTint: integer<HarmonyTint> notnull
+  | | {name HarmonyTint}
+  | | {type_int}: HarmonyTint: integer<HarmonyTint> notnull
+  | {enum_values}
+    | {enum_value}
+      | {name orange}: integer = 1 notnull
+
+The statement ending at line XXXX
+
+DECLARE ENUM GoalTint INT (
+  boo = 1,
+  coo = 5,
+  doo = 1 + 5,
+  foo = 6
+);
+
+  {declare_enum_stmt}: GoalTint: integer<GoalTint> notnull
+  | {typed_name}: GoalTint: integer<GoalTint> notnull
+  | | {name GoalTint}
+  | | {type_int}: GoalTint: integer<GoalTint> notnull
+  | {enum_values}
+    | {enum_value}
+    | | {name boo}: integer = 1 notnull
+    | | {int 1}: integer<HarmonyTint> notnull
+    | {enum_values}
+      | {enum_value}
+      | | {name coo}: integer = 5 notnull
+      | | {int 5}: integer notnull
+      | {enum_values}
+        | {enum_value}
+        | | {name doo}: integer = 6 notnull
+        | | {add}: integer<HarmonyTint> notnull
+        |   | {int 1}: integer<HarmonyTint> notnull
+        |   | {int 5}: integer notnull
+        | {enum_values}
+          | {enum_value}
+            | {name foo}: integer = 6 notnull
+            | {int 6}: integer notnull
+
+The statement ending at line XXXX
+
+DECLARE ENUM ErroneousEnum INT (
+  stew = HarmonyTint.garbonzo
+);
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0357: enum does not contain 'garbonzo'
+test/sem_test.sql:XXXX:1: error: in enum_value : CQL0355: evaluation failed 'stew'
+
+  {declare_enum_stmt}: err
+  | {typed_name}: ErroneousEnum: integer<ErroneousEnum> notnull
+  | | {name ErroneousEnum}
+  | | {type_int}: ErroneousEnum: integer<ErroneousEnum> notnull
+  | {enum_values}
+    | {enum_value}
+      | {name stew}
+      | {dot}: err
+        | {name HarmonyTint}
+        | {name garbonzo}
+

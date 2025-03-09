@@ -3488,6 +3488,13 @@ cql_noexport CSTR cql_builtin_text() {
     "[[builtin]]"
     "@op null : call fmt as cql_format_null;"
 
+    "[[builtin]]"
+    "declare function cql_make_blob_stream(list cql_blob_list!) create blob!;"
+    "[[builtin]]"
+    "declare proc cql_cursor_from_blob_stream(C cursor, b blob, i int!) using transaction;"
+    "[[builtin]]"
+    "declare function cql_blob_stream_count(b blob!) int!;"
+
     "@@end_include@@"
     ;
 }

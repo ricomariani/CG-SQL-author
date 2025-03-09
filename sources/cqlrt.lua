@@ -1841,6 +1841,87 @@ function cql_cursor_from_blob(db, C, C_types, C_fields, buffer)
   return rc
 end
 
+-- create a single blob for the whole stream of appended blobs
+-- with offsets for easy array style access.
+function cql_make_blob_stream(blob_list)
+  local count = #blob_list
+
+  local b = {}
+  table.insert(b, string.pack("<i4", count))
+
+  offset_next = (1 + count)*4
+
+  local i = 0
+  while i < count
+  do
+    local blob = blob_list[i+1]
+    local size = cql_get_blob_size(blob)
+    offset_next = offset_next + size
+    table.insert(b, string.pack("<i4", offset_next))
+    i = i + 1
+  end
+
+  local i = 0
+  while i < count
+  do
+    local blob = blob_list[i+1]
+    table.insert(b, blob)
+    i = i + 1
+  end
+
+  return table.concat(b)
+end
+
+-- the count of blobs is encoded at the head of the blob stream.
+function cql_blob_stream_count(b)
+  if #b < 4 then
+    return 0
+  end
+  return string.unpack("<i4", b)
+end
+
+-- fetch the cursor from the indicated blob stream
+function cql_cursor_from_blob_stream(db, C, C_types, C_fields, b, index)
+  C._has_row_ = false
+
+  local len = #b
+  if len < 4 then
+    return -1
+  end
+
+  -- the first 4 bytes are the count of blobs
+  local count = string.unpack("<i4", b)
+
+  if (index < 0 or index >= count or (index + 1) * 4 >= len) then
+    return -2
+  end
+
+  -- note that we're assuming little endian here, this could be generalized
+  local _end = string.unpack("<i4", b, 1 + (index + 1) * 4)
+
+  if _end > len then
+    return -3
+  end
+
+  -- the first blob starts after the offsets and count
+  local _start = (count + 1) * 4;
+
+  if index > 0 then
+    -- the first blob starts at after the offsets, that offset is  not recorded
+    _start = string.unpack("<i4", b, 1 + index * 4)
+  end
+
+  -- bogus offset order
+  if _start > _end then
+    return -4
+  end
+
+  -- this can still fail during decode but that's par of the course
+  -- we have to assume the blobs are hostile
+  local blob = string.sub(b, _start + 1, _end + 1)
+  return cql_cursor_from_blob(db, C, C_types, C_fields, blob)
+end
+
 function cql_blob_from_int(prefix, seed)
   if prefix == nil then
     prefix = ''

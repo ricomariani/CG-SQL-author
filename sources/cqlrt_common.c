@@ -1221,7 +1221,7 @@ static void cql_multibind_v(
         case CQL_DATA_TYPE_BLOB: {
           cql_blob_ref blob_ref = va_arg(*args, cql_blob_ref);
           const void *bytes = cql_get_blob_bytes(blob_ref);
-          int size = cql_get_blob_size(blob_ref);
+          cql_int32 size = cql_get_blob_size(blob_ref);
           *prc = sqlite3_bind_blob(*pstmt, column, bytes, size, SQLITE_TRANSIENT);
           column++;
           break;
@@ -1284,7 +1284,7 @@ static void cql_multibind_v(
           }
           else {
             const void *bytes = cql_get_blob_bytes(nullable_blob_ref);
-            int size = cql_get_blob_size(nullable_blob_ref);
+            cql_int32 size = cql_get_blob_size(nullable_blob_ref);
             *prc = sqlite3_bind_blob(*pstmt, column, bytes, size, SQLITE_TRANSIENT);
           }
           column++;
@@ -2602,7 +2602,7 @@ cql_bool cql_facet_upsert(
   return result;
 }
 
-#define cql_append_value(b, var) cql_bytebuf_append(&b, &var, sizeof(var))
+#define cql_append_value(b, var) cql_bytebuf_append(b, &var, sizeof(var))
 
 #define cql_append_nullable_value(b, var) \
   if (!var.is_null) { \
@@ -2750,7 +2750,7 @@ static void cql_write_varint_32(cql_bytebuf *_Nonnull buf, cql_int32 si) {
     if (i) {
       byte |= 0x80;
     }
-    cql_append_value(*buf, byte);
+    cql_append_value(buf, byte);
   } while (i);
 }
 
@@ -2764,7 +2764,7 @@ static void cql_write_varint_64(cql_bytebuf *_Nonnull buf, int64_t si) {
     if (i) {
       byte |= 0x80;
     }
-    cql_append_value(*buf, byte);
+    cql_append_value(buf, byte);
   } while (i);
 }
 
@@ -2773,23 +2773,17 @@ static void cql_write_varint_64(cql_bytebuf *_Nonnull buf, int64_t si) {
 // about the cursor.  By the time this is called many checks have been made
 // about the suitability of this cursor for serialization (e.g. no OBJECT
 // fields). As a consequence we get a nice simple strategy that is flexible.
-// CQLABI
-cql_code cql_cursor_to_blob(
-  sqlite3 *_Nonnull db,
+void cql_cursor_to_bytebuf(
   cql_dynamic_cursor *_Nonnull dyn_cursor,
-  cql_blob_ref _Nullable *_Nonnull blob)
+  cql_bytebuf *_Nonnull b)
 {
-  if (!*dyn_cursor->cursor_has_row) {
-    return SQLITE_ERROR;
-  }
+  cql_invariant(b);
+  cql_invariant(*dyn_cursor->cursor_has_row);
 
   uint16_t *offsets = dyn_cursor->cursor_col_offsets;
   uint8_t *types = dyn_cursor->cursor_data_types;
   uint16_t count = offsets[0];  // the first index is the count of fields
   uint8_t *cursor = dyn_cursor->cursor_data;  // we will be using char offsets
-
-  cql_bytebuf b;
-  cql_bytebuf_open(&b);
 
   uint8_t code = 0;
   uint16_t nullable_count = 0;
@@ -2827,7 +2821,7 @@ cql_code cql_cursor_to_blob(
   cql_append_value(b, code);
 
   uint16_t bitvector_bytes_needed = (nullable_count + bool_count + 7) / 8;
-  uint8_t *bits = cql_bytebuf_alloc(&b, bitvector_bytes_needed);
+  uint8_t *bits = cql_bytebuf_alloc(b, bitvector_bytes_needed);
   memset(bits, 0, bitvector_bytes_needed);
   uint16_t nullable_index = 0;
   uint16_t bool_index = 0;
@@ -2842,12 +2836,12 @@ cql_code cql_cursor_to_blob(
       switch (core_data_type) {
         case CQL_DATA_TYPE_INT32: {
           cql_int32 int32_data = *(cql_int32 *)(cursor + offset);
-          cql_write_varint_32(&b, int32_data);
+          cql_write_varint_32(b, int32_data);
           break;
         }
         case CQL_DATA_TYPE_INT64: {
           cql_int64 int64_data = *(cql_int64 *)(cursor + offset);
-          cql_write_varint_64(&b, int64_data);
+          cql_write_varint_64(b, int64_data);
           break;
         }
         case CQL_DATA_TYPE_DOUBLE: {
@@ -2869,7 +2863,7 @@ cql_code cql_cursor_to_blob(
         case CQL_DATA_TYPE_STRING: {
           cql_string_ref str_ref = *(cql_string_ref *)(cursor + offset);
           cql_alloc_cstr(temp, str_ref);
-          cql_bytebuf_append(&b, temp, (uint32_t)(strlen(temp) + 1));
+          cql_bytebuf_append(b, temp, (uint32_t)(strlen(temp) + 1));
           cql_free_cstr(temp, str_ref);
           break;
         }
@@ -2877,8 +2871,8 @@ cql_code cql_cursor_to_blob(
           cql_blob_ref blob_ref = *(cql_blob_ref *)(cursor + offset);
           const void *bytes = cql_get_blob_bytes(blob_ref);
           cql_int32 size = cql_get_blob_size(blob_ref);
-          cql_write_varint_32(&b, size);
-          cql_bytebuf_append(&b, bytes, (cql_uint32)size);
+          cql_write_varint_32(b, size);
+          cql_bytebuf_append(b, bytes, (cql_uint32)size);
           break;
         }
       }
@@ -2889,7 +2883,7 @@ cql_code cql_cursor_to_blob(
           cql_nullable_int32 int32_data = *(cql_nullable_int32 *)(cursor + offset);
           if (!int32_data.is_null) {
             cql_setbit(bits, nullable_index);
-            cql_write_varint_32(&b, int32_data.value);
+            cql_write_varint_32(b, int32_data.value);
           }
           break;
         }
@@ -2897,7 +2891,7 @@ cql_code cql_cursor_to_blob(
           cql_nullable_int64 int64_data = *(cql_nullable_int64 *)(cursor + offset);
           if (!int64_data.is_null) {
             cql_setbit(bits, nullable_index);
-            cql_write_varint_64(&b, int64_data.value);
+            cql_write_varint_64(b, int64_data.value);
           }
           break;
         }
@@ -2925,7 +2919,7 @@ cql_code cql_cursor_to_blob(
           if (str_ref) {
             cql_setbit(bits, nullable_index);
             cql_alloc_cstr(temp, str_ref);
-            cql_bytebuf_append(&b, temp, (uint32_t)(strlen(temp) + 1));
+            cql_bytebuf_append(b, temp, (uint32_t)(strlen(temp) + 1));
             cql_free_cstr(temp, str_ref);
           }
           break;
@@ -2936,8 +2930,8 @@ cql_code cql_cursor_to_blob(
             cql_setbit(bits, nullable_index);
             const void *bytes = cql_get_blob_bytes(blob_ref);
             cql_int32 size = cql_get_blob_size(blob_ref);
-            cql_write_varint_32(&b, size);
-            cql_bytebuf_append(&b, bytes, (cql_uint32)size);
+            cql_write_varint_32(b, size);
+            cql_bytebuf_append(b, bytes, (cql_uint32)size);
           }
           break;
         }
@@ -2946,6 +2940,27 @@ cql_code cql_cursor_to_blob(
     }
   }
   cql_invariant(nullable_index == nullable_count);
+}
+
+// This standard helper walks any cursor and creates a versionable encoding of
+// it in a blob.  The dynamic cursor structure has all the necessary metadata
+// about the cursor.  By the time this is called many checks have been made
+// about the suitability of this cursor for serialization (e.g. no OBJECT
+// fields). As a consequence we get a nice simple strategy that is flexible.
+// CQLABI
+cql_code cql_cursor_to_blob(
+  sqlite3 *_Nonnull db,
+  cql_dynamic_cursor *_Nonnull dyn_cursor,
+  cql_blob_ref _Nullable *_Nonnull blob)
+{
+  if (!*dyn_cursor->cursor_has_row) {
+    return SQLITE_ERROR;
+  }
+
+  cql_bytebuf b;
+  cql_bytebuf_open(&b);
+
+  cql_cursor_to_bytebuf(dyn_cursor, &b);
 
   cql_blob_ref new_blob = cql_blob_ref_new((const uint8_t *)b.ptr, (cql_int32)b.used);
   cql_blob_release(*blob);
@@ -2953,6 +2968,46 @@ cql_code cql_cursor_to_blob(
 
   cql_bytebuf_close(&b);
   return SQLITE_OK;
+}
+
+// create a single blob for the whole stream of appended blobs
+// with offsets for easy array style access.
+cql_blob_ref _Nonnull cql_make_blob_stream(cql_object_ref _Nonnull blob_list)
+{
+  cql_contract(blob_list);
+
+  cql_bytebuf b;
+  cql_bytebuf_open(&b);
+  cql_uint32 count = (cql_uint32)cql_blob_list_count(blob_list);
+
+  // note that we're assuming little endian here, this could be generalized
+  cql_append_value(&b, count);
+
+  cql_int32 offset_next = (cql_int32)((1 + count)*sizeof(cql_int32));
+
+  for (cql_int32 i = 0; i < count; i++) {
+    cql_blob_ref blob = cql_blob_list_get_at(blob_list, i);
+    cql_contract(blob);
+
+    cql_int32 size = cql_get_blob_size(blob);
+    offset_next += size;
+
+    // note that we're assuming little endian here, this could be generalized
+    cql_append_value(&b, offset_next);
+  }
+
+  for (cql_int32 i = 0; i < count; i++) {
+    cql_blob_ref blob = cql_blob_list_get_at(blob_list, i);
+    cql_uint32 size = (cql_uint32)cql_get_blob_size(blob);
+    const uint8_t *bytes = (const uint8_t *)cql_get_blob_bytes(blob);
+   
+    cql_bytebuf_append(&b, bytes, size);
+  }
+
+  cql_blob_ref result = cql_blob_ref_new((const uint8_t *)b.ptr, (cql_int32)b.used);
+  cql_bytebuf_close(&b);
+
+  return result;
 }
 
 // Generic method to hash a dynamic cursor: Note this code takes advantage of
@@ -3022,32 +3077,31 @@ static void cql_clear_references_before_deserialization(
      goto error; \
    }
 
-// CQLABI
-cql_code cql_cursor_from_blob(
-  sqlite3 *_Nonnull db,
+// This is the inverse of cql_cursor_to_bytebuf, it takes a byte stream and
+// reconstructs a dynamic cursor from it.  The byte stream is assumed to be
+// hostile. It could be corrupted in any kind of way and this code is expected
+// to handle that.
+cql_code cql_cursor_from_bytes(
   cql_dynamic_cursor *_Nonnull dyn_cursor,
-  cql_blob_ref _Nullable b)
+  const uint8_t *_Nonnull bytes,
+  uint32_t size)
 {
+  cql_invariant(bytes);
+
   cql_bool *has_row = dyn_cursor->cursor_has_row;
   uint16_t *offsets = dyn_cursor->cursor_col_offsets;
   uint8_t *types = dyn_cursor->cursor_data_types;
   uint8_t *cursor = dyn_cursor->cursor_data;  // we will be using char offsets
 
   // we have to release the existing cursor before we start
-  // we'll be clobbering the field while we build it.
+  // we'll be clobbering the fields while we build it.
 
   *has_row = false;
   cql_clear_references_before_deserialization(dyn_cursor);
 
-  if (!b) {
-    goto error;
-  }
-
-  const uint8_t *bytes = (const uint8_t *)cql_get_blob_bytes(b);
-
   cql_input_buf input;
   input.data = bytes;
-  input.remaining = (cql_uint32)cql_get_blob_size(b);
+  input.remaining = size;
 
   uint16_t needed_count = offsets[0];  // the first index is the count of fields
 
@@ -3285,6 +3339,96 @@ cql_code cql_cursor_from_blob(
 
   *has_row = true;
   return SQLITE_OK;
+
+error:
+  *has_row = false;
+  cql_clear_references_before_deserialization(dyn_cursor);
+  return SQLITE_ERROR;
+}
+
+// cql friendly wrapper for blob deserialization
+// CQLABI
+cql_code cql_cursor_from_blob(
+  sqlite3 *_Nonnull db,
+  cql_dynamic_cursor *_Nonnull dyn_cursor,
+  cql_blob_ref _Nullable b)
+{
+  cql_bool *has_row = dyn_cursor->cursor_has_row;
+
+  if (!b) {
+    goto error;
+  }
+
+  const uint8_t *bytes = (const uint8_t *)cql_get_blob_bytes(b);
+  const uint32_t len = (uint32_t)cql_get_blob_size(b);
+  return cql_cursor_from_bytes(dyn_cursor, bytes, len);
+
+error:
+  *has_row = false;
+  cql_clear_references_before_deserialization(dyn_cursor);
+  return SQLITE_ERROR;
+}
+
+// extract the count from the blob stream
+// CQLABI
+cql_int32 cql_blob_stream_count(cql_blob_ref _Nonnull b)
+{
+  cql_contract(b);
+
+  const uint8_t *bytes = (const uint8_t *)cql_get_blob_bytes(b);
+  const uint32_t len = (uint32_t)cql_get_blob_size(b);
+
+  // the first 4 bytes are the count of blobs
+  return len >= 4 ? *(cql_int32 *)bytes : 0;
+}
+
+
+// cql friendly wrapper for blob deserialization from blob array
+// CQLABI
+cql_code cql_cursor_from_blob_stream(
+  sqlite3 *_Nonnull db,
+  cql_dynamic_cursor *_Nonnull dyn_cursor,
+  cql_blob_ref _Nonnull b,
+  cql_int32 index)
+{
+  cql_contract(b);
+  cql_bool *has_row = dyn_cursor->cursor_has_row;
+
+  const uint8_t *bytes = (const uint8_t *)cql_get_blob_bytes(b);
+  const uint32_t len = (uint32_t)cql_get_blob_size(b);
+
+  if (len < 4) {
+    goto error;
+  }
+
+  // the first 4 bytes are the count of blobs
+  // note that we're assuming little endian here, this could be generalized
+  uint32_t count = *(uint32_t *)bytes;
+
+  if (index < 0 || index >= count || (index + 1) * 4 >= len) {
+    goto error;
+  }
+
+  // note that we're assuming little endian here, this could be generalized
+  uint32_t end = *(uint32_t *)(bytes + (index + 1) * 4);
+  if (end > len) {
+    goto error;
+  }
+
+  // the first blob starts after the offsets and count
+  uint32_t start = (count + 1) * sizeof(cql_int32);
+
+  if (index > 0) {
+    // the first blob starts at 0 which is not recorded
+    // note that we're assuming little endian here, this could be generalized
+    start = *(uint32_t *)(bytes + index * 4);
+  }
+
+  if (start > end) {
+    goto error;
+  }
+
+  return cql_cursor_from_bytes(dyn_cursor, bytes + start, end - start);
 
 error:
   *has_row = false;
@@ -5751,7 +5895,7 @@ void bupdatekey(
     if (!compat) {
       goto cql_error;
     }
-  
+
     // add the variable size of the replacement data if any
     variable_size_adjustment += field_variable_size;
 
@@ -6175,7 +6319,7 @@ void bcreateval(
 
     uint64_t field_id = (uint64_t)sqlite3_value_int64(field_id_arg);
     cql_write_big_endian_u64(b + field_ids_offset, field_id);
-    field_ids_offset  += sizeof(uint64_t);
+    field_ids_offset += sizeof(uint64_t);
 
     switch (blob_column_type) {
       // Boolean values are stored in the int64 storage, but are normalized

@@ -5395,6 +5395,39 @@
 
     The statement ending at line XXXX
 
+    [[builtin]]
+    DECLARE PROC cql_cursor_from_blob_stream (C CURSOR, b BLOB, i INT!) USING TRANSACTION
+
+    {
+      "name" : "cql_cursor_from_blob_stream",
+      "args" : [
+        {
+          "name" : "C",
+          "type" : "",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "b",
+          "type" : "blob",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "i",
+          "type" : "integer",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "usesDatabase" : 1
+    },
+
+    The statement ending at line XXXX
+
     DECLARE PROC result_proc (id INT, t TEXT) (x INT, y INT)
 
     {
@@ -8217,6 +8250,61 @@
         "isNotNull" : 1
       },
       "createsObject" : 1
+    },
+
+    The statement ending at line XXXX
+
+    [[builtin]]
+    DECLARE FUNC cql_make_blob_stream (list OBJECT<cql_blob_list>!) CREATE BLOB!
+
+    {
+      "name" : "cql_make_blob_stream",
+      "args" : [
+        {
+          "name" : "list",
+          "type" : "object",
+          "kind" : "cql_blob_list",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "blob",
+        "isNotNull" : 1
+      },
+      "createsObject" : 1
+    },
+
+    The statement ending at line XXXX
+
+    [[builtin]]
+    DECLARE FUNC cql_blob_stream_count (b BLOB!) INT!
+
+    {
+      "name" : "cql_blob_stream_count",
+      "args" : [
+        {
+          "name" : "b",
+          "type" : "blob",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "integer",
+        "isNotNull" : 1
+      },
+      "createsObject" : 0
     },
 
     The statement ending at line XXXX

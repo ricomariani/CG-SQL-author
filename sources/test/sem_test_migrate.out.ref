@@ -4187,6 +4187,87 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
+[[builtin]]
+DECLARE FUNC cql_make_blob_stream (list OBJECT<cql_blob_list>!) CREATE BLOB!;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: blob notnull create_func
+    | {name cql_make_blob_stream}: blob notnull create_func
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: list: object<cql_blob_list> notnull variable in
+      |   | {param_detail}: list: object<cql_blob_list> notnull variable in
+      |     | {name list}: list: object<cql_blob_list> notnull variable in
+      |     | {notnull}: object<cql_blob_list> notnull
+      |       | {type_object}: object<cql_blob_list>
+      |         | {name cql_blob_list}
+      | {create_data_type}: blob notnull create_func
+        | {notnull}: blob notnull
+          | {type_blob}: blob
+
+The statement ending at line XXXX
+
+[[builtin]]
+DECLARE PROC cql_cursor_from_blob_stream (C CURSOR, b BLOB, i INT!) USING TRANSACTION;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_proc_stmt}: ok dml_proc
+    | {proc_name_type}
+    | | {name cql_cursor_from_blob_stream}: ok dml_proc
+    | | {int 2}
+    | {proc_params_stmts}
+      | {params}: ok
+        | {param}: C: cursor variable in
+        | | {param_detail}: C: cursor variable in
+        |   | {name C}: C: cursor variable in
+        |   | {type_cursor}: cursor
+        | {params}
+          | {param}: b: blob variable in
+          | | {param_detail}: b: blob variable in
+          |   | {name b}: b: blob variable in
+          |   | {type_blob}: blob
+          | {params}
+            | {param}: i: integer notnull variable in
+              | {param_detail}: i: integer notnull variable in
+                | {name i}: i: integer notnull variable in
+                | {notnull}: integer notnull
+                  | {type_int}: integer
+
+The statement ending at line XXXX
+
+[[builtin]]
+DECLARE FUNC cql_blob_stream_count (b BLOB!) INT!;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: integer notnull
+    | {name cql_blob_stream_count}: integer notnull
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: b: blob notnull variable in
+      |   | {param_detail}: b: blob notnull variable in
+      |     | {name b}: b: blob notnull variable in
+      |     | {notnull}: blob notnull
+      |       | {type_blob}: blob
+      | {notnull}: integer notnull
+        | {type_int}: integer
+
+The statement ending at line XXXX
+
 @SCHEMA_UPGRADE_VERSION (5);
 
   {schema_upgrade_version_stmt}: ok

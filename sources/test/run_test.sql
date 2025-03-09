@@ -7746,6 +7746,129 @@ begin
 
 end);
 
+[[blob_storage]]
+create table my_blob
+(
+    x int,
+    y int,
+    z text
+);
+
+proc control_blob(out control blob!)
+begin
+  -- the hex for the test blob we use
+  control :=
+    (select x'05000000230000002E00000039000000440000004F000000696973000700007A5F3000696973000702027A5F3100696973000704047A5F3200696973000706067A5F3300696973000708087A5F3400');
+end;
+
+TEST!(make_blob_stream,
+begin
+  let builder := cql_blob_list_create();
+  cursor C like my_blob;
+  let i := 0;
+  for i < 5; i := i + 1;
+  begin
+    fetch C() from values () @dummy_seed(i) @dummy_nullables;
+    let b := cql_cursor_to_blob(C);
+    cql_blob_list_add(builder, b);
+  end;
+
+  b := cql_make_blob_stream(builder);
+  let control := control_blob();
+  EXPECT_EQ!(hex(b), hex(control));
+
+  let num := cql_blob_stream_count(b);
+  EXPECT_EQ!(num, 5);
+
+  i := 0;
+  for i < num; i := i + 1;
+  begin
+    cql_cursor_from_blob_stream(C, b, i);
+    EXPECT_EQ!(c.x, i);
+    EXPECT_EQ!(c.y, i);
+    EXPECT_EQ!(c.z, printf("z_%d", i));
+  end;
+end);
+
+TEST!(blob_stream_fixed_blob,
+begin
+  -- We revalidate based on a fixed blob, the format must be invariant across all output types
+  -- and versions.  E.g. the lua build must produce the same blob
+  let b := control_blob();
+  let num := cql_blob_stream_count(b);
+  EXPECT_EQ!(num, 5);
+
+  cursor C like my_blob;
+  let i := 0;
+  for i < num; i := i + 1;
+  begin
+    cql_cursor_from_blob_stream(C, b, i);
+    EXPECT_EQ!(c.x, i);
+    EXPECT_EQ!(c.y, i);
+    EXPECT_EQ!(c.z, printf("z_%d", i));
+  end;
+end);
+
+TEST!(blob_stream_empty,
+begin
+  let b := (select x'00');
+  let hit := false;
+  cursor C like my_blob;
+  try
+    cql_cursor_from_blob_stream(C, b, 0);
+  catch
+    hit := true;
+  end;
+  -- no row
+  EXPECT_EQ!(hit, true);
+  EXPECT_EQ!(c, false);
+end);
+
+TEST!(blob_stream_invalid_offsets__,
+begin
+  let b := (select x'05000000FF00000000000000');
+  let hit := 0;
+  cursor C like my_blob;
+  try
+    -- the offset of the first blob is too big
+    cql_cursor_from_blob_stream(C, b, 0);
+  catch
+    hit := 1;
+  end;
+  EXPECT_EQ!(hit, 1);
+  EXPECT_EQ!(C, false);
+
+  hit := 0;
+  try
+    -- the start offset of the 2nd blob (index 0) is too big
+    cql_cursor_from_blob_stream(C, b, 1);
+  catch
+    hit := 1;
+  end;
+  EXPECT_EQ!(hit, 1);
+  EXPECT_EQ!(C, false);
+
+  hit := 0;
+  try
+    -- the count claims to be 5 but there are not enough offsets
+    cql_cursor_from_blob_stream(C, b, 3);
+  catch
+    hit := 1;
+  end;
+  EXPECT_EQ!(hit, 1);
+  EXPECT_EQ!(C, false);
+
+  -- invalid index
+  hit := false;
+  try
+    cql_cursor_from_blob_stream(C, b, -1);
+  catch
+    hit := true;
+  end;
+  EXPECT_EQ!(hit, true);
+  EXPECT_EQ!(C, false);
+end);
+
 END_SUITE();
 
 -- manually force tracing on by redefining the macros

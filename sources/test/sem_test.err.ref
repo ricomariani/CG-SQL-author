@@ -1206,10 +1206,10 @@ test/sem_test.sql:XXXX:1: error: in return_stmt : CQL0352: use COMMIT RETURN or 
 test/sem_test.sql:XXXX:1: error: in dot : CQL0070: expressions of different kinds can't be mixed: 'real_things' vs. 'integer_things'
 test/sem_test.sql:XXXX:1: error: in dot : CQL0357: enum does not contain 'nope'
 Incompatible declarations found
-test/sem_test.sql:XXXX:1: error: in declare_enum_stmt : DECLARE ENUM long_things INT (
+test/sem_test.sql:XXXX:1: error: in declare_enum_stmt : ENUM long_things INT (
   foo
 )
-test/sem_test.sql:XXXX:1: error: in declare_enum_stmt : DECLARE ENUM long_things LONG (
+test/sem_test.sql:XXXX:1: error: in declare_enum_stmt : ENUM long_things LONG (
   pen,
   paper = -7,
   pencil
@@ -1259,12 +1259,12 @@ The above must be identical.
 test/sem_test.sql:XXXX:1: error: in declare_named_type : CQL0359: conflicting type declaration 'my_type'
 test/sem_test.sql:XXXX:1: error: in str : CQL0360: unknown type 'bogus_type'
 Incompatible declarations found
-test/sem_test.sql:XXXX:1: error: in declare_group_stmt : DECLARE GROUP some_group_with_a_var_of_a_named_type
+test/sem_test.sql:XXXX:1: error: in declare_group_stmt : GROUP some_group_with_a_var_of_a_named_type
 BEGIN
   DECLARE some_group_var1 ;
   DECLARE some_group_var2 TEXT @SENSITIVE;
 END
-test/sem_test.sql:XXXX:1: error: in declare_group_stmt : DECLARE GROUP some_group_with_a_var_of_a_named_type
+test/sem_test.sql:XXXX:1: error: in declare_group_stmt : GROUP some_group_with_a_var_of_a_named_type
 BEGIN
   DECLARE some_group_var1 TEXT @SENSITIVE;
   DECLARE some_group_var2 TEXT @SENSITIVE;
@@ -1281,7 +1281,7 @@ test/sem_test.sql:XXXX:1: error: in create_data_type : CQL0361: return data type
 test/sem_test.sql:XXXX:1: error: in create_data_type : CQL0360: unknown type 'bogus_type'
 Incompatible declarations found
 test/sem_test.sql:XXXX:1: error: in declare_named_type : TYPE my_type TEXT @SENSITIVE
-test/sem_test.sql:XXXX:1: error: in declare_enum_stmt : DECLARE ENUM my_type INT (
+test/sem_test.sql:XXXX:1: error: in declare_enum_stmt : ENUM my_type INT (
   negative_one = -1,
   postive_one = 1
 )
@@ -1460,10 +1460,10 @@ test/sem_test.sql:XXXX:1: error: in div : CQL0177: global constants must be eith
 test/sem_test.sql:XXXX:1: error: in call : CQL0177: global constants must be either constant numeric expressions or string literals 'const_err3 = printf("bar")'
 test/sem_test.sql:XXXX:1: error: in const_value : CQL0354: duplicate constant name 'const_v'
 Incompatible declarations found
-test/sem_test.sql:XXXX:1: error: in declare_const_stmt : DECLARE CONST GROUP foo (
+test/sem_test.sql:XXXX:1: error: in declare_const_stmt : CONST GROUP foo (
   const_v = FALSE
 )
-test/sem_test.sql:XXXX:1: error: in declare_const_stmt : DECLARE CONST GROUP foo (
+test/sem_test.sql:XXXX:1: error: in declare_const_stmt : CONST GROUP foo (
   const_v = FALSE,
   const_w = 3.5,
   const_x = 1L,
@@ -1632,11 +1632,11 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0460: field of a nonnull reference 
 test/sem_test.sql:XXXX:1: error: in dot : CQL0460: field of a nonnull reference type accessed before verifying that the cursor has a row 'c.a'
 test/sem_test.sql:XXXX:1: error: in dot : CQL0460: field of a nonnull reference type accessed before verifying that the cursor has a row 'c0.a'
 Incompatible declarations found
-test/sem_test.sql:XXXX:1: error: in declare_group_stmt : DECLARE GROUP var_group
+test/sem_test.sql:XXXX:1: error: in declare_group_stmt : GROUP var_group
 BEGIN
   DECLARE var_group_var1 INT;
 END
-test/sem_test.sql:XXXX:1: error: in declare_group_stmt : DECLARE GROUP var_group
+test/sem_test.sql:XXXX:1: error: in declare_group_stmt : GROUP var_group
 BEGIN
   DECLARE var_group_var1 INT;
   CURSOR var_group_var2 LIKE foo;

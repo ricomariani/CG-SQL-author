@@ -312,7 +312,7 @@ end;
 
 These forms are no longer supported:
 
-```
+```sql
 -- loading a blob from a cursor
 set a_blob from cursor C;
 

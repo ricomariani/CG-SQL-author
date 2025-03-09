@@ -6618,7 +6618,7 @@ CREATE TABLE booly(
 
 The statement ending at line XXXX
 
-DECLARE ENUM ints INT (
+ENUM ints INT (
   negative_one = -1,
   postive_one = 1
 );
@@ -55603,7 +55603,7 @@ test/sem_test.sql:XXXX:1: error: in return_stmt : CQL0352: use COMMIT RETURN or 
 
 The statement ending at line XXXX
 
-DECLARE ENUM integer_things INT (
+ENUM integer_things INT (
   pen,
   paper = 7,
   pencil
@@ -55779,7 +55779,7 @@ DECLARE PROC shape_result_test () (x INT<integer_things>!);
 
 The statement ending at line XXXX
 
-DECLARE ENUM integer_things INT (
+ENUM integer_things INT (
   pen,
   paper = 7,
   pencil
@@ -55802,7 +55802,7 @@ DECLARE ENUM integer_things INT (
 
 The statement ending at line XXXX
 
-DECLARE ENUM real_things REAL (
+ENUM real_things REAL (
   pen,
   paper = 7,
   pencil
@@ -55896,7 +55896,7 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0357: enum does not contain 'nope'
 
 The statement ending at line XXXX
 
-DECLARE ENUM bool_things BOOL (
+ENUM bool_things BOOL (
   pen,
   paper = 7,
   pencil
@@ -55919,7 +55919,7 @@ DECLARE ENUM bool_things BOOL (
 
 The statement ending at line XXXX
 
-DECLARE ENUM long_things LONG (
+ENUM long_things LONG (
   pen,
   paper = -7,
   pencil
@@ -55943,15 +55943,15 @@ DECLARE ENUM long_things LONG (
 
 The statement ending at line XXXX
 
-DECLARE ENUM long_things INT (
+ENUM long_things INT (
   foo
 );
 
 Incompatible declarations found
-test/sem_test.sql:XXXX:1: error: in declare_enum_stmt : DECLARE ENUM long_things INT (
+test/sem_test.sql:XXXX:1: error: in declare_enum_stmt : ENUM long_things INT (
   foo
 )
-test/sem_test.sql:XXXX:1: error: in declare_enum_stmt : DECLARE ENUM long_things LONG (
+test/sem_test.sql:XXXX:1: error: in declare_enum_stmt : ENUM long_things LONG (
   pen,
   paper = -7,
   pencil
@@ -55969,7 +55969,7 @@ test/sem_test.sql:XXXX:1: error: in declare_enum_stmt : CQL0356: enum definition
 
 The statement ending at line XXXX
 
-DECLARE ENUM duplicated_things INT (
+ENUM duplicated_things INT (
   two,
   two
 );
@@ -55989,7 +55989,7 @@ test/sem_test.sql:XXXX:1: error: in enum_value : CQL0354: duplicate enum member 
 
 The statement ending at line XXXX
 
-DECLARE ENUM invalid_things INT (
+ENUM invalid_things INT (
   boo = 1 / 0
 );
 
@@ -56008,7 +56008,7 @@ test/sem_test.sql:XXXX:1: error: in enum_value : CQL0355: evaluation failed 'boo
 
 The statement ending at line XXXX
 
-DECLARE ENUM sizes REAL (
+ENUM sizes REAL (
   big = 100,
   medium = 1.000000e+02 / 2,
   small = 5.000000e+01 / 2,
@@ -56044,7 +56044,7 @@ DECLARE ENUM sizes REAL (
 
 The statement ending at line XXXX
 
-DECLARE ENUM misc REAL (
+ENUM misc REAL (
   one = 1.000000e+02 - 2.500000e+01,
   two = 7.500000e+01 - 1.250000e+01
 );
@@ -56070,7 +56070,7 @@ The statement ending at line XXXX
 
 PROC enum_in_proc_bogus ()
 BEGIN
-  DECLARE ENUM bogus_inside_proc INT (
+  ENUM bogus_inside_proc INT (
     foo
   );
 END;
@@ -58277,7 +58277,7 @@ DECLARE PROC some_proc_with_an_arg_of_a_named_type (x TEXT @SENSITIVE);
 
 The statement ending at line XXXX
 
-DECLARE GROUP some_group_with_a_var_of_a_named_type
+GROUP some_group_with_a_var_of_a_named_type
 BEGIN
   DECLARE some_group_var1 TEXT @SENSITIVE;
   DECLARE some_group_var2 TEXT @SENSITIVE;
@@ -58299,7 +58299,7 @@ END;
 
 The statement ending at line XXXX
 
-DECLARE GROUP some_group_with_a_var_of_a_named_type
+GROUP some_group_with_a_var_of_a_named_type
 BEGIN
   DECLARE some_group_var1 my_type;
   DECLARE some_group_var2 TEXT @SENSITIVE;
@@ -58320,7 +58320,7 @@ END;
 
 The statement ending at line XXXX
 
-DECLARE GROUP some_group_with_a_var_of_a_named_type
+GROUP some_group_with_a_var_of_a_named_type
 BEGIN
   DECLARE some_group_var1 TEXT @SENSITIVE;
   DECLARE some_group_var2 my_type;
@@ -58341,19 +58341,19 @@ END;
 
 The statement ending at line XXXX
 
-DECLARE GROUP some_group_with_a_var_of_a_named_type
+GROUP some_group_with_a_var_of_a_named_type
 BEGIN
   DECLARE some_group_var1 some_bogus_named_type;
   DECLARE some_group_var2 TEXT @SENSITIVE;
 END;
 
 Incompatible declarations found
-test/sem_test.sql:XXXX:1: error: in declare_group_stmt : DECLARE GROUP some_group_with_a_var_of_a_named_type
+test/sem_test.sql:XXXX:1: error: in declare_group_stmt : GROUP some_group_with_a_var_of_a_named_type
 BEGIN
   DECLARE some_group_var1 ;
   DECLARE some_group_var2 TEXT @SENSITIVE;
 END
-test/sem_test.sql:XXXX:1: error: in declare_group_stmt : DECLARE GROUP some_group_with_a_var_of_a_named_type
+test/sem_test.sql:XXXX:1: error: in declare_group_stmt : GROUP some_group_with_a_var_of_a_named_type
 BEGIN
   DECLARE some_group_var1 TEXT @SENSITIVE;
   DECLARE some_group_var2 TEXT @SENSITIVE;
@@ -58849,14 +58849,14 @@ TYPE my_enum_type INT<ints>!;
 
 The statement ending at line XXXX
 
-DECLARE ENUM my_type INT (
+ENUM my_type INT (
   negative_one = -1,
   postive_one = 1
 );
 
 Incompatible declarations found
 test/sem_test.sql:XXXX:1: error: in declare_named_type : TYPE my_type TEXT @SENSITIVE
-test/sem_test.sql:XXXX:1: error: in declare_enum_stmt : DECLARE ENUM my_type INT (
+test/sem_test.sql:XXXX:1: error: in declare_enum_stmt : ENUM my_type INT (
   negative_one = -1,
   postive_one = 1
 )
@@ -62329,7 +62329,7 @@ END;
 
 The statement ending at line XXXX
 
-DECLARE ENUM three_things INT (
+ENUM three_things INT (
   zip = 0,
   zero = 0,
   one = 1,
@@ -74209,7 +74209,7 @@ LET proc_in_text_in_text_out_text_result := proc_in_text_in_text_out_text("a", "
 
 The statement ending at line XXXX
 
-DECLARE CONST GROUP foo (
+CONST GROUP foo (
   const_v = FALSE,
   const_w = 3.5,
   const_x = 1L,
@@ -74277,7 +74277,7 @@ END;
 
 The statement ending at line XXXX
 
-DECLARE CONST GROUP err1 (
+CONST GROUP err1 (
   const_err1 = NOT 'x'
 );
 
@@ -74293,7 +74293,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 
 The statement ending at line XXXX
 
-DECLARE CONST GROUP err2 (
+CONST GROUP err2 (
   const_err2 = 1 / 0
 );
 
@@ -74310,7 +74310,7 @@ test/sem_test.sql:XXXX:1: error: in div : CQL0177: global constants must be eith
 
 The statement ending at line XXXX
 
-DECLARE CONST GROUP err3 (
+CONST GROUP err3 (
   const_err3 = printf("bar")
 );
 
@@ -74330,7 +74330,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0177: global constants must be eit
 
 The statement ending at line XXXX
 
-DECLARE CONST GROUP err4 (
+CONST GROUP err4 (
   const_v = FALSE
 );
 
@@ -74345,15 +74345,15 @@ test/sem_test.sql:XXXX:1: error: in const_value : CQL0354: duplicate constant na
 
 The statement ending at line XXXX
 
-DECLARE CONST GROUP foo (
+CONST GROUP foo (
   const_v = FALSE
 );
 
 Incompatible declarations found
-test/sem_test.sql:XXXX:1: error: in declare_const_stmt : DECLARE CONST GROUP foo (
+test/sem_test.sql:XXXX:1: error: in declare_const_stmt : CONST GROUP foo (
   const_v = FALSE
 )
-test/sem_test.sql:XXXX:1: error: in declare_const_stmt : DECLARE CONST GROUP foo (
+test/sem_test.sql:XXXX:1: error: in declare_const_stmt : CONST GROUP foo (
   const_v = FALSE,
   const_w = 3.5,
   const_x = 1L,
@@ -74372,7 +74372,7 @@ test/sem_test.sql:XXXX:1: error: in declare_const_stmt : CQL0356: const definiti
 
 The statement ending at line XXXX
 
-DECLARE CONST GROUP foo (
+CONST GROUP foo (
   const_v = FALSE,
   const_w = 3.5,
   const_x = 1L,
@@ -74410,7 +74410,7 @@ The statement ending at line XXXX
 
 PROC try_to_nest_constants ()
 BEGIN
-  DECLARE CONST GROUP err5 (
+  CONST GROUP err5 (
     err5 = 1
   );
 END;
@@ -78514,7 +78514,7 @@ CREATE TABLE backed(
 
 The statement ending at line XXXX
 
-DECLARE ENUM an_enum INT (
+ENUM an_enum INT (
   ONE = 1,
   TWO = 2
 );
@@ -84808,7 +84808,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-DECLARE GROUP var_group
+GROUP var_group
 BEGIN
   DECLARE var_group_var1 INT;
   CURSOR var_group_var2 LIKE foo;
@@ -84853,7 +84853,7 @@ END;
 
 The statement ending at line XXXX
 
-DECLARE GROUP var_group
+GROUP var_group
 BEGIN
   DECLARE var_group_var1 INT;
   CURSOR var_group_var2 LIKE foo;
@@ -84898,17 +84898,17 @@ END;
 
 The statement ending at line XXXX
 
-DECLARE GROUP var_group
+GROUP var_group
 BEGIN
   DECLARE var_group_var1 INT;
 END;
 
 Incompatible declarations found
-test/sem_test.sql:XXXX:1: error: in declare_group_stmt : DECLARE GROUP var_group
+test/sem_test.sql:XXXX:1: error: in declare_group_stmt : GROUP var_group
 BEGIN
   DECLARE var_group_var1 INT;
 END
-test/sem_test.sql:XXXX:1: error: in declare_group_stmt : DECLARE GROUP var_group
+test/sem_test.sql:XXXX:1: error: in declare_group_stmt : GROUP var_group
 BEGIN
   DECLARE var_group_var1 INT;
   CURSOR var_group_var2 LIKE foo;
@@ -84929,7 +84929,7 @@ The statement ending at line XXXX
 
 PROC proc_contains_var_group ()
 BEGIN
-  DECLARE GROUP var_group
+  GROUP var_group
   BEGIN
     DECLARE var_group_var1 INT;
   END;
@@ -84951,7 +84951,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0462: group declared variables must
 
 The statement ending at line XXXX
 
-DECLARE GROUP var_group_error
+GROUP var_group_error
 BEGIN
   DECLARE var_group_var_dup INT;
   DECLARE var_group_var_dup INT;
@@ -100563,7 +100563,7 @@ test/sem_test.sql:XXXX:1: error: in assign : CQL0173: variable not found 'not_vi
 
 The statement ending at line XXXX
 
-DECLARE CONST GROUP some_constants (
+CONST GROUP some_constants (
   bazzle = 5
 );
 
@@ -100576,7 +100576,7 @@ DECLARE CONST GROUP some_constants (
 
 The statement ending at line XXXX
 
-DECLARE ENUM HarmonyTint INT (
+ENUM HarmonyTint INT (
   orange
 );
 
@@ -100590,7 +100590,7 @@ DECLARE ENUM HarmonyTint INT (
 
 The statement ending at line XXXX
 
-DECLARE ENUM GoalTint INT (
+ENUM GoalTint INT (
   boo = 1,
   coo = 5,
   doo = 1 + 5,
@@ -100622,7 +100622,7 @@ DECLARE ENUM GoalTint INT (
 
 The statement ending at line XXXX
 
-DECLARE ENUM ErroneousEnum INT (
+ENUM ErroneousEnum INT (
   stew = HarmonyTint.garbonzo
 );
 

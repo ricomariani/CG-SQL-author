@@ -14739,7 +14739,7 @@ declare enum invalid_things integer (
 );
 
 -- TEST: refer to the enum from within itself
--- + DECLARE ENUM sizes REAL (
+-- + ENUM sizes REAL (
 -- + big = 100,
 -- + medium = 1.000000e+02 / 2
 -- + small = 5.000000e+01 / 2
@@ -14749,7 +14749,7 @@ declare enum invalid_things integer (
 -- + {name small}: real = 2.500000e+01
 -- + {name tiny}: real = 1.250000e+01
 -- - error:
-declare enum sizes real (
+enum sizes real (
   big = 100,
   medium = big/2,
   small = medium/2,
@@ -14757,7 +14757,7 @@ declare enum sizes real (
 );
 
 -- TEST: reference other enums in this enum
--- + DECLARE ENUM misc REAL (
+-- + ENUM misc REAL (
 -- +   one = 1.000000e+02 - 2.500000e+01,
 -- +   two = 7.500000e+01 - 1.250000e+01
 -- + );
@@ -15368,7 +15368,7 @@ end;
 
 -- TEST: redeclaring a group with a bogus named type does not work
 -- + Incompatible declarations found
--- +2 error: % DECLARE GROUP some_group_with_a_var_of_a_named_type
+-- +2 error: % GROUP some_group_with_a_var_of_a_named_type
 -- + The above must be identical.
 -- + error: % variable definitions do not match in group 'some_group_with_a_var_of_a_named_type'
 -- +3 error:
@@ -19852,8 +19852,8 @@ declare const group err4 (
 );
 
 -- TEST: duplicate constant group that's different
--- + error: % DECLARE CONST GROUP foo
--- + error: % DECLARE CONST GROUP foo
+-- + error: % CONST GROUP foo
+-- + error: % CONST GROUP foo
 -- + error: % const definitions do not match 'foo'
 -- + {declare_const_stmt}: err
 -- +3 error:
@@ -20610,7 +20610,7 @@ CREATE TABLE backed (
  global_connection_state long
 );
 
-DECLARE ENUM an_enum INT (
+ENUM an_enum INT (
   ONE = 1,
   TWO = 2
 );
@@ -25951,7 +25951,7 @@ declare enum HarmonyTint integer (
 );
 
 -- TEST: declare an enum that uses constant names outside of itself
--- + DECLARE ENUM GoalTint INT (
+-- + ENUM GoalTint INT (
 -- +   boo = 1,
 -- +   coo = 5,
 -- +   doo = 1 + 5,

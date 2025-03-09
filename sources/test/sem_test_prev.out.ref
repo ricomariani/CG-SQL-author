@@ -3651,7 +3651,7 @@ TYPE long_int LONG;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE CONST GROUP cql_data_types (
+CONST GROUP cql_data_types (
   CQL_DATA_TYPE_NULL = 0,
   CQL_DATA_TYPE_INT32 = 1,
   CQL_DATA_TYPE_INT64 = 2,
@@ -6093,7 +6093,7 @@ CREATE TABLE adding_with_migrators_ok(
 
 The statement ending at line XXXX
 
-DECLARE ENUM foo_enum INT (
+ENUM foo_enum INT (
   a = 1,
   b = 2
 );
@@ -8418,7 +8418,7 @@ CREATE TABLE adding_with_migrators_ok(
 
 The statement ending at line XXXX
 
-DECLARE ENUM foo_enum INT (
+ENUM foo_enum INT (
   a = 10,
   b = 2
 );

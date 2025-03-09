@@ -4636,7 +4636,7 @@ static void gen_declare_enum_stmt(ast_node *ast) {
   Contract(is_ast_declare_enum_stmt(ast));
   EXTRACT_NOTNULL(typed_name, ast->left);
   EXTRACT_NOTNULL(enum_values, ast->right);
-  gen_printf("DECLARE ENUM ");
+  gen_printf("ENUM ");
   gen_typed_name(typed_name);
   gen_printf(" (");
 
@@ -4664,7 +4664,7 @@ static void gen_declare_group_stmt(ast_node *ast) {
   Contract(is_ast_declare_group_stmt(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_NOTNULL(stmt_list, ast->right);
-  gen_printf("DECLARE GROUP %s\nBEGIN\n", name);
+  gen_printf("GROUP %s\nBEGIN\n", name);
 
   while (stmt_list) {
      EXTRACT_ANY_NOTNULL(stmt, stmt_list->left);
@@ -4680,7 +4680,7 @@ static void gen_declare_const_stmt(ast_node *ast) {
   Contract(is_ast_declare_const_stmt(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_NOTNULL(const_values, ast->right);
-  gen_printf("DECLARE CONST GROUP %s (", name);
+  gen_printf("CONST GROUP %s (", name);
 
   while (const_values) {
      EXTRACT_NOTNULL(const_value, const_values->left);

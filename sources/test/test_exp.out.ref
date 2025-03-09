@@ -1120,7 +1120,7 @@ DECLARE INTERFACE decl5 (A INT!, B BOOL);
 
 DECLARE INTERFACE decl6 (A INT!, B BOOL);
 
-DECLARE ENUM things INT (
+ENUM things INT (
   foo,
   bar,
   baz = 3 + 1,
@@ -2093,7 +2093,7 @@ DECLARE SELECT FUNC no_check_select_table_valued_fun NO CHECK (t TEXT);
 
 @ENFORCE_STRICT IS TRUE;
 
-DECLARE CONST GROUP foo (
+CONST GROUP foo (
   x = 'this',
   y = 5 + 3,
   z = 3.0
@@ -2180,7 +2180,7 @@ BEGIN
   FETCH S;
 END;
 
-DECLARE GROUP foo
+GROUP foo
 BEGIN
   DECLARE x INT;
   CURSOR y LIKE foo;

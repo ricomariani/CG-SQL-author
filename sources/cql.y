@@ -2067,6 +2067,9 @@ declare_enum_stmt:
   DECLARE ENUM name data_type_numeric '(' enum_values ')' {
      ast_node *typed_name = new_ast_typed_name($name, $data_type_numeric);
      $$ = new_ast_declare_enum_stmt(typed_name, $enum_values); }
+  | ENUM name data_type_numeric '(' enum_values ')' {
+     ast_node *typed_name = new_ast_typed_name($name, $data_type_numeric);
+     $$ = new_ast_declare_enum_stmt(typed_name, $enum_values); }
   ;
 
 enum_values:
@@ -2082,10 +2085,14 @@ enum_value:
 declare_const_stmt:
   DECLARE CONST GROUP name '(' const_values ')' {
     $$ = new_ast_declare_const_stmt($name, $const_values); }
+  | CONST GROUP name '(' const_values ')' {
+    $$ = new_ast_declare_const_stmt($name, $const_values); }
   ;
 
 declare_group_stmt:
   DECLARE GROUP name BEGIN_ simple_variable_decls END {
+    $$ = new_ast_declare_group_stmt($name, $simple_variable_decls); }
+  | GROUP name BEGIN_ simple_variable_decls END {
     $$ = new_ast_declare_group_stmt($name, $simple_variable_decls); }
   ;
 

@@ -2979,6 +2979,8 @@ cql_blob_ref _Nonnull cql_make_blob_stream(
   cql_bytebuf b;
   cql_bytebuf_open(&b);
   cql_int32 count = cql_blob_list_count(blob_list);
+
+  // note that we're assuming little endian here, this could be generalized
   cql_append_value(&b, count);
 
   cql_int32 offset_next = (1 + count)*sizeof(cql_int32);
@@ -2987,6 +2989,8 @@ cql_blob_ref _Nonnull cql_make_blob_stream(
     cql_blob_ref blob = cql_blob_list_get_at(blob_list, i);
     cql_int32 size = cql_get_blob_size(blob);
     offset_next += size;
+
+    // note that we're assuming little endian here, this could be generalized
     cql_append_value(&b, offset_next);
   }
 
@@ -3391,12 +3395,14 @@ cql_code cql_cursor_from_blob_stream(
   }
 
   // the first 4 bytes are the count of blobs
+  // note that we're assuming little endian here, this could be generalized
   uint32_t count = *(uint32_t *)bytes;
 
   if (index < 0 || index >= count || (index + 1) * 4 >= len) {
     goto error;
   }
 
+  // note that we're assuming little endian here, this could be generalized
   uint32_t end = *(uint32_t *)(bytes + (index + 1) * 4);
   if (end > len) {
     goto error;
@@ -3407,6 +3413,7 @@ cql_code cql_cursor_from_blob_stream(
 
   if (index > 0) {
     // the first blob starts at 0 which is not recorded
+    // note that we're assuming little endian here, this could be generalized
     start = *(uint32_t *)(bytes + index * 4);
   }
 

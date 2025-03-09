@@ -2978,12 +2978,12 @@ cql_blob_ref _Nonnull cql_make_blob_stream(cql_object_ref _Nonnull blob_list)
 
   cql_bytebuf b;
   cql_bytebuf_open(&b);
-  cql_int32 count = cql_blob_list_count(blob_list);
+  cql_uint32 count = (cql_uint32)cql_blob_list_count(blob_list);
 
   // note that we're assuming little endian here, this could be generalized
   cql_append_value(&b, count);
 
-  cql_int32 offset_next = (1 + count)*sizeof(cql_int32);
+  cql_int32 offset_next = (cql_int32)((1 + count)*sizeof(cql_int32));
 
   for (cql_int32 i = 0; i < count; i++) {
     cql_blob_ref blob = cql_blob_list_get_at(blob_list, i);
@@ -2998,7 +2998,7 @@ cql_blob_ref _Nonnull cql_make_blob_stream(cql_object_ref _Nonnull blob_list)
 
   for (cql_int32 i = 0; i < count; i++) {
     cql_blob_ref blob = cql_blob_list_get_at(blob_list, i);
-    cql_int32 size = cql_get_blob_size(blob);
+    cql_uint32 size = (cql_uint32)cql_get_blob_size(blob);
     const uint8_t *bytes = (const uint8_t *)cql_get_blob_bytes(blob);
    
     cql_bytebuf_append(&b, bytes, size);

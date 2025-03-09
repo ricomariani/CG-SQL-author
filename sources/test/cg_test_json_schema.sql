@@ -1244,7 +1244,7 @@ create table with_collate_and_check
 -- + "value" : 2.718000e+00
 -- + "name" : "pi",
 -- + "value" : 3.140000e+00
-declare enum some_reals real (
+enum some_reals real (
   one = 1.0,
   e = 2.718,
   pi = 3.14
@@ -1257,7 +1257,7 @@ declare enum some_reals real (
 -- + "value" : -1000
 -- + "name" : "pos",
 -- + "value" : 17592454483968
-declare enum some_longs long (
+enum some_longs long (
   neg = -1000,
   pos = 0x100010001000
 );

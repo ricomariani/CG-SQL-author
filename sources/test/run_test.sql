@@ -216,12 +216,12 @@ declare function string_from_blob(b blob @sensitive) create text!;
 declare procedure _cql_init_extensions() using transaction;
 
 -- we will use these constants in various tests
-declare enum floats real (
+enum floats real (
   one = 1.0,
   two = 2.0
 );
 
-declare enum longs long (
+enum longs long (
   one = 1,
   big = 0x100000000,
   neg = -1

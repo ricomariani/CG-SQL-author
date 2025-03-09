@@ -988,7 +988,7 @@ Each enumeration value is of the form:
 Example:
 
 ```sql
-declare enum an_enumeration integer ( x = 5, y = 12 );
+enum an_enumeration integer ( x = 5, y = 12 );
 ```
 
 Generates:

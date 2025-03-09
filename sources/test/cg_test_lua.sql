@@ -3573,19 +3573,19 @@ begin
 end;
 
 -- TEST: make an integer enum
-declare enum some_ints integer (
+enum some_ints integer (
   foo = 12,
   bar = 3
 );
 
 -- TEST: make a float enum
-declare enum some_reals real (
+enum some_reals real (
   foo = 12,
   bar = 3
 );
 
 -- TEST: make a long enum
-declare enum some_longs long (
+enum some_longs long (
   foo = 87363537363847643647937,
   bar = 3
 );

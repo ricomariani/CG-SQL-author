@@ -327,7 +327,7 @@ switch x
     set y := 'zomg enormous';
 end;
 
-declare enum item integer (
+enum item integer (
   pen = 0, pencil, brush,
   paper, canvas,
   _count

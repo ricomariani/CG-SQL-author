@@ -3570,7 +3570,7 @@ functions include `iif`, which is rewritten; `abs`; `ifnull`, `nullif`, and
 
 ### CQL0354: duplicate enum member 'enum_name'
 
-While processing a `declare enum` statement the indicated member of the enum
+While processing a `enum` statement the indicated member of the enum
 appeared twice.
 
 This is almost certainly a copy/paste of the same enum member twice.
@@ -3579,7 +3579,7 @@ This is almost certainly a copy/paste of the same enum member twice.
 
 ### CQL0355: evaluation failed 'enum_name'
 
-While processing a `declare enum` statement the indicated member of the enum
+While processing a `enum` statement the indicated member of the enum
 could not be evaluated as a constant expression.
 
 There could be a non-constant in the expression or there could be a
@@ -3589,7 +3589,7 @@ divide-by-zero error.
 
 ### CQL0356: enum definitions do not match 'name'
 
-The two described `declare enum` statements have the same name but they are not
+The two described `enum` statements have the same name but they are not
 identical.
 
 The error output contains the full text of both declarations to compare.
@@ -3604,7 +3604,7 @@ The indicated member is not part of the enumeration.
 
 ### CQL0358: declared enums must be top level 'enum'
 
-A `DECLARE ENUM` statement for the named enum is happening inside of a
+An `ENUM` statement for the named enum is happening inside of a
 procedure.  This is not legal.
 
 To correct this move the declaration outside of the procedure.

@@ -334,7 +334,7 @@ be in the form of enumerations of a fixed type or general-purpose ad hoc constan
 We'll see both in the sections to follow.
 
 ```sql
-declare enum business_type integer (
+enum business_type integer (
   restaurant,
   laundromat,
   corner_store = 11 + 3  /* math added for demo purposes only */
@@ -410,7 +410,7 @@ Note that C does not allow for floating-point enumerations, so in case of
 floating-point values such as:
 
 ```sql
-declare enum floating real (
+enum floating real (
   one = 1.0,
   two = 2.0,
   e = 2.71828,
@@ -556,12 +556,12 @@ declare var foo_id;
 Additionally any enumerated type can be used as a type name.  e.g.
 
 ```sql
-declare enum thing integer (
+enum thing integer (
   thing1,
   thing2
 );
 
-declare thing_type type thing;
+type thing_type thing;
 ```
 
 Enumerations always include "not null" in addition to their base type. Enumerations

@@ -944,7 +944,7 @@ This is true even though the underlying type is the same for both!
 ENUM declarations can have any numeric type as their base type
 
 ```
-declare enum implement integer (
+enum implement integer (
    pencil,       -- values start at 1 unless you use = to choose something
    pen,          -- the next enum gets previous + 1 as its value (2)
    brush = 7     -- with = expression you get the indicated value

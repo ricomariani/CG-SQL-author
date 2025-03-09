@@ -406,7 +406,7 @@ create table adding_with_migrators_ok(
   id3 integer @create(3, create_me)
 ) @create(2);
 
-declare enum foo_enum integer (
+enum foo_enum integer (
  a = 1,
  b = 2
 );

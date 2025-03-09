@@ -63459,7 +63459,7 @@ static void sem_check_all_values_condition(ast_node *expr, bytebuf *case_buffer)
   qsort(enum_vals, enum_count, sizeof(case_val), case_val_comparator);
 
   // dedupe the enumeration cases, there are sometimes aliases
-  // e.g. declare enum integer ( x = 1, another_name_for_x = 1);
+  // e.g. enum integer ( x = 1, another_name_for_x = 1);
 
   uint32_t i = 0;
   uint32_t j = 0;

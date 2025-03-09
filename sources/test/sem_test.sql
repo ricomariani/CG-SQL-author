@@ -1703,7 +1703,7 @@ create table booly (
   flag BOOL
 );
 
-declare enum ints integer (
+enum ints integer (
  negative_one = -1,
  postive_one = 1
 );
@@ -14584,7 +14584,7 @@ end;
 -- + {name pen}: integer = 1
 -- + {name paper}: integer = 7
 -- + {name pencil}: integer = 8
-declare enum integer_things integer (
+enum integer_things integer (
   pen,
   paper = 7,
   pencil
@@ -14642,7 +14642,7 @@ declare proc shape_result_test() (like test_shape);
 -- + {name pen}: integer = 1
 -- + {name paper}: integer = 7
 -- + {name pencil}: integer = 8
-declare enum integer_things integer (
+enum integer_things integer (
   pen,
   paper = 7,
   pencil
@@ -14653,7 +14653,7 @@ declare enum integer_things integer (
 -- + {name pen}: real = 1.000000e+00
 -- + {name paper}: real = 7.000000e+00
 -- + {name pencil}: real = 8.000000e+00
-declare enum real_things real (
+enum real_things real (
   pen,
   paper = 7,
   pencil
@@ -14695,7 +14695,7 @@ select real_things.nope;
 -- + {name pen}: bool = 1
 -- + {name paper}: bool = 1
 -- + {name pencil}: bool = 0
-declare enum bool_things bool (
+enum bool_things bool (
   pen,
   paper = 7,
   pencil
@@ -14706,7 +14706,7 @@ declare enum bool_things bool (
 -- + {name pen}: longint = 1
 -- + {name paper}: longint = -7
 -- + {name pencil}: longint = -6
-declare enum long_things long_int (
+enum long_things long_int (
   pen,
   paper = -7,
   pencil
@@ -14717,7 +14717,7 @@ declare enum long_things long_int (
 -- + {declare_enum_stmt}: err
 -- there will be three reports, 1 each for the two versions and one overall error
 -- +3 error:
-declare enum long_things integer (
+enum long_things integer (
   foo
 );
 
@@ -14725,7 +14725,7 @@ declare enum long_things integer (
 -- + error: % duplicate enum member 'two'
 -- + {declare_enum_stmt}: err
 -- +1 error:
-declare enum duplicated_things integer (
+enum duplicated_things integer (
   two,
   two
 );
@@ -14734,7 +14734,7 @@ declare enum duplicated_things integer (
 -- + error: % evaluation failed 'boo'
 -- + {declare_enum_stmt}: err
 -- +1 error:
-declare enum invalid_things integer (
+enum invalid_things integer (
   boo = 1/0
 );
 
@@ -14764,7 +14764,7 @@ enum sizes real (
 -- + {name one}: real = 7.500000e+01
 -- + {name two}: real = 6.250000e+01
 -- - error:
-declare enum misc real (
+enum misc real (
   one = sizes.big - sizes.small,
   two = one - sizes.tiny
 );
@@ -14776,7 +14776,7 @@ declare enum misc real (
 -- +1 error:
 proc enum_in_proc_bogus()
 begin
-  declare enum bogus_inside_proc integer (foo);
+  enum bogus_inside_proc integer (foo);
 end;
 
 create table SalesInfo(
@@ -15567,7 +15567,7 @@ type my_enum_type ints;
 -- + {declare_enum_stmt}: err
 -- additional errors for the two conflicting lines
 -- +3 error:
-declare enum my_type integer (
+enum my_type integer (
  negative_one = -1,
  postive_one = 1
 );
@@ -16530,7 +16530,7 @@ switch z
 end;
 
 -- we need this for the "all values" test, it's just a sample enum
-declare enum three_things integer (
+enum three_things integer (
   zip = 0, -- an alias
   zero = 0,
   one = 1,
@@ -25946,7 +25946,7 @@ declare const group some_constants (
   bazzle = 5
 );
 
-declare enum HarmonyTint integer (
+enum HarmonyTint integer (
   orange
 );
 
@@ -25959,7 +25959,7 @@ declare enum HarmonyTint integer (
 -- + );
 -- + {declare_enum_stmt}: GoalTint: integer<GoalTint> notnull
 -- - error:
-declare enum GoalTint integer (
+enum GoalTint integer (
   boo = HarmonyTint.orange,
   coo = bazzle,
   doo = HarmonyTint.orange + bazzle,
@@ -25971,6 +25971,6 @@ declare enum GoalTint integer (
 -- + error: % evaluation failed 'stew'
 -- + {declare_enum_stmt}: err
 -- +2 error:
-declare enum ErroneousEnum integer (
+enum ErroneousEnum integer (
   stew = HarmonyTint.garbonzo
 );

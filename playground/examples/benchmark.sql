@@ -2,7 +2,7 @@
 
 DECLARE PROC printf NO CHECK;
 
-declare enum gender_type integer ( male = 0, female = 1, other );
+enum gender_type integer ( male = 0, female = 1, other );
 
 CREATE PROC User(id int, name text, gender gender_type, birth_year int)
 BEGIN

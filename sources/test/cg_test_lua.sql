@@ -4891,11 +4891,11 @@ const group big_constants(
 
 -- TEST: variable group creates declarations only, in Lua that's *nothing*
 -- there is a special marker in the output for testing.
--- + declare group emits no lua
+-- + group emits no lua
 -- - gr_integer =
 -- - gr_cursor =
 -- - gr_blob_cursor =
-declare group var_group
+group var_group
 begin
   declare gr_cursor cursor like select 1 x, "2" y;
   declare gr_integer integer;

@@ -15332,7 +15332,7 @@ declare proc some_proc_with_an_arg_of_a_named_type(x my_type);
 -- + {name some_group_var1}: some_group_var1: text variable sensitive
 -- + {name some_group_var2}: some_group_var2: text variable sensitive
 -- - error:
-declare group some_group_with_a_var_of_a_named_type
+group some_group_with_a_var_of_a_named_type
 begin
   declare some_group_var1 my_type;
   declare some_group_var2 text @sensitive;
@@ -15346,7 +15346,7 @@ end;
 -- - {name some_group_var1}: some_group_var1: text variable sensitive
 -- - {name some_group_var2}: some_group_var2: text variable sensitive
 -- - error:
-declare group some_group_with_a_var_of_a_named_type
+group some_group_with_a_var_of_a_named_type
 begin
   declare some_group_var1 my_type;
   declare some_group_var2 text @sensitive;
@@ -15360,7 +15360,7 @@ end;
 -- - {name some_group_var1}: some_group_var1: text variable sensitive
 -- - {name some_group_var2}: some_group_var2: text variable sensitive
 -- - error:
-declare group some_group_with_a_var_of_a_named_type
+group some_group_with_a_var_of_a_named_type
 begin
   declare some_group_var1 text @sensitive;
   declare some_group_var2 my_type;
@@ -15372,7 +15372,7 @@ end;
 -- + The above must be identical.
 -- + error: % variable definitions do not match in group 'some_group_with_a_var_of_a_named_type'
 -- +3 error:
-declare group some_group_with_a_var_of_a_named_type
+group some_group_with_a_var_of_a_named_type
 begin
   declare some_group_var1 some_bogus_named_type;
   declare some_group_var2 text @sensitive;
@@ -22120,7 +22120,7 @@ end;
 -- + {declare_cursor_like_name}: var_group_var2: foo: { id: integer notnull primary_key autoinc } variable shape_storage value_cursor
 -- + {declare_cursor_like_select}: var_group_var3: _select_: { x: integer notnull, y: text notnull } variable shape_storage value_cursor
 -- - error:
-declare group var_group
+group var_group
 begin
   declare var_group_var1 integer;
   cursor var_group_var2 like foo;
@@ -22130,7 +22130,7 @@ end;
 -- TEST: duplicate var group is ok
 -- + {declare_group_stmt}: ok alias
 -- - error:
-declare group var_group
+group var_group
 begin
   declare var_group_var1 integer;
   cursor var_group_var2 like foo;
@@ -22142,7 +22142,7 @@ end;
 -- + {declare_group_stmt}: err
 -- additional error lines (for the difference report)
 -- +3 error:
-declare group var_group
+group var_group
 begin
   declare var_group_var1 integer;
 end;
@@ -22154,7 +22154,7 @@ end;
 -- +1 error:
 proc proc_contains_var_group()
 begin
-  declare group var_group
+  group var_group
   begin
     declare var_group_var1 integer;
   end;
@@ -22164,7 +22164,7 @@ end;
 -- + error: % duplicate variable name in the same scope 'var_group_var_dup'
 -- + {declare_group_stmt}: err
 -- +1 error:
-declare group var_group_error
+group var_group_error
 begin
   declare var_group_var_dup integer;
   declare var_group_var_dup integer;

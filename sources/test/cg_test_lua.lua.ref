@@ -11594,7 +11594,7 @@ function cql_startup(_db_)
     CURSOR gr_blob_cursor LIKE structured_storage;
   END;
   --]]
-  -- declare group emits no lua
+  -- group emits no lua
 
   -- The statement ending at line XXXX
 

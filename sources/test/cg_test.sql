@@ -4912,7 +4912,7 @@ const group big_constants(
 -- - define
 -- - extern
 -- - error:
-declare group var_group
+group var_group
 begin
   declare gr_cursor cursor like select 1 x, "2" y;
   declare gr_integer int;

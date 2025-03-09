@@ -34,7 +34,7 @@ create table blobshape(
 -- + extern serialized_cursor_row serialized_cursor;
 -- + extern cql_dynamic_cursor serialized_cursor_dyn;
 -- + #endif
-declare group foo
+group foo
 begin
   declare c cursor like select 1 x;
   declare x integer;

@@ -4992,7 +4992,7 @@ static void cg_lua_throw_stmt(ast_node *ast) {
 // just so that we get the test directives.
 static void cg_lua_declare_group_stmt(ast_node *ast) {
   if (options.test) {
-    bprintf(cg_main_output, "-- declare group emits no lua\n");
+    bprintf(cg_main_output, "-- group emits no lua\n");
   }
 }
 

@@ -4960,7 +4960,7 @@ call requires_text_notnull(c.x);
 
 ### CQL0462: group declared variables must be top level 'name'
 
-A `DECLARE GROUP` statement for the named enum is happening inside of a
+A `GROUP` statement for the named enum is happening inside of a
 procedure.  This is not legal.
 
 To correct this, move the declaration outside of the procedure.
@@ -4969,7 +4969,7 @@ To correct this, move the declaration outside of the procedure.
 
 #### CQL0463: variable definitions do not match in group 'name'
 
-The two described `DECLARE GROUP` statements have the same name but they are not
+The two described `GROUP` statements have the same name but they are not
 identical.
 
 The error output contains the full text of both declarations to compare.

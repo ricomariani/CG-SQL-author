@@ -16,4 +16,9 @@ blob corruption results: good: 0, bad: 1000
 err: 	19	db info:	19	UNIQUE constraint failed: backing.the key
 err: 	19	db info:	19	UNIQUE constraint failed: backing.the key
 err: 	19	db info:	19	UNIQUE constraint failed: backing.the key
+err: 	-1	thrown exception
+err: 	-3	thrown exception
+err: 	-4	thrown exception
+err: 	-2	thrown exception
+err: 	-2	thrown exception
 exit code	0

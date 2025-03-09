@@ -2970,7 +2970,6 @@ cql_code cql_cursor_to_blob(
   return SQLITE_OK;
 }
 
-
 // create a single blob for the whole stream of appended blobs
 // with offsets for easy array style access.
 cql_blob_ref _Nonnull cql_make_blob_stream(

@@ -7758,7 +7758,14 @@ declare function cql_make_blob_stream(list cql_blob_list!) create blob!;
 declare proc cql_cursor_from_blob_stream(C cursor, b blob, i int!) using transaction;
 declare function cql_blob_stream_count(b blob!) int!;
 
-TEST!(blob_stream,
+proc control_blob(out control blob!)
+begin
+  -- the hex for the test blob we use
+  control :=
+    (select x'05000000230000002E00000039000000440000004F000000696973000700007A5F3000696973000702027A5F3100696973000704047A5F3200696973000706067A5F3300696973000708087A5F3400');
+end;
+
+TEST!(make_blob_stream,
 begin
   let builder := cql_blob_list_create();
   cursor C like my_blob;
@@ -7771,6 +7778,8 @@ begin
   end;
 
   b := cql_make_blob_stream(builder);
+  let control := control_blob();
+  EXPECT_EQ!(hex(b), hex(control));
 
   let num := cql_blob_stream_count(b);
   EXPECT_EQ!(num, 5);
@@ -7783,23 +7792,13 @@ begin
     EXPECT_EQ!(c.y, i);
     EXPECT_EQ!(c.z, printf("z_%d", i));
   end;
-
-  -- invalid index
-  let hit := false;
-  try
-    cql_cursor_from_blob_stream(C, b, -1);
-  catch
-    hit := true;
-  end;
-  EXPECT_EQ!(hit, true);
-  EXPECT_EQ!(C, false);
 end);
 
 TEST!(blob_stream_fixed_blob,
 begin
   -- We revalidate based on a fixed blob, the format must be invariant across all output types
   -- and versions.  E.g. the lua build must produce the same blob
-  let b := (select x'05000000230000002E00000039000000440000004F000000696973000700007A5F3000696973000702027A5F3100696973000704047A5F3200696973000706067A5F3300696973000708087A5F3400');
+  let b := control_blob();
   let num := cql_blob_stream_count(b);
   EXPECT_EQ!(num, 5);
 
@@ -7861,6 +7860,16 @@ begin
     hit := 1;
   end;
   EXPECT_EQ!(hit, 1);
+  EXPECT_EQ!(C, false);
+
+  -- invalid index
+  hit := false;
+  try
+    cql_cursor_from_blob_stream(C, b, -1);
+  catch
+    hit := true;
+  end;
+  EXPECT_EQ!(hit, true);
   EXPECT_EQ!(C, false);
 end);
 

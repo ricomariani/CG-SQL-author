@@ -19787,7 +19787,7 @@ let proc_in_text_in_text_out_text_result := proc_in_text_in_text_out_text("a", "
 -- + | {name const_z}: text notnull
 -- + | {strlit 'hello, world
 -- - error:
-declare const group foo (
+const group foo (
   const_v = false,
   const_w = 3.5,
   const_x = 1L,
@@ -19823,7 +19823,7 @@ end;
 -- + error: % string operand not allowed in 'NOT'
 -- + {declare_const_stmt}: err
 -- +1 error:
-declare const group err1 (
+const group err1 (
   const_err1 = NOT 'x'
 );
 
@@ -19831,7 +19831,7 @@ declare const group err1 (
 -- + error: % global constants must be either constant numeric expressions or string literals 'const_err2 = 1 / 0'
 -- + {declare_const_stmt}: err
 -- +1 error:
-declare const group err2 (
+const group err2 (
   const_err2 = 1 / 0
 );
 
@@ -19839,7 +19839,7 @@ declare const group err2 (
 -- + error: % global constants must be either constant numeric expressions or string literals 'const_err3 = printf("bar")'
 -- + {declare_const_stmt}: err
 -- +1 error:
-declare const group err3 (
+const group err3 (
   const_err3 = printf("bar")
 );
 
@@ -19847,7 +19847,7 @@ declare const group err3 (
 -- + error: % duplicate constant name 'const_v'
 -- + {declare_const_stmt}: err
 -- +1 error:
-declare const group err4 (
+const group err4 (
   const_v = false
 );
 
@@ -19857,7 +19857,7 @@ declare const group err4 (
 -- + error: % const definitions do not match 'foo'
 -- + {declare_const_stmt}: err
 -- +3 error:
-declare const group foo (
+const group foo (
   const_v = false
 );
 
@@ -19865,7 +19865,7 @@ declare const group foo (
 -- this is ok
 -- + {declare_const_stmt}: ok alias
 -- - error:
-declare const group foo (
+const group foo (
   const_v = false,
   const_w = 3.5,
   const_x = 1L,
@@ -19879,7 +19879,7 @@ declare const group foo (
 -- +1 error:
 proc try_to_nest_constants()
 begin
-  declare const group err5 (
+  const group err5 (
    err5 = 1
   );
 end;
@@ -25942,7 +25942,7 @@ begin
   end;
 end;
 
-declare const group some_constants (
+const group some_constants (
   bazzle = 5
 );
 

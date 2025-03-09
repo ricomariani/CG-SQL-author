@@ -184,7 +184,7 @@ begin
 ';
 end;
 
-declare const group blob_types (
+const group blob_types (
   CQL_BLOB_TYPE_BOOL   = 0,
   CQL_BLOB_TYPE_INT32  = 1,
   CQL_BLOB_TYPE_INT64  = 2,
@@ -5110,7 +5110,7 @@ begin
   EXPECT_EQ!(h1, h2);
 end);
 
-declare const group long_constants (
+const group long_constants (
   long_const_1 = -9223372036854775807L,
   long_const_2 = -9223372036854775808L,
   long_const_3 = -9223372036854775808

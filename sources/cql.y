@@ -3434,7 +3434,7 @@ cql_noexport CSTR cql_builtin_text() {
     "type @ID('long_int') long;"
 
     "[[builtin]]"
-    "declare const group cql_data_types("
+    "const group cql_data_types("
     "  CQL_DATA_TYPE_NULL      = 0,"
     "  CQL_DATA_TYPE_INT32     = 1,"
     "  CQL_DATA_TYPE_INT64     = 2,"

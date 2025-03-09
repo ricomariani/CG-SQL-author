@@ -1379,7 +1379,7 @@ create table with_from_recreate(
 -- +      "kind" : "some_reals",
 -- +      "isNotNull" : 1,
 -- +      "value" : 1.000000e+00
-declare const group const_group (
+const group const_group (
   global_numeric = 1+3,
   global_string = "\tx\ny",
   global_enum_alias = some_reals.one

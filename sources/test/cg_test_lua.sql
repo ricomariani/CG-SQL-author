@@ -4785,7 +4785,7 @@ begin
   select * from (call shared_frag());
 end;
 
-declare const group some_constants (
+const group some_constants (
   const_u = false,
   const_w = 3.5,
   const_x = 1L,
@@ -4881,7 +4881,7 @@ begin
   let big6 := 9223372036854775807;
 end;
 
-declare const group big_constants(
+const group big_constants(
   big_long_constants_max = 9223372036854775807,
   big_long_constants_min = -9223372036854775808,
   big_long_constants_almost_min = -9223372036854775807

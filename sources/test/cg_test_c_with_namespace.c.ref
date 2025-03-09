@@ -102,6 +102,10 @@ extern cql_string_ref _Nonnull cql_format_string(cql_string_ref _Nullable val);
 extern cql_string_ref _Nonnull cql_format_blob(cql_blob_ref _Nullable val);
 extern cql_string_ref _Nonnull cql_format_object(cql_object_ref _Nullable val);
 extern cql_string_ref _Nonnull cql_format_null(cql_nullable_bool ignored);
+extern cql_blob_ref _Nonnull cql_make_blob_stream(cql_object_ref _Nonnull list);
+extern CQL_WARN_UNUSED cql_code cql_cursor_from_blob_stream(sqlite3 *_Nonnull _db_, cql_dynamic_cursor *_Nonnull C, cql_blob_ref _Nullable b, cql_int32 i);
+
+extern cql_int32 cql_blob_stream_count(cql_blob_ref _Nonnull b);
 extern cql_nullable_int32 side_effect1(void);
 extern cql_nullable_int32 side_effect2(void);
 extern CQL_WARN_UNUSED cql_code with_result_set(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
@@ -711,6 +715,13 @@ DECLARE PROC cql_cursor_to_blob (C CURSOR, OUT result BLOB!) USING TRANSACTION;
 /*
 [[builtin]]
 DECLARE PROC cql_cursor_from_blob (C CURSOR, b BLOB) USING TRANSACTION;
+*/
+
+// The statement ending at line XXXX
+
+/*
+[[builtin]]
+DECLARE PROC cql_cursor_from_blob_stream (C CURSOR, b BLOB, i INT!) USING TRANSACTION;
 */
 cql_int32 c_runtime_generation = 0;
 cql_int32 c_runtime_generation_on_else = 0;

@@ -2972,9 +2972,10 @@ cql_code cql_cursor_to_blob(
 
 // create a single blob for the whole stream of appended blobs
 // with offsets for easy array style access.
-cql_blob_ref _Nonnull cql_make_blob_stream(
-  cql_object_ref _Nonnull blob_list)
+cql_blob_ref _Nonnull cql_make_blob_stream(cql_object_ref _Nonnull blob_list)
 {
+  cql_contract(blob_list);
+
   cql_bytebuf b;
   cql_bytebuf_open(&b);
   cql_int32 count = cql_blob_list_count(blob_list);
@@ -2986,6 +2987,8 @@ cql_blob_ref _Nonnull cql_make_blob_stream(
 
   for (cql_int32 i = 0; i < count; i++) {
     cql_blob_ref blob = cql_blob_list_get_at(blob_list, i);
+    cql_contract(blob);
+
     cql_int32 size = cql_get_blob_size(blob);
     offset_next += size;
 
@@ -3074,6 +3077,10 @@ static void cql_clear_references_before_deserialization(
      goto error; \
    }
 
+// This is the inverse of cql_cursor_to_bytebuf, it takes a byte stream and
+// reconstructs a dynamic cursor from it.  The byte stream is assumed to be
+// hostile. It could be corrupted in any kind of way and this code is expected
+// to handle that.
 cql_code cql_cursor_from_bytes(
   cql_dynamic_cursor *_Nonnull dyn_cursor,
   const uint8_t *_Nonnull bytes,
@@ -3087,7 +3094,7 @@ cql_code cql_cursor_from_bytes(
   uint8_t *cursor = dyn_cursor->cursor_data;  // we will be using char offsets
 
   // we have to release the existing cursor before we start
-  // we'll be clobbering the field while we build it.
+  // we'll be clobbering the fields while we build it.
 
   *has_row = false;
   cql_clear_references_before_deserialization(dyn_cursor);
@@ -3363,6 +3370,7 @@ error:
 }
 
 // extract the count from the blob stream
+// CQLABI
 cql_int32 cql_blob_stream_count(cql_blob_ref _Nonnull b)
 {
   cql_contract(b);

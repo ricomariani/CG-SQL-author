@@ -7754,10 +7754,6 @@ create table my_blob
     z text
 );
 
-declare function cql_make_blob_stream(list cql_blob_list!) create blob!;
-declare proc cql_cursor_from_blob_stream(C cursor, b blob, i int!) using transaction;
-declare function cql_blob_stream_count(b blob!) int!;
-
 proc control_blob(out control blob!)
 begin
   -- the hex for the test blob we use

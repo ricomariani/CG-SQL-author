@@ -3770,6 +3770,80 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
+[[builtin]]
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}
+    | {name cql_make_blob_stream}
+    | {func_params_return}
+      | {params}
+      | | {param}
+      |   | {param_detail}
+      |     | {name list}
+      |     | {notnull}
+      |       | {name cql_blob_list}
+      | {create_data_type}
+        | {notnull}
+          | {type_blob}
+
+The statement ending at line XXXX
+
+[[builtin]]
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_proc_stmt}
+    | {proc_name_type}
+    | | {name cql_cursor_from_blob_stream}
+    | | {int 2}
+    | {proc_params_stmts}
+      | {params}
+        | {param}
+        | | {param_detail}
+        |   | {name C}
+        |   | {type_cursor}
+        | {params}
+          | {param}
+          | | {param_detail}
+          |   | {name b}
+          |   | {type_blob}
+          | {params}
+            | {param}
+              | {param_detail}
+                | {name i}
+                | {notnull}
+                  | {type_int}
+
+The statement ending at line XXXX
+
+[[builtin]]
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}
+    | {name cql_blob_stream_count}
+    | {func_params_return}
+      | {params}
+      | | {param}
+      |   | {param_detail}
+      |     | {name b}
+      |     | {notnull}
+      |       | {type_blob}
+      | {notnull}
+        | {type_int}
+
+The statement ending at line XXXX
+
   {expr_macro_def}
   | {macro_name_formals}
   | | {name foo}

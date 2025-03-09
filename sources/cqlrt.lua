@@ -1872,6 +1872,7 @@ function cql_make_blob_stream(blob_list)
   return table.concat(b)
 end
 
+-- the count of blobs is encoded at the head of the blob stream.
 function cql_blob_stream_count(b)
   if #b < 4 then
     return 0
@@ -1910,10 +1911,13 @@ function cql_cursor_from_blob_stream(db, C, C_types, C_fields, b, index)
     _start = string.unpack("<i4", b, 1 + index * 4)
   end
 
+  -- bogus offset order
   if _start > _end then
     return -4
   end
 
+  -- this can still fail during decode but that's par of the course
+  -- we have to assume the blobs are hostile
   local blob = string.sub(b, _start + 1, _end + 1)
   return cql_cursor_from_blob(db, C, C_types, C_fields, blob)
 end

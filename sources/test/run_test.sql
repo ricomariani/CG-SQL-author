@@ -7746,6 +7746,44 @@ begin
 
 end);
 
+[[blob_storage]]
+create table my_blob
+(
+    x int,
+    y int,
+    z text
+);
+
+declare function cql_make_blob_stream(list cql_blob_list!) create blob!;
+declare proc cql_cursor_from_blob_stream(C cursor, b blob, i int!) using transaction;
+declare function cql_blob_stream_count(b blob!) int!;
+
+TEST!(blob_stream,
+begin
+    let builder := cql_blob_list_create();
+    cursor C like my_blob;
+    let i := 0;
+    for i < 5; i := i + 1;
+    begin
+        fetch C() from values () @dummy_seed(i) @dummy_nullables;
+        let b := cql_cursor_to_blob(C);
+        cql_blob_list_add(builder, b);
+    end;
+
+    b := cql_make_blob_stream(builder);
+
+    let num := cql_blob_stream_count(b);
+
+    i := 0;
+    for i < num; i := i + 1;
+    begin
+        cql_cursor_from_blob_stream(C, b, i);
+        EXPECT_EQ!(c.x, i);
+        EXPECT_EQ!(c.y, i);
+        EXPECT_EQ!(c.z, printf("z_%d", i));
+    end;
+end);
+
 END_SUITE();
 
 -- manually force tracing on by redefining the macros

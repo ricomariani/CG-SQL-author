@@ -1221,7 +1221,7 @@ static void cql_multibind_v(
         case CQL_DATA_TYPE_BLOB: {
           cql_blob_ref blob_ref = va_arg(*args, cql_blob_ref);
           const void *bytes = cql_get_blob_bytes(blob_ref);
-          int size = cql_get_blob_size(blob_ref);
+          cql_int32 size = cql_get_blob_size(blob_ref);
           *prc = sqlite3_bind_blob(*pstmt, column, bytes, size, SQLITE_TRANSIENT);
           column++;
           break;
@@ -1284,7 +1284,7 @@ static void cql_multibind_v(
           }
           else {
             const void *bytes = cql_get_blob_bytes(nullable_blob_ref);
-            int size = cql_get_blob_size(nullable_blob_ref);
+            cql_int32 size = cql_get_blob_size(nullable_blob_ref);
             *prc = sqlite3_bind_blob(*pstmt, column, bytes, size, SQLITE_TRANSIENT);
           }
           column++;
@@ -2970,89 +2970,36 @@ cql_code cql_cursor_to_blob(
   return SQLITE_OK;
 }
 
-// This lets us build a blob array out of blobs
-typedef struct cql_blob_array_builder {
-  uint32_t count;
-  cql_bytebuf data;
-  cql_bytebuf offsets;
-} cql_blob_array_builder;
 
-// When we tear down, we simply close the buffers and free the structure
-// the rest is handled by the generic object code.
-static void cql_blob_array_builder_finalize(void *_Nonnull data) {
-  // recover self
-  cql_blob_array_builder *_Nonnull self = data;
-
-  // clean up the buffers
-
-  cql_bytebuf_close(&self->data);
-  cql_bytebuf_close(&self->offsets);
-
-  free(self);
-}
-
-void cql_blob_array_builder_init(cql_blob_array_builder *_Nonnull self) {
-  // initialize main storage
-  self->count = 0;
-  cql_bytebuf_open(&self->data);
-  cql_bytebuf_open(&self->offsets);
-
-  // reserve space for the count in the offsets buffer, we'll change it
-  // when we make the blob.
-  const uint32_t count = 0;
-  cql_append_value(&self->offsets, count);
-
-}
-
-// This makes an empty blob array builder, it holds the bytebuffers
-// that accumulate the data and the offsets.  The offsets indicate the
-// end offset of the ith blob, the first blob starts at 0 which is not recorded.
-// CQLABI
-cql_object_ref _Nonnull cql_blob_array_builder_create(void) {
-
-  cql_blob_array_builder *_Nonnull self = calloc(1, sizeof(cql_blob_array_builder));
-  cql_object_ref obj = _cql_generic_object_create(self, cql_blob_array_builder_finalize);
-  cql_blob_array_builder_init(self);
-
-  return obj;
-}
-
-void cql_blob_array_builder_add_blob(
-  cql_object_ref _Nonnull builder,
-  cql_blob_ref _Nonnull blob)
+// create a single blob for the whole stream of appended blobs
+// with offsets for easy array style access.
+cql_blob_ref _Nonnull cql_make_blob_stream(
+  cql_object_ref _Nonnull blob_list)
 {
-  cql_contract(builder);
-  cql_contract(blob);
+  cql_bytebuf b;
+  cql_bytebuf_open(&b);
+  cql_int32 count = cql_blob_list_count(blob_list);
+  cql_append_value(&b, count);
 
-  cql_blob_array_builder *_Nonnull self = _cql_generic_object_get_data(builder);
+  cql_int32 offset_next = (1 + count)*sizeof(cql_int32);
 
-  const uint8_t *bytes = (const uint8_t *)cql_get_blob_bytes(blob);
-  const uint32_t len = (uint32_t)cql_get_blob_size(blob);
-  cql_bytebuf_append(&self->data, bytes, len);
+  for (cql_int32 i = 0; i < count; i++) {
+    cql_blob_ref blob = cql_blob_list_get_at(blob_list, i);
+    cql_int32 size = cql_get_blob_size(blob);
+    offset_next += size;
+    cql_append_value(&b, offset_next);
+  }
 
-  const uint32_t offset = self->data.used;
-  cql_append_value(&self->offsets, offset);
-  self->count++;
-}
+  for (cql_int32 i = 0; i < count; i++) {
+    cql_blob_ref blob = cql_blob_list_get_at(blob_list, i);
+    cql_int32 size = cql_get_blob_size(blob);
+    const uint8_t *bytes = (const uint8_t *)cql_get_blob_bytes(blob);
+   
+    cql_bytebuf_append(&b, bytes, size);
+  }
 
-cql_blob_ref _Nonnull cql_blob_array_builder_make_blob(
-  cql_object_ref _Nonnull builder)
-{
-  cql_contract(builder);
-  cql_blob_array_builder *_Nonnull self = _cql_generic_object_get_data(builder);
-
-  *(uint32_t *)self->offsets.ptr = self->count; // set the count in the buffer
-  cql_bytebuf_append(&self->offsets, self->data.ptr, self->data.used);
-
-  const uint8_t *bytes = (const uint8_t *)self->offsets.ptr;
-  const cql_int32 len = (cql_int32)self->offsets.used;
-
-  cql_blob_ref result = cql_blob_ref_new(bytes, len);
-
-  // reset the builder
-  cql_bytebuf_close(&self->data);
-  cql_bytebuf_close(&self->offsets);
-  cql_blob_array_builder_init(self);
+  cql_blob_ref result = cql_blob_ref_new((const uint8_t *)b.ptr, (cql_int32)b.used);
+  cql_bytebuf_close(&b);
 
   return result;
 }
@@ -3412,19 +3359,29 @@ error:
   return SQLITE_ERROR;
 }
 
+// extract the count from the blob stream
+cql_int32 cql_blob_stream_count(cql_blob_ref _Nonnull b)
+{
+  cql_contract(b);
+
+  const uint8_t *bytes = (const uint8_t *)cql_get_blob_bytes(b);
+  const uint32_t len = (uint32_t)cql_get_blob_size(b);
+
+  // the first 4 bytes are the count of blobs
+  return len >= 4 ? *(cql_int32 *)bytes : 0;
+}
+
+
 // cql friendly wrapper for blob deserialization from blob array
 // CQLABI
-cql_code cql_cursor_from_blob_array(
+cql_code cql_cursor_from_blob_stream(
   sqlite3 *_Nonnull db,
   cql_dynamic_cursor *_Nonnull dyn_cursor,
-  cql_blob_ref _Nullable b,
+  cql_blob_ref _Nonnull b,
   cql_int32 index)
 {
+  cql_contract(b);
   cql_bool *has_row = dyn_cursor->cursor_has_row;
-
-  if (!b) {
-    goto error;
-  }
 
   const uint8_t *bytes = (const uint8_t *)cql_get_blob_bytes(b);
   const uint32_t len = (uint32_t)cql_get_blob_size(b);
@@ -3445,7 +3402,8 @@ cql_code cql_cursor_from_blob_array(
     goto error;
   }
 
-  uint32_t start = 0;
+  // the first blob starts after the offsets and count
+  uint32_t start = (count + 1) * sizeof(cql_int32);
 
   if (index > 0) {
     // the first blob starts at 0 which is not recorded

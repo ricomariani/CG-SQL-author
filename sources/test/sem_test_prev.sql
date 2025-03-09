@@ -1000,7 +1000,7 @@ create table adding_with_migrators_ok(
   id2 integer
 ) @create(2);
 
-declare enum foo_enum integer (
+enum foo_enum integer (
  a = 10,
  b = 2
 );

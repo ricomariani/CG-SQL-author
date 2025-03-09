@@ -42,7 +42,7 @@ create table news_info(
 
 The `blob_storage attribute` indicates that the table we're about
 to define here is not really going to be a materialized table.  As a
-result, you will not be able to (e.g.) `DROP` the table or `SELECT`
+result, you will not be able to (e.g.) `DROP` the table or `select`
 from it, and there will be no schema upgrade for it should you request
 one. However, the usual schema maintenance rules still apply (See
 [Chapter 10](./10_schema_management.md) and
@@ -82,7 +82,7 @@ create table info(
 ```
 
 From a SQL perspective `news_info` is just a blob, you can only apply
-blob operations to it in the context of a query.  This means `WHERE`
+blob operations to it in the context of a query.  This means `where`
 clauses that partially constraint the blob contents are not generally
 possible (though you could do it if you write suitable UDFs and
 [Backed Tables](#backed-tables) actually generalize this if generic schema support
@@ -96,7 +96,7 @@ You can use the `to_blob` pipeline function on a cursor to get a blob.
 In the below `C:to_blob` becomes simply `cql_cursor_to_blob(C)`.
 
 ```sql
-create proc make_blob(like news_info, out result blob<news_info>)
+proc make_blob(like news_info, out result blob<news_info>)
 begin
   -- declare the cursor
   cursor C like news_info;
@@ -104,7 +104,7 @@ begin
   fetch c from arguments;
   -- set the blob variable
   set result := C:to_blob;
-END;
+end;
 ```
 
 The above declares a cursor, loads it from argument values, and converts it
@@ -114,7 +114,7 @@ The above is assembling a blob from arguments but you could equally make
 the blob from data.
 
 ```sql
-create proc get_news_info(id_ long not null, out result blob<news_info>)
+proc get_news_info(id_ long not null, out result blob<news_info>)
 begin
    -- use our @columns sugar syntax for getting just news_info columns from
    -- a table with potentially lots of stuff (or an error if it's missing columns)
@@ -122,7 +122,7 @@ begin
      select @columns(like news_info) from some_source_of_info where info.id = id_;
    fetch c;
    set result := C:to_blob;
-END;
+end;
 ```
 
 There are *many* cursor fetch forms, including dummy data forms and other
@@ -241,7 +241,7 @@ create table some_table(
 );
 
 -- a procedure that creates a news_info blob from loose args
-create proc make_blob(like news_info, out result blob<news_info>)
+proc make_blob(like news_info, out result blob<news_info>)
 begin
   cursor C like news_info;
   fetch C from arguments;
@@ -249,7 +249,7 @@ begin
 end;
 
 -- a procedure that cracks the blob, creating a cursor
-create proc crack_blob(data blob<news_info>)
+proc crack_blob(data blob<news_info>)
 begin
   cursor C like news_info;
   C:from_blob(data);
@@ -261,7 +261,7 @@ end;
 -- avoid this sort mass OUT awfulness consider that the blob
 -- might have dozens of columns, this quickly gets unweildy.
 -- But, as an illustration, here is explicit extraction.
-create proc crack_blob_to_vars(
+proc crack_blob_to_vars(
   data blob<news_info>,
   out who text,
   out what text,
@@ -288,17 +288,17 @@ interface my_result_shape (
   like news_info
 );
 
-create proc select_and_crack(whatever bool not null)
+proc select_and_crack(whatever bool not null)
 begin
   cursor C for select * from some_table where whatever;
   loop fetch c
   begin
     -- crack the blob in c into a new cursor 'news'
-    declare news cursor like news_info;
+    cursor news like news_info;
     fetch news from blob c.news_blob;
 
     -- assemble the result we want from the parts we have
-    declare result cursor like my_result_shape;
+    cursor result like my_result_shape;
     fetch result from values (from c like my_basic_columns, from news);
 
     -- emit one row, some came from the original data some cracked
@@ -316,12 +316,11 @@ These forms are no longer supported:
 -- loading a blob from a cursor
 set a_blob from cursor C;
 
-  -- new supported forms, these are all the same thing
-  let b := C:to_blob;
-  C:to_blob(b);
-  let b := cql_cursor_to_blob(C);
-  cql_cursor_to_blob(C, b);
-
+-- new supported forms, these are all the same thing
+let b := C:to_blob;
+C:to_blob(b);
+let b := cql_cursor_to_blob(C);
+cql_cursor_to_blob(C, b);
 
 -- loading a cursor from a blob
 fetch C from blob b;
@@ -329,6 +328,80 @@ fetch C from blob b;
   -- new supported forms, these are all the same thing
   C:from_blob(b);
   cql_cursor_from_blob(C, b);
+```
+
+### Blob Streams
+
+Blob storage provides for a general mechanism to create blobs and either store
+them or transmit them as a byte stream. The byte stream thus created is intended
+to be resilient to versioning, provided that the rules for versioning blob
+storage are followed, and also to be cross platform.
+
+Normal blob storage provides for general storage for a a single row of arbitrary
+data.  Something you might call a struct.  There is no provision for arrays of
+things, or mixed storage of various types, however, the storage allows for blobs
+nested within blobs. This gives us exactly the flexibility we need to generalize.
+
+A blob stream is an addressble array of nested blobs stored in one blob.  The
+header of the blob indicates the number of embeded blobs and their offsets.
+
+To make a blob stream, use the following steps:
+
+* create a `cql_blob_list` using `cql_blob_list_create`
+* create or select blobs that were made using `cql_cursor_to_blob`
+* put the blobs into a `cql_blob_list` using `cql_blob_list_add`
+* convert the list of blobs into blob stream (a single blob) using `cql_make_blob_stream`
+
+Most of the above actions have pipeline shortcuts (see above), e.g. `a_blob :=C:to_blob`,
+`list:add(a_blob)`.
+
+To use the blob stream:
+
+* get the count of embedded blobs with `cql_blob_stream_count`
+* load one of the blobs into a cursor with `cql_cursor_from_blob_stream`
+
+```sql
+[[blob_storage]]
+create table my_storage(
+  x int,
+  y text
+  -- etc.
+);
+
+
+  let a_blob := select T.my_stream from some_table;
+
+  let num := cql_blob_stream_count(a_blob);
+  let i := 0;
+  for i < num; i += 1;
+  begin
+    cursor C like my_storage;
+    cql_cursor_from_blob_stream(C, a_blob, i);
+    -- use C.x, C.y etc.
+  end;
+```
+
+Like all blobs, blob streams are immutable.
+
+>NOTE: there is no helper currently for extracting the blob from the storage
+>without decoding it. This seems like an obvious extension that would be
+>useful to split and recreate a blob stream without decoding everything.
+
+This blob shape can contain a nested blob which might be an array.
+Note that it is not required that all the blobs in the stream be the
+same shape.  However, if they are not, then some other rules will have
+to inform the decoding code as to what the types are.  The decoding
+logic for blob storage is designed to handle blobs that are "hostile"
+so attempting to decode the wrong type might generate errors but it
+is designed not to crash.
+
+```sql
+[[blob_storage]]
+create table bigger_storage(
+  id int,
+  -- other columns as needed
+  my_stream blob;
+);
 ```
 
 ### Backed Tables
@@ -437,16 +510,16 @@ have made.  The shared fragment looks like this:
 
 ```sql
 [[shared_fragment]]
-CREATE PROC _backed ()
-BEGIN
-  SELECT
+proc _backed ()
+begin
+  select
    rowid,
-   cql_blob_get(T.k, backed.id) AS id,
-   cql_blob_get(T.v, backed.name) AS name,
-   cql_blob_get(T.v, backed.bias) AS bias
-    FROM backing AS T
-    WHERE cql_blob_get_type(backed, T.k) = 2105552408096159860L;
-END;
+   cql_blob_get(T.k, backed.id) as id,
+   cql_blob_get(T.v, backed.name) as name,
+   cql_blob_get(T.v, backed.bias) as bias
+    from backing as T
+    where cql_blob_get_type(backed, T.k) = 2105552408096159860L;
+end;
 ```
 
 Two things to note:
@@ -473,15 +546,15 @@ As a second example, the expanded code for `backed2` is shown below:
 
 ```sql
 [[shared_fragment]]
-CREATE PROC _backed2 ()
-BEGIN
-  SELECT
+proc _backed2 ()
+begin
+  select
     rowid,
-    cql_blob_get(T.k, backed2.id) AS id,
-    cql_blob_get(T.v, backed2.name) AS name
-    FROM backing AS T
-    WHERE cql_blob_get_type(backed, T.k) = -1844763880292276559L;
-END;
+    cql_blob_get(T.k, backed2.id) as id,
+    cql_blob_get(T.v, backed2.name) as name
+    from backing as T
+    where cql_blob_get_type(backed, T.k) = -1844763880292276559L;
+end;
 ```
 As you can see it's very similar -- the type hash is different and of
 course it has different columns but the pattern should be clear.
@@ -567,33 +640,33 @@ cursor C for select * from backed;
 The compiler can make this select statement work with a simple transform:
 
 ```sql
- cursor C FOR WITH
-  backed (*) AS (CALL _backed())
-  SELECT *
-    FROM backed;
+ cursor C FOR with
+  backed (*) as (CALL _backed())
+  select *
+    from backed;
 ```
 
 Now remember `_backed` was the automatically created shared fragment.
 Basically, when the compiler encounters a select statement that mentions
 any backed table it adds a call to the corresponding shared fragment in
-the `WITH` clause, creating a `WITH`` clause if needed.  This effectively
+the `with` clause, creating a `with` clause if needed.  This effectively
 creates necessary "view".  And, because we're using the shared fragment
 form, all users of this fragment will share the text of the view.
 So there is no schema and the "view" text of the backed table appears
 only once in the binary.  More precisely we get this after full expansion:
 
 ```sql
-WITH
-backed (rowid, id, name, bias) AS (
-  SELECT
+with
+backed (rowid, id, name, bias) as (
+  select
     rowid,
     bgetkey(T.k, 0),                      -- 0 is offset of backed.id in key blob
     bgetval(T.v, -6639502068221071091L),  -- note hash of backed.name
     bgetval(T.v, -3826945563932272602L)   -- note hash of backed.bias
-  FROM backing AS T
-  WHERE bgetkey_type(T.k) = 2105552408096159860L)
-SELECT rowid, id, name, bias
-  FROM backed;
+  from backing as T
+  where bgetkey_type(T.k) = 2105552408096159860L)
+select rowid, id, name, bias
+  from backed;
 ```
 
 Now with this in mind we can see that it would be very beneficial to
@@ -603,13 +676,13 @@ also add this:
 [[deterministic]]
 declare select function bgetkey_type(b blob) long;
 
-CREATE INDEX backing_index ON backing(bgetkey_type(k));
+create index backing_index on backing(bgetkey_type(k));
 ```
 
 or more cleanly:
 
 ```sql
-CREATE INDEX backing_index ON backing(cql_blob_get_type(backing, k));
+create index backing_index on backing(cql_blob_get_type(backing, k));
 ```
 
 Either of these results in a computed index on the row type stored in
@@ -628,13 +701,13 @@ select T1.* from backed T1 join backed2 T2 where T1.id = T2.id;
 This becomes:
 
 ```
-WITH
-  backed (rowid, id, name, bias) AS (CALL _backed()),
-  backed2 (rowid, id, name) AS (CALL _backed2())
-  SELECT T1.*
-    FROM backed AS T1
-    INNER JOIN backed2 AS T2
-    WHERE T1.id = T2.id;
+with
+  backed (rowid, id, name, bias) as (call _backed()),
+  backed2 (rowid, id, name) as (call _backed2())
+  select T1.*
+    from backed as T1
+    inner join backed2 as T2
+    where T1.id = T2.id;
 ```
 Now even though two different backed tables will be using the backing
 store, the original select "just works" once the CTE's have been added.
@@ -654,16 +727,16 @@ various values into key and value blobs.  The compiler uses a simple
 transform to do this job as well.  The above becomes:
 
 ```sql
- WITH
-  _vals (id, name, bias) AS (
+ with
+  _vals (id, name, bias) as (
     VALUES(1, "n001", 1.2), (2, "n002", 3.7)
   )
-  INSERT INTO backing(k, v) SELECT
+  INSERT INTO backing(k, v) select
     cql_blob_create(backed, V.id, backed.id),
     cql_blob_create(backed,
       V.name, backed.name,
       V.bias, backed.bias)
-    FROM _vals AS V;
+    from _vals as V;
 ```
 
 Again the compiler is opting for a transform that is universal and here
@@ -691,16 +764,16 @@ field types.  The default configuration that corresponds to this:
 The final SQL for an insert operation looks like this:
 
 ```sql
-WITH
-_vals (id, name, bias) AS (
+with
+_vals (id, name, bias) as (
   VALUES(1, "n001", 1.2), (2, "n002", 3.7)
 )
-INSERT INTO backing(k, v) SELECT
+INSERT INTO backing(k, v) select
   bcreatekey(2105552408096159860, V.id, 1), -- type 1 is integer, offset implied
   bcreateval(2105552408096159860,
     -6639502068221071091, V.name, 4,  -- hash as before, type 4 is text,
     -3826945563932272602, V.bias, 3)  -- hash as before, type 3 is real,
-  FROM _vals AS V
+  from _vals as V
 ```
 
 As can be seen, both blobs have the same overall type code
@@ -722,18 +795,18 @@ simple transform above works just as before.  We add the needed `backed`
 CTE for the select and create `_vals` like before.
 
 ```sql
-WITH
-  backed (*) AS (CALL _backed()),
-  _vals (id, name, bias) AS (
-    SELECT id + 10, name || 'x', bias + 3
-    FROM backed
-    WHERE id < 3
+with
+  backed (*) as (CALL _backed()),
+  _vals (id, name, bias) as (
+    select id + 10, name || 'x', bias + 3
+    from backed
+    where id < 3
   )
   INSERT INTO backing(k, v)
-   SELECT
+   select
      cql_blob_create(backed, V.id, backed.id),
      cql_blob_create(backed, V.name, backed.name, V.bias, backed.bias)
-   FROM _vals AS V;
+   from _vals as V;
 ```
 
 Looking closely at the above we see a few things:
@@ -756,22 +829,22 @@ this case is simple the where condition could be very complicated.
 Fortunately there is such a simple transform:
 
 ```sql
-WITH
-  backed (*) AS (CALL _backed())
-DELETE FROM backing
-  WHERE rowid IN (
-    SELECT rowid
-    FROM backed
-    WHERE id = 7
+with
+  backed (*) as (CALL _backed())
+DELETE from backing
+  where rowid IN (
+    select rowid
+    from backed
+    where id = 7
   );
 ```
 
 All the compiler has to do here is:
 
 * add the usual `_backed` CTE
-* move the original `WHERE` clause into a subordinate `SELECT` that gives us the rowids to delete.
+* move the original `where` clause into a subordinate `select` that gives us the rowids to delete.
 
-With the backed table in scope, any `WHERE` clause works. If other backed
+With the backed table in scope, any `where` clause works. If other backed
 tables are mentioned, the compiler simply adds those as usual.
 
 Below is a more complicated delete, it's a bit crazy but illustrative:
@@ -785,22 +858,22 @@ So this is using rows in `backed2` to decide which rows to deleted in
 `backed`.  The same simple transform works directly.
 
 ```sql
-WITH
-  backed2 (*) AS (CALL _backed2()),
-  backed (*) AS (CALL _backed())
-DELETE FROM backing
-  WHERE rowid IN (
-    SELECT rowid
-    FROM backed
-    WHERE id IN (
-      SELECT id FROM backed2 WHERE name LIKE '%x%'
+with
+  backed2 (*) as (CALL _backed2()),
+  backed (*) as (CALL _backed())
+DELETE from backing
+  where rowid IN (
+    select rowid
+    from backed
+    where id IN (
+      select id from backed2 where name LIKE '%x%'
     )
   );
 ```
 
 What happened:
 
-* the `WHERE` clause went directly into the body of the rowid select
+* the `where` clause went directly into the body of the rowid select
 * `backed` was used as before but now we also need `backed2`
 
 The delete pattern does not need any additional cql helpers beyond what we've
@@ -838,19 +911,19 @@ Fundamentally we need to do these things:
 Applying all of the above, we get a transform like the following:
 
 ```sql
-WITH
-  backed (*) AS (CALL _backed())
+with
+  backed (*) as (CALL _backed())
 UPDATE backing
   SET v = cql_blob_update(v, 'foo', backed.name)
-    WHERE rowid IN (SELECT rowid
-    FROM backed
-    WHERE id = 5);
+    where rowid IN (select rowid
+    from backed
+    where id = 5);
 ```
 
 Looking into the details:
 
 * we needed the normal CTE so that we can use `backed` rows
-* the `WHERE` clause moved into a `WHERE rowid` sub-select just like in the
+* the `where` clause moved into a `where rowid` sub-select just like in the
   `DELETE` case
 * they compiler changed the SET targets to be `k` and `v` very much like the
   `INSERT` case, except we used an update helper that takes the current blob and
@@ -874,15 +947,15 @@ definitely not silly.  To make these cases work the reference to `name` inside
 of the set expression has to change. We end up with something like this:
 
 ```sql
-WITH
-  backed (*) AS (CALL _backed())
+with
+  backed (*) as (CALL _backed())
 UPDATE backing
   SET v = cql_blob_update(v,
     cql_blob_get(v, backed.name) || 'y',
     backed.name)
-  WHERE rowid IN (SELECT rowid
-    FROM backed
-    WHERE bias < 5);
+  where rowid IN (select rowid
+    from backed
+    where bias < 5);
 ```
 
 Importantly the reference to `name` in the set expression was changed to
@@ -890,10 +963,10 @@ Importantly the reference to `name` in the set expression was changed to
 which it is appended with 'y' as usual.
 
 The rest of the pattern is just as it was after the first attempt above, in fact
-literally everything else is unchanged.  It's easy to see that the `WHERE`
+literally everything else is unchanged.  It's easy to see that the `where`
 clause could be arbitrarily complex with no difficulty.
 
->NOTE: Since the `UPDATE` statement has no `FROM` clause only the fields in the
+>NOTE: Since the `UPDATE` statement has no `from` clause only the fields in the
 >target table might need to be rewritten, so in this case `name`, `id`, and
 >`bias` were possible but only `name` was mentioned.
 
@@ -901,15 +974,15 @@ After the `cql_blob_get` and `cql_blob_update` are expanded the result looks
 like this:
 
 ```sql
-WITH
-backed (rowid, id, name, bias) AS (
-  SELECT
+with
+backed (rowid, id, name, bias) as (
+  select
     rowid,
     bgetkey(T.k, 0),
     bgetval(T.v, -6639502068221071091L),
     bgetval(T.v, -3826945563932272602L)
-  FROM backing AS T
-  WHERE bgetkey_type(T.k) = 2105552408096159860L
+  from backing as T
+  where bgetkey_type(T.k) = 2105552408096159860L
 )
 UPDATE backing
 SET v =
@@ -917,9 +990,9 @@ SET v =
     v,
     -6639502068221071091L, bgetval(v, -6639502068221071091L) || 'y', 4
   )
-  WHERE rowid IN (SELECT rowid
-  FROM backed
-  WHERE bias < 5);
+  where rowid IN (select rowid
+  from backed
+  where bias < 5);
 ```
 
 >NOTE: The blob update function for the value blob requires the original
@@ -958,22 +1031,22 @@ update sample
 And the final output will be:
 
 ```sql
-WITH
-sample (rowid, name, state, prev_state) AS (
-  SELECT
+with
+sample (rowid, name, state, prev_state) as (
+  select
     rowid,
     bgetkey(T.k, 0),
     bgetkey(T.k, 1),
     bgetval(T.v, -4464241499905806900)
-  FROM backing AS T
-  WHERE bgetkey_type(T.k) = 3397981749045545394
+  from backing as T
+  where bgetkey_type(T.k) = 3397981749045545394
 )
 SET
   k = bupdatekey(k, bgetkey(k, 1) + 1, 1),
   v = bupdateval(v, -4464241499905806900, bgetkey(k, 1),  2)
-  WHERE rowid IN (SELECT rowid
-  FROM sample
-  WHERE name = 'foo');
+  where rowid IN (select rowid
+  from sample
+  where name = 'foo');
 ```
 
 As expected the `bupdatekey` call gets the column offset (1) but not

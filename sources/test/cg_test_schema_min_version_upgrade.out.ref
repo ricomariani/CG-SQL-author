@@ -9,18 +9,18 @@
 DECLARE facet_data TYPE OBJECT<facet_data>;
 DECLARE test_facets facet_data;
 DECLARE FUNCTION cql_facets_create() create facet_data not null;
-DECLARE FUNCTION cql_facet_add(facets facet_data, facet TEXT NOT NULL, crc LONG NOT NULL) BOOL NOT NULL;
-DECLARE FUNCTION cql_facet_upsert(facets facet_data, facet TEXT NOT NULL, crc LONG NOT NULL) BOOL NOT NULL;
-DECLARE FUNCTION cql_facet_find(facets facet_data, facet TEXT NOT NULL) LONG NOT NULL;
+DECLARE FUNCTION cql_facet_add(facets facet_data, facet TEXT!, crc LONG NOT NULL) BOOL NOT NULL;
+DECLARE FUNCTION cql_facet_upsert(facets facet_data, facet TEXT!, crc LONG NOT NULL) BOOL NOT NULL;
+DECLARE FUNCTION cql_facet_find(facets facet_data, facet TEXT!) LONG NOT NULL;
 
 -- declare recreate update helpers-- 
-DECLARE PROCEDURE cql_rebuild_recreate_group (tables TEXT NOT NULL, indices TEXT NOT NULL, deletes TEXT NOT NULL, out result BOOL NOT NULL) USING TRANSACTION;
+DECLARE PROCEDURE cql_rebuild_recreate_group (tables TEXT!, indices TEXT!, deletes TEXT!, out result BOOL NOT NULL) USING TRANSACTION;
 -- declare sqlite_master -- 
 CREATE TABLE sqlite_master (
-  type TEXT NOT NULL,
-  name TEXT NOT NULL,
-  tbl_name TEXT NOT NULL,
-  rootpage INTEGER NOT NULL,
+  type TEXT!,
+  name TEXT!,
+  tbl_name TEXT!,
+  rootpage INT!,
   sql TEXT
 );
 
@@ -429,17 +429,17 @@ END;
 
 -- facets table declaration --
 CREATE TABLE IF NOT EXISTS test_cql_schema_facets(
-  facet TEXT NOT NULL PRIMARY KEY,
-  version LONG INTEGER NOT NULL
+  facet TEXT! PRIMARY KEY,
+  version LONG!
 );
 
 -- rebuilt_tables table declaration --
 CREATE TEMP TABLE IF NOT EXISTS cql_schema_rebuilt_tables(
-  rebuild_facet TEXT NOT NULL 
+  rebuild_facet TEXT!
 );
 
 -- helper proc for getting the schema version of a facet
-PROC test_cql_get_facet_version(_facet TEXT NOT NULL, out _version LONG INTEGER NOT NULL)
+PROC test_cql_get_facet_version(_facet TEXT!, out _version LONG!)
 BEGIN
   TRY
     SET _version := (SELECT version FROM test_cql_schema_facets WHERE facet = _facet LIMIT 1 IF NOTHING THEN -1);
@@ -450,8 +450,8 @@ END;
 
 -- saved facets table declaration --
 CREATE TEMP TABLE test_cql_schema_facets_saved(
-  facet TEXT NOT NULL PRIMARY KEY,
-  version LONG INTEGER NOT NULL
+  facet TEXT! PRIMARY KEY,
+  version LONG!
 );
 
 -- holds all the table definitions out of sqlite_master
@@ -476,8 +476,8 @@ END;
 PROC test_create_cql_schema_facets_if_needed()
 BEGIN
   CREATE TABLE IF NOT EXISTS test_cql_schema_facets(
-    facet TEXT NOT NULL PRIMARY KEY,
-    version LONG INTEGER NOT NULL
+    facet TEXT! PRIMARY KEY,
+    version LONG!
   );
 END;
 
@@ -486,7 +486,7 @@ END;
 PROC test_create_cql_schema_rebuilt_tables_if_needed()
 BEGIN
   CREATE TEMP TABLE IF NOT EXISTS cql_schema_rebuilt_tables(
-    rebuild_facet TEXT NOT NULL
+    rebuild_facet TEXT!
   );
 END;
 
@@ -496,15 +496,15 @@ PROC test_save_cql_schema_facets()
 BEGIN
   DROP TABLE IF EXISTS test_cql_schema_facets_saved;
   CREATE TEMP TABLE test_cql_schema_facets_saved(
-    facet TEXT NOT NULL PRIMARY KEY,
-    version LONG INTEGER NOT NULL
+    facet TEXT! PRIMARY KEY,
+    version LONG!
   );
   INSERT INTO test_cql_schema_facets_saved
     SELECT * FROM test_cql_schema_facets;
 END;
 
 -- helper proc for setting the schema version of a facet
-PROC test_cql_set_facet_version(_facet TEXT NOT NULL, _version LONG INTEGER NOT NULL)
+PROC test_cql_set_facet_version(_facet TEXT!, _version LONG!)
 BEGIN
   INSERT OR REPLACE INTO test_cql_schema_facets (facet, version) VALUES(_facet, _version);
   LET added := cql_facet_upsert(test_facets, _facet, _version);
@@ -512,21 +512,21 @@ END;
 
 -- helper proc for getting the schema version CRC for a version index
 [[private]]
-PROC test_cql_get_version_crc(_v INTEGER NOT NULL, out _crc LONG INTEGER NOT NULL)
+PROC test_cql_get_version_crc(_v INT!, out _crc LONG!)
 BEGIN
   SET _crc := cql_facet_find(test_facets, printf('cql_schema_v%d', _v));
 END;
 
 -- helper proc for setting the schema version CRC for a version index
-PROC test_cql_set_version_crc(_v INTEGER NOT NULL, _crc LONG INTEGER NOT NULL)
+PROC test_cql_set_version_crc(_v INT!, _crc LONG!)
 BEGIN
   INSERT OR REPLACE INTO test_cql_schema_facets (facet, version) VALUES('cql_schema_v'||_v, _crc);
 END;
 
 -- helper proc to reset any triggers that are on the old plan --
-DECLARE PROCEDURE cql_exec_internal(sql TEXT NOT NULL) USING TRANSACTION;
+DECLARE PROC cql_exec_internal(sql TEXT!) USING TRANSACTION;
 
-PROC test_drop_table_helper(table_name TEXT NOT NULL)
+PROC test_drop_table_helper(table_name TEXT!)
 BEGIN
   CALL cql_exec_internal(printf('DROP TABLE IF EXISTS [%s]', table_name));
   -- remove the table from our dictionary marking it dropped
@@ -535,13 +535,13 @@ BEGIN
 END;
 
 -- helper proc to insert facet into cql_rebuilt_tables --
-PROC test_rebuilt_tables_insert_helper(facet TEXT NOT NULL)
+PROC test_rebuilt_tables_insert_helper(facet TEXT!)
 BEGIN
   INSERT INTO cql_schema_rebuilt_tables VALUES(facet);
 END;
 
 -- helper proc to delete facet from cql_schema_facets_saved table --
-PROC test_cql_schema_delete_saved_facet(delete_facet TEXT NOT NULL)
+PROC test_cql_schema_delete_saved_facet(delete_facet TEXT!)
 BEGIN
   DELETE FROM test_cql_schema_facets_saved WHERE facet = delete_facet;
 END;
@@ -934,7 +934,7 @@ END;
 
 DECLARE FUNCTION _cql_contains_column_def(needle TEXT, haystack TEXT) BOOL NOT NULL;
 [[private]]
-PROC test_column_exists(table_ TEXT NOT NULL, col_info TEXT NOT NULL, OUT exists_ BOOL NOT NULL)
+PROC test_column_exists(table_ TEXT!, col_info TEXT!, OUT exists_ BOOL NOT NULL)
 BEGIN
   IF test_tables_dict_ IS NULL THROW;
   LET table_str := cql_string_dictionary_find(test_tables_dict_, table_);
@@ -942,7 +942,7 @@ BEGIN
 END;
 
 [[private]]
-PROC test_table_exists(table_ TEXT NOT NULL, OUT exists_ BOOL NOT NULL)
+PROC test_table_exists(table_ TEXT!, OUT exists_ BOOL NOT NULL)
 BEGIN
   IF test_tables_dict_ IS NULL THROW;
   LET result := cql_string_dictionary_find(test_tables_dict_, table_);
@@ -963,7 +963,7 @@ PROC test_perform_upgrade_steps(include_virtual_tables BOOL NOT NULL)
 BEGIN
   LET facet := cql_compressed('cql_schema_crc_no_virtual');
   IF cql_facet_find(test_facets, facet) <> -500442630697164374 THEN
-    DECLARE schema_version LONG INTEGER NOT NULL;
+    DECLARE schema_version LONG!;
     -- dropping all views --
     CALL test_cql_drop_all_views();
 
@@ -1141,7 +1141,7 @@ END;
 [[private]]
 PROC test_helper(include_virtual_tables BOOL NOT NULL)
 BEGIN
-  DECLARE schema_crc LONG INTEGER NOT NULL;
+  DECLARE schema_crc LONG!;
 
   -- create schema facets information table --
   CALL test_create_cql_schema_facets_if_needed();

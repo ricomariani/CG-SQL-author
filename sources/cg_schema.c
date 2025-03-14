@@ -226,13 +226,13 @@ static bool_t cg_schema_force_if_not_exists(ast_node *ast, void *context, charbu
 static void cg_schema_helpers(charbuf *decls) {
   bprintf(decls, "-- facets table declaration --\n");
   bprintf(decls, "CREATE TABLE IF NOT EXISTS %s_cql_schema_facets(\n", global_proc_name);
-  bprintf(decls, "  facet TEXT NOT NULL PRIMARY KEY,\n");
-  bprintf(decls, "  version LONG INTEGER NOT NULL\n");
+  bprintf(decls, "  facet TEXT! PRIMARY KEY,\n");
+  bprintf(decls, "  version LONG!\n");
   bprintf(decls, ");\n\n");
 
   bprintf(decls, "-- rebuilt_tables table declaration --\n");
   bprintf(decls, "CREATE TEMP TABLE IF NOT EXISTS cql_schema_rebuilt_tables(\n");
-  bprintf(decls, "  rebuild_facet TEXT NOT NULL \n");
+  bprintf(decls, "  rebuild_facet TEXT!\n");
   bprintf(decls, ");\n\n");
 
   // Note this procedure has to handle the case where the table doesn't exist yet for retro-version validation
@@ -241,7 +241,7 @@ static void cg_schema_helpers(charbuf *decls) {
 
   bprintf(decls, "-- helper proc for getting the schema version of a facet\n");
 
-  bprintf(decls, "PROC %s_cql_get_facet_version(_facet TEXT NOT NULL, out _version LONG INTEGER NOT NULL)\n", global_proc_name);
+  bprintf(decls, "PROC %s_cql_get_facet_version(_facet TEXT!, out _version LONG!)\n", global_proc_name);
   bprintf(decls, "BEGIN\n");
   bprintf(decls, "  TRY\n");
   bprintf(decls, "    SET _version := (SELECT version FROM %s_cql_schema_facets WHERE facet = _facet LIMIT 1 IF NOTHING THEN -1);\n", global_proc_name);
@@ -252,8 +252,8 @@ static void cg_schema_helpers(charbuf *decls) {
 
   bprintf(decls, "-- saved facets table declaration --\n");
   bprintf(decls, "CREATE TEMP TABLE %s_cql_schema_facets_saved(\n", global_proc_name);
-  bprintf(decls, "  facet TEXT NOT NULL PRIMARY KEY,\n");
-  bprintf(decls, "  version LONG INTEGER NOT NULL\n");
+  bprintf(decls, "  facet TEXT! PRIMARY KEY,\n");
+  bprintf(decls, "  version LONG!\n");
   bprintf(decls, ");\n\n");
 
   bprintf(decls, "-- holds all the table definitions out of sqlite_master\n");
@@ -278,8 +278,8 @@ static void cg_schema_helpers(charbuf *decls) {
   bprintf(decls, "PROC %s_create_cql_schema_facets_if_needed()\n", global_proc_name);
   bprintf(decls, "BEGIN\n");
   bprintf(decls, "  CREATE TABLE IF NOT EXISTS %s_cql_schema_facets(\n", global_proc_name);
-  bprintf(decls, "    facet TEXT NOT NULL PRIMARY KEY,\n");
-  bprintf(decls, "    version LONG INTEGER NOT NULL\n");
+  bprintf(decls, "    facet TEXT! PRIMARY KEY,\n");
+  bprintf(decls, "    version LONG!\n");
   bprintf(decls, "  );\n");
   bprintf(decls, "END;\n\n");
 
@@ -288,7 +288,7 @@ static void cg_schema_helpers(charbuf *decls) {
   bprintf(decls, "PROC %s_create_cql_schema_rebuilt_tables_if_needed()\n", global_proc_name);
   bprintf(decls, "BEGIN\n");
   bprintf(decls, "  CREATE TEMP TABLE IF NOT EXISTS cql_schema_rebuilt_tables(\n");
-  bprintf(decls, "    rebuild_facet TEXT NOT NULL\n");
+  bprintf(decls, "    rebuild_facet TEXT!\n");
   bprintf(decls, "  );\n");
   bprintf(decls, "END;\n\n");
 
@@ -298,15 +298,15 @@ static void cg_schema_helpers(charbuf *decls) {
   bprintf(decls, "BEGIN\n");
   bprintf(decls, "  DROP TABLE IF EXISTS %s_cql_schema_facets_saved;\n", global_proc_name);
   bprintf(decls, "  CREATE TEMP TABLE %s_cql_schema_facets_saved(\n", global_proc_name);
-  bprintf(decls, "    facet TEXT NOT NULL PRIMARY KEY,\n");
-  bprintf(decls, "    version LONG INTEGER NOT NULL\n");
+  bprintf(decls, "    facet TEXT! PRIMARY KEY,\n");
+  bprintf(decls, "    version LONG!\n");
   bprintf(decls, "  );\n");
   bprintf(decls, "  INSERT INTO %s_cql_schema_facets_saved\n",  global_proc_name);
   bprintf(decls, "    SELECT * FROM %s_cql_schema_facets;\n", global_proc_name);
   bprintf(decls, "END;\n\n");
 
   bprintf(decls, "-- helper proc for setting the schema version of a facet\n");
-  bprintf(decls, "PROC %s_cql_set_facet_version(_facet TEXT NOT NULL, _version LONG INTEGER NOT NULL)\n", global_proc_name);
+  bprintf(decls, "PROC %s_cql_set_facet_version(_facet TEXT!, _version LONG!)\n", global_proc_name);
   bprintf(decls, "BEGIN\n");
   bprintf(decls, "  INSERT OR REPLACE INTO %s_cql_schema_facets (facet, version) VALUES(_facet, _version);\n", global_proc_name);
   bprintf(decls, "  LET added := cql_facet_upsert(%s_facets, _facet, _version);\n", global_proc_name);
@@ -314,21 +314,21 @@ static void cg_schema_helpers(charbuf *decls) {
 
   bprintf(decls, "-- helper proc for getting the schema version CRC for a version index\n");
   bprintf(decls, "[[private]]\n");
-  bprintf(decls, "PROC %s_cql_get_version_crc(_v INTEGER NOT NULL, out _crc LONG INTEGER NOT NULL)\n", global_proc_name);
+  bprintf(decls, "PROC %s_cql_get_version_crc(_v INT!, out _crc LONG!)\n", global_proc_name);
   bprintf(decls, "BEGIN\n");
   bprintf(decls, "  SET _crc := cql_facet_find(%s_facets, printf('cql_schema_v%%d', _v));\n", global_proc_name);
   bprintf(decls, "END;\n\n");
 
   bprintf(decls, "-- helper proc for setting the schema version CRC for a version index\n");
-  bprintf(decls, "PROC %s_cql_set_version_crc(_v INTEGER NOT NULL, _crc LONG INTEGER NOT NULL)\n", global_proc_name);
+  bprintf(decls, "PROC %s_cql_set_version_crc(_v INT!, _crc LONG!)\n", global_proc_name);
   bprintf(decls, "BEGIN\n");
   bprintf(decls, "  INSERT OR REPLACE INTO %s_cql_schema_facets (facet, version) VALUES('cql_schema_v'||_v, _crc);\n", global_proc_name);
   bprintf(decls, "END;\n\n");
 
   bprintf(decls, "-- helper proc to reset any triggers that are on the old plan --\n");
-  bprintf(decls, "DECLARE PROCEDURE cql_exec_internal(sql TEXT NOT NULL) USING TRANSACTION;\n\n");
+  bprintf(decls, "DECLARE PROC cql_exec_internal(sql TEXT!) USING TRANSACTION;\n\n");
 
-  bprintf(decls, "PROC %s_drop_table_helper(table_name TEXT NOT NULL)\n", global_proc_name);
+  bprintf(decls, "PROC %s_drop_table_helper(table_name TEXT!)\n", global_proc_name);
   bprintf(decls, "BEGIN\n");
   bprintf(decls, "  CALL cql_exec_internal(printf('DROP TABLE IF EXISTS [%%s]', table_name));\n");
   bprintf(decls, "  -- remove the table from our dictionary marking it dropped\n");
@@ -337,13 +337,13 @@ static void cg_schema_helpers(charbuf *decls) {
   bprintf(decls, "END;\n\n");
 
   bprintf(decls, "-- helper proc to insert facet into cql_rebuilt_tables --\n");
-  bprintf(decls, "PROC %s_rebuilt_tables_insert_helper(facet TEXT NOT NULL)\n", global_proc_name);
+  bprintf(decls, "PROC %s_rebuilt_tables_insert_helper(facet TEXT!)\n", global_proc_name);
   bprintf(decls, "BEGIN\n");
   bprintf(decls, "  INSERT INTO cql_schema_rebuilt_tables VALUES(facet);\n");
   bprintf(decls, "END;\n\n");
 
   bprintf(decls, "-- helper proc to delete facet from cql_schema_facets_saved table --\n");
-  bprintf(decls, "PROC %s_cql_schema_delete_saved_facet(delete_facet TEXT NOT NULL)\n", global_proc_name);
+  bprintf(decls, "PROC %s_cql_schema_delete_saved_facet(delete_facet TEXT!)\n", global_proc_name);
   bprintf(decls, "BEGIN\n");
   bprintf(decls, "  DELETE FROM %s_cql_schema_facets_saved WHERE facet = delete_facet;\n", global_proc_name);
   bprintf(decls, "END;\n\n");
@@ -353,10 +353,10 @@ static void cg_schema_helpers(charbuf *decls) {
 static void cg_schema_emit_sqlite_master(charbuf *decls) {
   bprintf(decls, "-- declare sqlite_master -- \n");
   bprintf(decls, "CREATE TABLE sqlite_master (\n");
-  bprintf(decls, "  type TEXT NOT NULL,\n");          // The type of database object such as table, index, trigger or view.
-  bprintf(decls, "  name TEXT NOT NULL,\n");          // The name of the database object.
-  bprintf(decls, "  tbl_name TEXT NOT NULL,\n");      // The table name that the database object is associated with.
-  bprintf(decls, "  rootpage INTEGER NOT NULL,\n");   // Root page.
+  bprintf(decls, "  type TEXT!,\n");          // The type of database object such as table, index, trigger or view.
+  bprintf(decls, "  name TEXT!,\n");          // The name of the database object.
+  bprintf(decls, "  tbl_name TEXT!,\n");      // The table name that the database object is associated with.
+  bprintf(decls, "  rootpage INT!,\n");   // Root page.
   bprintf(decls, "  sql TEXT\n);\n\n");      // the DDL to CREATE this object
 }
 
@@ -365,14 +365,14 @@ static void cg_schema_emit_facet_functions(charbuf *decls) {
   bprintf(decls, "DECLARE facet_data TYPE OBJECT<facet_data>;\n");
   bprintf(decls, "DECLARE %s_facets facet_data;\n", global_proc_name);
   bprintf(decls, "DECLARE FUNCTION cql_facets_create() create facet_data not null;\n");
-  bprintf(decls, "DECLARE FUNCTION cql_facet_add(facets facet_data, facet TEXT NOT NULL, crc LONG NOT NULL) BOOL NOT NULL;\n");
-  bprintf(decls, "DECLARE FUNCTION cql_facet_upsert(facets facet_data, facet TEXT NOT NULL, crc LONG NOT NULL) BOOL NOT NULL;\n");
-  bprintf(decls, "DECLARE FUNCTION cql_facet_find(facets facet_data, facet TEXT NOT NULL) LONG NOT NULL;\n\n");
+  bprintf(decls, "DECLARE FUNCTION cql_facet_add(facets facet_data, facet TEXT!, crc LONG NOT NULL) BOOL NOT NULL;\n");
+  bprintf(decls, "DECLARE FUNCTION cql_facet_upsert(facets facet_data, facet TEXT!, crc LONG NOT NULL) BOOL NOT NULL;\n");
+  bprintf(decls, "DECLARE FUNCTION cql_facet_find(facets facet_data, facet TEXT!) LONG NOT NULL;\n\n");
 }
 
 static void cg_schema_emit_recreate_update_functions(charbuf *decls) {
   bprintf(decls, "-- declare recreate update helpers-- \n");
-  bprintf(decls, "DECLARE PROCEDURE cql_rebuild_recreate_group (tables TEXT NOT NULL, indices TEXT NOT NULL, deletes TEXT NOT NULL, out result BOOL NOT NULL) USING TRANSACTION;\n");
+  bprintf(decls, "DECLARE PROCEDURE cql_rebuild_recreate_group (tables TEXT!, indices TEXT!, deletes TEXT!, out result BOOL NOT NULL) USING TRANSACTION;\n");
 }
 
 // Emit all tables versioned as they before modifications, just the original items
@@ -1791,7 +1791,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   bprintf(&preamble, "DECLARE FUNCTION _cql_contains_column_def(needle TEXT, haystack TEXT) BOOL NOT NULL;\n");
 
   bprintf(&preamble, "[[private]]\n");
-  bprintf(&preamble, "PROC %s_column_exists(table_ TEXT NOT NULL, col_info TEXT NOT NULL, OUT exists_ BOOL NOT NULL)\n", global_proc_name);
+  bprintf(&preamble, "PROC %s_column_exists(table_ TEXT!, col_info TEXT!, OUT exists_ BOOL NOT NULL)\n", global_proc_name);
   bprintf(&preamble, "BEGIN\n");
   bprintf(&preamble, "  IF %s_tables_dict_ IS NULL THROW;\n", global_proc_name);
   bprintf(&preamble, "  LET table_str := cql_string_dictionary_find(%s_tables_dict_, table_);\n", global_proc_name);
@@ -1799,7 +1799,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   bprintf(&preamble, "END;\n\n");
 
   bprintf(&preamble, "[[private]]\n");
-  bprintf(&preamble, "PROC %s_table_exists(table_ TEXT NOT NULL, OUT exists_ BOOL NOT NULL)\n", global_proc_name);
+  bprintf(&preamble, "PROC %s_table_exists(table_ TEXT!, OUT exists_ BOOL NOT NULL)\n", global_proc_name);
   bprintf(&preamble, "BEGIN\n");
   bprintf(&preamble, "  IF %s_tables_dict_ IS NULL THROW;\n", global_proc_name);
   bprintf(&preamble, "  LET result := cql_string_dictionary_find(%s_tables_dict_, table_);\n", global_proc_name);
@@ -1813,7 +1813,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   bprintf(&main, "BEGIN\n");
   bprintf(&main, "  LET facet := cql_compressed('cql_schema_crc_no_virtual');\n");
   bprintf(&main, "  IF cql_facet_find(%s_facets, facet) <> %lld THEN\n", global_proc_name, (llint_t) schema_crc_no_virtual);
-  bprintf(&main, "    DECLARE schema_version LONG INTEGER NOT NULL;\n");
+  bprintf(&main, "    DECLARE schema_version LONG!;\n");
 
   if (view_drops) {
     bprintf(&main, "    -- dropping all views --\n");
@@ -2185,7 +2185,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   bprintf(&main, "[[private]]\n");
   bprintf(&main, "PROC %s_helper(include_virtual_tables BOOL NOT NULL)\n", global_proc_name);
   bprintf(&main, "BEGIN\n");
-  bprintf(&main, "  DECLARE schema_crc LONG INTEGER NOT NULL;\n");
+  bprintf(&main, "  DECLARE schema_crc LONG!;\n");
   bprintf(&main, "\n");
   bprintf(&main, "  -- create schema facets information table --\n");
   bprintf(&main, "  CALL %s_create_cql_schema_facets_if_needed();\n\n", global_proc_name);

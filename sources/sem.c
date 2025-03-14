@@ -20129,12 +20129,18 @@ static bool_t sem_has_extra_clauses(ast_node *select_from_etc, ast_node *select_
   return has_extras;
 }
 
-// Here were going to verify that the procedure in question implements the indicated interface
-// in order to do so it has to have the correct columns with compatible types in any order
-// which is to say the procedures result type has to be a superset of the interface columns
+// Here were going to verify that the procedure in question implements the
+// indicated interface in order to do so it has to have the correct columns with
+// compatible types in any order which is to say the procedures result type has
+// to be a superset of the interface columns
 //   * note there can be more than one interface
-//   * we will eventually allow columns that are compatable with trivial conversion (e.g. not null -> nullable)
-static void sem_validate_one_interface(CSTR _Nonnull interface_name, ast_node *_Nonnull attr, void *_Nullable context) {
+//   * we will eventually allow columns that are compatable with trivial
+//     conversion (e.g. not null -> nullable)
+static void sem_validate_one_interface(
+  CSTR _Nonnull interface_name,
+  ast_node *_Nonnull attr,
+  void *_Nullable context)
+{
   ast_node *create_proc_stmt = (ast_node *)context;
 
   Contract(is_ast_create_proc_stmt(create_proc_stmt));
@@ -20153,7 +20159,8 @@ static void sem_validate_one_interface(CSTR _Nonnull interface_name, ast_node *_
   sem_struct *interface_sptr = interface->sem->sptr;
   sem_struct *proc_sptr = create_proc_stmt->sem->sptr;
 
-  // stash the indices of all the column names in the procedure so that we can find them quickly
+  // stash the indices of all the column names in the procedure so that we can
+  // find them quickly
   for (uint32_t i = 0; i < proc_sptr->count; i++) {
     symtab_add(names, proc_sptr->names[i], (void *)(uint64_t)i);
   }

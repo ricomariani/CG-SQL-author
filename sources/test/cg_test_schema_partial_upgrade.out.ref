@@ -8,13 +8,13 @@
 -- declare facet helpers-- 
 DECLARE facet_data TYPE OBJECT<facet_data>;
 DECLARE test_facets facet_data;
-DECLARE FUNCTION cql_facets_create() create facet_data not null;
-DECLARE FUNCTION cql_facet_add(facets facet_data, facet TEXT!, crc LONG NOT NULL) BOOL NOT NULL;
-DECLARE FUNCTION cql_facet_upsert(facets facet_data, facet TEXT!, crc LONG NOT NULL) BOOL NOT NULL;
-DECLARE FUNCTION cql_facet_find(facets facet_data, facet TEXT!) LONG NOT NULL;
+DECLARE FUNCTION cql_facets_create() create facet_data!;
+DECLARE FUNCTION cql_facet_add(facets facet_data, facet TEXT!, crc LONG!) BOOL!;
+DECLARE FUNCTION cql_facet_upsert(facets facet_data, facet TEXT!, crc LONG!) BOOL!;
+DECLARE FUNCTION cql_facet_find(facets facet_data, facet TEXT!) LONG!;
 
 -- declare recreate update helpers-- 
-DECLARE PROCEDURE cql_rebuild_recreate_group (tables TEXT!, indices TEXT!, deletes TEXT!, out result BOOL NOT NULL) USING TRANSACTION;
+DECLARE PROCEDURE cql_rebuild_recreate_group (tables TEXT!, indices TEXT!, deletes TEXT!, out result BOOL!) USING TRANSACTION;
 -- declare sqlite_master -- 
 CREATE TABLE sqlite_master (
   type TEXT!,
@@ -404,9 +404,9 @@ BEGIN
   END;
 END;
 
-DECLARE FUNCTION _cql_contains_column_def(needle TEXT, haystack TEXT) BOOL NOT NULL;
+DECLARE FUNCTION _cql_contains_column_def(needle TEXT, haystack TEXT) BOOL!;
 [[private]]
-PROC test_column_exists(table_ TEXT!, col_info TEXT!, OUT exists_ BOOL NOT NULL)
+PROC test_column_exists(table_ TEXT!, col_info TEXT!, OUT exists_ BOOL!)
 BEGIN
   IF test_tables_dict_ IS NULL THROW;
   LET table_str := cql_string_dictionary_find(test_tables_dict_, table_);
@@ -414,7 +414,7 @@ BEGIN
 END;
 
 [[private]]
-PROC test_table_exists(table_ TEXT!, OUT exists_ BOOL NOT NULL)
+PROC test_table_exists(table_ TEXT!, OUT exists_ BOOL!)
 BEGIN
   IF test_tables_dict_ IS NULL THROW;
   LET result := cql_string_dictionary_find(test_tables_dict_, table_);
@@ -423,7 +423,7 @@ END;
 
 
 [[private]]
-PROC test_perform_upgrade_steps(include_virtual_tables BOOL NOT NULL)
+PROC test_perform_upgrade_steps(include_virtual_tables BOOL!)
 BEGIN
   LET facet := cql_compressed('cql_schema_crc_no_virtual');
   IF cql_facet_find(test_facets, facet) <> -6837004499939777099 THEN
@@ -498,8 +498,8 @@ BEGIN
 END;
 
 PROC test_get_current_and_proposed_versions(
-    out current long not null,
-    out proposed long not null
+    out current long!,
+    out proposed long!
     )
 BEGIN
     SET current := test_cql_get_facet_version('cql_schema_version');
@@ -521,7 +521,7 @@ BEGIN
 END;
 
 [[private]]
-PROC test_perform_needed_upgrades(include_virtual_tables BOOL NOT NULL)
+PROC test_perform_needed_upgrades(include_virtual_tables BOOL!)
 BEGIN
   -- check for downgrade --
   IF cql_facet_find(test_facets, 'cql_schema_version') > 7 THEN
@@ -537,7 +537,7 @@ BEGIN
 END;
 
 [[private]]
-PROC test_helper(include_virtual_tables BOOL NOT NULL)
+PROC test_helper(include_virtual_tables BOOL!)
 BEGIN
   DECLARE schema_crc LONG!;
 

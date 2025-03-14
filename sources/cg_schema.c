@@ -364,15 +364,15 @@ static void cg_schema_emit_facet_functions(charbuf *decls) {
   bprintf(decls, "-- declare facet helpers-- \n");
   bprintf(decls, "DECLARE facet_data TYPE OBJECT<facet_data>;\n");
   bprintf(decls, "DECLARE %s_facets facet_data;\n", global_proc_name);
-  bprintf(decls, "DECLARE FUNCTION cql_facets_create() create facet_data not null;\n");
-  bprintf(decls, "DECLARE FUNCTION cql_facet_add(facets facet_data, facet TEXT!, crc LONG NOT NULL) BOOL NOT NULL;\n");
-  bprintf(decls, "DECLARE FUNCTION cql_facet_upsert(facets facet_data, facet TEXT!, crc LONG NOT NULL) BOOL NOT NULL;\n");
-  bprintf(decls, "DECLARE FUNCTION cql_facet_find(facets facet_data, facet TEXT!) LONG NOT NULL;\n\n");
+  bprintf(decls, "DECLARE FUNCTION cql_facets_create() create facet_data!;\n");
+  bprintf(decls, "DECLARE FUNCTION cql_facet_add(facets facet_data, facet TEXT!, crc LONG!) BOOL!;\n");
+  bprintf(decls, "DECLARE FUNCTION cql_facet_upsert(facets facet_data, facet TEXT!, crc LONG!) BOOL!;\n");
+  bprintf(decls, "DECLARE FUNCTION cql_facet_find(facets facet_data, facet TEXT!) LONG!;\n\n");
 }
 
 static void cg_schema_emit_recreate_update_functions(charbuf *decls) {
   bprintf(decls, "-- declare recreate update helpers-- \n");
-  bprintf(decls, "DECLARE PROCEDURE cql_rebuild_recreate_group (tables TEXT!, indices TEXT!, deletes TEXT!, out result BOOL NOT NULL) USING TRANSACTION;\n");
+  bprintf(decls, "DECLARE PROCEDURE cql_rebuild_recreate_group (tables TEXT!, indices TEXT!, deletes TEXT!, out result BOOL!) USING TRANSACTION;\n");
 }
 
 // Emit all tables versioned as they before modifications, just the original items
@@ -1788,10 +1788,10 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   bprintf(&preamble, "  END;\n");
   bprintf(&preamble, "END;\n\n");
 
-  bprintf(&preamble, "DECLARE FUNCTION _cql_contains_column_def(needle TEXT, haystack TEXT) BOOL NOT NULL;\n");
+  bprintf(&preamble, "DECLARE FUNCTION _cql_contains_column_def(needle TEXT, haystack TEXT) BOOL!;\n");
 
   bprintf(&preamble, "[[private]]\n");
-  bprintf(&preamble, "PROC %s_column_exists(table_ TEXT!, col_info TEXT!, OUT exists_ BOOL NOT NULL)\n", global_proc_name);
+  bprintf(&preamble, "PROC %s_column_exists(table_ TEXT!, col_info TEXT!, OUT exists_ BOOL!)\n", global_proc_name);
   bprintf(&preamble, "BEGIN\n");
   bprintf(&preamble, "  IF %s_tables_dict_ IS NULL THROW;\n", global_proc_name);
   bprintf(&preamble, "  LET table_str := cql_string_dictionary_find(%s_tables_dict_, table_);\n", global_proc_name);
@@ -1799,7 +1799,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   bprintf(&preamble, "END;\n\n");
 
   bprintf(&preamble, "[[private]]\n");
-  bprintf(&preamble, "PROC %s_table_exists(table_ TEXT!, OUT exists_ BOOL NOT NULL)\n", global_proc_name);
+  bprintf(&preamble, "PROC %s_table_exists(table_ TEXT!, OUT exists_ BOOL!)\n", global_proc_name);
   bprintf(&preamble, "BEGIN\n");
   bprintf(&preamble, "  IF %s_tables_dict_ IS NULL THROW;\n", global_proc_name);
   bprintf(&preamble, "  LET result := cql_string_dictionary_find(%s_tables_dict_, table_);\n", global_proc_name);
@@ -1809,7 +1809,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   // the main upgrade worker
 
   bprintf(&main, "\n[[private]]\n");
-  bprintf(&main, "PROC %s_perform_upgrade_steps(include_virtual_tables BOOL NOT NULL)\n", global_proc_name);
+  bprintf(&main, "PROC %s_perform_upgrade_steps(include_virtual_tables BOOL!)\n", global_proc_name);
   bprintf(&main, "BEGIN\n");
   bprintf(&main, "  LET facet := cql_compressed('cql_schema_crc_no_virtual');\n");
   bprintf(&main, "  IF cql_facet_find(%s_facets, facet) <> %lld THEN\n", global_proc_name, (llint_t) schema_crc_no_virtual);
@@ -2145,8 +2145,8 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   bprintf(&main, "END;\n\n");
 
   bprintf(&main, "PROC %s_get_current_and_proposed_versions(\n", global_proc_name);
-  bprintf(&main, "    out current long not null,\n");
-  bprintf(&main, "    out proposed long not null\n");
+  bprintf(&main, "    out current long!,\n");
+  bprintf(&main, "    out proposed long!\n");
   bprintf(&main, "    )\n");
   bprintf(&main, "BEGIN\n");
   bprintf(&main, "    SET current := %s_cql_get_facet_version('cql_schema_version');\n", global_proc_name);
@@ -2168,7 +2168,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   bprintf(&main, "END;\n\n");
 
   bprintf(&main, "[[private]]\n");
-  bprintf(&main, "PROC %s_perform_needed_upgrades(include_virtual_tables BOOL NOT NULL)\n", global_proc_name);
+  bprintf(&main, "PROC %s_perform_needed_upgrades(include_virtual_tables BOOL!)\n", global_proc_name);
   bprintf(&main, "BEGIN\n");
   bprintf(&main, "  -- check for downgrade --\n");
   bprintf(&main, "  IF cql_facet_find(%s_facets, 'cql_schema_version') > %d THEN\n", global_proc_name, max_schema_version);
@@ -2183,7 +2183,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   bprintf(&main, "END;\n\n");
 
   bprintf(&main, "[[private]]\n");
-  bprintf(&main, "PROC %s_helper(include_virtual_tables BOOL NOT NULL)\n", global_proc_name);
+  bprintf(&main, "PROC %s_helper(include_virtual_tables BOOL!)\n", global_proc_name);
   bprintf(&main, "BEGIN\n");
   bprintf(&main, "  DECLARE schema_crc LONG!;\n");
   bprintf(&main, "\n");

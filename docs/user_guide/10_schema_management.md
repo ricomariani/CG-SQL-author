@@ -157,9 +157,9 @@ Here's an example of a schema directly from the test cases:
 ```
 -- crazy amount of versioning here
 create table foo(
-  id integer not null,
-  rate long integer @delete(5),
-  rate_2 long integer @delete(4, DeleteRate2Proc),
+  id int!,
+  rate long @delete(5),
+  rate_2 long @delete(4, DeleteRate2Proc),
   id2 integer default 12345 @create(4, CreateId2Proc),
   name text @create(5),
   name_2 text @create(6)
@@ -168,7 +168,7 @@ create table foo(
 -- much simpler table, lots of stuff added in v2.
 -- note v1 is the first new version and v0 is base version
 create table table2(
-  id integer not null,
+  id int!,
   name1 text @create(2, CreateName1Proc),
   name2 text @create(2, CreateName2Proc),
   name3 text @create(2), -- no proc
@@ -176,7 +176,7 @@ create table table2(
 );
 
 create table added_table(
-  id integer not null,
+  id int!,
   name1 text,
   name2 text @create(4)
 ) @create(3) @delete(5);
@@ -266,8 +266,8 @@ DECLARE facet_data TYPE LONG<facet_data> not null;
 DECLARE test_facets facet_data;
 DECLARE FUNCTION cql_facets_new() facet_data;
 DECLARE PROCEDURE cql_facets_delete(facets facet_data);
-DECLARE FUNCTION cql_facet_add(facets facet_data, facet TEXT NOT NULL, crc LONG NOT NULL) BOOL NOT NULL;
-DECLARE FUNCTION cql_facet_find(facets facet_data, facet TEXT NOT NULL) LONG NOT NULL;
+DECLARE FUNCTION cql_facet_add(facets facet_data, facet TEXT!, crc LONG NOT NULL) BOOL!;
+DECLARE FUNCTION cql_facet_find(facets facet_data, facet TEXT!) LONG NOT NULL;
 ```
 
 #### Declaration Section
@@ -276,11 +276,11 @@ Wherein all the necessary objects are declared...
 ```sql
 -- declare sqlite_master --
 CREATE TABLE sqlite_master (
-  type TEXT NOT NULL,
-  name TEXT NOT NULL,
-  tbl_name TEXT NOT NULL,
-  rootpage INTEGER NOT NULL,
-  sql TEXT NOT NULL
+  type TEXT!,
+  name TEXT!,
+  tbl_name TEXT!,
+  rootpage INT!,
+  sql TEXT!
 );
 ```
 The `sqlite_master` table is built-in but it has to be introduced to CQL
@@ -294,16 +294,16 @@ version of a table created and the final version declared we have
 ```sql
 -- declare full schema of tables and views to be upgraded --
 CREATE TABLE foo(
-  id INTEGER NOT NULL,
-  rate LONG INT @DELETE(5),
-  rate_2 LONG INT @DELETE(4, DeleteRate2Proc),
+  id INT!,
+  rate LONG @DELETE(5),
+  rate_2 LONG @DELETE(4, DeleteRate2Proc),
   id2 INTEGER DEFAULT 12345 @CREATE(4, CreateId2Proc),
   name TEXT @CREATE(5),
   name_2 TEXT @CREATE(6)
 );
 
 CREATE TABLE table2(
-  id INTEGER NOT NULL,
+  id INT!,
   name1 TEXT @CREATE(2, CreateName1Proc),
   name2 TEXT @CREATE(2, CreateName2Proc),
   name3 TEXT @CREATE(2),
@@ -311,7 +311,7 @@ CREATE TABLE table2(
 );
 
 CREATE TABLE added_table(
-  id INTEGER NOT NULL,
+  id INT!,
   name1 TEXT,
   name2 TEXT @CREATE(4)
 ) @CREATE(3) @DELETE(5);
@@ -354,8 +354,8 @@ We have only the one trigger; we declare it here.
 ```sql
 -- facets table declaration --
 CREATE TABLE IF NOT EXISTS test_cql_schema_facets(
-  facet TEXT NOT NULL PRIMARY KEY,
-  version LONG INTEGER NOT NULL
+  facet TEXT! PRIMARY KEY,
+  version LONG!
 );
 ```
 This is where we will store everything we know about the current state of
@@ -365,8 +365,8 @@ that table and reading `sqlite_master`
 ```sql
 -- saved facets table declaration --
 CREATE TEMP TABLE test_cql_schema_facets_saved(
-  facet TEXT NOT NULL PRIMARY KEY,
-  version LONG INTEGER NOT NULL
+  facet TEXT! PRIMARY KEY,
+  version LONG!
 );
 ```
 We will snapshot the facets table at the start of the run so that we can
@@ -378,9 +378,9 @@ hold that snapshot.
 #### Helper Procedures
 ```sql
 -- helper proc for testing for the presence of a column/type
-CREATE PROCEDURE test_check_column_exists(table_name TEXT NOT NULL,
-                                          decl TEXT NOT NULL,
-                                          OUT present BOOL NOT NULL)
+CREATE PROCEDURE test_check_column_exists(table_name TEXT!,
+                                          decl TEXT!,
+                                          OUT present BOOL!)
 BEGIN
   SET present := (SELECT EXISTS(SELECT * FROM sqlite_master
                   WHERE tbl_name = table_name AND sql GLOB decl));
@@ -394,8 +394,8 @@ END;
 CREATE PROCEDURE test_create_cql_schema_facets_if_needed()
 BEGIN
   CREATE TABLE IF NOT EXISTS test_cql_schema_facets(
-    facet TEXT NOT NULL PRIMARY KEY,
-    version LONG INTEGER NOT NULL
+    facet TEXT! PRIMARY KEY,
+    version LONG!
   );
 END;
 ```
@@ -409,8 +409,8 @@ CREATE PROCEDURE test_save_cql_schema_facets()
 BEGIN
   DROP TABLE IF EXISTS test_cql_schema_facets_saved;
   CREATE TEMP TABLE test_cql_schema_facets_saved(
-    facet TEXT NOT NULL PRIMARY KEY,
-    version LONG INTEGER NOT NULL
+    facet TEXT! PRIMARY KEY,
+    version LONG!
   );
   INSERT INTO test_cql_schema_facets_saved
     SELECT * FROM test_cql_schema_facets;
@@ -423,16 +423,16 @@ differences by joining these tables.
 
 ```sql
 -- helper proc for setting the schema version of a facet
-CREATE PROCEDURE test_cql_set_facet_version(_facet TEXT NOT NULL,
-                                            _version LONG INTEGER NOT NULL)
+CREATE PROCEDURE test_cql_set_facet_version(_facet TEXT!,
+                                            _version LONG!)
 BEGIN
   INSERT OR REPLACE INTO test_cql_schema_facets (facet, version)
        VALUES(_facet, _version);
 END;
 
 -- helper proc for getting the schema version of a facet
-CREATE PROCEDURE test_cql_get_facet_version(_facet TEXT NOT NULL,
-                                            out _version LONG INTEGER NOT NULL)
+CREATE PROCEDURE test_cql_get_facet_version(_facet TEXT!,
+                                            out _version LONG!)
 BEGIN
   TRY
     SET _version := (SELECT version FROM test_cql_schema_facets
@@ -452,14 +452,14 @@ unnecessary repeated string literals in the output file which cause bloat.
 
 ```sql
 -- helper proc for getting the schema version CRC for a version index
-CREATE PROCEDURE test_cql_get_version_crc(_v INTEGER NOT NULL, out _crc LONG INTEGER NOT NULL)
+CREATE PROCEDURE test_cql_get_version_crc(_v INT!, out _crc LONG!)
 BEGIN
   SET _crc := cql_facet_find(test_facets, printf('cql_schema_v%d', _v));
 END;
 
 -- helper proc for setting the schema version CRC for a version index
-CREATE PROCEDURE test_cql_set_version_crc(_v INTEGER NOT NULL,
-                                          _crc LONG INTEGER NOT NULL)
+CREATE PROCEDURE test_cql_set_version_crc(_v INT!,
+                                          _crc LONG!)
 BEGIN
   INSERT OR REPLACE INTO test_cql_schema_facets (facet, version)
        VALUES('cql_schema_v'||_v, _crc);
@@ -467,7 +467,7 @@ END;
 ```
 As you can see, these procedures are effectively specializations of
 `cql_get_facet_version` and `cql_set_facet_version` where the facet name
-is computed from the integer.
+is computed from the int.
 
 
 Triggers require some special processing.  There are so-called "legacy"
@@ -481,10 +481,10 @@ that have these in them, we delete all triggers that start with `tr__`.
 
 ```sql
 -- helper proc to reset any triggers that are on the old plan --
-DECLARE PROCEDURE cql_exec_internal(sql TEXT NOT NULL) USING TRANSACTION;
+DECLARE PROCEDURE cql_exec_internal(sql TEXT!) USING TRANSACTION;
 CREATE PROCEDURE test_cql_drop_legacy_triggers()
 BEGIN
-  DECLARE C CURSOR FOR SELECT name from sqlite_master
+  CURSOR C FOR SELECT name from sqlite_master
      WHERE type = 'trigger' AND name GLOB 'tr__*';
   LOOP FETCH C
   BEGIN
@@ -503,13 +503,13 @@ creating and dropping these tables.
 CREATE PROCEDURE test_cql_install_baseline_schema()
 BEGIN
   CREATE TABLE foo(
-    id INTEGER NOT NULL,
+    id INT!,
     rate LONG_INT,
     rate_2 LONG_INT
   );
 
   CREATE TABLE table2(
-    id INTEGER NOT NULL
+    id INT!
   );
 
 END;
@@ -629,7 +629,7 @@ CREATE PROCEDURE test_setup_facets()
 BEGIN
   TRY
     SET test_facets := cql_facets_new();
-    DECLARE C CURSOR FOR SELECT * from test_cql_schema_facets;
+    CURSOR C FOR SELECT * from test_cql_schema_facets;
     LOOP FETCH C
     BEGIN
       LET added := cql_facet_add(test_facets, C.facet, C.version);
@@ -676,8 +676,8 @@ That's it... the details are below.
 ```sql
 CREATE PROCEDURE test_perform_upgrade_steps()
 BEGIN
-  DECLARE column_exists BOOL NOT NULL;
-  DECLARE schema_version LONG INTEGER NOT NULL;
+  DECLARE column_exists BOOL!;
+  DECLARE schema_version LONG!;
     -- dropping all views --
     CALL test_cql_drop_all_views();
 
@@ -747,7 +747,7 @@ BEGIN
       -- creating table added_table
 
       CREATE TABLE IF NOT EXISTS added_table(
-        id INTEGER NOT NULL,
+        id INT!,
         name1 TEXT
       );
 
@@ -863,7 +863,7 @@ the code for the full upgrade case in it.  This lets linker order files do a sup
 ```sql
 CREATE PROCEDURE test()
 BEGIN
-  DECLARE schema_crc LONG INTEGER NOT NULL;
+  DECLARE schema_crc LONG!;
 
   -- create schema facets information table --
   CALL test_create_cql_schema_facets_if_needed();
@@ -899,7 +899,7 @@ A procedure like this one is generated:
 CREATE PROCEDURE test_cql_install_temp_schema()
 BEGIN
   CREATE TEMP TABLE tempy(
-    id INTEGER
+    id INT
   );
 END;
 ```
@@ -998,7 +998,7 @@ An illustrative example, using the regions defined above:
 @begin_schema_region root;
 
 create table main(
-  id integer,
+  id int,
   name text
 );
 
@@ -1009,7 +1009,7 @@ create view names as select name from main order by name;
 @begin_schema_region extra;
 
 create table details(
-   id integer references main(id),
+   id int references main(id),
    details text
 );
 
@@ -1025,7 +1025,7 @@ end;
 @begin_schema_region feature1;
 
 create table f1(
-   id integer references details(id),
+   id int references details(id),
    f1_info text
 );
 
@@ -1063,8 +1063,8 @@ Case 1: The second line will fail semantic validation because table `A` already 
 
 ```sql
 -- obvious standard name conflict
-create table A (id integer);
-create table A (id integer, name text);
+create table A (id int);
+create table A (id int, name text);
 ```
 
 Case 2: This fails for the same reason as case #1. Table `A` already exists
@@ -1072,10 +1072,10 @@ Case 2: This fails for the same reason as case #1. Table `A` already exists
 ```sql
 @declare_region root;
 -- table A is in no region
-create table A (id integer);
+create table A (id int);
 @begin_region root:
 -- this table A is in the root region, still an error
-create table A (id integer, name text);
+create table A (id int, name text);
 @end_region;
 ```
 
@@ -1089,12 +1089,12 @@ same name in another region.
 
 @begin_region extra;
 -- so far so good
-create table A (id integer);
+create table A (id int);
 @end_region;
 
 @begin_region root;
 -- no joy, this A conflicts with the previous A
-create table A (id integer, name text);
+create table A (id int, name text);
 @end_region;
 ```
 
@@ -1324,20 +1324,20 @@ a visibility perspective `r3` can only directly depend on `r2`.
 @declare_schema_region r3 using r2;
 
 @begin_schema_region r1;
-create table r1_table(id integer primary key);
+create table r1_table(id int primary key);
 @end_schema_region;
 
 @begin_schema_region r2;
-create table r2_table(id integer primary key references r1_table(id));
+create table r2_table(id int primary key references r1_table(id));
 @end_schema_region;
 
 @begin_schema_region r3;
 
 -- this is OK
-create table r3_table_2(id integer primary key references r2_table(id));
+create table r3_table_2(id int primary key references r2_table(id));
 
 -- this is an error, no peeking into r1
-create table r3_table_1(id integer primary key references r1_table(id));
+create table r3_table_1(id int primary key references r1_table(id));
 
 @end_schema_region;
 ```

@@ -22,13 +22,13 @@ CQL types.
 create proc todo_create_tables()
 begin
   create table if not exists tasks(
-    description text not null,
+    description text!,
     done bool default false not null
   );
 end;
 
 -- adds a new not-done task
-create proc todo_add(task TEXT NOT null)
+create proc todo_add(task text!)
 begin
   insert into tasks values(task, false);
 end;
@@ -40,13 +40,13 @@ begin
 end;
 
 -- updates a given task by rowid
-create proc todo_setdone_(rowid_ integer not null, done_ bool not null)
+create proc todo_setdone_(rowid_ int!, done_ bool!)
 begin
   update tasks set done = done_ where rowid == rowid_;
 end;
 
 -- deletes a given task by rowid
-create proc todo_delete(rowid_ integer not null)
+create proc todo_delete(rowid_ int!)
 begin
   delete from tasks where rowid == rowid_;
 end;

@@ -251,7 +251,7 @@ typedef struct sem_node {
 * `name` : variables, columns, etc. have a canonical name -- when a name case-insensitivity resolves, the canonical name is stored here
   * typically later passes emit the canonical variable name everywhere
   * e.g. because `FoO` and `fOO` might both resolve to an object declared as `foo`, we always emit `foo` in codegen
-* `kind` : in CQL any type can be discriminated as in `declare foo real<meters>`, the kind here is `meters`
+* `kind` : in CQL any type can be discriminated as in `var foo real<meters>`, the kind here is `meters`
   * two expressions of the same core type (e.g. `real`) are incompatible if they have a `kind` and the `kind` does not match
   * e.g. if you have `bar real<liters>` then `set foo := bar;` this is an error even though both are `real` because `foo` above is `real<meters>`
 * `sptr` : if the item's core type is `SEM_TYPE_STRUCT` then this is populated (see below)
@@ -1495,7 +1495,7 @@ statements like `LOOP`, `WHILE`, and `TRY`. Take the following line-numbered
 code as an example:
 
 ```sql
-001  DECLARE x TEXT;
+001  VAR x TEXT;
 002  SET x := "foo";
 003  WHILE some_condition
 004  BEGIN
@@ -1527,7 +1527,7 @@ that results in the unsetting of an improvement later in a loop must affect
 improvements earlier in that loop. For example:
 
 ```sql
-DECLARE x INT;
+VAR x INT;
 SET x := 1;
 WHILE some_condition
 BEGIN
@@ -1847,7 +1847,7 @@ of a reference type (`BLOB`, `OBJECT`, or `TEXT`) that is also `NOT NULL`, it is
 not safe to use the variable until it has been given a value. For example:
 
 ```sql
-DECLARE x TEXT NOT NULL;
+VAR x TEXT!;
 
 IF some_condition THEN
   SET x := some_text_notnull_value;
@@ -2017,7 +2017,7 @@ but for now let's look at two different cases that are of interest.
 First, a cursor:
 
 ```
-DECLARE C CURSOR LIKE Foo;  -- Foo something with a shape
+CURSOR C LIKE Foo;  -- Foo something with a shape
 ```
 
 So, in the above, Foo could be a table, a view, a procedure with a result, another cursor, and so forth.

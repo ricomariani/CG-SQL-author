@@ -656,8 +656,8 @@ as good.
 // we need to make sure that same column value is also added as a value in the
 // the referenced table's dummy_test info.
 // e.g.
-//   create table A(id integer primary key);
-//   create table B(id integer primary key references A(id));
+//   create table A(id int primary key);
+//   create table B(id int primary key references A(id));
 //
 // If there is sample data provided for B.id then we must also ensure that
 // the value provided for B.id is also add as a sample row in A with the same

@@ -33,7 +33,7 @@ These functions are written in regular C and provide for the ability to do opera
 you could create functions that allow you to read and write from a dictionary.  You can declare these functions like so:
 
 ```sql
-declare function dict_get_value(dict object, key_ text not null) text;
+declare function dict_get_value(dict object, key_ text!) text;
 ```
 
 Such a function is not known to SQLite and therefore cannot appear in SQL statements.  CQL will enforce this.
@@ -58,8 +58,8 @@ If we also declare this procedure:
 ```sql
 declare procedure dict_add(
     dict object not null,
-    key_ text not null,
-    value text not null);
+    key_ text!,
+    value text!);
 ```
 
 then with this family of declarations we could write something like this:
@@ -88,14 +88,14 @@ order to use this function in CQL, you must also provide its prototype definitio
 can do so following this example:
 
 ```sql
-declare select function strencode(t text not null) text not null;
+declare select function strencode(t text!) text!;
 ```
 
 This introduces the function `strencode` to the compiler for use in SQL constructs.  With this done you
 could write a procedure something like this:
 
 ```sql
-create table foo(id integer, t text);
+create table foo(id int, t text);
 
 create procedure bar(id_ integer)
 begin
@@ -116,7 +116,7 @@ the function, it only needs the signature so that it can validate calls.
 
 Note that SQL Scalar Functions cannot contain `object` parameters. To
 pass an `object`, you should instead pass the memory address of this
-object using a `LONG INT` parameter. To access the address of an `object`
+object using a `LONG` parameter. To access the address of an `object`
 at runtime, you should use the `ptr()` function. See [the notes section
 below](#notes-on-builtin-functions) for more information.
 
@@ -138,7 +138,7 @@ function like so:
 
 ```sql
 declare select function dict_contents(dict object not null)
-   (k text not null, v text not null);
+   (k text!, v text!);
 ```
 
 This is just like the previous type of select function but the return

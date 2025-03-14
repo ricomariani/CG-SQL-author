@@ -61,14 +61,14 @@ This file may look something like this:
 ```sql
 -- prev_check.sql
 create table foo(
-  id integer,
+  id int,
   new_field text @create(1)
 );
 
 @previous_schema;
 
 create table foo(
-  id integer
+  id int
 );
 ```
 
@@ -117,18 +117,18 @@ We start with a valid fragment and go from there.
 
 ```sql
 create table foo(
-  id integer not null,
-  rate long int @delete(5, deletor),
-  rate_2 long int @delete(4),
+  id int!,
+  rate long @delete(5, deletor),
+  rate_2 long @delete(4),
   id2 integer @create(4),
   name text @create(5),
   name_2 text @create(6)
 );
 -------
 create table foo(
-  id integer not null,
-  rate long int @delete(5, deletor),
-  rate_2 long int @delete(4),
+  id int!,
+  rate long @delete(5, deletor),
+  rate_2 long @delete(4),
   id2 integer @create(4),
   name text @create(5),
   name_2 text @create(6)
@@ -139,9 +139,9 @@ The table `foo` is the same!  It doesn't get any easier than that.
 #### Case 2 : table create version changed
 
 ```sql
-create table t_create_version_changed(id integer) @create(1);
+create table t_create_version_changed(id int) @create(1);
 -------
-create table t_create_version_changed(id integer) @create(2);
+create table t_create_version_changed(id int) @create(2);
 
 Error at sem_test_prev.sql:15 : in str : current create version not equal to
 previous create version for 't_create_version_changed'
@@ -152,9 +152,9 @@ says it appeared in version 1.  The old schema says 2.
 #### Case 3 : table delete version changed
 
 ```sql
-create table t_delete_version_changed(id integer) @delete(1);
+create table t_delete_version_changed(id int) @delete(1);
 -------
-create table t_delete_version_changed(id integer) @delete(2);
+create table t_delete_version_changed(id int) @delete(2);
 
 Error at sem_test_prev.sql:18 : in str : current delete version not equal to
 previous delete version for 't_delete_version_changed'
@@ -167,7 +167,7 @@ says it was gone in version 1.  The old schema says 2.
 ```sql
 -- t_not_present_in_new_schema is gone
 -------
-create table t_not_present_in_new_schema(id integer);
+create table t_not_present_in_new_schema(id int);
 
 Error at sem_test_prev.sql:176 : in create_table_stmt : table was present but now it
 does not exist (use @delete instead) 't_not_present_in_new_schema'
@@ -180,7 +180,7 @@ marked with `@delete`.  You don't remove tables.
 ```sql
 create view t_became_a_view as select 1 id @create(6);
 -------
-create table t_became_a_view(id integer);
+create table t_became_a_view(id int);
 
 Error at sem_test_prev.sql:24 : in create_view_stmt : object was a table but is now a
 view 't_became_a_view'
@@ -190,9 +190,9 @@ Tables can't become views...
 #### Case 6 : table was in base schema, now created
 
 ```sql
-create table t_created_in_wrong_version(id integer) @create(1);
+create table t_created_in_wrong_version(id int) @create(1);
 -------
-create table t_created_in_wrong_version(id integer);
+create table t_created_in_wrong_version(id int);
 
 Error at sem_test_prev.sql:27 : in str : current create version not equal to previous
 create version for 't_created_in_wrong_version'
@@ -202,9 +202,9 @@ Here a version annotation is added after the fact.  This item was already in the
 #### Case 7: table was in base schema, now deleted (ok)
 
 ```sql
-create table t_was_correctly_deleted(id integer) @delete(1);
+create table t_was_correctly_deleted(id int) @delete(1);
 -------
-create table t_was_correctly_deleted(id integer);
+create table t_was_correctly_deleted(id int);
 ```
 No errors here, just a regular delete.
 
@@ -213,7 +213,7 @@ No errors here, just a regular delete.
 ```sql
 create table t_column_name_changed(id_ integer);
 -------
-create table t_column_name_changed(id integer);
+create table t_column_name_changed(id int);
 
 Error at sem_test_prev.sql:33 : in str : column name is different between previous and current schema 'id_'
 ```
@@ -226,7 +226,7 @@ doing physical renames.
 ```sql
 create table t_column_type_changed(id real);
 -------
-create table t_column_type_changed(id integer);
+create table t_column_type_changed(id int);
 
 Error at sem_test_prev.sql:36 : in str : column type is different between previous and current schema 'id'
 ```
@@ -235,9 +235,9 @@ You can't change the type of a column.
 #### Case 10 : column attribute changed
 
 ```sql
-create table t_column_attribute_changed(id integer not null);
+create table t_column_attribute_changed(id int!);
 -------
-create table t_column_attribute_changed(id integer);
+create table t_column_attribute_changed(id int);
 
 Error at sem_test_prev.sql:39 : in str : column type is different between previous and current schema 'id'
 ```
@@ -246,9 +246,9 @@ Change of column attributes counts as a change of type.
 #### Case 11: column version changed for delete
 
 ```sql
-create table t_column_delete_version_changed(id integer, id2 integer @delete(1));
+create table t_column_delete_version_changed(id int, id2 integer @delete(1));
 -------
-create table t_column_delete_version_changed(id integer, id2 integer @delete(2));
+create table t_column_delete_version_changed(id int, id2 integer @delete(2));
 
 Error at sem_test_prev.sql:42 : in str : column current delete version not equal to previous delete version 'id2'
 ```
@@ -257,9 +257,9 @@ You can't change the delete version after it has been set.
 
 #### Case 12 : column version changed for create
 ```sql
-create table t_column_create_version_changed(id integer, id2 integer @create(1));
+create table t_column_create_version_changed(id int, id2 integer @create(1));
 -------
-create table t_column_create_version_changed(id integer, id2 integer @create(2));
+create table t_column_create_version_changed(id int, id2 integer @create(2));
 
 Error at sem_test_prev.sql:45 : in str : column current create version not equal to previous create version 'id2'
 ```
@@ -269,9 +269,9 @@ You can't change the create version after it has been set.
 #### Case 13 : column default value changed
 
 ```sql
-create table t_column_default_value_changed(id integer, id2 integer not null default 2);
+create table t_column_default_value_changed(id int, id2 int! default 2);
 -------
-create table t_column_default_value_changed(id integer, id2 integer not null default 1);
+create table t_column_default_value_changed(id int, id2 int! default 1);
 
 Error at sem_test_prev.sql:48 : in str : column current default value not equal to previous default value 'id2'
 ```
@@ -283,9 +283,9 @@ sense.
 #### Case 14 : column default value did not change (ok)
 
 ```sql
-create table t_column_default_value_ok(id integer, id2 integer not null default 1);
+create table t_column_default_value_ok(id int, id2 int! default 1);
 -------
-create table t_column_default_value_ok(id integer, id2 integer not null default 1);
+create table t_column_default_value_ok(id int, id2 int! default 1);
 ```
 
 No change. No error here.
@@ -293,9 +293,9 @@ No change. No error here.
 #### Case 15 : create table with additional attribute present and matching (ok)
 
 ```sql
-create table t_additional_attribute_present(a int not null, b int, primary key (a,b));
+create table t_additional_attribute_present(a int!, b int, primary key (a,b));
 -------
-create table t_additional_attribute_present(a int not null, b int, primary key (a,b));
+create table t_additional_attribute_present(a int!, b int, primary key (a,b));
 ```
 
 No change. No error here.
@@ -303,9 +303,9 @@ No change. No error here.
 #### Case 16 : create table with additional attribute (doesn't match)
 
 ```sql
-create table t_additional_attribute_mismatch(a int not null, primary key (a));
+create table t_additional_attribute_mismatch(a int!, primary key (a));
 -------
-create table t_additional_attribute_mismatch(a int not null, b int, primary key (a,b));
+create table t_additional_attribute_mismatch(a int!, b int, primary key (a,b));
 
 Error at sem_test_prev.sql:57 : in pk_def : a table facet is different in the previous
 and current schema
@@ -316,9 +316,9 @@ This is an error because the additional attribute does not match the previous sc
 #### Case 17 : column removed
 
 ```sql
-create table t_columns_removed(id integer);
+create table t_columns_removed(id int);
 -------
-create table t_columns_removed(id integer, id2 integer);
+create table t_columns_removed(id int, id2 integer);
 
 Error at sem_test_prev.sql:255 : in col_def : items have been removed from the table
 rather than marked with @delete 't_columns_removed'
@@ -328,9 +328,9 @@ You can't remove columns from tables.  You have to mark them with `@delete` inst
 
 #### Case 18 : create table with added facet not present in the previous
 ```sql
-create table t_attribute_added(a int not null, primary key (a));
+create table t_attribute_added(a int!, primary key (a));
 -------
-create table t_attribute_added(a int not null);
+create table t_attribute_added(a int!);
 
 Error at sem_test_prev.sql:63 : in pk_def : table has a facet that is different in the
 previous and current schema 't_attribute_added'
@@ -341,9 +341,9 @@ Table facets like primary keys cannot be added after the fact. There is no way t
 #### Case 19 : create table with additional column and no `@create`
 
 ```sql
-create table t_additional_column(a int not null, b int);
+create table t_additional_column(a int!, b int);
 -------
-create table t_additional_column(a int not null);
+create table t_additional_column(a int!);
 
 Error at sem_test_prev.sql:66 : in col_def : table has columns added without marking
 them @create 't_additional_column'
@@ -354,9 +354,9 @@ If you add a new column like `b` above you have to mark it with `@create` in a s
 #### Case 20 : create table with additional column and ``@create` (ok)
 
 ```sql
-create table t_additional_column_ok(a int not null, b int @create(2), c int @create(6));
+create table t_additional_column_ok(a int!, b int @create(2), c int @create(6));
 -------
-create table t_additional_column_ok(a int not null, b int @create(2));
+create table t_additional_column_ok(a int!, b int @create(2));
 ```
 
 Column properly created.  No errors here.
@@ -364,9 +364,9 @@ Column properly created.  No errors here.
 #### Case 21 : create table with different flags (like TEMP)
 
 ```sql
-create TEMP table t_becomes_temp_table(a int not null, b int);
+create TEMP table t_becomes_temp_table(a int!, b int);
 -------
-create table t_becomes_temp_table(a int not null, b int);
+create table t_becomes_temp_table(a int!, b int);
 
 Error at sem_test_prev.sql:72 : in create_table_stmt : table create statement attributes
 different than previous version 't_becomes_temp_table'
@@ -377,7 +377,7 @@ Table became a TEMP table, there is no way to generate an alter statement for th
 #### Case 22 : create table and apply annotation (ok)
 
 ```sql
-create table t_new_table_ok(a int not null, b int) @create(6);
+create table t_new_table_ok(a int!, b int) @create(6);
 -------
 -- no previous version
 ```
@@ -386,7 +386,7 @@ No errors here; this is a properly created new table.
 #### Case 23 : create new table without annotation (error)
 
 ```sql
-create table t_new_table_no_annotation(a int not null, b int);
+create table t_new_table_no_annotation(a int!, b int);
 -------
 -- no previous version
 
@@ -398,7 +398,7 @@ This table was added with no annotation.  It has to have an @create and be at le
 #### Case 24 : create new table stale annotation (error)
 
 ```sql
-create table t_new_table_stale_annotation(a int not null, b int) @create(2);
+create table t_new_table_stale_annotation(a int!, b int) @create(2);
 -------
 -- no previous version
 
@@ -410,9 +410,9 @@ The schema is already up to version 6.  You can't then add a table in the past a
 #### Case 25 : add columns to table, marked `@create` and `@delete`
 
 ```sql
-create table t_new_table_create_and_delete(a int not null, b int @create(6) @delete(7));
+create table t_new_table_create_and_delete(a int!, b int @create(6) @delete(7));
 -------
-create table t_new_table_create_and_delete(a int not null);
+create table t_new_table_create_and_delete(a int!);
 
 Error at sem_test_prev.sql:96 : in col_def : table has newly added columns that are
 marked both @create and @delete 't_new_table_create_and_delete'
@@ -422,18 +422,18 @@ Adding a column in the new version and marking it both create and delete is ... 
 #### Case 26 : add columns to table, marked `@create` correctly
 
 ```sql
-create table t_new_legit_column(a int not null, b int @create(6));
+create table t_new_legit_column(a int!, b int @create(6));
 -------
-create table t_new_legit_column(a int not null);
+create table t_new_legit_column(a int!);
 ```
 No errors here; new column added in legit version.
 
 #### Case 27 : create table with a create migration proc where there was none
 
 ```sql
-create table with_create_migrator(id integer) @create(1, ACreateMigrator);
+create table with_create_migrator(id int) @create(1, ACreateMigrator);
 -------
-create table with_create_migrator(id integer) @create(1);
+create table with_create_migrator(id int) @create(1);
 
 Error at sem_test_prev.sql:104 : in str : @create procedure changed in object
 'with_create_migrator'
@@ -444,9 +444,9 @@ You can't add a create migration proc after the fact.
 #### Case 28 : create table with a different create migration proc
 
 ```sql
-create table with_create_migrator(id integer) @create(1, ACreateMigrator);
+create table with_create_migrator(id int) @create(1, ACreateMigrator);
 -------
-create table with_create_migrator(id integer) @create(1, ADifferentCreateMigrator);
+create table with_create_migrator(id int) @create(1, ADifferentCreateMigrator);
 
 Error at sem_test_prev.sql:104 : in str : @create procedure changed in object
 'with_create_migrator'
@@ -457,9 +457,9 @@ You can't change a create migration proc after the fact.
 #### Case 29 : create table with a delete migration proc where there was none
 
 ```sql
-create table with_delete_migrator(id integer) @delete(1, ADeleteMigrator);
+create table with_delete_migrator(id int) @delete(1, ADeleteMigrator);
 -------
-create table with_delete_migrator(id integer) @delete(1);
+create table with_delete_migrator(id int) @delete(1);
 
 Error at sem_test_prev.sql:107 : in str : @delete procedure changed in object
 'with_delete_migrator'
@@ -470,9 +470,9 @@ You can't add a delete migration proc after the fact.
 #### Case 30 : create table with a different delete migration proc
 
 ```sql
-create table with_delete_migrator(id integer) @delete(1, ADeleteMigrator);
+create table with_delete_migrator(id int) @delete(1, ADeleteMigrator);
 -------
-create table with_delete_migrator(id integer) @delete(1, ADifferentDeleteMigrator);
+create table with_delete_migrator(id int) @delete(1, ADifferentDeleteMigrator);
 
 Error at sem_test_prev.sql:107 : in str : @delete procedure changed in object
 'with_delete_migrator'

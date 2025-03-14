@@ -224,7 +224,7 @@ Let's look at another example:
 -- + {col_def}: value: real<dollars>
 -- - error:
 create table with_kind(
-  id integer<some_key>,
+  id int<some_key>,
   cost real<dollars>,
   value real<dollars>
 );
@@ -247,7 +247,7 @@ If you want to see the whole AST output for this, it's easy enough.  It's sittin
 The statement ending at line XXXX
 
 CREATE TABLE with_kind(
-  id INTEGER<some_key>,
+  id int<some_key>,
   cost REAL<dollars>,
   value REAL<dollars>
 );
@@ -357,7 +357,7 @@ Here's an sample test:
 -- - cql_int32 _tmp_int_1 = 0;
 -- + o = i.value;
 -- + o = - 1;
-create proc unused_temp(i integer, out o integer not null)
+create proc unused_temp(i int, out o int!)
 begin
   set o := coalesce(i, -1);
 end;
@@ -380,14 +380,14 @@ normalized:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC unused_temp (i INTEGER, OUT o INTEGER NOT NULL)
+CREATE PROC unused_temp (i INT, OUT o INT!)
 BEGIN
   SET o := coalesce(i, -1);
 END;
 */
 
 #define _PROC_ "unused_temp"
-// export: DECLARE PROC unused_temp (i INTEGER, OUT o INTEGER NOT NULL);
+// export: DECLARE PROC unused_temp (i INT, OUT o INT!);
 void unused_temp(cql_nullable_int32 i, cql_int32 *_Nonnull o) {
   cql_contract_argument_notnull((void *)o, 2);
 
@@ -620,7 +620,7 @@ reference results for version 0
 type: table
 tbl_name: g1
 CREATE TABLE g1(
-  id INTEGER PRIMARY KEY,
+  id INT PRIMARY KEY,
   name TEXT)
 
 ----- sqlite_autoindex_test_cql_schema_facets_1 -----
@@ -633,7 +633,7 @@ tbl_name: test_cql_schema_facets
 type: table
 tbl_name: test_cql_schema_facets
 CREATE TABLE test_cql_schema_facets(
-  facet TEXT NOT NULL PRIMARY KEY,
+  facet TEXT! PRIMARY KEY,
   version LONG_INT NOT NULL)
 ```
 
@@ -644,7 +644,7 @@ The verifications are very simple.
 First this happens:
 
 ```sql
-let version := cast(test_cql_get_facet_version("cql_schema_version") as integer);
+let version := cast(test_cql_get_facet_version("cql_schema_version") as int);
 ```
 
 The printing happens, then this simple validation:
@@ -658,7 +658,7 @@ The printing happens, then this simple validation:
 ...
  switch version
   when 0 then
-    if recreate_sql is null or recreate_sql not like '%xyzzy INTEGER%' then
+    if recreate_sql is null or recreate_sql not like '%xyzzy INT%' then
       call printf("ERROR! test_this_table_will_become_create should have a column named xyzzy in v%d\n", version);
       throw;
     end if;

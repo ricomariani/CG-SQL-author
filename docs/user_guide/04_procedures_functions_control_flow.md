@@ -19,14 +19,14 @@ Consider this procedure:
 
 
 ```sql
-create procedure copy_integer(in arg1 integer not null, out arg2 integer not null)
+create procedure copy_integer(in arg1 int!, out arg2 int!)
 begin
   set arg2 := arg1;
 end;
 ```
 
-`arg1` has been declared as `in`. This is the default: `in arg1 integer not null`,
-and `arg1 integer not null` mean the exact same thing.
+`arg1` has been declared as `in`. This is the default: `in arg1 int!`,
+and `arg1 int!` mean the exact same thing.
 
 `arg2`, however, has been declared as `out`. When a parameter is declared using
 `out`, arguments for it are passed by reference. This is similar to by-reference
@@ -37,7 +37,7 @@ Given that `arg2` is passed by reference, the statement `set arg2 := arg1;`
 actually updates a variable in the caller. For example:
 
 ```sql
-declare x int not null;
+var x int!;
 call copy_integer(42, x);
 -- `x` is now 42
 ```
@@ -62,7 +62,7 @@ is passed by reference as with `out` parameters.
 `inout` parameters allow for code such as the following:
 
 ```sql
-proc times_two(inout arg integer not null)
+proc times_two(inout arg int!)
 begin
   -- note that a variable in the caller is both read from and written to
 
@@ -80,7 +80,7 @@ The usual `call` syntax is used to invoke a procedure. It returns no value, but
 it can have any number of `out` arguments.
 
 ```sql
-  declare scratch integer not null;
+  var scratch int!;
   call copy_integer(12, scratch);
   scratch == 12; -- true
 ```
@@ -95,7 +95,7 @@ is baked into the `IF` statement, so what you see below is logically a single
 statement.
 
 ```sql
-create proc checker(foo integer, out result integer not null)
+create proc checker(foo int, out result int!)
 begin
   if foo = 1 then
     result := 1;
@@ -114,7 +114,7 @@ What follows is a simple procedure that counts down its input argument.
 ```sql
 declare procedure printf no check;
 
-create proc looper(x integer not null)
+create proc looper(x int!)
 begin
   while x > 0
   begin
@@ -130,7 +130,7 @@ control the loop. A more general loop might look like this:
 ```sql
 declare procedure printf no check;
 
-create proc looper(x integer not null)
+create proc looper(x int!)
 begin
   while 1
   begin
@@ -293,7 +293,7 @@ ELSE
 END;
 ```
 
-* the switch-expression must be a not-null integral type (`integer not null` or `long integer not null`)
+* the switch-expression must be a not-null integral type (`int!` or `long!`)
 * the `WHEN` expressions [expr1, expr2, etc.] are made from constant integer expressions (e.g. `5`, `1+7`, `1<<2`, or `my_enum.thing`)
 * the `WHEN` expressions must be compatible with the switch expression (long constants cannot be used if the switch expression is an integer)
 * the values in the `WHEN` clauses must be unique (after evaluation)
@@ -327,7 +327,7 @@ switch x
     set y := 'zomg enormous';
 end;
 
-enum item integer (
+enum item int (
   pen = 0, pencil, brush,
   paper, canvas,
   _count
@@ -437,12 +437,12 @@ function is possible.
 
 ```sql
 -- this works, but it is awkward
-create procedure fib (in arg integer not null, out result integer not null)
+create procedure fib (in arg int!, out result int!)
 begin
   if (arg <= 2) then
     set result := 1;
   else
-    declare t integer not null;
+    var t int!;
     call fib(arg - 1, result);
     call fib(arg - 2, t);
     set result := t + result;
@@ -464,7 +464,7 @@ of the `out` argument.
 
 ```sql
 -- rewritten with function call syntax
-create procedure fib (in arg integer not null, out result integer not null)
+create procedure fib (in arg int!, out result int!)
 begin
   if (arg <= 2) then
     set result := 1;

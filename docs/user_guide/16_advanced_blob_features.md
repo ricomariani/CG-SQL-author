@@ -235,8 +235,8 @@ create table news_info(
 
 -- a place where the blob appears in storage
 create table some_table(
-  x integer,
-  y integer,
+  x int,
+  y int,
   news_blob blob<news_info>
 );
 
@@ -288,7 +288,7 @@ interface my_result_shape (
   like news_info
 );
 
-proc select_and_crack(whatever bool not null)
+proc select_and_crack(whatever bool!)
 begin
   cursor C for select * from some_table where whatever;
   loop fetch c
@@ -471,15 +471,15 @@ Backed tables look like this:
 ```sql
 [[backed_by=backing]]
 CREATE TABLE backed(
-  id INTEGER PRIMARY KEY,
-  name TEXT NOT NULL,
+  id INT PRIMARY KEY,
+  name TEXT!,
   bias REAL
 );
 
 [[backed_by=backing]]
 CREATE TABLE backed2(
-  id INTEGER PRIMARY KEY,
-  name TEXT NOT NULL
+  id INT PRIMARY KEY,
+  name TEXT!
 );
 ```
 
@@ -1060,8 +1060,8 @@ for indices you'll also need to do something like this:
 ```sql
 [[deterministic]] declare select function bgetkey_type(b blob) long;
 [[deterministic]] declare select function bgetval_type(b blob) long;
-[[deterministic]] declare select function bgetkey(b blob, iarg integer) long; -- polymorphic
-[[deterministic]] declare select function bgetval(b blob, iarg integer) long; -- polymorphic
+[[deterministic]] declare select function bgetkey(b blob, iarg int) long; -- polymorphic
+[[deterministic]] declare select function bgetval(b blob, iarg int) long; -- polymorphic
 [[deterministic]] declare select function bcreateval no check blob;
 [[deterministic]] declare select function bcreatekey no check blob;
 [[deterministic]] declare select function bupdateval no check blob;

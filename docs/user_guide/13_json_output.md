@@ -878,7 +878,7 @@ Note that atypical binding forces procedures into the "general" section.
 Example
 
 ```sql
-declare interface interface1 (id integer);
+interface interface1 (id int);
 ```
 
 Generates:
@@ -1032,7 +1032,7 @@ Example:
 
 ```sql
 declare const group some_constants (
-  x = cast(5 as integer<job_id>),
+  x = cast(5 as int<job_id>),
   y = 12.0,
   z = 'foo'
 );

@@ -31,7 +31,7 @@ the sections below.
 ### Simple Procedures (database free):
 
 ```sql
-DECLARE PROCEDURE foo(id integer, out name text not null);
+declare proc foo(id int, out name text!);
 ```
 
 This introduces the symbol name without providing the body.
@@ -40,7 +40,7 @@ This has important variations.
 ### Procedures that use the database
 
 ```sql
-DECLARE PROCEDURE foo(id integer, out name text not null) USING TRANSACTION;
+declare proc foo(id int, out name text!) USING TRANSACTION;
 ```
 
 Most procedures you write will use SQLite in some fashion,
@@ -54,11 +54,11 @@ If the procedure in question is going to use `select` or `call` to create a resu
 the type of that result set has to be declared.  An example might look like this:
 
 ```sql
-DECLARE PROC with_result_set () (id INTEGER NOT NULL,
-                                 name TEXT,
-                                 rate LONG INTEGER,
-                                 type INTEGER,
-                                 size REAL);
+declare proc with_result_set () (id int!,
+                                 name text,
+                                 rate long,
+                                 type int,
+                                 size real);
 ```
 
 This says that the procedure takes no arguments (other than the implicit database
@@ -72,11 +72,11 @@ If the procedure emits a cursor with the `OUT` statement to produce a single
 row then it can be declared as follows:
 
 ```sql
-DECLARE PROC with_result_set () OUT (id INTEGER NOT NULL,
-                                     name TEXT,
-                                     rate LONG INTEGER,
-                                     type INTEGER,
-                                     size REAL);
+declare proc with_result_set () OUT (id int!,
+                                     name text,
+                                     rate long,
+                                     type int,
+                                     size real);
 ```
 
 This form can have `USING TRANSACTION`  or not, since it is possible
@@ -89,11 +89,11 @@ If the procedure emits many rows with the `OUT UNION` statement to produce a ful
 then it can be declared as follows:
 
 ```sql
-DECLARE PROC with_result_set () OUT UNION (id INTEGER NOT NULL,
-                                     name TEXT,
-                                     rate LONG INTEGER,
-                                     type INTEGER,
-                                     size REAL);
+declare proc with_result_set () OUT UNION (id int!,
+                                     name text,
+                                     rate long,
+                                     type int,
+                                     size real);
 ```
 
 This form can have `USING TRANSACTION`  or not, since it is possible
@@ -104,7 +104,7 @@ previous chapter for details on the `OUT UNION` statement.
 
 To avoid errors, the declarations for any given file can be automatically
 created by adding something like `--generate_exports` to the command
-line. This will require an additonal file name to be passed in the `--cg`
+line. This will require an additional file name to be passed in the `--cg`
 portion to capture the exports.
 
 That file can then be used with `#include` when you combine the C
@@ -134,40 +134,40 @@ Here are some more examples directly from the CQL test cases; these are all
 auto-generated with `--generate_exports`.
 
 ```sql
-DECLARE PROC test (i INTEGER NOT NULL);
+DECLARE PROC test (i INT!);
 
-DECLARE PROC out_test (OUT i INTEGER NOT NULL, OUT ii INTEGER);
+DECLARE PROC out_test (OUT i INT!, OUT ii INT);
 
-DECLARE PROC outparm_test (OUT foo INTEGER NOT NULL) USING TRANSACTION;
+DECLARE PROC outparm_test (OUT foo INT!) USING TRANSACTION;
 
-DECLARE PROC select_from_view () (id INTEGER NOT NULL, type INTEGER);
+DECLARE PROC select_from_view () (id INT!, type INT);
 
 DECLARE PROC make_view () USING TRANSACTION;
 
-DECLARE PROC copy_int (a INTEGER, OUT b INTEGER);
+DECLARE PROC copy_int (a INT, OUT b INT);
 
 DECLARE PROC complex_return ()
-  (_bool BOOL NOT NULL,
-   _integer INTEGER NOT NULL,
-   _longint LONG INTEGER NOT NULL,
+  (_bool BOOL!,
+   _integer INT!,
+   _longint LONG!,
    _real REAL NOT NULL,
-   _text TEXT NOT NULL,
+   _text TEXT!,
    _nullable_bool BOOL);
 
 DECLARE PROC outint_nullable (
-  OUT output INTEGER,
-  OUT result BOOL NOT NULL)
+  OUT output INT,
+  OUT result BOOL!)
 USING TRANSACTION;
 
 DECLARE PROC outint_notnull (
-  OUT output INTEGER NOT NULL,
-  OUT result BOOL NOT NULL)
+  OUT output INT!,
+  OUT result BOOL!)
 USING TRANSACTION;
 
 DECLARE PROC obj_proc (OUT an_object OBJECT);
 
 DECLARE PROC insert_values (
-  id_ INTEGER NOT NULL,
+  id_ INT!,
   type_ INTEGER)
   USING TRANSACTION;
 ```
@@ -260,7 +260,7 @@ But you could do more than simply pass on the result.
 ```sql
 create procedure meta_stuff(meta bool)
 begin
-  declare C cursor for call get_stuff();  -- or get_meta_stuff(...)
+  cursor C for call get_stuff();  -- or get_meta_stuff(...)
   loop fetch C
   begin
      -- do stuff with C

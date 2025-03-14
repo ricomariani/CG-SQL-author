@@ -197,7 +197,7 @@ There are some typical SQL synonyms
 ```
 var an_int int;
 var a_long long integer;
-var a_long long int;
+var a_long long;
 var a_long long_int;
 ```
 
@@ -232,7 +232,7 @@ let b := x IS y; -- bool!
 let b := x = y;  -- bool (maybe not null depending on x/y)
 ```
 
-The psuedo function "nullable" converts the type of its arg to the nullable
+The pseudo function "nullable" converts the type of its arg to the nullable
  version of the same thing.
 
 ```
@@ -460,13 +460,13 @@ exist as you specified.
 
 ```
 create table sample_table(
-  id integer primary key,
+  id int primary key,
   t text,
   r real
 );
 
 create table other_table(
-  id integer primary key references sample_table(id),
+  id int primary key references sample_table(id),
   l long,
   b blob
 );
@@ -484,7 +484,7 @@ proc make_tables()
 begin
   -- this is not just a declaration, it will actually create the table
   create table sample_table if not exists (
-    id integer primary key,
+    id int primary key,
     t text,
     r real
   );
@@ -612,7 +612,7 @@ end;
 IN, OUT, and INOUT parameters are possible
 
 ```
-proc swizzle(x integer, inout y integer, out z real not null)
+proc swizzle(x int, inout y int, out z real not null)
 begin
   set y := x + y;  -- any computation you like
 
@@ -944,7 +944,7 @@ This is true even though the underlying type is the same for both!
 ENUM declarations can have any numeric type as their base type
 
 ```
-enum implement integer (
+enum implement int (
    pencil,       -- values start at 1 unless you use = to choose something
    pen,          -- the next enum gets previous + 1 as its value (2)
    brush = 7     -- with = expression you get the indicated value
@@ -954,7 +954,7 @@ enum implement integer (
 The above also implicitly does this
 
 ```
-type implement integer<implement>!;  -- not needed
+type implement int<implement>!;  -- not needed
 ```
 
 Using the enum -- simply use dot notation
@@ -999,7 +999,7 @@ cursor E like (x int!, y text!) -- equivalent
 Another cursor defines a shape
 
 ```
-declare F cursor like C;
+cursor F like C;
 ```
 
 The arguments of a procedure define a shape. If you have
@@ -1033,7 +1033,7 @@ called "arguments" and can used where other shapes can appear.
 For instance, you can have "q" shim to "p" using this form:
 
 ```
-proc q(like sample_table, print bool not null)
+proc q(like sample_table, print bool!)
 begin
   -- maybe pre-process, silly example
   id_ += 1;

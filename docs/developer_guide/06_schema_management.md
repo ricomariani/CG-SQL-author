@@ -385,7 +385,7 @@ so we'll include this one in full.
   bprintf(&preamble, "BEGIN\n");
   bprintf(&preamble, "  TRY\n");
   bprintf(&preamble, "    SET %s_facets := cql_facets_new();\n", global_proc_name);
-  bprintf(&preamble, "    DECLARE C CURSOR FOR SELECT * from %s_cql_schema_facets;\n", global_proc_name);
+  bprintf(&preamble, "    CURSOR C FOR SELECT * from %s_cql_schema_facets;\n", global_proc_name);
   bprintf(&preamble, "    LOOP FETCH C\n");
   bprintf(&preamble, "    BEGIN\n");
   bprintf(&preamble, "      LET added := cql_facet_add(%s_facets, C.facet, C.version);\n", global_proc_name);
@@ -410,7 +410,7 @@ We'll go over this section by section.
   bprintf(&main, "\n@attribute(cql:private)\n");
   bprintf(&main, "CREATE PROCEDURE %s_perform_upgrade_steps()\n", global_proc_name);
   bprintf(&main, "BEGIN\n");
-  bprintf(&main, "  DECLARE schema_version LONG INTEGER NOT NULL;\n");
+  bprintf(&main, "  DECLARE schema_version LONG!;\n");
 
   if (view_drops) {
     bprintf(&main, "    -- dropping all views --\n");

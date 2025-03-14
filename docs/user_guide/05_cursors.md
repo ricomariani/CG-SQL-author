@@ -22,10 +22,10 @@ that returns a result set (like DML with `RETURNING`).  An example might look li
 
 ```sql
 -- somewhere we declare this table
-create table xy_table(x integer, y integer);
+create table xy_table(x int, y int);
 
 -- legacy syntax
-declare C cursor for select x, y from xy_table;
+cursor C for select x, y from xy_table;
 
 -- economical syntax (same thing)
 cursor C for select x, y from xy_table;
@@ -38,7 +38,7 @@ can then be used later in various ways.
 Here's perhaps the simplest way to use the cursor above:
 
 ```sql
-declare x, y integer;
+declare x, y int;
 fetch C into x, y;
 ```
 
@@ -192,14 +192,14 @@ the shape sources above.
 So:
 
 ```sql
-declare C cursor like xy_table;
-declare C cursor like select 1 a, 'x' b;
-declare C cursor like (a integer not null, b text not null);
-declare C cursor like a_view;
-declare C cursor like a_cursor;
-declare C cursor like an_interface;
-declare C cursor like a_previously_declared_procedure;
-declare C cursor like a_previously_declared_procedure arguments;
+cursor C like xy_table;
+cursor C like select 1 a, 'x' b;
+cursor C like (a int!, b text!);
+cursor C like a_view;
+cursor C like a_cursor;
+cursor C like an_interface;
+cursor C like a_previously_declared_procedure;
+cursor C like a_previously_declared_procedure arguments;
 ```
 
 Any of those forms define a valid set of columns, i.e., a shape.  Note that the
@@ -255,8 +255,8 @@ instance, in a loop you could copy the current max-value row into a value cursor
 and use it after the loop, like so:
 
 ```sql
-declare C cursor for select * from somewhere;
-declare D cursor like C;
+cursor C for select * from somewhere;
+cursor D like C;
 
 loop fetch C
 begin
@@ -277,7 +277,7 @@ cursors are "automatic".
 And as we saw above, value cursors may or may not be holding a row.
 
 ```sql
-declare C cursor like xy_table;
+cursor C like xy_table;
 if not C then
   call printf("this will always print because C starts empty\n");
 end if;
@@ -291,12 +291,12 @@ we'll go on to those statements next.  As it happens, we are recapitulating the
 history of cursor features in the CQL language by exploring the system in this
 way.
 
-#### Benefits of using named typed to declare a cursor
+#### Benefits of using named typed to cursor a
 
 This form allows any kind of declaration, for instance:
 
 ```sql
-declare C cursor like ( id integer not null, val real, flag boolean );
+cursor C like ( id int!, val real, flag boolean );
 ```
 
 This wouldn't really give us much more than the other forms, however typed name
@@ -305,7 +305,7 @@ do this kind of thing:
 
 ```sql
 -- make a cursor C just like D but also add the fields extra1 and extra2
-declare C cursor like (like D, extra1 real, extra2 bool)
+cursor C like (like D, extra1 real, extra2 bool)
 ```
 
 You could then load that cursor like so:
@@ -353,10 +353,10 @@ On the receiving side you must do something just as awkward:
 
 ```sql
 declare got_row bool!;
-declare w int!;
-declare x int;
-declare y text;
-declare z real;
+var w int!;
+var x int;
+var y text;
+var z real;
 call get_a_row(some_id, got_row, w, x, y, z);
 ```
 
@@ -364,7 +364,7 @@ Using the `out` statement we get the equivalent functionality with a much
 simplified pattern. It looks like this:
 
 ```sql
-proc get_a_row(id_ integer not null)
+proc get_a_row(id_ int!)
 begin
   cursor C for select w, x, y, z from somewhere where id = id_;
   fetch C;
@@ -374,7 +374,7 @@ end;
 
 To use the new procedure you simply do this:
 ```sql
-declare C cursor like get_a_row;
+cursor C like get_a_row;
 fetch C from call get_a_row(id);
 ```
 
@@ -422,13 +422,13 @@ Here's a (somewhat contrived) example of the kind of thing you can do with this
 form:
 
 ```sql
-proc foo(n integer not null)
+proc foo(n int!)
 begin
   cursor C like select 1 value;
   let i := 0;
   while i < n
   begin
-     -- emit one row for every integer
+     -- emit one row for every int
      fetch C from values(i);
      out union C;
      set i := i + 1;
@@ -443,13 +443,13 @@ This pattern is very flexible as we see below in `bar` where
 we merge two different data streams.
 
 ```sql
-create table t1(id integer, stuff text, [other things too]);
-create table t2(id integer, stuff text, [other things too]);
+create table t1(id int, stuff text, [other things too]);
+create table t2(id int, stuff text, [other things too]);
 
 proc bar()
 begin
-  declare C cursor for select * from t1 order by id;
-  declare D cursor for select * from t2 order by id;
+  cursor C for select * from t1 order by id;
+  cursor D for select * from t2 order by id;
 
   fetch C;
   fetch D;
@@ -559,14 +559,14 @@ here is a big table:
 
 ```sql
 create table big (
-  id integer primary key,
+  id int primary key,
   id2 integer unique,
-  a integer,
-  b integer,
-  c integer,
-  d integer,
-  e integer,
-  f integer
+  a int,
+  b int,
+  c int,
+  d int,
+  e int,
+  f int
 );
 ```
 
@@ -574,7 +574,7 @@ This example showcases several of the cursor and shape slicing features by emitt
 two related rows:
 
 ```sql
-proc foo(id_ integer not null)
+proc foo(id_ int!)
 begin
   -- this is the shape of the result we want -- it's some of the columns of "big"
   -- note this query doesn't run, we just use its shape to create a cursor
@@ -633,9 +633,9 @@ Here is the rewritten version of the above procedure; this is what ultimately
 gets compiled into C.
 
 ```sql
-PROC foo (id_ INTEGER NOT NULL)
+PROC foo (id_ INT!)
 BEGIN
-  DECLARE result CURSOR LIKE SELECT id, b, c, d FROM big;
+  CURSOR result LIKE SELECT id, b, c, d FROM big;
   DECLARE main_row CURSOR FOR SELECT * FROM big WHERE id = id_;
   FETCH main_row;
 
@@ -693,7 +693,7 @@ Having done this fetch you can use C as a scalar variable to see if it holds a
 row, e.g.
 
 ```sql
-declare C cursor for select * from foo limit 1;
+cursor C for select * from foo limit 1;
 fetch C;
 if C then
   -- bingo we have a row
@@ -704,7 +704,7 @@ end if
 You can easily iterate, e.g.
 
 ```sql
-declare C cursor for select * from foo;
+cursor C for select * from foo;
 loop fetch C
 begin
   -- one time for every row
@@ -850,8 +850,8 @@ using `T`.
 
 ```sql
 -- these tables appear in the following examples
-create table T(x integer not null, y integer not null,  z integer not null);
-create table U(like T, a integer not null, b integer not null);
+create table T(x int!, y int!,  z int!);
+create table U(like T, a int!, b int!);
 ```
 
 We haven't mentioned this before but the implication of the above is that you
@@ -887,7 +887,7 @@ cursor to call `p1`.
 ```sql
 proc q1()
 begin
- declare C cursor for select * from T;
+ cursor C for select * from T;
  loop fetch C
  begin
    /* this is the same as call p(C.x, C.y, C.z) */
@@ -914,7 +914,7 @@ Or similarly, using a cursor.
 ```sql
 proc q3(like U)
 begin
- declare C cursor for select * from U;
+ cursor C for select * from U;
  loop fetch C
  begin
   /* just the columns that match T so this is still call p(C.x, C.y, C.z) */
@@ -958,8 +958,8 @@ limitations. Let's consider a specific example to study:
 ```sql
 create table Person (
   id text primary key,
-  name text not null,
-  address text not null,
+  name text!,
+  address text!,
   birthday real
 );
 ```
@@ -977,9 +977,9 @@ As we have seen, the above expands into:
 
 ```sql
 proc insert_person(
-  id_ text not null,
-  name_ text not null,
-  address_ text not null,
+  id_ text!,
+  name_ text!,
+  address_ text!,
   birthday_ real)
 begin
   insert into Person(id, name, address, birthday)
@@ -1022,13 +1022,13 @@ The above expands into:
 
 ```sql
 proc insert_two_people(
-  p1_id text not null,
-  p1_name text not null,
-  p1_address text not null,
+  p1_id text!,
+  p1_name text!,
+  p1_address text!,
   p1_birthday real,
-  p2_id text not null,
-  p2_name text not null,
-  p2_address text not null,
+  p2_id text!,
+  p2_name text!,
+  p2_address text!,
   p2_birthday real)
 begin
   insert into Person(id, name, address, birthday)
@@ -1051,7 +1051,7 @@ Here's another example showing a silly but illustrative thing you could do:
 proc insert_lotsa_people(P like Person)
 begin
   -- make a cursor to hold the arguments
-  declare C cursor like P;
+  cursor C like P;
 
   -- convert arguments to a cursor
   fetch C from P;
@@ -1204,7 +1204,7 @@ you want and never actually create the procedure -- a pattern is very much like
 a shape "typedef".  E.g.
 
 ```sql
-interface shape1 (x integer, y real, z text);
+interface shape1 (x int, y real, z text);
 interface shape2 (like shape1, u bool, v bool);
 ```
 
@@ -1246,8 +1246,8 @@ This construct is hugely powerful in a loop to create many complete rows with
 very little effort, even if the schema change over time.
 
 ```sql
-declare i integer not null;
-declare C like my_table;
+var i int!;
+cursor C like my_table;
 set i := 0;
 while (i < 20)
 begin
@@ -1330,9 +1330,9 @@ The normal cursor usage pattern is by far the most common, a cursor is created
 directly with something like these forms:
 
 ```sql
-declare C cursor for select * from shape_source;
+cursor C for select * from shape_source;
 
-declare D cursor for call proc_that_returns_a_shape();
+cursor D for call proc_that_returns_a_shape();
 ```
 
 At this point the cursor can be used normally as follows:
@@ -1369,7 +1369,7 @@ various places.  Referring to the examples above, choices for `T` might be
 >NOTE: A key purpose of the `interface` keyword is to create shapes. e.g.
 
 ```sql
-interface my_shape (id integer not null, name text);
+interface my_shape (id int!, name text);
 ```
 
 The declared interface `my_shape` can be used to help define columns, arguments,
@@ -1397,7 +1397,7 @@ cursor back. Like so:
 
 ```sql
 -- unboxing a cursor from an object, the type of box_obj defines the type of the created cursor
-declare D cursor for box_obj;
+cursor D for box_obj;
 ```
 
 These primitives allow cursors to be passed around with general purpose lifetime.
@@ -1419,7 +1419,7 @@ end;
 -- captures a cursor and passes it on
 proc cursor_boxer()
 begin
-  declare C cursor for select * from something_like_my_shape;
+  cursor C for select * from something_like_my_shape;
   declare box_obj object<my_shape cursor>
   set box from cursor C; -- produces error if shape doesn't match
   call cursor_user(box_obj);
@@ -1465,7 +1465,7 @@ Let's suppose we want to write code to call a function with test arguments,
 there are dozens of combos so we might do something like this.
 
 ```sql
-declare C cursor for select * from test_args;
+cursor C for select * from test_args;
 loop fetch C
 begin
   let ok := foo(from C);

@@ -443,7 +443,7 @@ So in this area CQL departs from the standard syntax to this form:
 
 ```sql
 create virtual table virt_table using my_module [(module arguments)]  as (
-  id integer not null,
+  id int!,
   name text
 );
 ```
@@ -466,7 +466,7 @@ of these forms:
 
 ```sql
 create virtual table virt_table using my_module as (
-  id integer not null,
+  id int!,
   name text
 );
 ```
@@ -485,7 +485,7 @@ CREATE VIRTUAL TABLE virt_table USING my_module;
 
 ```sql
 create virtual table virt_table using my_module(foo, 'goo', (1.5, (bar, baz))) as (
-  id integer not null,
+  id int!,
   name text
 );
 ```
@@ -505,7 +505,7 @@ the actual schema declaration for the table in question. So:
 
 ```sql
 create virtual table virt_table using my_module(arguments following) as (
-  id integer not null,
+  id int!,
   name text
 );
 ```
@@ -514,7 +514,7 @@ becomes
 
 ```sql
 CREATE VIRTUAL TABLE virt_table USING my_module(
-  id INTEGER NOT NULL,
+  id INT!,
   name TEXT
 );
 ```
@@ -600,7 +600,7 @@ erroneous in the first place.  The variable could be a duplicate.
 The `SWITCH` form requires a number of conditions to successfully map
 down to a `C` `switch` statement.  These are:
 
-* the switch-expression must be a not-null integral type (`integer not null` or `long integer not null`)
+* the switch-expression must be a not-null integral type (`int!` or `long!`)
   * the `WHEN` expressions must be losslessly promotable to the type of the switch-expression
 * the values in the `WHEN` clauses must be unique
 * If `ALL VALUES` is present then:
@@ -613,11 +613,11 @@ down to a `C` `switch` statement.  These are:
 
 There are three forms of this declaration:
 * a regular procedure with no DML
-   * e.g. `declare proc X(id integer);`
+   * e.g. `declare proc X(id int);`
 * a regular procedure that uses DML (it will need a db parameter and returns a result code)
-   * e.g. `declare proc X(id integer) using transaction;`
+   * e.g. `declare proc X(id int) using transaction;`
 * a procedure that returns a result set, and you provide the result columns
-   * e.g. `declare proc X(id integer) : (A bool not null, B text);`
+   * e.g. `declare proc X(id int) : (A bool!, B text);`
 The main validations here are that there are no duplicate parameter names, or return value columns.
 
 #### The `DECLARE FUNCTION` Statement
@@ -634,15 +634,15 @@ column definitions.  Once we have the type we walk the list of variable
 names, check them for duplicates and such (see above) and assign their type.
 The canonical name of the variable is defined here. If it is later used with
 a different casing the output will always be as declared.
-e.g. `declare Foo integer; set foo = 1;` is legal but the output
+e.g. `declare Foo int; set foo = 1;` is legal but the output
 will always contain the variable written as `Foo`.
 
 #### The `DECLARE` Cursor Statement
 
 There are two forms of the declare cursor, both of which allow CQL to infer the exact type of the cursor.
-  * `declare foo cursor for select etc.`
+  * `cursor foo for select etc.`
     * the type of the cursor is the net struct type of the select list
-  * `declare foo cursor for call proc();`
+  * `cursor foo for call proc();`
     * proc must be statement that produces a result set via select (see above)
     * the type of the cursor is the struct of the select returned by the proc
     * note if there is more than one loose select in the proc they must match exactly
@@ -1135,7 +1135,7 @@ In a statement that produces a result set like `select * from table_or_view`*
 * binding to a CQL result set is done by column name and we know those names are unique
 * we won't include any columns that are logically deleted, so if you try to use a deleted column you'll get a compile time error
 
-In a cursor statement like `declare C cursor for select * from table_or_view` there are two cases here:
+In a cursor statement like `cursor C for select * from table_or_view` there are two cases here:
 
 *Automatic Fetch  `fetch C;`*
 
@@ -1167,8 +1167,8 @@ kind of join.
 Let's take a quick look.  First some sample data:
 
 ```sql
-create table A( id integer, a text, b text);
-create table B( id integer, c text, d text);
+create table A( id int, a text, b text);
+create table B( id int, c text, d text);
 
 insert into A values(1, 'a1', 'b1');
 insert into B values(1, 'c1', 'd1');

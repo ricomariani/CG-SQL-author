@@ -98,7 +98,7 @@ For instance:
 ```sql
 PROC print_parts(value TEXT)
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     WITH
       result(v) as (CALL split_text('x,y,z'))
       SELECT * from result;
@@ -128,7 +128,7 @@ Now we could write:
 ```sql
 PROC print_ids(value TEXT)
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     WITH
       result(id) as (CALL ids_from_string('1,2,3'))
       SELECT * from result;
@@ -148,7 +148,7 @@ a silly but illustrative example:
 /* This is a bit silly */
 PROC print_common_ids(value TEXT)
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     WITH
       v1(id) as (CALL ids_from_string('1,2,3')),
       v2(id) as (CALL ids_from_string('2,4,6'))
@@ -203,7 +203,7 @@ Here's a full example:
 ```sql
 PROC print_ids(value TEXT)
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     WITH
       my_data(*) as (CALL split_text(value)),
       my_numbers(id) as (CALL ids_from_string_table() USING my_data AS source)
@@ -351,7 +351,7 @@ When a condiitional is specified without an else clause, the fragment would retu
 For example:
 ```sql
 [[shared_fragment]]
-PROC maybe_empty(cond BOOL NOT NULL)
+PROC maybe_empty(cond BOOL!)
 BEGIN
   IF cond THEN
     SELECT 1 a, 2 b, 3 c;
@@ -362,7 +362,7 @@ END;
 Internally, this is actually equivalent to the following:
 ```sql
 [[shared_fragment]]
-PROC maybe_empty(cond BOOL NOT NULL)
+PROC maybe_empty(cond BOOL!)
 BEGIN
   IF cond THEN
     SELECT 1 a, 2 b, 3 c;
@@ -432,7 +432,7 @@ might look like this:
 ```sql
 -- this isn't very exciting because regular max would do the job
 [[shared_fragment]]
-proc max_func(x integer, y integer)
+proc max_func(x int, y int)
 begin
   select case when x >= y then x else y end;
 end;
@@ -504,7 +504,7 @@ Expression fragments can nest, so you could write:
 
 ```sql
 [[shared_fragment]]
-proc max3_func(x integer, y integer, z integer)
+proc max3_func(x int, y int, z int)
 begin
   select max_func(x, max_func(y, z));
 end;
@@ -519,7 +519,7 @@ using case/when can be written and shared this way:
 ```sql
 -- this sort of thing happens all the time
 [[shared_fragment]]
-proc remap(x integer not null)
+proc remap(x int!)
 begin
    select case x
      when 1 then 1001

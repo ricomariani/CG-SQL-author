@@ -112,7 +112,7 @@ will see.
 
 ```sql
 -- real code should use better names than this :)
-declare i_nn integer not null;
+declare i_nn int!;
 ```
 
 In fact, `NOT NULL` is so common in CQL code that it can be abbreviated with a
@@ -334,7 +334,7 @@ be in the form of enumerations of a fixed type or general-purpose ad hoc constan
 We'll see both in the sections to follow.
 
 ```sql
-enum business_type integer (
+enum business_type int (
   restaurant,
   laundromat,
   corner_store = 11 + 3  /* math added for demo purposes only */
@@ -457,7 +457,7 @@ could appear. This allows you to do things like:
 
 ```sql
 create table something(
-  x integer default const((1<<16)|0xf) /* again the math is just for illustration */
+  x int default const((1<<16)|0xf) /* again the math is just for illustration */
 );
 ```
 
@@ -476,7 +476,7 @@ declares named global constants of any type.
 
 ```sql
 declare const group some_constants (
-  my_x = cast(5 as integer<job_id>),
+  my_x = cast(5 as int<job_id>),
   my_y = 12.0,
   my_z = 'foo'
 );
@@ -556,7 +556,7 @@ declare var foo_id;
 Additionally any enumerated type can be used as a type name.  e.g.
 
 ```sql
-enum thing integer (
+enum thing int (
   thing1,
   thing2
 );
@@ -602,7 +602,7 @@ Importantly, an expression with no type kind is compatible with any type kind
 (or none). Hence all of the below are legal.
 
 ```sql
-declare generic real;
+var generic real;
 set generic := size;        -- no kind may accept <meters>
 set generic := duration;    -- no kind may accept <seconds>
 set duration := generic;    -- no kind may be stored in <seconds>
@@ -979,7 +979,7 @@ be used in SQLite contexts because the functions are not known to SQLite, but
 they can be used in loose expressions. For example:
 
 ```sql
-CREATE PROC square_if_odd(a INT NOT NULL, OUT result INT)
+CREATE PROC square_if_odd(a INT!, OUT result INT)
 BEGIN
   IF a % 2 = 0 THEN
     SET result := NULL;
@@ -1012,7 +1012,7 @@ END;
 ```sql
 CREATE PROC y_is_not_null(x INT)
 BEGIN
-  DECLARE y INT NOT NULL;
+  VAR y INT!;
   IF x IS NOT NULL THEN
     SET y := x;
   ELSE
@@ -1453,9 +1453,9 @@ of examples. So let's start with a table with some sensitive data.
 
 ```sql
 create table with_sensitive(
-  id integer,
+  id int,
   name text @sensitive,
-  sens integer @sensitive
+  sens int @sensitive
 );
 ```
 
@@ -1495,7 +1495,7 @@ SQL. Accordingly:
 Sensitive variables can be declared:
 
 ```sql
-declare sens integer @sensitive;
+var sens int @sensitive;
 ```
 
 Simple operations on the variables are sensitive:
@@ -1602,7 +1602,7 @@ Now we come to enforcement, which boils down to what assignments or
 If we have these:
 
 ```sql
-declare sens integer @sensitive;
+var sens int @sensitive;
 declare not_sens integer;
 ```
 
@@ -1893,7 +1893,7 @@ name to something more specific.  For instance.
 Now has more specific mappings
 
 ```sql
-declare x real<joules>;
+var x real<joules>;
 
 -- These are the functions that you might call with pipeline notation
 
@@ -2098,8 +2098,8 @@ like so:
 Like these maybe:
 
 ```sql
-declare function container_get_x(self object<container> not null) int not null;
-declare proc container_set_x(self object<container> not null, value int not null);
+declare function container_get_x(self object<container> not null) int!;
+declare proc container_set_x(self object<container> not null, value int!);
 ```
 
 With those in place `cont.x := cont.x + 1` will be converted into this:

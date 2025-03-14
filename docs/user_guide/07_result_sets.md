@@ -17,9 +17,9 @@ covers this code in even more detail but here it makes sense to at least talk ab
 Let's say we have this simple stored procedure:
 
 ```sql
-create table foo(id integer not null, b bool, t text);
+create table foo(id int!, b bool, t text);
 
-create proc read_foo(id_ integer not null)
+create proc read_foo(id_ int!)
 begin
   select * from foo where id = id_;
 end;
@@ -209,10 +209,10 @@ Chapter 5.  Here we'll discuss the code generation behind that.
 
 Here’s an example from the CQL tests:
 ```sql
-create proc some_integers(start integer not null, stop integer not null)
+create proc some_integers(start int!, stop int!)
 begin
-  declare C cursor like select 1 v, 2 v_squared, "xx" some_text;
-  declare i integer not null;
+  cursor C like select 1 v, 2 v_squared, "xx" some_text;
+  var i int!;
   set i := start;
   while (i < stop)
   begin
@@ -287,8 +287,8 @@ create proc hello()
 begin
 
   create table my_data(
-    pos integer not null primary key,
-    txt text not null
+    pos int! primary key,
+    txt text!
   );
 
   insert into my_data values(2, 'World');
@@ -389,42 +389,42 @@ same as the parent but includes columns for the the child results, too. This is 
 declaration that comes from a typed name list.  An example might be:
 
 ```sql
-declare C cursor like (id integer, name text);
+cursor C like (id int, name text);
 ```
 
 Importantly, such constructs include the ability to reference existing shapes by name. So we might create
 a cursor we need like so:
 
 ```sql
-declare result cursor like (like parent_proc, child_result object<child_proc set>);
+cursor result like (like parent_proc, child_result object<child_proc set>);
 ```
 
 Where the above indicates all the parent columns plus a child result set.  Or more than one child result set if needed.
 
-In addition, the language needs a way to conveniently declare a cursor that is only some of the columns of an existing cursor.
+In addition, the language needs a way to conveniently cursor a that is only some of the columns of an existing cursor.
 In particular, nested result sets require us to extract the columns that link the parent and child result sets.  The columns
 we will "join" on.  To accomplish this the language extends the familiar notion:
 
 ```sql
-declare D cursor like C;
+cursor D like C;
 ```
 
 To the more general form:
 
 ```sql
-declare pks cursor like C(pk1, pk2);
+cursor pks like C(pk1, pk2);
 ```
 
 Which chooses just the named fields from `C` and makes a cursor with only those. In this case
 this primary key fields, `pk1` and `pk2`.  Additionally, for completeness, we add this form:
 
 ```sql
-declare vals cursor like C(-pk1, -pk2);
+cursor vals like C(-pk1, -pk2);
 ```
 
 To mean the cursor vals should have all the columns of `C` except `pk1` and `pk2` i.e. all the "values".
 
-Using any number of intermediate construction steps, and maybe some `declare X type ...` statements,
+Using any number of intermediate construction steps, and maybe some `type X ...` statements,
 any type can be formed from existing shapes by adding and removing columns.
 
 Having done the above we can load a cursor that has just the primary keys with the usual form
@@ -482,7 +482,7 @@ DECLARE FUNC cql_partition_cursor (
   part OBJECT<partitioning> NOT NULL,
   key CURSOR,
   value CURSOR)
-    BOOL NOT NULL;
+    BOOL!;
 
 DECLARE FUNC cql_extract_partition (
   part OBJECT<partitioning> NOT NULL,
@@ -512,12 +512,12 @@ language sugar to do such partitionings automatically and type-safely, like so:
 
 ```sql
 -- parent and child defined elsewhere
-declare proc parent(x integer not null) (id integer not null, a integer, b integer);
-declare proc child(y integer not null) (id integer not null, u text, v text);
+declare proc parent(x int!) (id int!, a int, b integer);
+declare proc child(y int!) (id int!, u text, v text);
 
 -- join together parent and child using 'id'
 -- example x_, y_ arguments for illustration only
-create proc parent_child(x_ integer not null, y_ integer not null)
+create proc parent_child(x_ int!, y_ int!)
 begin
   out union call parent(x_) join call child(y_) using (id);
 end;
@@ -527,9 +527,9 @@ The generated code is simple enough, even though there's a good bit of it.
 But it's a useful exercise to look at it once.  Comments added for clarity.
 
 ```sql
-CREATE PROC parent_child (x_ INTEGER NOT NULL, y_ INTEGER NOT NULL)
+CREATE PROC parent_child (x_ INT!, y_ INT!)
 BEGIN
-  DECLARE __result__0 BOOL NOT NULL;
+  DECLARE __result__0 BOOL!;
 
   -- we need a cursor to hold just the key of the child row
   DECLARE __key__0 CURSOR LIKE child(id);
@@ -550,7 +550,7 @@ BEGIN
   END;
 
   -- we need a shape for our result, it is the columns of the parent plus the child rowset
-  DECLARE __out_cursor__0 CURSOR LIKE (id INTEGER NOT NULL, a INTEGER, b INTEGER,
+  DECLARE __out_cursor__0 CURSOR LIKE (id INT!, a INT, b INT,
                                        child1 OBJECT<child SET> NOT NULL);
 
   -- now we call the parent and iterate it
@@ -582,7 +582,7 @@ other than iterating them with a cursor.
 The iteration pattern:
 
 ```sql
-declare C cursor for call foo(args);
+cursor C for call foo(args);
 ```
 
 is very good if the data is coming from (e.g.) a select statement and we don't want to materialize all
@@ -606,16 +606,16 @@ let child_result := child(args);
 And more generally, this examples shows a manual iteration:
 
 ```sql
-declare proc parent(x integer not null) (id integer not null, a integer, b integer);
-declare proc child(id integer not null) (id integer not null, u text, v text);
+declare proc parent(x int!) (id int!, a int, b int);
+declare proc child(id int!) (id int!, u text, v text);
 
-create proc parent_child(x_ integer not null, y_ integer not null)
+create proc parent_child(x_ int!, y_ int!)
 begin
   -- the result is like the parent with an extra column for the child
-  declare result cursor like (like parent, child object<child set>);
+  cursor result like (like parent, child object<child set>);
 
   -- call the parent and loop over the results
-  declare P cursor for call parent(x_);
+  cursor P for call parent(x_);
   loop fetch P
   begin
      -- compute the child for each P and then emit it
@@ -628,15 +628,15 @@ end;
 After the sugar is applied to expand the types out, the net program is the following:
 
 ```sql
-DECLARE PROC parent (x INTEGER NOT NULL) (id INTEGER NOT NULL, a INTEGER, b INTEGER);
-DECLARE PROC child (id INTEGER NOT NULL) (id INTEGER NOT NULL, u TEXT, v TEXT);
+DECLARE PROC parent (x INT!) (id INT!, a INT, b INT);
+DECLARE PROC child (id INT!) (id INT!, u TEXT, v TEXT);
 
-CREATE PROC parent_child (x_ INTEGER NOT NULL, y_ INTEGER NOT NULL)
+CREATE PROC parent_child (x_ INT!, y_ INT!)
 BEGIN
-  DECLARE result CURSOR LIKE (id INTEGER NOT NULL, a INTEGER, b INTEGER,
+  CURSOR result LIKE (id INT!, a INT, b INT,
                               child OBJECT<child SET>);
 
-  DECLARE P CURSOR FOR CALL parent(x_);
+  CURSOR P FOR CALL parent(x_);
   LOOP FETCH P
   BEGIN
     FETCH result(id, a, b, child) FROM VALUES(P.id, P.a, P.b, child(P.id));

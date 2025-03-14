@@ -352,7 +352,7 @@ And indeed, it does.  Here's some actual output from the compiler:
 /*
 CREATE PROC p ()
 BEGIN
-  DECLARE x, y INTEGER NOT NULL;
+  DECLARE x, y INT!;
   SET x := x + y;
 END;
 */
@@ -388,7 +388,7 @@ To illustrate what goes wrong, we only have to change the test case a tiny bit. 
 /*
 CREATE PROC p ()
 BEGIN
-  DECLARE x, y INTEGER;
+  DECLARE x, y INT;
   SET x := x + y;
 END;
 */
@@ -428,7 +428,7 @@ Here's a more realistic example:
 
 ```c
 /*
-CREATE PROC combine (x INTEGER, y INTEGER, OUT result INTEGER)
+CREATE PROC combine (x INT, y INT, OUT result INT)
 BEGIN
   SET result := 5 * x + 3 * y;
 END;
@@ -891,7 +891,7 @@ illustrates this pretty clearly:
 ```SQL
 CREATE PROC p ()
 BEGIN
-  DECLARE x INTEGER NOT NULL;
+  VAR x INT!;
   SET x := 1;
   WHILE x < 5
   BEGIN
@@ -921,7 +921,7 @@ so this more general pattern is overkill.  But consider this program, just a tin
 ```SQL
 CREATE PROC p ()
 BEGIN
-  DECLARE x INTEGER;  -- x is nullable
+  VAR x INT;  -- x is nullable
   SET x := 1;
   WHILE x < 5
   BEGIN
@@ -1042,7 +1042,7 @@ This error pattern generalizes well and indeed if we use the exception handling 
 Let's generalize this example a tiny bit:
 
 ```SQL
-CREATE PROC p (OUT success BOOL NOT NULL)
+CREATE PROC p (OUT success BOOL!)
 BEGIN
   LET arg := "test";
   TRY
@@ -1264,9 +1264,9 @@ of encoding and re-encoding happens in some path through the code generator.
 By way of example let's consider a pretty simple piece of SQL we might want to run.
 
 ```SQL
-CREATE TABLE foo(id INTEGER, t TEXT);
+CREATE TABLE foo(id INT, t TEXT);
 
-CREATE PROC p (id_ INTEGER, t_ TEXT)
+CREATE PROC p (id_ INT, t_ TEXT)
 BEGIN
   UPDATE foo
   SET t = t_
@@ -1495,7 +1495,7 @@ And that's it.  With those few helpers we can bind any SQLite statement the same
 In many cases you need just one value
 
 ```SQL
-CREATE PROC p (id_ INTEGER NOT NULL, OUT t_ TEXT)
+CREATE PROC p (id_ INT!, OUT t_ TEXT)
 BEGIN
   SET t_ := ( SELECT t
     FROM foo
@@ -1557,7 +1557,7 @@ cql_cleanup:
 There are variations of this form such as:
 
 ```SQL
-CREATE PROC p (id_ INTEGER NOT NULL, OUT t_ TEXT)
+CREATE PROC p (id_ INT!, OUT t_ TEXT)
 BEGIN
   SET t_ := ( SELECT t
     FROM foo
@@ -1619,7 +1619,7 @@ First, let's look at how a CQL cursor is initialized:
 ```SQL
 CREATE PROC p ()
 BEGIN
-  DECLARE C CURSOR FOR SELECT 1 AS x, 2 AS y;
+  CURSOR C FOR SELECT 1 AS x, 2 AS y;
 END;
 ```
 
@@ -1692,9 +1692,9 @@ We change the example just a bit:
 ```SQL
 CREATE PROC p ()
 BEGIN
-  DECLARE x INTEGER NOT NULL;
-  DECLARE y INTEGER NOT NULL;
-  DECLARE C CURSOR FOR SELECT 1 AS x, 2 AS y;
+  VAR x INT!;
+  VAR y INT!;
+  CURSOR C FOR SELECT 1 AS x, 2 AS y;
   FETCH C INTO x, y;
 END;
 ```
@@ -1737,9 +1737,9 @@ DECLARE PROCEDURE printf NO CHECK;
 
 CREATE PROC p ()
 BEGIN
-  DECLARE x INTEGER NOT NULL;
-  DECLARE y INTEGER NOT NULL;
-  DECLARE C CURSOR FOR SELECT 1 AS x, 2 AS y;
+  VAR x INT!;
+  VAR y INT!;
+  CURSOR C FOR SELECT 1 AS x, 2 AS y;
   FETCH C INTO x, y;
   WHILE C
   BEGIN
@@ -1772,9 +1772,9 @@ The next improvement that was added to the language was the `LOOP` statement.  L
 
 ```SQL
 BEGIN
-  DECLARE x INTEGER NOT NULL;
-  DECLARE y INTEGER NOT NULL;
-  DECLARE C CURSOR FOR SELECT 1 AS x, 2 AS y;
+  VAR x INT!;
+  VAR y INT!;
+  CURSOR C FOR SELECT 1 AS x, 2 AS y;
   LOOP FETCH C INTO x, y
   BEGIN
     CALL printf("%d, %d\n", x, y);
@@ -1818,7 +1818,7 @@ Let's go back to one of the earlier examples, but write it the modern way:
 ```SQL
 CREATE PROC p ()
 BEGIN
-  DECLARE C CURSOR FOR SELECT 1 AS x, 2 AS y;
+  CURSOR C FOR SELECT 1 AS x, 2 AS y;
   FETCH C;
 END;
 ```
@@ -1879,7 +1879,7 @@ Now lets look at the loop pattern:
 ```SQL
 CREATE PROC p ()
 BEGIN
-  DECLARE C CURSOR FOR SELECT 1 AS x, 2 AS y;
+  CURSOR C FOR SELECT 1 AS x, 2 AS y;
   LOOP FETCH C
   BEGIN
     CALL printf("%d, %d\n", C.x, C.y);
@@ -1914,7 +1914,7 @@ Finally let's look at an example with cleanup required.  We'll just change the t
 ```SQL
 CREATE PROC p ()
 BEGIN
-  DECLARE C CURSOR FOR SELECT 1 AS x, "2" AS y;
+  CURSOR C FOR SELECT 1 AS x, "2" AS y;
   LOOP FETCH C
   BEGIN
     CALL printf("%d, %s\n", C.x, C.y);
@@ -2075,7 +2075,7 @@ this.  We can write a procedure that calls `q`, like so:
 ```SQL
 CREATE PROC p ()
 BEGIN
-  DECLARE C CURSOR FOR CALL q();
+  CURSOR C FOR CALL q();
   FETCH C;
 END;
 ```
@@ -2115,7 +2115,7 @@ result type of procedure `q` -- hence they always match.
 If q was in some other module, it could be declared with:
 
 ```SQL
-DECLARE PROC q () (x TEXT NOT NULL, y INTEGER NOT NULL);
+DECLARE PROC q () (x TEXT!, y INT!);
 ```
 
 This is a procedure that takes no arguments and returns a result with the indicated shape.
@@ -2128,7 +2128,7 @@ won't provide the declaration.
 If the private annotation were removed, the full exports for this file would be:
 
 ```SQL
-DECLARE PROC q () (x TEXT NOT NULL, y INTEGER NOT NULL);
+DECLARE PROC q () (x TEXT!, y INT!);
 DECLARE PROC p () USING TRANSACTION;
 ```
 
@@ -2147,9 +2147,9 @@ simple sample program that illustrates this.
 ```SQL
 CREATE PROC p ()
 BEGIN
-  DECLARE C CURSOR FOR SELECT "1" AS x, 2 AS y;
+  CURSOR C FOR SELECT "1" AS x, 2 AS y;
   FETCH C;
-  DECLARE D CURSOR LIKE C;
+  CURSOR D LIKE C;
   FETCH D from C;
 END;
 ```
@@ -2234,7 +2234,7 @@ Let's look at an example that is similar to the previous one:
 @ATTRIBUTE(cql:private)
 CREATE PROC q ()
 BEGIN
-  DECLARE C CURSOR LIKE SELECT "1" AS x, 2 AS y;
+  CURSOR C LIKE SELECT "1" AS x, 2 AS y;
   FETCH C USING
    "foo" x,
    3 y;
@@ -2243,14 +2243,14 @@ END;
 
 CREATE PROC p ()
 BEGIN
-  DECLARE C CURSOR FETCH FROM CALL q();
+  CURSOR C FETCH FROM CALL q();
   -- do something with C
 END;
 ```
 
 Let's discuss some of what is above, first looking at `q`:
 
-* `DECLARE C CURSOR LIKE SELECT "1" AS x, 2 AS y;` : this makes an empty value cursor
+* `CURSOR C LIKE SELECT "1" AS x, 2 AS y;` : this makes an empty value cursor
   * note the shape is `LIKE` the indicated `SELECT`, the `SELECT` does not actually run
 * `FETCH ... USING` : this form is sugar, it lets you put the column names `x` and `y` adjacent to the values but is otherwise equivalent to the canonical form
   * `FETCH C(x, y) FROM VALUES("foo", 3);` is the canonical form
@@ -2603,7 +2603,7 @@ Recalling this earlier example:
 ```SQL
 CREATE PROC q ()
 BEGIN
-  DECLARE C CURSOR LIKE SELECT "1" AS x, 2 AS y;
+  CURSOR C LIKE SELECT "1" AS x, 2 AS y;
   FETCH C USING
    "foo" x,
    3 y;
@@ -2670,7 +2670,7 @@ a cursor.  Or it can come from some computation or a mix of both.  Here's a very
 ```SQL
 CREATE PROC q ()
 BEGIN
-  DECLARE C CURSOR LIKE SELECT 1 AS x;
+  CURSOR C LIKE SELECT 1 AS x;
   LET i := 0;
   WHILE i < 5
   BEGIN
@@ -2735,9 +2735,9 @@ many results as possible, a cursor is needed to make the call.
 Here's an example, here `p` calls the `q` method above:
 
 ```SQL
-CREATE PROC p (OUT s INTEGER NOT NULL)
+CREATE PROC p (OUT s INT!)
 BEGIN
-  DECLARE C CURSOR FOR CALL q();
+  CURSOR C FOR CALL q();
   LOOP FETCH C
   BEGIN
     SET s := s + C.x;

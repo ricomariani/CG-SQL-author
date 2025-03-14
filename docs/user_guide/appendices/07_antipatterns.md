@@ -19,12 +19,12 @@ For these examples let's create a couple of tables we might need for examples
 
 ```sql
 CREATE TABLE foo (
-    id integer primary key,
+    id int primary key,
     name text
 );
 
 CREATE TABLE bar (
-    id integer primary key,
+    id int primary key,
     rate real
 );
 ```
@@ -45,7 +45,7 @@ LET v := 1L;  -- long literals have the L suffix like in C
 Similarly:
 
 ```sql
-DECLARE v REAL NOT NULL;
+VAR v REAL NOT NULL;
 SET v := 1;
 ```
 
@@ -63,13 +63,13 @@ below are not necessary.
 
 ```sql
   SELECT
-    CAST(foo.id as INTEGER) as id,
+    CAST(foo.id as INT) as id,
     CAST(foo.name as TEXT) as name,
     CAST(NULL as REAL) as rate
   FROM foo
 UNION ALL
   SELECT
-    CAST(bar.id as INTEGER) as id,
+    CAST(bar.id as INT) as id,
     CAST(NULL as TEXT) as name,
     CAST(bar.rate as REAL) as rate
   FROM bar
@@ -97,7 +97,7 @@ It's possible to do the following to make this even cleaner:
 -- somewhere central
 #define NULL_TEXT CAST(NULL as TEXT)
 #define NULL_REAL CAST(NULL as REAL)
-#define NULL_INT CAST(NULL as INTEGER)
+#define NULL_INT CAST(NULL as INT)
 #define NULL_LONG CAST(NULL as LONG)
 ```
 
@@ -233,7 +233,7 @@ This kind of boolean expression is also verbose for no reason
     rate IS NOT NULL AND rate = 20
 ```
 
-In a `WHERE` clause probably `rate = 20` suffices but even if you really need a `NOT NULL BOOL`
+In a `WHERE` clause probably `rate = 20` suffices but even if you really need a `BOOL NOT NULL`
 result the expression above is exactly what the `IS` operator is for.  e.g.
 
 ```sql

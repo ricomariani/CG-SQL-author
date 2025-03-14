@@ -563,7 +563,7 @@ possible.
 On the other hand this compiles fine.
 
 ```sql
-create proc foo(X object, out is_null bool not null)
+create proc foo(X object, out is_null bool!)
 begin
   set is_null := X is null;
 end;
@@ -613,9 +613,9 @@ generation form was not used so there are no such fields.
 e.g.
 
 ```sql
-declare a integer;
-declare b integer;
-declare C cursor for select 1 A, 2 B;
+var a int;
+var b int;
+cursor C for select 1 A, 2 B;
 fetch C into a, b; -- C.A and C.B not created (!)
 if (C.A) then -- error
   ...
@@ -625,7 +625,7 @@ end if;
 Correct usage looks like this:
 
 ```sql
-declare C cursor for select 1 A, 2 B;
+cursor C for select 1 A, 2 B;
 fetch C;  -- automatically creates C.A and C.B
 if (C.A) then
   ...
@@ -641,7 +641,7 @@ The indicated field is not a valid field in a cursor expression.
 e.g.
 
 ```sql
-declare C cursor for select 1 A, 2 B;
+cursor C for select 1 A, 2 B;
 fetch C;  -- automatically creates C.A and C.B
 if (C.X) then -- C has A and B, but no X
   ...
@@ -1613,7 +1613,7 @@ Cursors come in two flavors.  There are "statement cursors" which are built from
 something like this:
 
 ```sql
-declare C cursor for select * from foo;
+cursor C for select * from foo;
 fetch C;
 -- or --
 fetch C into a, b, c;
@@ -1623,7 +1623,7 @@ That is, they come from a SQLite statement and you can fetch values from that
 statement.  The second type comes from procedural values like this.
 
 ```sql
-declare C cursor like my_table;
+cursor C like my_table;
 fetch C from values(1, 2, 3);
 ```
 
@@ -1642,7 +1642,7 @@ data from one cursor into another.
 
 In a value cursor, declared something like this:
 ```sql
-declare C cursor like my_table;
+cursor C like my_table;
 fetch C from values(1, 2, 3);
 ```
 The type of the cursor ( in this case from `my_table`) requires a certain number
@@ -1656,7 +1656,7 @@ To fix this you'll need to add/remove values so that the type match.
 
 In a value cursor, declared something like this:
 ```sql
-declare C cursor like my_table;
+cursor C like my_table;
 fetch C(a,b,c) from values(1, 2, 3);
 ```
 
@@ -2032,7 +2032,7 @@ argument list.
 Example:
 
 ```sql
-declare proc foo(out x integer);
+declare proc foo(out x int);
 
 -- the constant 1 cannot be used in the out position when calling foo
 call foo(1); '
@@ -2053,7 +2053,7 @@ viable local variable but it is not an exact type match for the parameter.  The
 type of variable used to capture out parameters must be an exact match.
 
 ```sql
-declare proc foo(out x integer);
+declare proc foo(out x int);
 
 create proc bar(out y real)
 begin
@@ -2077,7 +2077,7 @@ viable local variable of the correct type but the nullability does not match.
 The type of variable used to capture out parameters must be an exact match.
 
 ```sql
-declare proc foo(out x integer not null);
+declare proc foo(out x int!);
 
 create proc bar(out y integer)
 begin
@@ -2158,14 +2158,14 @@ Example:good
 
 ```sql
 -- value cursor shaped like a table
-declare C cursor for select * from bar;
+cursor C for select * from bar;
 --ok, C is fetched from the select results
 fetch C;
 ```
 Example: bad
 ```sql
 -- value cursor shaped like a table
-declare C cursor like bar;
+cursor C like bar;
 -- invalid, there is no source for fetching a value cursor
 fetch C;
 -- ok assuming bar is made up of 3 integers
@@ -2251,15 +2251,15 @@ cursor never held values directly then there is nothing to return.
 Example:
 
 ```sql
-declare C cursor for select * from bar;
+cursor C for select * from bar;
 out C;  -- error C was never fetched
 
-declare C cursor for select * from bar;
+cursor C for select * from bar;
 fetch C into x, y, z;
 -- error C was used to load x, y, z so it's not holding any data
 out C;
 
-declare C cursor for select * from bar;
+cursor C for select * from bar;
 -- create storage in C to hold bar columns (e.g. C.x, C,y, C.z)
 fetch C;
 -- ok, C holds data
@@ -2510,7 +2510,7 @@ will be evaluated by SQLite.  That is, inside of some SQL statement.
 
 Examples:
 ```sql
-declare X text;
+var X text;
 
 set X := 'foo' || 'bar';   -- error
 
@@ -2580,7 +2580,7 @@ the DDL that it affects.
 
 The indicated identifier appears in the context of a table, it is a function,
 but it is not a table-valued function.  Either the declaration is wrong (use
-something like `declare select function foo(arg text) (id integer, t text)`) or
+something like `declare select function foo(arg text) (id int, t text)`) or
 the name is wrong.  Or both.
 
 -----
@@ -2768,13 +2768,13 @@ If you are calling a procedure that returns a value cursor (using `OUT`) then
 you accept that cursor using the pattern
 
 ```sql
-DECLARE C CURSOR FETCH FROM CALL foo(...);
+CURSOR C FETCH FROM CALL foo(...);
 ```
 
 The pattern
 
 ```sql
-DECLARE C CURSOR FOR CALL foo(...);
+CURSOR C FOR CALL foo(...);
 ```
 
 Is used for procedures that provide a full `select` statement.
@@ -3474,7 +3474,7 @@ It's possible to take the statement associated with a statement cursor and store
 it in an object variable. Using the form:
 
 ```sql
-declare C cursor for X;
+cursor C for X;
 ```
 
 The object variable 'X' must be declared as follows:
@@ -3676,7 +3676,7 @@ and typically need to be used with some "master plan" in mind.
 
 In the indicated type declaration, the indicated attribute was specified twice.
 This is almost certainly happening because the line in question looks like this
-`declare x type_name not null;` but `type_name` is already `not null`.
+`type x_name not null;` but `type_name` is already `not null`.
 
 ----
 
@@ -4176,7 +4176,7 @@ DECLARE PROCEDURE some_external_proc NO CHECK;
 -- because we're using a CALL statement.
 CALL some_external_proc("Hello!");
 
-DECLARE FUNCTION some_external_proc(t TEXT NOT NULL) INT NOT NULL;
+DECLARE FUNCTION some_external_proc(t TEXT!) INT!;
 
 -- Now that we've declared the type, we can use it in an expression.
 let result := some_external_proc("Hello!");
@@ -4353,7 +4353,7 @@ BEGIN
   ...
 END
 
-DECLARE t TEXT;
+VAR t TEXT;
 
 -- This is NOT legal.
 CALL some_proc(t, t);
@@ -4408,7 +4408,7 @@ shared fragment that is being called does not have any table bindings. e.g.:
 
 ```sql
 [[shared_fragment]]
-create proc my_fragment(lim integer not null)
+create proc my_fragment(lim int!)
 begin
  select * from a_location limit lim;
 end;
@@ -4429,7 +4429,7 @@ Example:
 
 ```sql
 [[shared_fragment]]
-create proc my_fragment(lim integer not null)
+create proc my_fragment(lim int!)
 begin
  with source LIKE source_shape
  select * from source limit lim;
@@ -4452,7 +4452,7 @@ Example:
 
 ```sql
 [[shared_fragment]]
-create proc my_fragment(lim integer not null)
+create proc my_fragment(lim int!)
 begin
  with source LIKE source_shape
  select * from source limit lim;
@@ -4475,7 +4475,7 @@ they might create ambiguities that were not present in the shared fragment. e.g.
 
 ```sql
 [[shared_fragment]]
-create proc my_fragment(lim integer not null)
+create proc my_fragment(lim int!)
 begin
  with source LIKE (select 1 x, 2 y)
  select * from source limit lim;
@@ -4500,7 +4500,7 @@ use a table that is missing a required column. e.g.:
 
 ```sql
 [[shared_fragment]]
-create proc my_fragment(lim integer not null)
+create proc my_fragment(lim int!)
 begin
  with source LIKE (select 1 x, 2 y)
  select * from source limit lim;
@@ -4523,7 +4523,7 @@ of a SQL statement. e.g.:
 
 ```sql
 [[shared_fragment]]
-create proc my_fragment(lim integer not null)
+create proc my_fragment(lim int!)
 begin
  select * from somewhere limit lim;
 end;
@@ -4627,7 +4627,7 @@ Example:
 
 ```
 [[shared_fragment]]
-create proc my_fragment(lim integer not null)
+create proc my_fragment(lim int!)
 begin
   /* something has to go here */
 end;
@@ -4889,7 +4889,7 @@ included in the text of the message.
 
 ### CQL0460: field of a nonnull reference type accessed before verifying that the cursor has a row 'cursor.field'
 
-If a cursor has a field of a nonnull reference type (e.g., `TEXT NOT NULL`), it
+If a cursor has a field of a nonnull reference type (e.g., `TEXT!`), it
 is necessary to verify that the cursor has a row before accessing the field
 (unless the cursor has been fetched in such a way that it *must* have a row,
 e.g., via `FETCH ... FROM VALUES` or `LOOP FETCH`). The reason for this is that,
@@ -4899,14 +4899,14 @@ type.
 Assume we have the following:
 
 ```sql
-create table t (x text not null);
-declare proc requires_text_notnull(x text not null);
+create table t (x text!);
+declare proc requires_text_notnull(x text!);
 ```
 
 The following code is **illegal**:
 
 ```sql
-declare c cursor for select * from t;
+cursor c for select * from t;
 fetch c;
 -- ILLEGAL because `c` may not have a row and thus
 -- `c.x` may be `NULL`
@@ -4917,7 +4917,7 @@ To fix it, the cursor must be verified to have a row before the field is
 accessed:
 
 ```sql
-declare c cursor for select * from t;
+cursor c for select * from t;
 fetch c;
 if c then
   -- legal due to the above check
@@ -4929,7 +4929,7 @@ Alternatively, one can perform a "negative" check by returning (or using another
 control flow statement) when the cursor does not have a row:
 
 ```sql
-declare c cursor for select * from t;
+cursor c for select * from t;
 fetch c;
 if not c then
   call some_logging_function("no rows in t");
@@ -4944,7 +4944,7 @@ If you are sure that a row *must* be present, you can throw to make that
 explicit:
 
 ```sql
-declare c cursor for select * from t;
+cursor c for select * from t;
 fetch c;
 if not c throw;
 -- legal as we would have thrown if `c` did not
@@ -5471,7 +5471,7 @@ All subsequent calls to `bar()` in CQL will call the `foo()` function.
 
 In a `CASE` statement each `WHEN` expression must not be a constant NULL. For example:
 ```sql
-  declare hex text;
+  var hex text;
   set hex := case color
     when NULL    then "#FFFFFF" -- error
     when "red"   then "#FF0000"

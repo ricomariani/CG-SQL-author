@@ -76,7 +76,7 @@ consumes a result set of a particular shape, it's easy enough to create
 a fake result set with a pattern something like this:
 
 ```sql
-create procedure dummy_stuff(lim integer not null)
+create proc dummy_stuff(lim int!)
 begin
   WITH RECURSIVE
   dummy(x) AS (
@@ -210,14 +210,14 @@ set that can be used to mock a method.  I've replaced the real fields with
 
 ```sql
 CREATE PROCEDURE test_my_subject(
-  f1_ LONG INTEGER NOT NULL,
-  f2_ TEXT NOT NULL,
-  f3_ INTEGER NOT NULL,
-  f4_ LONG INTEGER NOT NULL,
+  f1_ LONG!,
+  f2_ TEXT!,
+  f3_ INT!,
+  f4_ LONG!,
   f5_ TEXT,
   f6_ TEXT,
   f7_ TEXT,
-  f8_ BOOL NOT NULL,
+  f8_ BOOL!,
   f9_ TEXT,
   f10_ TEXT
 )
@@ -234,7 +234,7 @@ This can be written much more maintainably as:
 ```sql
 CREATE PROCEDURE test_my_subject(like my_subject)
 BEGIN
-  DECLARE C CURSOR LIKE my_subject;
+  CURSOR C LIKE my_subject;
   FETCH C FROM ARGUMENTS;
   OUT C;
 END;
@@ -260,8 +260,8 @@ attribute with dummy_table, dummy_insert, and dummy_select values.
 
 ```sql
 create table foo(
-  id integer not null,
-  name text not null
+  id int!,
+  name text!
 );
 
 [[autotest=(dummy_table, dummy_insert, dummy_select)]]
@@ -348,7 +348,7 @@ Will generate the following procedure
 ```sql
 CREATE PROC generate_sample_proc_row(LIKE sample_proc)
 BEGIN
-  DECLARE curs CURSOR LIKE sample_proc;
+  CURSOR curs LIKE sample_proc;
   FETCH curs FROM ARGUMENTS;
   OUT curs;
 END;
@@ -385,12 +385,12 @@ this we add a very small procedure that we might want to test.
 
 ```
 create table foo(
- id integer not null primary key,
+ id int! primary key,
  name text
 );
 
 create table bar(
- id integer not null primary key references foo(id),
+ id int! primary key references foo(id),
  data text
 );
 
@@ -440,7 +440,7 @@ Here they are again:
 ```sql
 -- note that the code does not actually call the test subject
 -- this declaration is used so that CQL will know the shape of the result
-DECLARE PROC the_subject () (id INTEGER NOT NULL, data TEXT);
+DECLARE PROC the_subject () (id INT!, data TEXT);
 
 CREATE PROC open_the_subject()
 BEGIN
@@ -464,7 +464,7 @@ END;
 
 CREATE PROC generate_the_subject_row(LIKE the_subject)
 BEGIN
-  DECLARE curs CURSOR LIKE the_subject;
+  CURSOR curs LIKE the_subject;
   FETCH curs FROM ARGUMENTS;
   OUT curs;
 END;
@@ -476,11 +476,11 @@ That covers what we had before, so, what's new?  Actually, quite a bit.  We'll b
 CREATE PROC test_the_subject_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS foo(
-    id INTEGER NOT NULL PRIMARY KEY,
+    id INT! PRIMARY KEY,
     name TEXT
   );
   CREATE TABLE IF NOT EXISTS bar(
-    id INTEGER NOT NULL PRIMARY KEY REFERENCES foo (id),
+    id INT! PRIMARY KEY REFERENCES foo (id),
     data TEXT
   );
 END;

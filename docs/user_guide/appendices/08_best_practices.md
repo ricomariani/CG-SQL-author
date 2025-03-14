@@ -309,7 +309,7 @@ arguments changes you just have to add the args you don't have to also add new
 declarations.
 
 The `LIKE` construct can be used to let you declare things whose type is the
-same as another thing.  Patterns like `DECLARE ARGS CURSOR LIKE FOO ARGUMENTS`
+same as another thing.  Patterns like `CURSOR ARGS LIKE FOO ARGUMENTS`
 save you a lot of typing and also enhance correctness.  There's a whole chapter
 dedicated to "shapes" defined by `LIKE`.
 
@@ -380,20 +380,20 @@ boring tables.
 ```sql
 create table A
 (
-   id integer primary key,
-   this text not null
+   id int primary key,
+   this text!
 );
 
 create table B
 (
-   id integer primary key,
-   that text not null
+   id int primary key,
+   that text!
 );
 
 create table C
 (
-   id integer primary key,
-   other text not null
+   id int primary key,
+   other text!
 );
 ```
 
@@ -509,8 +509,8 @@ begin
 end;
 
 create proc getAB(
-    id_ integer not null,
-    experiment bool not null,
+    id_ int!,
+    experiment bool!,
     b_filter text)
 begin
   with

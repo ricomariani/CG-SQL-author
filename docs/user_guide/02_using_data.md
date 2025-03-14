@@ -26,12 +26,12 @@ Suppose we have the following program:
 -- needed to allow vararg calls to C functions
 declare procedure printf no check;
 
-create table my_data(t text not null);
+create table my_data(t text!);
 
 create proc hello()
 begin
   insert into my_data(t) values("Hello, world\n");
-  declare t text not null;
+  var t text!;
   set t := (select * from my_data);
   call printf('%s', t);
 end;
@@ -129,10 +129,10 @@ declare procedure printf no check;
 
 create proc hello()
 begin
-  create table my_data(t text not null);
+  create table my_data(t text!);
   insert into my_data(t) values("Hello, world\n");
 
-  declare t text not null;
+  var t text!;
   set t := (select * from my_data);
   call printf('%s', t);
   drop table my_data;
@@ -169,7 +169,7 @@ any particular database setup; it just uses the provided database.
 When `hello` runs, we begin with:
 
 ```sql
-create table my_data(t text not null);
+create table my_data(t text!);
 ```
 
 This will create the `my_data` table with a single column `t`, of type `text not
@@ -193,7 +193,7 @@ alternative.
 Next, we declare a local variable to hold our data:
 
 ```sql
-declare t text not null;
+var t text!;
 ```
 
 Then, we can read back our data:
@@ -307,7 +307,7 @@ begin
   insert into my_data values(0, 'Hello');
   insert into my_data values(1, 'There');
 
-  declare C cursor for select * from my_data order by pos;
+  cursor C for select * from my_data order by pos;
 
   loop fetch C
   begin
@@ -325,8 +325,8 @@ Reviewing the essential parts of the above.
 
 ```sql
 create table my_data(
-  pos integer not null primary key,
-  txt text not null
+  pos int! primary key,
+  txt text!
 );
 ```
 
@@ -346,7 +346,7 @@ type compatible with the indicated column.
 The most important change is here:
 
 ```sql
-declare C cursor for select * from my_data order by pos;
+cursor C for select * from my_data order by pos;
 ```
 
 We've created a non-scalar variable `C`, a cursor over the indicated result set.
@@ -421,7 +421,7 @@ declare proc printf no check;
 procedure mandelbrot()
 begin
   -- this is basically one giant select statement
-  declare C cursor for
+  cursor C for
     with recursive
       -- x from -2.0 to +1.2
       xaxis(x) as (select -2.0 union all select x + 0.05 from xaxis where x < 1.2),

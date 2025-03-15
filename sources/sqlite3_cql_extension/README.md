@@ -20,7 +20,7 @@ gcc -g -O0 -DSQLITE_ENABLE_LOAD_EXTENSION -o sqlite3 sqlite3-all.c shell.c
 
 ```bash
 # Export the path of the sqlite sqlite3 source code
-export SQLITE_PATH=../../../sqlite
+export SQLITE_PATH=../sqlite
 
 # Build the extension
 ./make.sh

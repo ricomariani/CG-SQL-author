@@ -212,3 +212,211 @@ void sqlite3_result_cql_text(sqlite3_context *_Nonnull context, cql_string_ref v
   sqlite3_result_text(context, c_str, -1, SQLITE_TRANSIENT);
   cql_free_cstr(c_str, value);
 }
+
+typedef struct {
+  sqlite3_vtab_cursor base;
+  cql_result_set_ref result_set;
+  int row_count;
+  int column_count;
+  int current_row;
+} cql_rowset_cursor;
+
+static int cql_rowset_connect(
+  sqlite3 *db, 
+  void *pAux,
+  int argc,
+  const char *const *argv,
+  sqlite3_vtab **ppVtab,
+  char **pzErr)
+{
+  cql_rowset_table *pNew = sqlite3_malloc(sizeof(cql_rowset_table));
+  if (!pNew) return SQLITE_NOMEM;
+
+  memset(pNew, 0, sizeof(cql_rowset_table));
+  strncpy(pNew->function_name, argv[0], sizeof(pNew->function_name) - 1);
+  
+  // Store arguments
+  pNew->argc = argc - 3;
+  if (pNew->argc > 0) {
+      pNew->argv = sqlite3_malloc(sizeof(char*) * pNew->argc);
+      for (int i = 0; i < pNew->argc; i++) {
+          pNew->argv[i] = sqlite3_mprintf("%s", argv[i + 3]); // Store a copy of the arguments
+      }
+  } else {
+      pNew->argv = NULL;
+  }
+
+  *ppVtab = (sqlite3_vtab *)pNew;
+  return SQLITE_OK;
+}
+
+static int cql_rowset_open_stub(sqlite3_vtab *pVtab, sqlite3_vtab_cursor **ppCursor) {
+  cql_rowset_cursor *pCur = sqlite3_malloc(sizeof(cql_rowset_cursor));
+  if (!pCur) return SQLITE_NOMEM;
+  
+  cql_rowset_table *pTab = (cql_rowset_table *)pVtab;
+  pCur->result_set = 0; // get_rowset_handle_by_name(pTab->function_name, pTab->argc, pTab->argv);
+  
+  if (!pCur->result_set) {
+      sqlite3_free(pCur);
+      return SQLITE_ERROR;
+  }
+
+  // Check to make sure the meta data has column data
+  cql_result_set_meta *meta = cql_result_set_get_meta(pCur->result_set);
+  cql_contract(meta->columnOffsets != NULL);
+
+  pCur->column_count =  meta->columnCount;
+  pCur->row_count = cql_result_set_get_count(pCur->result_set); 
+  pCur->current_row = 0;
+  
+  *ppCursor = (sqlite3_vtab_cursor *)pCur;
+  return SQLITE_OK;
+}
+
+
+static int cql_rowset_disconnect(sqlite3_vtab *pVtab) {
+  cql_rowset_table *pTab = (cql_rowset_table *)pVtab;
+  if (pTab->argv) {
+      for (int i = 0; i < pTab->argc; i++) {
+          sqlite3_free(pTab->argv[i]);
+      }
+      sqlite3_free(pTab->argv);
+  }
+  sqlite3_free(pTab);
+  return SQLITE_OK;
+}
+
+/* Close Cursor */
+static int cql_rowset_close(sqlite3_vtab_cursor *cur) {
+  cql_rowset_cursor *pCur = (cql_rowset_cursor *)cur;
+  cql_result_set_release(pCur->result_set);
+  sqlite3_free(cur);
+  return SQLITE_OK;
+}
+
+/* Move to Next Row */
+static int cql_rowset_next(sqlite3_vtab_cursor *cur) {
+  cql_rowset_cursor *pCur = (cql_rowset_cursor *)cur;
+  pCur->current_row++;
+  return SQLITE_OK;
+}
+
+/* Check if Cursor is at End */
+static int cql_rowset_eof(sqlite3_vtab_cursor *cur) {
+  cql_rowset_cursor *pCur = (cql_rowset_cursor *)cur;
+  return pCur->current_row >= pCur->row_count;
+}
+
+/* Retrieve Column Data */
+static int cql_rowset_column(sqlite3_vtab_cursor *cur, sqlite3_context *context, int column) {
+  cql_rowset_cursor *pCur = (cql_rowset_cursor *)cur;
+
+  cql_result_set_ref result_set = pCur->result_set;
+  if (result_set == NULL) {
+    sqlite3_result_text(context, "nil result set", -1, SQLITE_TRANSIENT);
+    return SQLITE_ERROR;
+  }
+
+  if (column >= pCur->column_count) {
+    sqlite3_result_text(context, "column out of range", -1, SQLITE_TRANSIENT);
+    return SQLITE_ERROR;
+  }
+  const cql_int32 row = pCur->current_row;
+  if (row >= pCur->row_count) {
+    sqlite3_result_text(context, "row out of range", -1, SQLITE_TRANSIENT);
+    return SQLITE_ERROR;
+  }
+
+  cql_result_set_meta *meta = cql_result_set_get_meta(result_set);
+
+  if (meta->columnOffsets == NULL) {
+    sqlite3_result_text(context, "rowset metadata null", -1, SQLITE_TRANSIENT);
+    return SQLITE_ERROR;
+  }
+
+  if (cql_result_set_get_is_null_col(result_set, row, column)) {
+    sqlite3_result_null(context);
+    return SQLITE_OK;
+  }
+
+  switch (CQL_CORE_DATA_TYPE_OF(meta->dataTypes[column])) {
+    case CQL_DATA_TYPE_INT32:
+      sqlite3_result_int(context, cql_result_set_get_int32_col(result_set, row, column));
+      break;
+    case CQL_DATA_TYPE_INT64:
+      sqlite3_result_int64(context, cql_result_set_get_int64_col(result_set, row, column));
+      break;
+    case CQL_DATA_TYPE_DOUBLE:
+      sqlite3_result_double(context, cql_result_set_get_double_col(result_set, row, column));
+      break;
+    case CQL_DATA_TYPE_BOOL:
+      sqlite3_result_int(context, cql_result_set_get_bool_col(result_set, row, column));
+      break;
+    case CQL_DATA_TYPE_STRING: {
+      cql_string_ref str_ref = cql_result_set_get_string_col(result_set, row, column);
+      cql_alloc_cstr(c_str, str_ref);
+      sqlite3_result_text(context, c_str, -1, SQLITE_TRANSIENT);
+      cql_free_cstr(c_str, str_ref);
+      break;
+    }
+    case CQL_DATA_TYPE_BLOB: {
+      cql_blob_ref blob_ref = cql_result_set_get_blob_col(result_set, row, column);
+      const void *bytes = cql_get_blob_bytes(blob_ref);
+      cql_uint32 size = cql_get_blob_size(blob_ref);
+      sqlite3_result_blob(context, bytes, size, SQLITE_TRANSIENT);
+      break;
+    }
+    case CQL_DATA_TYPE_OBJECT: {
+      // Not supported yet — See https://www.sqlite.org/bindptr.html
+      cql_object_ref obj_ref = cql_result_set_get_object_col(result_set, row, column);
+      cql_retain((cql_type_ref)obj_ref);
+      sqlite3_result_int64(context, (int64_t)obj_ref);
+      break;
+    }
+  }
+  return SQLITE_OK;
+}
+   
+/* Return Row ID */
+static int cql_rowset_rowid(sqlite3_vtab_cursor *cur, sqlite_int64 *pRowid) {
+  cql_rowset_cursor *pCur = (cql_rowset_cursor *)cur;
+  *pRowid = pCur->current_row;
+  return SQLITE_OK;
+}
+
+/* xBestIndex - No filtering, full table scan */
+static int cql_rowset_best_index(sqlite3_vtab *pVtab, sqlite3_index_info *pIdxInfo) {
+  pIdxInfo->estimatedCost = 100.0;
+  return SQLITE_OK;
+}
+
+int register_rowset_tvf(sqlite3 *db, const char *name) {
+  static sqlite3_module rowsetModule = {
+      .iVersion = 0,
+      .xCreate = cql_rowset_connect,
+      .xConnect = cql_rowset_connect,
+      .xDisconnect = cql_rowset_disconnect,
+      .xOpen = cql_rowset_open_stub,
+      .xClose = cql_rowset_close,
+      .xBestIndex = cql_rowset_best_index,
+      .xNext = cql_rowset_next,
+      .xEof = cql_rowset_eof,
+      .xColumn = cql_rowset_column,
+      .xRowid = cql_rowset_rowid
+  };
+  
+  return sqlite3_create_module_v2(db, name, &rowsetModule, NULL, NULL);
+}
+
+int sqlite3_rowsettvf_init(sqlite3 *db, char **pzErrMsg, const sqlite3_api_routines *pApi) {
+  SQLITE_EXTENSION_INIT2(pApi);
+
+  register_rowset_tvf(db, "A");
+  register_rowset_tvf(db, "B");
+  register_rowset_tvf(db, "C");
+
+  return SQLITE_OK;
+}
+
+

@@ -24,3 +24,11 @@ void sqlite3_result_cql_nullable_double(sqlite3_context *_Nonnull context, cql_n
 void sqlite3_result_cql_pointer(sqlite3_context *_Nonnull context, void *_Nonnull value);
 void sqlite3_result_cql_blob(sqlite3_context *_Nonnull context, _Nullable cql_blob_ref value);
 void sqlite3_result_cql_text(sqlite3_context *_Nonnull context, _Nullable cql_string_ref value);
+
+typedef struct {
+    sqlite3_vtab base;
+    char function_name[10];   // Stores "A", "B", or "C"
+    int argc;                 // Number of arguments
+    char **argv;              // Array of argument values (strings)
+} cql_rowset_table;
+  

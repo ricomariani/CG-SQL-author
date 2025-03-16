@@ -36,6 +36,7 @@ cql_bool is_sqlite3_type_compatible_with_cql_core_type(
   return false;
 }
 
+/*
 void set_sqlite3_result_from_result_set(sqlite3_context *_Nonnull context, cql_result_set_ref _Nonnull result_set) {
   const cql_int32 row = 0;
   const cql_int32 column = 0;
@@ -86,6 +87,7 @@ void set_sqlite3_result_from_result_set(sqlite3_context *_Nonnull context, cql_r
   silent_error:
     sqlite3_result_null(context);
 }
+*/
 
 cql_bool resolve_not_null_bool_from_sqlite3_value(sqlite3_value *_Nonnull value) {
   return (cql_bool)sqlite3_value_int(value);
@@ -212,14 +214,6 @@ void sqlite3_result_cql_text(sqlite3_context *_Nonnull context, cql_string_ref v
   sqlite3_result_text(context, c_str, -1, SQLITE_TRANSIENT);
   cql_free_cstr(c_str, value);
 }
-
-typedef struct {
-  sqlite3_vtab_cursor base;
-  cql_result_set_ref result_set;
-  int row_count;
-  int column_count;
-  int current_row;
-} cql_rowset_cursor;
 
 static int cql_rowset_connect(
   sqlite3 *db, 
@@ -391,7 +385,7 @@ static int cql_rowset_best_index(sqlite3_vtab *pVtab, sqlite3_index_info *pIdxIn
   return SQLITE_OK;
 }
 
-int register_rowset_tvf(sqlite3 *db, const char *name) {
+int register_rowset_tvf(sqlite3 *db, cql_rowset_func func, const char *name) {
   static sqlite3_module rowsetModule = {
       .iVersion = 0,
       .xCreate = cql_rowset_connect,
@@ -407,16 +401,6 @@ int register_rowset_tvf(sqlite3 *db, const char *name) {
   };
   
   return sqlite3_create_module_v2(db, name, &rowsetModule, NULL, NULL);
-}
-
-int sqlite3_rowsettvf_init(sqlite3 *db, char **pzErrMsg, const sqlite3_api_routines *pApi) {
-  SQLITE_EXTENSION_INIT2(pApi);
-
-  register_rowset_tvf(db, "A");
-  register_rowset_tvf(db, "B");
-  register_rowset_tvf(db, "C");
-
-  return SQLITE_OK;
 }
 
 

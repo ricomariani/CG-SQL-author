@@ -166,10 +166,17 @@ int sqlite3_cqlextension_init(sqlite3 *_Nonnull db, char *_Nonnull *_Nonnull pzE
   int rc = SQLITE_OK;
 """)
     for proc in data['queries'] + data['deletes'] + data['inserts'] + data['generalInserts'] + data['updates'] + data['general']:
-        print(f"""
-  rc = sqlite3_create_function(db, "{proc['canonicalName']}", {len([arg for arg in proc['args'] if arg['binding'] in ['in', 'inout']])}, SQLITE_UTF8, NULL, call_{proc['canonicalName']}, NULL, NULL);
-  if (rc != SQLITE_OK) return rc;
+        if proc['projection']:
+             print(f"""
+  rc = register_rowset_tvf(db, call_{proc['canonicalName']}, "{proc['canonicalName']}");
 """)
+        else:
+            print(f"""
+  rc = sqlite3_create_function(db, "{proc['canonicalName']}", {len([arg for arg in proc['args'] if arg['binding'] in ['in', 'inout']])}, SQLITE_UTF8, NULL, call_{proc['canonicalName']}, NULL, NULL);
+""")  
+        print("""
+        if (rc != SQLITE_OK) return rc;
+        """)
 
     print("""
   return rc;
@@ -207,8 +214,12 @@ def emit_proc_c_func_body(proc, cmd_args):
     innie_arguments = in_arguments + inout_arguments
     outtie_arguments = inout_arguments + out_arguments
 
+    if proc['projection']:
+        out_cursor = ", cql_rowset_cursor *result"
+    else:
+        out_cursor = ""
 
-    ___(f"void call_{proc['canonicalName']}(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *_Nonnull *_Nonnull argv)")
+    ___(f"void call_{proc['canonicalName']}(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *_Nonnull *_Nonnull argv{out_cursor})")
     ___("{")
     indent()
 
@@ -295,7 +306,7 @@ def emit_proc_c_func_body(proc, cmd_args):
     if proc['projection']:
         vvv("// Current strategy: (A) Using the result set")
 
-        ___("set_sqlite3_result_from_result_set(context, (cql_result_set_ref)_data_result_set_);")
+        ___("result->result_set = (cql_result_set_ref)_data_result_set_;")
         ___("goto cleanup;")
         ___()
     else:

@@ -3,7 +3,7 @@
 
 cql_bool is_sqlite3_type_compatible_with_cql_core_type(int sqlite_type, int8_t cql_core_type, cql_bool is_nullable);
 
-void set_sqlite3_result_from_result_set(sqlite3_context *_Nonnull context, cql_result_set_ref _Nonnull result_set);
+// void set_sqlite3_result_from_result_set(sqlite3_context *_Nonnull context, cql_result_set_ref _Nonnull result_set);
 
 cql_bool resolve_not_null_bool_from_sqlite3_value(sqlite3_value *_Nonnull value);
 cql_double resolve_not_null_real_from_sqlite3_value(sqlite3_value *_Nonnull value);
@@ -32,3 +32,14 @@ typedef struct {
     char **argv;              // Array of argument values (strings)
 } cql_rowset_table;
   
+typedef struct {
+  sqlite3_vtab_cursor base;
+  cql_result_set_ref result_set;
+  int row_count;
+  int column_count;
+  int current_row;
+} cql_rowset_cursor;
+
+typedef void (*cql_rowset_func)(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *_Nonnull *_Nonnull argv, cql_rowset_cursor *result);
+int register_rowset_tvf(sqlite3 *db, cql_rowset_func func, const char *name);
+

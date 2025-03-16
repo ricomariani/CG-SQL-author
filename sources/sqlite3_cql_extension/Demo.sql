@@ -137,7 +137,7 @@ begin
 
   let wanted := 10;
   declare LL cursor for select * from many_rows(wanted);
-  
+
   let got := 0;
   loop fetch LL
   begin
@@ -240,7 +240,7 @@ begin
   E!(b, true);
   bl := (select out__blob__nullable());
   E!(bl, null);
-  
+
   printf("Successful exit\n");
 end;
 
@@ -248,11 +248,11 @@ end;
 @echo C, '
 int sqlite3_cqlextension_init(sqlite3 *_Nonnull db, char *_Nonnull *_Nonnull pzErrMsg, const sqlite3_api_routines *_Nonnull pApi);
 
-#define trace_printf(x,...) 
+#define trace_printf(x,...)
 
 void explicit_test(sqlite3 *db) {
     printf("explicit test\n");
-    
+
     /* Query with filtering via hidden columns */
     sqlite3_stmt *stmt;
     int rc = sqlite3_prepare_v2(db, "SELECT * FROM three_int_test WHERE arg_x = 100 AND arg_y = 200 and arg_z = 300", -1, &stmt, NULL);
@@ -281,9 +281,15 @@ int main(int argc, char **argv) {
    sqlite3 *db = NULL;
    int rc = sqlite3_open(":memory:", &db);
    if (rc) exit(rc);
+
+   // this is the thing that registers all of the UDFs and TVFs
    rc = sqlite3_cqlextension_init(db, NULL, NULL);
    if (rc) exit(rc);
+
+   // this is a hand written test case
    explicit_test(db);
+
+   // this is CQL exercising its own generated procs via the interop interface
    rc = test_cases(db);
    exit(rc);
 }

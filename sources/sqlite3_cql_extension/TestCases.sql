@@ -5,8 +5,12 @@ declare proc printf no check;
 #define cql_error_trace() fprintf(stderr, "Error at %s:%d in %s: %d %s\n", __FILE__, __LINE__, _PROC_, _rc_, sqlite3_errmsg(_db_))
 ';
 
--- auto  generateed by the python, simply "grep DECLARE SELECT" SampleInterop.c
-DECLARE SELECT FUNCTION comprehensive_test(in__bool__not_null bool!, in__bool__nullable bool, in__real__not_null real!, in__real__nullable real, in__integer__not_null integer!, in__integer__nullable integer, in__long__not_null long!, in__long__nullable long, in__text__not_null text!, in__text__nullable text, in__blob__not_null blob!, in__blob__nullable blob, inout__bool__not_null bool!, inout__bool__nullable bool, inout__real__not_null real!, inout__real__nullable real, inout__integer__not_null integer!, inout__integer__nullable integer, inout__long__not_null long!, inout__long__nullable long, inout__text__not_null text!, inout__text__nullable text, inout__blob__not_null blob!, inout__blob__nullable blob) (result text!);
+-- auto  generateed by the python, simply `grep "DECLARE SELECT" out/SampleInterop.c | sed s/...//`
+-- the prototype is emitted in a comment so you just strip it out
+-- see out/SampleInterop.c if this is unclear at all
+DECLARE SELECT FUNCTION comprehensive_test1(in__bool__not_null bool!, in__bool__nullable bool, in__real__not_null real!, in__real__nullable real, in__integer__not_null integer!, in__integer__nullable integer, in__long__not_null long!, in__long__nullable long, in__text__not_null text!, in__text__nullable text, in__blob__not_null blob!, in__blob__nullable blob) (result text!);
+DECLARE SELECT FUNCTION comprehensive_test2(inout__bool__not_null bool!, inout__bool__nullable bool, inout__real__not_null real!, inout__real__nullable real, inout__integer__not_null integer!, inout__integer__nullable integer, inout__long__not_null long!, inout__long__nullable long, inout__text__not_null text!, inout__text__nullable text, inout__blob__not_null blob!, inout__blob__nullable blob) (result text!);
+DECLARE SELECT FUNCTION comprehensive_test3() (result text!);
 DECLARE SELECT FUNCTION hello_world() (result text!);
 DECLARE SELECT FUNCTION in__blob__not_null(in__x blob!) (in__x blob!);
 DECLARE SELECT FUNCTION in__blob__nullable(in__x blob) (in__x blob);
@@ -54,7 +58,6 @@ DECLARE SELECT FUNCTION result_from_result_set__with_in_out_inout(in__text__not_
 DECLARE SELECT FUNCTION result_from_void__null__no_args() /*void*/ int;
 DECLARE SELECT FUNCTION result_from_void__null__with_in(in__x text!) /*void*/ int;
 DECLARE SELECT FUNCTION three_int_test(x integer, y integer, z integer) (x integer, y integer, z integer);
-
 
 @macro(stmt_list) sel!(f! expr, v! expr)
 begin
@@ -229,6 +232,25 @@ begin
   EXPECT_EQ!(b, true);
   bl := (select out__blob__nullable());
   EXPECT_EQ!(bl, null);
+
+  let b_nn := true;
+  let i_nn := 1;
+  let l_nn := 123456789012345L;
+  let r_nn := 1.5;
+  let t_nn := 'foo';
+  let bl_nn := (select x'1234');
+
+  t := (select result from comprehensive_test1(
+    false, null, 1.5, null, 1, null, 12345679012345L, null, 'foo', null,  (select x'1234'), null));
+  EXPECT_EQ!(t, 'hello1');
+
+  t := (select result from comprehensive_test2(
+    b_nn, b, r_nn, r, i_nn, i, l_nn, l, t_nn, t, bl_nn, bl));
+
+  EXPECT_EQ!(t, 'hello2');
+
+  t := (select result from comprehensive_test3());
+  EXPECT_EQ!(t, 'hello3');
 
   printf("Successful exit\n");
 end;

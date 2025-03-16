@@ -28,7 +28,7 @@ begin
   end;
 end;
 
-proc comprehensive_test(
+proc comprehensive_test1(
   in in__bool__not_null bool!,
   in in__bool__nullable bool,
   in in__real__not_null real!,
@@ -39,10 +39,16 @@ proc comprehensive_test(
   in in__long__nullable long,
   in in__text__not_null text!,
   in in__text__nullable text,
-  -- in in__object__not_null object!,
-  -- in in__object__nullable object,
   in in__blob__not_null blob!,
-  in in__blob__nullable blob,
+  in in__blob__nullable blob
+  -- in in__object__not_null object!
+  -- in in__object__nullable object
+)
+begin
+  select "hello1" as `result`;
+end;
+
+proc comprehensive_test2(
   inout inout__bool__not_null bool!,
   inout inout__bool__nullable bool,
   inout inout__real__not_null real!,
@@ -53,10 +59,16 @@ proc comprehensive_test(
   inout inout__long__nullable long,
   inout inout__text__not_null text!,
   inout inout__text__nullable text,
+  inout inout__blob__not_null blob!,
+  inout inout__blob__nullable blob
   -- inout inout__object__not_null object!,
   -- inout inout__object__nullable object,
-  inout inout__blob__not_null blob!,
-  inout inout__blob__nullable blob,
+)
+begin
+  select "hello2" as `result`;
+end;
+
+proc comprehensive_test3(
   out out__real__not_null real!,
   out out__real__nullable real,
   out out__bool__not_null bool!,
@@ -73,7 +85,6 @@ proc comprehensive_test(
   out out__blob__nullable blob
 )
 begin
-
   out__bool__not_null := TRUE;
   out__bool__nullable := TRUE;
 
@@ -95,7 +106,7 @@ begin
   out__blob__not_null := (select CAST("blob" as blob));
   out__blob__nullable := (select CAST("blob" as blob));
 
-  select "hello" as `result`;
+  select "hello3" as `result`;
 end;
 
 proc result_from_result_set__no_args()

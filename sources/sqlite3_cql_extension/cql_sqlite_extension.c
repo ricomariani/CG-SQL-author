@@ -279,7 +279,9 @@ static int cql_rowset_column(sqlite3_vtab_cursor *cur, sqlite3_context *context,
   if (column >= pCur->column_count) {
     // sqlite3_result_text(context, "column out of range", -1, SQLITE_TRANSIENT);
     // These are the hidden columns we always return null
-    sqlite3_result_int(context, 5);
+    // The most common reason for hitting this code is that we didn't "omit" a constraint column
+    // in the best index function.
+    sqlite3_result_null(context);
     return SQLITE_OK;
   }
   const cql_int32 row = pCur->current_row;

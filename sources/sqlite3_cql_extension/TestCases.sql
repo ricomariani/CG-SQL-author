@@ -5,71 +5,56 @@ declare proc printf no check;
 #define cql_error_trace() fprintf(stderr, "Error at %s:%d in %s: %d %s\n", __FILE__, __LINE__, _PROC_, _rc_, sqlite3_errmsg(_db_))
 ';
 
--- we could add a flag to the .py file to generrate these declarations automatically
--- this is the transformation after the first outtie arguments is turned into the return value
---   all the innie arguments (in, inout) stay as args
---   the first outtie argument (out, inout) becomes the return value
---   if the procedure returns a result set then it becomes a table valued function
-
--- the table valued functions
-DECLARE SELECT FUNCTION hello_world() (result text);
-DECLARE SELECT FUNCTION result_from_result_set__no_args() (result text);
-DECLARE SELECT FUNCTION in__bool__not_null(x bool!) (in__x bool!);
-DECLARE SELECT FUNCTION in__bool__nullable(x bool) (in__x bool);
-DECLARE SELECT FUNCTION in__real__not_null(x real!) (in__x real!);
-DECLARE SELECT FUNCTION in__real__nullable(x real) (in__x real);
-DECLARE SELECT FUNCTION in__integer__not_null(x int!) (in__x integer!);
-DECLARE SELECT FUNCTION in__integer__nullable(x int) (in__x integer);
-DECLARE SELECT FUNCTION in__long__not_null(x long!) (in__x long!);
-DECLARE SELECT FUNCTION in__long__nullable(x long) (in__x long);
-DECLARE SELECT FUNCTION in__text__not_null(x text!) (in__x text!);
-DECLARE SELECT FUNCTION in__text__nullable(x text) (in__x text);
-DECLARE SELECT FUNCTION in__blob__not_null(x blob!) (in__x blob!);
-DECLARE SELECT FUNCTION in__blob__nullable(x blob) (in__x blob);
-DECLARE SELECT FUNCTION three_int_test(x int, y int, z int) (x int, y int, z int);
-DECLARE SELECT FUNCTION many_rows(n int) (x int!, y int!, z text!);
-
--- assorted scalar cases using text args
-DECLARE SELECT FUNCTION result_from_first_inout_or_out_argument__inout(t1 text!, t2 text!, t3 text!) text;
-DECLARE SELECT FUNCTION result_from_first_inout_or_out_argument__out(t1 text!, t2 text!, t3 text!) text;
-DECLARE SELECT FUNCTION result_from_inout(t text) text;
-DECLARE SELECT FUNCTION result_from_out() text;
-DECLARE SELECT FUNCTION result_from_void__null__with_in(t text) int;
-DECLARE SELECT FUNCTION result_from_void__null__no_args() int;
-
--- the full scalar family using inout
-DECLARE SELECT FUNCTION inout__bool__not_null(b bool!) bool;
-DECLARE SELECT FUNCTION inout__bool__nullable(b bool) bool;
-DECLARE SELECT FUNCTION inout__real__not_null(r real!) real;
-DECLARE SELECT FUNCTION inout__real__nullable(r real) real;
-DECLARE SELECT FUNCTION inout__integer__not_null(i int!) int;
-DECLARE SELECT FUNCTION inout__integer__nullable(i int) int;
-DECLARE SELECT FUNCTION inout__long__not_null(ll long!) long;
-DECLARE SELECT FUNCTION inout__long__nullable(l long) long;
-DECLARE SELECT FUNCTION inout__text__not_null(t text!) text;
-DECLARE SELECT FUNCTION inout__text__nullable(t text) text;
-DECLARE SELECT FUNCTION inout__blob__not_null(b blob!) blob;
-DECLARE SELECT FUNCTION inout__blob__nullable(b blob) blob;
-
--- the full scalar family using out
-DECLARE SELECT FUNCTION out__bool__not_null() bool!;
-DECLARE SELECT FUNCTION out__bool__nullable() bool;
-DECLARE SELECT FUNCTION out__real__not_null() real!;
-DECLARE SELECT FUNCTION out__real__nullable() real;
-DECLARE SELECT FUNCTION out__integer__not_null() int!;
-DECLARE SELECT FUNCTION out__integer__nullable() int;
-DECLARE SELECT FUNCTION out__long__not_null() long!;
-DECLARE SELECT FUNCTION out__long__nullable() long;
-DECLARE SELECT FUNCTION out__text__not_null() text!;
-DECLARE SELECT FUNCTION out__text__nullable() text;
+-- auto  generateed by the python, simply "grep DECLARE SELECT" SampleInterop.c
+DECLARE SELECT FUNCTION comprehensive_test(in__bool__not_null bool!, in__bool__nullable bool, in__real__not_null real!, in__real__nullable real, in__integer__not_null integer!, in__integer__nullable integer, in__long__not_null long!, in__long__nullable long, in__text__not_null text!, in__text__nullable text, in__blob__not_null blob!, in__blob__nullable blob, inout__bool__not_null bool!, inout__bool__nullable bool, inout__real__not_null real!, inout__real__nullable real, inout__integer__not_null integer!, inout__integer__nullable integer, inout__long__not_null long!, inout__long__nullable long, inout__text__not_null text!, inout__text__nullable text, inout__blob__not_null blob!, inout__blob__nullable blob) (result text!);
+DECLARE SELECT FUNCTION hello_world() (result text!);
+DECLARE SELECT FUNCTION in__blob__not_null(in__x blob!) (in__x blob!);
+DECLARE SELECT FUNCTION in__blob__nullable(in__x blob) (in__x blob);
+DECLARE SELECT FUNCTION in__bool__not_null(in__x bool!) (in__x bool!);
+DECLARE SELECT FUNCTION in__bool__nullable(in__x bool) (in__x bool);
+DECLARE SELECT FUNCTION in__integer__not_null(in__x integer!) (in__x integer!);
+DECLARE SELECT FUNCTION in__integer__nullable(in__x integer) (in__x integer);
+DECLARE SELECT FUNCTION in__long__not_null(in__x long!) (in__x long!);
+DECLARE SELECT FUNCTION in__long__nullable(in__x long) (in__x long);
+DECLARE SELECT FUNCTION in__real__not_null(in__x real!) (in__x real!);
+DECLARE SELECT FUNCTION in__real__nullable(in__x real) (in__x real);
+DECLARE SELECT FUNCTION in__text__not_null(in__x text!) (in__x text!);
+DECLARE SELECT FUNCTION in__text__nullable(in__x text) (in__x text);
+DECLARE SELECT FUNCTION inout__blob__not_null(inout__x blob!) blob!;
+DECLARE SELECT FUNCTION inout__blob__nullable(inout__x blob) blob;
+DECLARE SELECT FUNCTION inout__bool__not_null(inout__x bool!) bool!;
+DECLARE SELECT FUNCTION inout__bool__nullable(inout__x bool) bool;
+DECLARE SELECT FUNCTION inout__integer__not_null(inout__x integer!) integer!;
+DECLARE SELECT FUNCTION inout__integer__nullable(inout__x integer) integer;
+DECLARE SELECT FUNCTION inout__long__not_null(inout__x long!) long!;
+DECLARE SELECT FUNCTION inout__long__nullable(inout__x long) long;
+DECLARE SELECT FUNCTION inout__real__not_null(inout__x real!) real!;
+DECLARE SELECT FUNCTION inout__real__nullable(inout__x real) real;
+DECLARE SELECT FUNCTION inout__text__not_null(inout__x text!) text!;
+DECLARE SELECT FUNCTION inout__text__nullable(inout__x text) text;
+DECLARE SELECT FUNCTION many_rows(x integer) (x integer!, y integer!, z text!);
 DECLARE SELECT FUNCTION out__blob__not_null() blob!;
 DECLARE SELECT FUNCTION out__blob__nullable() blob;
+DECLARE SELECT FUNCTION out__bool__not_null() bool!;
+DECLARE SELECT FUNCTION out__bool__nullable() bool;
+DECLARE SELECT FUNCTION out__integer__not_null() integer!;
+DECLARE SELECT FUNCTION out__integer__nullable() integer;
+DECLARE SELECT FUNCTION out__long__not_null() long!;
+DECLARE SELECT FUNCTION out__long__nullable() long;
+DECLARE SELECT FUNCTION out__real__not_null() real!;
+DECLARE SELECT FUNCTION out__real__nullable() real;
+DECLARE SELECT FUNCTION out__text__not_null() text!;
+DECLARE SELECT FUNCTION out__text__nullable() text;
+DECLARE SELECT FUNCTION result_from_first_inout_or_out_argument__inout(in__text__not_null text!, inout__text__not_null text!, inout__text__not_null_bis text!) text!;
+DECLARE SELECT FUNCTION result_from_first_inout_or_out_argument__out(in__text__not_null text!, inout__text__not_null text!, inout__text__not_null_bis text!) text!;
+DECLARE SELECT FUNCTION result_from_inout(inout__x text!) text!;
+DECLARE SELECT FUNCTION result_from_out() text!;
+DECLARE SELECT FUNCTION result_from_result_set__no_args() (result text!);
+DECLARE SELECT FUNCTION result_from_result_set__with_in_out_inout(in__text__not_null text!, inout__text__not_null text!) (result text!);
+DECLARE SELECT FUNCTION result_from_void__null__no_args() /*void*/ int;
+DECLARE SELECT FUNCTION result_from_void__null__with_in(in__x text!) /*void*/ int;
+DECLARE SELECT FUNCTION three_int_test(x integer, y integer, z integer) (x integer, y integer, z integer);
 
-DECLARE SELECT FUNCTION result_from_result_set__with_in_out_inout(t1 text!, t2 text!) (result text);
-
-/* Pending test cases
-DECLARE SELECT FUNCTION comprehensive_test() (result text);
-*/
 
 @macro(stmt_list) sel!(f! expr, v! expr)
 begin
@@ -97,7 +82,7 @@ proc test_cases()
 begin
   printf("Starting demo.\n");
   let hello := (select result from hello_world());
-  printf("%s\n", hello:ifnull("<null>"));
+  printf("%s\n", hello);
 
   printf("three int test");
 

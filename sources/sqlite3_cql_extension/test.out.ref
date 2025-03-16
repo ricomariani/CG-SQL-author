@@ -6,6 +6,7 @@ Sample.c
 Sample.json
 # Generate SQLite3 extension
 SampleInterop.c
+# Compiling Test Cases
 # Running test cases
 ./out/demo
 explicit test

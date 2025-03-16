@@ -225,6 +225,19 @@ def emit_proc_c_func_body(proc, cmd_args):
     out_arguments = [arg for arg in proc['args'] if (arg['binding'] == 'out')]
     in_arguments = [arg for arg in proc['args'] if (arg['binding'] == 'in')]
 
+    first_outtie = None
+    for arg in outtie_arguments:
+        skip = False
+
+        if is_ref_type[arg['type']]:
+            if arg['type'] == "object":
+                __v(f"/* {arg['type']} not implemented yet, skipping outtie arg {arg['name']} */")
+                skip = True
+
+        if not skip:
+            first_outtie = arg
+            break
+
     proc_name = proc['canonicalName']
     has_projection = 'projection' in proc
 
@@ -233,9 +246,8 @@ def emit_proc_c_func_body(proc, cmd_args):
     if has_projection:
         sql_result =  ', '.join(f"{p['name']} {p['type']}{'!' if p['isNotNull'] else ''}" for p in proc['projection'])
         sql_result = "(" + sql_result + ")"
-    elif outtie_arguments:
-        a = outtie_arguments[0]
-        sql_result = f"{a['type']}{'!' if a['isNotNull'] else ''}"
+    elif first_outtie:
+        sql_result = f"{first_outtie['type']}{'!' if first_outtie['isNotNull'] else ''}"
     else:
         # function must return something but it's a void proc, so it will return null in a nullable int
         sql_result = "/*void*/ int"
@@ -335,37 +347,31 @@ def emit_proc_c_func_body(proc, cmd_args):
     ___()
 
     _vv("// 8. Resolve the result base on:")
-    vvv("//   (A) The first column of first row of the result_set, if any")
+    vvv("//   (A) The rows of the result_set, if any")
     vvv("//   (B) The first outtie argument (in or inout) value, if any")
     vvv("//   (C) Fallback to: null")
     vvv("//")
     if has_projection:
-        vvv("// Current strategy: (A) Using the result set")
+        vvv("// Current strategy: (A) Table valued function that exposes the result set")
 
         ___("*result = (cql_result_set_ref)_data_result_set_;")
         ___("goto cleanup;")
         ___()
     else:
-        vvv("// Current strategy: (B) Using Outtie arguments")
-        vvv("// Set Sqlite result")
-        vvv("// NB: If the proc_namedure generates a cql result set, the first column of the first row would be used as the result")
-        for arg in [arg for arg in proc['args'] if arg['binding'] in ("inout", "out")]:
-            skip = False
-
+        if first_outtie:
+            vvv("// Current strategy: (B) Using Outtie arguments")
+            vvv("// Set Sqlite result")
+            arg = first_outtie
             if is_ref_type[arg['type']]:
-                if arg['type'] == "object":
-                    __v(f"/* {arg['type']} not implemented yet */")
-                    skip = True
-                else:
-                    ___(f"{sqlite3_result_setter[IS_NULLABLE][arg['type']]}(context, {arg['name']}); goto cleanup;")
+                ___(f"{sqlite3_result_setter[IS_NULLABLE][arg['type']]}(context, {arg['name']});")
             else:
-                ___(f"{sqlite3_result_setter[arg['isNotNull']][arg['type']]}(context, {arg['name']}); goto cleanup;")
+                ___(f"{sqlite3_result_setter[arg['isNotNull']][arg['type']]}(context, {arg['name']});")
+        else:
+            vvv("// Current strategy: (C) Fallback to null")
+            ___("sqlite3_result_null(context);")
 
-            if not skip: break
-        ___()
         ___("goto cleanup;")
         ___()
-
 
     ___("invalid_arguments:")
     if 'projection' not in proc:

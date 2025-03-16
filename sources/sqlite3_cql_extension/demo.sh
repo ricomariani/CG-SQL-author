@@ -6,21 +6,9 @@
 
 set -o errexit -o nounset -o pipefail
 
-echo "This build is only to create a shared library version of some extension you might need"
-echo "On many operating systems this binding can be tricky."
-echo "Testing is limited so be prepared to sort out the dynamic loading yourself."
-echo
-
 S=$(cd $(dirname "$0"); pwd)
 O=$S/out
 R=$S/..
-
-if [ -v SQLITE_PATH ]; then
-  SQLITE_PATH=$(realpath $SQLITE_PATH)
-else
-  cat $S/README.md | awk '/<!-- build_requirements_start/{flag=1; next} /<!-- build_requirements_end/{flag=0;} flag'
-  exit 1
-fi
 
 while [ "${1:-}" != "" ]; do
   if [ "$1" == "--use_gcc" ]; then
@@ -32,7 +20,7 @@ while [ "${1:-}" != "" ]; do
     export CC
     shift 1
   else
-    echo "Usage: make.sh"
+    echo "Usage: demo.sh"
     echo "  --use_gcc"
     echo "  --use_clang"
     exit 1
@@ -42,7 +30,6 @@ done
 echo "# Clean up output directory"
 rm -rf $O
 mkdir -p $O
-ls -d $O
 
 echo "# Build CQL compiler"
 (cd $O/../.. ; make)
@@ -57,40 +44,31 @@ ls Sample.c Sample.json
 echo "# Generate SQLite3 extension"
 ../cqlsqlite3extension.py ./Sample.json --cql_header Sample.h > SampleInterop.c
 ls SampleInterop.c
-popd >/dev/null
 
+echo "# Compiling Test Cases"
+${CQL} --nolines --in ../TestCases.sql --cg TestCases.h TestCases.c
+
+popd >/dev/null
 
 pushd $S >/dev/null
 
-CC="cc -g -O0"
+CC="cc -g -O0 -DNO_SQLITE_EXT"
 
-OS=$(uname)
-if [ "$OS" = "Darwin" ]; then
-  CC="${CC} -fPIC -undefined dynamic_lookup"
-  LIB_EXT="dylib"
-elif [ "$OS" = "Linux" ]; then
-  LIB_EXT="so"
-  CC="${CC} -fPIC"
-elif [ "$OS" = "MINGW64_NT" ] || [ "$OS" = "MSYS_NT" ]; then
-  LIB_EXT="dll"
-  CC="${CC} -Wl,--enable-auto-import -Wl,--export-all-symbols"
-else
-  echo "Unsupported platform: $OS"
-  exit 1
-fi
-
-echo "Build ./out/cqlextension.$LIB_EXT extension for SQLite ($SQLITE_PATH/sqlite3ext.h) on $OS"
-${CC} -shared \
-  -I $SQLITE_PATH \
+${CC} \
   -I./out \
   -I./. \
   -I./.. \
-  -o ./out/cqlextension.${LIB_EXT} \
+  -o ./out/demo \
   ./out/SampleInterop.c \
+  ./out/TestCases.c \
   ./cql_sqlite_extension.c \
   ./out/Sample.c \
-  ./../cqlrt.c
+  ./../cqlrt.c \
+  -lsqlite3
 
-ls ./out/cqlextension.${LIB_EXT}
+echo "# Running test cases"
+
+ls ./out/demo
+out/demo
 
 popd >/dev/null

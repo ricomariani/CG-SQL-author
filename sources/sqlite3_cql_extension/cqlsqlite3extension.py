@@ -150,8 +150,10 @@ def emit_original_licence():
     print("")
 
 def emit_headers(cmd_args):
+    print(f"#ifndef NO_SQLITE_EXT")
     print(f"#include <sqlite3ext.h>")
     print(f"SQLITE_EXTENSION_INIT1")
+    print(f"#endif")
     print(f"#include \"cqlrt.h\"")
     print(f"#include \"cql_sqlite_extension.h\"")
     print(f"#include \"{cmd_args['cql_header']}\"")
@@ -161,21 +163,35 @@ def emit_extension_initializer(data, cmd_args):
 
     print("""
 int sqlite3_cqlextension_init(sqlite3 *_Nonnull db, char *_Nonnull *_Nonnull pzErrMsg, const sqlite3_api_routines *_Nonnull pApi) {
+#ifndef NO_SQLITE_EXT
   SQLITE_EXTENSION_INIT2(pApi);
+#endif
 
   int rc = SQLITE_OK;
-""")
+  cql_rowset_aux_init *aux = NULL;""")
     for proc in data['queries'] + data['deletes'] + data['inserts'] + data['generalInserts'] + data['updates'] + data['general']:
-        print(f"""
-  rc = sqlite3_create_function(db, "{proc['canonicalName']}", {len([arg for arg in proc['args'] if arg['binding'] in ['in', 'inout']])}, SQLITE_UTF8, NULL, call_{proc['canonicalName']}, NULL, NULL);
-  if (rc != SQLITE_OK) return rc;
-""")
+        proc_name = proc['canonicalName']
+        has_projection = 'projection' in proc
 
-    print("""
-  return rc;
-}
-
+        if has_projection:
+            # Create a new array with the required changes
+            args = [{'name': f"arg_{a['name']}", 'type': f"{a['type']} hidden"} for a in proc['args']]
+            col = [{'name': p['name'], 'type' : p['type'] } for p in proc['projection']]
+            cols = ", ".join(f"{p['name']} {p['type']}" for p in (col + args))
+            table_decl = f"CREATE TABLE {proc_name}({cols})"
+            print(f"""
+  aux = cql_rowset_create_aux_init(call_{proc_name}, "{table_decl}");
+  rc = register_cql_rowset_tvf(db, aux, "{proc_name}");
 """)
+        else:
+            print(f"""
+  rc = sqlite3_create_function(db, "{proc_name}", {len([arg for arg in proc['args'] if arg['binding'] in ['in', 'inout']])}, SQLITE_UTF8, NULL, call_{proc_name}, NULL, NULL);
+""")
+        print("  if (rc != SQLITE_OK) return rc;")
+
+    print("")
+    print("  return rc;")
+    print("}")
 
 def emit_all_procs(data, cmd_args):
     for proc in sorted(
@@ -200,17 +216,56 @@ def emit_all_procs(data, cmd_args):
 def emit_proc_c_func_body(proc, cmd_args):
     ___, __v, _vv, vvv, indent, dedent = codegen_utils(cmd_args)
 
-    in_arguments = [arg for arg in proc['args'] if arg['binding'] == 'in']
-    inout_arguments = [arg for arg in proc['args'] if arg['binding'] == 'inout']
-    out_arguments = [arg for arg in proc['args'] if arg['binding'] == 'out']
+    # select in style arguments preserving order of original arguments, i.e. only skip pure out
+    innie_arguments = [arg for arg in proc['args'] if (arg['binding'] == 'in' or arg['binding'] == 'inout')]
 
-    innie_arguments = in_arguments + inout_arguments
-    outtie_arguments = inout_arguments + out_arguments
+    # again preserve original order, skip only 'in' arguments
+    outtie_arguments = [arg for arg in proc['args'] if (arg['binding'] == 'out' or arg['binding'] == 'inout')]
 
+    out_arguments = [arg for arg in proc['args'] if (arg['binding'] == 'out')]
+    in_arguments = [arg for arg in proc['args'] if (arg['binding'] == 'in')]
 
-    ___(f"void call_{proc['canonicalName']}(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *_Nonnull *_Nonnull argv)")
+    first_outtie = None
+    for arg in outtie_arguments:
+        skip = False
+
+        if is_ref_type[arg['type']]:
+            if arg['type'] == "object":
+                __v(f"/* {arg['type']} not implemented yet, skipping outtie arg {arg['name']} */")
+                skip = True
+
+        if not skip:
+            first_outtie = arg
+            break
+
+    proc_name = proc['canonicalName']
+    has_projection = 'projection' in proc
+
+    sql_in_args = ', '.join(f"{a['name']} {a['type']}{'!' if a['isNotNull'] else ''}" for a in innie_arguments)
+
+    if has_projection:
+        sql_result =  ', '.join(f"{p['name']} {p['type']}{'!' if p['isNotNull'] else ''}" for p in proc['projection'])
+        sql_result = "(" + sql_result + ")"
+    elif first_outtie:
+        sql_result = f"{first_outtie['type']}{'!' if first_outtie['isNotNull'] else ''}"
+    else:
+        # function must return something but it's a void proc, so it will return null in a nullable int
+        sql_result = "/*void*/ int"
+
+    ___(f"// DECLARE SELECT FUNCTION {proc_name}({sql_in_args}) {sql_result};")
+
+    if has_projection:
+        ___(f"void call_{proc_name}(sqlite3 *_Nonnull db, int32_t argc, sqlite3_value *_Nonnull *_Nonnull argv, cql_result_set_ref *result)")
+    else:
+        ___(f"void call_{proc_name}(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *_Nonnull *_Nonnull argv)")
     ___("{")
+
     indent()
+
+    if has_projection:
+        _vv(f"// Ensure output result set is cleared in case of early out")
+        ___(f"*result = NULL;")
+        ___(f"")
 
     _vv(f"// 1. Ensure Sqlite function argument count matches count of the procedure in and inout arguments")
     ___(f"if (argc != {len(innie_arguments)}) goto invalid_arguments;")
@@ -244,21 +299,25 @@ def emit_proc_c_func_body(proc, cmd_args):
     ___()
 
 
+    # note that project procs always get the database via the module interface even if they don't need it
+    # and they don't get the context arg
     _vv(f"// 4. Initialize procedure dependencies")
     if proc['usesDatabase']:
         ___(f"cql_code rc = SQLITE_OK;")
-        ___(f"sqlite3* db = sqlite3_context_db_handle(context);")
+        if not has_projection:
+            ___(f"sqlite3* db = sqlite3_context_db_handle(context);")
         ___(f"")
-    if proc['projection']:
+
+    if has_projection:
         ___(f"{proc['name']}_result_set_ref _data_result_set_ = NULL;")
         ___(f"")
 
 
     _vv("// 5. Call the procedure")
-    ___(f"{'rc = ' if proc['usesDatabase'] else ''}{proc['name']}{'_fetch_results' if proc['projection'] else ''}(", end="")
+    ___(f"{'rc = ' if proc['usesDatabase'] else ''}{proc['name']}{'_fetch_results' if has_projection else ''}(", end="")
     for index, computed_arg in enumerate(
         (["db"] if proc['usesDatabase'] else []) +
-        (["&_data_result_set_"] if proc['projection'] else []) +
+        (["&_data_result_set_"] if has_projection else []) +
         [
             f"&{arg['name']}" if arg['binding'] != "in"
                 else "/* unsupported arg type object*/" if arg['type'] == "object"
@@ -281,54 +340,49 @@ def emit_proc_c_func_body(proc, cmd_args):
     _vv("// 7. Ensure the procedure executed successfully")
     if proc['usesDatabase']:
         ___("if (rc != SQLITE_OK) {")
-        ___("  sqlite3_result_null(context);")
+        if not has_projection:
+            ___("  sqlite3_result_null(context);")
         ___("  goto cleanup;")
         ___("}")
     ___()
 
-
     _vv("// 8. Resolve the result base on:")
-    vvv("//   (A) The first column of first row of the result_set, if any")
+    vvv("//   (A) The rows of the result_set, if any")
     vvv("//   (B) The first outtie argument (in or inout) value, if any")
     vvv("//   (C) Fallback to: null")
     vvv("//")
-    if proc['projection']:
-        vvv("// Current strategy: (A) Using the result set")
+    if has_projection:
+        vvv("// Current strategy: (A) Table valued function that exposes the result set")
 
-        ___("set_sqlite3_result_from_result_set(context, (cql_result_set_ref)_data_result_set_);")
+        ___("*result = (cql_result_set_ref)_data_result_set_;")
         ___("goto cleanup;")
         ___()
     else:
-        vvv("// Current strategy: (B) Using Outtie arguments")
-        vvv("// Set Sqlite result")
-        vvv("// NB: If the procedure generates a cql result set, the first column of the first row would be used as the result")
-        for arg in [arg for arg in proc['args'] if arg['binding'] in ("inout", "out")]:
-            skip = False
-
+        if first_outtie:
+            vvv("// Current strategy: (B) Using Outtie arguments")
+            vvv("// Set Sqlite result")
+            arg = first_outtie
             if is_ref_type[arg['type']]:
-                if arg['type'] == "object":
-                    __v(f"/* {arg['type']} not implemented yet */")
-                    skip = True
-                else:
-                    ___(f"{sqlite3_result_setter[IS_NULLABLE][arg['type']]}(context, {arg['name']}); goto cleanup;")
+                ___(f"{sqlite3_result_setter[IS_NULLABLE][arg['type']]}(context, {arg['name']});")
             else:
-                ___(f"{sqlite3_result_setter[arg['isNotNull']][arg['type']]}(context, {arg['name']}); goto cleanup;")
+                ___(f"{sqlite3_result_setter[arg['isNotNull']][arg['type']]}(context, {arg['name']});")
+        else:
+            vvv("// Current strategy: (C) Fallback to null")
+            ___("sqlite3_result_null(context);")
 
-            if not skip: break
-        ___()
         ___("goto cleanup;")
         ___()
 
-
     ___("invalid_arguments:")
-    ___("sqlite3_result_error(context, \"CQL extension: Invalid procedure arguments\", -1);")
+    if not has_projection:
+        ___("sqlite3_result_error(context, \"CQL extension: Invalid proc_namedure arguments\", -1);")
     ___("return;")
     ___()
 
     ___("cleanup:")
     _vv("// 10. Cleanup Outtie arguments")
     for arg in [arg for arg in outtie_arguments if is_ref_type[arg['type']]]:
-        ___(f"if({arg['name']}) {cql_ref_release[arg['type']]}({arg['name']});")
+        ___(f"if ({arg['name']}) {cql_ref_release[arg['type']]}({arg['name']});")
     __v("/* Avoid empty block warning */ ;")
 
     dedent()
@@ -345,7 +399,6 @@ def normalize_json_output(data, cmd_args):
         data["general"]
     ):
         proc['usesDatabase'] = proc.get("usesDatabase", True)
-        proc['projection'] = "projection" in proc
         proc['canonicalName'] = cmd_args['namespace'] + proc['name']
         proc['attributes'] = {attr['name']: attr['value'] for attr in proc.get("attributes", [])}
         for arg in proc['args']:

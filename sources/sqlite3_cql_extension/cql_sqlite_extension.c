@@ -1,5 +1,7 @@
+#ifndef NO_SQLITE_EXT
 #include <sqlite3ext.h>
 extern const sqlite3_api_routines *sqlite3_api;
+#endif
 
 #include "cql_sqlite_extension.h"
 #include "cqlrt.h"
@@ -199,20 +201,6 @@ static int cql_rowset_open(sqlite3_vtab *pVtab, sqlite3_vtab_cursor **ppCursor) 
   if (!pCur) return SQLITE_NOMEM;
 
   cql_rowset_table *pTab = (cql_rowset_table *)pVtab;
-  pCur->result_set = pTab->result_set;
-
-  if (!pCur->result_set) {
-      sqlite3_free(pCur);
-      return SQLITE_ERROR;
-  }
-
-  // Check to make sure the meta data has column data
-  cql_result_set_meta *meta = cql_result_set_get_meta(pCur->result_set);
-  cql_contract(meta->columnOffsets != NULL);
-
-  pCur->column_count =  meta->columnCount;
-  pCur->row_count = cql_result_set_get_count(pCur->result_set); 
-  pCur->current_row = 0;
   pCur->db = pTab->db;
 
   *ppCursor = (sqlite3_vtab_cursor *)pCur;
@@ -222,13 +210,20 @@ static int cql_rowset_open(sqlite3_vtab *pVtab, sqlite3_vtab_cursor **ppCursor) 
 static int cql_rowset_filter(sqlite3_vtab_cursor *cur, int idxNum, const char *idxStr, int argc, sqlite3_value **argv) {
   cql_rowset_cursor *pCur = (cql_rowset_cursor *)cur;
   cql_rowset_table *pTab = (cql_rowset_table *)pCur->base.pVtab;
+  pCur->func = pTab->func;
 
   // Call the function to get the result set
   cql_rowset_func func = pCur->func;
   pCur->result_set = NULL;
-  pCur->current_row = 0;
-  pCur->row_count = 0;
   func(pCur->db, argc, argv, &pCur->result_set);
+
+  // Check to make sure the meta data has column data
+  cql_result_set_meta *meta = cql_result_set_get_meta(pCur->result_set);
+  cql_contract(meta->columnOffsets != NULL);
+
+  pCur->column_count =  meta->columnCount;
+  pCur->row_count = cql_result_set_get_count(pCur->result_set); 
+  pCur->current_row = 0;
 
   return SQLITE_OK;
 }

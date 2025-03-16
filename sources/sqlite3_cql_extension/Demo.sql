@@ -81,7 +81,7 @@ begin
   end if;
 end;
 
-proc demo()
+proc test_cases()
 begin
   printf("Starting demo.\n");
   let hello := (select result from hello_world());
@@ -273,9 +273,7 @@ int main(int argc, char **argv) {
    rc = sqlite3_cqlextension_init(db, NULL, NULL);
    if (rc) exit(rc);
    explicit_test(db);
-   rc = demo(db);
+   rc = test_cases(db);
    exit(rc);
 }
 ';
-
-

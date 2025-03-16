@@ -64,6 +64,8 @@ ${CC} \
   ./../cqlrt.c \
   -lsqlite3
 
+echo "# Running test cases"
+
 ls ./out/demo
 out/demo
 

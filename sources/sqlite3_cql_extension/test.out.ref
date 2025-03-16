@@ -6,6 +6,7 @@ Sample.c
 Sample.json
 # Generate SQLite3 extension
 SampleInterop.c
+# Running test cases
 ./out/demo
 explicit test
 Row: 100, 200, 300

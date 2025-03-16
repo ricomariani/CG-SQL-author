@@ -65,9 +65,10 @@ DECLARE SELECT FUNCTION out__text__nullable() text;
 DECLARE SELECT FUNCTION out__blob__not_null() blob!;
 DECLARE SELECT FUNCTION out__blob__nullable() blob;
 
+DECLARE SELECT FUNCTION result_from_result_set__with_in_out_inout(t1 text!, t2 text!) (result text);
+
 /* Pending test cases
 DECLARE SELECT FUNCTION comprehensive_test() (result text);
-DECLARE SELECT FUNCTION result_from_result_set__with_in_out_inout() (result text);
 */
 
 @macro(stmt_list) sel!(f! expr, v! expr)
@@ -81,7 +82,7 @@ begin
   end if;
 end;
 
-@macro(stmt_list) E!(x! expr, y! expr)
+@macro(stmt_list) EXPECT_EQ!(x! expr, y! expr)
 begin
   let @tmp(x) := x!;
   let @tmp(y) := y!;
@@ -155,91 +156,94 @@ begin
   var bl blob;
   var b bool;
 
+  t := (select result from result_from_result_set__with_in_out_inout("foo", "bar"));
+  EXPECT_EQ!(t, "result_set");
+
   t := (select result_from_first_inout_or_out_argument__inout("foo", "bar", "baz"));
-  E!(t, "inout_argument");
+  EXPECT_EQ!(t, "inout_argument");
 
   t := (select result_from_first_inout_or_out_argument__out("foo", "bar", "baz"));
-  E!(t, "out_argument");
+  EXPECT_EQ!(t, "out_argument");
 
   t := (select result_from_inout("foo"));
-  E!(t, "inout_argument");
+  EXPECT_EQ!(t, "inout_argument");
 
   t := (select result_from_out());
-  E!(t, "out_argument");
+  EXPECT_EQ!(t, "out_argument");
 
   let nil := (select result_from_void__null__with_in("foo"));
-  E!(nil, null);
+  EXPECT_EQ!(nil, null);
 
   nil := (select result_from_void__null__no_args());
-  E!(nil, null);
+  EXPECT_EQ!(nil, null);
 
   -- all these bind to nothing so we're really just testing
   -- the call sequence for errors
 
   b := (select inout__bool__not_null(false));
-  E!(b, false);
+  EXPECT_EQ!(b, false);
   b := (select inout__bool__nullable(true));
-  E!(b, true);
+  EXPECT_EQ!(b, true);
   b := (select inout__bool__nullable(null));
-  E!(b, null);
+  EXPECT_EQ!(b, null);
   r := (select inout__real__not_null(3.25));
-  E!(r, 3.25);
+  EXPECT_EQ!(r, 3.25);
   r := (select inout__real__nullable(6.5));
-  E!(r, 6.5);
+  EXPECT_EQ!(r, 6.5);
   r := (select inout__real__nullable(null));
-  E!(r, null);
+  EXPECT_EQ!(r, null);
   i := (select inout__integer__not_null(7));
-  E!(i, 7);
+  EXPECT_EQ!(i, 7);
   i := (select inout__integer__nullable(11));
-  E!(i, 11);
+  EXPECT_EQ!(i, 11);
   i := (select inout__integer__nullable(null));
-  E!(i, null);
+  EXPECT_EQ!(i, null);
   l := (select inout__long__not_null(5L));
-  E!(l, 5);
+  EXPECT_EQ!(l, 5);
   l := (select inout__long__nullable(0x123456789a));
-  E!(l, 0x123456789a);
+  EXPECT_EQ!(l, 0x123456789a);
   l := (select inout__long__nullable(null));
-  E!(l, null);
+  EXPECT_EQ!(l, null);
   t := (select inout__text__not_null('foo'));
-  E!(t, 'foo');
+  EXPECT_EQ!(t, 'foo');
   t := (select inout__text__nullable('bar'));
-  E!(t, 'bar');
+  EXPECT_EQ!(t, 'bar');
   t := (select inout__text__nullable(null));
-  E!(t, null);
+  EXPECT_EQ!(t, null);
   bl := (select inout__blob__not_null(x'1234'));
   b := (select bl == x'1234');
-  E!(b, true);
+  EXPECT_EQ!(b, true);
   bl := (select inout__blob__nullable(x'4567'));
   b := (select bl == x'4567');
-  E!(b, true);
+  EXPECT_EQ!(b, true);
   bl := (select inout__blob__nullable(null));
-  E!(bl, null);
+  EXPECT_EQ!(bl, null);
 
   b := (select out__bool__not_null());
-  E!(b, true);
+  EXPECT_EQ!(b, true);
   b := (select out__bool__nullable());
-  E!(b, null);
+  EXPECT_EQ!(b, null);
   r := (select out__real__not_null());
-  E!(r, 3.14);
+  EXPECT_EQ!(r, 3.14);
   r := (select out__real__nullable());
-  E!(r, null);
+  EXPECT_EQ!(r, null);
   i := (select out__integer__not_null());
-  E!(i, 1234);
+  EXPECT_EQ!(i, 1234);
   i := (select out__integer__nullable());
-  E!(i, null);
+  EXPECT_EQ!(i, null);
   l := (select out__long__not_null());
-  E!(l, 1234567890123456789);
+  EXPECT_EQ!(l, 1234567890123456789);
   l := (select out__long__nullable());
-  E!(l, null);
+  EXPECT_EQ!(l, null);
   t := (select out__text__not_null());
-  E!(t, 'HW');
+  EXPECT_EQ!(t, 'HW');
   t := (select out__text__nullable());
-  E!(t, null);
+  EXPECT_EQ!(t, null);
   bl := (select out__blob__not_null());
   b := (select bl ~text~ == 'blob');
-  E!(b, true);
+  EXPECT_EQ!(b, true);
   bl := (select out__blob__nullable());
-  E!(bl, null);
+  EXPECT_EQ!(bl, null);
 
   printf("Successful exit\n");
 end;

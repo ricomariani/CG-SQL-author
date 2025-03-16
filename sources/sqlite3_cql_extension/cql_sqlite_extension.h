@@ -22,21 +22,22 @@ void sqlite3_result_cql_pointer(sqlite3_context *_Nonnull context, void *_Nonnul
 void sqlite3_result_cql_blob(sqlite3_context *_Nonnull context, _Nullable cql_blob_ref value);
 void sqlite3_result_cql_text(sqlite3_context *_Nonnull context, _Nullable cql_string_ref value);
 
+typedef void (*cql_rowset_func)(sqlite3 *db, int32_t argc, sqlite3_value *_Nonnull *_Nonnull argv, cql_result_set_ref *result);
+int register_cql_rowset_tvf(sqlite3 *db, cql_rowset_func func, const char *name);
+
 typedef struct {
     sqlite3_vtab base;
-    char function_name[10];   // Stores "A", "B", or "C"
-    int argc;                 // Number of arguments
-    char **argv;              // Array of argument values (strings)
+    cql_result_set_ref result_set;
+    cql_rowset_func func;
+    sqlite3 *db;
 } cql_rowset_table;
-  
+
 typedef struct {
   sqlite3_vtab_cursor base;
+  sqlite3 *db;
+  cql_rowset_func func;
   cql_result_set_ref result_set;
   int row_count;
   int column_count;
   int current_row;
 } cql_rowset_cursor;
-
-typedef void (*cql_rowset_func)(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *_Nonnull *_Nonnull argv, cql_rowset_cursor *result);
-int register_cql_rowset_tvf(sqlite3 *db, cql_rowset_func func, const char *name);
-

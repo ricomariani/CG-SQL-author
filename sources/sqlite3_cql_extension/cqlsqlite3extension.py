@@ -173,7 +173,7 @@ int sqlite3_cqlextension_init(sqlite3 *_Nonnull db, char *_Nonnull *_Nonnull pzE
         else:
             print(f"""
   rc = sqlite3_create_function(db, "{proc['canonicalName']}", {len([arg for arg in proc['args'] if arg['binding'] in ['in', 'inout']])}, SQLITE_UTF8, NULL, call_{proc['canonicalName']}, NULL, NULL);
-""")  
+""")
         print("""
         if (rc != SQLITE_OK) return rc;
         """)
@@ -215,13 +215,17 @@ def emit_proc_c_func_body(proc, cmd_args):
     outtie_arguments = inout_arguments + out_arguments
 
     if proc['projection']:
-        out_cursor = ", cql_rowset_cursor *result"
+        ___(f"void call_{proc['canonicalName']}(sqlite3 *_Nonnull db, int32_t argc, sqlite3_value *_Nonnull *_Nonnull argv, cql_result_set_ref *result)")
     else:
-        out_cursor = ""
-
-    ___(f"void call_{proc['canonicalName']}(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *_Nonnull *_Nonnull argv{out_cursor})")
+        ___(f"void call_{proc['canonicalName']}(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *_Nonnull *_Nonnull argv)")
     ___("{")
+
     indent()
+
+    if proc['projection']:
+        _vv(f"// Ensure output result set is cleared in case of early out")
+        ___(f"*result = NULL;")
+        ___(f"")
 
     _vv(f"// 1. Ensure Sqlite function argument count matches count of the procedure in and inout arguments")
     ___(f"if (argc != {len(innie_arguments)}) goto invalid_arguments;")
@@ -255,11 +259,15 @@ def emit_proc_c_func_body(proc, cmd_args):
     ___()
 
 
+    # note that project procs always get the database via the module interface even if they don't need it
+    # and they don't get the context arg
     _vv(f"// 4. Initialize procedure dependencies")
     if proc['usesDatabase']:
         ___(f"cql_code rc = SQLITE_OK;")
-        ___(f"sqlite3* db = sqlite3_context_db_handle(context);")
+        if not proc['projection']:
+            ___(f"sqlite3* db = sqlite3_context_db_handle(context);")
         ___(f"")
+
     if proc['projection']:
         ___(f"{proc['name']}_result_set_ref _data_result_set_ = NULL;")
         ___(f"")
@@ -292,7 +300,8 @@ def emit_proc_c_func_body(proc, cmd_args):
     _vv("// 7. Ensure the procedure executed successfully")
     if proc['usesDatabase']:
         ___("if (rc != SQLITE_OK) {")
-        ___("  sqlite3_result_null(context);")
+        if not proc['projection']:
+            ___("  sqlite3_result_null(context);")
         ___("  goto cleanup;")
         ___("}")
     ___()
@@ -306,7 +315,7 @@ def emit_proc_c_func_body(proc, cmd_args):
     if proc['projection']:
         vvv("// Current strategy: (A) Using the result set")
 
-        ___("result->result_set = (cql_result_set_ref)_data_result_set_;")
+        ___("*result = (cql_result_set_ref)_data_result_set_;")
         ___("goto cleanup;")
         ___()
     else:
@@ -332,7 +341,8 @@ def emit_proc_c_func_body(proc, cmd_args):
 
 
     ___("invalid_arguments:")
-    ___("sqlite3_result_error(context, \"CQL extension: Invalid procedure arguments\", -1);")
+    if not proc['projection']:
+        ___("sqlite3_result_error(context, \"CQL extension: Invalid procedure arguments\", -1);")
     ___("return;")
     ___()
 

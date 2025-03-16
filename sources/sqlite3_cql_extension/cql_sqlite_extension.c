@@ -170,34 +170,23 @@ static int cql_rowset_connect(
   sqlite3_vtab **ppVtab,
   char **pzErr)
 {
-  cql_rowset_table *pNew = sqlite3_malloc(sizeof(cql_rowset_table));
-  if (!pNew) return SQLITE_NOMEM;
+  cql_rowset_table *pTab = sqlite3_malloc(sizeof(cql_rowset_table));
+  if (!pTab) return SQLITE_NOMEM;
 
-  memset(pNew, 0, sizeof(cql_rowset_table));
-  strncpy(pNew->function_name, argv[0], sizeof(pNew->function_name) - 1);
-  
-  // Store arguments
-  pNew->argc = argc - 3;
-  if (pNew->argc > 0) {
-      pNew->argv = sqlite3_malloc(sizeof(char*) * pNew->argc);
-      for (int i = 0; i < pNew->argc; i++) {
-          pNew->argv[i] = sqlite3_mprintf("%s", argv[i + 3]); // Store a copy of the arguments
-      }
-  } else {
-      pNew->argv = NULL;
-  }
-
-  *ppVtab = (sqlite3_vtab *)pNew;
+  memset(pTab, 0, sizeof(cql_rowset_table));
+  pTab->func = (cql_rowset_func)pAux;
+  pTab->db = db;
+  *ppVtab = (sqlite3_vtab *)pTab;
   return SQLITE_OK;
 }
 
-static int cql_rowset_open_stub(sqlite3_vtab *pVtab, sqlite3_vtab_cursor **ppCursor) {
+static int cql_rowset_open(sqlite3_vtab *pVtab, sqlite3_vtab_cursor **ppCursor) {
   cql_rowset_cursor *pCur = sqlite3_malloc(sizeof(cql_rowset_cursor));
   if (!pCur) return SQLITE_NOMEM;
-  
+
   cql_rowset_table *pTab = (cql_rowset_table *)pVtab;
-  pCur->result_set = 0; // get_rowset_handle_by_name(pTab->function_name, pTab->argc, pTab->argv);
-  
+  pCur->result_set = pTab->result_set;
+
   if (!pCur->result_set) {
       sqlite3_free(pCur);
       return SQLITE_ERROR;
@@ -210,20 +199,29 @@ static int cql_rowset_open_stub(sqlite3_vtab *pVtab, sqlite3_vtab_cursor **ppCur
   pCur->column_count =  meta->columnCount;
   pCur->row_count = cql_result_set_get_count(pCur->result_set); 
   pCur->current_row = 0;
-  
+  pCur->db = pTab->db;
+
   *ppCursor = (sqlite3_vtab_cursor *)pCur;
   return SQLITE_OK;
 }
 
+static int cql_rowset_filter(sqlite3_vtab_cursor *cur, int idxNum, const char *idxStr, int argc, sqlite3_value **argv) {
+  cql_rowset_cursor *pCur = (cql_rowset_cursor *)cur;
+  cql_rowset_table *pTab = (cql_rowset_table *)pCur->base.pVtab;
+
+  // Call the function to get the result set
+  cql_rowset_func func = pCur->func;
+  pCur->result_set = NULL;
+  pCur->current_row = 0;
+  pCur->row_count = 0;
+  func(pCur->db, argc, argv, &pCur->result_set);
+
+  return SQLITE_OK;
+}
 
 static int cql_rowset_disconnect(sqlite3_vtab *pVtab) {
   cql_rowset_table *pTab = (cql_rowset_table *)pVtab;
-  if (pTab->argv) {
-      for (int i = 0; i < pTab->argc; i++) {
-          sqlite3_free(pTab->argv[i]);
-      }
-      sqlite3_free(pTab->argv);
-  }
+  cql_result_set_release(pTab->result_set);
   sqlite3_free(pTab);
   return SQLITE_OK;
 }
@@ -231,7 +229,6 @@ static int cql_rowset_disconnect(sqlite3_vtab *pVtab) {
 /* Close Cursor */
 static int cql_rowset_close(sqlite3_vtab_cursor *cur) {
   cql_rowset_cursor *pCur = (cql_rowset_cursor *)cur;
-  cql_result_set_release(pCur->result_set);
   sqlite3_free(cur);
   return SQLITE_OK;
 }
@@ -318,7 +315,7 @@ static int cql_rowset_column(sqlite3_vtab_cursor *cur, sqlite3_context *context,
   }
   return SQLITE_OK;
 }
-   
+
 /* Return Row ID */
 static int cql_rowset_rowid(sqlite3_vtab_cursor *cur, sqlite_int64 *pRowid) {
   cql_rowset_cursor *pCur = (cql_rowset_cursor *)cur;
@@ -338,16 +335,18 @@ int register_cql_rowset_tvf(sqlite3 *db, cql_rowset_func func, const char *name)
       .xCreate = cql_rowset_connect,
       .xConnect = cql_rowset_connect,
       .xDisconnect = cql_rowset_disconnect,
-      .xOpen = cql_rowset_open_stub,
+      .xOpen = cql_rowset_open,
       .xClose = cql_rowset_close,
       .xBestIndex = cql_rowset_best_index,
       .xNext = cql_rowset_next,
       .xEof = cql_rowset_eof,
       .xColumn = cql_rowset_column,
-      .xRowid = cql_rowset_rowid
+      .xRowid = cql_rowset_rowid,
+      .xFilter = cql_rowset_filter,
   };
-  
-  return sqlite3_create_module_v2(db, name, &rowsetModule, NULL, NULL);
+
+  /* func becomes the client data, so we know what to call to get the result set*/
+  return sqlite3_create_module_v2(db, name, &rowsetModule, func, NULL);
 }
 
 

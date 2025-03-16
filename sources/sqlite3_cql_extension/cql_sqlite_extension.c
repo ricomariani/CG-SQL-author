@@ -277,11 +277,13 @@ static int cql_rowset_column(sqlite3_vtab_cursor *cur, sqlite3_context *context,
   }
 
   if (column >= pCur->column_count) {
-    // sqlite3_result_text(context, "column out of range", -1, SQLITE_TRANSIENT);
-    // These are the hidden columns we always return null
-    // The most common reason for hitting this code is that we didn't "omit" a constraint column
-    // in the best index function.
-    sqlite3_result_null(context);
+    // These are the hidden columns, any attempt to read these indicates
+    // that we likely have too many arguments.  The best index function
+    // is supposed to ensure that we omit all columns but the normal data
+    // columns but it can only do so for the first 16 columns.  So either
+    // we have a bug where .omit is not being set or we have more than 16.
+    // Check out the cql_rowset_best_index function.
+    sqlite3_result_text(context, "column out of range (maybe >16 args?)", -1, SQLITE_TRANSIENT);
     return SQLITE_OK;
   }
   const cql_int32 row = pCur->current_row;
@@ -354,8 +356,20 @@ static int cql_rowset_best_index(sqlite3_vtab *pVtab, sqlite3_index_info *pIdxIn
   // Loop through each constraint
   for (int i = 0; i < pIdxInfo->nConstraint; i++) {
     // Make sure every constraint is marked as usable
-    pIdxInfo->aConstraint[i].usable = 1; // Allow all constraints to be used
+    pIdxInfo->aConstraint[i].usable = 1;
+
+    // We want each constraint to come to us as a parameter
+    // so give it a number (they are 1 based as 0 indicates we don't want it)
+    // they won't be one based when they come back to us in argc/argv
     pIdxInfo->aConstraintUsage[i].argvIndex = i + 1;
+
+    // We do not want SQLite to try to apply a where clause
+    // on our table data for us and "fetch" the argument columns
+    // the fact that they are hidden columns at all is a lie for
+    // us, there are no such columns, they are func args only.
+    // Note that nConstaint above is limited to 16 so if there are
+    // ever more than 16 args this stops working.  We'll generate
+    // a runtime error below with a hint that this happened.
     pIdxInfo->aConstraintUsage[i].omit = 1;
   }
 

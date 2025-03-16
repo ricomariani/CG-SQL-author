@@ -171,7 +171,11 @@ int sqlite3_cqlextension_init(sqlite3 *_Nonnull db, char *_Nonnull *_Nonnull pzE
   cql_rowset_aux_init *aux = NULL;""")
     for proc in data['queries'] + data['deletes'] + data['inserts'] + data['generalInserts'] + data['updates'] + data['general']:
         if 'projection' in proc:
-            cols = ", ".join(f"{col['name']} {col['type']}" for col in proc['projection'])
+            
+            # Create a new array with the required changes
+            args = [{'name': f"arg_{a['name']}", 'type': f"{a['type']} hidden"} for a in proc['args']]
+            col = [{'name': p['name'], 'type' : p['type'] } for p in proc['projection']]
+            cols = ", ".join(f"{p['name']} {p['type']}" for p in (col + args))
             table_decl = f"CREATE TABLE {proc['name']}({cols})"
             print(f"""
   aux = cql_rowset_create_aux_init(call_{proc['name']}, "{table_decl}");

@@ -6,6 +6,8 @@ extern const sqlite3_api_routines *sqlite3_api;
 #include "cql_sqlite_extension.h"
 #include "cqlrt.h"
 
+#define trace_printf(x, ...)
+
 cql_bool is_sqlite3_type_compatible_with_cql_core_type(
   int sqlite_type,
   int8_t cql_core_type,
@@ -172,6 +174,7 @@ static int cql_rowset_connect(
   sqlite3_vtab **ppVtab,
   char **pzErr)
 {
+  trace_printf("connect\n");
   cql_rowset_aux_init *pAux = (cql_rowset_aux_init *)aux;
 
   const char *table_decl = pAux->table_decl;
@@ -188,8 +191,8 @@ static int cql_rowset_connect(
 
   cql_rowset_table *pTab = sqlite3_malloc(sizeof(cql_rowset_table));
   if (!pTab) return SQLITE_NOMEM;
-
   memset(pTab, 0, sizeof(cql_rowset_table));
+
   pTab->func = pAux->func;
   pTab->db = db;
   *ppVtab = (sqlite3_vtab *)pTab;
@@ -197,8 +200,10 @@ static int cql_rowset_connect(
 }
 
 static int cql_rowset_open(sqlite3_vtab *pVtab, sqlite3_vtab_cursor **ppCursor) {
+  trace_printf("open\n");
   cql_rowset_cursor *pCur = sqlite3_malloc(sizeof(cql_rowset_cursor));
   if (!pCur) return SQLITE_NOMEM;
+  memset(pCur, 0, sizeof(cql_rowset_cursor));
 
   cql_rowset_table *pTab = (cql_rowset_table *)pVtab;
   pCur->db = pTab->db;
@@ -208,13 +213,13 @@ static int cql_rowset_open(sqlite3_vtab *pVtab, sqlite3_vtab_cursor **ppCursor) 
 }
 
 static int cql_rowset_filter(sqlite3_vtab_cursor *cur, int idxNum, const char *idxStr, int argc, sqlite3_value **argv) {
+  trace_printf("filter\n");
   cql_rowset_cursor *pCur = (cql_rowset_cursor *)cur;
   cql_rowset_table *pTab = (cql_rowset_table *)pCur->base.pVtab;
   pCur->func = pTab->func;
 
   // Call the function to get the result set
   cql_rowset_func func = pCur->func;
-  pCur->result_set = NULL;
   func(pCur->db, argc, argv, &pCur->result_set);
 
   // Check to make sure the meta data has column data
@@ -229,21 +234,25 @@ static int cql_rowset_filter(sqlite3_vtab_cursor *cur, int idxNum, const char *i
 }
 
 static int cql_rowset_disconnect(sqlite3_vtab *pVtab) {
+  trace_printf("disconnect\n");
   cql_rowset_table *pTab = (cql_rowset_table *)pVtab;
-  cql_result_set_release(pTab->result_set);
   sqlite3_free(pTab);
   return SQLITE_OK;
 }
 
 /* Close Cursor */
 static int cql_rowset_close(sqlite3_vtab_cursor *cur) {
+  trace_printf("close\n");
   cql_rowset_cursor *pCur = (cql_rowset_cursor *)cur;
+  cql_result_set_release(pCur->result_set);
+  pCur->result_set = NULL;
   sqlite3_free(cur);
   return SQLITE_OK;
 }
 
 /* Move to Next Row */
 static int cql_rowset_next(sqlite3_vtab_cursor *cur) {
+  trace_printf("next\n");
   cql_rowset_cursor *pCur = (cql_rowset_cursor *)cur;
   pCur->current_row++;
   return SQLITE_OK;
@@ -251,12 +260,14 @@ static int cql_rowset_next(sqlite3_vtab_cursor *cur) {
 
 /* Check if Cursor is at End */
 static int cql_rowset_eof(sqlite3_vtab_cursor *cur) {
+  trace_printf("eof\n");
   cql_rowset_cursor *pCur = (cql_rowset_cursor *)cur;
   return pCur->current_row >= pCur->row_count;
 }
 
 /* Retrieve Column Data */
 static int cql_rowset_column(sqlite3_vtab_cursor *cur, sqlite3_context *context, int column) {
+  trace_printf("column %d\n", column);
   cql_rowset_cursor *pCur = (cql_rowset_cursor *)cur;
 
   cql_result_set_ref result_set = pCur->result_set;
@@ -266,8 +277,10 @@ static int cql_rowset_column(sqlite3_vtab_cursor *cur, sqlite3_context *context,
   }
 
   if (column >= pCur->column_count) {
-    sqlite3_result_text(context, "column out of range", -1, SQLITE_TRANSIENT);
-    return SQLITE_ERROR;
+    // sqlite3_result_text(context, "column out of range", -1, SQLITE_TRANSIENT);
+    // These are the hidden columns we always return null
+    sqlite3_result_int(context, 5);
+    return SQLITE_OK;
   }
   const cql_int32 row = pCur->current_row;
   if (row >= pCur->row_count) {
@@ -327,6 +340,7 @@ static int cql_rowset_column(sqlite3_vtab_cursor *cur, sqlite3_context *context,
 
 /* Return Row ID */
 static int cql_rowset_rowid(sqlite3_vtab_cursor *cur, sqlite_int64 *pRowid) {
+  trace_printf("rowid\n");
   cql_rowset_cursor *pCur = (cql_rowset_cursor *)cur;
   *pRowid = pCur->current_row;
   return SQLITE_OK;
@@ -334,11 +348,25 @@ static int cql_rowset_rowid(sqlite3_vtab_cursor *cur, sqlite_int64 *pRowid) {
 
 /* xBestIndex - No filtering, full table scan */
 static int cql_rowset_best_index(sqlite3_vtab *pVtab, sqlite3_index_info *pIdxInfo) {
-  pIdxInfo->estimatedCost = 100.0;
+  trace_printf("best index\n");
+  // Loop through each constraint
+  for (int i = 0; i < pIdxInfo->nConstraint; i++) {
+    // Make sure every constraint is marked as usable
+    pIdxInfo->aConstraint[i].usable = 1; // Allow all constraints to be used
+    pIdxInfo->aConstraintUsage[i].argvIndex = i + 1;
+    pIdxInfo->aConstraintUsage[i].omit = 1;
+  }
+
+  // You can optionally tell SQLite to not use any specific index
+  // if you don't want it to make optimizations based on the index
+  pIdxInfo->idxNum = 1; // No specific index to use
+  pIdxInfo->idxFlags = SQLITE_INDEX_SCAN_UNIQUE;
+
   return SQLITE_OK;
 }
 
 int register_cql_rowset_tvf(sqlite3 *db, cql_rowset_aux_init *aux, const char *name) {
+  trace_printf("register %s\n", name);
   static sqlite3_module rowsetModule = {
       .iVersion = 0,
       .xCreate = cql_rowset_connect,

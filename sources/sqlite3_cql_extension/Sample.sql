@@ -12,6 +12,22 @@ begin
   select "Hello World !" as result;
 end;
 
+proc three_int_test(x int, y int, z int)
+begin
+  select x x, y y, z z;
+end;
+
+proc many_rows(x int)
+begin
+  cursor C like (x int!, y int!, z text!);
+  let i := 0;
+  for i < x; i += 1;
+  begin
+    fetch C using i x, i*100 y, printf("text_%d", i) z;
+    out union C;
+  end;
+end;
+
 proc comprehensive_test(
   in in__bool__not_null bool!,
   in in__bool__nullable bool,

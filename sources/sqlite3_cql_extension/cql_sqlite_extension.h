@@ -36,7 +36,6 @@ int register_cql_rowset_tvf(sqlite3 *db, cql_rowset_aux_init *aux, const char *n
 
 typedef struct {
     sqlite3_vtab base;
-    cql_result_set_ref result_set;
     cql_rowset_func func;
     sqlite3 *db;
 } cql_rowset_table;

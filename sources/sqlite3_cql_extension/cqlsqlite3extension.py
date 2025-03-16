@@ -231,7 +231,8 @@ def emit_proc_c_func_body(proc, cmd_args):
     sql_in_args = ', '.join(f"{a['name']} {a['type']}{'!' if a['isNotNull'] else ''}" for a in innie_arguments)
 
     if has_projection:
-        sql_result =  f"({', '.join(f"{p['name']} {p['type']}{'!' if p['isNotNull'] else ''}" for p in proc['projection'])})"
+        sql_result =  ', '.join(f"{p['name']} {p['type']}{'!' if p['isNotNull'] else ''}" for p in proc['projection'])
+        sql_result = "(" + sql_result + ")"
     elif outtie_arguments:
         a = outtie_arguments[0]
         sql_result = f"{a['type']}{'!' if a['isNotNull'] else ''}"

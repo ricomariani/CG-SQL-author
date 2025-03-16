@@ -40,21 +40,21 @@ DECLARE SELECT FUNCTION inout__text__not_null(t text!) text;
 DECLARE SELECT FUNCTION inout__text__nullable(t text) text;
 DECLARE SELECT FUNCTION inout__blob__not_null(b blob!) blob;
 DECLARE SELECT FUNCTION inout__blob__nullable(b blob) blob;
+DECLARE SELECT FUNCTION out__bool__not_null() bool!;
+DECLARE SELECT FUNCTION out__bool__nullable() bool;
+DECLARE SELECT FUNCTION out__real__not_null() real!;
+DECLARE SELECT FUNCTION out__real__nullable() real;
+DECLARE SELECT FUNCTION out__integer__not_null() int!;
+DECLARE SELECT FUNCTION out__integer__nullable() int;
+DECLARE SELECT FUNCTION out__long__not_null() long!;
+DECLARE SELECT FUNCTION out__long__nullable() long;
+DECLARE SELECT FUNCTION out__text__not_null() text!;
+DECLARE SELECT FUNCTION out__text__nullable() text;
+DECLARE SELECT FUNCTION out__blob__not_null() blob!;
+DECLARE SELECT FUNCTION out__blob__nullable() blob;
 
 /* Pending test cases
 
-DECLARE SELECT FUNCTION out__bool__not_null()
-DECLARE SELECT FUNCTION out__bool__nullable()
-DECLARE SELECT FUNCTION out__real__not_null()
-DECLARE SELECT FUNCTION out__real__nullable()
-DECLARE SELECT FUNCTION out__integer__not_null()
-DECLARE SELECT FUNCTION out__integer__nullable()
-DECLARE SELECT FUNCTION out__long__not_null()
-DECLARE SELECT FUNCTION out__long__nullable()
-DECLARE SELECT FUNCTION out__text__not_null()
-DECLARE SELECT FUNCTION out__text__nullable()
-DECLARE SELECT FUNCTION out__blob__not_null()
-DECLARE SELECT FUNCTION out__blob__nullable()
 DECLARE SELECT FUNCTION comprehensive_test() (result text);
 DECLARE SELECT FUNCTION result_from_result_set__with_in_out_inout() (result text);
 */
@@ -203,6 +203,32 @@ begin
   E!(b, true);
   bl := (select inout__blob__nullable(null));
   E!(bl, null);
+
+  b := (select out__bool__not_null());
+  E!(b, true);
+  b := (select out__bool__nullable());
+  E!(b, null);
+  r := (select out__real__not_null());
+  E!(r, 3.14);
+  r := (select out__real__nullable());
+  E!(r, null);
+  i := (select out__integer__not_null());
+  E!(i, 1234);
+  i := (select out__integer__nullable());
+  E!(i, null);
+  l := (select out__long__not_null());
+  E!(l, 1234567890123456789);
+  l := (select out__long__nullable());
+  E!(l, null);
+  t := (select out__text__not_null());
+  E!(t, 'HW');
+  t := (select out__text__nullable());
+  E!(t, null);
+  bl := (select out__blob__not_null());
+  b := (select bl ~text~ == 'blob');
+  E!(b, true);
+  bl := (select out__blob__nullable());
+  E!(bl, null);
   
   printf("Successful exit\n");
 end;
@@ -251,4 +277,5 @@ int main(int argc, char **argv) {
    exit(rc);
 }
 ';
+
 

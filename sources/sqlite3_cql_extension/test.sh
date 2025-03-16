@@ -20,7 +20,8 @@ done
 
 pushd $S >/dev/null
 
-./demo.sh > $S/test.out
+echo "running demo"
+bash ./demo.sh > $S/test.out
 
 on_diff_exit $S/test.out
 

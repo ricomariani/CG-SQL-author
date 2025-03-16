@@ -1,3 +1,14 @@
+-- These test cases are no longer used but I (Rico) did not want to
+-- to delete them because @grifx might want to revive these with more
+-- loadable extension work.  They are not needed now as the new tests
+-- do what is below and more but it would still be cool to set up
+-- loadable extensions more easily.  There are symbol binding issues
+-- that need to be resolved to make it all work but it's all library
+-- management stuff and not SQLite stuff per se.  I'm sure it can be
+-- done with a modest amount of effort from someone who understands
+-- this binding stuff.  Alas shared libraries and how they bind is still
+-- somewhat mysterious to me.
+
 CREATE TABLE t(cql TEXT, dummy, sqlite TEXT GENERATED ALWAYS AS (typeof(dummy)) VIRTUAL);
 INSERT INTO t(cql, dummy) VALUES
   ('bool', 1),

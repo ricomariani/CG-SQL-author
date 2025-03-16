@@ -36,59 +36,6 @@ cql_bool is_sqlite3_type_compatible_with_cql_core_type(
   return false;
 }
 
-/*
-void set_sqlite3_result_from_result_set(sqlite3_context *_Nonnull context, cql_result_set_ref _Nonnull result_set) {
-  const cql_int32 row = 0;
-  const cql_int32 column = 0;
-
-  if (row >= cql_result_set_get_count(result_set)) goto silent_error;
-
-  cql_result_set_meta *meta = cql_result_set_get_meta(result_set);
-
-  if (meta->columnOffsets == NULL || column >= meta->columnCount) goto silent_error;
-  if (cql_result_set_get_is_null_col(result_set, row, column)) goto silent_error;
-
-  switch (CQL_CORE_DATA_TYPE_OF(meta->dataTypes[column])) {
-    case CQL_DATA_TYPE_INT32:
-      sqlite3_result_int(context, cql_result_set_get_int32_col(result_set, row, column));
-      return;
-    case CQL_DATA_TYPE_INT64:
-      sqlite3_result_int64(context, cql_result_set_get_int64_col(result_set, row, column));
-      return;
-    case CQL_DATA_TYPE_DOUBLE:
-      sqlite3_result_double(context, cql_result_set_get_double_col(result_set, row, column));
-      return;
-    case CQL_DATA_TYPE_BOOL:
-      sqlite3_result_int(context, cql_result_set_get_bool_col(result_set, row, column));
-      return;
-    case CQL_DATA_TYPE_STRING: {
-      cql_string_ref str_ref = cql_result_set_get_string_col(result_set, row, column);
-      cql_alloc_cstr(c_str, str_ref);
-      sqlite3_result_text(context, c_str, -1, SQLITE_TRANSIENT);
-      cql_free_cstr(c_str, str_ref);
-      return;
-    }
-    case CQL_DATA_TYPE_BLOB: {
-      cql_blob_ref blob_ref = cql_result_set_get_blob_col(result_set, row, column);
-      const void *bytes = cql_get_blob_bytes(blob_ref);
-      cql_uint32 size = cql_get_blob_size(blob_ref);
-      sqlite3_result_blob(context, bytes, size, SQLITE_TRANSIENT);
-      return;
-    }
-    case CQL_DATA_TYPE_OBJECT: {
-      // Not supported yet — See https://www.sqlite.org/bindptr.html
-      cql_object_ref obj_ref = cql_result_set_get_object_col(result_set, row, column);
-      cql_retain((cql_type_ref)obj_ref);
-      sqlite3_result_int64(context, (int64_t)obj_ref);
-      return;
-    }
-  }
-
-  silent_error:
-    sqlite3_result_null(context);
-}
-*/
-
 cql_bool resolve_not_null_bool_from_sqlite3_value(sqlite3_value *_Nonnull value) {
   return (cql_bool)sqlite3_value_int(value);
 }
@@ -385,7 +332,7 @@ static int cql_rowset_best_index(sqlite3_vtab *pVtab, sqlite3_index_info *pIdxIn
   return SQLITE_OK;
 }
 
-int register_rowset_tvf(sqlite3 *db, cql_rowset_func func, const char *name) {
+int register_cql_rowset_tvf(sqlite3 *db, cql_rowset_func func, const char *name) {
   static sqlite3_module rowsetModule = {
       .iVersion = 0,
       .xCreate = cql_rowset_connect,

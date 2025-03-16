@@ -168,7 +168,7 @@ int sqlite3_cqlextension_init(sqlite3 *_Nonnull db, char *_Nonnull *_Nonnull pzE
     for proc in data['queries'] + data['deletes'] + data['inserts'] + data['generalInserts'] + data['updates'] + data['general']:
         if proc['projection']:
              print(f"""
-  rc = register_rowset_tvf(db, call_{proc['canonicalName']}, "{proc['canonicalName']}");
+  rc = register_cql_rowset_tvf(db, call_{proc['canonicalName']}, "{proc['canonicalName']}");
 """)
         else:
             print(f"""

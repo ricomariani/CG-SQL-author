@@ -28,20 +28,21 @@ DECLARE SELECT FUNCTION result_from_out() text;
 DECLARE SELECT FUNCTION result_from_void__null__with_in(t text) int;
 DECLARE SELECT FUNCTION result_from_void__null__no_args() int;
 
+DECLARE SELECT FUNCTION inout__bool__not_null(b bool!) bool;
+DECLARE SELECT FUNCTION inout__bool__nullable(b bool) bool;
+DECLARE SELECT FUNCTION inout__real__not_null(r real!) real;
+DECLARE SELECT FUNCTION inout__real__nullable(r real) real;
+DECLARE SELECT FUNCTION inout__integer__not_null(i int!) int;
+DECLARE SELECT FUNCTION inout__integer__nullable(i int) int;
+DECLARE SELECT FUNCTION inout__long__not_null(ll long!) long;
+DECLARE SELECT FUNCTION inout__long__nullable(l long) long;
+DECLARE SELECT FUNCTION inout__text__not_null(t text!) text;
+DECLARE SELECT FUNCTION inout__text__nullable(t text) text;
+DECLARE SELECT FUNCTION inout__blob__not_null(b blob!) blob;
+DECLARE SELECT FUNCTION inout__blob__nullable(b blob) blob;
+
 /* Pending test cases
 
-DECLARE SELECT FUNCTION inout__bool__not_null()
-DECLARE SELECT FUNCTION inout__bool__nullable()
-DECLARE SELECT FUNCTION inout__real__not_null()
-DECLARE SELECT FUNCTION inout__real__nullable()
-DECLARE SELECT FUNCTION inout__integer__not_null()
-DECLARE SELECT FUNCTION inout__integer__nullable()
-DECLARE SELECT FUNCTION inout__long__not_null()
-DECLARE SELECT FUNCTION inout__long__nullable()
-DECLARE SELECT FUNCTION inout__text__not_null()
-DECLARE SELECT FUNCTION inout__text__nullable()
-DECLARE SELECT FUNCTION inout__blob__not_null()
-DECLARE SELECT FUNCTION inout__blob__nullable()
 DECLARE SELECT FUNCTION out__bool__not_null()
 DECLARE SELECT FUNCTION out__bool__nullable()
 DECLARE SELECT FUNCTION out__real__not_null()
@@ -83,8 +84,8 @@ end;
 proc demo()
 begin
   printf("Starting demo.\n");
-  let r := (select result from hello_world());
-  printf("%s\n", r:ifnull("<null>"));
+  let hello := (select result from hello_world());
+  printf("%s\n", hello:ifnull("<null>"));
 
   printf("three int test");
 
@@ -124,19 +125,26 @@ begin
   sel!(in__blob__nullable, a_blob);
 
   let wanted := 10;
-  declare L cursor for select * from many_rows(wanted);
+  declare LL cursor for select * from many_rows(wanted);
   
   let got := 0;
-  loop fetch L
+  loop fetch LL
   begin
-    printf("%d %d %s\n", L.x, L.y, L.z);
-    if L.x != got throw;
-    if L.y != got*100 throw;
-    if L.z != printf("text_%d", got) throw;
+    printf("%d %d %s\n", LL.x, LL.y, LL.z);
+    if LL.x != got throw;
+    if LL.y != got*100 throw;
+    if LL.z != printf("text_%d", got) throw;
     got += 1;
   end;
 
-  let t := (select result_from_first_inout_or_out_argument__inout("foo", "bar", "baz"));
+  var i int;
+  var l long;
+  var r real;
+  var t text;
+  var bl blob;
+  var b bool;
+
+  t := (select result_from_first_inout_or_out_argument__inout("foo", "bar", "baz"));
   E!(t, "inout_argument");
 
   t := (select result_from_first_inout_or_out_argument__out("foo", "bar", "baz"));
@@ -153,6 +161,35 @@ begin
 
   nil := (select result_from_void__null__no_args());
   E!(nil, null);
+
+  -- all these bind to nothing so we're really just testing
+  -- the call sequence for errors
+
+  b := (select inout__bool__not_null(false));
+  E!(b, false);
+  b := (select inout__bool__nullable(null));
+  E!(b, null);
+  r := (select inout__real__not_null(3.25));
+  E!(r, 3.25);
+  r := (select inout__real__nullable(null));
+  E!(r, null);
+  i := (select inout__integer__not_null(7));
+  E!(i, 7);
+  i := (select inout__integer__nullable(null));
+  E!(i, null);
+  l := (select inout__long__not_null(5L));
+  E!(l, 5);
+  l := (select inout__long__nullable(null));
+  E!(l, null);
+  t := (select inout__text__not_null('foo'));
+  E!(t, 'foo');
+  t := (select inout__text__nullable(null));
+  E!(t, null);
+  bl := (select inout__blob__not_null(x'1234'));
+  b := (select bl == x'1234');
+  E!(b, true);
+  bl := (select inout__blob__nullable(null));
+  E!(bl, null);
   
   printf("Successful exit\n");
 end;

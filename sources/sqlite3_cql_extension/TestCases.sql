@@ -86,18 +86,24 @@ begin
   printf("Starting demo.\n");
   let hello := (select result from hello_world());
   printf("%s\n", hello);
+  EXPECT_EQ!(hello, "Hello World !");
 
-  printf("three int test");
+  printf("three int test\n");
 
   cursor C for select * from three_int_test(1, 2, 3);
   fetch C;
   printf("%d %d %d\n", C.x, C.y, C.z);
-  if C.x != 1 or C.y != 2 or C.z != 3 throw;
+  EXPECT_EQ!(C.x, 1);
+  EXPECT_EQ!(C.y, 2);
+  EXPECT_EQ!(C.z, 3);
 
   cursor D for select * from three_int_test(4, 5, 6);
   fetch D;
   printf("%d %d %d\n", D.x, D.y, D.z);
-  if D.x != 4 or D.y != 5 or D.z != 6 throw;
+  EXPECT_EQ!(D.x, 4);
+  EXPECT_EQ!(D.y, 5);
+  EXPECT_EQ!(D.z, 6);
+  printf("three int test passed\n");
 
   sel!(in__bool__not_null, true);
   sel!(in__bool__not_null, false);
@@ -131,11 +137,12 @@ begin
   loop fetch LL
   begin
     printf("%d %d %s\n", LL.x, LL.y, LL.z);
-    if LL.x != got throw;
-    if LL.y != got*100 throw;
-    if LL.z != printf("text_%d", got) throw;
+    EXPECT_EQ!(LL.x, got);
+    EXPECT_EQ!(LL.y, got*100);
+    EXPECT_EQ!(LL.z, printf("text_%d", got));
     got += 1;
   end;
+  EXPECT_EQ!(got, wanted);
 
   var i int;
   var l long;

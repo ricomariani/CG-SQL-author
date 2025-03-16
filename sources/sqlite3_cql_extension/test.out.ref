@@ -14,8 +14,10 @@ Row: 100, 200, 300
 done explicit test
 Starting demo.
 Hello World !
-three int test1 2 3
+three int test
+1 2 3
 4 5 6
+three int test passed
 in__bool__not_null: passed with TRUE
 in__bool__not_null: passed with FALSE
 in__bool__nullable: passed with TRUE

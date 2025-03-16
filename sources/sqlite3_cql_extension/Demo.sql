@@ -5,6 +5,13 @@ declare proc printf no check;
 #define cql_error_trace() fprintf(stderr, "Error at %s:%d in %s: %d %s\n", __FILE__, __LINE__, _PROC_, _rc_, sqlite3_errmsg(_db_))
 ';
 
+-- we could add a flag to the .py file to generrate these declarations automatically
+-- this is the transformation after the first outtie arguments is turned into the return value
+--   all the innie arguments (in, inout) stay as args
+--   the first outtie argument (out, inout) becomes the return value
+--   if the procedure returns a result set then it becomes a table valued function
+
+-- the table valued functions
 DECLARE SELECT FUNCTION hello_world() (result text);
 DECLARE SELECT FUNCTION result_from_result_set__no_args() (result text);
 DECLARE SELECT FUNCTION in__bool__not_null(x bool!) (in__x bool!);
@@ -21,6 +28,8 @@ DECLARE SELECT FUNCTION in__blob__not_null(x blob!) (in__x blob!);
 DECLARE SELECT FUNCTION in__blob__nullable(x blob) (in__x blob);
 DECLARE SELECT FUNCTION three_int_test(x int, y int, z int) (x int, y int, z int);
 DECLARE SELECT FUNCTION many_rows(n int) (x int!, y int!, z text!);
+
+-- assorted scalar cases using text args
 DECLARE SELECT FUNCTION result_from_first_inout_or_out_argument__inout(t1 text!, t2 text!, t3 text!) text;
 DECLARE SELECT FUNCTION result_from_first_inout_or_out_argument__out(t1 text!, t2 text!, t3 text!) text;
 DECLARE SELECT FUNCTION result_from_inout(t text) text;
@@ -28,6 +37,7 @@ DECLARE SELECT FUNCTION result_from_out() text;
 DECLARE SELECT FUNCTION result_from_void__null__with_in(t text) int;
 DECLARE SELECT FUNCTION result_from_void__null__no_args() int;
 
+-- the full scalar family using inout
 DECLARE SELECT FUNCTION inout__bool__not_null(b bool!) bool;
 DECLARE SELECT FUNCTION inout__bool__nullable(b bool) bool;
 DECLARE SELECT FUNCTION inout__real__not_null(r real!) real;
@@ -40,6 +50,8 @@ DECLARE SELECT FUNCTION inout__text__not_null(t text!) text;
 DECLARE SELECT FUNCTION inout__text__nullable(t text) text;
 DECLARE SELECT FUNCTION inout__blob__not_null(b blob!) blob;
 DECLARE SELECT FUNCTION inout__blob__nullable(b blob) blob;
+
+-- the full scalar family using out
 DECLARE SELECT FUNCTION out__bool__not_null() bool!;
 DECLARE SELECT FUNCTION out__bool__nullable() bool;
 DECLARE SELECT FUNCTION out__real__not_null() real!;
@@ -54,7 +66,6 @@ DECLARE SELECT FUNCTION out__blob__not_null() blob!;
 DECLARE SELECT FUNCTION out__blob__nullable() blob;
 
 /* Pending test cases
-
 DECLARE SELECT FUNCTION comprehensive_test() (result text);
 DECLARE SELECT FUNCTION result_from_result_set__with_in_out_inout() (result text);
 */

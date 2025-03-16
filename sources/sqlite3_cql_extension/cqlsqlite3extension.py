@@ -164,11 +164,13 @@ int sqlite3_cqlextension_init(sqlite3 *_Nonnull db, char *_Nonnull *_Nonnull pzE
   SQLITE_EXTENSION_INIT2(pApi);
 
   int rc = SQLITE_OK;
+  cql_rowset_aux_init *aux = NULL;
 """)
     for proc in data['queries'] + data['deletes'] + data['inserts'] + data['generalInserts'] + data['updates'] + data['general']:
         if proc['projection']:
              print(f"""
-  rc = register_cql_rowset_tvf(db, call_{proc['canonicalName']}, "{proc['canonicalName']}");
+  aux = cql_rowset_create_aux_init(call_{proc['name']}, "create table (x,y)");
+  rc = register_cql_rowset_tvf(db, aux, "{proc['canonicalName']}");
 """)
         else:
             print(f"""

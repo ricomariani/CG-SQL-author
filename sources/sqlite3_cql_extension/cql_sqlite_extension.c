@@ -164,17 +164,31 @@ void sqlite3_result_cql_text(sqlite3_context *_Nonnull context, cql_string_ref v
 
 static int cql_rowset_connect(
   sqlite3 *db, 
-  void *pAux,
+  void *aux,
   int argc,
   const char *const *argv,
   sqlite3_vtab **ppVtab,
   char **pzErr)
 {
+  cql_rowset_aux_init *pAux = (cql_rowset_aux_init *)aux;
+
+  const char *table_decl = pAux->table_decl;
+  if (!table_decl) {
+    *pzErr = sqlite3_mprintf("Missing table declaration");
+    return SQLITE_ERROR;
+  }
+
+  // Declare the table structure (column names)
+  if (sqlite3_declare_vtab(db, table_decl) != SQLITE_OK) {
+    *pzErr = sqlite3_mprintf("Unable to declare vtab: %s", sqlite3_errmsg(db));
+    return SQLITE_ERROR;
+  }
+
   cql_rowset_table *pTab = sqlite3_malloc(sizeof(cql_rowset_table));
   if (!pTab) return SQLITE_NOMEM;
 
   memset(pTab, 0, sizeof(cql_rowset_table));
-  pTab->func = (cql_rowset_func)pAux;
+  pTab->func = pAux->func;
   pTab->db = db;
   *ppVtab = (sqlite3_vtab *)pTab;
   return SQLITE_OK;
@@ -329,7 +343,7 @@ static int cql_rowset_best_index(sqlite3_vtab *pVtab, sqlite3_index_info *pIdxIn
   return SQLITE_OK;
 }
 
-int register_cql_rowset_tvf(sqlite3 *db, cql_rowset_func func, const char *name) {
+int register_cql_rowset_tvf(sqlite3 *db, cql_rowset_aux_init *aux, const char *name) {
   static sqlite3_module rowsetModule = {
       .iVersion = 0,
       .xCreate = cql_rowset_connect,
@@ -346,7 +360,20 @@ int register_cql_rowset_tvf(sqlite3 *db, cql_rowset_func func, const char *name)
   };
 
   /* func becomes the client data, so we know what to call to get the result set*/
-  return sqlite3_create_module_v2(db, name, &rowsetModule, func, NULL);
+  return sqlite3_create_module_v2(db, name, &rowsetModule, aux, cql_rowset_create_aux_destroy);
 }
 
+cql_rowset_aux_init *cql_rowset_create_aux_init(cql_rowset_func func, const char *table_decl) {
+  cql_rowset_aux_init *pAux = sqlite3_malloc(sizeof(cql_rowset_aux_init));
+  if (!pAux) return NULL;
+  pAux->func = func;
+  pAux->table_decl = table_decl;
+  return pAux;
+}
 
+void cql_rowset_create_aux_destroy(void *pv) {
+  cql_rowset_aux_init *aux = (cql_rowset_aux_init *)pv;
+  if (aux) {
+    sqlite3_free(aux);
+  }
+}

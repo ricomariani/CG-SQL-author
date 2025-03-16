@@ -23,7 +23,13 @@ void sqlite3_result_cql_blob(sqlite3_context *_Nonnull context, _Nullable cql_bl
 void sqlite3_result_cql_text(sqlite3_context *_Nonnull context, _Nullable cql_string_ref value);
 
 typedef void (*cql_rowset_func)(sqlite3 *db, int32_t argc, sqlite3_value *_Nonnull *_Nonnull argv, cql_result_set_ref *result);
-int register_cql_rowset_tvf(sqlite3 *db, cql_rowset_func func, const char *name);
+
+typedef struct {
+    const char *table_decl;
+    cql_rowset_func func;
+} cql_rowset_aux_init;
+
+int register_cql_rowset_tvf(sqlite3 *db, cql_rowset_aux_init *aux, const char *name);
 
 typedef struct {
     sqlite3_vtab base;
@@ -41,3 +47,6 @@ typedef struct {
   int column_count;
   int current_row;
 } cql_rowset_cursor;
+
+cql_rowset_aux_init *cql_rowset_create_aux_init(cql_rowset_func func, const char *create_table_str);
+void cql_rowset_create_aux_destroy(void *pAux);

@@ -267,7 +267,7 @@ def emit_proc_c_func_body(proc, cmd_args):
         ___(f"*result = NULL;")
         ___(f"")
 
-    _vv(f"// 1. Ensure Sqlite function argument count matches count of the proc_namedure in and inout arguments")
+    _vv(f"// 1. Ensure Sqlite function argument count matches count of the procedure in and inout arguments")
     ___(f"if (argc != {len(innie_arguments)}) goto invalid_arguments;")
     ___(f"")
 
@@ -301,10 +301,10 @@ def emit_proc_c_func_body(proc, cmd_args):
 
     # note that project procs always get the database via the module interface even if they don't need it
     # and they don't get the context arg
-    _vv(f"// 4. Initialize proc_namedure dependencies")
+    _vv(f"// 4. Initialize procedure dependencies")
     if proc['usesDatabase']:
         ___(f"cql_code rc = SQLITE_OK;")
-        if 'projection' not in proc:
+        if not has_projection:
             ___(f"sqlite3* db = sqlite3_context_db_handle(context);")
         ___(f"")
 
@@ -313,7 +313,7 @@ def emit_proc_c_func_body(proc, cmd_args):
         ___(f"")
 
 
-    _vv("// 5. Call the proc_namedure")
+    _vv("// 5. Call the procedure")
     ___(f"{'rc = ' if proc['usesDatabase'] else ''}{proc['name']}{'_fetch_results' if has_projection else ''}(", end="")
     for index, computed_arg in enumerate(
         (["db"] if proc['usesDatabase'] else []) +
@@ -337,10 +337,10 @@ def emit_proc_c_func_body(proc, cmd_args):
     ___()
 
 
-    _vv("// 7. Ensure the proc_namedure executed successfully")
+    _vv("// 7. Ensure the procedure executed successfully")
     if proc['usesDatabase']:
         ___("if (rc != SQLITE_OK) {")
-        if 'projection' not in proc:
+        if not has_projection:
             ___("  sqlite3_result_null(context);")
         ___("  goto cleanup;")
         ___("}")
@@ -374,7 +374,7 @@ def emit_proc_c_func_body(proc, cmd_args):
         ___()
 
     ___("invalid_arguments:")
-    if 'projection' not in proc:
+    if not has_projection:
         ___("sqlite3_result_error(context, \"CQL extension: Invalid proc_namedure arguments\", -1);")
     ___("return;")
     ___()

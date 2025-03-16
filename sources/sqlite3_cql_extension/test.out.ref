@@ -1,5 +1,4 @@
 # Clean up output directory
-/home/ricomariani/CG-SQL-author/sources/sqlite3_cql_extension/out
 # Build CQL compiler
 make: Nothing to be done for 'all'.
 # Generate stored procedures C and JSON output

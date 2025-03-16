@@ -21,8 +21,39 @@ DECLARE SELECT FUNCTION in__blob__not_null(x blob!) (in__x blob!);
 DECLARE SELECT FUNCTION in__blob__nullable(x blob) (in__x blob);
 DECLARE SELECT FUNCTION three_int_test(x int, y int, z int) (x int, y int, z int);
 DECLARE SELECT FUNCTION many_rows(n int) (x int!, y int!, z text!);
+DECLARE SELECT FUNCTION result_from_first_inout_or_out_argument__inout(t1 text!, t2 text!, t3 text!) text;
+DECLARE SELECT FUNCTION result_from_first_inout_or_out_argument__out(t1 text!, t2 text!, t3 text!) text;
+DECLARE SELECT FUNCTION result_from_inout(t text) text;
+DECLARE SELECT FUNCTION result_from_out() text;
+DECLARE SELECT FUNCTION result_from_void__null__with_in(t text) int;
+DECLARE SELECT FUNCTION result_from_void__null__no_args() int;
 
-/*
+/* Pending test cases
+
+DECLARE SELECT FUNCTION inout__bool__not_null()
+DECLARE SELECT FUNCTION inout__bool__nullable()
+DECLARE SELECT FUNCTION inout__real__not_null()
+DECLARE SELECT FUNCTION inout__real__nullable()
+DECLARE SELECT FUNCTION inout__integer__not_null()
+DECLARE SELECT FUNCTION inout__integer__nullable()
+DECLARE SELECT FUNCTION inout__long__not_null()
+DECLARE SELECT FUNCTION inout__long__nullable()
+DECLARE SELECT FUNCTION inout__text__not_null()
+DECLARE SELECT FUNCTION inout__text__nullable()
+DECLARE SELECT FUNCTION inout__blob__not_null()
+DECLARE SELECT FUNCTION inout__blob__nullable()
+DECLARE SELECT FUNCTION out__bool__not_null()
+DECLARE SELECT FUNCTION out__bool__nullable()
+DECLARE SELECT FUNCTION out__real__not_null()
+DECLARE SELECT FUNCTION out__real__nullable()
+DECLARE SELECT FUNCTION out__integer__not_null()
+DECLARE SELECT FUNCTION out__integer__nullable()
+DECLARE SELECT FUNCTION out__long__not_null()
+DECLARE SELECT FUNCTION out__long__nullable()
+DECLARE SELECT FUNCTION out__text__not_null()
+DECLARE SELECT FUNCTION out__text__nullable()
+DECLARE SELECT FUNCTION out__blob__not_null()
+DECLARE SELECT FUNCTION out__blob__nullable()
 DECLARE SELECT FUNCTION comprehensive_test() (result text);
 DECLARE SELECT FUNCTION result_from_result_set__with_in_out_inout() (result text);
 */
@@ -32,8 +63,20 @@ begin
   let @tmp(r) := (select in__x from @id(f!)(v!));
   if @tmp(r) is not v! then
      printf("%s: error %s is not %s\n", @text(f!), @text(v!), @tmp(r):fmt);
+     throw;
   else
      printf("%s: passed with %s\n", @text(f!), @text(v!));
+  end if;
+end;
+
+@macro(stmt_list) E!(x! expr, y! expr)
+begin
+  let @tmp(x) := x!;
+  let @tmp(y) := y!;
+  if @tmp(x) is not @tmp(y) then
+     printf("line %d error %s is not %s\n", @MACRO_LINE, @tmp(x):fmt, @tmp(y):fmt);
+     printf("expressions:%s is not %s\n", @text(x!), @text(y!));
+     throw;
   end if;
 end;
 
@@ -92,6 +135,24 @@ begin
     if L.z != printf("text_%d", got) throw;
     got += 1;
   end;
+
+  let t := (select result_from_first_inout_or_out_argument__inout("foo", "bar", "baz"));
+  E!(t, "inout_argument");
+
+  t := (select result_from_first_inout_or_out_argument__out("foo", "bar", "baz"));
+  E!(t, "out_argument");
+
+  t := (select result_from_inout("foo"));
+  E!(t, "inout_argument");
+
+  t := (select result_from_out());
+  E!(t, "out_argument");
+
+  let nil := (select result_from_void__null__with_in("foo"));
+  E!(nil, null);
+
+  nil := (select result_from_void__null__no_args());
+  E!(nil, null);
   
   printf("Successful exit\n");
 end;
@@ -140,3 +201,4 @@ int main(int argc, char **argv) {
    exit(rc);
 }
 ';
+

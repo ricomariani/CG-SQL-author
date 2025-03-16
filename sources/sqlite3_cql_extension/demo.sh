@@ -30,7 +30,6 @@ done
 echo "# Clean up output directory"
 rm -rf $O
 mkdir -p $O
-ls -d $O
 
 echo "# Build CQL compiler"
 (cd $O/../.. ; make)

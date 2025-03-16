@@ -7,6 +7,7 @@
 
 - Code source must be available to compile the extension (sqlite3ext.h).
 - The compiled SQLite3 binary must allow loading extensions
+- The checked in Sqlite should do the job `export SQLITE_PATH=../sqlite`
 - The version of the binary must match the version of the code source
 
 ```bash

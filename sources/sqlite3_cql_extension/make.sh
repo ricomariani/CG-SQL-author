@@ -6,16 +6,20 @@
 
 set -o errexit -o nounset -o pipefail
 
+echo "This build is only to create a shared library version of some extension you might need"
+echo "On many operating systems this binding can be tricky."
+echo "Testing is limited so be prepared to sort out the dynamic loading yourself."
+echo
+
 S=$(cd $(dirname "$0"); pwd)
 O=$S/out
 R=$S/..
 
-if [ -z "$SQLITE_PATH" ]; then
-  cat $S/README.md | awk '/<!-- build_requirements_start/{flag=1; next} /<!-- build_requirements_end/{flag=0;} flag'
-
-  exit 1
-else
+if [ -v SQLITE_PATH ]; then
   SQLITE_PATH=$(realpath $SQLITE_PATH)
+else
+  cat $S/README.md | awk '/<!-- build_requirements_start/{flag=1; next} /<!-- build_requirements_end/{flag=0;} flag'
+  exit 1
 fi
 
 while [ "${1:-}" != "" ]; do

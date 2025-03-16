@@ -39,7 +39,7 @@ pushd $O >/dev/null
 echo "# Generate stored procedures C and JSON output"
 ${CQL} --nolines --in ../Sample.sql --cg Sample.h Sample.c
 ${CQL} --nolines --in ../Sample.sql --rt json_schema --cg Sample.json
-${CQL} --nolines --in ../Demo.sql --cg Demo.h Demo.c
+${CQL} --nolines --in ../TestCases.sql --cg TestCases.h TestCases.c
 ls Sample.c Sample.json
 
 echo "# Generate SQLite3 extension"
@@ -58,7 +58,7 @@ ${CC} \
   -I./.. \
   -o ./out/demo \
   ./out/SampleInterop.c \
-  ./out/Demo.c \
+  ./out/TestCases.c \
   ./cql_sqlite_extension.c \
   ./out/Sample.c \
   ./../cqlrt.c \

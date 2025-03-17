@@ -9,6 +9,16 @@ extern const sqlite3_api_routines *sqlite3_api;
 #define trace_printf(x, ...)
 // #define trace_printf printf
 
+// This is used to validate if an imcoming argument
+// is compatible with the required CQL type.  If the
+// argument is not compatible then an error is ultimately
+// generated for this call. If you're using CQL to call
+// the procedures via declare select function then this
+// check happens at compile time but the code can't assume
+// this. In fact that is not the normal use case at all
+// if you are already in CQL you could just call the proc
+// directly, so we have to assume a hostile, or at least
+// error-prone caller.
 cql_bool is_sqlite3_type_compatible_with_cql_core_type(
   int sqlite_type,
   int8_t cql_core_type,
@@ -40,6 +50,8 @@ cql_bool is_sqlite3_type_compatible_with_cql_core_type(
 
   return false;
 }
+
+// Below are the conversion functions for getting a cql native type from a sqlite_value
 
 cql_bool resolve_not_null_bool_from_sqlite3_value(sqlite3_value *_Nonnull value) {
   return (cql_bool)sqlite3_value_int(value);
@@ -103,6 +115,8 @@ cql_object_ref _Nullable resolve_object_from_sqlite3_value(sqlite3_value *_Nonnu
 
   return (cql_object_ref)sqlite3_value_pointer(value, "pointer_type");
 }
+
+// below are the function for setting a SQlite result using a cql type
 
 void sqlite3_result_cql_nullable_bool(sqlite3_context *_Nonnull context, cql_nullable_bool value) {
   if (value.is_null) {

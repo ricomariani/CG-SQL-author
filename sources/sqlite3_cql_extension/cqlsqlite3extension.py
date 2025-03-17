@@ -177,7 +177,7 @@ int sqlite3_cqlextension_init(sqlite3 *_Nonnull db, char *_Nonnull *_Nonnull pzE
             # Create a new array with the required changes
             args = [{'name': f"arg_{a['name']}", 'type': f"{a['type']} hidden"} for a in proc['args']]
             col = [{'name': p['name'], 'type' : p['type'] } for p in proc['projection']]
-            cols = ", ".join(f"{p['name']} {p['type']}" for p in (col + args))
+            cols = ", ".join(f"[{p['name']}] {p['type']}" for p in (col + args))
             table_decl = f"CREATE TABLE {proc_name}({cols})"
             print(f"""
   aux = cql_rowset_create_aux_init(call_{proc_name}, "{table_decl}");
@@ -241,10 +241,10 @@ def emit_proc_c_func_body(proc, cmd_args):
     proc_name = proc['canonicalName']
     has_projection = 'projection' in proc
 
-    sql_in_args = ', '.join(f"{a['name']} {a['type']}{'!' if a['isNotNull'] else ''}" for a in innie_arguments)
+    sql_in_args = ', '.join(f"`{a['name']}` {a['type']}{'!' if a['isNotNull'] else ''}" for a in innie_arguments)
 
     if has_projection:
-        sql_result =  ', '.join(f"{p['name']} {p['type']}{'!' if p['isNotNull'] else ''}" for p in proc['projection'])
+        sql_result =  ', '.join(f"`{p['name']}` {p['type']}{'!' if p['isNotNull'] else ''}" for p in proc['projection'])
         sql_result = "(" + sql_result + ")"
     elif first_outtie:
         sql_result = f"{first_outtie['type']}{'!' if first_outtie['isNotNull'] else ''}"

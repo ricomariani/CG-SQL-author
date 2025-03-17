@@ -10,7 +10,7 @@ declare proc printf no check;
 -- trivial case fixed text output as a result set
 proc hello_world()
 begin
-  select "Hello World!" as result;
+  select "Hello World!" as `the result`;
 end;
 
 -- multi-column result set, with pass through, one row

@@ -11,7 +11,7 @@ declare proc printf no check;
 DECLARE SELECT FUNCTION comprehensive_test1(in__bool__not_null bool!, in__bool__nullable bool, in__real__not_null real!, in__real__nullable real, in__integer__not_null integer!, in__integer__nullable integer, in__long__not_null long!, in__long__nullable long, in__text__not_null text!, in__text__nullable text, in__blob__not_null blob!, in__blob__nullable blob) (result text!);
 DECLARE SELECT FUNCTION comprehensive_test2(inout__bool__not_null bool!, inout__bool__nullable bool, inout__real__not_null real!, inout__real__nullable real, inout__integer__not_null integer!, inout__integer__nullable integer, inout__long__not_null long!, inout__long__nullable long, inout__text__not_null text!, inout__text__nullable text, inout__blob__not_null blob!, inout__blob__nullable blob) (result text!);
 DECLARE SELECT FUNCTION comprehensive_test3() (result text!);
-DECLARE SELECT FUNCTION hello_world() (result text!);
+DECLARE SELECT FUNCTION hello_world() (`the result` text!);
 DECLARE SELECT FUNCTION in__blob__not_null(in__x blob!) (in__x blob!);
 DECLARE SELECT FUNCTION in__blob__nullable(in__x blob) (in__x blob);
 DECLARE SELECT FUNCTION in__bool__not_null(in__x bool!) (in__x bool!);
@@ -100,7 +100,7 @@ begin
   printf("Starting demo.\n");
 
   -- extracts a fixed string
-  let hello := (select result from hello_world());
+  let hello := (select `the result` from hello_world());
   printf("%s\n", hello);
   EXPECT_EQ!(hello, "Hello World!");
 

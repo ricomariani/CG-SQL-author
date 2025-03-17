@@ -7,6 +7,7 @@ extern const sqlite3_api_routines *sqlite3_api;
 #include "cqlrt.h"
 
 #define trace_printf(x, ...)
+// #define trace_printf printf
 
 cql_bool is_sqlite3_type_compatible_with_cql_core_type(
   int sqlite_type,
@@ -166,8 +167,12 @@ void sqlite3_result_cql_text(sqlite3_context *_Nonnull context, cql_string_ref v
   cql_free_cstr(c_str, value);
 }
 
+// This is the function that SQLite calls to create the virtual table.
+// We give it the table declaration provided to us and store the function
+// pointer in the vtab structure.  We will use the function pointer
+// later to actually get the result set we need so provide values.
 static int cql_rowset_connect(
-  sqlite3 *db, 
+  sqlite3 *db,
   void *aux,
   int argc,
   const char *const *argv,
@@ -199,6 +204,14 @@ static int cql_rowset_connect(
   return SQLITE_OK;
 }
 
+// Here we can only allocate the cursor structure and fill in the db pointer
+// Everything else will need to wait until xFilter is called.  The call sequence
+// is xConnect
+//   -> xBestIndex -> xOpen -> xFilter
+//   -> xEof -> xColumn -> xNext
+//   -> xEof -> xColumn -> xNext
+//   -> xEof -> xClose
+// -> xDisconnect
 static int cql_rowset_open(sqlite3_vtab *pVtab, sqlite3_vtab_cursor **ppCursor) {
   trace_printf("open\n");
   cql_rowset_cursor *pCur = sqlite3_malloc(sizeof(cql_rowset_cursor));
@@ -212,7 +225,25 @@ static int cql_rowset_open(sqlite3_vtab *pVtab, sqlite3_vtab_cursor **ppCursor) 
   return SQLITE_OK;
 }
 
-static int cql_rowset_filter(sqlite3_vtab_cursor *cur, int idxNum, const char *idxStr, int argc, sqlite3_value **argv) {
+// Filter the result set based on the arguments passed to the function
+// This is where we actually call the function to get the result set
+// and set up the cursor to iterate over the result set.
+// The arguments are passed in as sqlite3_value pointers.  The function
+// pointer we got in the aux structure is called to get the result set.
+// It does the work of cracking the args out of argc and argv and it will
+// give errors if they don't match the function signature.  We don't do any
+// of that here, we just pass the args to the function and get the result
+// set back.  The function is expected to return a result set that is
+// compatible with the table declaration we passed in when we created
+// the virtual table.  If the arguments match, it uses them to call the
+// stored procedure it is wrapping which in turn yields the result set.
+static int cql_rowset_filter(
+  sqlite3_vtab_cursor *cur,
+  int idxNum,
+  const char *idxStr,
+  int argc,
+  sqlite3_value **argv)
+{
   trace_printf("filter\n");
   cql_rowset_cursor *pCur = (cql_rowset_cursor *)cur;
   cql_rowset_table *pTab = (cql_rowset_table *)pCur->base.pVtab;
@@ -227,12 +258,15 @@ static int cql_rowset_filter(sqlite3_vtab_cursor *cur, int idxNum, const char *i
   cql_contract(meta->columnOffsets != NULL);
 
   pCur->column_count =  meta->columnCount;
-  pCur->row_count = cql_result_set_get_count(pCur->result_set); 
+  pCur->row_count = cql_result_set_get_count(pCur->result_set);
   pCur->current_row = 0;
 
   return SQLITE_OK;
 }
 
+// Disconnect from the virtual table, this is called when the
+// virtual table is no longer needed.  We just free our
+// vtab structure here.  It has nothing in it to free.
 static int cql_rowset_disconnect(sqlite3_vtab *pVtab) {
   trace_printf("disconnect\n");
   cql_rowset_table *pTab = (cql_rowset_table *)pVtab;
@@ -240,7 +274,7 @@ static int cql_rowset_disconnect(sqlite3_vtab *pVtab) {
   return SQLITE_OK;
 }
 
-/* Close Cursor */
+// Close Cursor, release the result set here
 static int cql_rowset_close(sqlite3_vtab_cursor *cur) {
   trace_printf("close\n");
   cql_rowset_cursor *pCur = (cql_rowset_cursor *)cur;
@@ -250,7 +284,7 @@ static int cql_rowset_close(sqlite3_vtab_cursor *cur) {
   return SQLITE_OK;
 }
 
-/* Move to Next Row */
+// Move to Next Row
 static int cql_rowset_next(sqlite3_vtab_cursor *cur) {
   trace_printf("next\n");
   cql_rowset_cursor *pCur = (cql_rowset_cursor *)cur;
@@ -258,14 +292,14 @@ static int cql_rowset_next(sqlite3_vtab_cursor *cur) {
   return SQLITE_OK;
 }
 
-/* Check if Cursor is at End */
+// Check if Cursor is at End
 static int cql_rowset_eof(sqlite3_vtab_cursor *cur) {
   trace_printf("eof\n");
   cql_rowset_cursor *pCur = (cql_rowset_cursor *)cur;
   return pCur->current_row >= pCur->row_count;
 }
 
-/* Retrieve Column Data */
+// Retrieve Column Data
 static int cql_rowset_column(sqlite3_vtab_cursor *cur, sqlite3_context *context, int column) {
   trace_printf("column %d\n", column);
   cql_rowset_cursor *pCur = (cql_rowset_cursor *)cur;
@@ -342,7 +376,7 @@ static int cql_rowset_column(sqlite3_vtab_cursor *cur, sqlite3_context *context,
   return SQLITE_OK;
 }
 
-/* Return Row ID */
+// Return Row ID, it's just the row number
 static int cql_rowset_rowid(sqlite3_vtab_cursor *cur, sqlite_int64 *pRowid) {
   trace_printf("rowid\n");
   cql_rowset_cursor *pCur = (cql_rowset_cursor *)cur;
@@ -350,7 +384,12 @@ static int cql_rowset_rowid(sqlite3_vtab_cursor *cur, sqlite_int64 *pRowid) {
   return SQLITE_OK;
 }
 
-/* xBestIndex - No filtering, full table scan */
+// We tell SQLite that "we got it" we'll use the "index" to get the
+// results it doesn't need to filter for us.  This is a lie, we don't
+// actually have an index, we just want to be able to use the
+// arguments as parameters to the function.  We don't want it to apply
+// any where clause to the data in the table.  We are not a table, we
+// are a function.  We'll get the actual arguments in cql_rowset_filter
 static int cql_rowset_best_index(sqlite3_vtab *pVtab, sqlite3_index_info *pIdxInfo) {
   trace_printf("best index\n");
   // Loop through each constraint
@@ -381,8 +420,16 @@ static int cql_rowset_best_index(sqlite3_vtab *pVtab, sqlite3_index_info *pIdxIn
   return SQLITE_OK;
 }
 
+// the standard helper to register a named tvf for wrapping a CQL proc and
+// access its result set as a virtual table function.
 int register_cql_rowset_tvf(sqlite3 *db, cql_rowset_aux_init *aux, const char *name) {
   trace_printf("register %s\n", name);
+
+  // all of the tvfs we create use the same helper functions, it always just decodes
+  // a result set.  The only difference is what helper function we call to get the
+  // result set and that flows to us in the aux pointer.  The aux pointer is
+  // passed to us in the xCreate and xConnect functions.  We use it to get the
+  // function to call to get the result set and the virtual table declaration.
   static sqlite3_module rowsetModule = {
       .iVersion = 0,
       .xCreate = cql_rowset_connect,
@@ -398,11 +445,16 @@ int register_cql_rowset_tvf(sqlite3 *db, cql_rowset_aux_init *aux, const char *n
       .xFilter = cql_rowset_filter,
   };
 
-  /* func becomes the client data, so we know what to call to get the result set*/
+  // we use the aux pointer as our client data, that will tell us what function to call to
+  // get the result set and what the table declaration is.
   return sqlite3_create_module_v2(db, name, &rowsetModule, aux, cql_rowset_create_aux_destroy);
 }
 
-cql_rowset_aux_init *cql_rowset_create_aux_init(cql_rowset_func func, const char *table_decl) {
+// Make the new aux init structure from the pieces
+cql_rowset_aux_init *cql_rowset_create_aux_init(
+  cql_rowset_func func,
+  const char *table_decl)
+{
   cql_rowset_aux_init *pAux = sqlite3_malloc(sizeof(cql_rowset_aux_init));
   if (!pAux) return NULL;
   pAux->func = func;
@@ -410,9 +462,14 @@ cql_rowset_aux_init *cql_rowset_create_aux_init(cql_rowset_func func, const char
   return pAux;
 }
 
+// release the aux structure
+// this is called when the virtual table is no longer needed
 void cql_rowset_create_aux_destroy(void *pv) {
   cql_rowset_aux_init *aux = (cql_rowset_aux_init *)pv;
   if (aux) {
+    // there are no fields we need to free inside of aux at this time
+    // but some day their might be so this is here to give us access
+    // to those fields.
     sqlite3_free(aux);
   }
 }

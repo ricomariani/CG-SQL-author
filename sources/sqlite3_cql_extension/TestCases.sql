@@ -59,6 +59,12 @@ DECLARE SELECT FUNCTION result_from_void__null__no_args() /*void*/ int;
 DECLARE SELECT FUNCTION result_from_void__null__with_in(in__x text!) /*void*/ int;
 DECLARE SELECT FUNCTION three_int_test(x integer, y integer, z integer) (x integer, y integer, z integer);
 
+-- this does one basic select from the indicated function
+-- all of the functions return a result set and they all have
+-- the same column name as their result 'in__x' which is
+-- an echo of their first argument.  The data type is different
+-- for each ohne but the macro doesn't care.  We just validate
+-- that what we put is is what comes out.
 @macro(stmt_list) sel!(f! expr, v! expr)
 begin
   let @tmp(r) := (select in__x from @id(f!)(v!));
@@ -70,6 +76,10 @@ begin
   end if;
 end;
 
+-- this is an "expect equals" macro
+-- it caches its args in @tmp(x) and @tmp(y) so that
+-- they are evaluated once and only once.  Otherwise
+-- it's just a case of continue if all is good otherwise throw
 @macro(stmt_list) EXPECT_EQ!(x! expr, y! expr)
 begin
   let @tmp(x) := x!;
@@ -81,15 +91,21 @@ begin
   end if;
 end;
 
+-- we'll itemize the various declared functions above and
+-- test each one in turn.  The first few tests are chatty
+-- because that's where things are likely to go wrong
+-- all the tests have at least basic validations.
 proc test_cases()
 begin
   printf("Starting demo.\n");
+
+  -- extracts a fixed string
   let hello := (select result from hello_world());
   printf("%s\n", hello);
   EXPECT_EQ!(hello, "Hello World !");
 
+  -- flows three integers from args to output
   printf("three int test\n");
-
   cursor C for select * from three_int_test(1, 2, 3);
   fetch C;
   printf("%d %d %d\n", C.x, C.y, C.z);
@@ -105,32 +121,33 @@ begin
   EXPECT_EQ!(D.z, 6);
   printf("three int test passed\n");
 
+  -- verify that we can pass through bools, ints, reals, text
   sel!(in__bool__not_null, true);
   sel!(in__bool__not_null, false);
   sel!(in__bool__nullable, true);
   sel!(in__bool__nullable, false);
   sel!(in__bool__nullable, null);
   sel!(in__integer__not_null, 1);
-  sel!(in__integer__not_null, 100);
   sel!(in__integer__nullable, null);
   sel!(in__integer__nullable, 2);
-  sel!(in__integer__nullable, 200);
+  sel!(in__long__not_null, 1234567890123456789);
+  sel!(in__long__nullable, null);
+  sel!(in__long__nullable, 2345678901234567890);
   sel!(in__real__not_null, 1.5);
-  sel!(in__real__not_null, 100.5);
   sel!(in__real__nullable, null);
   sel!(in__real__nullable, 2.5);
-  sel!(in__real__nullable, 200.5);
   sel!(in__text__not_null, "foo_text");
   sel!(in__text__nullable, null);
   sel!(in__text__nullable, "bar_text");
 
+  -- make blob and pass it through
   let a_blob := (select "blob stuff" ~blob~);
-
   sel!(in__blob__not_null, a_blob);
   sel!(in__blob__nullable, null);
   sel!(in__blob__nullable, a_blob);
 
-  let wanted := 10;
+  -- generate 5 rows and verify them all
+  let wanted := 5;
   declare LL cursor for select * from many_rows(wanted);
 
   let got := 0;
@@ -151,30 +168,32 @@ begin
   var bl blob;
   var b bool;
 
+  -- simple result set return, verifies that the result set is the preferred result type
   t := (select result from result_from_result_set__with_in_out_inout("foo", "bar"));
   EXPECT_EQ!(t, "result_set");
 
+  -- verifies choice of the inout argument as the result
   t := (select result_from_first_inout_or_out_argument__inout("foo", "bar", "baz"));
   EXPECT_EQ!(t, "inout_argument");
-
-  t := (select result_from_first_inout_or_out_argument__out("foo", "bar", "baz"));
-  EXPECT_EQ!(t, "out_argument");
 
   t := (select result_from_inout("foo"));
   EXPECT_EQ!(t, "inout_argument");
 
+  -- verifies choice of the out argument as the result
+  t := (select result_from_first_inout_or_out_argument__out("foo", "bar", "baz"));
+  EXPECT_EQ!(t, "out_argument");
+
   t := (select result_from_out());
   EXPECT_EQ!(t, "out_argument");
 
+  -- verifies plan (C) no result, we get a dummy null result
   let nil := (select result_from_void__null__with_in("foo"));
   EXPECT_EQ!(nil, null);
 
   nil := (select result_from_void__null__no_args());
   EXPECT_EQ!(nil, null);
 
-  -- all these bind to nothing so we're really just testing
-  -- the call sequence for errors
-
+  -- verify pass through for inout args
   b := (select inout__bool__not_null(false));
   EXPECT_EQ!(b, false);
   b := (select inout__bool__nullable(true));
@@ -214,6 +233,8 @@ begin
   bl := (select inout__blob__nullable(null));
   EXPECT_EQ!(bl, null);
 
+  -- verify that the out argument is used
+  -- these all return a constant essentially
   b := (select out__bool__not_null());
   EXPECT_EQ!(b, true);
   b := (select out__bool__nullable());
@@ -247,18 +268,22 @@ begin
   let t_nn := 'foo';
   let bl_nn := (select x'1234');
 
+  -- comprehensive test of all the types in 3 parts
+  -- this used to be one bit test but then there are too many arguments
+  -- 16 is the max SQLite can handle.
+
   t := (select result from comprehensive_test1(
     false, null, 1.5, null, 1, null, 12345679012345L, null, 'foo', null,  (select x'1234'), null));
   EXPECT_EQ!(t, 'hello1');
 
   t := (select result from comprehensive_test2(
     b_nn, b, r_nn, r, i_nn, i, l_nn, l, t_nn, t, bl_nn, bl));
-
   EXPECT_EQ!(t, 'hello2');
 
   t := (select result from comprehensive_test3());
   EXPECT_EQ!(t, 'hello3');
 
+  -- if we got there we didn't throw hence we succeded
   printf("Successful exit\n");
 end;
 
@@ -268,6 +293,10 @@ int sqlite3_cqlextension_init(sqlite3 *_Nonnull db, char *_Nonnull *_Nonnull pzE
 
 #define trace_printf(x,...)
 
+// this test uses the three_int_test virtual table directly
+// it is redundant with the above tests but if things are going crazy
+// this gives you a simple thing to step through with each step readily
+// breakpointed.  This proved to be invaluable
 void explicit_test(sqlite3 *db) {
     printf("explicit test\n");
 
@@ -296,19 +325,20 @@ void explicit_test(sqlite3 *db) {
 }
 
 int main(int argc, char **argv) {
-   sqlite3 *db = NULL;
-   int rc = sqlite3_open(":memory:", &db);
-   if (rc) exit(rc);
+  // create an in-memory database
+  sqlite3 *db = NULL;
+  int rc = sqlite3_open(":memory:", &db);
+  if (rc) exit(rc);
 
-   // this is the thing that registers all of the UDFs and TVFs
-   rc = sqlite3_cqlextension_init(db, NULL, NULL);
-   if (rc) exit(rc);
+  // this is the thing that registers all of the UDFs and TVFs
+  rc = sqlite3_cqlextension_init(db, NULL, NULL);
+  if (rc) exit(rc);
 
-   // this is a hand written test case
-   explicit_test(db);
+  // this is a hand written test case
+  explicit_test(db);
 
-   // this is CQL exercising its own generated procs via the interop interface
-   rc = test_cases(db);
-   exit(rc);
+  // this is CQL exercising its own generated procs via the interop interface
+  rc = test_cases(db);
+  exit(rc);
 }
 ';

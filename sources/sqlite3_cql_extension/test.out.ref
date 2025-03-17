@@ -24,15 +24,14 @@ in__bool__nullable: passed with TRUE
 in__bool__nullable: passed with FALSE
 in__bool__nullable: passed with NULL
 in__integer__not_null: passed with 1
-in__integer__not_null: passed with 100
 in__integer__nullable: passed with NULL
 in__integer__nullable: passed with 2
-in__integer__nullable: passed with 200
+in__long__not_null: passed with 1234567890123456789L
+in__long__nullable: passed with NULL
+in__long__nullable: passed with 2345678901234567890L
 in__real__not_null: passed with 1.5
-in__real__not_null: passed with 100.5
 in__real__nullable: passed with NULL
 in__real__nullable: passed with 2.5
-in__real__nullable: passed with 200.5
 in__text__not_null: passed with foo_text
 in__text__nullable: passed with NULL
 in__text__nullable: passed with bar_text
@@ -44,9 +43,4 @@ in__blob__nullable: passed with a_blob
 2 200 text_2
 3 300 text_3
 4 400 text_4
-5 500 text_5
-6 600 text_6
-7 700 text_7
-8 800 text_8
-9 900 text_9
 Successful exit

@@ -102,7 +102,7 @@ begin
   -- extracts a fixed string
   let hello := (select result from hello_world());
   printf("%s\n", hello);
-  EXPECT_EQ!(hello, "Hello World !");
+  EXPECT_EQ!(hello, "Hello World!");
 
   -- flows three integers from args to output
   printf("three int test\n");

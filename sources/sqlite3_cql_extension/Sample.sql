@@ -7,16 +7,20 @@
 
 declare proc printf no check;
 
+-- trivial case fixed text output as a result set
 proc hello_world()
 begin
-  select "Hello World !" as result;
+  select "Hello World!" as result;
 end;
 
+-- multi-column result set, with pass through, one row
 proc three_int_test(x int, y int, z int)
 begin
   select x x, y y, z z;
 end;
 
+-- generated result set with a cursor
+-- as many rows as you desire
 proc many_rows(x int)
 begin
   cursor C like (x int!, y int!, z text!);
@@ -28,6 +32,10 @@ begin
   end;
 end;
 
+-- first of 3 tests that aim to ensure each arg type can be
+-- verified and marshalled correctly.  We use 3 tests
+-- because the max number of args is 16 if we are going to
+-- use the select contract we are testing here.
 proc comprehensive_test1(
   in in__bool__not_null bool!,
   in in__bool__nullable bool,
@@ -48,6 +56,9 @@ begin
   select "hello1" as `result`;
 end;
 
+-- second of 3 tests that aim to ensure each arg type can be
+-- verified and marshalled correctly. This one uses
+-- inout args for the return type so they are passthrough
 proc comprehensive_test2(
   inout inout__bool__not_null bool!,
   inout inout__bool__nullable bool,
@@ -68,6 +79,9 @@ begin
   select "hello2" as `result`;
 end;
 
+-- third of 3 tests that aim to ensure each arg type can be
+-- verified and marshalled correctly.  This one uses out args
+-- to get the return type.
 proc comprehensive_test3(
   out out__real__not_null real!,
   out out__real__nullable real,
@@ -126,6 +140,8 @@ begin
   select "result_set" as `result`;
 end;
 
+-- verifies that the first inout or out argument is used
+-- as the scalar return value
 proc result_from_first_inout_or_out_argument__inout(
   in in__text__not_null text!,
   inout inout__text__not_null text!,
@@ -140,6 +156,8 @@ begin
   out__text__not_null_bis := "out_argument";
 end;
 
+-- verifies that the first inout or out argument is used
+-- as the scalar return value
 proc result_from_first_inout_or_out_argument__out(
   in in__text__not_null text!,
   out out__text__not_null text!,
@@ -154,22 +172,35 @@ begin
   inout__text__not_null_bis := "inout_argument";
 end;
 
-proc result_from_inout(inout inout__x text!) begin
+-- simple test that flows an inout text
+proc result_from_inout(inout inout__x text!)
+begin
   inout__x := "inout_argument";
 end;
 
-proc result_from_out(out out__x text!) begin
+-- simple test case that fills an out text
+proc result_from_out(out out__x text!)
+begin
   out__x := "out_argument";
 end;
 
-proc result_from_void__null__with_in(in in__x text!) begin
+-- return nothing, this will appear as function
+-- that returns a nullable int and it's always null
+-- it has to return something.
+proc result_from_void__null__with_in(in in__x text!)
+begin
   /* noop */
 end;
 
-proc result_from_void__null__no_args() begin
+-- return nothing, this will appear as function
+-- that returns a nullable int and it's always null
+-- it has to return something.
+proc result_from_void__null__no_args()
+begin
   /* noop */
 end;
 
+-- these all pass through their argument and return it in a result set
 proc in__bool__not_null(in in__x bool!) begin SELECT in__x; end;
 proc in__bool__nullable(in in__x bool) begin SELECT in__x; end;
 proc in__real__not_null(in in__x real!) begin SELECT in__x; end;
@@ -185,6 +216,7 @@ proc in__blob__nullable(in in__x blob) begin SELECT in__x; end;
 -- proc in__object__not_null(inout in__x integer!) begin SELECT in__x; end;
 -- proc in__object__nullable(inout in__x integer) begin SELECT in__x; end;
 
+-- these all leave their inout argument unchanged and it is their result
 proc inout__bool__not_null(inout inout__x bool!) begin /* noop */ end;
 proc inout__bool__nullable(inout inout__x bool) begin /* noop */ end;
 proc inout__real__not_null(inout inout__x real!) begin /* noop */ end;
@@ -200,6 +232,7 @@ proc inout__blob__nullable(inout inout__x blob) begin /* noop */ end;
 -- proc inout__object__not_null(inout inout__x integer!) begin /* noop */ end;
 -- proc inout__object__nullable(inout inout__x integer) begin /* noop */ end;
 
+-- these all return some constant value, it's null whenever it's allowed to be
 proc out__bool__not_null(out out__x bool!) begin out__x := TRUE; end;
 proc out__bool__nullable(out out__x bool) begin out__x := NULL; end;
 proc out__real__not_null(out out__x real!) begin out__x := 3.14; end;

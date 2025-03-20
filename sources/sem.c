@@ -4010,6 +4010,11 @@ cql_noexport ast_node *sem_get_name_ast(ast_node *ast) {
     return col_name_ast;
   }
 
+  if (is_ast_declare_interface_stmt(ast)) {
+    EXTRACT_NAME_AST(name_ast, ast->left);
+    return name_ast;
+  }
+
   // the only other option
   Contract(is_ast_create_view_stmt(ast));
   EXTRACT_NOTNULL(view_and_attrs, ast->right);
@@ -20206,10 +20211,17 @@ static void validate_reqd_sptrs(
         pch++;
       }
 
-      ast_node *interface_actual = find_interface_type(tmp.ptr);
-      if (!interface_actual) {
-        report_error(error_ast, "CQL0482: interface not found", tmp.ptr);
-        goto error;
+      ast_node *interface_actual = find_proc(tmp.ptr);
+      bool_t valid = interface_actual && interface_actual->sem && interface_actual->sem->sptr;
+      CSTR actual_item = "procedure";
+
+      if (!valid) {
+        interface_actual = find_interface_type(tmp.ptr);
+        actual_item = "interface";
+        if (!interface_actual) {
+          report_error(error_ast, "CQL0482: interface not found", tmp.ptr);
+          goto error;
+        }
       }
 
       bclear(&tmp);
@@ -20219,14 +20231,19 @@ static void validate_reqd_sptrs(
         pch++;
       }
 
-      ast_node *interface_reqd = find_interface_type(tmp.ptr);
-      if (!interface_reqd) {
-        report_error(error_ast, "CQL0482: interface not found", tmp.ptr);
-        goto error;
+      ast_node *interface_reqd = find_proc(tmp.ptr);
+      valid = interface_reqd && interface_reqd->sem && interface_reqd->sem->sptr;
+
+      if (!valid) {
+        interface_reqd = find_interface_type(tmp.ptr);
+        if (!interface_reqd) {
+          report_error(error_ast, "CQL0482: interface not found", tmp.ptr);
+          goto error;
+        }
       }
 
-      EXTRACT_STRING(reqd_name, interface_reqd->left);
-      EXTRACT_STRING(actual_name, interface_actual->left);
+      CSTR reqd_name = sem_get_name(interface_reqd);
+      CSTR actual_name = sem_get_name(interface_actual);
 
       sem_struct *nested_reqd_sptr = interface_reqd->sem->sptr;
       sem_struct *nested_actual_sptr = interface_actual->sem->sptr;
@@ -20234,7 +20251,7 @@ static void validate_reqd_sptrs(
       validate_reqd_sptrs(
         actual_name,
         reqd_name,
-        "interface",
+        actual_item,
         error_ast,
         nested_reqd_sptr,
         nested_actual_sptr);

@@ -86962,6 +86962,240 @@ END;
 
 The statement ending at line XXXX
 
+DECLARE INTERFACE interface_base (foo OBJECT<interface1>);
+
+  {declare_interface_stmt}: interface_base: { foo: object<interface1> }
+  | {name interface_base}
+  | {proc_params_stmts}
+    | {typed_names}: interface_base: { foo: object<interface1> }
+      | {typed_name}: foo: object<interface1>
+        | {name foo}
+        | {type_object}: foo: object<interface1>
+          | {name interface1}
+
+The statement ending at line XXXX
+
+DECLARE INTERFACE interface_base_bad (foo OBJECT<also_not_an_interface>);
+
+  {declare_interface_stmt}: interface_base_bad: { foo: object<also_not_an_interface> }
+  | {name interface_base_bad}
+  | {proc_params_stmts}
+    | {typed_names}: interface_base_bad: { foo: object<also_not_an_interface> }
+      | {typed_name}: foo: object<also_not_an_interface>
+        | {name foo}
+        | {type_object}: foo: object<also_not_an_interface>
+          | {name also_not_an_interface}
+
+The statement ending at line XXXX
+
+[[implements=interface_base]]
+PROC interface_proc_subtype ()
+BEGIN
+  CURSOR C LIKE (foo OBJECT<interface2>);
+  FETCH C(foo) FROM VALUES (NULL);
+  OUT C;
+END;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name implements}
+  |   | {name interface_base}: ok
+  | {create_proc_stmt}: C: interface_proc_subtype: { foo: object<interface2> } variable shape_storage uses_out value_cursor
+    | {name interface_proc_subtype}: C: interface_proc_subtype: { foo: object<interface2> } variable shape_storage uses_out value_cursor
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {declare_cursor_like_typed_names}: C: _select_: { foo: object<interface2> } variable shape_storage value_cursor
+        | | {name C}: C: _select_: { foo: object<interface2> } variable shape_storage value_cursor
+        | | {typed_names}: _select_: { foo: object<interface2> }
+        |   | {typed_name}: foo: object<interface2>
+        |     | {name foo}
+        |     | {type_object}: foo: object<interface2>
+        |       | {name interface2}
+        | {fetch_values_stmt}: ok
+        | | {name_columns_values}
+        |   | {name C}: C: _select_: { foo: object<interface2> } variable shape_storage value_cursor
+        |   | {columns_values}: ok
+        |     | {column_spec}
+        |     | | {name_list}
+        |     |   | {name foo}: foo: object<interface2>
+        |     | {insert_list}: ok
+        |       | {null}: null
+        | {out_stmt}: C: _select_: { foo: object<interface2> } variable shape_storage value_cursor
+          | {name C}: C: _select_: { foo: object<interface2> } variable shape_storage value_cursor
+
+The statement ending at line XXXX
+
+[[implements=interface_base]]
+PROC interface_proc_subtype_with_error ()
+BEGIN
+  CURSOR C LIKE (foo OBJECT<interface_foo1>);
+  FETCH C(foo) FROM VALUES (NULL);
+  OUT C;
+END;
+
+test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0485: column types returned by proc need to be the same as defined on the interface (expected integer; found integer notnull) 'id'
+test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0486: column 'foo' of interface 'interface_base' is not compatible with column 'foo' of procedure 'interface_proc_subtype_with_error'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name implements}
+  |   | {name interface_base}: ok
+  | {create_proc_stmt}: err
+    | {name interface_proc_subtype_with_error}: err
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {declare_cursor_like_typed_names}: C: _select_: { foo: object<interface_foo1> } variable shape_storage value_cursor
+        | | {name C}: C: _select_: { foo: object<interface_foo1> } variable shape_storage value_cursor
+        | | {typed_names}: _select_: { foo: object<interface_foo1> }
+        |   | {typed_name}: foo: object<interface_foo1>
+        |     | {name foo}
+        |     | {type_object}: foo: object<interface_foo1>
+        |       | {name interface_foo1}
+        | {fetch_values_stmt}: ok
+        | | {name_columns_values}
+        |   | {name C}: C: _select_: { foo: object<interface_foo1> } variable shape_storage value_cursor
+        |   | {columns_values}: ok
+        |     | {column_spec}
+        |     | | {name_list}
+        |     |   | {name foo}: foo: object<interface_foo1>
+        |     | {insert_list}: ok
+        |       | {null}: null
+        | {out_stmt}: C: _select_: { foo: object<interface_foo1> } variable shape_storage value_cursor
+          | {name C}: C: _select_: { foo: object<interface_foo1> } variable shape_storage value_cursor
+
+The statement ending at line XXXX
+
+[[implements=interface_base]]
+PROC interface_proc_non_interface_kind_with_error ()
+BEGIN
+  CURSOR C LIKE (foo OBJECT<garbonzo>);
+  FETCH C(foo) FROM VALUES (NULL);
+  OUT C;
+END;
+
+test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0482: interface not found 'garbonzo'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name implements}
+  |   | {name interface_base}: ok
+  | {create_proc_stmt}: err
+    | {name interface_proc_non_interface_kind_with_error}: err
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {declare_cursor_like_typed_names}: C: _select_: { foo: object<garbonzo> } variable shape_storage value_cursor
+        | | {name C}: C: _select_: { foo: object<garbonzo> } variable shape_storage value_cursor
+        | | {typed_names}: _select_: { foo: object<garbonzo> }
+        |   | {typed_name}: foo: object<garbonzo>
+        |     | {name foo}
+        |     | {type_object}: foo: object<garbonzo>
+        |       | {name garbonzo}
+        | {fetch_values_stmt}: ok
+        | | {name_columns_values}
+        |   | {name C}: C: _select_: { foo: object<garbonzo> } variable shape_storage value_cursor
+        |   | {columns_values}: ok
+        |     | {column_spec}
+        |     | | {name_list}
+        |     |   | {name foo}: foo: object<garbonzo>
+        |     | {insert_list}: ok
+        |       | {null}: null
+        | {out_stmt}: C: _select_: { foo: object<garbonzo> } variable shape_storage value_cursor
+          | {name C}: C: _select_: { foo: object<garbonzo> } variable shape_storage value_cursor
+
+The statement ending at line XXXX
+
+[[implements=interface_base]]
+PROC interface_proc_no_kind_with_error ()
+BEGIN
+  CURSOR C LIKE (foo OBJECT);
+  FETCH C(foo) FROM VALUES (NULL);
+  OUT C;
+END;
+
+test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0486: required type of column 'foo' in interface_base has kind <interface1> but the actual column from procedure interface_proc_no_kind_with_error has no kind.
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name implements}
+  |   | {name interface_base}: ok
+  | {create_proc_stmt}: err
+    | {name interface_proc_no_kind_with_error}: err
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {declare_cursor_like_typed_names}: C: _select_: { foo: object } variable shape_storage value_cursor
+        | | {name C}: C: _select_: { foo: object } variable shape_storage value_cursor
+        | | {typed_names}: _select_: { foo: object }
+        |   | {typed_name}: foo: object
+        |     | {name foo}
+        |     | {type_object}: foo: object
+        | {fetch_values_stmt}: ok
+        | | {name_columns_values}
+        |   | {name C}: C: _select_: { foo: object } variable shape_storage value_cursor
+        |   | {columns_values}: ok
+        |     | {column_spec}
+        |     | | {name_list}
+        |     |   | {name foo}: foo: object
+        |     | {insert_list}: ok
+        |       | {null}: null
+        | {out_stmt}: C: _select_: { foo: object } variable shape_storage value_cursor
+          | {name C}: C: _select_: { foo: object } variable shape_storage value_cursor
+
+The statement ending at line XXXX
+
+[[implements=interface_base_bad]]
+PROC interface_proc_bad_base_interface_with_error ()
+BEGIN
+  CURSOR C LIKE (foo OBJECT<interface2>);
+  FETCH C(foo) FROM VALUES (NULL);
+  OUT C;
+END;
+
+test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0482: interface not found 'also_not_an_interface'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name implements}
+  |   | {name interface_base_bad}: ok
+  | {create_proc_stmt}: err
+    | {name interface_proc_bad_base_interface_with_error}: err
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {declare_cursor_like_typed_names}: C: _select_: { foo: object<interface2> } variable shape_storage value_cursor
+        | | {name C}: C: _select_: { foo: object<interface2> } variable shape_storage value_cursor
+        | | {typed_names}: _select_: { foo: object<interface2> }
+        |   | {typed_name}: foo: object<interface2>
+        |     | {name foo}
+        |     | {type_object}: foo: object<interface2>
+        |       | {name interface2}
+        | {fetch_values_stmt}: ok
+        | | {name_columns_values}
+        |   | {name C}: C: _select_: { foo: object<interface2> } variable shape_storage value_cursor
+        |   | {columns_values}: ok
+        |     | {column_spec}
+        |     | | {name_list}
+        |     |   | {name foo}: foo: object<interface2>
+        |     | {insert_list}: ok
+        |       | {null}: null
+        | {out_stmt}: C: _select_: { foo: object<interface2> } variable shape_storage value_cursor
+          | {name C}: C: _select_: { foo: object<interface2> } variable shape_storage value_cursor
+
+The statement ending at line XXXX
+
 DECLARE FUNC no_check_func NO CHECK TEXT;
 
   {declare_func_no_check_stmt}: text

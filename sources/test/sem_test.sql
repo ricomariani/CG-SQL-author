@@ -22642,7 +22642,6 @@ begin
   select id_ id2, name_ name;
 end;
 
-
 -- interfaces for multi-interface test cases
 declare interface interface_foo1 (id int!, name text not null);
 declare interface interface_foo2 (id2 int!, name text not null);
@@ -22667,6 +22666,74 @@ end;
 proc interface_proc2()
 begin
    select 1 id, "2" name, 3 id2;
+end;
+
+DECLARE INTERFACE interface_base (foo OBJECT<interface1>);
+DECLARE INTERFACE interface_base_bad (foo OBJECT<also_not_an_interface>);
+
+-- TEST interface implemented is a subtype of the base, `interface2` is ok
+-- + {stmt_and_attr}: ok
+-- + {create_proc_stmt}: C: interface_proc_subtype: { foo: object<interface2> } variable shape_storage uses_out value_cursor
+-- - error:
+[[implements=interface_base]]
+proc interface_proc_subtype()
+begin
+   cursor C like (foo object<interface2>);
+   fetch C from values(null);
+   out C;
+end;
+
+-- TEST interface implemented is not a subtype of the base
+-- + error: % column types returned by proc need to be the same as defined on the interface (expected integer; found integer notnull) 'id'
+-- + error: % column 'foo' of interface 'interface_base' is not compatible with column 'foo' of procedure 'interface_proc_subtype_with_error
+-- + {create_proc_stmt}: err
+-- +2 error:
+[[implements=interface_base]]
+proc interface_proc_subtype_with_error()
+begin
+   -- this interface does not match
+   cursor C like (foo object<interface_foo1>);
+   fetch C from values(null);
+   out C;
+end;
+
+-- TEST type kind doesn't match and not an interface
+-- + error: % interface not found 'garbonzo'
+-- + {create_proc_stmt}: err
+-- +1 error:
+[[implements=interface_base]]
+proc interface_proc_non_interface_kind_with_error()
+begin
+   -- this interface does not match because it isn't an interface type
+   cursor C like  (foo object<garbonzo>);
+   fetch C from values(null);
+   out C;
+end;
+
+-- TEST type kind doesn't match -- empty actual
+-- + error: % required type of column 'foo' in interface_base has kind <interface1> but the actual column from procedure interface_proc_no_kind_with_error has no kind.
+-- + {create_proc_stmt}: err
+-- +1 error:
+[[implements=interface_base]]
+proc interface_proc_no_kind_with_error()
+begin
+   -- this interface does not match because it has no type kind
+   cursor C like  (foo object);
+   fetch C from values(null);
+   out C;
+end;
+
+-- TEST type kind doesn't match -- base is not an interface
+-- + error: % interface not found 'also_not_an_interface'
+-- + {create_proc_stmt}: err
+-- +1 error:
+[[implements=interface_base_bad]]
+proc interface_proc_bad_base_interface_with_error()
+begin
+   -- this interface does not match the required type has a kind that is not an interface
+   cursor C like  (foo object<interface2>);
+   fetch C from values(null);
+   out C;
 end;
 
 -- TEST: declare unchecked functions (allows variadic params and uses the cheaper calling convention)

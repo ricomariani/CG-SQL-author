@@ -20143,6 +20143,7 @@ static void validate_reqd_sptrs(
   sem_struct *reqd_sptr,
   sem_struct *actual_sptr)
 {
+  CHARBUF_OPEN(tmp);
   symtab *names = symtab_new();
 
   // stash the indices of all the column names in the procedure so that we can
@@ -20152,7 +20153,6 @@ static void validate_reqd_sptrs(
   }
 
   for (uint32_t i = 0; i < reqd_sptr->count; ++i) {
-
     CSTR interface_column_name = reqd_sptr->names[i];
 
     symtab_entry *entry = symtab_find(names, reqd_sptr->names[i]);
@@ -20178,6 +20178,74 @@ static void validate_reqd_sptrs(
       report_sem_type_mismatch(expected_type, actual_type, error_ast, error, interface_column_name);
       goto error;
     }
+
+    CSTR kind_actual = actual_sptr->kinds[j];
+    CSTR kind_reqd = reqd_sptr->kinds[i];
+
+    if (!kind_reqd) {
+      // no kind required, all specified kinds ok, even none
+    }
+    else if (!kind_actual) {
+      CSTR msg = dup_printf("CQL0486: required type of column '%s' in %s has kind <%s> but the actual column from %s %s has no kind.",
+        interface_column_name, interface_name, kind_reqd, source_type, source_name);
+      report_error(error_ast, msg, NULL);
+      goto error;
+    }
+    else if (!StrCaseCmp(kind_actual, kind_reqd)) {
+      // exact match ok
+    }
+    else {
+      Invariant(kind_actual);
+      Invariant(kind_reqd);
+
+      // take what comes before any space
+      bclear(&tmp);
+      CSTR pch = kind_actual;
+      while (*pch && *pch != ' ') {
+        bputc(&tmp, *pch);
+        pch++;
+      }
+
+      ast_node *interface_actual = find_interface_type(tmp.ptr);
+      if (!interface_actual) {
+        report_error(error_ast, "CQL0482: interface not found", tmp.ptr);
+        goto error;
+      }
+
+      bclear(&tmp);
+      pch = kind_reqd;
+      while (*pch && *pch != ' ') {
+        bputc(&tmp, *pch);
+        pch++;
+      }
+
+      ast_node *interface_reqd = find_interface_type(tmp.ptr);
+      if (!interface_reqd) {
+        report_error(error_ast, "CQL0482: interface not found", tmp.ptr);
+        goto error;
+      }
+
+      EXTRACT_STRING(reqd_name, interface_reqd->left);
+      EXTRACT_STRING(actual_name, interface_actual->left);
+
+      sem_struct *nested_reqd_sptr = interface_reqd->sem->sptr;
+      sem_struct *nested_actual_sptr = interface_actual->sem->sptr;
+
+      validate_reqd_sptrs(
+        actual_name,
+        reqd_name,
+        "interface",
+        error_ast,
+        nested_reqd_sptr,
+        nested_actual_sptr);
+
+      if (is_error(error_ast)) {
+        CSTR msg = dup_printf("CQL0486: column '%s' of interface '%s' is not compatible with column '%s' of %s '%s'",
+          interface_column_name, interface_name, interface_column_name, source_type, source_name);
+        report_error(error_ast, msg, NULL);
+        goto error;
+      }
+    }
   }
 
   goto cleanup;
@@ -20187,6 +20255,7 @@ error:
 
 cleanup:
   symtab_delete(names);
+  CHARBUF_CLOSE(tmp);
 }
 
 // Here were going to verify that the procedure in question implements the

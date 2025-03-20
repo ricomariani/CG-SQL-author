@@ -4010,6 +4010,11 @@ cql_noexport ast_node *sem_get_name_ast(ast_node *ast) {
     return col_name_ast;
   }
 
+  if (is_ast_declare_interface_stmt(ast)) {
+    EXTRACT_NAME_AST(name_ast, ast->left);
+    return name_ast;
+  }
+
   // the only other option
   Contract(is_ast_create_view_stmt(ast));
   EXTRACT_NOTNULL(view_and_attrs, ast->right);
@@ -20129,6 +20134,147 @@ static bool_t sem_has_extra_clauses(ast_node *select_from_etc, ast_node *select_
   return has_extras;
 }
 
+// Here we do field by field validation of two structure types
+// they must be interface compatible, which means the required
+// columns must be present in the actual result type and the
+// types must be compatible. If the type kind is not an exact
+// match then both kinds must be interfaces and they must
+// recursively be compatible.
+static void validate_reqd_sptrs(
+  CSTR source_name,
+  CSTR interface_name,
+  CSTR source_type,
+  ast_node *error_ast,
+  sem_struct *reqd_sptr,
+  sem_struct *actual_sptr)
+{
+  CHARBUF_OPEN(tmp);
+  symtab *names = symtab_new();
+
+  // stash the indices of all the column names in the procedure so that we can
+  // find them quickly
+  for (uint32_t i = 0; i < actual_sptr->count; i++) {
+    symtab_add(names, actual_sptr->names[i], (void *)(uint64_t)i);
+  }
+
+  for (uint32_t i = 0; i < reqd_sptr->count; ++i) {
+    CSTR interface_column_name = reqd_sptr->names[i];
+
+    symtab_entry *entry = symtab_find(names, reqd_sptr->names[i]);
+    if (!entry) {
+      CSTR msg = dup_printf("CQL0484: %s '%s' is missing column '%s' of interface '%s'",
+        source_type, source_name, interface_column_name, interface_name);
+      report_error(error_ast, msg, NULL);
+      goto error;
+    }
+
+    // the column index in the procedure result type can be different, we saved it above
+    uint32_t j = (uint32_t)(uint64_t)entry->val;
+
+    sem_t actual_type = actual_sptr->semtypes[j];
+    sem_t expected_type = reqd_sptr->semtypes[i];
+
+    if (
+      core_type_of(actual_type) != core_type_of(expected_type) ||
+      is_nullable(actual_type) != is_nullable(expected_type) ||
+      sensitive_flag(actual_type) != sensitive_flag(expected_type)
+    ) {
+      CSTR error = "CQL0485: column types returned by proc need to be the same as defined on the interface";
+      report_sem_type_mismatch(expected_type, actual_type, error_ast, error, interface_column_name);
+      goto error;
+    }
+
+    CSTR kind_actual = actual_sptr->kinds[j];
+    CSTR kind_reqd = reqd_sptr->kinds[i];
+
+    if (!kind_reqd) {
+      // no kind required, all specified kinds ok, even none
+    }
+    else if (!kind_actual) {
+      CSTR msg = dup_printf("CQL0486: required type of column '%s' in %s has kind <%s> but the actual column from %s %s has no kind.",
+        interface_column_name, interface_name, kind_reqd, source_type, source_name);
+      report_error(error_ast, msg, NULL);
+      goto error;
+    }
+    else if (!StrCaseCmp(kind_actual, kind_reqd)) {
+      // exact match ok
+    }
+    else {
+      Invariant(kind_actual);
+      Invariant(kind_reqd);
+
+      // take what comes before any space
+      bclear(&tmp);
+      CSTR pch = kind_actual;
+      while (*pch && *pch != ' ') {
+        bputc(&tmp, *pch);
+        pch++;
+      }
+
+      ast_node *interface_actual = find_proc(tmp.ptr);
+      bool_t valid = interface_actual && interface_actual->sem && interface_actual->sem->sptr;
+      CSTR actual_item = "procedure";
+
+      if (!valid) {
+        interface_actual = find_interface_type(tmp.ptr);
+        actual_item = "interface";
+        if (!interface_actual) {
+          report_error(error_ast, "CQL0482: interface not found", tmp.ptr);
+          goto error;
+        }
+      }
+
+      bclear(&tmp);
+      pch = kind_reqd;
+      while (*pch && *pch != ' ') {
+        bputc(&tmp, *pch);
+        pch++;
+      }
+
+      ast_node *interface_reqd = find_proc(tmp.ptr);
+      valid = interface_reqd && interface_reqd->sem && interface_reqd->sem->sptr;
+
+      if (!valid) {
+        interface_reqd = find_interface_type(tmp.ptr);
+        if (!interface_reqd) {
+          report_error(error_ast, "CQL0482: interface not found", tmp.ptr);
+          goto error;
+        }
+      }
+
+      CSTR reqd_name = sem_get_name(interface_reqd);
+      CSTR actual_name = sem_get_name(interface_actual);
+
+      sem_struct *nested_reqd_sptr = interface_reqd->sem->sptr;
+      sem_struct *nested_actual_sptr = interface_actual->sem->sptr;
+
+      validate_reqd_sptrs(
+        actual_name,
+        reqd_name,
+        actual_item,
+        error_ast,
+        nested_reqd_sptr,
+        nested_actual_sptr);
+
+      if (is_error(error_ast)) {
+        CSTR msg = dup_printf("CQL0486: column '%s' of interface '%s' is not compatible with column '%s' of %s '%s'",
+          interface_column_name, interface_name, interface_column_name, source_type, source_name);
+        report_error(error_ast, msg, NULL);
+        goto error;
+      }
+    }
+  }
+
+  goto cleanup;
+
+error:
+  record_error(error_ast);
+
+cleanup:
+  symtab_delete(names);
+  CHARBUF_CLOSE(tmp);
+}
+
 // Here were going to verify that the procedure in question implements the
 // indicated interface in order to do so it has to have the correct columns with
 // compatible types in any order which is to say the procedures result type has
@@ -20145,7 +20291,6 @@ static void sem_validate_one_interface(
 
   Contract(is_ast_create_proc_stmt(create_proc_stmt));
 
-  symtab *names = symtab_new();
   ast_node *name_ast = get_proc_name(create_proc_stmt);
   EXTRACT_STRING(proc_name, name_ast);
 
@@ -20153,54 +20298,21 @@ static void sem_validate_one_interface(
   if (!interface) {
     report_error(attr, "CQL0482: interface not found", interface_name);
     record_error(attr);
-    goto error;
+    record_error(create_proc_stmt);
+    return;
   }
 
-  sem_struct *interface_sptr = interface->sem->sptr;
-  sem_struct *proc_sptr = create_proc_stmt->sem->sptr;
+  sem_struct *reqd_sptr = interface->sem->sptr;
+  sem_struct *actual_sptr = create_proc_stmt->sem->sptr;
 
-  // stash the indices of all the column names in the procedure so that we can
-  // find them quickly
-  for (uint32_t i = 0; i < proc_sptr->count; i++) {
-    symtab_add(names, proc_sptr->names[i], (void *)(uint64_t)i);
-  }
-
-  for (uint32_t i = 0; i < interface_sptr->count; ++i) {
-
-    CSTR interface_column_name = interface_sptr->names[i];
-
-    symtab_entry *entry = symtab_find(names, interface_sptr->names[i]);
-    if (!entry) {
-      CSTR msg = dup_printf("CQL0484: procedure '%s' is missing column '%s' of interface '%s'",
-        proc_name, interface_column_name, interface_name);
-      report_error(create_proc_stmt, msg, NULL);
-      goto error;
-    }
-
-    // the column index in the procedure result type can be different, we saved it above
-    uint32_t j = (uint32_t)(uint64_t)entry->val;
-
-    sem_t actual_type = proc_sptr->semtypes[j];
-    sem_t expected_type = interface_sptr->semtypes[i];
-
-    if (
-      core_type_of(actual_type) != core_type_of(expected_type) ||
-      is_nullable(actual_type) != is_nullable(expected_type) ||
-      sensitive_flag(actual_type) != sensitive_flag(expected_type)
-    ) {
-      CSTR error = "CQL0485: column types returned by proc need to be the same as defined on the interface";
-      report_sem_type_mismatch(expected_type, actual_type, create_proc_stmt, error, interface_column_name);
-      goto error;
-    }
-  }
-
-  goto cleanup;
-
-error:
-  record_error(create_proc_stmt);
-
-cleanup:
-  symtab_delete(names);
+  // check the actual and required types, this might recurse
+  return validate_reqd_sptrs(
+    proc_name,
+    interface_name,
+    "procedure",
+    create_proc_stmt,
+    reqd_sptr,
+    actual_sptr);
 }
 
 // Returns true if all parameters of the current procedure that require

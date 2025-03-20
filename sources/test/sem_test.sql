@@ -22560,7 +22560,7 @@ end;
 
 -- TEST: this procedure returns NOT NULL id column instead of NULLABLE
 -- + PROC test_interface1_implementation_wrong_nullability (id_ INT!)
--- + error: % column types returned by proc need to be the same as defined on the interface (expected integer; found integer notnull) 'id'
+-- + error: % actual column types need to be the same as interface column types (expected integer; found integer notnull) 'id'
 -- + {create_proc_stmt}: err
 -- +1 error:
 [[implements=interface1]]
@@ -22571,7 +22571,7 @@ end;
 
 -- TEST: this procedure returns TEXT NOT NULL id column instead of INT NOT NULL
 -- + PROC test_interface1_implementation_wrong_type (id_ TEXT!)
--- + error: % column types returned by proc need to be the same as defined on the interface (expected integer; found text notnull) 'id'
+-- + error: % actual column types need to be the same as interface column types (expected integer; found text notnull) 'id'
 -- + {create_proc_stmt}: err
 -- +1 error:
 [[implements=interface1]]
@@ -22684,8 +22684,8 @@ begin
 end;
 
 -- TEST interface implemented is not a subtype of the base
--- + error: % column types returned by proc need to be the same as defined on the interface (expected integer; found integer notnull) 'id'
--- + error: % column 'foo' of interface 'interface_base' is not compatible with column 'foo' of procedure 'interface_proc_subtype_with_error
+-- + error: % actual column types need to be the same as interface column types (expected integer; found integer notnull) 'id'
+-- + error: % required column interface_base :: 'foo OBJECT<interface1>' actual column procedure interface_proc_subtype_with_error :: 'foo OBJECT<interface_foo1>'
 -- + {create_proc_stmt}: err
 -- +2 error:
 [[implements=interface_base]]
@@ -22711,7 +22711,7 @@ begin
 end;
 
 -- TEST type kind doesn't match -- empty actual
--- + error: % required type of column 'foo' in interface_base has kind <interface1> but the actual column from procedure interface_proc_no_kind_with_error has no kind.
+-- + error: % required column interface_base :: 'foo OBJECT<interface1>' actual column procedure interface_proc_no_kind_with_error :: 'foo OBJECT'
 -- + {create_proc_stmt}: err
 -- +1 error:
 [[implements=interface_base]]

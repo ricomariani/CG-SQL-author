@@ -20171,16 +20171,19 @@ static void validate_reqd_sptrs(
     // the column index in the procedure result type can be different, we saved it above
     uint32_t j = (uint32_t)(uint64_t)entry->val;
 
-    sem_t actual_type = actual_sptr->semtypes[j];
-    sem_t expected_type = reqd_sptr->semtypes[i];
+    sem_t type_actual = actual_sptr->semtypes[j];
+    sem_t type_reqd = reqd_sptr->semtypes[i];
+
+    CSTR type_str_actual = coretype_string(type_actual);
+    CSTR type_str_reqd = coretype_string(type_reqd);
 
     if (
-      core_type_of(actual_type) != core_type_of(expected_type) ||
-      is_nullable(actual_type) != is_nullable(expected_type) ||
-      sensitive_flag(actual_type) != sensitive_flag(expected_type)
+      core_type_of(type_actual) != core_type_of(type_reqd) ||
+      is_nullable(type_actual) != is_nullable(type_reqd) ||
+      sensitive_flag(type_actual) != sensitive_flag(type_reqd)
     ) {
-      CSTR error = "CQL0485: column types returned by proc need to be the same as defined on the interface";
-      report_sem_type_mismatch(expected_type, actual_type, error_ast, error, interface_column_name);
+      CSTR error = "CQL0485: actual column types need to be the same as interface column types";
+      report_sem_type_mismatch(type_reqd, type_actual, error_ast, error, interface_column_name);
       goto error;
     }
 
@@ -20191,8 +20194,8 @@ static void validate_reqd_sptrs(
       // no kind required, all specified kinds ok, even none
     }
     else if (!kind_actual) {
-      CSTR msg = dup_printf("CQL0486: required type of column '%s' in %s has kind <%s> but the actual column from %s %s has no kind.",
-        interface_column_name, interface_name, kind_reqd, source_type, source_name);
+      CSTR msg = dup_printf("CQL0486: required column %s :: '%s %s<%s>' actual column %s %s :: '%s %s'",
+        interface_name, interface_column_name, type_str_reqd, kind_reqd, source_type, source_name, interface_column_name, type_str_actual);
       report_error(error_ast, msg, NULL);
       goto error;
     }
@@ -20257,9 +20260,9 @@ static void validate_reqd_sptrs(
         nested_actual_sptr);
 
       if (is_error(error_ast)) {
-        CSTR msg = dup_printf("CQL0486: column '%s' of interface '%s' is not compatible with column '%s' of %s '%s'",
-          interface_column_name, interface_name, interface_column_name, source_type, source_name);
-        report_error(error_ast, msg, NULL);
+        CSTR msg = dup_printf("CQL0486: required column %s :: '%s %s<%s>' actual column %s %s :: '%s %s<%s>'",
+          interface_name, interface_column_name, type_str_reqd, kind_reqd, source_type, source_name, interface_column_name, type_str_actual, kind_actual);
+          report_error(error_ast, msg, NULL);
         goto error;
       }
     }

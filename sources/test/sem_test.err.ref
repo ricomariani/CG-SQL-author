@@ -1673,18 +1673,18 @@ test/sem_test.sql:XXXX:1: error: in declare_interface_stmt : DECLARE INTERFACE i
 test/sem_test.sql:XXXX:1: error: in declare_interface_stmt : DECLARE INTERFACE interface1 (id INT, name TEXT)
 The above must be identical.
 test/sem_test.sql:XXXX:1: error: in declare_interface_stmt : CQL0479: interface declarations do not match 'interface1'
-test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0485: column types returned by proc need to be the same as defined on the interface (expected integer; found integer notnull) 'id'
-test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0485: column types returned by proc need to be the same as defined on the interface (expected integer; found text notnull) 'id'
+test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0485: actual column types need to be the same as interface column types (expected integer; found integer notnull) 'id'
+test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0485: actual column types need to be the same as interface column types (expected integer; found text notnull) 'id'
 test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0484: procedure 'test_interface1_implementation_wrong_name' is missing column 'id' of interface 'interface1'
 test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0484: procedure 'test_interface1_missing_column' is missing column 'name' of interface 'interface2'
 test/sem_test.sql:XXXX:1: error: in str : CQL0482: interface not found 'missing_interface'
 test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : CQL0481: proc name conflicts with interface name 'interface1'
 test/sem_test.sql:XXXX:1: error: in str : CQL0481: proc name conflicts with interface name 'interface1'
 test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0484: procedure 'interface_proc1' is missing column 'id2' of interface 'interface_foo2'
-test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0485: column types returned by proc need to be the same as defined on the interface (expected integer; found integer notnull) 'id'
-test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0486: column 'foo' of interface 'interface_base' is not compatible with column 'foo' of procedure 'interface_proc_subtype_with_error'
+test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0485: actual column types need to be the same as interface column types (expected integer; found integer notnull) 'id'
+test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0486: required column interface_base :: 'foo OBJECT<interface1>' actual column procedure interface_proc_subtype_with_error :: 'foo OBJECT<interface_foo1>'
 test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0482: interface not found 'garbonzo'
-test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0486: required type of column 'foo' in interface_base has kind <interface1> but the actual column from procedure interface_proc_no_kind_with_error has no kind.
+test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0486: required column interface_base :: 'foo OBJECT<interface1>' actual column procedure interface_proc_no_kind_with_error :: 'foo OBJECT'
 test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0482: interface not found 'also_not_an_interface'
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 test/sem_test.sql:XXXX:1: error: in declare_select_func_stmt : CQL0486: function cannot be both a normal function and an unchecked function 'no_check_select_fun'

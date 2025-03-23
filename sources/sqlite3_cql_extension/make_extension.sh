@@ -16,11 +16,14 @@ O=$S/out
 R=$S/..
 
 if [ -v SQLITE_PATH ]; then
-  SQLITE_PATH=$(realpath $SQLITE_PATH)
+  echo using external SQLITE ${SQLITE_PATH}
 else
-  cat $S/README.md | awk '/<!-- build_requirements_start/{flag=1; next} /<!-- build_requirements_end/{flag=0;} flag'
-  exit 1
+  SQLITE_PATH=../sqlite
 fi
+
+SQLITE_PATH=$(realpath $SQLITE_PATH)
+
+CC=cc
 
 while [ "${1:-}" != "" ]; do
   if [ "$1" == "--use_gcc" ]; then
@@ -62,7 +65,7 @@ popd >/dev/null
 
 pushd $S >/dev/null
 
-CC="cc -g -O0"
+CC="${CC} -g -O0 -DCQL_SQLITE_EXT"
 
 OS=$(uname)
 if [ "$OS" = "Darwin" ]; then
@@ -79,8 +82,12 @@ else
   exit 1
 fi
 
-echo "Build ./out/cqlextension.$LIB_EXT extension for SQLite ($SQLITE_PATH/sqlite3ext.h) on $OS"
-${CC} -shared \
+CC="${CC} -shared"
+echo CFLAGS: ${CC}
+
+echo "Build ./out/cqlextension.$LIB_EXT extension for SQLite ${SQLITE_PATH}/sqlite3ext.h on ${OS}"
+
+${CC} \
   -I $SQLITE_PATH \
   -I./out \
   -I./. \
@@ -94,3 +101,5 @@ ${CC} -shared \
 ls ./out/cqlextension.${LIB_EXT}
 
 popd >/dev/null
+
+$SQLITE_PATH/sqlite3 <test_extension.sql

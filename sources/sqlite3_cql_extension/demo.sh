@@ -52,7 +52,7 @@ popd >/dev/null
 
 pushd $S >/dev/null
 
-CC="cc -g -O0 -DNO_SQLITE_EXT"
+CC="cc -g -O0"
 
 ${CC} \
   -I./out \

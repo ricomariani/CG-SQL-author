@@ -1,10 +1,15 @@
-#ifndef NO_SQLITE_EXT
-#include <sqlite3ext.h>
-extern const sqlite3_api_routines *sqlite3_api;
-#endif
+// This file contains the implementation of the CQL SQLite extension
+// helper functions. These functions are used to convert SQLite values
+// to CQL types and vice versa so that CQL procedures can be called
+// from SQLite queries using the virtual table (and hence table-valued
+// function) mechanism.
 
 #include "cql_sqlite_extension.h"
 #include "cqlrt.h"
+
+#ifdef CQL_SQLITE_EXT
+extern const sqlite3_api_routines *sqlite3_api;
+#endif
 
 #define trace_printf(x, ...)
 // #define trace_printf printf

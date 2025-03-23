@@ -1,3 +1,5 @@
+.load out/cqlextension
+
 -- These test cases are no longer used but I (Rico) did not want to
 -- to delete them because @grifx might want to revive these with more
 -- loadable extension work.  They are not needed now as the new tests
@@ -22,22 +24,10 @@ INSERT INTO t(cql, dummy) VALUES
 ;
 
 -- Example from ./README.md
-SELECT hello_world(); -- Expect Result
+SELECT * from hello_world(); -- Expect Result
 
 -- Nullables as null
-SELECT comprehensive_test(
-  (SELECT t.dummy FROM t WHERE t.cql = 'bool'),
-  (SELECT t.dummy FROM t WHERE t.cql = 'null'),
-  (SELECT t.dummy FROM t WHERE t.cql = 'real'),
-  (SELECT t.dummy FROM t WHERE t.cql = 'null'),
-  (SELECT t.dummy FROM t WHERE t.cql = 'integer'),
-  (SELECT t.dummy FROM t WHERE t.cql = 'null'),
-  (SELECT t.dummy FROM t WHERE t.cql = 'long'),
-  (SELECT t.dummy FROM t WHERE t.cql = 'null'),
-  (SELECT t.dummy FROM t WHERE t.cql = 'text'),
-  (SELECT t.dummy FROM t WHERE t.cql = 'null'),
-  (SELECT t.dummy FROM t WHERE t.cql = 'blob'),
-  (SELECT t.dummy FROM t WHERE t.cql = 'null'),
+SELECT * from comprehensive_test1(
   (SELECT t.dummy FROM t WHERE t.cql = 'bool'),
   (SELECT t.dummy FROM t WHERE t.cql = 'null'),
   (SELECT t.dummy FROM t WHERE t.cql = 'real'),
@@ -52,8 +42,25 @@ SELECT comprehensive_test(
   (SELECT t.dummy FROM t WHERE t.cql = 'null')
 ) as out; -- Expect RESULT
 
+SELECT * from comprehensive_test2(
+  (SELECT t.dummy FROM t WHERE t.cql = 'bool'),
+  (SELECT t.dummy FROM t WHERE t.cql = 'null'),
+  (SELECT t.dummy FROM t WHERE t.cql = 'real'),
+  (SELECT t.dummy FROM t WHERE t.cql = 'null'),
+  (SELECT t.dummy FROM t WHERE t.cql = 'integer'),
+  (SELECT t.dummy FROM t WHERE t.cql = 'null'),
+  (SELECT t.dummy FROM t WHERE t.cql = 'long'),
+  (SELECT t.dummy FROM t WHERE t.cql = 'null'),
+  (SELECT t.dummy FROM t WHERE t.cql = 'text'),
+  (SELECT t.dummy FROM t WHERE t.cql = 'null'),
+  (SELECT t.dummy FROM t WHERE t.cql = 'blob'),
+  (SELECT t.dummy FROM t WHERE t.cql = 'null')
+) as out; -- Expect RESULT
+
+SELECT * from comprehensive_test3() as out; -- Expect RESULT
+
 -- Nullables as non null
-SELECT comprehensive_test(
+SELECT * from comprehensive_test1(
   (SELECT t.dummy FROM t WHERE t.cql = 'bool'),
   (SELECT t.dummy FROM t WHERE t.cql = 'bool'),
   (SELECT t.dummy FROM t WHERE t.cql = 'real'),
@@ -65,7 +72,10 @@ SELECT comprehensive_test(
   (SELECT t.dummy FROM t WHERE t.cql = 'text'),
   (SELECT t.dummy FROM t WHERE t.cql = 'text'),
   (SELECT t.dummy FROM t WHERE t.cql = 'blob'),
-  (SELECT t.dummy FROM t WHERE t.cql = 'blob'),
+  (SELECT t.dummy FROM t WHERE t.cql = 'blob')
+) as out; -- Expect Result;
+
+SELECT * from comprehensive_test2(
   (SELECT t.dummy FROM t WHERE t.cql = 'bool'),
   (SELECT t.dummy FROM t WHERE t.cql = 'bool'),
   (SELECT t.dummy FROM t WHERE t.cql = 'real'),
@@ -81,36 +91,32 @@ SELECT comprehensive_test(
 ) as out; -- Expect RESULT
 
 -- Nullables as null
-SELECT
-  in__bool__not_null((SELECT t.dummy FROM t WHERE t.cql = 'bool')) bool__not_null,
-  in__bool__nullable((SELECT t.dummy FROM t WHERE t.cql = 'null')) bool__nullable,
-  in__real__not_null((SELECT t.dummy FROM t WHERE t.cql = 'real')) real__not_null,
-  in__real__nullable((SELECT t.dummy FROM t WHERE t.cql = 'null')) real__nullable,
-  in__integer__not_null((SELECT t.dummy FROM t WHERE t.cql = 'integer')) integer__not_null,
-  in__integer__nullable((SELECT t.dummy FROM t WHERE t.cql = 'null')) integer__nullable,
-  in__long__not_null((SELECT t.dummy FROM t WHERE t.cql = 'long')) long__not_null,
-  in__long__nullable((SELECT t.dummy FROM t WHERE t.cql = 'null')) long__nullable,
-  in__text__not_null((SELECT t.dummy FROM t WHERE t.cql = 'text')) text__not_null,
-  in__text__nullable((SELECT t.dummy FROM t WHERE t.cql = 'null')) text__nullable,
-  in__blob__not_null((SELECT t.dummy FROM t WHERE t.cql = 'blob')) blob__not_null,
-  in__blob__nullable((SELECT t.dummy FROM t WHERE t.cql = 'null')) blob__nullable
-; -- Expect RESULT
+select * from in__bool__not_null((SELECT t.dummy FROM t WHERE t.cql = 'bool'));
+select * from  in__bool__nullable((SELECT t.dummy FROM t WHERE t.cql = 'null'));
+select * from in__real__not_null((SELECT t.dummy FROM t WHERE t.cql = 'real'));
+select * from in__real__nullable((SELECT t.dummy FROM t WHERE t.cql = 'null'));
+select * from in__integer__not_null((SELECT t.dummy FROM t WHERE t.cql = 'integer'));
+select * from in__integer__nullable((SELECT t.dummy FROM t WHERE t.cql = 'null'));
+select * from in__long__not_null((SELECT t.dummy FROM t WHERE t.cql = 'long'));
+select * from in__long__nullable((SELECT t.dummy FROM t WHERE t.cql = 'null'));
+select * from in__text__not_null((SELECT t.dummy FROM t WHERE t.cql = 'text'));
+select * from in__text__nullable((SELECT t.dummy FROM t WHERE t.cql = 'null'));
+select * from in__blob__not_null((SELECT t.dummy FROM t WHERE t.cql = 'blob'));
+select * from in__blob__nullable((SELECT t.dummy FROM t WHERE t.cql = 'null'));
 
 -- Nullables as non null
-SELECT
-  in__bool__not_null((SELECT t.dummy FROM t WHERE t.cql = 'bool')) bool__not_null,
-  in__bool__nullable((SELECT t.dummy FROM t WHERE t.cql = 'bool')) bool__nullable,
-  in__real__not_null((SELECT t.dummy FROM t WHERE t.cql = 'real')) real__not_null,
-  in__real__nullable((SELECT t.dummy FROM t WHERE t.cql = 'real')) real__nullable,
-  in__integer__not_null((SELECT t.dummy FROM t WHERE t.cql = 'integer')) integer__not_null,
-  in__integer__nullable((SELECT t.dummy FROM t WHERE t.cql = 'integer')) integer__nullable,
-  in__long__not_null((SELECT t.dummy FROM t WHERE t.cql = 'long')) long__not_null,
-  in__long__nullable((SELECT t.dummy FROM t WHERE t.cql = 'long')) long__nullable,
-  in__text__not_null((SELECT t.dummy FROM t WHERE t.cql = 'text')) text__not_null,
-  in__text__nullable((SELECT t.dummy FROM t WHERE t.cql = 'text')) text__nullable,
-  in__blob__not_null((SELECT t.dummy FROM t WHERE t.cql = 'blob')) blob__not_null,
-  in__blob__nullable((SELECT t.dummy FROM t WHERE t.cql = 'blob')) blob__nullable
-; -- Expect RESULT
+select * from in__bool__not_null((SELECT t.dummy FROM t WHERE t.cql = 'bool'));
+select * from in__bool__nullable((SELECT t.dummy FROM t WHERE t.cql = 'bool'));
+select * from in__real__not_null((SELECT t.dummy FROM t WHERE t.cql = 'real'));
+select * from in__real__nullable((SELECT t.dummy FROM t WHERE t.cql = 'real'));
+select * from in__integer__not_null((SELECT t.dummy FROM t WHERE t.cql = 'integer'));
+select * from in__integer__nullable((SELECT t.dummy FROM t WHERE t.cql = 'integer'));
+select * from in__long__not_null((SELECT t.dummy FROM t WHERE t.cql = 'long'));
+select * from in__long__nullable((SELECT t.dummy FROM t WHERE t.cql = 'long'));
+select * from in__text__not_null((SELECT t.dummy FROM t WHERE t.cql = 'text'));
+select * from in__text__nullable((SELECT t.dummy FROM t WHERE t.cql = 'text'));
+select * from in__blob__not_null((SELECT t.dummy FROM t WHERE t.cql = 'blob'));
+select * from in__blob__nullable((SELECT t.dummy FROM t WHERE t.cql = 'blob'));
 
 -- Nullables as null
 SELECT
@@ -159,14 +165,14 @@ SELECT
   out__blob__nullable() blob__nullable
 ; -- Expect RESULT
 
-SELECT result_from_inout(t.dummy) output, t.* FROM t WHERE t.cql = 'bool'; -- Expect ERROR
-SELECT result_from_inout(t.dummy) output, t.* FROM t WHERE t.cql = 'integer'; -- Expect ERROR
-SELECT result_from_inout(t.dummy) output, t.* FROM t WHERE t.cql = 'long'; -- Expect ERROR
-SELECT result_from_inout(t.dummy) output, t.* FROM t WHERE t.cql = 'real'; -- Expect ERROR
-SELECT result_from_inout(t.dummy) output, t.* FROM t WHERE t.cql = 'text'; -- Expect RESULT
-SELECT result_from_inout(t.dummy) output, t.* FROM t WHERE t.cql = 'blob'; -- Expect ERROR
-SELECT result_from_inout(t.dummy) output, t.* FROM t WHERE t.cql = 'object'; -- Expect ERROR
-SELECT result_from_inout(t.dummy) output, t.* FROM t WHERE t.cql = 'null'; -- Expect ERROR
+SELECT * from result_from_inout(t.dummy) output, t.* FROM t WHERE t.cql = 'bool'; -- Expect ERROR
+SELECT * from result_from_inout(t.dummy) output, t.* FROM t WHERE t.cql = 'integer'; -- Expect ERROR
+SELECT * from result_from_inout(t.dummy) output, t.* FROM t WHERE t.cql = 'long'; -- Expect ERROR
+SELECT * from result_from_inout(t.dummy) output, t.* FROM t WHERE t.cql = 'real'; -- Expect ERROR
+SELECT * from result_from_inout(t.dummy) output, t.* FROM t WHERE t.cql = 'text'; -- Expect RESULT
+SELECT * from result_from_inout(t.dummy) output, t.* FROM t WHERE t.cql = 'blob'; -- Expect ERROR
+SELECT * from result_from_inout(t.dummy) output, t.* FROM t WHERE t.cql = 'object'; -- Expect ERROR
+SELECT * from result_from_inout(t.dummy) output, t.* FROM t WHERE t.cql = 'null'; -- Expect ERROR
 
 
 SELECT inout__bool__not_null(t.dummy) output, t.* FROM t WHERE t.cql = 'bool'; -- Expect RESULT

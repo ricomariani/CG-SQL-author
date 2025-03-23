@@ -1,7 +1,3 @@
-#ifndef NO_SQLITE_EXT
-#include <sqlite3ext.h>
-#endif
-
 #include "cqlrt.h"
 
 cql_bool is_sqlite3_type_compatible_with_cql_core_type(int sqlite_type, int8_t cql_core_type, cql_bool is_nullable);

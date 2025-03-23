@@ -165,14 +165,14 @@ SELECT
   out__blob__nullable() blob__nullable
 ; -- Expect RESULT
 
-SELECT * from result_from_inout(t.dummy) output, t.* FROM t WHERE t.cql = 'bool'; -- Expect ERROR
-SELECT * from result_from_inout(t.dummy) output, t.* FROM t WHERE t.cql = 'integer'; -- Expect ERROR
-SELECT * from result_from_inout(t.dummy) output, t.* FROM t WHERE t.cql = 'long'; -- Expect ERROR
-SELECT * from result_from_inout(t.dummy) output, t.* FROM t WHERE t.cql = 'real'; -- Expect ERROR
-SELECT * from result_from_inout(t.dummy) output, t.* FROM t WHERE t.cql = 'text'; -- Expect RESULT
-SELECT * from result_from_inout(t.dummy) output, t.* FROM t WHERE t.cql = 'blob'; -- Expect ERROR
-SELECT * from result_from_inout(t.dummy) output, t.* FROM t WHERE t.cql = 'object'; -- Expect ERROR
-SELECT * from result_from_inout(t.dummy) output, t.* FROM t WHERE t.cql = 'null'; -- Expect ERROR
+SELECT result_from_inout(t.dummy) output, t.* FROM t WHERE t.cql = 'bool'; -- Expect ERROR
+SELECT result_from_inout(t.dummy) output, t.* FROM t WHERE t.cql = 'integer'; -- Expect ERROR
+SELECT result_from_inout(t.dummy) output, t.* FROM t WHERE t.cql = 'long'; -- Expect ERROR
+SELECT result_from_inout(t.dummy) output, t.* FROM t WHERE t.cql = 'real'; -- Expect ERROR
+SELECT result_from_inout(t.dummy) output, t.* FROM t WHERE t.cql = 'text'; -- Expect RESULT
+SELECT result_from_inout(t.dummy) output, t.* FROM t WHERE t.cql = 'blob'; -- Expect ERROR
+SELECT result_from_inout(t.dummy) output, t.* FROM t WHERE t.cql = 'object'; -- Expect ERROR
+SELECT result_from_inout(t.dummy) output, t.* FROM t WHERE t.cql = 'null'; -- Expect ERROR
 
 
 SELECT inout__bool__not_null(t.dummy) output, t.* FROM t WHERE t.cql = 'bool'; -- Expect RESULT
@@ -305,3 +305,5 @@ SELECT inout__blob__nullable(t.dummy) output, t.* FROM t WHERE t.cql = 'null'; -
 -- SELECT inout__object__nullable(t.dummy) output, t.* FROM t WHERE t.cql = 'blob'; -- Expect ERROR
 -- SELECT inout__object__nullable(t.dummy) output, t.* FROM t WHERE t.cql = 'object'; -- Expect ERROR
 -- SELECT inout__object__nullable(t.dummy) output, t.* FROM t WHERE t.cql = 'null'; -- Expect ERROR
+
+select * from three_int_test(10,20,30);

@@ -14,6 +14,9 @@ echo
 S=$(cd $(dirname "$0"); pwd)
 O=$S/out
 R=$S/..
+T=.
+
+source $S/../common/test_helpers.sh || exit 1
 
 if [ -v SQLITE_PATH ]; then
   echo using external SQLITE ${SQLITE_PATH}
@@ -102,4 +105,12 @@ ls ./out/cqlextension.${LIB_EXT}
 
 popd >/dev/null
 
-$SQLITE_PATH/sqlite3 <test_extension.sql
+echo running SQLite test cases with extension
+set +e
+$SQLITE_PATH/sqlite3 <test_extension.sql > out/test_extension.out 2>&1
+
+echo checking output difference
+
+on_diff_exit ./test_extension.out
+
+echo "test passed"

@@ -22,6 +22,11 @@ pushd $S >/dev/null
 
 echo "running demo"
 set +e
+
+# we have to filter out Nothing to be done because on
+# MAC_OS the target 'all' gets `all' quotes hence
+# spurious diff.  We just filter that line out to
+# make the output canonical
 bash ./demo.sh | grep -v "Nothing to be done" >$S/test.out
 cat $S/test.out
 

@@ -5,6 +5,8 @@ declare proc printf no check;
 #define cql_error_trace() fprintf(stderr, "Error at %s:%d in %s: %d %s\n", __FILE__, __LINE__, _PROC_, _rc_, sqlite3_errmsg(_db_))
 ';
 
+@echo C, "extern const sqlite3_api_routines *sqlite3_api;\n";
+
 -- auto  generateed by the python, simply `grep "DECLARE SELECT" out/SampleInterop.c | sed s/...//`
 -- the prototype is emitted in a comment so you just strip it out
 -- see out/SampleInterop.c if this is unclear at all

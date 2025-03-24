@@ -1,7 +1,3 @@
-#ifndef NO_SQLITE_EXT
-#include <sqlite3ext.h>
-#endif
-
 #include "cqlrt.h"
 
 cql_bool is_sqlite3_type_compatible_with_cql_core_type(int sqlite_type, int8_t cql_core_type, cql_bool is_nullable);
@@ -25,30 +21,40 @@ void sqlite3_result_cql_pointer(sqlite3_context *_Nonnull context, void *_Nonnul
 void sqlite3_result_cql_blob(sqlite3_context *_Nonnull context, _Nullable cql_blob_ref value);
 void sqlite3_result_cql_text(sqlite3_context *_Nonnull context, _Nullable cql_string_ref value);
 
-typedef void (*cql_rowset_func)(sqlite3 *db, int32_t argc, sqlite3_value *_Nonnull *_Nonnull argv, cql_result_set_ref *result);
+typedef void (*cql_rowset_func)(
+  sqlite3 *_Nonnull db,
+  int32_t argc,
+  sqlite3_value *_Nonnull *_Nonnull argv,
+  cql_result_set_ref _Nonnull *_Nonnull result);
 
 typedef struct {
-    const char *table_decl;
-    cql_rowset_func func;
+    const char *_Nonnull table_decl;
+    cql_rowset_func _Nonnull func;
 } cql_rowset_aux_init;
 
-int register_cql_rowset_tvf(sqlite3 *db, cql_rowset_aux_init *aux, const char *name);
+int register_cql_rowset_tvf(
+  sqlite3 *_Nonnull db,
+  cql_rowset_aux_init *_Nonnull aux,
+  const char *_Nonnull name);
 
 typedef struct {
     sqlite3_vtab base;
-    cql_rowset_func func;
-    sqlite3 *db;
+    cql_rowset_func _Nonnull func;
+    sqlite3 *_Nonnull db;
 } cql_rowset_table;
 
 typedef struct {
   sqlite3_vtab_cursor base;
-  sqlite3 *db;
-  cql_rowset_func func;
-  cql_result_set_ref result_set;
+  sqlite3 *_Nonnull db;
+  cql_rowset_func _Nonnull func;
+  cql_result_set_ref _Nonnull result_set;
   int row_count;
   int column_count;
   int current_row;
 } cql_rowset_cursor;
 
-cql_rowset_aux_init *cql_rowset_create_aux_init(cql_rowset_func func, const char *create_table_str);
-void cql_rowset_create_aux_destroy(void *pAux);
+cql_rowset_aux_init *_Nullable cql_rowset_create_aux_init(
+  cql_rowset_func _Nonnull func,
+  const char *_Nonnull create_table_str);
+
+void cql_rowset_create_aux_destroy(void *_Nullable pAux);

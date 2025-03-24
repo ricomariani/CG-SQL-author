@@ -150,7 +150,7 @@ def emit_original_licence():
     print("")
 
 def emit_headers(cmd_args):
-    print(f"#ifndef NO_SQLITE_EXT")
+    print(f"#ifdef CQL_SQLITE_EXT")
     print(f"#include <sqlite3ext.h>")
     print(f"SQLITE_EXTENSION_INIT1")
     print(f"#endif")
@@ -163,7 +163,7 @@ def emit_extension_initializer(data, cmd_args):
 
     print("""
 int sqlite3_cqlextension_init(sqlite3 *_Nonnull db, char *_Nonnull *_Nonnull pzErrMsg, const sqlite3_api_routines *_Nonnull pApi) {
-#ifndef NO_SQLITE_EXT
+#ifdef CQL_SQLITE_EXT
   SQLITE_EXTENSION_INIT2(pApi);
 #endif
 

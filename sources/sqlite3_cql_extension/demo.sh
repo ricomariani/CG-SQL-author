@@ -10,6 +10,7 @@ S=$(cd $(dirname "$0"); pwd)
 O=$S/out
 R=$S/..
 
+CC=cc
 while [ "${1:-}" != "" ]; do
   if [ "$1" == "--use_gcc" ]; then
     CC=gcc
@@ -52,7 +53,7 @@ popd >/dev/null
 
 pushd $S >/dev/null
 
-CC="cc -g -O0 -DNO_SQLITE_EXT"
+CC="cc -g -O0"
 
 ${CC} \
   -I./out \

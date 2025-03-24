@@ -14,13 +14,21 @@ echo
 S=$(cd $(dirname "$0"); pwd)
 O=$S/out
 R=$S/..
+T=.
+
+rm -f $O/cqlrt.o
+
+source $S/../common/test_helpers.sh || exit 1
 
 if [ -v SQLITE_PATH ]; then
-  SQLITE_PATH=$(realpath $SQLITE_PATH)
+  echo using external SQLITE ${SQLITE_PATH}
 else
-  cat $S/README.md | awk '/<!-- build_requirements_start/{flag=1; next} /<!-- build_requirements_end/{flag=0;} flag'
-  exit 1
+  SQLITE_PATH=$R/sqlite
 fi
+
+SQLITE_PATH=$(realpath $SQLITE_PATH)
+
+CC=cc
 
 while [ "${1:-}" != "" ]; do
   if [ "$1" == "--use_gcc" ]; then
@@ -31,10 +39,16 @@ while [ "${1:-}" != "" ]; do
     CC=clang
     export CC
     shift 1
+  elif [ "$1" == "--non_interactive" ]; then
+    # shellcheck disable=SC2034
+    NON_INTERACTIVE=1
+    export NON_INTERACTIVE
+    shift 1
   else
     echo "Usage: make.sh"
     echo "  --use_gcc"
     echo "  --use_clang"
+    echo "  --non_interactive"
     exit 1
   fi
 done
@@ -59,10 +73,9 @@ echo "# Generate SQLite3 extension"
 ls SampleInterop.c
 popd >/dev/null
 
-
 pushd $S >/dev/null
 
-CC="cc -g -O0"
+CC="${CC} -g -O0 -DCQL_SQLITE_EXT"
 
 OS=$(uname)
 if [ "$OS" = "Darwin" ]; then
@@ -79,8 +92,12 @@ else
   exit 1
 fi
 
-echo "Build ./out/cqlextension.$LIB_EXT extension for SQLite ($SQLITE_PATH/sqlite3ext.h) on $OS"
-${CC} -shared \
+CC="${CC} -shared"
+echo CFLAGS: ${CC}
+
+echo "Build ./out/cqlextension.$LIB_EXT extension for SQLite ${SQLITE_PATH}/sqlite3ext.h on ${OS}"
+
+${CC} \
   -I $SQLITE_PATH \
   -I./out \
   -I./. \
@@ -93,4 +110,15 @@ ${CC} -shared \
 
 ls ./out/cqlextension.${LIB_EXT}
 
+echo running SQLite test cases with extension
+set +e
+$SQLITE_PATH/sqlite3 <test_extension.sql > out/test_extension.out 2>&1
+
+echo checking output difference
+set -e
+on_diff_exit ./test_extension.out
+
 popd >/dev/null
+
+echo "test passed"
+exit 0

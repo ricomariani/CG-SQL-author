@@ -7,6 +7,8 @@
 
 declare proc printf no check;
 
+@echo c, "extern const sqlite3_api_routines *sqlite3_api;\n";
+
 -- trivial case fixed text output as a result set
 proc hello_world()
 begin

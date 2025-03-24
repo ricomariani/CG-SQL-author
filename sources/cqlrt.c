@@ -9,6 +9,10 @@
 // there are many macros defined for the base types etc.
 #include "cqlrt.h"
 
+#ifdef CQL_SQLITE_EXT
+extern const sqlite3_api_routines *sqlite3_api;
+#endif
+
 #include <memory.h>
 #include <stdbool.h>
 

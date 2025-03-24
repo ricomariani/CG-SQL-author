@@ -334,7 +334,11 @@ int main(int argc, char **argv) {
   if (rc) exit(rc);
 
   // this is the thing that registers all of the UDFs and TVFs
-  rc = sqlite3_cqlextension_init(db, NULL, NULL);
+  // we use bogus context pointers because we are not using the
+  // SQLiteAPI extension features in this test case, the bogus
+  // pointers ensure that one false move will result in a crash.
+
+  rc = sqlite3_cqlextension_init(db, (void*)1, (void*)1);
   if (rc) exit(rc);
 
   // this is a hand written test case

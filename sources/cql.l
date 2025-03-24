@@ -26,43 +26,54 @@
 #ifndef _MSC_VER
 #include <libgen.h>
 
-#else
+// these stubs are only here for debugging
 
-static char *realpath(const char *relpath, char *absPathBuffer) {
-    // Check if the file exists before resolving
-    if (_access(relpath, 0) != 0) {
-        return NULL;  // File does not exist
-    }
-
-    // Resolve absolute path
-    return _fullpath(absPathBuffer, relpath, _MAX_PATH);
+static char *Realpath(const char *relpath, char *absPathBuffer) {
+  return realpath(relpath, absPathBuffer);
 }
 
-static char *dirname(char *path) {
-    if (path == NULL || *path == '\0') {
-        return ".";  // Return current directory for empty paths
-    }
+#else
 
-    // Find last backslash or forward slash
-    char *lastSlash = strrchr(path, '\\');
-    if (!lastSlash) {
-        lastSlash = strrchr(path, '/');
-    }
+static char *Realpath(const char *relpath, char *absPathBuffer) {
+  // Check if the file exists before resolving
+  if (_access(relpath, 0) != 0) {
+    return NULL;  // File does not exist
+  }
 
-    if (lastSlash) {
-        if (lastSlash == path) {  // If the only slash is at the start (e.g., "/home")
-            *(lastSlash + 1) = '\0';
-        } else {
-            *lastSlash = '\0';  // Truncate path at last slash
-        }
-    } else {
-        return ".";  // No slash found, return current directory
-    }
-
-    return path;
+  // Resolve absolute path
+  return _fullpath(absPathBuffer, relpath, _MAX_PATH);
 }
 
 #endif
+
+// The APPLE version of dirname has different behavior than
+// the Linux version and Windows doesn't have one.  This is
+// used infrequently so we may as well just use a portable
+// version.
+
+static char *Dirname(char *path) {
+  if (path == NULL || *path == '\0') {
+    return ".";  // Return current directory for empty paths
+  }
+
+  // Find last backslash or forward slash
+  char *lastSlash = strrchr(path, '\\');
+  if (!lastSlash) {
+    lastSlash = strrchr(path, '/');
+  }
+
+  if (lastSlash) {
+    if (lastSlash == path) {  // If the only slash is at the start (e.g., "/home")
+      *(lastSlash + 1) = '\0';
+    } else {
+      *lastSlash = '\0';  // Truncate path at last slash
+    }
+  } else {
+    return ".";  // No slash found, return current directory
+  }
+
+  return path;
+}
 
 void yyerror(const char *s, ...);
 void line_directive(const char *);
@@ -126,7 +137,7 @@ cql_noexport void cql_setup_for_builtins() {
   else {
     strncpy(ambient_path, current_file, sizeof(ambient_path));
     ambient_path[sizeof(ambient_path)-1] = 0;
-    dirname(ambient_path);
+    Dirname(ambient_path);
   }
 }
 
@@ -188,7 +199,7 @@ static void cql_setup_for_include(CSTR str) {
 
   yyin = NULL;
 
-  // Call realpath to resolve the pathname
+  // Call Realpath to resolve the pathname
   bclear(&path);
   if (ambient_path[0]) {
     bprintf(&path, "%s/%s", ambient_path, name.ptr);
@@ -199,14 +210,14 @@ static void cql_setup_for_include(CSTR str) {
 
   CSTR opened_name = path.ptr;
 
-  char *abspath = realpath(path.ptr, resolved_path);
+  char *abspath = Realpath(path.ptr, resolved_path);
   if (abspath) {
     if (cql_already_processed_file(abspath)) {
       yy_switch_to_buffer(yy_scan_string(""));
       goto done;
     }
     strcpy(ambient_path, path.ptr);
-    dirname(ambient_path);
+    Dirname(ambient_path);
     yyin = fopen(abspath, "r");
   }
 
@@ -214,7 +225,7 @@ static void cql_setup_for_include(CSTR str) {
      for (int i = 0; i < options.include_paths_count; i++) {
         bclear(&path);
         bprintf(&path, "%s/%s", options.include_paths[i], name.ptr);
-        abspath = realpath(path.ptr, resolved_path);
+        abspath = Realpath(path.ptr, resolved_path);
         if (abspath) {
           if (cql_already_processed_file(abspath)) {
             yy_switch_to_buffer(yy_scan_string(""));
@@ -222,7 +233,7 @@ static void cql_setup_for_include(CSTR str) {
           }
 
           strcpy(ambient_path, path.ptr);
-          dirname(ambient_path);
+          Dirname(ambient_path);
           yyin = fopen(path.ptr, "r");
           if (yyin) {
             opened_name = path.ptr;

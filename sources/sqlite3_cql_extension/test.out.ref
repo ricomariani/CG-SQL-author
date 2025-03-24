@@ -1,6 +1,5 @@
 # Clean up output directory
 # Build CQL compiler
-make: Nothing to be done for 'all'.
 # Generate stored procedures C and JSON output
 Sample.c
 Sample.json

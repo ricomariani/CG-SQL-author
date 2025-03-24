@@ -19130,7 +19130,7 @@ static void sem_param(ast_node *ast) {
   sem_type |= sem_opt_inout(opt_inout);
 
   // We set this even if `current_proc` is NULL (i.e., we set it for the DECLARE
-  // PROC and DECLARE FUNCTION forms, not just CREATE PROC). The reason for
+  // PROC and FUNC forms, not just CREATE PROC). The reason for
   // doing this is so that any later parameter declarations that refer to the
   // current procedure using LIKE...ARGUMENTS will have this flag set
   // appropriately.

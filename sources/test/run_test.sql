@@ -9,7 +9,7 @@ declare tests int!;
 declare tests_passed int!;
 declare fails int!;
 declare expectations int!;
-function get_outstanding_refs() int!;
+func get_outstanding_refs() int!;
 declare start_refs int!;
 declare end_refs int!;
 declare proc printf no check;
@@ -210,9 +210,9 @@ declare select function bupdateval no check blob;
 declare select function bupdatekey no check blob;
 
 -- some test helpers we will need
-function create_truncated_blob(b blob!, truncated_size int!) create blob!;
-function blob_from_string(str text @sensitive) create blob!;
-function string_from_blob(b blob @sensitive) create text!;
+func create_truncated_blob(b blob!, truncated_size int!) create blob!;
+func blob_from_string(str text @sensitive) create blob!;
+func string_from_blob(b blob @sensitive) create text!;
 declare procedure _cql_init_extensions() using transaction;
 
 -- we will use these constants in various tests
@@ -1677,9 +1677,9 @@ begin
   EXPECT_EQ!(int2, 2); -- bind output not nullable
 end);
 
-function run_test_math(int1 int!, out int2 int) int!;
-function string_create() create text;
-function string_ref_count(str text) int!;
+func run_test_math(int1 int!, out int2 int) int!;
+func string_create() create text;
+func string_ref_count(str text) int!;
 
 TEST!(external_functions,
 begin
@@ -1713,9 +1713,9 @@ begin
   EXPECT_SQL_TOO!(int_result2 == 490);
 end);
 
-function set_create() create object!;
-function set_add(_set object!, _key text!) bool!;
-function set_contains(_set object!, _key text!) bool!;
+func set_create() create object!;
+func set_add(_set object!, _key text!) bool!;
+func set_contains(_set object!, _key text!) bool!;
 
 TEST!(external_set,
 begin
@@ -4087,9 +4087,9 @@ END);
 
 -- facet helper functions, used by the schema upgrade system
 declare facet_data TYPE OBJECT<facet_data>;
-declare func cql_facets_create() create facet_data!;
-declare func cql_facet_add(facets facet_data, facet text!, crc LONG not null) BOOL not null;
-declare func cql_facet_find(facets facet_data, facet text!) LONG not null;
+func cql_facets_create() create facet_data!;
+func cql_facet_add(facets facet_data, facet text!, crc LONG not null) BOOL not null;
+func cql_facet_find(facets facet_data, facet text!) LONG not null;
 
 TEST!(facet_helpers,
 begin
@@ -5208,7 +5208,7 @@ begin
 end);
 
 declare proc rand_reset();
-function corrupt_blob_with_invalid_shenanigans(b blob!) create blob!;
+func corrupt_blob_with_invalid_shenanigans(b blob!) create blob!;
 
 TEST!(clobber_blobs,
 begin
@@ -5302,7 +5302,7 @@ declare proc many_types() (
   t0 text
 );
 
-function cql_cursor_hash(C cursor) long!;
+func cql_cursor_hash(C cursor) long!;
 
 TEST!(cursor_hash,
 begin
@@ -6231,7 +6231,7 @@ begin
 end);
 
 
-declare func _cql_contains_column_def(haystack text, needle text) BOOL not null;
+func _cql_contains_column_def(haystack text, needle text) BOOL not null;
 
 -- _cql_contains_column_def is used by the schema upgrade logic to find string matches the indicate a column is present
 -- it's the same as this expression: haystack glob printf('*[) ]%s*', needle)

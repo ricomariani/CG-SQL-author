@@ -179,8 +179,8 @@ call printf("Hello, world\n");
 set i2 := r2 and l2;
 
 -- helper methods for the next test
-function side_effect1() int;
-function side_effect2() int;
+func side_effect1() int;
+func side_effect2() int;
 
 -- TEST: the operands have side effects, the short circuit must not
 -- do the evaluation of the side effect for the second arg if the first
@@ -1021,7 +1021,7 @@ begin
   set result := C;
 END;
 
-function simple_func(int1 int) int;
+func simple_func(int1 int) int;
 
 -- TEST: call external function
 -- + cql_set_notnull(_tmp_n_int_%, 2);
@@ -1034,7 +1034,7 @@ let result := simple_func(2);
 -- + result = simple_func(_tmp_n_int_1);
 set result := simple_func(simple_func(1));
 
-function text_func(int1 int, int2 int!) text!;
+func text_func(int1 int, int2 int!) text!;
 declare text_result text;
 
 -- TEST: call external text function
@@ -1055,7 +1055,7 @@ set obj_var := null;
 -- + cql_object_ref obj_var2 = NULL;
 declare obj_var2 object!;
 
-function obj_notnull_func() object!;
+func obj_notnull_func() object!;
 
 -- initialize for later use
 set obj_var2 := obj_notnull_func();
@@ -1116,19 +1116,19 @@ set i2 := case obj_var when obj_var then 1 else 2 end;
 -- + cql_set_object_ref(&obj_var, NULL);
 set obj_var := case 1 when 1 then obj_var2 else null end;
 
-function obj_func() object;
+func obj_func() object;
 
 -- TEST: function invocation with object function
 -- + cql_set_object_ref(&obj_var, obj_func());
 set obj_var := obj_func();
 
-function obj_func_create() create object;
+func obj_func_create() create object;
 
 -- TEST: function invocation with creater object function
 -- + cql_set_created_object_ref(&obj_var, obj_func_create());
 set obj_var := obj_func_create();
 
-function text_func_create() create text;
+func text_func_create() create text;
 
 -- TEST: function invocation with creater text function
 -- cql_string_release(_tmp_n_text_0);
@@ -1256,7 +1256,7 @@ begin
 end;
 
 -- TEST: declare a void func
-function voidfunc() int;
+func voidfunc() int;
 
 -- TEST: use a select exists clause
 -- + "SELECT EXISTS (SELECT 1 "
@@ -1363,7 +1363,7 @@ declare blob_var blob;
 -- + cql_blob_ref blob_var2 = NULL;
 declare blob_var2 blob!;
 
-function blob_notnull_func() blob!;
+func blob_notnull_func() blob!;
 
 -- initialize for later use
 set blob_var2 := blob_notnull_func();
@@ -1447,13 +1447,13 @@ set i2 := case blob_var when blob_var then 1 else 2 end;
 -- + cql_set_blob_ref(&blob_var, NULL);
 set blob_var := case 1 when 1 then blob_var2 else null end;
 
-function blob_func() blob;
+func blob_func() blob;
 
 -- TEST: function invocation with blob function
 -- + cql_set_blob_ref(&blob_var, blob_func());
 set blob_var := blob_func();
 
-function blob_func_create() create blob;
+func blob_func_create() create blob;
 
 -- TEST: function invocation with creater blob function
 -- + cql_set_created_blob_ref(&blob_var, blob_func_create());
@@ -4329,10 +4329,10 @@ proc ltor_proc_int_not_null(a int!, b int!, out c int!) begin end;
 proc ltor_proc_int(a int, b int, out c int) begin end;
 proc ltor_proc_text_not_null(a text!, b text!, out c text!) begin set c := "text"; end;
 proc ltor_proc_text(a text, b text, out c text) begin end;
-function ltor_func_int_not_null(a int!, b int!) int!;
-function ltor_func_int(a int, b int) int;
-function ltor_func_text_not_null(a text!, b text!) text!;
-function ltor_func_text(a text, b text) text;
+func ltor_func_int_not_null(a int!, b int!) int!;
+func ltor_func_int(a int, b int) int;
+func ltor_func_text_not_null(a text!, b text!) text!;
+func ltor_func_text(a text, b text) text;
 
 -- TEST: Arguments are always evaluated left-to-right (which is ensured by
 -- generating temps).
@@ -4862,7 +4862,7 @@ begin
   D:from_blob(B);
 end;
 
-function make_blob() create blob<structured_storage>;
+func make_blob() create blob<structured_storage>;
 
 -- TEST: get a blob from somewhere other than a local
 -- checks general expression evaluation in the fetch path
@@ -4990,7 +4990,7 @@ begin
   out union c;
 end;
 
-function external_cursor_func(x cursor) int;
+func external_cursor_func(x cursor) int;
 
 -- TEST call a function that takes a generic cursor
 -- + cql_dynamic_cursor shape_storage_dyn = {
@@ -5717,16 +5717,16 @@ begin
   let int_sql_val := (select type_check(1 as int!));
 end;
 
-function expr_func_a(x int) int;
+func expr_func_a(x int) int;
 declare procedure expr_proc_b(x int);
 
 -- TEST: top level expressions
 -- + (void)(1 + 2 + 3);
 1+2+3;
 
-function stew1 no check int!;
-function stew2 no check create text!;
-function stew3 no check text!;
+func stew1 no check int!;
+func stew2 no check create text!;
+func stew3 no check text!;
 
 @echo c, "int stew1(int x, ...);\n";
 @echo c, "cql_string_ref stew2(int x, ...);\n";
@@ -5758,7 +5758,7 @@ end;
 
 -- TEST: cql:alias_of attribution
 [[alias_of=some_native_func]]
-function an_alias_func(x int!) int!;
+func an_alias_func(x int!) int!;
 
 -- TEST: create a table with a weird name and a weird column
 -- verify that echoing is re-emitting the escaped text

@@ -9,7 +9,7 @@ declare tests integer not null;
 declare tests_passed integer not null;
 declare fails integer not null;
 declare expectations integer not null;
-function get_outstanding_refs() integer not null;
+func get_outstanding_refs() integer not null;
 declare start_refs integer not null;
 declare end_refs integer not null;
 declare proc printf no check;

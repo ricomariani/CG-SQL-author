@@ -346,7 +346,7 @@ declare real_result2 real;
 -- + {name simple_func2}: real notnull
 -- + {func_params_return}
 -- - error:
-function simple_func2(arg1 int!, arg2 int!, arg3 int!) real!;
+func simple_func2(arg1 int!, arg2 int!, arg3 int!) real!;
 
 -- TEST: colon operator used with the right number of args does not report errors
 -- + {name simple_func2}
@@ -360,7 +360,7 @@ function simple_func2(arg1 int!, arg2 int!, arg3 int!) real!;
 SET real_result2 := 2:simple_func2(3, 4);
 
 declare int_result int;
-function simple_func3(arg1 int!) int!;
+func simple_func3(arg1 int!) int!;
 
 -- TEST: colon operator when only one arg exists
 -- + {name simple_func3}
@@ -2219,7 +2219,7 @@ begin
   close C;
 end;
 
-declare func get_boxed_cursor() object<foo cursor>;
+func get_boxed_cursor() object<foo cursor>;
 
 -- TEST: use boxed cursor from an expression
 -- + {declare_cursor}: C: foo: { id: integer notnull primary_key autoinc } variable boxed
@@ -6001,14 +6001,14 @@ select T.* from (select 1) as U;
 -- + {params}: ok
 -- + {param}: arg1: integer notnull variable in
 -- - error:
-function simple_func(arg1 int!) real!;
+func simple_func(arg1 int!) real!;
 
 -- TEST: error duplicate function
 -- + error: % FUNC simple_func (arg1 INT) REAL!
 -- + error: % FUNC simple_func (arg1 INT!) REAL!
 -- + error: % duplicate function name 'simple_func'
 -- +3 error:
-function simple_func(arg1 integer) real!;
+func simple_func(arg1 integer) real!;
 
 -- TEST: error declare proc conflicts with func
 -- + error: % proc name conflicts with func name 'simple_func'
@@ -6026,7 +6026,7 @@ end;
 -- TEST: error function that conflicts with a proc
 -- + error: % func name conflicts with proc name 'proc1'
 -- +1 error:
-function proc1(i integer) integer;
+func proc1(i integer) integer;
 
 -- TEST: try to declare a function inside a proc
 -- + error: % declared functions must be top level 'foo'
@@ -6039,7 +6039,7 @@ end;
 -- TEST: duplicate function formal
 -- + error: % duplicate parameter name 'a'
 -- +1 error:
-function dup_formal(a integer, a integer) integer;
+func dup_formal(a integer, a integer) integer;
 
 -- result for the next test
 declare real_result real;
@@ -6233,12 +6233,12 @@ set X := 2 not between 1 and obj_var;
 -- TEST: make a function that creates an not null object
 -- + {name creater_func}: object notnull create_func
 -- - error:
-function creater_func() create object not null;
+func creater_func() create object not null;
 
 -- TEST: make a function that creates an nullable
 -- + declare_func_stmt}: object create_func
 -- - error:
-function maybe_create_func() create object;
+func maybe_create_func() create object;
 
 -- Storage for these next few tests
 -- - error:
@@ -6324,7 +6324,7 @@ set foo_obj := foo_obj;
 -- TEST: function with typed object return type
 -- + {declare_func_stmt}: object<Foo>
 -- - error:
-function foo_func() object<Foo>;
+func foo_func() object<Foo>;
 
 -- TEST: function with typed object return type
 -- + {assign}: foo_obj: object<Foo> variable
@@ -6431,7 +6431,7 @@ insert into garbonzo(id) values ('x');
 -- TEST: declare a function with object arg type
 -- + {param_detail}: goo: object<Goo> variable in
 -- - error:
-function goo_func(goo object<Goo>) text;
+func goo_func(goo object<Goo>) text;
 
 -- TEST: function with mismatched arg type
 -- + error: % expressions of different kinds can't be mixed: 'Goo' vs. 'Bar'
@@ -9534,7 +9534,7 @@ insert into foo(id) values (coalesce(_sens,0));
 update bar set id = coalesce(_sens,0) where name = 'x';
 
 -- Do various validations on this func in the following tests
-function sens_func(id integer @sensitive, t text) text @sensitive;
+func sens_func(id integer @sensitive, t text) text @sensitive;
 declare sens_text text @sensitive;
 declare non_sens_text text;
 
@@ -13017,7 +13017,7 @@ let result_of_some_external_thing := some_external_thing('x', 5.0);
 -- + {param}: r: real variable in
 -- + {type_int}: integer
 -- - error:
-function some_external_thing(t text, r real) int;
+func some_external_thing(t text, r real) int;
 
 -- TEST: works fine after re-declaring
 -- + {let_stmt}: result_of_some_external_thing: integer variable
@@ -15238,7 +15238,7 @@ declare adding_notnull my_type not null;
 -- + error: % an attribute was specified twice '@sensitive'
 -- + {declare_func_stmt}: err
 -- +1 error:
-function adding_attr_to_func_redundant() create my_type @sensitive;
+func adding_attr_to_func_redundant() create my_type @sensitive;
 
 
 -- TEST: just verify this is correct
@@ -15433,7 +15433,7 @@ end;
 -- + FUNC decl_type_func (arg1 INT) TEXT @SENSITIVE;
 -- + {declare_func_stmt}: text sensitive
 -- - error:
-declare func decl_type_func (arg1 integer) my_type;
+func decl_type_func (arg1 integer) my_type;
 
 -- TEST: declared type in function with err
 -- + FUNC decl_type_func_err (arg1 INT) bogus_type;
@@ -15441,7 +15441,7 @@ declare func decl_type_func (arg1 integer) my_type;
 -- + {declare_func_stmt}: err
 -- + {name bogus_type}: err
 -- +1 error:
-declare func decl_type_func_err (arg1 integer) bogus_type;
+func decl_type_func_err (arg1 integer) bogus_type;
 
 create table to_copy(
   f1 integer,
@@ -15476,7 +15476,7 @@ declare proc uses_complex_table_attrs(like to_copy);
 -- TEST: ensure func arguments are rewritten correctly
 -- + FUNC function_uses_complex_table_attrs (f1_ INT, f2_ INT!, f3_ INT! @SENSITIVE, f4_ INT @SENSITIVE) INT;
 -- - error:
-function function_uses_complex_table_attrs(like to_copy) integer;
+func function_uses_complex_table_attrs(like to_copy) integer;
 
 -- TEST: ensure cursor includes not-null and sensitive
 -- + {declare_cursor_like_name}: complex_attr_cursor: to_copy: { f1: integer, f2: integer notnull, f3: integer notnull sensitive, f4: integer sensitive } variable shape_storage value_cursor
@@ -15489,7 +15489,7 @@ cursor complex_attr_cursor like to_copy;
 -- + {sensitive_attr}: object sensitive
 -- + {type_object}: object
 -- - error:
-function maybe_create_func_sensitive() create object @sensitive;
+func maybe_create_func_sensitive() create object @sensitive;
 
 -- TEST: make a function that creates blob
 -- + {declare_func_stmt}: blob notnull create_func
@@ -15497,35 +15497,35 @@ function maybe_create_func_sensitive() create object @sensitive;
 -- + {notnull}: blob notnull
 -- + {type_blob}: blob
 -- - error:
-function maybe_create_func_blob() create blob not null;
+func maybe_create_func_blob() create blob not null;
 
 -- TEST: make a function that creates text
 -- + {declare_func_stmt}: text create_func
 -- + {create_data_type}: text create_func
 -- + {type_text}: text
 -- - error:
-function maybe_create_func_text() create text;
+func maybe_create_func_text() create text;
 
 -- TEST: make a function that creates int
 -- + error: % Return data type in a create function declaration can only be Text, Blob or Object
 -- + {declare_func_stmt}: err
 -- + {create_data_type}: err
 -- +1 error:
-function maybe_create_func_int() create int;
+func maybe_create_func_int() create int;
 
 -- TEST: make a function that creates bool
 -- + error: % Return data type in a create function declaration can only be Text, Blob or Object
 -- + {declare_func_stmt}: err
 -- + {create_data_type}: err
 -- +1 error:
-function maybe_create_func_bool() create bool;
+func maybe_create_func_bool() create bool;
 
 -- TEST: make a function that creates long
 -- + error: % Return data type in a create function declaration can only be Text, Blob or Object
 -- + {declare_func_stmt}: err
 -- + {create_data_type}: err
 -- +1 error:
-function maybe_create_func_long() create long not null @sensitive;
+func maybe_create_func_long() create long not null @sensitive;
 
 -- TEST: type a named for object Foo
 -- + {declare_named_type}: object<Foo> notnull sensitive
@@ -15540,20 +15540,20 @@ type type_obj_foo object<Foo> not null @sensitive;
 -- + FUNC type_func_return_create_obj () CREATE OBJECT<Foo>! @SENSITIVE;
 -- + {declare_func_stmt}: object<Foo> notnull create_func sensitive
 -- - error:
-function type_func_return_create_obj() create type_obj_foo;
+func type_func_return_create_obj() create type_obj_foo;
 
 -- TEST: declared function that return create bogus object
 -- + error: % unknown type 'bogus_type'
 -- + {declare_func_stmt}: err
 -- + {create_data_type}: err
 -- +1 error:
-function type_func_return_create_bogus_obj() create bogus_type;
+func type_func_return_create_bogus_obj() create bogus_type;
 
 -- TEST: declared function that return object
 -- + FUNC type_func_return_obj () OBJECT<Foo>! @SENSITIVE;
 -- + {declare_func_stmt}: object<Foo> notnull sensitive
 -- - error:
-function type_func_return_obj() type_obj_foo;
+func type_func_return_obj() type_obj_foo;
 
 -- TEST: declare type as enum name
 -- + TYPE my_enum_type INT<ints>!;
@@ -22486,7 +22486,7 @@ declare proc uses_broken_thing() (LIKE broken_thing arguments);
 -- + {param_detail}: x: cursor variable in
 -- + {name x}: x: cursor variable in
 -- + {type_cursor}: cursor
-function external_cursor_func(x cursor) integer;
+func external_cursor_func(x cursor) integer;
 
 -- TEST: try to call a function with a cursor argument
 -- + {let_stmt}: result: integer variable
@@ -22744,7 +22744,7 @@ end;
 -- + {func_params_return}
 -- + {type_text}: text
 -- - error:
-function no_check_func no check text;
+func no_check_func no check text;
 
 -- TEST: call with various args
 -- + {expr_stmt}: text
@@ -23261,7 +23261,7 @@ end;
 -- + {declare_func_stmt}: integer notnull
 -- - error:
 [[alias_of=some_native_func]]
-function an_alias_func(x int!) int!;
+func an_alias_func(x int!) int!;
 
 -- TEST: cql:alias_of attribution on declare proc stmt
 -- + {stmt_and_attr}: ok
@@ -23290,7 +23290,7 @@ declare select function foobaz(x int!) int!;
 -- + {declare_func_stmt}: err
 -- +1 error:
 [[alias_of]]
-function an_alias_func_bad(x int!) int!;
+func an_alias_func_bad(x int!) int!;
 
 -- setup for invalid child test, private proc
 -- this ok so far
@@ -23324,13 +23324,13 @@ begin
   declare x object<invalid_child_proc_2 set>;
 end;
 
-function rev_apply_bool(x bool) int!;
-function rev_apply_int(x int) int!;
-function rev_apply_long(x long) int!;
-function rev_apply_real(x real) int!;
-function rev_apply_text(x text) int!;
-function rev_apply_blob(x blob) int!;
-function rev_apply_object(x object) int!;
+func rev_apply_bool(x bool) int!;
+func rev_apply_int(x int) int!;
+func rev_apply_long(x long) int!;
+func rev_apply_real(x real) int!;
+func rev_apply_text(x text) int!;
+func rev_apply_blob(x blob) int!;
+func rev_apply_object(x object) int!;
 -- function rev_apply_cursor(x cursor) int!;
 
 @op bool : call rev_apply as rev_apply_bool;
@@ -23402,7 +23402,7 @@ set int_result := invalid_id_bogus:rev_apply();
 
 declare lbs real<pounds> not null;
 
-function some_polymorphic_function_real_pounds(x real<pounds>, y real) int!;
+func some_polymorphic_function_real_pounds(x real<pounds>, y real) int!;
 @op real<pounds> : call myfunc as some_polymorphic_function_real_pounds;
 
 -- TEST: using the type kind we append "real_pounds" not just "real"
@@ -23419,7 +23419,7 @@ end;
 -- so we have to use a generic object to capture the argument.
 -- this is of dubious usefulness.  But again these internal types
 -- are not intended to be used in this way anyway.
-function get_result_set_count(result object) int!;
+func get_result_set_count(result object) int!;
 @op object<get_result SET> : call count as get_result_set_count;
 
 -- TEST: this is a not very clever use of : but it showcases space issue
@@ -23429,7 +23429,7 @@ function get_result_set_count(result object) int!;
 let poly_result_2 := get_result():count();
 
 -- some things we will use in the tests
-function expr_func_a(x integer) integer;
+func expr_func_a(x integer) integer;
 declare procedure expr_proc_b(x integer);
 
 -- TEST: top level function calls are ok, any expression is ok
@@ -23579,8 +23579,8 @@ op_assign >>= 11;
 -- +1 error:
 1 += 7;
 
-function get_from_object_foo(array object<foo>, index text) text not null;
-function set_in_object_foo( array object<foo>, index text, value text) text not null;
+func get_from_object_foo(array object<foo>, index text) text not null;
+func set_in_object_foo( array object<foo>, index text, value text) text not null;
 
 @op object<foo> : array get as get_from_object_foo;
 @op object<foo> : array set as set_in_object_foo;
@@ -23624,8 +23624,8 @@ end;
 -- +1 error
 (not 'x')[5];
 
-function get_object_dot_one_id(x object<dot_one>) integer;
-function get_from_object_dot_two no check integer;
+func get_object_dot_one_id(x object<dot_one>) integer;
+func get_from_object_dot_two no check integer;
 
 @op object<dot_one> : get id as get_object_dot_one_id;
 @op object<dot_two> : get all as get_from_object_dot_two;
@@ -23667,7 +23667,7 @@ begin
   let z := q.id;
 end;
 
-function make_dot_one() create object<dot_one>;
+func make_dot_one() create object<dot_one>;
 @op object<dot_one> : get id as get_object_dot_one_id;
 
 -- TEST: try to use a . op but no helper functions (computed version)
@@ -23701,8 +23701,8 @@ end;
 -- both options for getting/setting tested here
 declare proc set_in_object_dot_storage no check;
 declare proc set_object_dot_storage_id(self object<dot_storage>, value int);
-function get_object_dot_storage_id(self object<dot_storage>) integer;
-function get_from_object_dot_storage no check integer;
+func get_object_dot_storage_id(self object<dot_storage>) integer;
+func get_from_object_dot_storage no check integer;
 
 declare storage object<dot_storage>;
 @op object<dot_storage> : array get as get_from_object_dot_storage;
@@ -23764,7 +23764,7 @@ begin
   another_target_proc(*, 1);
 end;
 
-function create_event() create object<event> not null;
+func create_event() create object<event> not null;
 declare proc get_object_event_invitees(event_ object<event>, out value object<event_invitees> not null);
 declare proc event_invitees_get(invitees object<event_invitees>, field text not null, out value text not null);
 
@@ -24872,11 +24872,11 @@ select json_group_object();
 -- +1 error:
 select jsonb_group_object();
 
-function new_builder() create object<list_builder>;
-function builder_int(arg1 object<list_builder>, arg2 int!) object<list_builder>;
-function builder_int_int(arg1 object<list_builder>, arg2 int!, arg3 int!) object<list_builder>;
-function builder_real(arg1 object<list_builder>, arg2 real!) object<list_builder>;
-function builder_to_list(arg1 object<list_builder>) create object<list>;
+func new_builder() create object<list_builder>;
+func builder_int(arg1 object<list_builder>, arg2 int!) object<list_builder>;
+func builder_int_int(arg1 object<list_builder>, arg2 int!, arg3 int!) object<list_builder>;
+func builder_real(arg1 object<list_builder>, arg2 real!) object<list_builder>;
+func builder_to_list(arg1 object<list_builder>) create object<list>;
 
 @op object<list_builder> : call to_list as builder_to_list;
 @op object<list_builder> : functor all as builder;
@@ -24937,9 +24937,9 @@ select 'x' -> 'y' ~int~ as U;
 -- +1 error:
 let uu  := list_result[5];
 
-function do_arrow(x integer, y integer) integer;
-function do_text_arrow(x integer, y text) integer;
-function do_int_foo_arrow(x integer, y integer) integer;
+func do_arrow(x integer, y integer) integer;
+func do_text_arrow(x integer, y text) integer;
+func do_int_foo_arrow(x integer, y integer) integer;
 
 @op int<foo> : arrow all as do_arrow;
 @op int<foo> : arrow text as do_text_arrow;
@@ -24969,10 +24969,10 @@ var my_bar text<bar>;
 let arrow_result_2 := (select my_bar -> 'x');
 
 @op object<storage> : lshift int as write_int;
-function write_int(store object<storage>, val int!) object<storage>;
+func write_int(store object<storage>, val int!) object<storage>;
 
 @op object<storage> : rshift int as read_int;
-function read_int(store object<storage>, out val int!) object<storage>;
+func read_int(store object<storage>, out val int!) object<storage>;
 
 var store object<storage>;
 
@@ -24989,7 +24989,7 @@ store << 5;
 store >> int_var;
 
 @op object<foo> : concat int as concat_func;
-function concat_func(store object<foo>, x int!) object<foo>;
+func concat_func(store object<foo>, x int!) object<foo>;
 
 -- TEST: try || overload to concat_func
 -- verify rewrite
@@ -25005,9 +25005,9 @@ let concat_result := foo_obj || 5;
 -- - error:
 @op cursor : call foo as cursor_foo;
 
-function cursor_foo(x CURSOR) int;
-function cursor_bar(x CURSOR) int;
-function cursor_foo_poly_int(x CURSOR, y int) int;
+func cursor_foo(x CURSOR) int;
+func cursor_bar(x CURSOR) int;
+func cursor_foo_poly_int(x CURSOR, y int) int;
 
 cursor CPipe for select 1 x, 2 y;
 fetch CPipe;
@@ -25356,7 +25356,7 @@ begin
    macro_one!(@tmp(x));
 end;
 
-function expensive(x int) int!;
+func expensive(x int) int!;
 
 -- TEST: we are testing the expansion of macro_two
 -- we can't readily validate that the @tmp(x) has

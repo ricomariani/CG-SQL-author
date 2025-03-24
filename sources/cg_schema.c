@@ -364,10 +364,10 @@ static void cg_schema_emit_facet_functions(charbuf *decls) {
   bprintf(decls, "-- declare facet helpers-- \n");
   bprintf(decls, "DECLARE facet_data TYPE OBJECT<facet_data>;\n");
   bprintf(decls, "DECLARE %s_facets facet_data;\n", global_proc_name);
-  bprintf(decls, "DECLARE FUNCTION cql_facets_create() create facet_data!;\n");
-  bprintf(decls, "DECLARE FUNCTION cql_facet_add(facets facet_data, facet TEXT!, crc LONG!) BOOL!;\n");
-  bprintf(decls, "DECLARE FUNCTION cql_facet_upsert(facets facet_data, facet TEXT!, crc LONG!) BOOL!;\n");
-  bprintf(decls, "DECLARE FUNCTION cql_facet_find(facets facet_data, facet TEXT!) LONG!;\n\n");
+  bprintf(decls, "FUNC cql_facets_create() create facet_data!;\n");
+  bprintf(decls, "FUNC cql_facet_add(facets facet_data, facet TEXT!, crc LONG!) BOOL!;\n");
+  bprintf(decls, "FUNC cql_facet_upsert(facets facet_data, facet TEXT!, crc LONG!) BOOL!;\n");
+  bprintf(decls, "FUNC cql_facet_find(facets facet_data, facet TEXT!) LONG!;\n\n");
 }
 
 static void cg_schema_emit_recreate_update_functions(charbuf *decls) {
@@ -1788,7 +1788,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   bprintf(&preamble, "  END;\n");
   bprintf(&preamble, "END;\n\n");
 
-  bprintf(&preamble, "DECLARE FUNCTION _cql_contains_column_def(needle TEXT, haystack TEXT) BOOL!;\n");
+  bprintf(&preamble, "FUNC _cql_contains_column_def(needle TEXT, haystack TEXT) BOOL!;\n");
 
   bprintf(&preamble, "[[private]]\n");
   bprintf(&preamble, "PROC %s_column_exists(table_ TEXT!, col_info TEXT!, OUT exists_ BOOL!)\n", global_proc_name);

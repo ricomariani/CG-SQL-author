@@ -22,15 +22,15 @@
 
 declare procedure printf no check;
 
-function cql_fopen(name text!, mode text!) create object<file>;
-function readline_object_file(f object<file>!) create text;
-function atoi_at_text(str text, `offset` int!) int!;
-function len_text(self text) int!;
-function octet_text(self text, `offset` int!) int!;
-function after_text(self text, `offset` int!) create text;
-function starts_with_text(haystack text!, needle text!) bool!;
-function index_of_text(haystack text!, needle text!) int!;
-function contains_at_text(haystack text!, needle text!, `offset` int!) bool!;
+func cql_fopen(name text!, mode text!) create object<file>;
+func readline_object_file(f object<file>!) create text;
+func atoi_at_text(str text, `offset` int!) int!;
+func len_text(self text) int!;
+func octet_text(self text, `offset` int!) int!;
+func after_text(self text, `offset` int!) create text;
+func starts_with_text(haystack text!, needle text!) bool!;
+func index_of_text(haystack text!, needle text!) int!;
+func contains_at_text(haystack text!, needle text!, `offset` int!) bool!;
 
 @op object<file>: call readline as readline_object_file;
 @op text: call atoi_at as atoi_at_text;

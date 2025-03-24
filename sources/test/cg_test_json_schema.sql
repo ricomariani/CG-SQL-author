@@ -1763,7 +1763,7 @@ DECLARE SELECT FUNCTION tvf(id INTEGER) (foo TEXT);
 -- + "type" : "text",
 -- + "isNotNull" : 1
 -- + "createsObject" : 0
-DECLARE FUNCTION NoCheckFunc NO CHECK TEXT!;
+FUNC NoCheckFunc NO CHECK TEXT!;
 
 -- TEST: no check select real return
 -- + "name" : "NoCheckSelectFunc",
@@ -1826,7 +1826,7 @@ DECLARE PROC other_no_check_proc NO CHECK;
 -- + "name" : "foo"
 -- + "value" : "bar"
 @attribute(foo=bar)
-DECLARE FUNCTION decl_func_take_all_types_func(
+FUNC decl_func_take_all_types_func(
   t BOOL,
   i INTEGER,
   l LONG,
@@ -1848,74 +1848,74 @@ DECLARE FUNCTION decl_func_take_all_types_func(
 -- + "type" : "bool"
 -- + "isNotNull" : 0
 -- + "createsObject" : 0
-DECLARE FUNCTION func_return_bool() BOOL;
+FUNC func_return_bool() BOOL;
 
 -- TEST: check declare function that returns a integer
 -- + "returnType" : {
 -- + "type" : "integer"
 -- + "isNotNull" : 0
 -- + "createsObject" : 0
-DECLARE FUNCTION func_return_integer() INTEGER;
+FUNC func_return_integer() INTEGER;
 
 -- TEST: check declare function that returns a long
 -- + "returnType" : {
 -- + "type" : "long"
 -- + "isNotNull" : 0
 -- + "createsObject" : 0
-DECLARE FUNCTION func_return_long() LONG;
+FUNC func_return_long() LONG;
 
 -- TEST: check declare function that returns a real
 -- + "returnType" : {
 -- + "type" : "real"
 -- + "isNotNull" : 0
 -- + "createsObject" : 0
-DECLARE FUNCTION func_return_real() REAL;
+FUNC func_return_real() REAL;
 
 -- TEST: check declare function that returns a blob
 -- + "returnType" : {
 -- + "type" : "blob"
 -- + "isNotNull" : 0
 -- + "createsObject" : 0
-DECLARE FUNCTION func_return_blob() BLOB;
+FUNC func_return_blob() BLOB;
 
 -- TEST: check declare function that returns a text
 -- + "returnType" : {
 -- + "type" : "text"
 -- + "isNotNull" : 0
 -- + "createsObject" : 0
-DECLARE FUNCTION func_return_text() TEXT;
+FUNC func_return_text() TEXT;
 
 -- TEST: check declare function that returns an object
 -- + "returnType" : {
 -- + "type" : "object"
 -- + "isNotNull" : 0
 -- + "createsObject" : 0
-DECLARE FUNCTION func_return_object() OBJECT;
+FUNC func_return_object() OBJECT;
 
 -- TEST: check declare function that returns notnull type
 -- + "returnType" : {
 -- + "type" : "bool"
 -- + "isNotNull" : 1
 -- + "createsObject" : 0
-DECLARE FUNCTION func_return_bool_notnull() BOOL!;
+FUNC func_return_bool_notnull() BOOL!;
 
 -- TEST: check declare function that returns a create blob.
 -- + "returnType" : {
 -- + "type" : "blob"
 -- + "createsObject" : 1
-DECLARE FUNCTION func_create_blob() CREATE BLOB;
+FUNC func_create_blob() CREATE BLOB;
 
 -- TEST: check declare function that returns a create text.
 -- + "returnType" : {
 -- + "type" : "text"
 -- + "createsObject" : 1
-DECLARE FUNCTION func_create_text() CREATE TEXT;
+FUNC func_create_text() CREATE TEXT;
 
 -- TEST: check declare function that returns a create object.
 -- + "returnType" : {
 -- + "type" : "object"
 -- + "createsObject" : 1
-DECLARE FUNCTION func_create_object() CREATE OBJECT;
+FUNC func_create_object() CREATE OBJECT;
 
 -- TEST: create a table with exotic name and columns
 -- + "name" : "abc def",

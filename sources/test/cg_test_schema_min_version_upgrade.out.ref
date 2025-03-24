@@ -8,10 +8,10 @@
 -- declare facet helpers-- 
 DECLARE facet_data TYPE OBJECT<facet_data>;
 DECLARE test_facets facet_data;
-DECLARE FUNCTION cql_facets_create() create facet_data!;
-DECLARE FUNCTION cql_facet_add(facets facet_data, facet TEXT!, crc LONG!) BOOL!;
-DECLARE FUNCTION cql_facet_upsert(facets facet_data, facet TEXT!, crc LONG!) BOOL!;
-DECLARE FUNCTION cql_facet_find(facets facet_data, facet TEXT!) LONG!;
+FUNC cql_facets_create() create facet_data!;
+FUNC cql_facet_add(facets facet_data, facet TEXT!, crc LONG!) BOOL!;
+FUNC cql_facet_upsert(facets facet_data, facet TEXT!, crc LONG!) BOOL!;
+FUNC cql_facet_find(facets facet_data, facet TEXT!) LONG!;
 
 -- declare recreate update helpers-- 
 DECLARE PROCEDURE cql_rebuild_recreate_group (tables TEXT!, indices TEXT!, deletes TEXT!, out result BOOL!) USING TRANSACTION;
@@ -932,7 +932,7 @@ BEGIN
   END;
 END;
 
-DECLARE FUNCTION _cql_contains_column_def(needle TEXT, haystack TEXT) BOOL!;
+FUNC _cql_contains_column_def(needle TEXT, haystack TEXT) BOOL!;
 [[private]]
 PROC test_column_exists(table_ TEXT!, col_info TEXT!, OUT exists_ BOOL!)
 BEGIN

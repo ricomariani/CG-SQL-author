@@ -383,11 +383,11 @@ create index it5 ON t4(data) @delete(1);
 create view my_view as select * from `table one` inner join t2 using(id);
 create view my_view as select * from `table one` inner join t2 using(id);
 create view my_view_using_table_alias as select foo.*, bar.id id2, bar.rowid rowid from `table one` as foo inner join t2 as bar using(id);
-function any_func() bool not null;
+func any_func() bool not null;
 select function is_declare_func_enabled() bool not null;
 select function is_declare_func_wall(id long integer) bool not null;
 select function array_num_at(array_object_ptr LONG!, idx int!) long;
-function blob_from_string(str text) create blob not null;
+func blob_from_string(str text) create blob not null;
 declare timer_var int;
 declare label_var text;
 declare data_var blob;
@@ -736,7 +736,7 @@ begin
   select * from (call notnull_int_frag(v));
 end;
 
-function foo() int not null;
+func foo() int not null;
 select function stuff() int not null;
 
 proc a_proc(out v int not null)
@@ -749,7 +749,7 @@ begin
   select stuff() x, notnull_int_frag(1) y, T1.* from (call notnull_int_frag(foo() + a_proc())) T1;
 end;
 
-function external_blob_func() blob;
+func external_blob_func() blob;
 
 [[shared_fragment]]
 proc simple_blob_fragment(x blob)
@@ -765,7 +765,7 @@ BEGIN
   select * from (call simple_blob_fragment(external_blob_func()));
 END;
 
-function external_object_func() object;
+func external_object_func() object;
 
 [[shared_fragment]]
 proc simple_object_fragment(x object)
@@ -806,7 +806,7 @@ proc qp_use_no_frag(foo blob) begin
   select foo foo;
 end;
 
-function my_object_func() object;
+func my_object_func() object;
 
 [[shared_fragment]]
 proc object_frag(o object)

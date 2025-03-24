@@ -535,7 +535,7 @@ do let you name types for reuse.
 You can now write these sorts of forms:
 
 ```sql
-declare foo_id type long not null;
+type foo_id long!;
 
 create table foo(
   id foo_id primary key autoincrement,
@@ -548,9 +548,9 @@ begin
   set id := last_insert_rowid();
 end;
 
-function func_return_foo_id() foo_id;
+func func_return_foo_id() foo_id;
 
-declare var foo_id;
+var v foo_id;
 ```
 
 Additionally any enumerated type can be used as a type name.  e.g.
@@ -1693,7 +1693,7 @@ have either `get` or `create` semantics
 If you declare a function like so:
 
 ```sql
-function Getter() object;
+func Getter() object;
 ```
 
 Then CQL assumes that the returned object should follow the normal rules above,
@@ -1705,7 +1705,7 @@ or `out` arguments could retain the object.
 If you declare a function like so:
 
 ```sql
-function Getter() create text;
+func Getter() create text;
 ```
 
 then CQL assumes that the function created a new result which it is now
@@ -1897,9 +1897,9 @@ var x real<joules>;
 
 -- These are the functions that you might call with pipeline notation
 
-function foo(x text) real;
-function foo_real(x real) real;
-function foo_real_joules(x real) real;
+func foo(x text) real;
+func foo_real(x real) real;
+func foo_real_joules(x real) real;
 ```
 
 The mappings and declarations are both required now allow this:
@@ -1952,11 +1952,11 @@ To enable:
 for instance, with these declarations:
 
 ```sql
-function new_builder() create object<list_builder>;
-function list_builder_add_int(arg1 object<list_builder>, arg2 int!) object<list_builder>;
-function list_builder_add_int_int(arg1 object<list_builder>, arg2 int!, arg3 int!) object<list_builder>;
-function list_builder_add_real(arg1 object<list_builder>, arg2 real!) object<list_builder>;
-function list_builder_to_list(arg1 object<list_builder>) create object<list>;
+func new_builder() create object<list_builder>;
+func list_builder_add_int(arg1 object<list_builder>, arg2 int!) object<list_builder>;
+func list_builder_add_int_int(arg1 object<list_builder>, arg2 int!, arg3 int!) object<list_builder>;
+func list_builder_add_real(arg1 object<list_builder>, arg2 real!) object<list_builder>;
+func list_builder_to_list(arg1 object<list_builder>) create object<list>;
 
 @op object<list_builder> : functor all as list_builder_add;
 @op object<list_builder> : call to_list as list_builder_to_list;
@@ -2072,7 +2072,7 @@ The rewrite depends on the object type, and in particular the "kind"
 designation. So for instance consider:
 
 ```sql
-function create_container() create object<container> not null;
+func create_container() create object<container>!;
 let cont := create_container();
 cont.x := cont.x + 1;
 ```
@@ -2080,7 +2080,7 @@ cont.x := cont.x + 1;
 For this to work we need a function that makes the container:
 
 ```sql
-function create_container() create object<container>;
+func create_container() create object<container>;
 ```
 
 Now `cont.x` *might* mean field access in a cursor or table access in a `select`
@@ -2098,7 +2098,7 @@ like so:
 Like these maybe:
 
 ```sql
-function container_get_x(self object<container> not null) int!;
+func container_get_x(self object<container> not null) int!;
 declare proc container_set_x(self object<container> not null, value int!);
 ```
 
@@ -2130,7 +2130,7 @@ That is where the property name can be anything. If instead of the property
 specific functions above, we had created these more general functions:
 
 ```sql
-function container_get(self object<container>! , field text!) int!;
+func container_get(self object<container>! , field text!) int!;
 declare proc container_set(self object<container>!, field text!, value int!);
 ```
 
@@ -2193,7 +2193,7 @@ cont[1,2] := cont[3,4] + cont[5,6];
 Could be supported by these functions:
 
 ```sql
-function cont_get_ij(self object<container>!, i int!, j int!) int!;
+func cont_get_ij(self object<container>!, i int!, j int!) int!;
 declare proc cont_set_ij(self object<container>!, i int!, j int!, value int!);
 
 @op object<container> : array get as cont_get_ij;

@@ -33,7 +33,7 @@ These functions are written in regular C and provide for the ability to do opera
 you could create functions that allow you to read and write from a dictionary.  You can declare these functions like so:
 
 ```sql
-function dict_get_value(dict object, key_ text!) text;
+func dict_get_value(dict object, key_ text!) text;
 ```
 
 Such a function is not known to SQLite and therefore cannot appear in SQL statements.  CQL will enforce this.
@@ -46,7 +46,7 @@ this case, the dictionary continues to own the object.
 It is also possible to functions that create objects.  Such as this example:
 
 ```sql
-function dict_create() create object;
+func dict_create() create object;
 ```
 
 This declaration tells CQL that the function will create a new object for our use.  CQL does not retain the

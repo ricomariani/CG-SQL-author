@@ -449,7 +449,7 @@ The minimum requirement is that the language must be able to declare a functions
 and to call such functions a generic cursor construct that has the necessary shape info.  This form does the job:
 
 ```sql
-function cursor_hash(C cursor) long not null;
+func cursor_hash(C cursor) long!;
 ```
 
 And it can be used like so:

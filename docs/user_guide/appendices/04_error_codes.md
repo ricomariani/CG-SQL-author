@@ -892,9 +892,8 @@ Only forms with a string as the second argument are supported by SQLite.
 ### CQL0094: function not yet implemented 'function'
 
 The indicated function is not implemented in CQL.  Possibly you intended to
-declare it with `function` as an external function or `declare select
-function` as a sqlite builtin.  Note not all sqlite builtins are automatically
-declared.
+declare it with `function` as an external function or `select function` as a
+sqlite builtin.  Note not all sqlite builtins are automatically declared.
 
 -----
 
@@ -5460,7 +5459,7 @@ name that the aliased function references. For example:
 
 ```sql
 [[alias_of=foo]]
-function bar() int
+func bar() int;
 ```
 
 All subsequent calls to `bar()` in CQL will call the `foo()` function.

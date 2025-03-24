@@ -1954,7 +1954,8 @@ for instance, with these declarations:
 ```sql
 func new_builder() create object<list_builder>;
 func list_builder_add_int(arg1 object<list_builder>, arg2 int!) object<list_builder>;
-func list_builder_add_int_int(arg1 object<list_builder>, arg2 int!, arg3 int!) object<list_builder>;
+func list_builder_add_int_int(arg1 object<list_builder>, arg2 int!, arg3 int!)
+  object<list_builder>;
 func list_builder_add_real(arg1 object<list_builder>, arg2 real!) object<list_builder>;
 func list_builder_to_list(arg1 object<list_builder>) create object<list>;
 

@@ -11,6 +11,12 @@
 
 // Generated from linetest.sql:1
 
+// Generated from linetest.sql:1
+
+// Generated from linetest.sql:1
+
+// Generated from linetest.sql:1
+
 // Generated from linetest.sql:47
 extern cql_int32 proc_count;
 

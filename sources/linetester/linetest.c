@@ -24,10 +24,24 @@ extern cql_object_ref _Nonnull cql_extract_partition(cql_object_ref _Nonnull p, 
 extern cql_object_ref _Nonnull cql_string_dictionary_create(void);
 extern cql_bool cql_string_dictionary_add(cql_object_ref _Nonnull dict, cql_string_ref _Nonnull key, cql_string_ref _Nonnull value);
 extern cql_string_ref _Nullable cql_string_dictionary_find(cql_object_ref _Nonnull dict, cql_string_ref _Nullable key);
+extern cql_object_ref _Nonnull cql_long_dictionary_create(void);
+extern cql_bool cql_long_dictionary_add(cql_object_ref _Nonnull dict, cql_string_ref _Nonnull key, cql_int64 value);
+extern cql_nullable_int64 cql_long_dictionary_find(cql_object_ref _Nonnull dict, cql_string_ref _Nullable key);
+extern cql_object_ref _Nonnull cql_real_dictionary_create(void);
+extern cql_bool cql_real_dictionary_add(cql_object_ref _Nonnull dict, cql_string_ref _Nonnull key, cql_double value);
+extern cql_nullable_double cql_real_dictionary_find(cql_object_ref _Nonnull dict, cql_string_ref _Nullable key);
 extern cql_object_ref _Nonnull cql_object_dictionary_create(void);
 extern cql_bool cql_object_dictionary_add(cql_object_ref _Nonnull dict, cql_string_ref _Nonnull key, cql_object_ref _Nonnull value);
 extern cql_object_ref _Nullable cql_object_dictionary_find(cql_object_ref _Nonnull dict, cql_string_ref _Nullable key);
+extern cql_object_ref _Nonnull cql_blob_dictionary_create(void);
+extern cql_bool cql_blob_dictionary_add(cql_object_ref _Nonnull dict, cql_string_ref _Nonnull key, cql_blob_ref _Nonnull value);
+extern cql_blob_ref _Nullable cql_blob_dictionary_find(cql_object_ref _Nonnull dict, cql_string_ref _Nullable key);
 extern cql_string_ref _Nonnull cql_cursor_format(cql_dynamic_cursor *_Nonnull C);
+extern cql_int64 cql_cursor_hash(cql_dynamic_cursor *_Nonnull C);
+extern cql_bool cql_cursors_equal(cql_dynamic_cursor *_Nonnull l, cql_dynamic_cursor *_Nonnull r);
+extern cql_int32 cql_cursor_diff_index(cql_dynamic_cursor *_Nonnull l, cql_dynamic_cursor *_Nonnull r);
+extern cql_string_ref _Nullable cql_cursor_diff_col(cql_dynamic_cursor *_Nonnull l, cql_dynamic_cursor *_Nonnull r);
+extern cql_string_ref _Nullable cql_cursor_diff_val(cql_dynamic_cursor *_Nonnull l, cql_dynamic_cursor *_Nonnull r);
 extern cql_object_ref _Nonnull cql_box_int(cql_nullable_int32 x);
 extern cql_nullable_int32 cql_unbox_int(cql_object_ref _Nullable box);
 extern cql_object_ref _Nonnull cql_box_real(cql_nullable_double x);
@@ -48,8 +62,29 @@ extern cql_object_ref _Nonnull cql_string_list_set_at(cql_object_ref _Nonnull li
 extern cql_string_ref _Nullable cql_string_list_get_at(cql_object_ref _Nonnull list, cql_int32 index_);
 extern cql_int32 cql_string_list_count(cql_object_ref _Nonnull list);
 extern cql_object_ref _Nonnull cql_string_list_add(cql_object_ref _Nonnull list, cql_string_ref _Nonnull string);
+extern cql_object_ref _Nonnull cql_blob_list_create(void);
+extern cql_object_ref _Nonnull cql_blob_list_set_at(cql_object_ref _Nonnull list, cql_int32 index_, cql_blob_ref _Nonnull value_);
+extern cql_blob_ref _Nullable cql_blob_list_get_at(cql_object_ref _Nonnull list, cql_int32 index_);
+extern cql_int32 cql_blob_list_count(cql_object_ref _Nonnull list);
+extern cql_object_ref _Nonnull cql_blob_list_add(cql_object_ref _Nonnull list, cql_blob_ref _Nonnull value);
+extern cql_object_ref _Nonnull cql_object_list_create(void);
+extern cql_object_ref _Nonnull cql_object_list_set_at(cql_object_ref _Nonnull list, cql_int32 index_, cql_object_ref _Nonnull value_);
+extern cql_object_ref _Nullable cql_object_list_get_at(cql_object_ref _Nonnull list, cql_int32 index_);
+extern cql_int32 cql_object_list_count(cql_object_ref _Nonnull list);
+extern cql_object_ref _Nonnull cql_object_list_add(cql_object_ref _Nonnull list, cql_object_ref _Nonnull value);
+extern cql_object_ref _Nonnull cql_long_list_create(void);
+extern cql_object_ref _Nonnull cql_long_list_set_at(cql_object_ref _Nonnull list, cql_int32 index_, cql_int64 value_);
+extern cql_int64 cql_long_list_get_at(cql_object_ref _Nonnull list, cql_int32 index_);
+extern cql_int32 cql_long_list_count(cql_object_ref _Nonnull list);
+extern cql_object_ref _Nonnull cql_long_list_add(cql_object_ref _Nonnull list, cql_int64 value_);
+extern cql_object_ref _Nonnull cql_real_list_create(void);
+extern cql_object_ref _Nonnull cql_real_list_set_at(cql_object_ref _Nonnull list, cql_int32 index_, cql_double value_);
+extern cql_double cql_real_list_get_at(cql_object_ref _Nonnull list, cql_int32 index_);
+extern cql_int32 cql_real_list_count(cql_object_ref _Nonnull list);
+extern cql_object_ref _Nonnull cql_real_list_add(cql_object_ref _Nonnull list, cql_double value_);
 extern cql_int32 cql_cursor_column_count(cql_dynamic_cursor *_Nonnull C);
 extern cql_int32 cql_cursor_column_type(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
+extern cql_string_ref _Nullable cql_cursor_column_name(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
 extern cql_nullable_bool cql_cursor_get_bool(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
 extern cql_nullable_int32 cql_cursor_get_int(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
 extern cql_nullable_int64 cql_cursor_get_long(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
@@ -57,8 +92,26 @@ extern cql_nullable_double cql_cursor_get_real(cql_dynamic_cursor *_Nonnull C, c
 extern cql_string_ref _Nullable cql_cursor_get_text(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
 extern cql_blob_ref _Nullable cql_cursor_get_blob(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
 extern cql_object_ref _Nullable cql_cursor_get_object(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
+extern cql_string_ref _Nonnull cql_cursor_format_column(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
 extern CQL_WARN_UNUSED cql_code cql_throw(sqlite3 *_Nonnull _db_, cql_int32 code);
 
+extern CQL_WARN_UNUSED cql_code cql_cursor_to_blob(sqlite3 *_Nonnull _db_, cql_dynamic_cursor *_Nonnull C, cql_blob_ref _Nullable *_Nonnull result);
+
+extern CQL_WARN_UNUSED cql_code cql_cursor_from_blob(sqlite3 *_Nonnull _db_, cql_dynamic_cursor *_Nonnull C, cql_blob_ref _Nullable b);
+
+extern cql_blob_ref _Nonnull cql_blob_from_int(cql_string_ref _Nullable prefix, cql_int32 val);
+extern cql_string_ref _Nonnull cql_format_bool(cql_nullable_bool val);
+extern cql_string_ref _Nonnull cql_format_int(cql_nullable_int32 val);
+extern cql_string_ref _Nonnull cql_format_long(cql_nullable_int64 val);
+extern cql_string_ref _Nonnull cql_format_double(cql_nullable_double val);
+extern cql_string_ref _Nonnull cql_format_string(cql_string_ref _Nullable val);
+extern cql_string_ref _Nonnull cql_format_blob(cql_blob_ref _Nullable val);
+extern cql_string_ref _Nonnull cql_format_object(cql_object_ref _Nullable val);
+extern cql_string_ref _Nonnull cql_format_null(cql_nullable_bool ignored);
+extern cql_blob_ref _Nonnull cql_make_blob_stream(cql_object_ref _Nonnull list);
+extern CQL_WARN_UNUSED cql_code cql_cursor_from_blob_stream(sqlite3 *_Nonnull _db_, cql_dynamic_cursor *_Nonnull C, cql_blob_ref _Nullable b, cql_int32 i);
+
+extern cql_int32 cql_blob_stream_count(cql_blob_ref _Nonnull b);
 extern cql_object_ref _Nullable cql_fopen(cql_string_ref _Nonnull name, cql_string_ref _Nonnull mode);
 extern cql_string_ref _Nullable readline_object_file(cql_object_ref _Nonnull f);
 extern cql_int32 atoi_at_text(cql_string_ref _Nullable str, cql_int32 offset);
@@ -81,6 +134,27 @@ cql_string_literal(_literal_7_r_read_file, "r");
 /*
 [[builtin]]
 DECLARE PROC cql_throw (code INT!) USING TRANSACTION;
+*/
+
+// Generated from linetest.sql:1
+
+/*
+[[builtin]]
+DECLARE PROC cql_cursor_to_blob (C CURSOR, OUT result BLOB!) USING TRANSACTION;
+*/
+
+// Generated from linetest.sql:1
+
+/*
+[[builtin]]
+DECLARE PROC cql_cursor_from_blob (C CURSOR, b BLOB) USING TRANSACTION;
+*/
+
+// Generated from linetest.sql:1
+
+/*
+[[builtin]]
+DECLARE PROC cql_cursor_from_blob_stream (C CURSOR, b BLOB, i INT!) USING TRANSACTION;
 */
 
 //
@@ -185,8 +259,8 @@ cql_cleanup:
 [[private]]
 PROC add_linedata (source_ TEXT!, procname_ TEXT!, line_ INT!, data_ TEXT!, physical_line_ INT!)
 BEGIN
-  INSERT INTO linedata(source, procname, line, data, physical_line) VALUES(source_, procname_, line_, data_, physical_line_);
-  INSERT OR IGNORE INTO procs(procname) VALUES(procname_);
+  INSERT INTO linedata(source, procname, line, data, physical_line) VALUES (source_, procname_, line_, data_, physical_line_);
+  INSERT OR IGNORE INTO procs(procname) VALUES (procname_);
 END;
 */
 
@@ -197,7 +271,7 @@ static CQL_WARN_UNUSED cql_code add_linedata(sqlite3 *_Nonnull _db_, cql_string_
   sqlite3_stmt *_temp_stmt = NULL;
 
   _rc_ = cql_prepare(_db_, &_temp_stmt,
-    "INSERT INTO linedata(source, procname, line, data, physical_line) VALUES(?, ?, ?, ?, ?)");
+    "INSERT INTO linedata(source, procname, line, data, physical_line) VALUES (?, ?, ?, ?, ?)");
   cql_multibind(&_rc_, _db_, &_temp_stmt, 5,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, source_,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, procname_,
@@ -209,7 +283,7 @@ static CQL_WARN_UNUSED cql_code add_linedata(sqlite3 *_Nonnull _db_, cql_string_
   if (_rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
   cql_finalize_stmt(&_temp_stmt);
   _rc_ = cql_prepare(_db_, &_temp_stmt,
-    "INSERT OR IGNORE INTO procs(procname) VALUES(?)");
+    "INSERT OR IGNORE INTO procs(procname) VALUES (?)");
   cql_multibind(&_rc_, _db_, &_temp_stmt, 1,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, procname_);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -232,7 +306,12 @@ cql_cleanup:
 PROC dump_proc_records (source_ TEXT!, procname_ TEXT!)
 BEGIN
   CURSOR C FOR
-    SELECT *
+    SELECT
+        linedata.source,
+        linedata.procname,
+        linedata.line,
+        linedata.data,
+        linedata.physical_line
       FROM linedata
       WHERE procname = procname_ AND source = source_;
   LOOP FETCH C
@@ -263,7 +342,12 @@ static CQL_WARN_UNUSED cql_code dump_proc_records(sqlite3 *_Nonnull _db_, cql_st
   dump_proc_records_C_row C = { ._refs_count_ = 3, ._refs_offset_ = dump_proc_records_C_refs_offset };
 
   _rc_ = cql_prepare(_db_, &C_stmt,
-    "SELECT source, procname, line, data, physical_line "
+    "SELECT "
+        "linedata.source, "
+        "linedata.procname, "
+        "linedata.line, "
+        "linedata.data, "
+        "linedata.physical_line "
       "FROM linedata "
       "WHERE procname = ? AND source = ?");
   cql_multibind(&_rc_, _db_, &C_stmt, 2,
@@ -338,17 +422,27 @@ cql_cleanup:
 PROC compare_lines ()
 BEGIN
   CURSOR p FOR
-    SELECT *
+    SELECT procs.procname
       FROM procs;
   LOOP FETCH p
   BEGIN
     SET proc_count := proc_count + 1;
     CURSOR actual FOR
-      SELECT *
+      SELECT
+          linedata.source,
+          linedata.procname,
+          linedata.line,
+          linedata.data,
+          linedata.physical_line
         FROM linedata
         WHERE source = 'act' AND procname = p.procname;
     CURSOR expected FOR
-      SELECT *
+      SELECT
+          linedata.source,
+          linedata.procname,
+          linedata.line,
+          linedata.data,
+          linedata.physical_line
         FROM linedata
         WHERE source = 'exp' AND procname = p.procname;
     FETCH actual;
@@ -436,7 +530,7 @@ static CQL_WARN_UNUSED cql_code compare_lines(sqlite3 *_Nonnull _db_) {
   compare_lines_expected_row expected = { ._refs_count_ = 3, ._refs_offset_ = compare_lines_expected_refs_offset };
 
   _rc_ = cql_prepare(_db_, &p_stmt,
-    "SELECT procname "
+    "SELECT procs.procname "
       "FROM procs");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   for (;;) {
@@ -449,7 +543,12 @@ static CQL_WARN_UNUSED cql_code compare_lines(sqlite3 *_Nonnull _db_) {
     proc_count = proc_count + 1;
     cql_finalize_stmt(&actual_stmt);
     _rc_ = cql_prepare(_db_, &actual_stmt,
-      "SELECT source, procname, line, data, physical_line "
+      "SELECT "
+          "linedata.source, "
+          "linedata.procname, "
+          "linedata.line, "
+          "linedata.data, "
+          "linedata.physical_line "
         "FROM linedata "
         "WHERE source = 'act' AND procname = ?");
     cql_multibind(&_rc_, _db_, &actual_stmt, 1,
@@ -457,7 +556,12 @@ static CQL_WARN_UNUSED cql_code compare_lines(sqlite3 *_Nonnull _db_) {
     if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
     cql_finalize_stmt(&expected_stmt);
     _rc_ = cql_prepare(_db_, &expected_stmt,
-      "SELECT source, procname, line, data, physical_line "
+      "SELECT "
+          "linedata.source, "
+          "linedata.procname, "
+          "linedata.line, "
+          "linedata.data, "
+          "linedata.physical_line "
         "FROM linedata "
         "WHERE source = 'exp' AND procname = ?");
     cql_multibind(&_rc_, _db_, &expected_stmt, 1,
@@ -650,8 +754,7 @@ static CQL_WARN_UNUSED cql_code read_file(sqlite3 *_Nonnull _db_, cql_string_ref
   prefix2_len = len_text(prefix2);
   prefix3_len = len_text(prefix3);
   prefix4_len = len_text(prefix4);
-  cql_object_release(input_file);
-  input_file = cql_fopen(input_name, _literal_7_r_read_file);
+  cql_set_created_object_ref(&input_file, cql_fopen(input_name, _literal_7_r_read_file));
   if (!input_file) {
     cql_alloc_cstr(_cstr_5, input_name);
     printf("unable to open file '%s'\n", _cstr_5);
@@ -666,16 +769,14 @@ static CQL_WARN_UNUSED cql_code read_file(sqlite3 *_Nonnull _db_, cql_string_ref
   physical_line = 0;
   for (;;) {
     if (!(1)) break;
-    cql_string_release(data);
-    data = readline_object_file(input_file);
+    cql_set_created_string_ref(&data, readline_object_file(input_file));
     if (!data) {
       break;
     }
     physical_line = physical_line + 1;
     _tmp_bool_0 = starts_with_text(data, prefix1);
     if (_tmp_bool_0) {
-      cql_string_release(procname);
-      procname = after_text(data, prefix1_len);
+      cql_set_created_string_ref(&procname, after_text(data, prefix1_len));
       base_at_next_line = 1;
       line = 0;
     }

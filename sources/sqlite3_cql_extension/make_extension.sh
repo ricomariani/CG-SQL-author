@@ -16,6 +16,8 @@ O=$S/out
 R=$S/..
 T=.
 
+rm -f $O/cqlrt.o
+
 source $S/../common/test_helpers.sh || exit 1
 
 if [ -v SQLITE_PATH ]; then

@@ -10,6 +10,9 @@ S=$(cd $(dirname "$0"); pwd)
 O=$S/out
 R=$S/..
 
+rm -f $R/out/cqlrt.o
+rm -f $O/out/*.o
+
 CC=cc
 while [ "${1:-}" != "" ]; do
   if [ "$1" == "--use_gcc" ]; then

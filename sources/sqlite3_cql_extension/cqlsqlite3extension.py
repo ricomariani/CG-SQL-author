@@ -252,7 +252,7 @@ def emit_proc_c_func_body(proc, cmd_args):
         # function must return something but it's a void proc, so it will return null in a nullable int
         sql_result = "/*void*/ int"
 
-    ___(f"// DECLARE SELECT FUNCTION {proc_name}({sql_in_args}) {sql_result};")
+    ___(f"// SELECT FUNC {proc_name}({sql_in_args}) {sql_result};")
 
     if has_projection:
         ___(f"void call_{proc_name}(sqlite3 *_Nonnull db, int32_t argc, sqlite3_value *_Nonnull *_Nonnull argv, cql_result_set_ref *result)")

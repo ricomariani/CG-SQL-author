@@ -13,6 +13,10 @@
 #include <math.h>
 #include <sqlite3.h>
 
+#ifdef CQL_SQLITE_EXT
+#include <sqlite3ext.h>
+#endif
+
 #ifdef CQLRT_DIAG
 #include "diags.h"
 #endif

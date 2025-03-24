@@ -39,16 +39,23 @@ CQL_FILE= # The CQL file to compile
 CQL_ROOT_DIR= # Path to cql directory
 CQL=$CQL_ROOT_DIR/out/cql
 
+# Standard compile flags
+CC="cc -I$CQL_ROOT_DIR -I."
+set -e
+
 # Generate Query Plan Script
+echo $CQL --in $CQL_FILE --rt query_plan --cg go-qp.sql
 $CQL --in $CQL_FILE --rt query_plan --cg go-qp.sql
 
 # Compile and link CQL artifacts, with a main C file query_plan_test.c
 $CQL --in go-qp.sql --cg go-qp.h go-qp.c --dev
-cc -I$CQL_ROOT_DIR -I. -c $CQL_ROOT_DIR/query_plan_test.c go-qp.c
-cc -I$CQL_ROOT_DIR -I. -O -o go_query_plan go-qp.o query_plan_test.o $CQL_ROOT_DIR/cqlrt.c -lsqlite3
+
+$CC -c $CQL_ROOT_DIR/query_plan_test.c go-qp.c
+$CC -c go-qp.c
+$CC -o go-qp go-qp.o query_plan_test.o $CQL_ROOT_DIR/cqlrt.c -lsqlite3
 
 # Run and generate query plans
-./go_query_plan
+./go-qp
 ```
 
 In order to flexibily create query plans, CQL uses `--rt query_plan`

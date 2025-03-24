@@ -23,15 +23,19 @@ to do additional checks such as:
 * columns can't be renamed
 * columns can't be removed, only marked delete
 * new columns must be at the end of the table and marked with create
-* created columns have to be created in a schema version >= any that previously existed (no creating columns in the past)
-* nothing other than new columns at the end may be added to a table (e.g. new PK/UK is right out)
+* created columns have to be created in a schema version >= any that previously
+  existed (no creating columns in the past)
+* nothing other than new columns at the end may be added to a table (e.g. new
+  PK/UK is right out)
 * new tables must be marked create, deleted tables must be marked delete
 * new views must be marked create, deleted views must be marked delete
 * new indices must be marked create, deleted indices must be marked delete
 * an item that was previously a table/view cannot turn into the other one
 * version numbers in the annotations may not ever change
-* if any annotation has a migration proc associated with it, it cannot change to a different proc later
-* created tables, views, indices have to be created in a schema version >= any that previously existed (no creating tables in the past)
+* if any annotation has a migration proc associated with it, it cannot change to
+  a different proc later
+* created tables, views, indices have to be created in a schema version >= any
+  that previously existed (no creating tables in the past)
 * there may be other checks not mentioned here
 
 When checking `@recreate` tables against the previous schema version
@@ -45,7 +49,6 @@ for errors, these checks are done:
 * do not allow a table to go from `@create` or `@delete` state to `@recreate`
 
 All of these are statically checked.
-
 
 To use these tools, you must run CQL in a mode where it has both the
 proposed and existing schema in its input stream,
@@ -90,27 +93,27 @@ maintainable way, like so:
 ```
 
 Now importantly, in this configuration, everything that follows the
-`@previous_schema` directive does not actually contribute to the
-declared schema.  This means the `--rt schema` result type will not
-see it.   Because of this, you can do your checking operation like so:
+`@previous_schema` directive does not actually contribute to the declared
+schema.  This means the `--rt schema` result type will not see it. Because of
+this, you can do your checking operation like so:
 
 ```bash
 cc -E -x c prev_check.sql | cql --cg new_previous_schema.sql --rt schema
 ```
 
-The above command will generate the schema in new_previous_schema and,
-if this command succeeds, it's safe to replace the existing `previous.sql`
-with `new_previous_schema`.
+The above command will generate the schema in new_previous_schema and, if this
+command succeeds, it's safe to replace the existing `previous.sql` with
+`new_previous_schema`.
 
->NOTE: you can bootstrap the above by leaving off the `@previous_schema`
->and what follows to get your first previous schema from the command above.
+>NOTE: you can bootstrap the above by leaving off the `@previous_schema` and
+>what follows to get your first previous schema from the command above.
 
-Now, as you can imagine, comparing against the previous schema allows
-many more kinds of errors to be discovered.  What follows is a large
-chunk of the CQL tests for this area taken from the test files themselves.
-For easy visibility I have brought each fragment of current and previous
-schema close to each other and I show the errors that are reported.
-We start with a valid fragment and go from there.
+Now, as you can imagine, comparing against the previous schema allows many more
+kinds of errors to be discovered.  What follows is a large chunk of the CQL
+tests for this area taken from the test files themselves. For easy visibility I
+have brought each fragment of current and previous schema close to each other
+and I show the errors that are reported. We start with a valid fragment and go
+from there.
 
 
 #### Case 1 : No problemo
@@ -215,11 +218,13 @@ create table t_column_name_changed(id_ integer);
 -------
 create table t_column_name_changed(id int);
 
-Error at sem_test_prev.sql:33 : in str : column name is different between previous and current schema 'id_'
+Error at sem_test_prev.sql:33 : in str : column name is different between previous
+and current schema 'id_'
 ```
-You can't rename columns.  We could support this but it's a bit of a
-maintenance nightmare and logical renames are possible easily without
-doing physical renames.
+
+You can't rename columns. We could support this but it's a bit of a maintenance
+nightmare. On the other hand logical renames of columns in procedure results are
+trivial without doing physical renames.
 
 #### Case 9 : column type changed
 
@@ -228,7 +233,8 @@ create table t_column_type_changed(id real);
 -------
 create table t_column_type_changed(id int);
 
-Error at sem_test_prev.sql:36 : in str : column type is different between previous and current schema 'id'
+Error at sem_test_prev.sql:36 : in str : column type is different between previous
+and current schema 'id'
 ```
 You can't change the type of a column.
 
@@ -239,7 +245,8 @@ create table t_column_attribute_changed(id int!);
 -------
 create table t_column_attribute_changed(id int);
 
-Error at sem_test_prev.sql:39 : in str : column type is different between previous and current schema 'id'
+Error at sem_test_prev.sql:39 : in str : column type is different between previous
+and current schema 'id'
 ```
 Change of column attributes counts as a change of type.
 
@@ -250,7 +257,8 @@ create table t_column_delete_version_changed(id int, id2 integer @delete(1));
 -------
 create table t_column_delete_version_changed(id int, id2 integer @delete(2));
 
-Error at sem_test_prev.sql:42 : in str : column current delete version not equal to previous delete version 'id2'
+Error at sem_test_prev.sql:42 : in str : column current delete version not equal
+to previous delete version 'id2'
 ```
 
 You can't change the delete version after it has been set.
@@ -261,7 +269,8 @@ create table t_column_create_version_changed(id int, id2 integer @create(1));
 -------
 create table t_column_create_version_changed(id int, id2 integer @create(2));
 
-Error at sem_test_prev.sql:45 : in str : column current create version not equal to previous create version 'id2'
+Error at sem_test_prev.sql:45 : in str : column current create version not equal
+to previous create version 'id2'
 ```
 
 You can't change the create version after it has been set.
@@ -273,7 +282,8 @@ create table t_column_default_value_changed(id int, id2 int! default 2);
 -------
 create table t_column_default_value_changed(id int, id2 int! default 1);
 
-Error at sem_test_prev.sql:48 : in str : column current default value not equal to previous default value 'id2'
+Error at sem_test_prev.sql:48 : in str : column current default value not equal
+to previous default value 'id2'
 ```
 
 You can't change the default value after the fact.  There's no alter
@@ -372,7 +382,8 @@ Error at sem_test_prev.sql:72 : in create_table_stmt : table create statement at
 different than previous version 't_becomes_temp_table'
 ```
 
-Table became a TEMP table, there is no way to generate an alter statement for that.  Not allowed.
+Table became a TEMP table, there is no way to generate an alter statement for
+that.  Not allowed.
 
 #### Case 22 : create table and apply annotation (ok)
 
@@ -393,7 +404,8 @@ create table t_new_table_no_annotation(a int!, b int);
 Error at sem_test_prev.sql:85 : in create_table_stmt : new table must be added with
 @create(6) or later 't_new_table_no_annotation'
 ```
-This table was added with no annotation.  It has to have an @create and be at least version 6, the current largest.
+This table was added with no annotation.  It has to have an @create and be at
+least version 6, the current largest.
 
 #### Case 24 : create new table stale annotation (error)
 
@@ -405,7 +417,8 @@ create table t_new_table_stale_annotation(a int!, b int) @create(2);
 Error at sem_test_prev.sql:91 : in create_table_stmt : new table must be added with
 @create(6) or later 't_new_table_stale_annotation'
 ```
-The schema is already up to version 6.  You can't then add a table in the past at version 2.
+The schema is already up to version 6.  You can't then add a table in the past
+at version 2.
 
 #### Case 25 : add columns to table, marked `@create` and `@delete`
 
@@ -417,7 +430,9 @@ create table t_new_table_create_and_delete(a int!);
 Error at sem_test_prev.sql:96 : in col_def : table has newly added columns that are
 marked both @create and @delete 't_new_table_create_and_delete'
 ```
-Adding a column in the new version and marking it both create and delete is ... weird... don't do that.  Technically you can do it (sigh) but it must be done one step at a time.
+Adding a column in the new version and marking it both create and delete is ...
+weird... don't do that.  Technically you can do it (sigh) but it must be done
+one step at a time.
 
 #### Case 26 : add columns to table, marked `@create` correctly
 
@@ -615,8 +630,8 @@ Error at sem_test_prev.sql:142 : in str : column @delete procedure changed 'id2'
 
 You can't change the `@delete` migration stored proc on columns.
 
->NOTE: in addition to these errors, there are many more that do not
->require the previous schema which are also checked (not shown here).
->These comprise things like making sure the delete version is greater than
->the create version on any item.  There is a lot of "sensibility checking"
->that can happen without reference to the previous schema.
+>NOTE: in addition to these errors, there are many more that do not require the
+>previous schema which are also checked (not shown here). These comprise things
+>like making sure the delete version is greater than the create version on any
+>item.  There is a lot of "sensibility checking" that can happen without
+>reference to the previous schema.

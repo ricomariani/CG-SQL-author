@@ -21,9 +21,10 @@ done
 pushd $S >/dev/null
 
 echo "running demo"
+set +e
 bash ./demo.sh > $S/test.out
+cat $S/test.out
 
 on_diff_exit $S/test.out
 
-cat $S/test.out
 echo "test passed"

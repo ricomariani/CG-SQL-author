@@ -23,7 +23,7 @@ source $S/../common/test_helpers.sh || exit 1
 if [ -v SQLITE_PATH ]; then
   echo using external SQLITE ${SQLITE_PATH}
 else
-  SQLITE_PATH=../sqlite
+  SQLITE_PATH=$R/sqlite
 fi
 
 SQLITE_PATH=$(realpath $SQLITE_PATH)

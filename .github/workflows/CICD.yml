@@ -165,8 +165,8 @@ jobs:
       - name: Verify SQLite Build
         run: ${{ github.workspace }}/.cache/sqlite/sqlite3 --version
       - name: Build SQLite CQL Extension using Clang
-        run: SQLITE_PATH=${{ github.workspace }}/.cache/sqlite ./sqlite3_cql_extension/make.sh --use_clang
+        run: SQLITE_PATH=${{ github.workspace }}/.cache/sqlite ./sqlite3_cql_extension/make.sh --use_clang --non_interactive
       - name: Build SQLite CQL Extension using GCC
-        run: SQLITE_PATH=${{ github.workspace }}/.cache/sqlite ./sqlite3_cql_extension/make.sh --use_gcc
+        run: SQLITE_PATH=${{ github.workspace }}/.cache/sqlite ./sqlite3_cql_extension/make.sh --use_gcc --non_interactive
       - name: Test SQLite CQL Extension
         run: SQLITE_PATH=${{ github.workspace }}/.cache/sqlite ./sqlite3_cql_extension/test.sh --non_interactive

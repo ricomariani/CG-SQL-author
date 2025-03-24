@@ -39,10 +39,16 @@ while [ "${1:-}" != "" ]; do
     CC=clang
     export CC
     shift 1
+  elif [ "$1" == "--non_interactive" ]; then
+    # shellcheck disable=SC2034
+    NON_INTERACTIVE=1
+    export NON_INTERACTIVE
+    shift 1
   else
     echo "Usage: make.sh"
     echo "  --use_gcc"
     echo "  --use_clang"
+    echo "  --non_interactive"
     exit 1
   fi
 done
@@ -66,7 +72,6 @@ echo "# Generate SQLite3 extension"
 ../cqlsqlite3extension.py ./Sample.json --cql_header Sample.h > SampleInterop.c
 ls SampleInterop.c
 popd >/dev/null
-
 
 pushd $S >/dev/null
 
@@ -112,7 +117,8 @@ set +e
 $SQLITE_PATH/sqlite3 <test_extension.sql > out/test_extension.out 2>&1
 
 echo checking output difference
-
+set -e
 on_diff_exit ./test_extension.out
 
 echo "test passed"
+exit 0

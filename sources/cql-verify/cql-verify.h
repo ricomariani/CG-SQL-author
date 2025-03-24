@@ -15,6 +15,8 @@
 
 // Generated from cql-verify.sql:1
 
+// Generated from cql-verify.sql:1
+
 // Generated from cql-verify.sql:50
 extern cql_string_ref _Nullable sql_file_name;
 

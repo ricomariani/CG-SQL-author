@@ -108,6 +108,10 @@ extern cql_string_ref _Nonnull cql_format_string(cql_string_ref _Nullable val);
 extern cql_string_ref _Nonnull cql_format_blob(cql_blob_ref _Nullable val);
 extern cql_string_ref _Nonnull cql_format_object(cql_object_ref _Nullable val);
 extern cql_string_ref _Nonnull cql_format_null(cql_nullable_bool ignored);
+extern cql_blob_ref _Nonnull cql_make_blob_stream(cql_object_ref _Nonnull list);
+extern CQL_WARN_UNUSED cql_code cql_cursor_from_blob_stream(sqlite3 *_Nonnull _db_, cql_dynamic_cursor *_Nonnull C, cql_blob_ref _Nullable b, cql_int32 i);
+
+extern cql_int32 cql_blob_stream_count(cql_blob_ref _Nonnull b);
 extern cql_object_ref _Nullable cql_fopen(cql_string_ref _Nonnull name, cql_string_ref _Nonnull mode);
 extern cql_string_ref _Nullable readline_object_file(cql_object_ref _Nonnull f);
 extern cql_int32 atoi_at_text(cql_string_ref _Nullable str, cql_int32 offset);
@@ -156,6 +160,13 @@ DECLARE PROC cql_cursor_to_blob (C CURSOR, OUT result BLOB!) USING TRANSACTION;
 /*
 [[builtin]]
 DECLARE PROC cql_cursor_from_blob (C CURSOR, b BLOB) USING TRANSACTION;
+*/
+
+// Generated from cql-verify.sql:1
+
+/*
+[[builtin]]
+DECLARE PROC cql_cursor_from_blob_stream (C CURSOR, b BLOB, i INT!) USING TRANSACTION;
 */
 
 //

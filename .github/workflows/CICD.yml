@@ -128,6 +128,22 @@ jobs:
           sudo luarocks install lsqlite3
       - name: Execute test script using Clang in non-interactive mode
         run: ./test.sh --use_clang --non_interactive
+      - name: Execute test script using GCC in non-interactive mode
+        run: ./test.sh --use_gcc --non_interactive
+      - name: Execute test script in non-interactive mode (Using Amalgam)
+        run: ./test.sh --use_clang --use_amalgam --non_interactive
+      - name: Execute test script in non-interactive mode with Address Sanitizer enabled
+        run: ./test.sh --use_clang --use_asan --non_interactive
+      - name: Execute coverage script
+        run: ./cov.sh
+      - name: Playground
+        run: |
+          ../playground/play.sh || true
+          ../playground/play.sh hello
+          ../playground/play.sh build-cql-compiler
+          ../playground/play.sh build-everything
+          ../playground/play.sh run-data-access-demo
+          ../playground/play.sh run c ../playground/examples/*.sql
       - name: Cache SQLite Build Folder
         uses: actions/cache@v3
         with:
@@ -154,19 +170,3 @@ jobs:
         run: SQLITE_PATH=${{ github.workspace }}/.cache/sqlite ./sqlite3_cql_extension/make_extension.sh --use_gcc --non_interactive
       - name: Test SQLite CQL Extension
         run: SQLITE_PATH=${{ github.workspace }}/.cache/sqlite ./sqlite3_cql_extension/test.sh --non_interactive
-      - name: Execute test script using GCC in non-interactive mode
-        run: ./test.sh --use_gcc --non_interactive
-      - name: Execute test script in non-interactive mode (Using Amalgam)
-        run: ./test.sh --use_clang --use_amalgam --non_interactive
-      - name: Execute test script in non-interactive mode with Address Sanitizer enabled
-        run: ./test.sh --use_clang --use_asan --non_interactive
-      - name: Execute coverage script
-        run: ./cov.sh
-      - name: Playground
-        run: |
-          ../playground/play.sh || true
-          ../playground/play.sh hello
-          ../playground/play.sh build-cql-compiler
-          ../playground/play.sh build-everything
-          ../playground/play.sh run-data-access-demo
-          ../playground/play.sh run c ../playground/examples/*.sql

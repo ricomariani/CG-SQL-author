@@ -59,7 +59,7 @@ create table `use g1`(
 ) @recreate(gr1);
 
 [[deterministic]]
-declare select function my_func(x text) text;
+select func my_func(x text) text;
 
 create index gr1_index on g1(name);
 create index gr1_index2 on g1(name, `an id`);
@@ -157,7 +157,7 @@ end @delete(3);
 @end_schema_region;
 
 -- declare a select function that we will use
-declare select function filter_(id integer) integer not null;
+select func filter_(id integer) integer not null;
 
 -- now use that function in a trigger
 create trigger trig_with_filter

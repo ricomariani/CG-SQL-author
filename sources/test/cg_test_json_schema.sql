@@ -1755,7 +1755,7 @@ DECLARE PROC out_cursor_proc() OUT (A INTEGER NOT NULL, B INTEGER NOT NULL) USIN
 -- + "type" : "text",
 -- + "isNotNull" : 0
 -- - "createsObject"
-DECLARE SELECT FUNCTION tvf(id INTEGER) (foo TEXT);
+SELECT FUNC tvf(id INTEGER) (foo TEXT);
 
 -- TEST: no check text return
 -- + "name" : "NoCheckFunc",
@@ -1771,7 +1771,7 @@ FUNC NoCheckFunc NO CHECK TEXT!;
 -- + "type" : "real",
 -- + "isNotNull" : 0
 -- - "createsObject"
-DECLARE SELECT FUNCTION NoCheckSelectFunc NO CHECK REAL;
+SELECT FUNC NoCheckSelectFunc NO CHECK REAL;
 
 -- TEST: check proc with like as an argument
 -- + "args" : [

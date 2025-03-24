@@ -1,4 +1,4 @@
-declare select function foofoo(x integer) integer;
+select func foofoo(x integer) integer;
 create table foo(id integer, x text);
 
 create proc stuff()

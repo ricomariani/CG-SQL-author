@@ -8621,7 +8621,7 @@
 
     The statement ending at line XXXX
 
-    DECLARE INTERFACE interface1 (id INT)
+    INTERFACE interface1 (id INT)
 
     {
       "name" : "interface1",

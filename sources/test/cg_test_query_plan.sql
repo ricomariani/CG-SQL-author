@@ -167,10 +167,9 @@
 -- +   LET query_plan_trivial_object := trivial_object();
 -- +   LET query_plan_trivial_blob := trivial_blob();
 --
--- +   DECLARE stmt TEXT!;
--- +   SET stmt := "SELECT %\\n  FROM `table one`\\n  WHERE name = 'Nelly' AND id IN (SELECT id\\n  FROM t2\\n  WHERE id = 1\\nUNION\\nSELECT id\\n  FROM t3)\\n  ORDER BY name ASC";
+-- +   LET stmt := "SELECT %\\n  FROM `table one`\\n  WHERE name = 'Nelly' AND id IN (SELECT id\\n  FROM t2\\n  WHERE id = 1\\nUNION\\nSELECT id\\n  FROM t3)\\n  ORDER BY name ASC";
 -- +   INSERT INTO sql_temp(id, sql) VALUES(1, stmt);
--- +   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+-- +   CURSOR C FOR EXPLAIN QUERY PLAN
 -- +   SELECT %
 -- +     FROM `table one`
 -- +     WHERE name = 'Nelly' AND id IN (SELECT id
@@ -219,10 +218,9 @@
 -- +   LET query_plan_trivial_object := trivial_object();
 -- +   LET query_plan_trivial_blob := trivial_blob();
 --
--- +   DECLARE stmt TEXT!;
--- +   SET stmt := "WITH\\n  I (id) AS (CALL ids_from_string('1')),\\n  E (id) AS (CALL ids_from_string('1'))\\nSELECT %\\n  FROM C\\n  WHERE C.id IN (SELECT %\\n  FROM I) AND C.id NOT IN (SELECT %\\n  FROM E)";
+-- +   LET stmt := "WITH\\n  I (id) AS (CALL ids_from_string('1')),\\n  E (id) AS (CALL ids_from_string('1'))\\nSELECT %\\n  FROM C\\n  WHERE C.id IN (SELECT %\\n  FROM I) AND C.id NOT IN (SELECT %\\n  FROM E)";
 -- +   INSERT INTO sql_temp(id, sql) VALUES(21, stmt);
--- +   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+-- +   CURSOR C FOR EXPLAIN QUERY PLAN
 -- +   WITH
 -- +     I (id) AS (CALL ids_from_string('1')),
 -- +     E (id) AS (CALL ids_from_string('1'))
@@ -759,7 +757,7 @@ end;
 
 -- + LET query_plan_trivial_object := trivial_object();
 -- + LET query_plan_trivial_blob := trivial_blob();
--- + SET stmt := "SELECT %\\n  FROM (CALL simple_blob_fragment(nullable(trivial_blob())))";
+-- + LET stmt := "SELECT %\\n  FROM (CALL simple_blob_fragment(nullable(trivial_blob())))";
 proc blob_frag_user()
 BEGIN
   select * from (call simple_blob_fragment(external_blob_func()));
@@ -773,7 +771,7 @@ begin
   select 1 xx;
 end;
 
--- + SET stmt := "SELECT %\\n  FROM (CALL simple_object_fragment(nullable(trivial_object())))";
+-- + LET stmt := "SELECT %\\n  FROM (CALL simple_object_fragment(nullable(trivial_object())))";
 proc object_frag_user()
 BEGIN
   select * from (call simple_object_fragment(external_object_func()));

@@ -6,15 +6,15 @@
 -- schema crc -6837004499939777099
 
 -- declare facet helpers-- 
-DECLARE facet_data TYPE OBJECT<facet_data>;
-DECLARE test_facets facet_data;
+TYPE facet_data OBJECT<facet_data>;
+VAR test_facets facet_data;
 FUNC cql_facets_create() create facet_data!;
 FUNC cql_facet_add(facets facet_data, facet TEXT!, crc LONG!) BOOL!;
 FUNC cql_facet_upsert(facets facet_data, facet TEXT!, crc LONG!) BOOL!;
 FUNC cql_facet_find(facets facet_data, facet TEXT!) LONG!;
 
 -- declare recreate update helpers-- 
-DECLARE PROCEDURE cql_rebuild_recreate_group (tables TEXT!, indices TEXT!, deletes TEXT!, out result BOOL!) USING TRANSACTION;
+DECLARE PROC cql_rebuild_recreate_group (tables TEXT!, indices TEXT!, deletes TEXT!, out result BOOL!) USING TRANSACTION;
 -- declare sqlite_master -- 
 CREATE TABLE sqlite_master (
   type TEXT!,
@@ -210,7 +210,7 @@ CREATE TEMP TABLE test_cql_schema_facets_saved(
 );
 
 -- holds all the table definitions out of sqlite_master
-DECLARE test_tables_dict_ OBJECT<cql_string_dictionary>;
+VAR test_tables_dict_ OBJECT<cql_string_dictionary>;
 
 -- helper proc for creating the dictionary of table defs from sqlite_master
 [[private]]

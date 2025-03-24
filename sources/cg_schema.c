@@ -257,7 +257,7 @@ static void cg_schema_helpers(charbuf *decls) {
   bprintf(decls, ");\n\n");
 
   bprintf(decls, "-- holds all the table definitions out of sqlite_master\n");
-  bprintf(decls, "DECLARE %s_tables_dict_ OBJECT<cql_string_dictionary>;\n\n", global_proc_name);
+  bprintf(decls, "VAR %s_tables_dict_ OBJECT<cql_string_dictionary>;\n\n", global_proc_name);
 
   bprintf(decls, "-- helper proc for creating the dictionary of table defs from sqlite_master\n");
   bprintf(decls, "[[private]]\n");
@@ -362,8 +362,8 @@ static void cg_schema_emit_sqlite_master(charbuf *decls) {
 
 static void cg_schema_emit_facet_functions(charbuf *decls) {
   bprintf(decls, "-- declare facet helpers-- \n");
-  bprintf(decls, "DECLARE facet_data TYPE OBJECT<facet_data>;\n");
-  bprintf(decls, "DECLARE %s_facets facet_data;\n", global_proc_name);
+  bprintf(decls, "TYPE facet_data OBJECT<facet_data>;\n");
+  bprintf(decls, "VAR %s_facets facet_data;\n", global_proc_name);
   bprintf(decls, "FUNC cql_facets_create() create facet_data!;\n");
   bprintf(decls, "FUNC cql_facet_add(facets facet_data, facet TEXT!, crc LONG!) BOOL!;\n");
   bprintf(decls, "FUNC cql_facet_upsert(facets facet_data, facet TEXT!, crc LONG!) BOOL!;\n");
@@ -372,7 +372,7 @@ static void cg_schema_emit_facet_functions(charbuf *decls) {
 
 static void cg_schema_emit_recreate_update_functions(charbuf *decls) {
   bprintf(decls, "-- declare recreate update helpers-- \n");
-  bprintf(decls, "DECLARE PROCEDURE cql_rebuild_recreate_group (tables TEXT!, indices TEXT!, deletes TEXT!, out result BOOL!) USING TRANSACTION;\n");
+  bprintf(decls, "DECLARE PROC cql_rebuild_recreate_group (tables TEXT!, indices TEXT!, deletes TEXT!, out result BOOL!) USING TRANSACTION;\n");
 }
 
 // Emit all tables versioned as they before modifications, just the original items

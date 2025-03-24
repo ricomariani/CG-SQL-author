@@ -76,7 +76,7 @@ create index p_id on primary_as_column(id_);
 create index p_id_delete on primary_as_column(id_) @delete(1);
 
 [[deterministic]]
-declare select function is_declare_func_enabled() bool!;
+select func is_declare_func_enabled() bool!;
 
 create trigger `trigger on table a`
   before delete on `table a` when is_declare_func_enabled()

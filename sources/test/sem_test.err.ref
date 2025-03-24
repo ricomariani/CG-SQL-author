@@ -1669,8 +1669,8 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0069: name not found (proc had err
 test/sem_test.sql:XXXX:1: error: in declare_interface_stmt : CQL0478: interface name conflicts with procedure name 'proc4'
 test/sem_test.sql:XXXX:1: error: in str : CQL0190: duplicate column name 'id'
 Incompatible declarations found
-test/sem_test.sql:XXXX:1: error: in declare_interface_stmt : DECLARE INTERFACE interface1 (id INT)
-test/sem_test.sql:XXXX:1: error: in declare_interface_stmt : DECLARE INTERFACE interface1 (id INT, name TEXT)
+test/sem_test.sql:XXXX:1: error: in declare_interface_stmt : INTERFACE interface1 (id INT)
+test/sem_test.sql:XXXX:1: error: in declare_interface_stmt : INTERFACE interface1 (id INT, name TEXT)
 The above must be identical.
 test/sem_test.sql:XXXX:1: error: in declare_interface_stmt : CQL0479: interface declarations do not match 'interface1'
 test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0485: actual column types need to be the same as interface column types (expected integer; found integer notnull) 'id'

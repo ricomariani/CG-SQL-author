@@ -382,7 +382,7 @@ CSTR static best_shape_type_name(ast_node *shape) {
   CSTR obj_name = shape->sem->name;
 
   // "_select_" is the generic name used for structs that are otherwise unnamed.
-  // e.g.  "declare C cursor like select 1 x, 2 y"
+  // e.g.  "cursor C like select 1 x, 2 y"
   if (struct_name && strcmp("_select_", struct_name)) {
     return struct_name;
   }

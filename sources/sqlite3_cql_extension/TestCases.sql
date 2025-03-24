@@ -7,9 +7,10 @@ declare proc printf no check;
 
 @echo C, "extern const sqlite3_api_routines *sqlite3_api;\n";
 
--- auto  generateed by the python, simply `grep "DECLARE SELECT" out/SampleInterop.c | sed s/...//`
+-- auto  generateed by the python, simply `grep "SELECT FUNC" out/SampleInterop.c | sed s/...//`
 -- the prototype is emitted in a comment so you just strip it out
 -- see out/SampleInterop.c if this is unclear at all
+
 SELECT FUNC comprehensive_test1(`in__bool__not_null` bool!, `in__bool__nullable` bool, `in__real__not_null` real!, `in__real__nullable` real, `in__integer__not_null` integer!, `in__integer__nullable` integer, `in__long__not_null` long!, `in__long__nullable` long, `in__text__not_null` text!, `in__text__nullable` text, `in__blob__not_null` blob!, `in__blob__nullable` blob) (`result` text!);
 SELECT FUNC comprehensive_test2(`inout__bool__not_null` bool!, `inout__bool__nullable` bool, `inout__real__not_null` real!, `inout__real__nullable` real, `inout__integer__not_null` integer!, `inout__integer__nullable` integer, `inout__long__not_null` long!, `inout__long__nullable` long, `inout__text__not_null` text!, `inout__text__nullable` text, `inout__blob__not_null` blob!, `inout__blob__nullable` blob) (`result` text!);
 SELECT FUNC comprehensive_test3() (`result` text!);

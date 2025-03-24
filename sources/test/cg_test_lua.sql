@@ -2385,7 +2385,7 @@ begin
 end;
 
 -- declare a simple table-valued function
-declare select function ReadFromRowset(rowset Object<rowset>) (id integer);
+select func ReadFromRowset(rowset Object<rowset>) (id integer);
 
 -- TEST: use a table valued function that consumes an object
 -- + function rowset_object_reader(_db_, rowset)
@@ -5036,11 +5036,11 @@ end;
 
 -- TEST: declaration of an unchecked select function
 -- this is a no-op
-declare select function no_check_select_fun no check text;
+select func no_check_select_fun no check text;
 
 -- TEST: declaration of an unchecked table-valued select function
 -- this is a no-op
-declare select function no_check_select_table_valued_fun no check (t text);
+select func no_check_select_table_valued_fun no check (t text);
 
 -- for the next case
 proc simple_child_proc()

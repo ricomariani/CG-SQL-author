@@ -22507,37 +22507,37 @@ DECLARE PROC uses_broken_thing() (LIKE broken_thing ARGUMENTS);
 
 -- TEST: attempting to define interface with the same name as proc
 -- + {declare_interface_stmt}: err
-DECLARE INTERFACE proc4 (id INT);
+INTERFACE proc4 (id INT);
 
 -- TEST: attempting to define interface
 -- + {declare_interface_stmt}: interface1: { id: integer }
 -- - error:
-DECLARE INTERFACE interface1 (id INT);
+INTERFACE interface1 (id INT);
 
 -- TEST: attempting to redefine interface with the same signature
 -- + {declare_interface_stmt}: interface1: { id: integer }
 -- - error:
-DECLARE INTERFACE interface1 (id INT);
+INTERFACE interface1 (id INT);
 
 -- TEST: attempting to redefine column with the same name
 -- + error: % duplicate column name 'id'
 -- + {declare_interface_stmt}: err
 -- +1 error:
-DECLARE INTERFACE interface1 (id INT, id TEXT);
+INTERFACE interface1 (id INT, id TEXT);
 
 -- TEST: attempting to redefine interface with different signature
--- + error: % DECLARE INTERFACE interface1 (id INT)
--- + error: % DECLARE INTERFACE interface1 (id INT, name TEXT)
+-- + error: % INTERFACE interface1 (id INT)
+-- + error: % INTERFACE interface1 (id INT, name TEXT)
 -- + The above must be identical.
 -- + error: % interface declarations do not match 'interface1'
 -- + {declare_interface_stmt}: err
 -- +3 error:
-DECLARE INTERFACE interface1 (id INT, name TEXT);
+INTERFACE interface1 (id INT, name TEXT);
 
 -- TEST: attempting to define interface with two columns
 -- + {declare_interface_stmt}: interface2: { id: integer, name: text }
 -- - error:
-DECLARE INTERFACE interface2 (id INT, name TEXT);
+INTERFACE interface2 (id INT, name TEXT);
 
 -- TEST: this procedure uses interface for its args
 -- verify that the args are rewritten correctly
@@ -22668,8 +22668,8 @@ begin
    select 1 id, "2" name, 3 id2;
 end;
 
-DECLARE INTERFACE interface_base (foo OBJECT<interface1>);
-DECLARE INTERFACE interface_base_bad (foo OBJECT<also_not_an_interface>);
+INTERFACE interface_base (foo OBJECT<interface1>);
+INTERFACE interface_base_bad (foo OBJECT<also_not_an_interface>);
 
 -- TEST interface implemented is a subtype of the base, `interface2` is ok
 -- + {stmt_and_attr}: ok
@@ -22856,7 +22856,7 @@ declare procedure interface1 no check;
 
 -- TEST: redefining func as interface
 -- + {declare_interface_stmt}: err
-DECLARE INTERFACE maybe_create_func_text (id INT, name TEXT);
+INTERFACE maybe_create_func_text (id INT, name TEXT);
 
 -- TEST: try to declare a interface inside a proc
 -- + error: % declared interface must be top level 'foo'

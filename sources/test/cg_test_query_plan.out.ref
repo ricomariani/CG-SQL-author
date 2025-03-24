@@ -175,10 +175,9 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  DECLARE stmt TEXT!;
-  SET stmt := "SELECT `table one`.id, `table one`.name\\n  FROM `table one`\\n  WHERE name = 'Nelly' AND id IN (SELECT id\\n  FROM t2\\n  WHERE id = 1\\nUNION\\nSELECT id\\n  FROM t3)\\n  ORDER BY name ASC";
+  LET stmt := "SELECT `table one`.id, `table one`.name\\n  FROM `table one`\\n  WHERE name = 'Nelly' AND id IN (SELECT id\\n  FROM t2\\n  WHERE id = 1\\nUNION\\nSELECT id\\n  FROM t3)\\n  ORDER BY name ASC";
   INSERT INTO sql_temp(id, sql) VALUES(1, stmt);
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  CURSOR C FOR EXPLAIN QUERY PLAN
   SELECT `table one`.id, `table one`.name
     FROM `table one`
     WHERE name = 'Nelly' AND id IN (SELECT id
@@ -199,10 +198,9 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  DECLARE stmt TEXT!;
-  SET stmt := "SELECT is_declare_func_wall(id)\\n  FROM t4\\n  WHERE data = query_plan_trivial_blob";
+  LET stmt := "SELECT is_declare_func_wall(id)\\n  FROM t4\\n  WHERE data = query_plan_trivial_blob";
   INSERT INTO sql_temp(id, sql) VALUES(2, stmt);
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  CURSOR C FOR EXPLAIN QUERY PLAN
   SELECT is_declare_func_wall(id)
     FROM t4
     WHERE data = query_plan_trivial_blob;
@@ -217,10 +215,9 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  DECLARE stmt TEXT!;
-  SET stmt := "UPDATE `table one`\\n  SET id = 1, name = '1'\\n  WHERE name IN (SELECT T.NAME\\n    FROM t3 AS T)";
+  LET stmt := "UPDATE `table one`\\n  SET id = 1, name = '1'\\n  WHERE name IN (SELECT T.NAME\\n    FROM t3 AS T)";
   INSERT INTO sql_temp(id, sql) VALUES(3, stmt);
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  CURSOR C FOR EXPLAIN QUERY PLAN
   UPDATE `table one`
     SET id = 1, name = '1'
     WHERE name IN (SELECT T.NAME
@@ -236,10 +233,9 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  DECLARE stmt TEXT!;
-  SET stmt := "WITH\\n  some_cte (id, name) AS (\\n    SELECT T.id, T.name\\n      FROM t2 AS T\\n  )\\nUPDATE `table one`\\n  SET id = 1, name = '1'\\n  WHERE name IN (SELECT name\\n    FROM some_cte)";
+  LET stmt := "WITH\\n  some_cte (id, name) AS (\\n    SELECT T.id, T.name\\n      FROM t2 AS T\\n  )\\nUPDATE `table one`\\n  SET id = 1, name = '1'\\n  WHERE name IN (SELECT name\\n    FROM some_cte)";
   INSERT INTO sql_temp(id, sql) VALUES(4, stmt);
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  CURSOR C FOR EXPLAIN QUERY PLAN
   WITH
     some_cte (id, name) AS (
       SELECT T.id, T.name
@@ -260,10 +256,9 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  DECLARE stmt TEXT!;
-  SET stmt := "DELETE FROM `table one` WHERE name IN (SELECT foo.name\\n  FROM t2 AS foo\\n    INNER JOIN t3 USING (name))";
+  LET stmt := "DELETE FROM `table one` WHERE name IN (SELECT foo.name\\n  FROM t2 AS foo\\n    INNER JOIN t3 USING (name))";
   INSERT INTO sql_temp(id, sql) VALUES(5, stmt);
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  CURSOR C FOR EXPLAIN QUERY PLAN
   DELETE FROM `table one` WHERE name IN (SELECT foo.name
     FROM t2 AS foo
       INNER JOIN t3 USING (name));
@@ -278,10 +273,9 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  DECLARE stmt TEXT!;
-  SET stmt := "WITH\\n  some_cte (name) AS (\\n    SELECT foo.name\\n      FROM t2 AS foo\\n        INNER JOIN t3 USING (id)\\n  )\\nDELETE FROM `table one` WHERE name NOT IN (SELECT some_cte.name\\n  FROM some_cte)";
+  LET stmt := "WITH\\n  some_cte (name) AS (\\n    SELECT foo.name\\n      FROM t2 AS foo\\n        INNER JOIN t3 USING (id)\\n  )\\nDELETE FROM `table one` WHERE name NOT IN (SELECT some_cte.name\\n  FROM some_cte)";
   INSERT INTO sql_temp(id, sql) VALUES(6, stmt);
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  CURSOR C FOR EXPLAIN QUERY PLAN
   WITH
     some_cte (name) AS (
       SELECT foo.name
@@ -301,10 +295,9 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  DECLARE stmt TEXT!;
-  SET stmt := "INSERT INTO `table one`(id, name)\\n  SELECT foo.id, foo.name\\n    FROM t2 AS foo\\n  UNION ALL\\n  SELECT bar.id, bar.name\\n    FROM t3 AS bar";
+  LET stmt := "INSERT INTO `table one`(id, name)\\n  SELECT foo.id, foo.name\\n    FROM t2 AS foo\\n  UNION ALL\\n  SELECT bar.id, bar.name\\n    FROM t3 AS bar";
   INSERT INTO sql_temp(id, sql) VALUES(7, stmt);
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  CURSOR C FOR EXPLAIN QUERY PLAN
   INSERT INTO `table one`(id, name)
     SELECT foo.id, foo.name
       FROM t2 AS foo
@@ -322,10 +315,9 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  DECLARE stmt TEXT!;
-  SET stmt := "WITH\\n  some_cte (id, name) AS (\\n    SELECT T.id, T.name\\n      FROM t2 AS T\\n  )\\nINSERT INTO `table one`(id, name)\\n  SELECT some_cte.id, some_cte.name\\n    FROM some_cte";
+  LET stmt := "WITH\\n  some_cte (id, name) AS (\\n    SELECT T.id, T.name\\n      FROM t2 AS T\\n  )\\nINSERT INTO `table one`(id, name)\\n  SELECT some_cte.id, some_cte.name\\n    FROM some_cte";
   INSERT INTO sql_temp(id, sql) VALUES(8, stmt);
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  CURSOR C FOR EXPLAIN QUERY PLAN
   WITH
     some_cte (id, name) AS (
       SELECT T.id, T.name
@@ -345,10 +337,9 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  DECLARE stmt TEXT!;
-  SET stmt := "BEGIN";
+  LET stmt := "BEGIN";
   INSERT INTO sql_temp(id, sql) VALUES(9, stmt);
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  CURSOR C FOR EXPLAIN QUERY PLAN
   BEGIN;
   LOOP FETCH C
   BEGIN
@@ -361,10 +352,9 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  DECLARE stmt TEXT!;
-  SET stmt := "INSERT INTO `table one`(id, name)\\n  VALUES (1, 'Irene')\\nON CONFLICT (id)\\nDO UPDATE\\n  SET name = excluded.name || 'replace' || ' \\u00e2\\u0080\\u00a2 ' || '\\\\x01\\\\x02\\\\xA1\\\\x1b\\\\x00\\\\xg' || 'it''s high noon\\\\r\\\\n\\\\f\\\\b\\\\t\\\\v' || \\\"it's\\\" || name";
+  LET stmt := "INSERT INTO `table one`(id, name)\\n  VALUES (1, 'Irene')\\nON CONFLICT (id)\\nDO UPDATE\\n  SET name = excluded.name || 'replace' || ' \\u00e2\\u0080\\u00a2 ' || '\\\\x01\\\\x02\\\\xA1\\\\x1b\\\\x00\\\\xg' || 'it''s high noon\\\\r\\\\n\\\\f\\\\b\\\\t\\\\v' || \\\"it's\\\" || name";
   INSERT INTO sql_temp(id, sql) VALUES(10, stmt);
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  CURSOR C FOR EXPLAIN QUERY PLAN
   INSERT INTO `table one`(id, name)
     VALUES (1, 'Irene')
   ON CONFLICT (id)
@@ -381,10 +371,9 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  DECLARE stmt TEXT!;
-  SET stmt := "WITH\\n  some_cte (id, name) AS (\\n    SELECT 1, 'Irene'\\n  )\\nINSERT INTO `table one`(id, name)\\n  SELECT some_cte.id, some_cte.name\\n    FROM some_cte\\n    WHERE id = 1\\nON CONFLICT (id)\\nDO UPDATE\\n  SET name = excluded.name || 'replace' || ' \\u00e2\\u0080\\u00a2 ' || '\\\\x01\\\\x02\\\\xA1\\\\x1b\\\\x00\\\\xg' || 'it''s high noon\\\\r\\\\n\\\\f\\\\b\\\\t\\\\v' || \\\"it's\\\" || name";
+  LET stmt := "WITH\\n  some_cte (id, name) AS (\\n    SELECT 1, 'Irene'\\n  )\\nINSERT INTO `table one`(id, name)\\n  SELECT some_cte.id, some_cte.name\\n    FROM some_cte\\n    WHERE id = 1\\nON CONFLICT (id)\\nDO UPDATE\\n  SET name = excluded.name || 'replace' || ' \\u00e2\\u0080\\u00a2 ' || '\\\\x01\\\\x02\\\\xA1\\\\x1b\\\\x00\\\\xg' || 'it''s high noon\\\\r\\\\n\\\\f\\\\b\\\\t\\\\v' || \\\"it's\\\" || name";
   INSERT INTO sql_temp(id, sql) VALUES(11, stmt);
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  CURSOR C FOR EXPLAIN QUERY PLAN
   WITH
     some_cte (id, name) AS (
       SELECT 1, 'Irene'
@@ -407,10 +396,9 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  DECLARE stmt TEXT!;
-  SET stmt := "COMMIT";
+  LET stmt := "COMMIT";
   INSERT INTO sql_temp(id, sql) VALUES(12, stmt);
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  CURSOR C FOR EXPLAIN QUERY PLAN
   COMMIT;
   LOOP FETCH C
   BEGIN
@@ -423,10 +411,9 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  DECLARE stmt TEXT!;
-  SET stmt := "DROP TABLE IF EXISTS `table one`";
+  LET stmt := "DROP TABLE IF EXISTS `table one`";
   INSERT INTO sql_temp(id, sql) VALUES(13, stmt);
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  CURSOR C FOR EXPLAIN QUERY PLAN
   DROP TABLE IF EXISTS `table one`;
   LOOP FETCH C
   BEGIN
@@ -439,10 +426,9 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  DECLARE stmt TEXT!;
-  SET stmt := "DROP VIEW my_view";
+  LET stmt := "DROP VIEW my_view";
   INSERT INTO sql_temp(id, sql) VALUES(14, stmt);
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  CURSOR C FOR EXPLAIN QUERY PLAN
   DROP VIEW my_view;
   LOOP FETCH C
   BEGIN
@@ -455,10 +441,9 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  DECLARE stmt TEXT!;
-  SET stmt := "DROP INDEX `table one index`";
+  LET stmt := "DROP INDEX `table one index`";
   INSERT INTO sql_temp(id, sql) VALUES(15, stmt);
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  CURSOR C FOR EXPLAIN QUERY PLAN
   DROP INDEX `table one index`;
   LOOP FETCH C
   BEGIN
@@ -471,10 +456,9 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  DECLARE stmt TEXT!;
-  SET stmt := "WITH\\n  some_cte (name) AS (\\n    SELECT t2.name\\n      FROM t2\\n        INNER JOIN t3 USING (id)\\n  )\\nSELECT some_cte.name\\n  FROM some_cte";
+  LET stmt := "WITH\\n  some_cte (name) AS (\\n    SELECT t2.name\\n      FROM t2\\n        INNER JOIN t3 USING (id)\\n  )\\nSELECT some_cte.name\\n  FROM some_cte";
   INSERT INTO sql_temp(id, sql) VALUES(16, stmt);
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  CURSOR C FOR EXPLAIN QUERY PLAN
   WITH
     some_cte (name) AS (
       SELECT t2.name
@@ -494,10 +478,9 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  DECLARE stmt TEXT!;
-  SET stmt := "SELECT array_num_at(ptr(query_plan_trivial_object), id) AS idx\\n  FROM `table one`";
+  LET stmt := "SELECT array_num_at(ptr(query_plan_trivial_object), id) AS idx\\n  FROM `table one`";
   INSERT INTO sql_temp(id, sql) VALUES(17, stmt);
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  CURSOR C FOR EXPLAIN QUERY PLAN
   SELECT array_num_at(ptr(query_plan_trivial_object), id) AS idx
     FROM `table one`;
   LOOP FETCH C
@@ -511,11 +494,10 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  DECLARE stmt TEXT!;
-  SET stmt := "SELECT scan_ok.id\\n  FROM scan_ok";
+  LET stmt := "SELECT scan_ok.id\\n  FROM scan_ok";
   INSERT INTO sql_temp(id, sql) VALUES(18, stmt);
   INSERT INTO ok_table_scan(sql_id, proc_name, table_names) VALUES(18, "use_ok_table_scan_attr", "#scan_ok#,#t3#");
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  CURSOR C FOR EXPLAIN QUERY PLAN
   SELECT scan_ok.id
     FROM scan_ok;
   LOOP FETCH C
@@ -529,10 +511,9 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  DECLARE stmt TEXT!;
-  SET stmt := "SELECT 1 AS n\\n  FROM foo_,\\n    _foo";
+  LET stmt := "SELECT 1 AS n\\n  FROM foo_,\\n    _foo";
   INSERT INTO sql_temp(id, sql) VALUES(19, stmt);
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  CURSOR C FOR EXPLAIN QUERY PLAN
   SELECT 1 AS n
     FROM foo_,
       _foo;
@@ -547,10 +528,9 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  DECLARE stmt TEXT!;
-  SET stmt := "SELECT ifnull(nullable(1), 42) AS nullable_result";
+  LET stmt := "SELECT ifnull(nullable(1), 42) AS nullable_result";
   INSERT INTO sql_temp(id, sql) VALUES(20, stmt);
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  CURSOR C FOR EXPLAIN QUERY PLAN
   SELECT ifnull(nullable(1), 42) AS nullable_result;
   LOOP FETCH C
   BEGIN
@@ -588,10 +568,9 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  DECLARE stmt TEXT!;
-  SET stmt := "WITH\\n  I (id) AS (CALL ids_from_string('1')),\\n  E (id) AS (CALL ids_from_string('1'))\\nSELECT C.id, C.name\\n  FROM C\\n  WHERE C.id IN (SELECT I.id\\n  FROM I) AND C.id NOT IN (SELECT E.id\\n  FROM E)";
+  LET stmt := "WITH\\n  I (id) AS (CALL ids_from_string('1')),\\n  E (id) AS (CALL ids_from_string('1'))\\nSELECT C.id, C.name\\n  FROM C\\n  WHERE C.id IN (SELECT I.id\\n  FROM I) AND C.id NOT IN (SELECT E.id\\n  FROM E)";
   INSERT INTO sql_temp(id, sql) VALUES(21, stmt);
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  CURSOR C FOR EXPLAIN QUERY PLAN
   WITH
     I (id) AS (CALL ids_from_string('1')),
     E (id) AS (CALL ids_from_string('1'))
@@ -655,10 +634,9 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  DECLARE stmt TEXT!;
-  SET stmt := "WITH\\n  frag (val) AS (CALL frag(1))\\nSELECT frag.val\\n  FROM frag";
+  LET stmt := "WITH\\n  frag (val) AS (CALL frag(1))\\nSELECT frag.val\\n  FROM frag";
   INSERT INTO sql_temp(id, sql) VALUES(22, stmt);
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  CURSOR C FOR EXPLAIN QUERY PLAN
   WITH
     frag (val) AS (CALL frag(1))
   SELECT frag.val
@@ -674,10 +652,9 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  DECLARE stmt TEXT!;
-  SET stmt := "WITH\\n  frag (val) AS (CALL frag(1))\\nSELECT frag.val\\n  FROM frag";
+  LET stmt := "WITH\\n  frag (val) AS (CALL frag(1))\\nSELECT frag.val\\n  FROM frag";
   INSERT INTO sql_temp(id, sql) VALUES(23, stmt);
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  CURSOR C FOR EXPLAIN QUERY PLAN
   WITH
     frag (val) AS (CALL frag(1))
   SELECT frag.val
@@ -693,10 +670,9 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  DECLARE stmt TEXT!;
-  SET stmt := "SELECT\\n    one.id,\\n    one.t,\\n    one.b,\\n    one.r,\\n    two.id AS id_,\\n    two.t AS t_,\\n    two.b AS b_,\\n    two.r AS r_\\n  FROM select_virtual_table AS one,\\n    select_virtual_table AS two";
+  LET stmt := "SELECT\\n    one.id,\\n    one.t,\\n    one.b,\\n    one.r,\\n    two.id AS id_,\\n    two.t AS t_,\\n    two.b AS b_,\\n    two.r AS r_\\n  FROM select_virtual_table AS one,\\n    select_virtual_table AS two";
   INSERT INTO sql_temp(id, sql) VALUES(24, stmt);
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  CURSOR C FOR EXPLAIN QUERY PLAN
   SELECT
       one.id,
       one.t,
@@ -719,10 +695,9 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  DECLARE stmt TEXT!;
-  SET stmt := "WITH\\n  backed (rowid, id, name) AS (CALL _backed())\\nSELECT backed.id, backed.name\\n  FROM backed\\n  WHERE name = 'x'";
+  LET stmt := "WITH\\n  backed (rowid, id, name) AS (CALL _backed())\\nSELECT backed.id, backed.name\\n  FROM backed\\n  WHERE name = 'x'";
   INSERT INTO sql_temp(id, sql) VALUES(25, stmt);
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  CURSOR C FOR EXPLAIN QUERY PLAN
   WITH
     backed (rowid, id, name) AS (CALL _backed())
   SELECT backed.id, backed.name
@@ -739,10 +714,9 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  DECLARE stmt TEXT!;
-  SET stmt := "SELECT CAST(1L AS INT)";
+  LET stmt := "SELECT CAST(1L AS INT)";
   INSERT INTO sql_temp(id, sql) VALUES(26, stmt);
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  CURSOR C FOR EXPLAIN QUERY PLAN
   SELECT CAST(1L AS INT);
   LOOP FETCH C
   BEGIN
@@ -755,10 +729,9 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  DECLARE stmt TEXT!;
-  SET stmt := "SELECT CAST(1.0 AS INT)";
+  LET stmt := "SELECT CAST(1.0 AS INT)";
   INSERT INTO sql_temp(id, sql) VALUES(27, stmt);
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  CURSOR C FOR EXPLAIN QUERY PLAN
   SELECT CAST(1.0 AS INT);
   LOOP FETCH C
   BEGIN
@@ -771,10 +744,9 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  DECLARE stmt TEXT!;
-  SET stmt := "SELECT CAST(1 AS REAL)";
+  LET stmt := "SELECT CAST(1 AS REAL)";
   INSERT INTO sql_temp(id, sql) VALUES(28, stmt);
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  CURSOR C FOR EXPLAIN QUERY PLAN
   SELECT CAST(1 AS REAL);
   LOOP FETCH C
   BEGIN
@@ -787,10 +759,9 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  DECLARE stmt TEXT!;
-  SET stmt := "SELECT CAST(true AS INT)";
+  LET stmt := "SELECT CAST(true AS INT)";
   INSERT INTO sql_temp(id, sql) VALUES(29, stmt);
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  CURSOR C FOR EXPLAIN QUERY PLAN
   SELECT CAST(true AS INT);
   LOOP FETCH C
   BEGIN
@@ -809,10 +780,9 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  DECLARE stmt TEXT!;
-  SET stmt := "SELECT _select_.val\\n  FROM (CALL notnull_int_frag(1))";
+  LET stmt := "SELECT _select_.val\\n  FROM (CALL notnull_int_frag(1))";
   INSERT INTO sql_temp(id, sql) VALUES(30, stmt);
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  CURSOR C FOR EXPLAIN QUERY PLAN
   SELECT _select_.val
     FROM (CALL notnull_int_frag(1));
   LOOP FETCH C
@@ -826,10 +796,9 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  DECLARE stmt TEXT!;
-  SET stmt := "SELECT stuff() AS x, notnull_int_frag(1) AS y, T1.val\\n  FROM (CALL notnull_int_frag(1 + 1)) AS T1";
+  LET stmt := "SELECT stuff() AS x, notnull_int_frag(1) AS y, T1.val\\n  FROM (CALL notnull_int_frag(1 + 1)) AS T1";
   INSERT INTO sql_temp(id, sql) VALUES(31, stmt);
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  CURSOR C FOR EXPLAIN QUERY PLAN
   SELECT stuff() AS x, notnull_int_frag(1) AS y, T1.val
     FROM (CALL notnull_int_frag(1 + 1)) AS T1;
   LOOP FETCH C
@@ -849,10 +818,9 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  DECLARE stmt TEXT!;
-  SET stmt := "SELECT _select_.xx\\n  FROM (CALL simple_blob_fragment(nullable(trivial_blob())))";
+  LET stmt := "SELECT _select_.xx\\n  FROM (CALL simple_blob_fragment(nullable(trivial_blob())))";
   INSERT INTO sql_temp(id, sql) VALUES(32, stmt);
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  CURSOR C FOR EXPLAIN QUERY PLAN
   SELECT _select_.xx
     FROM (CALL simple_blob_fragment(nullable(trivial_blob())));
   LOOP FETCH C
@@ -872,10 +840,9 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  DECLARE stmt TEXT!;
-  SET stmt := "SELECT _select_.xx\\n  FROM (CALL simple_object_fragment(nullable(trivial_object())))";
+  LET stmt := "SELECT _select_.xx\\n  FROM (CALL simple_object_fragment(nullable(trivial_object())))";
   INSERT INTO sql_temp(id, sql) VALUES(33, stmt);
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  CURSOR C FOR EXPLAIN QUERY PLAN
   SELECT _select_.xx
     FROM (CALL simple_object_fragment(nullable(trivial_object())));
   LOOP FETCH C
@@ -904,10 +871,9 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  DECLARE stmt TEXT!;
-  SET stmt := "WITH\\n  qp_take_blob (inner_a) AS (CALL qp_take_blob(nullable(query_plan_trivial_blob)))\\nSELECT qp_take_blob.inner_a\\n  FROM qp_take_blob";
+  LET stmt := "WITH\\n  qp_take_blob (inner_a) AS (CALL qp_take_blob(nullable(query_plan_trivial_blob)))\\nSELECT qp_take_blob.inner_a\\n  FROM qp_take_blob";
   INSERT INTO sql_temp(id, sql) VALUES(34, stmt);
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  CURSOR C FOR EXPLAIN QUERY PLAN
   WITH
     qp_take_blob (inner_a) AS (CALL qp_take_blob(nullable(query_plan_trivial_blob)))
   SELECT qp_take_blob.inner_a
@@ -923,10 +889,9 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  DECLARE stmt TEXT!;
-  SET stmt := "WITH\\n  qp_take_inner_blob (inner_a) AS (CALL qp_take_inner_blob(nullable(query_plan_trivial_blob)))\\nSELECT qp_take_inner_blob.inner_a\\n  FROM qp_take_inner_blob";
+  LET stmt := "WITH\\n  qp_take_inner_blob (inner_a) AS (CALL qp_take_inner_blob(nullable(query_plan_trivial_blob)))\\nSELECT qp_take_inner_blob.inner_a\\n  FROM qp_take_inner_blob";
   INSERT INTO sql_temp(id, sql) VALUES(35, stmt);
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  CURSOR C FOR EXPLAIN QUERY PLAN
   WITH
     qp_take_inner_blob (inner_a) AS (CALL qp_take_inner_blob(nullable(query_plan_trivial_blob)))
   SELECT qp_take_inner_blob.inner_a
@@ -942,10 +907,9 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  DECLARE stmt TEXT!;
-  SET stmt := "SELECT nullable(query_plan_trivial_blob) AS foo";
+  LET stmt := "SELECT nullable(query_plan_trivial_blob) AS foo";
   INSERT INTO sql_temp(id, sql) VALUES(36, stmt);
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  CURSOR C FOR EXPLAIN QUERY PLAN
   SELECT nullable(query_plan_trivial_blob) AS foo;
   LOOP FETCH C
   BEGIN
@@ -971,10 +935,9 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  DECLARE stmt TEXT!;
-  SET stmt := "SELECT _select_.x\\n  FROM (CALL outer_frag())";
+  LET stmt := "SELECT _select_.x\\n  FROM (CALL outer_frag())";
   INSERT INTO sql_temp(id, sql) VALUES(37, stmt);
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  CURSOR C FOR EXPLAIN QUERY PLAN
   SELECT _select_.x
     FROM (CALL outer_frag());
   LOOP FETCH C
@@ -988,10 +951,9 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  DECLARE stmt TEXT!;
-  SET stmt := "SELECT alias.id, alias.name\\n  FROM `table one` AS alias";
+  LET stmt := "SELECT alias.id, alias.name\\n  FROM `table one` AS alias";
   INSERT INTO sql_temp(id, sql) VALUES(38, stmt);
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  CURSOR C FOR EXPLAIN QUERY PLAN
   SELECT alias.id, alias.name
     FROM `table one` AS alias;
   LOOP FETCH C
@@ -1005,10 +967,9 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  DECLARE stmt TEXT!;
-  SET stmt := "SELECT alias.rowid\\n  FROM `table one` AS alias";
+  LET stmt := "SELECT alias.rowid\\n  FROM `table one` AS alias";
   INSERT INTO sql_temp(id, sql) VALUES(39, stmt);
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  CURSOR C FOR EXPLAIN QUERY PLAN
   SELECT alias.rowid
     FROM `table one` AS alias;
   LOOP FETCH C
@@ -1022,10 +983,9 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  DECLARE stmt TEXT!;
-  SET stmt := "SELECT view.id, view.name, view.id2\\n  FROM my_view_using_table_alias AS view";
+  LET stmt := "SELECT view.id, view.name, view.id2\\n  FROM my_view_using_table_alias AS view";
   INSERT INTO sql_temp(id, sql) VALUES(40, stmt);
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  CURSOR C FOR EXPLAIN QUERY PLAN
   SELECT view.id, view.name, view.id2
     FROM my_view_using_table_alias AS view;
   LOOP FETCH C

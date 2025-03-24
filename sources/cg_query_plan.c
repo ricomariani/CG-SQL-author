@@ -311,8 +311,7 @@ static void cg_qp_explain_query_stmt(ast_node *stmt) {
   // The C encoded will be unescaped when it is compiled and the JSON goes directly to the output
   // so that we correctly generate a JSON fragment as a result of running this code.  The JSON
   // string has escaped any quotes etc. that were in the original SQL.
-  bprintf(&body, "DECLARE stmt TEXT!;\n");
-  bprintf(&body, "SET stmt := %s;\n", c_str.ptr);
+  bprintf(&body, "LET stmt := %s;\n", c_str.ptr);
 
   bprintf(&body, "INSERT INTO sql_temp(id, sql) VALUES(%d, stmt);\n", sql_stmt_count);
   if (current_procedure_name && current_ok_table_scan && current_ok_table_scan->used > 1) {
@@ -324,7 +323,7 @@ static void cg_qp_explain_query_stmt(ast_node *stmt) {
       current_ok_table_scan->ptr
     );
   }
-  bprintf(&body, "DECLARE C CURSOR FOR EXPLAIN QUERY PLAN\n");
+  bprintf(&body, "CURSOR C FOR EXPLAIN QUERY PLAN\n");
   bprintf(&body, "%s;\n", sql.ptr);
   bprintf(&body, "LOOP FETCH C\n");
   bprintf(&body, "BEGIN\n");

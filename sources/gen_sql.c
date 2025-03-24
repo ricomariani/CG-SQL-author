@@ -4391,7 +4391,7 @@ cql_noexport void gen_declare_interface_stmt(ast_node *ast) {
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
   EXTRACT_NOTNULL(typed_names, proc_params_stmts->right);
 
-  gen_printf("DECLARE INTERFACE %s", name);
+  gen_printf("INTERFACE %s", name);
 
   gen_printf(" (");
   gen_typed_names(typed_names);

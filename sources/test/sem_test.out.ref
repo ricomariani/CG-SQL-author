@@ -86288,7 +86288,7 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0069: name not found (proc had err
 
 The statement ending at line XXXX
 
-DECLARE INTERFACE proc4 (id INT);
+INTERFACE proc4 (id INT);
 
 test/sem_test.sql:XXXX:1: error: in declare_interface_stmt : CQL0478: interface name conflicts with procedure name 'proc4'
 
@@ -86302,7 +86302,7 @@ test/sem_test.sql:XXXX:1: error: in declare_interface_stmt : CQL0478: interface 
 
 The statement ending at line XXXX
 
-DECLARE INTERFACE interface1 (id INT);
+INTERFACE interface1 (id INT);
 
   {declare_interface_stmt}: interface1: { id: integer }
   | {name interface1}
@@ -86314,7 +86314,7 @@ DECLARE INTERFACE interface1 (id INT);
 
 The statement ending at line XXXX
 
-DECLARE INTERFACE interface1 (id INT);
+INTERFACE interface1 (id INT);
 
   {declare_interface_stmt}: interface1: { id: integer } alias
   | {name interface1}
@@ -86326,7 +86326,7 @@ DECLARE INTERFACE interface1 (id INT);
 
 The statement ending at line XXXX
 
-DECLARE INTERFACE interface1 (id INT, id TEXT);
+INTERFACE interface1 (id INT, id TEXT);
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0190: duplicate column name 'id'
 
@@ -86344,11 +86344,11 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0190: duplicate column name 'id'
 
 The statement ending at line XXXX
 
-DECLARE INTERFACE interface1 (id INT, name TEXT);
+INTERFACE interface1 (id INT, name TEXT);
 
 Incompatible declarations found
-test/sem_test.sql:XXXX:1: error: in declare_interface_stmt : DECLARE INTERFACE interface1 (id INT)
-test/sem_test.sql:XXXX:1: error: in declare_interface_stmt : DECLARE INTERFACE interface1 (id INT, name TEXT)
+test/sem_test.sql:XXXX:1: error: in declare_interface_stmt : INTERFACE interface1 (id INT)
+test/sem_test.sql:XXXX:1: error: in declare_interface_stmt : INTERFACE interface1 (id INT, name TEXT)
 The above must be identical.
 test/sem_test.sql:XXXX:1: error: in declare_interface_stmt : CQL0479: interface declarations do not match 'interface1'
 
@@ -86366,7 +86366,7 @@ test/sem_test.sql:XXXX:1: error: in declare_interface_stmt : CQL0479: interface 
 
 The statement ending at line XXXX
 
-DECLARE INTERFACE interface2 (id INT, name TEXT);
+INTERFACE interface2 (id INT, name TEXT);
 
   {declare_interface_stmt}: interface2: { id: integer, name: text }
   | {name interface2}
@@ -86823,7 +86823,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0481: proc name conflicts with inte
 
 The statement ending at line XXXX
 
-DECLARE INTERFACE interface_foo1 (id INT!, name TEXT!);
+INTERFACE interface_foo1 (id INT!, name TEXT!);
 
   {declare_interface_stmt}: interface_foo1: { id: integer notnull, name: text notnull }
   | {name interface_foo1}
@@ -86841,7 +86841,7 @@ DECLARE INTERFACE interface_foo1 (id INT!, name TEXT!);
 
 The statement ending at line XXXX
 
-DECLARE INTERFACE interface_foo2 (id2 INT!, name TEXT!);
+INTERFACE interface_foo2 (id2 INT!, name TEXT!);
 
   {declare_interface_stmt}: interface_foo2: { id2: integer notnull, name: text notnull }
   | {name interface_foo2}
@@ -86962,7 +86962,7 @@ END;
 
 The statement ending at line XXXX
 
-DECLARE INTERFACE interface_base (foo OBJECT<interface1>);
+INTERFACE interface_base (foo OBJECT<interface1>);
 
   {declare_interface_stmt}: interface_base: { foo: object<interface1> }
   | {name interface_base}
@@ -86975,7 +86975,7 @@ DECLARE INTERFACE interface_base (foo OBJECT<interface1>);
 
 The statement ending at line XXXX
 
-DECLARE INTERFACE interface_base_bad (foo OBJECT<also_not_an_interface>);
+INTERFACE interface_base_bad (foo OBJECT<also_not_an_interface>);
 
   {declare_interface_stmt}: interface_base_bad: { foo: object<also_not_an_interface> }
   | {name interface_base_bad}
@@ -87430,7 +87430,7 @@ test/sem_test.sql:XXXX:1: error: in declare_proc_no_check_stmt : CQL0481: proc n
 
 The statement ending at line XXXX
 
-DECLARE INTERFACE maybe_create_func_text (id INT, name TEXT);
+INTERFACE maybe_create_func_text (id INT, name TEXT);
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0477: interface name conflicts with func name 'maybe_create_func_text'
 
@@ -87450,7 +87450,7 @@ The statement ending at line XXXX
 
 PROC nested_interface_wrapper ()
 BEGIN
-  DECLARE INTERFACE foo (LIKE interface1);
+  INTERFACE foo (LIKE interface1);
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0480: declared interface must be top level 'foo'
@@ -91009,7 +91009,7 @@ CREATE TABLE larger_table(
 
 The statement ending at line XXXX
 
-DECLARE INTERFACE smaller_interface (a INT, b INT);
+INTERFACE smaller_interface (a INT, b INT);
 
   {declare_interface_stmt}: smaller_interface: { a: integer, b: integer }
   | {name smaller_interface}

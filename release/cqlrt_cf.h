@@ -90,7 +90,7 @@ typedef CFDataRef cql_blob_ref ;
 void cql_blob_retain(cql_blob_ref _Nullable obj);
 void cql_blob_release(cql_blob_ref _Nullable obj);
 void *_Nonnull cql_get_blob_bytes(cql_blob_ref _Nonnull blob);
-cql_int64 cql_get_blob_size(cql_blob_ref _Nonnull blob);
+cql_int32 cql_get_blob_size(cql_blob_ref _Nonnull blob);
 cql_blob_ref _Nonnull cql_blob_ref_new(const void *_Nonnull bytes, cql_int64 size);
 cql_bool cql_blob_equal(cql_blob_ref _Nullable b1, cql_blob_ref _Nullable  b2);
 

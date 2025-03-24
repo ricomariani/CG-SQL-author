@@ -40,7 +40,7 @@ char *_Nullable cql_copy_string_to_stack_or_heap(
           cstr = stack_string;
       }
       else {
-        heap_string = malloc(size);
+        heap_string = malloc((size_t)size);
         if (CFStringGetCString(cf_string_ref, heap_string, size, kCFStringEncodingUTF8)) {
           cstr = heap_string;
         }
@@ -81,8 +81,8 @@ void *_Nonnull cql_get_blob_bytes(cql_blob_ref _Nonnull blob)  {
   return (void *_Nonnull)CFDataGetBytePtr(blob);
 }
 
-cql_int64 cql_get_blob_size(cql_blob_ref _Nonnull blob)  {
-  return CFDataGetLength(blob);
+cql_int32 cql_get_blob_size(cql_blob_ref _Nonnull blob)  {
+  return (cql_int32)CFDataGetLength(blob);
 }
 
 cql_blob_ref _Nonnull cql_blob_ref_new(const void *_Nonnull bytes, cql_int64 size) {

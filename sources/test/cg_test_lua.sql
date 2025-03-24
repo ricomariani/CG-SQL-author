@@ -172,8 +172,8 @@ call printf("Hello, world\n");
 set i2 := r2 and l2;
 
 -- helper methods for the next test
-declare function side_effect1() integer;
-declare function side_effect2() integer;
+function side_effect1() integer;
+function side_effect2() integer;
 
 -- TEST: the operands have side effects, the short circuit must not
 -- do the evaluation of the side effect for the second arg if the first
@@ -975,7 +975,7 @@ begin
   set result := C;
 END;
 
-declare function simple_func(int1 integer) integer;
+function simple_func(int1 integer) integer;
 
 -- TEST: call external function
 -- + result = simple_func(2)
@@ -986,7 +986,7 @@ let result := simple_func(2);
 -- + result = simple_func(_tmp_n_int_%)
 set result := simple_func(simple_func(1));
 
-declare function text_func(int1 integer, int2 integer not null) text not null;
+function text_func(int1 integer, int2 integer not null) text not null;
 declare text_result text;
 
 -- TEST: call external text function
@@ -1006,7 +1006,7 @@ set obj_var := null;
 -- + local obj_var2
 declare obj_var2 object not null;
 
-declare function obj_notnull_func() object not null;
+function obj_notnull_func() object not null;
 
 -- initialize for later use
 set obj_var2 := obj_notnull_func();
@@ -1082,19 +1082,19 @@ set i2 := case obj_var when obj_var then 1 else 2 end;
 -- + obj_var = nil
 set obj_var := case 1 when 1 then obj_var2 else null end;
 
-declare function obj_func() object;
+function obj_func() object;
 
 -- TEST: function invocation with object function
 -- + obj_var = obj_func()
 set obj_var := obj_func();
 
-declare function obj_func_create() create object;
+function obj_func_create() create object;
 
 -- TEST: function invocation with creater object function
 -- + obj_var = obj_func_create()
 set obj_var := obj_func_create();
 
-declare function text_func_create() create text;
+function text_func_create() create text;
 
 -- TEST: function invocation with creater text function
 -- + text_result = text_func_create()
@@ -1218,7 +1218,7 @@ end;
 -- TEST: declare a void func
 -- no output
 --- - voidfunc
-declare function voidfunc() integer;
+function voidfunc() integer;
 
 -- TEST: use a select exists clause
 -- + "SELECT EXISTS (SELECT 1 FROM bar)"
@@ -1301,7 +1301,7 @@ declare blob_var blob;
 -- + local blob_var2
 declare blob_var2 blob not null;
 
-declare function blob_notnull_func() blob not null;
+function blob_notnull_func() blob not null;
 
 -- initialize for later use
 -- + blob_var2 = blob_notnull_func()
@@ -1386,13 +1386,13 @@ set i2 := case blob_var when blob_var then 1 else 2 end;
 -- + blob_var = nil
 set blob_var := case 1 when 1 then blob_var2 else null end;
 
-declare function blob_func() blob;
+function blob_func() blob;
 
 -- TEST: function invocation with blob function
 -- + blob_var := blob_func()
 set blob_var := blob_func();
 
-declare function blob_func_create() create blob;
+function blob_func_create() create blob;
 
 -- TEST: function invocation with creater blob function
 -- + blob_var = blob_func_create()
@@ -4408,10 +4408,10 @@ proc ltor_proc_int_not_null(a int not null, b int not null, out c int not null) 
 proc ltor_proc_int(a int, b int, out c int) begin end;
 proc ltor_proc_text_not_null(a text not null, b text not null, out c text not null) begin set c := "text"; end;
 proc ltor_proc_text(a text, b text, out c text) begin end;
-declare function ltor_func_int_not_null(a int not null, b int not null) int not null;
-declare function ltor_func_int(a int, b int) int;
-declare function ltor_func_text_not_null(a text not null, b text not null) text not null;
-declare function ltor_func_text(a text, b text) text;
+function ltor_func_int_not_null(a int not null, b int not null) int not null;
+function ltor_func_int(a int, b int) int;
+function ltor_func_text_not_null(a text not null, b text not null) text not null;
+function ltor_func_text(a text, b text) text;
 
 -- TEST: Arguments are always evaluated left-to-right (which is ensured by generating temps).
 -- + _tmp_int_1 = ltor_proc_int_not_null(1, 2)
@@ -4847,7 +4847,7 @@ begin
   D:from_blob(B);
 end;
 
-declare function make_blob() create blob<structured_storage>;
+function make_blob() create blob<structured_storage>;
 
 -- TEST: get a blob from somewhere other than a local
 -- checks general expression evaluation in the fetch path
@@ -4973,7 +4973,7 @@ begin
   out union c;
 end;
 
-declare function external_cursor_func(x cursor) integer;
+function external_cursor_func(x cursor) integer;
 
 -- TEST call a function that takes a generic cursor
 -- + result = external_cursor_func(shape_storage, shape_storage_types_, shape_storage_fields_)
@@ -5224,9 +5224,9 @@ begin
   4+5+6;
 end;
 
-declare function stew1 no check integer not null;
-declare function stew2 no check create text not null;
-declare function stew3 no check text not null;
+function stew1 no check integer not null;
+function stew2 no check create text not null;
+function stew3 no check text not null;
 
 -- TEST: invocation of no check functions
 -- + local x = 0
@@ -5252,7 +5252,7 @@ begin
   const const_variable := 1;
 end;
 
-declare function real_func(x integer) real;
+function real_func(x integer) real;
 
 -- TEST: force real scratch variables
 -- + local _tmp_n_double_0

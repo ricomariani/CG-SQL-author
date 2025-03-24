@@ -6,27 +6,27 @@
  */
 
 -- TEST: query plan
--- + DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
--- + DECLARE SELECT FUNC is_declare_func_wall (id LONG) BOOL!;
--- + DECLARE SELECT FUNC array_num_at (array_object_ptr LONG!, idx INT!) LONG;
--- + DECLARE SELECT FUNC select_virtual_table (b TEXT) (id LONG, t TEXT, b BLOB, r REAL);
+-- + SELECT FUNC is_declare_func_enabled () BOOL!;
+-- + SELECT FUNC is_declare_func_wall (id LONG) BOOL!;
+-- + SELECT FUNC array_num_at (array_object_ptr LONG!, idx INT!) LONG;
+-- + SELECT FUNC select_virtual_table (b TEXT) (id LONG, t TEXT, b BLOB, r REAL);
 -- + [[deterministic]]
--- + DECLARE SELECT FUNC bgetkey_type (x BLOB!) LONG!;
+-- + SELECT FUNC bgetkey_type (x BLOB!) LONG!;
 -- + [[deterministic]]
--- + DECLARE SELECT FUNC bgetval_type (x BLOB!) LONG!;
+-- + SELECT FUNC bgetval_type (x BLOB!) LONG!;
 -- + [[deterministic]]
--- + DECLARE SELECT FUNC bgetkey NO CHECK BLOB;
+-- + SELECT FUNC bgetkey NO CHECK BLOB;
 -- + [[deterministic]]
--- + DECLARE SELECT FUNC bgetval NO CHECK BLOB;
+-- + SELECT FUNC bgetval NO CHECK BLOB;
 -- + [[deterministic]]
--- + DECLARE SELECT FUNC bcreatekey NO CHECK BLOB;
+-- + SELECT FUNC bcreatekey NO CHECK BLOB;
 -- + [[deterministic]]
--- + DECLARE SELECT FUNC bcreateval NO CHECK BLOB;
+-- + SELECT FUNC bcreateval NO CHECK BLOB;
 -- + [[deterministic]]
--- + DECLARE SELECT FUNC bupdatekey NO CHECK BLOB;
+-- + SELECT FUNC bupdatekey NO CHECK BLOB;
 -- + [[deterministic]]
--- + DECLARE SELECT FUNC bupdateval NO CHECK BLOB;
--- + DECLARE SELECT FUNC stuff () INT!;
+-- + SELECT FUNC bupdateval NO CHECK BLOB;
+-- + SELECT FUNC stuff () INT!;
 -- + PROC create_schema()
 -- + BEGIN
 -- +   call cql_create_udf_stub("is_declare_func_enabled");
@@ -383,11 +383,11 @@ create index it5 ON t4(data) @delete(1);
 create view my_view as select * from `table one` inner join t2 using(id);
 create view my_view as select * from `table one` inner join t2 using(id);
 create view my_view_using_table_alias as select foo.*, bar.id id2, bar.rowid rowid from `table one` as foo inner join t2 as bar using(id);
-declare function any_func() bool not null;
-declare select function is_declare_func_enabled() bool not null;
-declare select function is_declare_func_wall(id long integer) bool not null;
-declare select function array_num_at(array_object_ptr LONG!, idx int!) long;
-declare function blob_from_string(str text) create blob not null;
+function any_func() bool not null;
+select function is_declare_func_enabled() bool not null;
+select function is_declare_func_wall(id long integer) bool not null;
+select function array_num_at(array_object_ptr LONG!, idx int!) long;
+function blob_from_string(str text) create blob not null;
 declare timer_var int;
 declare label_var text;
 declare data_var blob;
@@ -418,7 +418,7 @@ create virtual table virtual_table using module_name(this, that, the_other) as (
   r real
 );
 
-declare select function select_virtual_table(b text) (id long int, t text, b blob, r real);
+select function select_virtual_table(b text) (id long int, t text, b blob, r real);
 
 -- Proc with SELECT stmt
 proc sample()
@@ -680,28 +680,28 @@ create table backed(
 -- semantically checked, but we do want them in the UDF output
 
 [[deterministic]]
-DECLARE SELECT FUNCTION bgetkey_type(x blob not null) long not null;
+select function bgetkey_type(x blob not null) long not null;
 
 [[deterministic]]
-DECLARE SELECT FUNCTION bgetval_type(x blob not null) long not null;
+select function bgetval_type(x blob not null) long not null;
 
 [[deterministic]]
-declare select function bgetkey no check blob;
+select function bgetkey no check blob;
 
 [[deterministic]]
-declare select function bgetval no check blob;
+select function bgetval no check blob;
 
 [[deterministic]]
-declare select function bcreatekey no check blob;
+select function bcreatekey no check blob;
 
 [[deterministic]]
-declare select function bcreateval no check blob;
+select function bcreateval no check blob;
 
 [[deterministic]]
-declare select function bupdatekey no check blob;
+select function bupdatekey no check blob;
 
 [[deterministic]]
-declare select function bupdateval no check blob;
+select function bupdateval no check blob;
 
 create index backing_index on backing(bgetkey_type(k));
 
@@ -736,8 +736,8 @@ begin
   select * from (call notnull_int_frag(v));
 end;
 
-declare function foo() int not null;
-declare select function stuff() int not null;
+function foo() int not null;
+select function stuff() int not null;
 
 proc a_proc(out v int not null)
 begin
@@ -749,7 +749,7 @@ begin
   select stuff() x, notnull_int_frag(1) y, T1.* from (call notnull_int_frag(foo() + a_proc())) T1;
 end;
 
-declare function external_blob_func() blob;
+function external_blob_func() blob;
 
 [[shared_fragment]]
 proc simple_blob_fragment(x blob)
@@ -765,7 +765,7 @@ BEGIN
   select * from (call simple_blob_fragment(external_blob_func()));
 END;
 
-declare function external_object_func() object;
+function external_object_func() object;
 
 [[shared_fragment]]
 proc simple_object_fragment(x object)
@@ -806,7 +806,7 @@ proc qp_use_no_frag(foo blob) begin
   select foo foo;
 end;
 
-declare function my_object_func() object;
+function my_object_func() object;
 
 [[shared_fragment]]
 proc object_frag(o object)

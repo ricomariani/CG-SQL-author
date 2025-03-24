@@ -927,7 +927,7 @@ The `declareFuncs` section contains a list of function declarations, Each declar
 * **args** : see [the relevant section](#procedure-arguments)
 * **attributes** : optional, see the section on attributes, they appear in many places
 * **returnType** : see the relevant section below.
-* **createsObject** : true if the function will create a new object (e.g. `declare function dict_create() create object;`)
+* **createsObject** : true if the function will create a new object (e.g. `function dict_create() create object;`)
 
 There are also sections for `declareNoCheckFuncs`, `declareSelectFuncs`, and `declareNoCheckSelectFuncs`.
 

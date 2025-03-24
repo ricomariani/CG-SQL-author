@@ -9,7 +9,7 @@ declare tests int!;
 declare tests_passed int!;
 declare fails int!;
 declare expectations int!;
-declare function get_outstanding_refs() int!;
+function get_outstanding_refs() int!;
 declare start_refs int!;
 declare end_refs int!;
 declare proc printf no check;
@@ -210,9 +210,9 @@ declare select function bupdateval no check blob;
 declare select function bupdatekey no check blob;
 
 -- some test helpers we will need
-declare function create_truncated_blob(b blob!, truncated_size int!) create blob!;
-declare function blob_from_string(str text @sensitive) create blob!;
-declare function string_from_blob(b blob @sensitive) create text!;
+function create_truncated_blob(b blob!, truncated_size int!) create blob!;
+function blob_from_string(str text @sensitive) create blob!;
+function string_from_blob(b blob @sensitive) create text!;
 declare procedure _cql_init_extensions() using transaction;
 
 -- we will use these constants in various tests
@@ -1677,9 +1677,9 @@ begin
   EXPECT_EQ!(int2, 2); -- bind output not nullable
 end);
 
-declare function run_test_math(int1 int!, out int2 int) int!;
-declare function string_create() create text;
-declare function string_ref_count(str text) int!;
+function run_test_math(int1 int!, out int2 int) int!;
+function string_create() create text;
+function string_ref_count(str text) int!;
 
 TEST!(external_functions,
 begin
@@ -1713,9 +1713,9 @@ begin
   EXPECT_SQL_TOO!(int_result2 == 490);
 end);
 
-declare function set_create() create object!;
-declare function set_add(_set object!, _key text!) bool!;
-declare function set_contains(_set object!, _key text!) bool!;
+function set_create() create object!;
+function set_add(_set object!, _key text!) bool!;
+function set_contains(_set object!, _key text!) bool!;
 
 TEST!(external_set,
 begin
@@ -5208,7 +5208,7 @@ begin
 end);
 
 declare proc rand_reset();
-declare function corrupt_blob_with_invalid_shenanigans(b blob!) create blob!;
+function corrupt_blob_with_invalid_shenanigans(b blob!) create blob!;
 
 TEST!(clobber_blobs,
 begin
@@ -5302,7 +5302,7 @@ declare proc many_types() (
   t0 text
 );
 
-declare function cql_cursor_hash(C cursor) long!;
+function cql_cursor_hash(C cursor) long!;
 
 TEST!(cursor_hash,
 begin

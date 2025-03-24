@@ -1,8 +1,8 @@
 
 [[deterministic]]
-DECLARE SELECT FUNC my_func (x TEXT) TEXT;
+SELECT FUNC my_func (x TEXT) TEXT;
 
-DECLARE SELECT FUNC filter_ (id INT) INT!;
+SELECT FUNC filter_ (id INT) INT!;
 
 @DECLARE_SCHEMA_REGION shared;
 

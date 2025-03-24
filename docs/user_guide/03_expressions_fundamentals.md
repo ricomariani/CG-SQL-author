@@ -548,7 +548,7 @@ begin
   set id := last_insert_rowid();
 end;
 
-declare function func_return_foo_id() foo_id;
+function func_return_foo_id() foo_id;
 
 declare var foo_id;
 ```
@@ -1693,7 +1693,7 @@ have either `get` or `create` semantics
 If you declare a function like so:
 
 ```sql
-declare function Getter() object;
+function Getter() object;
 ```
 
 Then CQL assumes that the returned object should follow the normal rules above,
@@ -1705,7 +1705,7 @@ or `out` arguments could retain the object.
 If you declare a function like so:
 
 ```sql
-declare function Getter() create text;
+function Getter() create text;
 ```
 
 then CQL assumes that the function created a new result which it is now
@@ -1897,9 +1897,9 @@ var x real<joules>;
 
 -- These are the functions that you might call with pipeline notation
 
-declare function foo(x text) real;
-declare function foo_real(x real) real;
-declare function foo_real_joules(x real) real;
+function foo(x text) real;
+function foo_real(x real) real;
+function foo_real_joules(x real) real;
 ```
 
 The mappings and declarations are both required now allow this:
@@ -1952,11 +1952,11 @@ To enable:
 for instance, with these declarations:
 
 ```sql
-declare function new_builder() create object<list_builder>;
-declare function list_builder_add_int(arg1 object<list_builder>, arg2 int!) object<list_builder>;
-declare function list_builder_add_int_int(arg1 object<list_builder>, arg2 int!, arg3 int!) object<list_builder>;
-declare function list_builder_add_real(arg1 object<list_builder>, arg2 real!) object<list_builder>;
-declare function list_builder_to_list(arg1 object<list_builder>) create object<list>;
+function new_builder() create object<list_builder>;
+function list_builder_add_int(arg1 object<list_builder>, arg2 int!) object<list_builder>;
+function list_builder_add_int_int(arg1 object<list_builder>, arg2 int!, arg3 int!) object<list_builder>;
+function list_builder_add_real(arg1 object<list_builder>, arg2 real!) object<list_builder>;
+function list_builder_to_list(arg1 object<list_builder>) create object<list>;
 
 @op object<list_builder> : functor all as list_builder_add;
 @op object<list_builder> : call to_list as list_builder_to_list;
@@ -2072,7 +2072,7 @@ The rewrite depends on the object type, and in particular the "kind"
 designation. So for instance consider:
 
 ```sql
-declare function create_container() create object<container> not null;
+function create_container() create object<container> not null;
 let cont := create_container();
 cont.x := cont.x + 1;
 ```
@@ -2098,7 +2098,7 @@ like so:
 Like these maybe:
 
 ```sql
-declare function container_get_x(self object<container> not null) int!;
+function container_get_x(self object<container> not null) int!;
 declare proc container_set_x(self object<container> not null, value int!);
 ```
 
@@ -2120,8 +2120,8 @@ then it can be supported.
 
 Additionally, the rewrite can happen in a SQL context or a native context. The
 only difference is that in a SQL context you would need to create the
-appropriate SQLite UDF and declare it with `declare select function` rather than
-`declare function`.
+appropriate SQLite UDF and declare it with `select function` rather than
+`function`.
 
 #### Open Ended Properties
 
@@ -2130,7 +2130,7 @@ That is where the property name can be anything. If instead of the property
 specific functions above, we had created these more general functions:
 
 ```sql
-declare function container_get(self object<container>! , field text!) int!;
+function container_get(self object<container>! , field text!) int!;
 declare proc container_set(self object<container>!, field text!, value int!);
 ```
 
@@ -2193,7 +2193,7 @@ cont[1,2] := cont[3,4] + cont[5,6];
 Could be supported by these functions:
 
 ```sql
-declare function cont_get_ij(self object<container>!, i int!, j int!) int!;
+function cont_get_ij(self object<container>!, i int!, j int!) int!;
 declare proc cont_set_ij(self object<container>!, i int!, j int!, value int!);
 
 @op object<container> : array get as cont_get_ij;

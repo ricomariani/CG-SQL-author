@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-declare function make_str(x integer) text;
+function make_str(x integer) text;
 declare procedure printf no check;
 
 create proc make_values()

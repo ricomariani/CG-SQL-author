@@ -1313,7 +1313,7 @@ DECLARE real_result2 REAL;
 
 The statement ending at line XXXX
 
-DECLARE FUNC simple_func2 (arg1 INT!, arg2 INT!, arg3 INT!) REAL!;
+FUNC simple_func2 (arg1 INT!, arg2 INT!, arg3 INT!) REAL!;
 
   {declare_func_stmt}: real notnull
   | {name simple_func2}: real notnull
@@ -1367,7 +1367,7 @@ DECLARE int_result INT;
 
 The statement ending at line XXXX
 
-DECLARE FUNC simple_func3 (arg1 INT!) INT!;
+FUNC simple_func3 (arg1 INT!) INT!;
 
   {declare_func_stmt}: integer notnull
   | {name simple_func3}: integer notnull
@@ -7754,7 +7754,7 @@ test/sem_test.sql:XXXX:1: error: in close_stmt : CQL0391: CLOSE cannot be used o
 
 The statement ending at line XXXX
 
-DECLARE FUNC get_boxed_cursor () OBJECT<foo CURSOR>;
+FUNC get_boxed_cursor () OBJECT<foo CURSOR>;
 
   {declare_func_stmt}: object<foo CURSOR>
   | {name get_boxed_cursor}: object<foo CURSOR>
@@ -23965,7 +23965,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0054: table not found 'T'
 
 The statement ending at line XXXX
 
-DECLARE FUNC simple_func (arg1 INT!) REAL!;
+FUNC simple_func (arg1 INT!) REAL!;
 
   {declare_func_stmt}: real notnull
   | {name simple_func}: real notnull
@@ -23981,11 +23981,11 @@ DECLARE FUNC simple_func (arg1 INT!) REAL!;
 
 The statement ending at line XXXX
 
-DECLARE FUNC simple_func (arg1 INT) REAL!;
+FUNC simple_func (arg1 INT) REAL!;
 
 Incompatible declarations found
-test/sem_test.sql:XXXX:1: error: in declare_func_stmt : DECLARE FUNC simple_func (arg1 INT) REAL!
-test/sem_test.sql:XXXX:1: error: in declare_func_stmt : DECLARE FUNC simple_func (arg1 INT!) REAL!
+test/sem_test.sql:XXXX:1: error: in declare_func_stmt : FUNC simple_func (arg1 INT) REAL!
+test/sem_test.sql:XXXX:1: error: in declare_func_stmt : FUNC simple_func (arg1 INT!) REAL!
 The above must be identical.
 test/sem_test.sql:XXXX:1: error: in str : CQL0193: duplicate function name 'simple_func'
 
@@ -24054,7 +24054,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0185: proc name conflicts with func
 
 The statement ending at line XXXX
 
-DECLARE FUNC proc1 (i INT) INT;
+FUNC proc1 (i INT) INT;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0192: func name conflicts with proc name 'proc1'
 
@@ -24072,7 +24072,7 @@ The statement ending at line XXXX
 
 PROC nested_func_wrapper ()
 BEGIN
-  DECLARE FUNC foo () INT;
+  FUNC foo () INT;
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0191: declared functions must be top level 'foo'
@@ -24088,7 +24088,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0191: declared functions must be to
 
 The statement ending at line XXXX
 
-DECLARE FUNC dup_formal (a INT, a INT) INT;
+FUNC dup_formal (a INT, a INT) INT;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0175: duplicate parameter name 'a'
 
@@ -24549,7 +24549,7 @@ test/sem_test.sql:XXXX:1: error: in not_between : CQL0009: required 'INT' not co
 
 The statement ending at line XXXX
 
-DECLARE FUNC creater_func () CREATE OBJECT!;
+FUNC creater_func () CREATE OBJECT!;
 
   {declare_func_stmt}: object notnull create_func
   | {name creater_func}: object notnull create_func
@@ -24560,7 +24560,7 @@ DECLARE FUNC creater_func () CREATE OBJECT!;
 
 The statement ending at line XXXX
 
-DECLARE FUNC maybe_create_func () CREATE OBJECT;
+FUNC maybe_create_func () CREATE OBJECT;
 
   {declare_func_stmt}: object create_func
   | {name maybe_create_func}: object create_func
@@ -24748,7 +24748,7 @@ SET foo_obj := foo_obj;
 
 The statement ending at line XXXX
 
-DECLARE FUNC foo_func () OBJECT<Foo>;
+FUNC foo_func () OBJECT<Foo>;
 
   {declare_func_stmt}: object<Foo>
   | {name foo_func}: object<Foo>
@@ -25130,7 +25130,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0160: table in insert statement doe
 
 The statement ending at line XXXX
 
-DECLARE FUNC goo_func (goo OBJECT<Goo>) TEXT;
+FUNC goo_func (goo OBJECT<Goo>) TEXT;
 
   {declare_func_stmt}: text
   | {name goo_func}: text
@@ -31219,7 +31219,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 
 The statement ending at line XXXX
 
-DECLARE SELECT FUNC SqlUserFunc (id INT) REAL!;
+SELECT FUNC SqlUserFunc (id INT) REAL!;
 
   {declare_select_func_stmt}: real notnull select_func
   | {name SqlUserFunc}: real notnull
@@ -31368,7 +31368,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0089: user function may only appea
 
 The statement ending at line XXXX
 
-DECLARE SELECT FUNC foo (x INT, x INT) INT;
+SELECT FUNC foo (x INT, x INT) INT;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0192: func name conflicts with proc name 'foo'
 
@@ -36458,7 +36458,7 @@ test/sem_test.sql:XXXX:1: error: in call : additional info: in update table 'bar
 
 The statement ending at line XXXX
 
-DECLARE FUNC sens_func (id INT @SENSITIVE, t TEXT) TEXT @SENSITIVE;
+FUNC sens_func (id INT @SENSITIVE, t TEXT) TEXT @SENSITIVE;
 
   {declare_func_stmt}: text sensitive
   | {name sens_func}: text sensitive
@@ -40643,7 +40643,7 @@ SELECT COUNT(*)
 
 The statement ending at line XXXX
 
-DECLARE SELECT FUNC tvf (id INT) (foo TEXT);
+SELECT FUNC tvf (id INT) (foo TEXT);
 
   {declare_select_func_stmt}: _select_: { foo: text } select_func
   | {name tvf}: _select_: { foo: text }
@@ -40996,7 +40996,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0250: table-valued function not dec
 
 The statement ending at line XXXX
 
-DECLARE SELECT FUNC ReadFromRowset (rowset OBJECT<rowset>) (id INT);
+SELECT FUNC ReadFromRowset (rowset OBJECT<rowset>) (id INT);
 
   {declare_select_func_stmt}: _select_: { id: integer } select_func
   | {name ReadFromRowset}: _select_: { id: integer }
@@ -48962,7 +48962,7 @@ SELECT nullif(name, 'a') AS n
 
 The statement ending at line XXXX
 
-DECLARE SELECT FUNC nullif (value INT, defaultValue INT!) INT;
+SELECT FUNC nullif (value INT, defaultValue INT!) INT;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0314: select function does not require a declaration, it is a CQL built-in 'nullif'
 
@@ -49577,7 +49577,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0405: procedure of an unknown type 
 
 The statement ending at line XXXX
 
-DECLARE FUNC some_external_thing (t TEXT, r REAL) INT;
+FUNC some_external_thing (t TEXT, r REAL) INT;
 
   {declare_func_stmt}: integer
   | {name some_external_thing}: integer
@@ -54928,7 +54928,7 @@ END;
 
 The statement ending at line XXXX
 
-DECLARE SELECT FUNC returns_object_is_bogus () OBJECT;
+SELECT FUNC returns_object_is_bogus () OBJECT;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0347: select function may not return type OBJECT 'returns_object_is_bogus'
 
@@ -58095,7 +58095,7 @@ DECLARE adding_notnull TEXT @SENSITIVE!;
 
 The statement ending at line XXXX
 
-DECLARE FUNC adding_attr_to_func_redundant () CREATE TEXT @SENSITIVE @SENSITIVE;
+FUNC adding_attr_to_func_redundant () CREATE TEXT @SENSITIVE @SENSITIVE;
 
 test/sem_test.sql:XXXX:1: error: in sensitive_attr : CQL0367: an attribute was specified twice '@sensitive'
 
@@ -58493,7 +58493,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0360: unknown type 'bogus_type'
 
 The statement ending at line XXXX
 
-DECLARE FUNC decl_type_func (arg1 INT) TEXT @SENSITIVE;
+FUNC decl_type_func (arg1 INT) TEXT @SENSITIVE;
 
   {declare_func_stmt}: text sensitive
   | {name decl_type_func}: text sensitive
@@ -58508,7 +58508,7 @@ DECLARE FUNC decl_type_func (arg1 INT) TEXT @SENSITIVE;
 
 The statement ending at line XXXX
 
-DECLARE FUNC decl_type_func_err (arg1 INT) bogus_type;
+FUNC decl_type_func_err (arg1 INT) bogus_type;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0360: unknown type 'bogus_type'
 
@@ -58678,7 +58678,7 @@ DECLARE PROC uses_complex_table_attrs (f1_ INT, f2_ INT!, f3_ INT! @SENSITIVE, f
 
 The statement ending at line XXXX
 
-DECLARE FUNC function_uses_complex_table_attrs (f1_ INT, f2_ INT!, f3_ INT! @SENSITIVE, f4_ INT @SENSITIVE) INT;
+FUNC function_uses_complex_table_attrs (f1_ INT, f2_ INT!, f3_ INT! @SENSITIVE, f4_ INT @SENSITIVE) INT;
 
   {declare_func_stmt}: integer
   | {name function_uses_complex_table_attrs}: integer
@@ -58721,7 +58721,7 @@ CURSOR complex_attr_cursor LIKE to_copy;
 
 The statement ending at line XXXX
 
-DECLARE FUNC maybe_create_func_sensitive () CREATE OBJECT @SENSITIVE;
+FUNC maybe_create_func_sensitive () CREATE OBJECT @SENSITIVE;
 
   {declare_func_stmt}: object create_func sensitive
   | {name maybe_create_func_sensitive}: object create_func sensitive
@@ -58732,7 +58732,7 @@ DECLARE FUNC maybe_create_func_sensitive () CREATE OBJECT @SENSITIVE;
 
 The statement ending at line XXXX
 
-DECLARE FUNC maybe_create_func_blob () CREATE BLOB!;
+FUNC maybe_create_func_blob () CREATE BLOB!;
 
   {declare_func_stmt}: blob notnull create_func
   | {name maybe_create_func_blob}: blob notnull create_func
@@ -58743,7 +58743,7 @@ DECLARE FUNC maybe_create_func_blob () CREATE BLOB!;
 
 The statement ending at line XXXX
 
-DECLARE FUNC maybe_create_func_text () CREATE TEXT;
+FUNC maybe_create_func_text () CREATE TEXT;
 
   {declare_func_stmt}: text create_func
   | {name maybe_create_func_text}: text create_func
@@ -58753,7 +58753,7 @@ DECLARE FUNC maybe_create_func_text () CREATE TEXT;
 
 The statement ending at line XXXX
 
-DECLARE FUNC maybe_create_func_int () CREATE INT;
+FUNC maybe_create_func_int () CREATE INT;
 
 test/sem_test.sql:XXXX:1: error: in create_data_type : CQL0361: return data type in a create function declaration can only be text, blob or object
 
@@ -58765,7 +58765,7 @@ test/sem_test.sql:XXXX:1: error: in create_data_type : CQL0361: return data type
 
 The statement ending at line XXXX
 
-DECLARE FUNC maybe_create_func_bool () CREATE BOOL;
+FUNC maybe_create_func_bool () CREATE BOOL;
 
 test/sem_test.sql:XXXX:1: error: in create_data_type : CQL0361: return data type in a create function declaration can only be text, blob or object
 
@@ -58777,7 +58777,7 @@ test/sem_test.sql:XXXX:1: error: in create_data_type : CQL0361: return data type
 
 The statement ending at line XXXX
 
-DECLARE FUNC maybe_create_func_long () CREATE LONG! @SENSITIVE;
+FUNC maybe_create_func_long () CREATE LONG! @SENSITIVE;
 
 test/sem_test.sql:XXXX:1: error: in create_data_type : CQL0361: return data type in a create function declaration can only be text, blob or object
 
@@ -58802,7 +58802,7 @@ TYPE type_obj_foo OBJECT<Foo>! @SENSITIVE;
 
 The statement ending at line XXXX
 
-DECLARE FUNC type_func_return_create_obj () CREATE OBJECT<Foo>! @SENSITIVE;
+FUNC type_func_return_create_obj () CREATE OBJECT<Foo>! @SENSITIVE;
 
   {declare_func_stmt}: object<Foo> notnull create_func sensitive
   | {name type_func_return_create_obj}: object<Foo> notnull create_func sensitive
@@ -58815,7 +58815,7 @@ DECLARE FUNC type_func_return_create_obj () CREATE OBJECT<Foo>! @SENSITIVE;
 
 The statement ending at line XXXX
 
-DECLARE FUNC type_func_return_create_bogus_obj () CREATE bogus_type;
+FUNC type_func_return_create_bogus_obj () CREATE bogus_type;
 
 test/sem_test.sql:XXXX:1: error: in create_data_type : CQL0360: unknown type 'bogus_type'
 
@@ -58827,7 +58827,7 @@ test/sem_test.sql:XXXX:1: error: in create_data_type : CQL0360: unknown type 'bo
 
 The statement ending at line XXXX
 
-DECLARE FUNC type_func_return_obj () OBJECT<Foo>! @SENSITIVE;
+FUNC type_func_return_obj () OBJECT<Foo>! @SENSITIVE;
 
   {declare_func_stmt}: object<Foo> notnull sensitive
   | {name type_func_return_obj}: object<Foo> notnull sensitive
@@ -86227,7 +86227,7 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0069: name not found (proc had err
 
 The statement ending at line XXXX
 
-DECLARE FUNC external_cursor_func (x CURSOR) INT;
+FUNC external_cursor_func (x CURSOR) INT;
 
   {declare_func_stmt}: integer
   | {name external_cursor_func}: integer
@@ -87196,7 +87196,7 @@ test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0482: interface not fo
 
 The statement ending at line XXXX
 
-DECLARE FUNC no_check_func NO CHECK TEXT;
+FUNC no_check_func NO CHECK TEXT;
 
   {declare_func_no_check_stmt}: text
   | {name no_check_func}: text
@@ -87262,7 +87262,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 
 The statement ending at line XXXX
 
-DECLARE SELECT FUNC no_check_select_fun NO CHECK TEXT;
+SELECT FUNC no_check_select_fun NO CHECK TEXT;
 
   {declare_select_func_no_check_stmt}: text select_func
   | {name no_check_select_fun}: text
@@ -87271,7 +87271,7 @@ DECLARE SELECT FUNC no_check_select_fun NO CHECK TEXT;
 
 The statement ending at line XXXX
 
-DECLARE SELECT FUNC no_check_select_fun NO CHECK TEXT;
+SELECT FUNC no_check_select_fun NO CHECK TEXT;
 
   {declare_select_func_no_check_stmt}: text select_func
   | {name no_check_select_fun}: text
@@ -87280,7 +87280,7 @@ DECLARE SELECT FUNC no_check_select_fun NO CHECK TEXT;
 
 The statement ending at line XXXX
 
-DECLARE SELECT FUNC no_check_select_fun () TEXT;
+SELECT FUNC no_check_select_fun () TEXT;
 
 test/sem_test.sql:XXXX:1: error: in declare_select_func_stmt : CQL0486: function cannot be both a normal function and an unchecked function 'no_check_select_fun'
 
@@ -87343,7 +87343,7 @@ test/sem_test.sql:XXXX:1: error: in star : CQL0051: argument can only be used in
 
 The statement ending at line XXXX
 
-DECLARE SELECT FUNC no_check_select_table_valued_fun NO CHECK (t TEXT, i INT);
+SELECT FUNC no_check_select_table_valued_fun NO CHECK (t TEXT, i INT);
 
   {declare_select_func_no_check_stmt}: _select_: { t: text, i: integer } select_func
   | {name no_check_select_table_valued_fun}: _select_: { t: text, i: integer }
@@ -89001,7 +89001,7 @@ test/sem_test.sql:XXXX:1: error: in update_stmt : CQL0157: count of columns diff
 The statement ending at line XXXX
 
 [[alias_of=some_native_func]]
-DECLARE FUNC an_alias_func (x INT!) INT!;
+FUNC an_alias_func (x INT!) INT!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -89049,7 +89049,7 @@ DECLARE PROC an_alias_proc (x INT!);
 The statement ending at line XXXX
 
 [[alias_of=barfoo]]
-DECLARE SELECT FUNC foobaz (x INT!) INT!;
+SELECT FUNC foobaz (x INT!) INT!;
 
 test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0499: alias_of attribute may only be added to a declare function or declare proc statement
 
@@ -89075,7 +89075,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0499: alias_of attribute may
 The statement ending at line XXXX
 
 [[alias_of]]
-DECLARE FUNC an_alias_func_bad (x INT!) INT!;
+FUNC an_alias_func_bad (x INT!) INT!;
 
 test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0500: alias_of attribute must be a non-empty string argument.
 
@@ -89217,7 +89217,7 @@ test/sem_test.sql:XXXX:1: error: in type_object : CQL0091: object<T SET> has a T
 
 The statement ending at line XXXX
 
-DECLARE FUNC rev_apply_bool (x BOOL) INT!;
+FUNC rev_apply_bool (x BOOL) INT!;
 
   {declare_func_stmt}: integer notnull
   | {name rev_apply_bool}: integer notnull
@@ -89232,7 +89232,7 @@ DECLARE FUNC rev_apply_bool (x BOOL) INT!;
 
 The statement ending at line XXXX
 
-DECLARE FUNC rev_apply_int (x INT) INT!;
+FUNC rev_apply_int (x INT) INT!;
 
   {declare_func_stmt}: integer notnull
   | {name rev_apply_int}: integer notnull
@@ -89247,7 +89247,7 @@ DECLARE FUNC rev_apply_int (x INT) INT!;
 
 The statement ending at line XXXX
 
-DECLARE FUNC rev_apply_long (x LONG) INT!;
+FUNC rev_apply_long (x LONG) INT!;
 
   {declare_func_stmt}: integer notnull
   | {name rev_apply_long}: integer notnull
@@ -89262,7 +89262,7 @@ DECLARE FUNC rev_apply_long (x LONG) INT!;
 
 The statement ending at line XXXX
 
-DECLARE FUNC rev_apply_real (x REAL) INT!;
+FUNC rev_apply_real (x REAL) INT!;
 
   {declare_func_stmt}: integer notnull
   | {name rev_apply_real}: integer notnull
@@ -89277,7 +89277,7 @@ DECLARE FUNC rev_apply_real (x REAL) INT!;
 
 The statement ending at line XXXX
 
-DECLARE FUNC rev_apply_text (x TEXT) INT!;
+FUNC rev_apply_text (x TEXT) INT!;
 
   {declare_func_stmt}: integer notnull
   | {name rev_apply_text}: integer notnull
@@ -89292,7 +89292,7 @@ DECLARE FUNC rev_apply_text (x TEXT) INT!;
 
 The statement ending at line XXXX
 
-DECLARE FUNC rev_apply_blob (x BLOB) INT!;
+FUNC rev_apply_blob (x BLOB) INT!;
 
   {declare_func_stmt}: integer notnull
   | {name rev_apply_blob}: integer notnull
@@ -89307,7 +89307,7 @@ DECLARE FUNC rev_apply_blob (x BLOB) INT!;
 
 The statement ending at line XXXX
 
-DECLARE FUNC rev_apply_object (x OBJECT) INT!;
+FUNC rev_apply_object (x OBJECT) INT!;
 
   {declare_func_stmt}: integer notnull
   | {name rev_apply_object}: integer notnull
@@ -89530,7 +89530,7 @@ DECLARE lbs REAL<pounds>!;
 
 The statement ending at line XXXX
 
-DECLARE FUNC some_polymorphic_function_real_pounds (x REAL<pounds>, y REAL) INT!;
+FUNC some_polymorphic_function_real_pounds (x REAL<pounds>, y REAL) INT!;
 
   {declare_func_stmt}: integer notnull
   | {name some_polymorphic_function_real_pounds}: integer notnull
@@ -89612,7 +89612,7 @@ END;
 
 The statement ending at line XXXX
 
-DECLARE FUNC get_result_set_count (result OBJECT) INT!;
+FUNC get_result_set_count (result OBJECT) INT!;
 
   {declare_func_stmt}: integer notnull
   | {name get_result_set_count}: integer notnull
@@ -89656,7 +89656,7 @@ LET poly_result_2 := get_result_set_count(get_result());
 
 The statement ending at line XXXX
 
-DECLARE FUNC expr_func_a (x INT) INT;
+FUNC expr_func_a (x INT) INT;
 
   {declare_func_stmt}: integer
   | {name expr_func_a}: integer
@@ -90002,7 +90002,7 @@ test/sem_test.sql:XXXX:1: error: in expr_assign : CQL0465: left operand of assig
 
 The statement ending at line XXXX
 
-DECLARE FUNC get_from_object_foo (array OBJECT<foo>, index TEXT) TEXT!;
+FUNC get_from_object_foo (array OBJECT<foo>, index TEXT) TEXT!;
 
   {declare_func_stmt}: text notnull
   | {name get_from_object_foo}: text notnull
@@ -90023,7 +90023,7 @@ DECLARE FUNC get_from_object_foo (array OBJECT<foo>, index TEXT) TEXT!;
 
 The statement ending at line XXXX
 
-DECLARE FUNC set_in_object_foo (array OBJECT<foo>, index TEXT, value TEXT) TEXT!;
+FUNC set_in_object_foo (array OBJECT<foo>, index TEXT, value TEXT) TEXT!;
 
   {declare_func_stmt}: text notnull
   | {name set_in_object_foo}: text notnull
@@ -90173,7 +90173,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 
 The statement ending at line XXXX
 
-DECLARE FUNC get_object_dot_one_id (x OBJECT<dot_one>) INT;
+FUNC get_object_dot_one_id (x OBJECT<dot_one>) INT;
 
   {declare_func_stmt}: integer
   | {name get_object_dot_one_id}: integer
@@ -90188,7 +90188,7 @@ DECLARE FUNC get_object_dot_one_id (x OBJECT<dot_one>) INT;
 
 The statement ending at line XXXX
 
-DECLARE FUNC get_from_object_dot_two NO CHECK INT;
+FUNC get_from_object_dot_two NO CHECK INT;
 
   {declare_func_no_check_stmt}: integer
   | {name get_from_object_dot_two}: integer
@@ -90326,7 +90326,7 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'q.id'
 
 The statement ending at line XXXX
 
-DECLARE FUNC make_dot_one () CREATE OBJECT<dot_one>;
+FUNC make_dot_one () CREATE OBJECT<dot_one>;
 
   {declare_func_stmt}: object<dot_one> create_func
   | {name make_dot_one}: object<dot_one> create_func
@@ -90445,7 +90445,7 @@ DECLARE PROC set_object_dot_storage_id (self OBJECT<dot_storage>, value INT);
 
 The statement ending at line XXXX
 
-DECLARE FUNC get_object_dot_storage_id (self OBJECT<dot_storage>) INT;
+FUNC get_object_dot_storage_id (self OBJECT<dot_storage>) INT;
 
   {declare_func_stmt}: integer
   | {name get_object_dot_storage_id}: integer
@@ -90460,7 +90460,7 @@ DECLARE FUNC get_object_dot_storage_id (self OBJECT<dot_storage>) INT;
 
 The statement ending at line XXXX
 
-DECLARE FUNC get_from_object_dot_storage NO CHECK INT;
+FUNC get_from_object_dot_storage NO CHECK INT;
 
   {declare_func_no_check_stmt}: integer
   | {name get_from_object_dot_storage}: integer
@@ -90836,7 +90836,7 @@ test/sem_test.sql:XXXX:1: error: in arg_list : CQL0474: when '*' appears in an e
 
 The statement ending at line XXXX
 
-DECLARE FUNC create_event () CREATE OBJECT<event>!;
+FUNC create_event () CREATE OBJECT<event>!;
 
   {declare_func_stmt}: object<event> notnull create_func
   | {name create_event}: object<event> notnull create_func
@@ -91123,7 +91123,7 @@ TYPE an_integer_type INT!;
 
 The statement ending at line XXXX
 
-DECLARE SELECT FUNC select_func_with_out_arg1 (INOUT inout_param INT!) INT;
+SELECT FUNC select_func_with_out_arg1 (INOUT inout_param INT!) INT;
 
 test/sem_test.sql:XXXX:1: error: in param : CQL0475: select functions cannot have out parameters 'inout_param'
 
@@ -91141,7 +91141,7 @@ test/sem_test.sql:XXXX:1: error: in param : CQL0475: select functions cannot hav
 
 The statement ending at line XXXX
 
-DECLARE SELECT FUNC select_func_with_out_arg2 (OUT out_param INT!) INT;
+SELECT FUNC select_func_with_out_arg2 (OUT out_param INT!) INT;
 
 test/sem_test.sql:XXXX:1: error: in param : CQL0475: select functions cannot have out parameters 'out_param'
 
@@ -94998,7 +94998,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0081: aggregates only make sense i
 
 The statement ending at line XXXX
 
-DECLARE FUNC new_builder () CREATE OBJECT<list_builder>;
+FUNC new_builder () CREATE OBJECT<list_builder>;
 
   {declare_func_stmt}: object<list_builder> create_func
   | {name new_builder}: object<list_builder> create_func
@@ -95009,7 +95009,7 @@ DECLARE FUNC new_builder () CREATE OBJECT<list_builder>;
 
 The statement ending at line XXXX
 
-DECLARE FUNC builder_int (arg1 OBJECT<list_builder>, arg2 INT!) OBJECT<list_builder>;
+FUNC builder_int (arg1 OBJECT<list_builder>, arg2 INT!) OBJECT<list_builder>;
 
   {declare_func_stmt}: object<list_builder>
   | {name builder_int}: object<list_builder>
@@ -95031,7 +95031,7 @@ DECLARE FUNC builder_int (arg1 OBJECT<list_builder>, arg2 INT!) OBJECT<list_buil
 
 The statement ending at line XXXX
 
-DECLARE FUNC builder_int_int (arg1 OBJECT<list_builder>, arg2 INT!, arg3 INT!) OBJECT<list_builder>;
+FUNC builder_int_int (arg1 OBJECT<list_builder>, arg2 INT!, arg3 INT!) OBJECT<list_builder>;
 
   {declare_func_stmt}: object<list_builder>
   | {name builder_int_int}: object<list_builder>
@@ -95059,7 +95059,7 @@ DECLARE FUNC builder_int_int (arg1 OBJECT<list_builder>, arg2 INT!, arg3 INT!) O
 
 The statement ending at line XXXX
 
-DECLARE FUNC builder_real (arg1 OBJECT<list_builder>, arg2 REAL!) OBJECT<list_builder>;
+FUNC builder_real (arg1 OBJECT<list_builder>, arg2 REAL!) OBJECT<list_builder>;
 
   {declare_func_stmt}: object<list_builder>
   | {name builder_real}: object<list_builder>
@@ -95081,7 +95081,7 @@ DECLARE FUNC builder_real (arg1 OBJECT<list_builder>, arg2 REAL!) OBJECT<list_bu
 
 The statement ending at line XXXX
 
-DECLARE FUNC builder_to_list (arg1 OBJECT<list_builder>) CREATE OBJECT<list>;
+FUNC builder_to_list (arg1 OBJECT<list_builder>) CREATE OBJECT<list>;
 
   {declare_func_stmt}: object<list> create_func
   | {name builder_to_list}: object<list> create_func
@@ -95307,7 +95307,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0094: function not builtin and not 
 
 The statement ending at line XXXX
 
-DECLARE FUNC do_arrow (x INT, y INT) INT;
+FUNC do_arrow (x INT, y INT) INT;
 
   {declare_func_stmt}: integer
   | {name do_arrow}: integer
@@ -95326,7 +95326,7 @@ DECLARE FUNC do_arrow (x INT, y INT) INT;
 
 The statement ending at line XXXX
 
-DECLARE FUNC do_text_arrow (x INT, y TEXT) INT;
+FUNC do_text_arrow (x INT, y TEXT) INT;
 
   {declare_func_stmt}: integer
   | {name do_text_arrow}: integer
@@ -95345,7 +95345,7 @@ DECLARE FUNC do_text_arrow (x INT, y TEXT) INT;
 
 The statement ending at line XXXX
 
-DECLARE FUNC do_int_foo_arrow (x INT, y INT) INT;
+FUNC do_int_foo_arrow (x INT, y INT) INT;
 
   {declare_func_stmt}: integer
   | {name do_int_foo_arrow}: integer
@@ -95504,7 +95504,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-DECLARE FUNC write_int (store OBJECT<storage>, val INT!) OBJECT<storage>;
+FUNC write_int (store OBJECT<storage>, val INT!) OBJECT<storage>;
 
   {declare_func_stmt}: object<storage>
   | {name write_int}: object<storage>
@@ -95539,7 +95539,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-DECLARE FUNC read_int (store OBJECT<storage>, OUT val INT!) OBJECT<storage>;
+FUNC read_int (store OBJECT<storage>, OUT val INT!) OBJECT<storage>;
 
   {declare_func_stmt}: object<storage>
   | {name read_int}: object<storage>
@@ -95613,7 +95613,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-DECLARE FUNC concat_func (store OBJECT<foo>, x INT!) OBJECT<foo>;
+FUNC concat_func (store OBJECT<foo>, x INT!) OBJECT<foo>;
 
   {declare_func_stmt}: object<foo>
   | {name concat_func}: object<foo>
@@ -95662,7 +95662,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-DECLARE FUNC cursor_foo (x CURSOR) INT;
+FUNC cursor_foo (x CURSOR) INT;
 
   {declare_func_stmt}: integer
   | {name cursor_foo}: integer
@@ -95676,7 +95676,7 @@ DECLARE FUNC cursor_foo (x CURSOR) INT;
 
 The statement ending at line XXXX
 
-DECLARE FUNC cursor_bar (x CURSOR) INT;
+FUNC cursor_bar (x CURSOR) INT;
 
   {declare_func_stmt}: integer
   | {name cursor_bar}: integer
@@ -95690,7 +95690,7 @@ DECLARE FUNC cursor_bar (x CURSOR) INT;
 
 The statement ending at line XXXX
 
-DECLARE FUNC cursor_foo_poly_int (x CURSOR, y INT) INT;
+FUNC cursor_foo_poly_int (x CURSOR, y INT) INT;
 
   {declare_func_stmt}: integer
   | {name cursor_foo_poly_int}: integer
@@ -97367,7 +97367,7 @@ END;
 
 The statement ending at line XXXX
 
-DECLARE FUNC expensive (x INT) INT!;
+FUNC expensive (x INT) INT!;
 
   {declare_func_stmt}: integer notnull
   | {name expensive}: integer notnull

@@ -4469,7 +4469,7 @@ static void gen_declare_select_func_stmt(ast_node *ast) {
   EXTRACT(params, func_params_return->left);
   EXTRACT_ANY_NOTNULL(ret_data_type, func_params_return->right);
 
-  gen_printf("DECLARE SELECT FUNC %s (", name);
+  gen_printf("SELECT FUNC %s (", name);
   if (params) {
     gen_params(params);
   }
@@ -4493,7 +4493,7 @@ static void gen_declare_select_func_no_check_stmt(ast_node *ast) {
   EXTRACT_NOTNULL(func_params_return, ast->right);
   EXTRACT_ANY_NOTNULL(ret_data_type, func_params_return->right);
 
-  gen_printf("DECLARE SELECT FUNC %s NO CHECK ", name);
+  gen_printf("SELECT FUNC %s NO CHECK ", name);
 
   if (is_ast_typed_names(ret_data_type)) {
     // table valued function
@@ -4514,7 +4514,7 @@ static void gen_declare_func_stmt(ast_node *ast) {
   EXTRACT(params, func_params_return->left);
   EXTRACT_ANY_NOTNULL(ret_data_type, func_params_return->right);
 
-  gen_printf("DECLARE FUNC %s (", name);
+  gen_printf("FUNC %s (", name);
   if (params) {
     gen_params(params);
   }
@@ -4529,7 +4529,7 @@ static void gen_declare_func_no_check_stmt(ast_node *ast) {
   EXTRACT_NOTNULL(func_params_return, ast->right);
   EXTRACT_ANY_NOTNULL(ret_data_type, func_params_return->right);
 
-  gen_printf("DECLARE FUNC %s NO CHECK ", name);
+  gen_printf("FUNC %s NO CHECK ", name);
 
   gen_data_type(ret_data_type);
 }

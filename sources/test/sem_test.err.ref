@@ -535,8 +535,8 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0052: select *, T.*, or @columns(...) cannot be used with no FROM clause
 test/sem_test.sql:XXXX:1: error: in str : CQL0054: table not found 'T'
 Incompatible declarations found
-test/sem_test.sql:XXXX:1: error: in declare_func_stmt : DECLARE FUNC simple_func (arg1 INT) REAL!
-test/sem_test.sql:XXXX:1: error: in declare_func_stmt : DECLARE FUNC simple_func (arg1 INT!) REAL!
+test/sem_test.sql:XXXX:1: error: in declare_func_stmt : FUNC simple_func (arg1 INT) REAL!
+test/sem_test.sql:XXXX:1: error: in declare_func_stmt : FUNC simple_func (arg1 INT!) REAL!
 The above must be identical.
 test/sem_test.sql:XXXX:1: error: in str : CQL0193: duplicate function name 'simple_func'
 test/sem_test.sql:XXXX:1: error: in str : CQL0195: proc name conflicts with func name 'simple_func'

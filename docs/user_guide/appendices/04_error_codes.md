@@ -836,7 +836,7 @@ The problem could be nested quite deeply.
 
 ### CQL0088: user function may not appear in the context of a SQL statement 'function_name'
 
-External C functions declared with `declare function ...` are not for use in
+External C functions declared with `function ...` are not for use in
 sqlite.  They may not appear inside statements.
 
 -----
@@ -892,7 +892,7 @@ Only forms with a string as the second argument are supported by SQLite.
 ### CQL0094: function not yet implemented 'function'
 
 The indicated function is not implemented in CQL.  Possibly you intended to
-declare it with `declare function` as an external function or `declare select
+declare it with `function` as an external function or `declare select
 function` as a sqlite builtin.  Note not all sqlite builtins are automatically
 declared.
 
@@ -2580,7 +2580,7 @@ the DDL that it affects.
 
 The indicated identifier appears in the context of a table, it is a function,
 but it is not a table-valued function.  Either the declaration is wrong (use
-something like `declare select function foo(arg text) (id int, t text)`) or
+something like `select function foo(arg text) (id int, t text)`) or
 the name is wrong.  Or both.
 
 -----
@@ -2600,7 +2600,7 @@ However , `my_function` has not been declared as a function at all.  A correct
 declaration might look like this:
 
 ```sql
-declare select function my_function(a int, b int, c int)
+select function my_function(a int, b int, c int)
   (x int, y text);
 ```
 
@@ -4023,7 +4023,7 @@ documentation.
 require that the expressions be deterministic.  User defined functions may or
 may not be deterministic.
 
-Use [[deterministic) on a UDF declaration (declare select function...]] to mark
+Use [[deterministic) on a UDF declaration (select function...]] to mark
 it deterministic and allow its use in an index.
 
 ----
@@ -5122,7 +5122,7 @@ For instance, `select *, * from foo` is not supported.
 
 ### CQL0475: select functions cannot have out parameters 'param_name'
 
-A function declared with `declare select function` will be called by SQLite --
+A function declared with `select function` will be called by SQLite --
 it has no possibilty of having a call-by-reference out argument.  Therefore
 these are disallowed.  Both `out` and `in out` forms generate this error and may
 not be used.
@@ -5445,7 +5445,7 @@ code expects to target SQLite version 3.33 or lower.
 
 -----
 
-### CQL0499: alias_of attribute may only be added to a declare function statement
+### CQL0499: alias_of attribute may only be added to a function statement
 
 `cql:alias_of` attributes may only be used in [`DECLARE FUNC`
 statements](../08_functions.md#ordinary-scalar-functions) or [`DECLARE PROC`
@@ -5460,7 +5460,7 @@ name that the aliased function references. For example:
 
 ```sql
 [[alias_of=foo]]
-declare function bar() int
+function bar() int
 ```
 
 All subsequent calls to `bar()` in CQL will call the `foo()` function.

@@ -173,7 +173,7 @@ BEGIN
 END;
 
 [[deterministic]]
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+SELECT FUNC is_declare_func_enabled () BOOL!;
 
 PROC test_sample_proc7_create_tables()
 BEGIN
@@ -312,7 +312,7 @@ END;
 
 -- The statement ending at line XXXX
 [[deterministic]]
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+SELECT FUNC is_declare_func_enabled () BOOL!;
 
 PROC test_sample_proc13_create_tables()
 BEGIN
@@ -454,7 +454,7 @@ END;
 
 -- The statement ending at line XXXX
 [[deterministic]]
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+SELECT FUNC is_declare_func_enabled () BOOL!;
 
 PROC test_sample_proc14_create_tables()
 BEGIN
@@ -569,7 +569,7 @@ END;
 
 -- The statement ending at line XXXX
 [[deterministic]]
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+SELECT FUNC is_declare_func_enabled () BOOL!;
 
 PROC test_sample_proc15_create_tables()
 BEGIN
@@ -700,7 +700,7 @@ END;
 
 -- The statement ending at line XXXX
 [[deterministic]]
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+SELECT FUNC is_declare_func_enabled () BOOL!;
 
 PROC test_sample_proc16_create_tables()
 BEGIN
@@ -800,7 +800,7 @@ END;
 
 -- The statement ending at line XXXX
 [[deterministic]]
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+SELECT FUNC is_declare_func_enabled () BOOL!;
 
 PROC test_sample_proc17_create_tables()
 BEGIN
@@ -931,7 +931,7 @@ END;
 
 -- The statement ending at line XXXX
 [[deterministic]]
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+SELECT FUNC is_declare_func_enabled () BOOL!;
 
 PROC test_sample_proc18_create_tables()
 BEGIN
@@ -1031,7 +1031,7 @@ END;
 
 -- The statement ending at line XXXX
 [[deterministic]]
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+SELECT FUNC is_declare_func_enabled () BOOL!;
 
 PROC test_sample_proc19_create_tables()
 BEGIN
@@ -1076,7 +1076,7 @@ END;
 
 -- The statement ending at line XXXX
 [[deterministic]]
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+SELECT FUNC is_declare_func_enabled () BOOL!;
 
 PROC test_sample_proc20_create_tables()
 BEGIN
@@ -1176,7 +1176,7 @@ END;
 
 -- The statement ending at line XXXX
 [[deterministic]]
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+SELECT FUNC is_declare_func_enabled () BOOL!;
 
 PROC test_sample_proc21_create_tables()
 BEGIN
@@ -1320,7 +1320,7 @@ END;
 
 -- The statement ending at line XXXX
 [[deterministic]]
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+SELECT FUNC is_declare_func_enabled () BOOL!;
 
 PROC test_sample_proc22_create_tables()
 BEGIN
@@ -1463,7 +1463,7 @@ END;
 
 -- The statement ending at line XXXX
 [[deterministic]]
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+SELECT FUNC is_declare_func_enabled () BOOL!;
 
 PROC test_sample_proc23_create_tables()
 BEGIN
@@ -1596,7 +1596,7 @@ END;
 
 -- The statement ending at line XXXX
 [[deterministic]]
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+SELECT FUNC is_declare_func_enabled () BOOL!;
 
 PROC test_sample_proc24_create_tables()
 BEGIN
@@ -1706,7 +1706,7 @@ END;
 
 -- The statement ending at line XXXX
 [[deterministic]]
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+SELECT FUNC is_declare_func_enabled () BOOL!;
 
 PROC test_sample_proc25_create_tables()
 BEGIN
@@ -1816,7 +1816,7 @@ END;
 
 -- The statement ending at line XXXX
 [[deterministic]]
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+SELECT FUNC is_declare_func_enabled () BOOL!;
 
 PROC test_sample_proc26_create_tables()
 BEGIN
@@ -1856,7 +1856,7 @@ END;
 
 -- The statement ending at line XXXX
 [[deterministic]]
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+SELECT FUNC is_declare_func_enabled () BOOL!;
 
 PROC test_sample_proc27_create_tables()
 BEGIN
@@ -1898,7 +1898,7 @@ END;
 
 -- The statement ending at line XXXX
 [[deterministic]]
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+SELECT FUNC is_declare_func_enabled () BOOL!;
 
 PROC test_sample_proc28_create_tables()
 BEGIN
@@ -1960,7 +1960,7 @@ END;
 
 -- The statement ending at line XXXX
 [[deterministic]]
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+SELECT FUNC is_declare_func_enabled () BOOL!;
 
 PROC test_sample_proc29_create_tables()
 BEGIN
@@ -2000,7 +2000,7 @@ END;
 
 -- The statement ending at line XXXX
 [[deterministic]]
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+SELECT FUNC is_declare_func_enabled () BOOL!;
 
 PROC test_sample_proc30_create_tables()
 BEGIN
@@ -2062,7 +2062,7 @@ END;
 
 -- The statement ending at line XXXX
 [[deterministic]]
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+SELECT FUNC is_declare_func_enabled () BOOL!;
 
 PROC test_sample_proc31_create_tables()
 BEGIN
@@ -2143,7 +2143,7 @@ END;
 
 -- The statement ending at line XXXX
 [[deterministic]]
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+SELECT FUNC is_declare_func_enabled () BOOL!;
 
 PROC test_sample_proc311_create_tables()
 BEGIN
@@ -2243,7 +2243,7 @@ END;
 
 -- The statement ending at line XXXX
 [[deterministic]]
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+SELECT FUNC is_declare_func_enabled () BOOL!;
 
 PROC test_no_long_to_conversion_create_tables()
 BEGIN
@@ -2311,7 +2311,7 @@ END;
 
 -- The statement ending at line XXXX
 [[deterministic]]
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+SELECT FUNC is_declare_func_enabled () BOOL!;
 
 PROC test_self_ref_proc_create_tables()
 BEGIN
@@ -2351,7 +2351,7 @@ END;
 
 -- The statement ending at line XXXX
 [[deterministic]]
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+SELECT FUNC is_declare_func_enabled () BOOL!;
 
 PROC test_self_ref_proc_no_data_create_tables()
 BEGIN
@@ -2391,7 +2391,7 @@ END;
 
 -- The statement ending at line XXXX
 [[deterministic]]
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+SELECT FUNC is_declare_func_enabled () BOOL!;
 
 PROC test_self_ref_proc2_create_tables()
 BEGIN
@@ -2430,7 +2430,7 @@ END;
 
 -- The statement ending at line XXXX
 [[deterministic]]
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+SELECT FUNC is_declare_func_enabled () BOOL!;
 
 PROC test_self_ref_proc2_no_data_create_tables()
 BEGIN
@@ -2469,7 +2469,7 @@ END;
 
 -- The statement ending at line XXXX
 [[deterministic]]
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+SELECT FUNC is_declare_func_enabled () BOOL!;
 
 PROC test_test_too_many_row_in_child_table_create_tables()
 BEGIN
@@ -2521,7 +2521,7 @@ END;
 
 -- The statement ending at line XXXX
 [[deterministic]]
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+SELECT FUNC is_declare_func_enabled () BOOL!;
 
 PROC test_test_too_many_row_in_child_table_2_create_tables()
 BEGIN
@@ -2575,7 +2575,7 @@ END;
 
 -- The statement ending at line XXXX
 [[deterministic]]
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+SELECT FUNC is_declare_func_enabled () BOOL!;
 
 PROC test_test_virtual_table_proc_create_tables()
 BEGIN
@@ -2607,7 +2607,7 @@ END;
 
 -- The statement ending at line XXXX
 [[deterministic]]
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+SELECT FUNC is_declare_func_enabled () BOOL!;
 
 PROC test_test_blob_primary_key_create_tables()
 BEGIN
@@ -2645,7 +2645,7 @@ END;
 
 -- The statement ending at line XXXX
 [[deterministic]]
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+SELECT FUNC is_declare_func_enabled () BOOL!;
 
 PROC test_test_child_blob_primary_key_create_tables()
 BEGIN
@@ -2696,7 +2696,7 @@ END;
 
 -- The statement ending at line XXXX
 [[deterministic]]
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+SELECT FUNC is_declare_func_enabled () BOOL!;
 
 PROC test_test_blob_literal_in_dummy_test_create_tables()
 BEGIN
@@ -2747,7 +2747,7 @@ END;
 
 -- The statement ending at line XXXX
 [[deterministic]]
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+SELECT FUNC is_declare_func_enabled () BOOL!;
 
 PROC test_test_frags_create_tables()
 BEGIN
@@ -2798,7 +2798,7 @@ END;
 
 -- The statement ending at line XXXX
 [[deterministic]]
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+SELECT FUNC is_declare_func_enabled () BOOL!;
 
 PROC test_MyProc_create_tables()
 BEGIN
@@ -2888,7 +2888,7 @@ END;
 
 -- The statement ending at line XXXX
 [[deterministic]]
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+SELECT FUNC is_declare_func_enabled () BOOL!;
 
 PROC test_uses_backed_table_create_tables()
 BEGIN
@@ -2945,7 +2945,7 @@ END;
 
 -- The statement ending at line XXXX
 [[deterministic]]
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+SELECT FUNC is_declare_func_enabled () BOOL!;
 
 PROC test_insert_returning_cursor_create_tables()
 BEGIN
@@ -2983,7 +2983,7 @@ END;
 
 -- The statement ending at line XXXX
 [[deterministic]]
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+SELECT FUNC is_declare_func_enabled () BOOL!;
 
 PROC test_insert_returning_stmt_create_tables()
 BEGIN
@@ -3048,7 +3048,7 @@ END;
 
 -- The statement ending at line XXXX
 [[deterministic]]
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+SELECT FUNC is_declare_func_enabled () BOOL!;
 
 PROC test_delete_returning_stmt_create_tables()
 BEGIN
@@ -3113,7 +3113,7 @@ END;
 
 -- The statement ending at line XXXX
 [[deterministic]]
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+SELECT FUNC is_declare_func_enabled () BOOL!;
 
 PROC test_update_returning_stmt_create_tables()
 BEGIN
@@ -3178,7 +3178,7 @@ END;
 
 -- The statement ending at line XXXX
 [[deterministic]]
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+SELECT FUNC is_declare_func_enabled () BOOL!;
 
 PROC test_upsert_returning_stmt_create_tables()
 BEGIN

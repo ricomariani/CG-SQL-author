@@ -674,7 +674,7 @@ also add this:
 
 ```sql
 [[deterministic]]
-declare select function bgetkey_type(b blob) long;
+select function bgetkey_type(b blob) long;
 
 create index backing_index on backing(bgetkey_type(k));
 ```
@@ -1058,14 +1058,14 @@ If you want to refer to your blob functions in your own code, such as
 for indices you'll also need to do something like this:
 
 ```sql
-[[deterministic]] declare select function bgetkey_type(b blob) long;
-[[deterministic]] declare select function bgetval_type(b blob) long;
-[[deterministic]] declare select function bgetkey(b blob, iarg int) long; -- polymorphic
-[[deterministic]] declare select function bgetval(b blob, iarg int) long; -- polymorphic
-[[deterministic]] declare select function bcreateval no check blob;
-[[deterministic]] declare select function bcreatekey no check blob;
-[[deterministic]] declare select function bupdateval no check blob;
-[[deterministic]] declare select function bupdatekey no check blob;
+[[deterministic]] select function bgetkey_type(b blob) long;
+[[deterministic]] select function bgetval_type(b blob) long;
+[[deterministic]] select function bgetkey(b blob, iarg int) long; -- polymorphic
+[[deterministic]] select function bgetval(b blob, iarg int) long; -- polymorphic
+[[deterministic]] select function bcreateval no check blob;
+[[deterministic]] select function bcreatekey no check blob;
+[[deterministic]] select function bupdateval no check blob;
+[[deterministic]] select function bupdatekey no check blob;
 ```
 
 `bgetval` and `bgetkey` are not readily declarable generally because their

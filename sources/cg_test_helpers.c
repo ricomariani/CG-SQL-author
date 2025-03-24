@@ -802,7 +802,7 @@ static void cg_test_helpers_dummy_test(ast_node *stmt) {
   // At this point we're done with all the tables, we're ready to generate the main methods
   // plus do the rest of the housekeeping
 
-  // Emit declare functions because they may be needed for schema and query validation
+  // Emit functions because they may be needed for schema and query validation
   // We don't try to guess which functions were used, we just emit the correct declarations for them all.
   // We could in principle do this one time for the entire translation unit but duplicates don't hurt anyway.
   gen_set_output_buffer(&gen_declare_funcs);
@@ -823,7 +823,7 @@ static void cg_test_helpers_dummy_test(ast_node *stmt) {
     }
   }
 
-  // declare functions
+  // functions
   bprintf(cg_th_procs, "%s", gen_declare_funcs.ptr);
 
   // create tables proc

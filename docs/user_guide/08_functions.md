@@ -18,7 +18,7 @@ Even a random number generator or something would be difficult to
 use because it could not be called in the context of an expression.
 To allow for this CQL adds declared functions
 
-In another example of the two-headed nature of CQL, there are two ways to declare functions.  As we have already
+In another example of the two-headed nature of CQL, there are two ways to functions.  As we have already
 seen you can make function-like procedures and call them like functions
 simply by making a procedure with an `out` parameter. However, there
 are also cases where it is reasonable to make function calls to external
@@ -33,7 +33,7 @@ These functions are written in regular C and provide for the ability to do opera
 you could create functions that allow you to read and write from a dictionary.  You can declare these functions like so:
 
 ```sql
-declare function dict_get_value(dict object, key_ text!) text;
+function dict_get_value(dict object, key_ text!) text;
 ```
 
 Such a function is not known to SQLite and therefore cannot appear in SQL statements.  CQL will enforce this.
@@ -43,10 +43,10 @@ is presumably holding on to the reference and as long as it is not mutated the r
 retain this reference as soon as it is stored and release it automatically when it is out of scope.  So, in
 this case, the dictionary continues to own the object.
 
-It is also possible to declare functions that create objects.  Such as this example:
+It is also possible to functions that create objects.  Such as this example:
 
 ```sql
-declare function dict_create() create object;
+function dict_create() create object;
 ```
 
 This declaration tells CQL that the function will create a new object for our use.  CQL does not retain the
@@ -88,7 +88,7 @@ order to use this function in CQL, you must also provide its prototype definitio
 can do so following this example:
 
 ```sql
-declare select function strencode(t text!) text!;
+select function strencode(t text!) text!;
 ```
 
 This introduces the function `strencode` to the compiler for use in SQL constructs.  With this done you
@@ -137,7 +137,7 @@ most object types.  For instance it is possible to create a table-valued
 function like so:
 
 ```sql
-declare select function dict_contents(dict object not null)
+select function dict_contents(dict object not null)
    (k text!, v text!);
 ```
 
@@ -169,13 +169,13 @@ the `NO CHECK` clause instead of parameter types.
 
 For example:
 ```sql
-declare select function json_extract no check text;
+select function json_extract no check text;
 ```
 
 This is also supported for SQL table-valued functions:
 
 ```sql
-declare select function table_valued_function no check (t text, i int);
+select function table_valued_function no check (t text, i int);
 ```
 
 >NOTE: currently the `NO CHECK` clause is not supported for non SQL

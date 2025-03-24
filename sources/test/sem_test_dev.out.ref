@@ -3,7 +3,7 @@
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_partition_create () CREATE OBJECT<partitioning>!;
+FUNC cql_partition_create () CREATE OBJECT<partitioning>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -22,7 +22,7 @@ DECLARE FUNC cql_partition_create () CREATE OBJECT<partitioning>!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_partition_cursor (p OBJECT<partitioning>!, key CURSOR, value CURSOR) BOOL!;
+FUNC cql_partition_cursor (p OBJECT<partitioning>!, key CURSOR, value CURSOR) BOOL!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -56,7 +56,7 @@ DECLARE FUNC cql_partition_cursor (p OBJECT<partitioning>!, key CURSOR, value CU
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_extract_partition (p OBJECT<partitioning>!, key CURSOR) CREATE OBJECT!;
+FUNC cql_extract_partition (p OBJECT<partitioning>!, key CURSOR) CREATE OBJECT!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -86,7 +86,7 @@ DECLARE FUNC cql_extract_partition (p OBJECT<partitioning>!, key CURSOR) CREATE 
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_string_dictionary_create () CREATE OBJECT<cql_string_dictionary>!;
+FUNC cql_string_dictionary_create () CREATE OBJECT<cql_string_dictionary>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -105,7 +105,7 @@ DECLARE FUNC cql_string_dictionary_create () CREATE OBJECT<cql_string_dictionary
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_string_dictionary_add (dict OBJECT<cql_string_dictionary>!, key TEXT!, value TEXT!) BOOL!;
+FUNC cql_string_dictionary_add (dict OBJECT<cql_string_dictionary>!, key TEXT!, value TEXT!) BOOL!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -141,7 +141,7 @@ DECLARE FUNC cql_string_dictionary_add (dict OBJECT<cql_string_dictionary>!, key
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_string_dictionary_find (dict OBJECT<cql_string_dictionary>!, key TEXT) TEXT;
+FUNC cql_string_dictionary_find (dict OBJECT<cql_string_dictionary>!, key TEXT) TEXT;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -249,7 +249,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_long_dictionary_create () CREATE OBJECT<cql_long_dictionary>!;
+FUNC cql_long_dictionary_create () CREATE OBJECT<cql_long_dictionary>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -268,7 +268,7 @@ DECLARE FUNC cql_long_dictionary_create () CREATE OBJECT<cql_long_dictionary>!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_long_dictionary_add (dict OBJECT<cql_long_dictionary>!, key TEXT!, value LONG!) BOOL!;
+FUNC cql_long_dictionary_add (dict OBJECT<cql_long_dictionary>!, key TEXT!, value LONG!) BOOL!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -304,7 +304,7 @@ DECLARE FUNC cql_long_dictionary_add (dict OBJECT<cql_long_dictionary>!, key TEX
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_long_dictionary_find (dict OBJECT<cql_long_dictionary>!, key TEXT) LONG;
+FUNC cql_long_dictionary_find (dict OBJECT<cql_long_dictionary>!, key TEXT) LONG;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -412,7 +412,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_real_dictionary_create () CREATE OBJECT<cql_real_dictionary>!;
+FUNC cql_real_dictionary_create () CREATE OBJECT<cql_real_dictionary>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -431,7 +431,7 @@ DECLARE FUNC cql_real_dictionary_create () CREATE OBJECT<cql_real_dictionary>!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_real_dictionary_add (dict OBJECT<cql_real_dictionary>!, key TEXT!, value REAL!) BOOL!;
+FUNC cql_real_dictionary_add (dict OBJECT<cql_real_dictionary>!, key TEXT!, value REAL!) BOOL!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -467,7 +467,7 @@ DECLARE FUNC cql_real_dictionary_add (dict OBJECT<cql_real_dictionary>!, key TEX
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_real_dictionary_find (dict OBJECT<cql_real_dictionary>!, key TEXT) REAL;
+FUNC cql_real_dictionary_find (dict OBJECT<cql_real_dictionary>!, key TEXT) REAL;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -575,7 +575,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_object_dictionary_create () CREATE OBJECT<cql_object_dictionary>!;
+FUNC cql_object_dictionary_create () CREATE OBJECT<cql_object_dictionary>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -594,7 +594,7 @@ DECLARE FUNC cql_object_dictionary_create () CREATE OBJECT<cql_object_dictionary
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_object_dictionary_add (dict OBJECT<cql_object_dictionary>!, key TEXT!, value OBJECT!) BOOL!;
+FUNC cql_object_dictionary_add (dict OBJECT<cql_object_dictionary>!, key TEXT!, value OBJECT!) BOOL!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -630,7 +630,7 @@ DECLARE FUNC cql_object_dictionary_add (dict OBJECT<cql_object_dictionary>!, key
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_object_dictionary_find (dict OBJECT<cql_object_dictionary>!, key TEXT) OBJECT;
+FUNC cql_object_dictionary_find (dict OBJECT<cql_object_dictionary>!, key TEXT) OBJECT;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -738,7 +738,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_blob_dictionary_create () CREATE OBJECT<cql_blob_dictionary>!;
+FUNC cql_blob_dictionary_create () CREATE OBJECT<cql_blob_dictionary>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -757,7 +757,7 @@ DECLARE FUNC cql_blob_dictionary_create () CREATE OBJECT<cql_blob_dictionary>!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_blob_dictionary_add (dict OBJECT<cql_blob_dictionary>!, key TEXT!, value BLOB!) BOOL!;
+FUNC cql_blob_dictionary_add (dict OBJECT<cql_blob_dictionary>!, key TEXT!, value BLOB!) BOOL!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -793,7 +793,7 @@ DECLARE FUNC cql_blob_dictionary_add (dict OBJECT<cql_blob_dictionary>!, key TEX
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_blob_dictionary_find (dict OBJECT<cql_blob_dictionary>!, key TEXT) BLOB;
+FUNC cql_blob_dictionary_find (dict OBJECT<cql_blob_dictionary>!, key TEXT) BLOB;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -901,7 +901,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_cursor_format (C CURSOR) CREATE TEXT!;
+FUNC cql_cursor_format (C CURSOR) CREATE TEXT!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -924,7 +924,7 @@ DECLARE FUNC cql_cursor_format (C CURSOR) CREATE TEXT!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_cursor_hash (C CURSOR) LONG!;
+FUNC cql_cursor_hash (C CURSOR) LONG!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -946,7 +946,7 @@ DECLARE FUNC cql_cursor_hash (C CURSOR) LONG!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_cursors_equal (l CURSOR, r CURSOR) BOOL!;
+FUNC cql_cursors_equal (l CURSOR, r CURSOR) BOOL!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -973,7 +973,7 @@ DECLARE FUNC cql_cursors_equal (l CURSOR, r CURSOR) BOOL!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_cursor_diff_index (l CURSOR, r CURSOR) INT!;
+FUNC cql_cursor_diff_index (l CURSOR, r CURSOR) INT!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -1000,7 +1000,7 @@ DECLARE FUNC cql_cursor_diff_index (l CURSOR, r CURSOR) INT!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_cursor_diff_col (l CURSOR, r CURSOR) CREATE TEXT;
+FUNC cql_cursor_diff_col (l CURSOR, r CURSOR) CREATE TEXT;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -1027,7 +1027,7 @@ DECLARE FUNC cql_cursor_diff_col (l CURSOR, r CURSOR) CREATE TEXT;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_cursor_diff_val (l CURSOR, r CURSOR) CREATE TEXT;
+FUNC cql_cursor_diff_val (l CURSOR, r CURSOR) CREATE TEXT;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -1054,7 +1054,7 @@ DECLARE FUNC cql_cursor_diff_val (l CURSOR, r CURSOR) CREATE TEXT;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_box_int (x INT) CREATE OBJECT<cql_box>!;
+FUNC cql_box_int (x INT) CREATE OBJECT<cql_box>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -1078,7 +1078,7 @@ DECLARE FUNC cql_box_int (x INT) CREATE OBJECT<cql_box>!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_unbox_int (box OBJECT<cql_box>) INT;
+FUNC cql_unbox_int (box OBJECT<cql_box>) INT;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -1100,7 +1100,7 @@ DECLARE FUNC cql_unbox_int (box OBJECT<cql_box>) INT;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_box_real (x REAL) CREATE OBJECT<cql_box>!;
+FUNC cql_box_real (x REAL) CREATE OBJECT<cql_box>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -1124,7 +1124,7 @@ DECLARE FUNC cql_box_real (x REAL) CREATE OBJECT<cql_box>!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_unbox_real (box OBJECT<cql_box>) REAL;
+FUNC cql_unbox_real (box OBJECT<cql_box>) REAL;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -1146,7 +1146,7 @@ DECLARE FUNC cql_unbox_real (box OBJECT<cql_box>) REAL;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_box_bool (x BOOL) CREATE OBJECT<cql_box>!;
+FUNC cql_box_bool (x BOOL) CREATE OBJECT<cql_box>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -1170,7 +1170,7 @@ DECLARE FUNC cql_box_bool (x BOOL) CREATE OBJECT<cql_box>!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_unbox_bool (box OBJECT<cql_box>) BOOL;
+FUNC cql_unbox_bool (box OBJECT<cql_box>) BOOL;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -1192,7 +1192,7 @@ DECLARE FUNC cql_unbox_bool (box OBJECT<cql_box>) BOOL;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_box_long (x LONG) CREATE OBJECT<cql_box>!;
+FUNC cql_box_long (x LONG) CREATE OBJECT<cql_box>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -1216,7 +1216,7 @@ DECLARE FUNC cql_box_long (x LONG) CREATE OBJECT<cql_box>!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_unbox_long (box OBJECT<cql_box>) LONG;
+FUNC cql_unbox_long (box OBJECT<cql_box>) LONG;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -1238,7 +1238,7 @@ DECLARE FUNC cql_unbox_long (box OBJECT<cql_box>) LONG;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_box_text (x TEXT) CREATE OBJECT<cql_box>!;
+FUNC cql_box_text (x TEXT) CREATE OBJECT<cql_box>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -1262,7 +1262,7 @@ DECLARE FUNC cql_box_text (x TEXT) CREATE OBJECT<cql_box>!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_unbox_text (box OBJECT<cql_box>) TEXT;
+FUNC cql_unbox_text (box OBJECT<cql_box>) TEXT;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -1284,7 +1284,7 @@ DECLARE FUNC cql_unbox_text (box OBJECT<cql_box>) TEXT;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_box_blob (x BLOB) CREATE OBJECT<cql_box>!;
+FUNC cql_box_blob (x BLOB) CREATE OBJECT<cql_box>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -1308,7 +1308,7 @@ DECLARE FUNC cql_box_blob (x BLOB) CREATE OBJECT<cql_box>!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_unbox_blob (box OBJECT<cql_box>) BLOB;
+FUNC cql_unbox_blob (box OBJECT<cql_box>) BLOB;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -1330,7 +1330,7 @@ DECLARE FUNC cql_unbox_blob (box OBJECT<cql_box>) BLOB;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_box_object (x OBJECT) CREATE OBJECT<cql_box>!;
+FUNC cql_box_object (x OBJECT) CREATE OBJECT<cql_box>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -1354,7 +1354,7 @@ DECLARE FUNC cql_box_object (x OBJECT) CREATE OBJECT<cql_box>!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_unbox_object (box OBJECT<cql_box>) OBJECT;
+FUNC cql_unbox_object (box OBJECT<cql_box>) OBJECT;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -1376,7 +1376,7 @@ DECLARE FUNC cql_unbox_object (box OBJECT<cql_box>) OBJECT;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_box_get_type (box OBJECT<cql_box>) INT!;
+FUNC cql_box_get_type (box OBJECT<cql_box>) INT!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -1708,7 +1708,7 @@ TYPE cql_string_list OBJECT<cql_string_list>;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_string_list_create () CREATE OBJECT<cql_string_list>!;
+FUNC cql_string_list_create () CREATE OBJECT<cql_string_list>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -1727,7 +1727,7 @@ DECLARE FUNC cql_string_list_create () CREATE OBJECT<cql_string_list>!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_string_list_set_at (list OBJECT<cql_string_list>!, index_ INT!, value_ TEXT!) OBJECT<cql_string_list>!;
+FUNC cql_string_list_set_at (list OBJECT<cql_string_list>!, index_ INT!, value_ TEXT!) OBJECT<cql_string_list>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -1764,7 +1764,7 @@ DECLARE FUNC cql_string_list_set_at (list OBJECT<cql_string_list>!, index_ INT!,
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_string_list_get_at (list OBJECT<cql_string_list>!, index_ INT!) TEXT;
+FUNC cql_string_list_get_at (list OBJECT<cql_string_list>!, index_ INT!) TEXT;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -1793,7 +1793,7 @@ DECLARE FUNC cql_string_list_get_at (list OBJECT<cql_string_list>!, index_ INT!)
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_string_list_count (list OBJECT<cql_string_list>!) INT!;
+FUNC cql_string_list_count (list OBJECT<cql_string_list>!) INT!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -1817,7 +1817,7 @@ DECLARE FUNC cql_string_list_count (list OBJECT<cql_string_list>!) INT!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_string_list_add (list OBJECT<cql_string_list>!, string TEXT!) OBJECT<cql_string_list>!;
+FUNC cql_string_list_add (list OBJECT<cql_string_list>!, string TEXT!) OBJECT<cql_string_list>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -1944,7 +1944,7 @@ TYPE cql_blob_list OBJECT<cql_blob_list>;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_blob_list_create () CREATE OBJECT<cql_blob_list>!;
+FUNC cql_blob_list_create () CREATE OBJECT<cql_blob_list>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -1963,7 +1963,7 @@ DECLARE FUNC cql_blob_list_create () CREATE OBJECT<cql_blob_list>!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_blob_list_set_at (list OBJECT<cql_blob_list>!, index_ INT!, value_ BLOB!) OBJECT<cql_blob_list>!;
+FUNC cql_blob_list_set_at (list OBJECT<cql_blob_list>!, index_ INT!, value_ BLOB!) OBJECT<cql_blob_list>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -2000,7 +2000,7 @@ DECLARE FUNC cql_blob_list_set_at (list OBJECT<cql_blob_list>!, index_ INT!, val
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_blob_list_get_at (list OBJECT<cql_blob_list>!, index_ INT!) BLOB;
+FUNC cql_blob_list_get_at (list OBJECT<cql_blob_list>!, index_ INT!) BLOB;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -2029,7 +2029,7 @@ DECLARE FUNC cql_blob_list_get_at (list OBJECT<cql_blob_list>!, index_ INT!) BLO
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_blob_list_count (list OBJECT<cql_blob_list>!) INT!;
+FUNC cql_blob_list_count (list OBJECT<cql_blob_list>!) INT!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -2053,7 +2053,7 @@ DECLARE FUNC cql_blob_list_count (list OBJECT<cql_blob_list>!) INT!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_blob_list_add (list OBJECT<cql_blob_list>!, value BLOB!) OBJECT<cql_blob_list>!;
+FUNC cql_blob_list_add (list OBJECT<cql_blob_list>!, value BLOB!) OBJECT<cql_blob_list>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -2180,7 +2180,7 @@ TYPE cql_object_list OBJECT<cql_object_list>;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_object_list_create () CREATE OBJECT<cql_object_list>!;
+FUNC cql_object_list_create () CREATE OBJECT<cql_object_list>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -2199,7 +2199,7 @@ DECLARE FUNC cql_object_list_create () CREATE OBJECT<cql_object_list>!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_object_list_set_at (list OBJECT<cql_object_list>!, index_ INT!, value_ OBJECT!) OBJECT<cql_object_list>!;
+FUNC cql_object_list_set_at (list OBJECT<cql_object_list>!, index_ INT!, value_ OBJECT!) OBJECT<cql_object_list>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -2236,7 +2236,7 @@ DECLARE FUNC cql_object_list_set_at (list OBJECT<cql_object_list>!, index_ INT!,
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_object_list_get_at (list OBJECT<cql_object_list>!, index_ INT!) OBJECT;
+FUNC cql_object_list_get_at (list OBJECT<cql_object_list>!, index_ INT!) OBJECT;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -2265,7 +2265,7 @@ DECLARE FUNC cql_object_list_get_at (list OBJECT<cql_object_list>!, index_ INT!)
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_object_list_count (list OBJECT<cql_object_list>!) INT!;
+FUNC cql_object_list_count (list OBJECT<cql_object_list>!) INT!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -2289,7 +2289,7 @@ DECLARE FUNC cql_object_list_count (list OBJECT<cql_object_list>!) INT!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_object_list_add (list OBJECT<cql_object_list>!, value OBJECT!) OBJECT<cql_object_list>!;
+FUNC cql_object_list_add (list OBJECT<cql_object_list>!, value OBJECT!) OBJECT<cql_object_list>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -2416,7 +2416,7 @@ TYPE cql_long_list OBJECT<cql_long_list>;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_long_list_create () CREATE OBJECT<cql_long_list>!;
+FUNC cql_long_list_create () CREATE OBJECT<cql_long_list>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -2435,7 +2435,7 @@ DECLARE FUNC cql_long_list_create () CREATE OBJECT<cql_long_list>!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_long_list_set_at (list OBJECT<cql_long_list>!, index_ INT!, value_ LONG!) OBJECT<cql_long_list>!;
+FUNC cql_long_list_set_at (list OBJECT<cql_long_list>!, index_ INT!, value_ LONG!) OBJECT<cql_long_list>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -2472,7 +2472,7 @@ DECLARE FUNC cql_long_list_set_at (list OBJECT<cql_long_list>!, index_ INT!, val
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_long_list_get_at (list OBJECT<cql_long_list>!, index_ INT!) LONG!;
+FUNC cql_long_list_get_at (list OBJECT<cql_long_list>!, index_ INT!) LONG!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -2502,7 +2502,7 @@ DECLARE FUNC cql_long_list_get_at (list OBJECT<cql_long_list>!, index_ INT!) LON
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_long_list_count (list OBJECT<cql_long_list>!) INT!;
+FUNC cql_long_list_count (list OBJECT<cql_long_list>!) INT!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -2526,7 +2526,7 @@ DECLARE FUNC cql_long_list_count (list OBJECT<cql_long_list>!) INT!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_long_list_add (list OBJECT<cql_long_list>!, value_ LONG!) OBJECT<cql_long_list>!;
+FUNC cql_long_list_add (list OBJECT<cql_long_list>!, value_ LONG!) OBJECT<cql_long_list>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -2653,7 +2653,7 @@ TYPE cql_real_list OBJECT<cql_real_list>;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_real_list_create () CREATE OBJECT<cql_real_list>!;
+FUNC cql_real_list_create () CREATE OBJECT<cql_real_list>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -2672,7 +2672,7 @@ DECLARE FUNC cql_real_list_create () CREATE OBJECT<cql_real_list>!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_real_list_set_at (list OBJECT<cql_real_list>!, index_ INT!, value_ REAL!) OBJECT<cql_real_list>!;
+FUNC cql_real_list_set_at (list OBJECT<cql_real_list>!, index_ INT!, value_ REAL!) OBJECT<cql_real_list>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -2709,7 +2709,7 @@ DECLARE FUNC cql_real_list_set_at (list OBJECT<cql_real_list>!, index_ INT!, val
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_real_list_get_at (list OBJECT<cql_real_list>!, index_ INT!) REAL!;
+FUNC cql_real_list_get_at (list OBJECT<cql_real_list>!, index_ INT!) REAL!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -2739,7 +2739,7 @@ DECLARE FUNC cql_real_list_get_at (list OBJECT<cql_real_list>!, index_ INT!) REA
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_real_list_count (list OBJECT<cql_real_list>!) INT!;
+FUNC cql_real_list_count (list OBJECT<cql_real_list>!) INT!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -2763,7 +2763,7 @@ DECLARE FUNC cql_real_list_count (list OBJECT<cql_real_list>!) INT!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_real_list_add (list OBJECT<cql_real_list>!, value_ REAL!) OBJECT<cql_real_list>!;
+FUNC cql_real_list_add (list OBJECT<cql_real_list>!, value_ REAL!) OBJECT<cql_real_list>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -2874,7 +2874,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_cursor_column_count (C CURSOR) INT!;
+FUNC cql_cursor_column_count (C CURSOR) INT!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -2896,7 +2896,7 @@ DECLARE FUNC cql_cursor_column_count (C CURSOR) INT!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_cursor_column_type (C CURSOR, icol INT!) INT!;
+FUNC cql_cursor_column_type (C CURSOR, icol INT!) INT!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -2924,7 +2924,7 @@ DECLARE FUNC cql_cursor_column_type (C CURSOR, icol INT!) INT!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_cursor_column_name (C CURSOR, icol INT!) CREATE TEXT;
+FUNC cql_cursor_column_name (C CURSOR, icol INT!) CREATE TEXT;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -2952,7 +2952,7 @@ DECLARE FUNC cql_cursor_column_name (C CURSOR, icol INT!) CREATE TEXT;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_cursor_get_bool (C CURSOR, icol INT!) BOOL;
+FUNC cql_cursor_get_bool (C CURSOR, icol INT!) BOOL;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -2979,7 +2979,7 @@ DECLARE FUNC cql_cursor_get_bool (C CURSOR, icol INT!) BOOL;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_cursor_get_int (C CURSOR, icol INT!) INT;
+FUNC cql_cursor_get_int (C CURSOR, icol INT!) INT;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -3006,7 +3006,7 @@ DECLARE FUNC cql_cursor_get_int (C CURSOR, icol INT!) INT;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_cursor_get_long (C CURSOR, icol INT!) LONG;
+FUNC cql_cursor_get_long (C CURSOR, icol INT!) LONG;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -3033,7 +3033,7 @@ DECLARE FUNC cql_cursor_get_long (C CURSOR, icol INT!) LONG;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_cursor_get_real (C CURSOR, icol INT!) REAL;
+FUNC cql_cursor_get_real (C CURSOR, icol INT!) REAL;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -3060,7 +3060,7 @@ DECLARE FUNC cql_cursor_get_real (C CURSOR, icol INT!) REAL;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_cursor_get_text (C CURSOR, icol INT!) TEXT;
+FUNC cql_cursor_get_text (C CURSOR, icol INT!) TEXT;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -3087,7 +3087,7 @@ DECLARE FUNC cql_cursor_get_text (C CURSOR, icol INT!) TEXT;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_cursor_get_blob (C CURSOR, icol INT!) BLOB;
+FUNC cql_cursor_get_blob (C CURSOR, icol INT!) BLOB;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -3114,7 +3114,7 @@ DECLARE FUNC cql_cursor_get_blob (C CURSOR, icol INT!) BLOB;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_cursor_get_object (C CURSOR, icol INT!) OBJECT;
+FUNC cql_cursor_get_object (C CURSOR, icol INT!) OBJECT;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -3141,7 +3141,7 @@ DECLARE FUNC cql_cursor_get_object (C CURSOR, icol INT!) OBJECT;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_cursor_format_column (C CURSOR, icol INT!) CREATE TEXT!;
+FUNC cql_cursor_format_column (C CURSOR, icol INT!) CREATE TEXT!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -3815,7 +3815,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_blob_from_int (prefix TEXT, val INT!) CREATE BLOB!;
+FUNC cql_blob_from_int (prefix TEXT, val INT!) CREATE BLOB!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -3844,7 +3844,7 @@ DECLARE FUNC cql_blob_from_int (prefix TEXT, val INT!) CREATE BLOB!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_format_bool (val BOOL @SENSITIVE) CREATE TEXT!;
+FUNC cql_format_bool (val BOOL @SENSITIVE) CREATE TEXT!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -3868,7 +3868,7 @@ DECLARE FUNC cql_format_bool (val BOOL @SENSITIVE) CREATE TEXT!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_format_int (val INT @SENSITIVE) CREATE TEXT!;
+FUNC cql_format_int (val INT @SENSITIVE) CREATE TEXT!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -3892,7 +3892,7 @@ DECLARE FUNC cql_format_int (val INT @SENSITIVE) CREATE TEXT!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_format_long (val LONG @SENSITIVE) CREATE TEXT!;
+FUNC cql_format_long (val LONG @SENSITIVE) CREATE TEXT!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -3916,7 +3916,7 @@ DECLARE FUNC cql_format_long (val LONG @SENSITIVE) CREATE TEXT!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_format_double (val REAL @SENSITIVE) CREATE TEXT!;
+FUNC cql_format_double (val REAL @SENSITIVE) CREATE TEXT!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -3940,7 +3940,7 @@ DECLARE FUNC cql_format_double (val REAL @SENSITIVE) CREATE TEXT!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_format_string (val TEXT @SENSITIVE) CREATE TEXT!;
+FUNC cql_format_string (val TEXT @SENSITIVE) CREATE TEXT!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -3964,7 +3964,7 @@ DECLARE FUNC cql_format_string (val TEXT @SENSITIVE) CREATE TEXT!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_format_blob (val BLOB @SENSITIVE) CREATE TEXT!;
+FUNC cql_format_blob (val BLOB @SENSITIVE) CREATE TEXT!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -3988,7 +3988,7 @@ DECLARE FUNC cql_format_blob (val BLOB @SENSITIVE) CREATE TEXT!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_format_object (val OBJECT @SENSITIVE) CREATE TEXT!;
+FUNC cql_format_object (val OBJECT @SENSITIVE) CREATE TEXT!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -4012,7 +4012,7 @@ DECLARE FUNC cql_format_object (val OBJECT @SENSITIVE) CREATE TEXT!;
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_format_null (ignored BOOL @SENSITIVE) CREATE TEXT!;
+FUNC cql_format_null (ignored BOOL @SENSITIVE) CREATE TEXT!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -4188,7 +4188,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_make_blob_stream (list OBJECT<cql_blob_list>!) CREATE BLOB!;
+FUNC cql_make_blob_stream (list OBJECT<cql_blob_list>!) CREATE BLOB!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -4246,7 +4246,7 @@ DECLARE PROC cql_cursor_from_blob_stream (C CURSOR, b BLOB, i INT!) USING TRANSA
 The statement ending at line XXXX
 
 [[builtin]]
-DECLARE FUNC cql_blob_stream_count (b BLOB!) INT!;
+FUNC cql_blob_stream_count (b BLOB!) INT!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok

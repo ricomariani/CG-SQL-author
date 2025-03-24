@@ -5701,7 +5701,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_partition_create () CREATE OBJECT<partitioning>!
+    FUNC cql_partition_create () CREATE OBJECT<partitioning>!
 
     {
       "name" : "cql_partition_create",
@@ -5724,7 +5724,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_partition_cursor (p OBJECT<partitioning>!, key CURSOR, value CURSOR) BOOL!
+    FUNC cql_partition_cursor (p OBJECT<partitioning>!, key CURSOR, value CURSOR) BOOL!
 
     {
       "name" : "cql_partition_cursor",
@@ -5762,7 +5762,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_extract_partition (p OBJECT<partitioning>!, key CURSOR) CREATE OBJECT!
+    FUNC cql_extract_partition (p OBJECT<partitioning>!, key CURSOR) CREATE OBJECT!
 
     {
       "name" : "cql_extract_partition",
@@ -5795,7 +5795,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_string_dictionary_create () CREATE OBJECT<cql_string_dictionary>!
+    FUNC cql_string_dictionary_create () CREATE OBJECT<cql_string_dictionary>!
 
     {
       "name" : "cql_string_dictionary_create",
@@ -5818,7 +5818,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_string_dictionary_add (dict OBJECT<cql_string_dictionary>!, key TEXT!, value TEXT!) BOOL!
+    FUNC cql_string_dictionary_add (dict OBJECT<cql_string_dictionary>!, key TEXT!, value TEXT!) BOOL!
 
     {
       "name" : "cql_string_dictionary_add",
@@ -5856,7 +5856,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_string_dictionary_find (dict OBJECT<cql_string_dictionary>!, key TEXT) TEXT
+    FUNC cql_string_dictionary_find (dict OBJECT<cql_string_dictionary>!, key TEXT) TEXT
 
     {
       "name" : "cql_string_dictionary_find",
@@ -5889,7 +5889,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_long_dictionary_create () CREATE OBJECT<cql_long_dictionary>!
+    FUNC cql_long_dictionary_create () CREATE OBJECT<cql_long_dictionary>!
 
     {
       "name" : "cql_long_dictionary_create",
@@ -5912,7 +5912,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_long_dictionary_add (dict OBJECT<cql_long_dictionary>!, key TEXT!, value LONG!) BOOL!
+    FUNC cql_long_dictionary_add (dict OBJECT<cql_long_dictionary>!, key TEXT!, value LONG!) BOOL!
 
     {
       "name" : "cql_long_dictionary_add",
@@ -5950,7 +5950,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_long_dictionary_find (dict OBJECT<cql_long_dictionary>!, key TEXT) LONG
+    FUNC cql_long_dictionary_find (dict OBJECT<cql_long_dictionary>!, key TEXT) LONG
 
     {
       "name" : "cql_long_dictionary_find",
@@ -5983,7 +5983,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_real_dictionary_create () CREATE OBJECT<cql_real_dictionary>!
+    FUNC cql_real_dictionary_create () CREATE OBJECT<cql_real_dictionary>!
 
     {
       "name" : "cql_real_dictionary_create",
@@ -6006,7 +6006,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_real_dictionary_add (dict OBJECT<cql_real_dictionary>!, key TEXT!, value REAL!) BOOL!
+    FUNC cql_real_dictionary_add (dict OBJECT<cql_real_dictionary>!, key TEXT!, value REAL!) BOOL!
 
     {
       "name" : "cql_real_dictionary_add",
@@ -6044,7 +6044,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_real_dictionary_find (dict OBJECT<cql_real_dictionary>!, key TEXT) REAL
+    FUNC cql_real_dictionary_find (dict OBJECT<cql_real_dictionary>!, key TEXT) REAL
 
     {
       "name" : "cql_real_dictionary_find",
@@ -6077,7 +6077,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_object_dictionary_create () CREATE OBJECT<cql_object_dictionary>!
+    FUNC cql_object_dictionary_create () CREATE OBJECT<cql_object_dictionary>!
 
     {
       "name" : "cql_object_dictionary_create",
@@ -6100,7 +6100,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_object_dictionary_add (dict OBJECT<cql_object_dictionary>!, key TEXT!, value OBJECT!) BOOL!
+    FUNC cql_object_dictionary_add (dict OBJECT<cql_object_dictionary>!, key TEXT!, value OBJECT!) BOOL!
 
     {
       "name" : "cql_object_dictionary_add",
@@ -6138,7 +6138,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_object_dictionary_find (dict OBJECT<cql_object_dictionary>!, key TEXT) OBJECT
+    FUNC cql_object_dictionary_find (dict OBJECT<cql_object_dictionary>!, key TEXT) OBJECT
 
     {
       "name" : "cql_object_dictionary_find",
@@ -6171,7 +6171,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_blob_dictionary_create () CREATE OBJECT<cql_blob_dictionary>!
+    FUNC cql_blob_dictionary_create () CREATE OBJECT<cql_blob_dictionary>!
 
     {
       "name" : "cql_blob_dictionary_create",
@@ -6194,7 +6194,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_blob_dictionary_add (dict OBJECT<cql_blob_dictionary>!, key TEXT!, value BLOB!) BOOL!
+    FUNC cql_blob_dictionary_add (dict OBJECT<cql_blob_dictionary>!, key TEXT!, value BLOB!) BOOL!
 
     {
       "name" : "cql_blob_dictionary_add",
@@ -6232,7 +6232,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_blob_dictionary_find (dict OBJECT<cql_blob_dictionary>!, key TEXT) BLOB
+    FUNC cql_blob_dictionary_find (dict OBJECT<cql_blob_dictionary>!, key TEXT) BLOB
 
     {
       "name" : "cql_blob_dictionary_find",
@@ -6265,7 +6265,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_cursor_format (C CURSOR) CREATE TEXT!
+    FUNC cql_cursor_format (C CURSOR) CREATE TEXT!
 
     {
       "name" : "cql_cursor_format",
@@ -6292,7 +6292,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_cursor_hash (C CURSOR) LONG!
+    FUNC cql_cursor_hash (C CURSOR) LONG!
 
     {
       "name" : "cql_cursor_hash",
@@ -6319,7 +6319,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_cursors_equal (l CURSOR, r CURSOR) BOOL!
+    FUNC cql_cursors_equal (l CURSOR, r CURSOR) BOOL!
 
     {
       "name" : "cql_cursors_equal",
@@ -6351,7 +6351,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_cursor_diff_index (l CURSOR, r CURSOR) INT!
+    FUNC cql_cursor_diff_index (l CURSOR, r CURSOR) INT!
 
     {
       "name" : "cql_cursor_diff_index",
@@ -6383,7 +6383,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_cursor_diff_col (l CURSOR, r CURSOR) CREATE TEXT
+    FUNC cql_cursor_diff_col (l CURSOR, r CURSOR) CREATE TEXT
 
     {
       "name" : "cql_cursor_diff_col",
@@ -6415,7 +6415,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_cursor_diff_val (l CURSOR, r CURSOR) CREATE TEXT
+    FUNC cql_cursor_diff_val (l CURSOR, r CURSOR) CREATE TEXT
 
     {
       "name" : "cql_cursor_diff_val",
@@ -6447,7 +6447,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_box_int (x INT) CREATE OBJECT<cql_box>!
+    FUNC cql_box_int (x INT) CREATE OBJECT<cql_box>!
 
     {
       "name" : "cql_box_int",
@@ -6475,7 +6475,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_unbox_int (box OBJECT<cql_box>) INT
+    FUNC cql_unbox_int (box OBJECT<cql_box>) INT
 
     {
       "name" : "cql_unbox_int",
@@ -6503,7 +6503,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_box_real (x REAL) CREATE OBJECT<cql_box>!
+    FUNC cql_box_real (x REAL) CREATE OBJECT<cql_box>!
 
     {
       "name" : "cql_box_real",
@@ -6531,7 +6531,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_unbox_real (box OBJECT<cql_box>) REAL
+    FUNC cql_unbox_real (box OBJECT<cql_box>) REAL
 
     {
       "name" : "cql_unbox_real",
@@ -6559,7 +6559,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_box_bool (x BOOL) CREATE OBJECT<cql_box>!
+    FUNC cql_box_bool (x BOOL) CREATE OBJECT<cql_box>!
 
     {
       "name" : "cql_box_bool",
@@ -6587,7 +6587,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_unbox_bool (box OBJECT<cql_box>) BOOL
+    FUNC cql_unbox_bool (box OBJECT<cql_box>) BOOL
 
     {
       "name" : "cql_unbox_bool",
@@ -6615,7 +6615,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_box_long (x LONG) CREATE OBJECT<cql_box>!
+    FUNC cql_box_long (x LONG) CREATE OBJECT<cql_box>!
 
     {
       "name" : "cql_box_long",
@@ -6643,7 +6643,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_unbox_long (box OBJECT<cql_box>) LONG
+    FUNC cql_unbox_long (box OBJECT<cql_box>) LONG
 
     {
       "name" : "cql_unbox_long",
@@ -6671,7 +6671,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_box_text (x TEXT) CREATE OBJECT<cql_box>!
+    FUNC cql_box_text (x TEXT) CREATE OBJECT<cql_box>!
 
     {
       "name" : "cql_box_text",
@@ -6699,7 +6699,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_unbox_text (box OBJECT<cql_box>) TEXT
+    FUNC cql_unbox_text (box OBJECT<cql_box>) TEXT
 
     {
       "name" : "cql_unbox_text",
@@ -6727,7 +6727,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_box_blob (x BLOB) CREATE OBJECT<cql_box>!
+    FUNC cql_box_blob (x BLOB) CREATE OBJECT<cql_box>!
 
     {
       "name" : "cql_box_blob",
@@ -6755,7 +6755,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_unbox_blob (box OBJECT<cql_box>) BLOB
+    FUNC cql_unbox_blob (box OBJECT<cql_box>) BLOB
 
     {
       "name" : "cql_unbox_blob",
@@ -6783,7 +6783,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_box_object (x OBJECT) CREATE OBJECT<cql_box>!
+    FUNC cql_box_object (x OBJECT) CREATE OBJECT<cql_box>!
 
     {
       "name" : "cql_box_object",
@@ -6811,7 +6811,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_unbox_object (box OBJECT<cql_box>) OBJECT
+    FUNC cql_unbox_object (box OBJECT<cql_box>) OBJECT
 
     {
       "name" : "cql_unbox_object",
@@ -6839,7 +6839,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_box_get_type (box OBJECT<cql_box>) INT!
+    FUNC cql_box_get_type (box OBJECT<cql_box>) INT!
 
     {
       "name" : "cql_box_get_type",
@@ -6867,7 +6867,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_string_list_create () CREATE OBJECT<cql_string_list>!
+    FUNC cql_string_list_create () CREATE OBJECT<cql_string_list>!
 
     {
       "name" : "cql_string_list_create",
@@ -6890,7 +6890,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_string_list_set_at (list OBJECT<cql_string_list>!, index_ INT!, value_ TEXT!) OBJECT<cql_string_list>!
+    FUNC cql_string_list_set_at (list OBJECT<cql_string_list>!, index_ INT!, value_ TEXT!) OBJECT<cql_string_list>!
 
     {
       "name" : "cql_string_list_set_at",
@@ -6929,7 +6929,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_string_list_get_at (list OBJECT<cql_string_list>!, index_ INT!) TEXT
+    FUNC cql_string_list_get_at (list OBJECT<cql_string_list>!, index_ INT!) TEXT
 
     {
       "name" : "cql_string_list_get_at",
@@ -6962,7 +6962,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_string_list_count (list OBJECT<cql_string_list>!) INT!
+    FUNC cql_string_list_count (list OBJECT<cql_string_list>!) INT!
 
     {
       "name" : "cql_string_list_count",
@@ -6990,7 +6990,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_string_list_add (list OBJECT<cql_string_list>!, string TEXT!) OBJECT<cql_string_list>!
+    FUNC cql_string_list_add (list OBJECT<cql_string_list>!, string TEXT!) OBJECT<cql_string_list>!
 
     {
       "name" : "cql_string_list_add",
@@ -7024,7 +7024,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_blob_list_create () CREATE OBJECT<cql_blob_list>!
+    FUNC cql_blob_list_create () CREATE OBJECT<cql_blob_list>!
 
     {
       "name" : "cql_blob_list_create",
@@ -7047,7 +7047,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_blob_list_set_at (list OBJECT<cql_blob_list>!, index_ INT!, value_ BLOB!) OBJECT<cql_blob_list>!
+    FUNC cql_blob_list_set_at (list OBJECT<cql_blob_list>!, index_ INT!, value_ BLOB!) OBJECT<cql_blob_list>!
 
     {
       "name" : "cql_blob_list_set_at",
@@ -7086,7 +7086,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_blob_list_get_at (list OBJECT<cql_blob_list>!, index_ INT!) BLOB
+    FUNC cql_blob_list_get_at (list OBJECT<cql_blob_list>!, index_ INT!) BLOB
 
     {
       "name" : "cql_blob_list_get_at",
@@ -7119,7 +7119,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_blob_list_count (list OBJECT<cql_blob_list>!) INT!
+    FUNC cql_blob_list_count (list OBJECT<cql_blob_list>!) INT!
 
     {
       "name" : "cql_blob_list_count",
@@ -7147,7 +7147,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_blob_list_add (list OBJECT<cql_blob_list>!, value BLOB!) OBJECT<cql_blob_list>!
+    FUNC cql_blob_list_add (list OBJECT<cql_blob_list>!, value BLOB!) OBJECT<cql_blob_list>!
 
     {
       "name" : "cql_blob_list_add",
@@ -7181,7 +7181,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_object_list_create () CREATE OBJECT<cql_object_list>!
+    FUNC cql_object_list_create () CREATE OBJECT<cql_object_list>!
 
     {
       "name" : "cql_object_list_create",
@@ -7204,7 +7204,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_object_list_set_at (list OBJECT<cql_object_list>!, index_ INT!, value_ OBJECT!) OBJECT<cql_object_list>!
+    FUNC cql_object_list_set_at (list OBJECT<cql_object_list>!, index_ INT!, value_ OBJECT!) OBJECT<cql_object_list>!
 
     {
       "name" : "cql_object_list_set_at",
@@ -7243,7 +7243,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_object_list_get_at (list OBJECT<cql_object_list>!, index_ INT!) OBJECT
+    FUNC cql_object_list_get_at (list OBJECT<cql_object_list>!, index_ INT!) OBJECT
 
     {
       "name" : "cql_object_list_get_at",
@@ -7276,7 +7276,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_object_list_count (list OBJECT<cql_object_list>!) INT!
+    FUNC cql_object_list_count (list OBJECT<cql_object_list>!) INT!
 
     {
       "name" : "cql_object_list_count",
@@ -7304,7 +7304,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_object_list_add (list OBJECT<cql_object_list>!, value OBJECT!) OBJECT<cql_object_list>!
+    FUNC cql_object_list_add (list OBJECT<cql_object_list>!, value OBJECT!) OBJECT<cql_object_list>!
 
     {
       "name" : "cql_object_list_add",
@@ -7338,7 +7338,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_long_list_create () CREATE OBJECT<cql_long_list>!
+    FUNC cql_long_list_create () CREATE OBJECT<cql_long_list>!
 
     {
       "name" : "cql_long_list_create",
@@ -7361,7 +7361,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_long_list_set_at (list OBJECT<cql_long_list>!, index_ INT!, value_ LONG!) OBJECT<cql_long_list>!
+    FUNC cql_long_list_set_at (list OBJECT<cql_long_list>!, index_ INT!, value_ LONG!) OBJECT<cql_long_list>!
 
     {
       "name" : "cql_long_list_set_at",
@@ -7400,7 +7400,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_long_list_get_at (list OBJECT<cql_long_list>!, index_ INT!) LONG!
+    FUNC cql_long_list_get_at (list OBJECT<cql_long_list>!, index_ INT!) LONG!
 
     {
       "name" : "cql_long_list_get_at",
@@ -7433,7 +7433,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_long_list_count (list OBJECT<cql_long_list>!) INT!
+    FUNC cql_long_list_count (list OBJECT<cql_long_list>!) INT!
 
     {
       "name" : "cql_long_list_count",
@@ -7461,7 +7461,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_long_list_add (list OBJECT<cql_long_list>!, value_ LONG!) OBJECT<cql_long_list>!
+    FUNC cql_long_list_add (list OBJECT<cql_long_list>!, value_ LONG!) OBJECT<cql_long_list>!
 
     {
       "name" : "cql_long_list_add",
@@ -7495,7 +7495,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_real_list_create () CREATE OBJECT<cql_real_list>!
+    FUNC cql_real_list_create () CREATE OBJECT<cql_real_list>!
 
     {
       "name" : "cql_real_list_create",
@@ -7518,7 +7518,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_real_list_set_at (list OBJECT<cql_real_list>!, index_ INT!, value_ REAL!) OBJECT<cql_real_list>!
+    FUNC cql_real_list_set_at (list OBJECT<cql_real_list>!, index_ INT!, value_ REAL!) OBJECT<cql_real_list>!
 
     {
       "name" : "cql_real_list_set_at",
@@ -7557,7 +7557,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_real_list_get_at (list OBJECT<cql_real_list>!, index_ INT!) REAL!
+    FUNC cql_real_list_get_at (list OBJECT<cql_real_list>!, index_ INT!) REAL!
 
     {
       "name" : "cql_real_list_get_at",
@@ -7590,7 +7590,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_real_list_count (list OBJECT<cql_real_list>!) INT!
+    FUNC cql_real_list_count (list OBJECT<cql_real_list>!) INT!
 
     {
       "name" : "cql_real_list_count",
@@ -7618,7 +7618,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_real_list_add (list OBJECT<cql_real_list>!, value_ REAL!) OBJECT<cql_real_list>!
+    FUNC cql_real_list_add (list OBJECT<cql_real_list>!, value_ REAL!) OBJECT<cql_real_list>!
 
     {
       "name" : "cql_real_list_add",
@@ -7652,7 +7652,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_cursor_column_count (C CURSOR) INT!
+    FUNC cql_cursor_column_count (C CURSOR) INT!
 
     {
       "name" : "cql_cursor_column_count",
@@ -7679,7 +7679,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_cursor_column_type (C CURSOR, icol INT!) INT!
+    FUNC cql_cursor_column_type (C CURSOR, icol INT!) INT!
 
     {
       "name" : "cql_cursor_column_type",
@@ -7711,7 +7711,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_cursor_column_name (C CURSOR, icol INT!) CREATE TEXT
+    FUNC cql_cursor_column_name (C CURSOR, icol INT!) CREATE TEXT
 
     {
       "name" : "cql_cursor_column_name",
@@ -7743,7 +7743,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_cursor_get_bool (C CURSOR, icol INT!) BOOL
+    FUNC cql_cursor_get_bool (C CURSOR, icol INT!) BOOL
 
     {
       "name" : "cql_cursor_get_bool",
@@ -7775,7 +7775,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_cursor_get_int (C CURSOR, icol INT!) INT
+    FUNC cql_cursor_get_int (C CURSOR, icol INT!) INT
 
     {
       "name" : "cql_cursor_get_int",
@@ -7807,7 +7807,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_cursor_get_long (C CURSOR, icol INT!) LONG
+    FUNC cql_cursor_get_long (C CURSOR, icol INT!) LONG
 
     {
       "name" : "cql_cursor_get_long",
@@ -7839,7 +7839,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_cursor_get_real (C CURSOR, icol INT!) REAL
+    FUNC cql_cursor_get_real (C CURSOR, icol INT!) REAL
 
     {
       "name" : "cql_cursor_get_real",
@@ -7871,7 +7871,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_cursor_get_text (C CURSOR, icol INT!) TEXT
+    FUNC cql_cursor_get_text (C CURSOR, icol INT!) TEXT
 
     {
       "name" : "cql_cursor_get_text",
@@ -7903,7 +7903,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_cursor_get_blob (C CURSOR, icol INT!) BLOB
+    FUNC cql_cursor_get_blob (C CURSOR, icol INT!) BLOB
 
     {
       "name" : "cql_cursor_get_blob",
@@ -7935,7 +7935,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_cursor_get_object (C CURSOR, icol INT!) OBJECT
+    FUNC cql_cursor_get_object (C CURSOR, icol INT!) OBJECT
 
     {
       "name" : "cql_cursor_get_object",
@@ -7967,7 +7967,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_cursor_format_column (C CURSOR, icol INT!) CREATE TEXT!
+    FUNC cql_cursor_format_column (C CURSOR, icol INT!) CREATE TEXT!
 
     {
       "name" : "cql_cursor_format_column",
@@ -7999,7 +7999,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_blob_from_int (prefix TEXT, val INT!) CREATE BLOB!
+    FUNC cql_blob_from_int (prefix TEXT, val INT!) CREATE BLOB!
 
     {
       "name" : "cql_blob_from_int",
@@ -8031,7 +8031,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_format_bool (val BOOL @SENSITIVE) CREATE TEXT!
+    FUNC cql_format_bool (val BOOL @SENSITIVE) CREATE TEXT!
 
     {
       "name" : "cql_format_bool",
@@ -8059,7 +8059,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_format_int (val INT @SENSITIVE) CREATE TEXT!
+    FUNC cql_format_int (val INT @SENSITIVE) CREATE TEXT!
 
     {
       "name" : "cql_format_int",
@@ -8087,7 +8087,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_format_long (val LONG @SENSITIVE) CREATE TEXT!
+    FUNC cql_format_long (val LONG @SENSITIVE) CREATE TEXT!
 
     {
       "name" : "cql_format_long",
@@ -8115,7 +8115,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_format_double (val REAL @SENSITIVE) CREATE TEXT!
+    FUNC cql_format_double (val REAL @SENSITIVE) CREATE TEXT!
 
     {
       "name" : "cql_format_double",
@@ -8143,7 +8143,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_format_string (val TEXT @SENSITIVE) CREATE TEXT!
+    FUNC cql_format_string (val TEXT @SENSITIVE) CREATE TEXT!
 
     {
       "name" : "cql_format_string",
@@ -8171,7 +8171,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_format_blob (val BLOB @SENSITIVE) CREATE TEXT!
+    FUNC cql_format_blob (val BLOB @SENSITIVE) CREATE TEXT!
 
     {
       "name" : "cql_format_blob",
@@ -8199,7 +8199,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_format_object (val OBJECT @SENSITIVE) CREATE TEXT!
+    FUNC cql_format_object (val OBJECT @SENSITIVE) CREATE TEXT!
 
     {
       "name" : "cql_format_object",
@@ -8227,7 +8227,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_format_null (ignored BOOL @SENSITIVE) CREATE TEXT!
+    FUNC cql_format_null (ignored BOOL @SENSITIVE) CREATE TEXT!
 
     {
       "name" : "cql_format_null",
@@ -8255,7 +8255,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_make_blob_stream (list OBJECT<cql_blob_list>!) CREATE BLOB!
+    FUNC cql_make_blob_stream (list OBJECT<cql_blob_list>!) CREATE BLOB!
 
     {
       "name" : "cql_make_blob_stream",
@@ -8283,7 +8283,7 @@
     The statement ending at line XXXX
 
     [[builtin]]
-    DECLARE FUNC cql_blob_stream_count (b BLOB!) INT!
+    FUNC cql_blob_stream_count (b BLOB!) INT!
 
     {
       "name" : "cql_blob_stream_count",
@@ -8310,7 +8310,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(foo=bar)
-    DECLARE FUNC decl_func_take_all_types_func (t BOOL, i INT, l LONG, r REAL, bl BLOB, str TEXT, obj OBJECT, t_nn BOOL!, i_nn INT!, l_nn LONG!, r_nn REAL!, bl_nn BLOB!, str_nn TEXT!, obj_nn OBJECT!) BOOL
+    FUNC decl_func_take_all_types_func (t BOOL, i INT, l LONG, r REAL, bl BLOB, str TEXT, obj OBJECT, t_nn BOOL!, i_nn INT!, l_nn LONG!, r_nn REAL!, bl_nn BLOB!, str_nn TEXT!, obj_nn OBJECT!) BOOL
 
     {
       "name" : "decl_func_take_all_types_func",
@@ -8401,7 +8401,7 @@
 
     The statement ending at line XXXX
 
-    DECLARE FUNC func_return_bool () BOOL
+    FUNC func_return_bool () BOOL
 
     {
       "name" : "func_return_bool",
@@ -8416,7 +8416,7 @@
 
     The statement ending at line XXXX
 
-    DECLARE FUNC func_return_integer () INT
+    FUNC func_return_integer () INT
 
     {
       "name" : "func_return_integer",
@@ -8431,7 +8431,7 @@
 
     The statement ending at line XXXX
 
-    DECLARE FUNC func_return_long () LONG
+    FUNC func_return_long () LONG
 
     {
       "name" : "func_return_long",
@@ -8446,7 +8446,7 @@
 
     The statement ending at line XXXX
 
-    DECLARE FUNC func_return_real () REAL
+    FUNC func_return_real () REAL
 
     {
       "name" : "func_return_real",
@@ -8461,7 +8461,7 @@
 
     The statement ending at line XXXX
 
-    DECLARE FUNC func_return_blob () BLOB
+    FUNC func_return_blob () BLOB
 
     {
       "name" : "func_return_blob",
@@ -8476,7 +8476,7 @@
 
     The statement ending at line XXXX
 
-    DECLARE FUNC func_return_text () TEXT
+    FUNC func_return_text () TEXT
 
     {
       "name" : "func_return_text",
@@ -8491,7 +8491,7 @@
 
     The statement ending at line XXXX
 
-    DECLARE FUNC func_return_object () OBJECT
+    FUNC func_return_object () OBJECT
 
     {
       "name" : "func_return_object",
@@ -8506,7 +8506,7 @@
 
     The statement ending at line XXXX
 
-    DECLARE FUNC func_return_bool_notnull () BOOL!
+    FUNC func_return_bool_notnull () BOOL!
 
     {
       "name" : "func_return_bool_notnull",
@@ -8521,7 +8521,7 @@
 
     The statement ending at line XXXX
 
-    DECLARE FUNC func_create_blob () CREATE BLOB
+    FUNC func_create_blob () CREATE BLOB
 
     {
       "name" : "func_create_blob",
@@ -8536,7 +8536,7 @@
 
     The statement ending at line XXXX
 
-    DECLARE FUNC func_create_text () CREATE TEXT
+    FUNC func_create_text () CREATE TEXT
 
     {
       "name" : "func_create_text",
@@ -8551,7 +8551,7 @@
 
     The statement ending at line XXXX
 
-    DECLARE FUNC func_create_object () CREATE OBJECT
+    FUNC func_create_object () CREATE OBJECT
 
     {
       "name" : "func_create_object",
@@ -8568,7 +8568,7 @@
 
     The statement ending at line XXXX
 
-    DECLARE FUNC NoCheckFunc NO CHECK TEXT!
+    FUNC NoCheckFunc NO CHECK TEXT!
 
     {
       "name" : "NoCheckFunc",
@@ -8583,7 +8583,7 @@
 
     The statement ending at line XXXX
 
-    DECLARE SELECT FUNC tvf (id INT) (foo TEXT)
+    SELECT FUNC tvf (id INT) (foo TEXT)
 
     {
       "name" : "tvf",
@@ -8607,7 +8607,7 @@
 
     The statement ending at line XXXX
 
-    DECLARE SELECT FUNC NoCheckSelectFunc NO CHECK REAL
+    SELECT FUNC NoCheckSelectFunc NO CHECK REAL
 
     {
       "name" : "NoCheckSelectFunc",

@@ -2109,6 +2109,7 @@ const_values:
 const_value:  name '=' expr { $$ = new_ast_const_value($name, $expr); }
   ;
 
+
 declare_select_func_stmt:
    DECLARE SELECT function name '(' params ')' data_type_with_options  {
       $$ = new_ast_declare_select_func_stmt($name, new_ast_func_params_return($params, $data_type_with_options)); }
@@ -2117,6 +2118,14 @@ declare_select_func_stmt:
   | DECLARE SELECT function name NO CHECK data_type_with_options {
       $$  = new_ast_declare_select_func_no_check_stmt($name, new_ast_func_params_return(NULL, $data_type_with_options)); }
   | DECLARE SELECT function name NO CHECK '(' typed_names ')' {
+      $$ = new_ast_declare_select_func_no_check_stmt($name, new_ast_func_params_return(NULL, $typed_names)); }
+  | SELECT function name '(' params ')' data_type_with_options  {
+      $$ = new_ast_declare_select_func_stmt($name, new_ast_func_params_return($params, $data_type_with_options)); }
+  | SELECT function name '(' params ')' '(' typed_names ')'  {
+      $$ = new_ast_declare_select_func_stmt($name, new_ast_func_params_return($params, $typed_names)); }
+  | SELECT function name NO CHECK data_type_with_options {
+      $$  = new_ast_declare_select_func_no_check_stmt($name, new_ast_func_params_return(NULL, $data_type_with_options)); }
+  | SELECT function name NO CHECK '(' typed_names ')' {
       $$ = new_ast_declare_select_func_no_check_stmt($name, new_ast_func_params_return(NULL, $typed_names)); }
   ;
 
@@ -2129,6 +2138,16 @@ declare_func_stmt:
   | DECLARE function loose_name[name] NO CHECK data_type_with_options  {
       $$ = new_ast_declare_func_no_check_stmt($name, new_ast_func_params_return(NULL, $data_type_with_options)); }
   | DECLARE function loose_name[name] NO CHECK CREATE data_type_with_options  {
+      ast_node *create_data_type = new_ast_create_data_type($data_type_with_options);
+      $$ = new_ast_declare_func_no_check_stmt($name, new_ast_func_params_return(NULL, create_data_type)); }
+  | function loose_name[name] '(' func_params ')' data_type_with_options  {
+      $$ = new_ast_declare_func_stmt($name, new_ast_func_params_return($func_params, $data_type_with_options)); }
+  | function loose_name[name] '(' func_params ')' CREATE data_type_with_options  {
+      ast_node *create_data_type = new_ast_create_data_type($data_type_with_options);
+      $$ = new_ast_declare_func_stmt($name, new_ast_func_params_return($func_params, create_data_type)); }
+  | function loose_name[name] NO CHECK data_type_with_options  {
+      $$ = new_ast_declare_func_no_check_stmt($name, new_ast_func_params_return(NULL, $data_type_with_options)); }
+  | function loose_name[name] NO CHECK CREATE data_type_with_options  {
       ast_node *create_data_type = new_ast_create_data_type($data_type_with_options);
       $$ = new_ast_declare_func_no_check_stmt($name, new_ast_func_params_return(NULL, create_data_type)); }
   ;
@@ -3459,24 +3478,24 @@ cql_noexport CSTR cql_builtin_text() {
     "@op cursor: call from_blob as cql_cursor_from_blob;"
 
     "[[builtin]]"
-    "declare function cql_blob_from_int(prefix text, val int!) create blob!;"
+    "function cql_blob_from_int(prefix text, val int!) create blob!;"
 
     "[[builtin]]"
-    "declare function cql_format_bool(val bool @sensitive) create text!;"
+    "function cql_format_bool(val bool @sensitive) create text!;"
     "[[builtin]]"
-    "declare function cql_format_int(val int @sensitive) create text!;"
+    "function cql_format_int(val int @sensitive) create text!;"
     "[[builtin]]"
-    "declare function cql_format_long(val long @sensitive) create text!;"
+    "function cql_format_long(val long @sensitive) create text!;"
     "[[builtin]]"
-    "declare function cql_format_double(val real @sensitive) create text!;"
+    "function cql_format_double(val real @sensitive) create text!;"
     "[[builtin]]"
-    "declare function cql_format_string(val text @sensitive) create text!;"
+    "function cql_format_string(val text @sensitive) create text!;"
     "[[builtin]]"
-    "declare function cql_format_blob(val blob @sensitive) create text!;"
+    "function cql_format_blob(val blob @sensitive) create text!;"
     "[[builtin]]"
-    "declare function cql_format_object(val object @sensitive) create text!;"
+    "function cql_format_object(val object @sensitive) create text!;"
     "[[builtin]]"
-    "declare function cql_format_null(ignored bool @sensitive) create text!;"
+    "function cql_format_null(ignored bool @sensitive) create text!;"
 
     "[[builtin]]"
     "@op bool : call fmt as cql_format_bool;"
@@ -3496,11 +3515,11 @@ cql_noexport CSTR cql_builtin_text() {
     "@op null : call fmt as cql_format_null;"
 
     "[[builtin]]"
-    "declare function cql_make_blob_stream(list cql_blob_list!) create blob!;"
+    "function cql_make_blob_stream(list cql_blob_list!) create blob!;"
     "[[builtin]]"
     "declare proc cql_cursor_from_blob_stream(C cursor, b blob, i int!) using transaction;"
     "[[builtin]]"
-    "declare function cql_blob_stream_count(b blob!) int!;"
+    "function cql_blob_stream_count(b blob!) int!;"
 
     "@@end_include@@"
     ;

@@ -276,7 +276,7 @@ end;
 
 -- TEST: Proc that generates table/insert/select/result_set/dummy_test
 -- + DECLARE PROC sample_proc13 () OUT (id INT!) USING TRANSACTION;
--- + DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+-- + SELECT FUNC is_declare_func_enabled () BOOL!;
 -- + PROC test_sample_proc13_create_tables()
 -- + PROC test_sample_proc13_populate_tables()
 -- + PROC test_sample_proc13_drop_tables()
@@ -598,7 +598,7 @@ BEGIN
 END;
 
 -- TEST: test dbl_table is processed in dummy_test because of `trigger on table a` on `table a`
--- + DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+-- + SELECT FUNC is_declare_func_enabled () BOOL!;
 -- + PROC test_sample_proc28_create_tables()
 -- + CREATE TABLE IF NOT EXISTS `table a`
 -- + CREATE TABLE IF NOT EXISTS dbl_table
@@ -642,7 +642,7 @@ BEGIN
 END;
 
 -- TEST: test dbl_table is processed in dummy_test because of trigger`table a` on `table a`
--- + DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+-- + SELECT FUNC is_declare_func_enabled () BOOL!;
 -- + PROC test_sample_proc30_create_tables()
 -- + CREATE TABLE IF NOT EXISTS `table a`
 -- + CREATE TABLE IF NOT EXISTS dbl_table

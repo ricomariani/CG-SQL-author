@@ -15,27 +15,27 @@ end;
 
 -- The statement ending at line XXXX
 
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
-DECLARE SELECT FUNC is_declare_func_wall (id LONG) BOOL!;
-DECLARE SELECT FUNC array_num_at (array_object_ptr LONG!, idx INT!) LONG;
-DECLARE SELECT FUNC select_virtual_table (b TEXT) (id LONG, t TEXT, b BLOB, r REAL);
+SELECT FUNC is_declare_func_enabled () BOOL!;
+SELECT FUNC is_declare_func_wall (id LONG) BOOL!;
+SELECT FUNC array_num_at (array_object_ptr LONG!, idx INT!) LONG;
+SELECT FUNC select_virtual_table (b TEXT) (id LONG, t TEXT, b BLOB, r REAL);
 [[deterministic]]
-DECLARE SELECT FUNC bgetkey_type (x BLOB!) LONG!;
+SELECT FUNC bgetkey_type (x BLOB!) LONG!;
 [[deterministic]]
-DECLARE SELECT FUNC bgetval_type (x BLOB!) LONG!;
+SELECT FUNC bgetval_type (x BLOB!) LONG!;
 [[deterministic]]
-DECLARE SELECT FUNC bgetkey NO CHECK BLOB;
+SELECT FUNC bgetkey NO CHECK BLOB;
 [[deterministic]]
-DECLARE SELECT FUNC bgetval NO CHECK BLOB;
+SELECT FUNC bgetval NO CHECK BLOB;
 [[deterministic]]
-DECLARE SELECT FUNC bcreatekey NO CHECK BLOB;
+SELECT FUNC bcreatekey NO CHECK BLOB;
 [[deterministic]]
-DECLARE SELECT FUNC bcreateval NO CHECK BLOB;
+SELECT FUNC bcreateval NO CHECK BLOB;
 [[deterministic]]
-DECLARE SELECT FUNC bupdatekey NO CHECK BLOB;
+SELECT FUNC bupdatekey NO CHECK BLOB;
 [[deterministic]]
-DECLARE SELECT FUNC bupdateval NO CHECK BLOB;
-DECLARE SELECT FUNC stuff () INT!;
+SELECT FUNC bupdateval NO CHECK BLOB;
+SELECT FUNC stuff () INT!;
 PROC create_schema()
 BEGIN
   call cql_create_udf_stub("is_declare_func_enabled");

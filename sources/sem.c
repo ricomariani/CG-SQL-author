@@ -10334,7 +10334,7 @@ static void sem_user_func(ast_node *ast, ast_node *user_func) {
       return;
     }
 
-    // normal declare function call
+    // normal function call
     sql_udf_context = false;
   }
   else {

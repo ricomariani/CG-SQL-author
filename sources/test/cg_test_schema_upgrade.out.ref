@@ -26,9 +26,9 @@ CREATE TABLE sqlite_master (
 
 -- declare full schema of tables and views to be upgraded and their dependencies -- 
 [[deterministic]]
-DECLARE SELECT FUNC my_func (x TEXT) TEXT;
+SELECT FUNC my_func (x TEXT) TEXT;
 
-DECLARE SELECT FUNC filter_ (id INT) INT!;
+SELECT FUNC filter_ (id INT) INT!;
 
 @DECLARE_SCHEMA_REGION shared;
 

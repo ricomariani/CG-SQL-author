@@ -568,7 +568,7 @@ static void emit_populate_no_table_scan_proc(charbuf *output) {
 
 // Emit function declarations for "declare select function"
 static void cg_qp_emit_declare_func(charbuf *output) {
-  // Emit declare functions because it may be needed for schema and query validation
+  // Emit functions because it may be needed for schema and query validation
   gen_set_output_buffer(output);
   for (list_item *item = all_functions_list; item; item = item->next) {
     EXTRACT_ANY_NOTNULL(any_func, item->ast);

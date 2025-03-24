@@ -126,6 +126,12 @@ jobs:
 
           sudo pip3 install gcovr
           sudo luarocks install lsqlite3
+      - name: Build SQLite CQL Extension using Clang
+        run: SQLITE_PATH=${{ github.workspace }}/.cache/sqlite ./sqlite3_cql_extension/make_extension.sh --use_clang --non_interactive
+      - name: Build SQLite CQL Extension using GCC
+        run: SQLITE_PATH=${{ github.workspace }}/.cache/sqlite ./sqlite3_cql_extension/make_extension.sh --use_gcc --non_interactive
+      - name: Test SQLite CQL Extension
+        run: SQLITE_PATH=${{ github.workspace }}/.cache/sqlite ./sqlite3_cql_extension/test.sh --non_interactive
       - name: Execute test script using Clang in non-interactive mode
         run: ./test.sh --use_clang --non_interactive
       - name: Execute test script using GCC in non-interactive mode
@@ -164,9 +170,3 @@ jobs:
           fi
       - name: Verify SQLite Build
         run: ${{ github.workspace }}/.cache/sqlite/sqlite3 --version
-      - name: Build SQLite CQL Extension using Clang
-        run: SQLITE_PATH=${{ github.workspace }}/.cache/sqlite ./sqlite3_cql_extension/make.sh --use_clang --non_interactive
-      - name: Build SQLite CQL Extension using GCC
-        run: SQLITE_PATH=${{ github.workspace }}/.cache/sqlite ./sqlite3_cql_extension/make.sh --use_gcc --non_interactive
-      - name: Test SQLite CQL Extension
-        run: SQLITE_PATH=${{ github.workspace }}/.cache/sqlite ./sqlite3_cql_extension/test.sh --non_interactive

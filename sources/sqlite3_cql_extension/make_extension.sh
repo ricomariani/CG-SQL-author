@@ -110,8 +110,6 @@ ${CC} \
 
 ls ./out/cqlextension.${LIB_EXT}
 
-popd >/dev/null
-
 echo running SQLite test cases with extension
 set +e
 $SQLITE_PATH/sqlite3 <test_extension.sql > out/test_extension.out 2>&1
@@ -119,6 +117,8 @@ $SQLITE_PATH/sqlite3 <test_extension.sql > out/test_extension.out 2>&1
 echo checking output difference
 set -e
 on_diff_exit ./test_extension.out
+
+popd >/dev/null
 
 echo "test passed"
 exit 0

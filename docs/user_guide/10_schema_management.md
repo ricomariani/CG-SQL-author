@@ -378,7 +378,7 @@ hold that snapshot.
 #### Helper Procedures
 ```sql
 -- helper proc for testing for the presence of a column/type
-CREATE PROCEDURE test_check_column_exists(table_name TEXT!,
+PROC test_check_column_exists(table_name TEXT!,
                                           decl TEXT!,
                                           OUT present BOOL!)
 BEGIN
@@ -391,7 +391,7 @@ END;
 
 ```sql
 -- helper proc for creating the schema version table
-CREATE PROCEDURE test_create_cql_schema_facets_if_needed()
+PROC test_create_cql_schema_facets_if_needed()
 BEGIN
   CREATE TABLE IF NOT EXISTS test_cql_schema_facets(
     facet TEXT! PRIMARY KEY,
@@ -405,7 +405,7 @@ conflict.
 
 ```sql
 -- helper proc for saving the schema version table
-CREATE PROCEDURE test_save_cql_schema_facets()
+PROC test_save_cql_schema_facets()
 BEGIN
   DROP TABLE IF EXISTS test_cql_schema_facets_saved;
   CREATE TEMP TABLE test_cql_schema_facets_saved(
@@ -423,16 +423,14 @@ differences by joining these tables.
 
 ```sql
 -- helper proc for setting the schema version of a facet
-CREATE PROCEDURE test_cql_set_facet_version(_facet TEXT!,
-                                            _version LONG!)
+PROC test_cql_set_facet_version(_facet TEXT!, _version LONG!)
 BEGIN
   INSERT OR REPLACE INTO test_cql_schema_facets (facet, version)
        VALUES(_facet, _version);
 END;
 
 -- helper proc for getting the schema version of a facet
-CREATE PROCEDURE test_cql_get_facet_version(_facet TEXT!,
-                                            out _version LONG!)
+PROC test_cql_get_facet_version(_facet TEXT!, out _version LONG!)
 BEGIN
   TRY
     SET _version := (SELECT version FROM test_cql_schema_facets
@@ -452,14 +450,13 @@ unnecessary repeated string literals in the output file which cause bloat.
 
 ```sql
 -- helper proc for getting the schema version CRC for a version index
-CREATE PROCEDURE test_cql_get_version_crc(_v INT!, out _crc LONG!)
+PROC test_cql_get_version_crc(_v INT!, out _crc LONG!)
 BEGIN
   SET _crc := cql_facet_find(test_facets, printf('cql_schema_v%d', _v));
 END;
 
 -- helper proc for setting the schema version CRC for a version index
-CREATE PROCEDURE test_cql_set_version_crc(_v INT!,
-                                          _crc LONG!)
+PROC test_cql_set_version_crc(_v INT!, crc LONG!)
 BEGIN
   INSERT OR REPLACE INTO test_cql_schema_facets (facet, version)
        VALUES('cql_schema_v'||_v, _crc);
@@ -468,7 +465,6 @@ END;
 As you can see, these procedures are effectively specializations of
 `cql_get_facet_version` and `cql_set_facet_version` where the facet name
 is computed from the int.
-
 
 Triggers require some special processing.  There are so-called "legacy"
 triggers that crept into the system.  These begin with `tr__` and they
@@ -482,7 +478,8 @@ that have these in them, we delete all triggers that start with `tr__`.
 ```sql
 -- helper proc to reset any triggers that are on the old plan --
 DECLARE PROCEDURE cql_exec_internal(sql TEXT!) USING TRANSACTION;
-CREATE PROCEDURE test_cql_drop_legacy_triggers()
+
+PROC test_cql_drop_legacy_triggers()
 BEGIN
   CURSOR C FOR SELECT name from sqlite_master
      WHERE type = 'trigger' AND name GLOB 'tr__*';
@@ -500,7 +497,7 @@ The 'baseline' or 'v0' schema is unannotated (no `@create` or
 creating and dropping these tables.
 
 ```sql
-CREATE PROCEDURE test_cql_install_baseline_schema()
+PROC test_cql_install_baseline_schema()
 BEGIN
   CREATE TABLE foo(
     id INT!,
@@ -517,7 +514,7 @@ END;
 
 ```sql
 -- helper proc for dropping baseline tables before installing the baseline schema
-CREATE PROCEDURE test_cql_drop_baseline_tables()
+PROC test_cql_drop_baseline_tables()
 BEGIN
   DROP TABLE IF EXISTS foo;
   DROP TABLE IF EXISTS table2;
@@ -547,7 +544,7 @@ declaration so that we can use the names in context.
 #### Views
 ```sql
 -- drop all the views we know
-CREATE PROCEDURE test_cql_drop_all_views()
+PROC test_cql_drop_all_views()
 BEGIN
   DROP VIEW IF EXISTS live_view;
   DROP VIEW IF EXISTS another_live_view;
@@ -555,7 +552,7 @@ BEGIN
 END;
 
 -- create all the views we know
-CREATE PROCEDURE test_cql_create_all_views()
+PROC test_cql_create_all_views()
 BEGIN
   CREATE VIEW live_view AS
   SELECT *
@@ -573,7 +570,7 @@ View migration is done by dropping all views and putting all views back.
 
 ```sql
 -- drop all the indices that are deleted or changing
-CREATE PROCEDURE test_cql_drop_all_indices()
+PROC test_cql_drop_all_indices()
 BEGIN
   IF cql_facet_find(test_facets, 'index_still_present_index_crc') != -6823087563145941851 THEN
     DROP INDEX IF EXISTS index_still_present;
@@ -582,7 +579,7 @@ BEGIN
 END;
 
 -- create all the indices we need
-CREATE PROCEDURE test_cql_create_indices()
+PROC test_cql_create_indices()
 BEGIN
   IF cql_facet_find(test_facets, 'index_still_present_index_crc') != -6823087563145941851 THEN
     CREATE INDEX index_still_present ON table2 (name1, name2);
@@ -597,14 +594,14 @@ Indices are processed similarly to views, however we do not want to drop indices
 
 ```sql
 - drop all the triggers we know
-CREATE PROCEDURE test_cql_drop_all_triggers()
+PROC test_cql_drop_all_triggers()
 BEGIN
   CALL test_cql_drop_legacy_triggers();
   DROP TRIGGER IF EXISTS trigger_one;
 END;
 
 -- create all the triggers we know
-CREATE PROCEDURE test_cql_create_all_triggers()
+PROC test_cql_create_all_triggers()
 BEGIN
   CREATE TRIGGER trigger_one
     AFTER INSERT ON foo
@@ -625,7 +622,7 @@ were declared above.  You've already seen usage of the facets in the
 code above.
 
 ```sql
-CREATE PROCEDURE test_setup_facets()
+PROC test_setup_facets()
 BEGIN
   TRY
     SET test_facets := cql_facets_new();
@@ -674,10 +671,10 @@ These operations are done in `test_perform_needed_upgrades`
 That's it... the details are below.
 
 ```sql
-CREATE PROCEDURE test_perform_upgrade_steps()
+PROC test_perform_upgrade_steps()
 BEGIN
   DECLARE column_exists BOOL!;
-  DECLARE schema_version LONG!;
+  VAR schema_version LONG!;
     -- dropping all views --
     CALL test_cql_drop_all_views();
 
@@ -835,7 +832,7 @@ This procedure also arranges for the original facet versions to be saved
 and it proceduces a difference in facets after the upgrade is done.
 
 ```sql
-CREATE PROCEDURE test_perform_needed_upgrades()
+PROC test_perform_needed_upgrades()
 BEGIN
   -- check for downgrade --
   IF cql_facet_find(test_facets, 'cql_schema_version') > 6 THEN
@@ -861,7 +858,7 @@ the code for the full upgrade case in it.  This lets linker order files do a sup
 (since full upgrade is the rare case).
 
 ```sql
-CREATE PROCEDURE test()
+PROC test()
 BEGIN
   DECLARE schema_crc LONG!;
 
@@ -896,7 +893,7 @@ to the schema after the upgrade check.
 A procedure like this one is generated:
 
 ```sql
-CREATE PROCEDURE test_cql_install_temp_schema()
+PROC test_cql_install_temp_schema()
 BEGIN
   CREATE TEMP TABLE tempy(
     id INT

@@ -23,7 +23,7 @@ Annotations on procedures can also be used to indicate that you would like suppo
 SQLite is widely used, but creating well tested and maintainable data access layers can be challenging at best. Many teams use some kind of code generation to avoid having to change dozens of ordinals every time a column is added, but these can be error prone. The CQL compiler in CG/SQL allows you to create highly complex stored procedures with very large queries and with a combination of syntax helpers and strong typing these procedures are much easier to get right and keep right. The combination of strong typing in the language plus facilities for good unit testing can provide confidence that even very complex logic is correct. Syntax helpers convert safer code into the canonical SQL, allowing engineers to write less code that is more correct — and still runs everywhere. For example:
 
 ```
-create procedure insert_a_row(like your_table)
+proc insert_a_row(like your_table)
 begin
   insert into your_table from arguments;
 end;

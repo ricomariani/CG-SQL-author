@@ -1396,7 +1396,8 @@ as an `in` parameter.  Then, later, you can "unbox" `box_obj` to get a
 cursor back. Like so:
 
 ```sql
--- unboxing a cursor from an object, the type of box_obj defines the type of the created cursor
+-- unboxing a cursor from an object, the type of box_obj defines the type
+-- of the created cursor
 cursor D for box_obj;
 ```
 

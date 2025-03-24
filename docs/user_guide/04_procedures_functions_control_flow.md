@@ -19,7 +19,7 @@ Consider this procedure:
 
 
 ```sql
-create procedure copy_integer(in arg1 int!, out arg2 int!)
+proc copy_integer(in arg1 int!, out arg2 int!)
 begin
   set arg2 := arg1;
 end;
@@ -362,7 +362,7 @@ pattern (insert or update)
 ```sql
 declare procedure printf no check;
 
-create procedure upsert_foo(id_ integer, t_ text)
+proc upsert_foo(id_ integer, t_ text)
 begin
   try
     insert into foo(id, t) values(id_, t_);
@@ -437,7 +437,7 @@ function is possible.
 
 ```sql
 -- this works, but it is awkward
-create procedure fib (in arg int!, out result int!)
+proc fib (in arg int!, out result int!)
 begin
   if (arg <= 2) then
     set result := 1;
@@ -464,7 +464,7 @@ of the `out` argument.
 
 ```sql
 -- rewritten with function call syntax
-create procedure fib (in arg int!, out result int!)
+proc fib (in arg int!, out result int!)
 begin
   if (arg <= 2) then
     set result := 1;

@@ -1813,7 +1813,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   bprintf(&main, "BEGIN\n");
   bprintf(&main, "  LET facet := cql_compressed('cql_schema_crc_no_virtual');\n");
   bprintf(&main, "  IF cql_facet_find(%s_facets, facet) <> %lld THEN\n", global_proc_name, (llint_t) schema_crc_no_virtual);
-  bprintf(&main, "    DECLARE schema_version LONG!;\n");
+  bprintf(&main, "    VAR schema_version LONG!;\n");
 
   if (view_drops) {
     bprintf(&main, "    -- dropping all views --\n");

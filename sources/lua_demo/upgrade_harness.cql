@@ -82,7 +82,7 @@ begin
   end;
 end;
 
-create procedure go()
+proc go()
 begin
   begin transaction;
   call lua_upgrade_no_virtual_tables();

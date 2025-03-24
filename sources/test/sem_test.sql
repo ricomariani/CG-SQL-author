@@ -20618,7 +20618,7 @@ ENUM an_enum INT (
 -- TEST: ensure that we do not lose type kind on the folded constant
 -- + {create_proc_stmt}: use_enum_and_backing: { x: integer<an_enum> notnull } dml_proc
 -- - error:
-CREATE PROCEDURE use_enum_and_backing()
+PROC use_enum_and_backing()
 BEGIN
   SELECT an_enum.ONE AS x FROM backed;
 END;

@@ -360,7 +360,7 @@ procedure. The save point's scope is the same as the procedure's scope.
 More precisely
 
 ```sql
-create procedure foo()
+proc foo()
 begin
   proc savepoint
   begin
@@ -372,7 +372,7 @@ end;
 becomes:
 
 ```sql
-create procedure foo()
+proc foo()
 begin
   savepoint @proc;  -- @proc is always the name of the current procedure
   try
@@ -568,10 +568,16 @@ Semantic analysis of stored procedures is fairly easy at the core:
  * record the name of the procedure for callers
 
 In addition, while processing the statement:
- * we determine if it uses the database; this will change the emitted signature of the proc to include a `sqlite3 *db`
-     input argument and it will return a sqlite error code (e.g. `SQLITE_OK`)
+
+ * we determine if it uses the database; this will change the emitted signature
+     of the proc to include a `sqlite3 *db` input argument and it will return a
+     sqlite error code (e.g. `SQLITE_OK`)
  * select statements that are loose in the proc represent the "return" of that
-   select;  this changes the signature to include a `sqlite3_stmt **pstmt` parameter corresponding to the returned statement
+   select;  this changes the signature to include a `sqlite3_stmt **pstmt`
+   parameter corresponding to the returned statement
+
+`CREATE PROCEDURE foo` can be abbreviated to just `PROCEDURE foo` or even
+`PROC foo`.
 
 #### The `IF` Statement
 
@@ -586,6 +592,10 @@ The set statement is for variable assignment.  We just validate
 that the target exists and is compatible with the source.
 Cursor variables cannot be set with simple assignment and CQL generates
 errors if you attempt to do so.
+
+Assignment can be written without the `SET` keyword as `x := 1`;
+
+There are also a number mutations like `+=`, `-=`, `*=` and so forth.
 
 #### The `LET` Statement
 
@@ -626,6 +636,9 @@ Function declarations are similar to procedures; there must be a return type
 (use proc if there is none).  The `DECLARE SELECT FUNCTION` form indicates a function
 visible to SQLite; other functions are usable in the `call` statement.
 
+This can be abbreviated as just `FUNCTION foo` or even `FUNC foo`.  The select function
+variation can be `SELECT FUNC foo`.
+
 #### The `DECLARE` Variable Statement
 
 This declares a new local or global variable that is not a cursor.
@@ -636,6 +649,8 @@ The canonical name of the variable is defined here. If it is later used with
 a different casing the output will always be as declared.
 e.g. `declare Foo int; set foo = 1;` is legal but the output
 will always contain the variable written as `Foo`.
+
+`DECLARE foo int` can be abbreviated as `VAR foo int`.
 
 #### The `DECLARE` Cursor Statement
 
@@ -657,6 +672,7 @@ and then pull out the structure type of that thing and use it for the cursor's s
 This statement declares a cursor that will be based on the return type of a procedure.
 When using this form the cursor is also fetched, hence the name.  The fetch result of
 the stored proc will be used for the value.  At this point, we use its type only.
+
 * the call must be semantically valid
 * the procedure must return an OUT parameter (not a result set)
 * the cursor name must be unique
@@ -674,6 +690,30 @@ Loop analysis is just as simple as "while" -- because the loop_stmt
 literally has an embedded fetch, you simply use the fetch helper to
 validate that the fetch is good and then visit the statement list.
 Loop depth is increased as it is with while.
+
+#### The `FOR` Statement
+
+`FOR` includes a condition and then any number of statements intended
+to update the state. The condition is checked first, then the body,
+and lastly the increment statements.
+
+```sql
+for condition;state update statements;...;
+begin
+  -- loop body statements
+end
+```
+
+Is analyzed very much like this:
+
+```sql
+while condition
+begin
+  -- loop body statements;
+  -- continue will go here
+  -- state update statements;
+end;
+```
 
 #### The `CALL` Statement
 
@@ -702,6 +742,8 @@ Semantic rules:
    * if the formal is an out parameter the argument must be a variable
      * the type of the variable must be an exact type match for the formal
    * non-out parameters must be type-compatible, but exact match is not required
+
+Calls can omit the `CALL` directive -- `CALL foo(x)` can be simply `foo(x)`.
 
 #### The `DECLARE OUT CALL` Statement
 
@@ -746,11 +788,11 @@ No analysis needed here other than that the two statement lists are ok.
 
 #### The `CLOSE` CURSOR Statement
 
-For `close cursor`, we just validate that the name is in fact a cursor
-and it is not a boxed cursor.  Boxed cursor lifetime is managed by the
-box object so manually closing it is not allowed.  Instead, the usual
-reference-counting semantics apply; the boxed cursor variable typically falls out of
-scope and is released, or is perhaps set to NULL to release its reference early.
+For `close cursor`, we just validate that the name is in fact a cursor and it is
+not a boxed cursor.  Boxed cursor lifetime is managed by the box object so
+manually closing it is not allowed.  Instead, the usual reference-counting
+semantics apply; the boxed cursor variable typically falls out of scope and is
+released, or is perhaps set to NULL to release its reference early.
 
 #### The `OUT` CURSOR Statement
 
@@ -764,34 +806,33 @@ the compiler specific directives as to how the program should be compiled.
 
 #### the `@ATTRIBUTE` Notation
 
-Zero or more miscellaneous attributes can be added to any statement,
-or any column definition.  See the `misc_attrs` node in the grammar for
-the exact placement.  Each attribute notation has the general form:
+Zero or more miscellaneous attributes can be added to any statement, or any
+column definition.  See the `misc_attrs` node in the grammar for the exact
+placement.  Each attribute notation has the general form:
 
 * `@attribute`(_namespace_ : _attribute-name_ ) or
 * `@attribute`(_namespace_ : _attribute-name_ = _attribute-value_)
 
-The _namespace_ portion is optional and attributes with
-special meaning to the compiler are all in the `cql:` namespace.
-e.g. @attribute(cql:private).  This form is so common that the special
-abbreviation `[[foo]]`` can be used instead of `@attribute(cql:foo)` and
-all the builtin attributes are in the `cql` namespace so we can always use
- `[[foo]]`.  All examples in the documentation use this form.
+The _namespace_ portion is optional and attributes with special meaning to the
+compiler are all in the `cql:` namespace. e.g. @attribute(cql:private).  This
+form is so common that the special abbreviation `[[foo]]`` can be used instead
+of `@attribute(cql:foo)` and all the builtin attributes are in the `cql`
+namespace so we can always use `[[foo]]`.  All examples in the documentation use
+ this form.
 
 * The _attribute-name_ can be any valid name
 * Each _attribute-value_ can be:
   * any literal
   * an array of _attribute-values_
 
-Since the _attribute-values_ can nest it's possible to represent
-arbitrarily complex data types in an attribute.  You can even represent
-a LISP program.
+Since the _attribute-values_ can nest it's possible to represent arbitrarily
+complex data types in an attribute.  You can even represent a LISP program.
 
-By convention, CQL lets you define "global" attributes by applying them
-to a global variable of type `object` ending with the suffix "database".
+By convention, CQL lets you define "global" attributes by applying them to a
+global variable of type `object` ending with the suffix "database".
 
-The main usage of global attributes is as a way to propagate
-configurations into the JSON output (q.v.).
+The main usage of global attributes is as a way to propagate configurations into
+the JSON output (q.v.).
 
 Examples:
 
@@ -799,7 +840,7 @@ Examples:
 -- "global" attributes
 @attribute(attribute_1 = "value_1")
 @attribute(attribute_2 = "value_2")
-declare database object;
+var database object;
 
 -- cql:private marking on a method to make it private, using simplified syntax
 [[private]]
@@ -814,27 +855,29 @@ Echo is valid in any top level contexts.
 
 #### The `@PREVIOUS SCHEMA` Statement
 
-Begins the region where previous schema will be compared against what
-has been declared before this directive for alterations that could not
+Begins the region where previous schema will be compared against what has been
+declared before this directive for alterations that could not
 be upgraded.
 
 #### The `@SCHEMA_UPGRADE_SCRIPT` Statement
 
-When upgrading the DDL, it's necessary to emit create table statements for
-the original version of the schema.  These create statements may conflict
-with the current version of the schema.  This attribute tells CQL to
+When upgrading the DDL, it's necessary to emit create table statements for the
+original version of the schema.  These create statements may conflict with the
+current version of the schema.  This attribute tells CQL to
 
-1) ignore DDL in stored procedures for declaration purposes; only DDL outside of a proc counts
-2) do not make any columns "hidden" thereby allowing all annotations to be present so they can be used to validate other aspects of the migration script.
+1) ignore DDL in stored procedures for declaration purposes; only DDL outside of
+   a proc counts
+2) do not make any columns "hidden" thereby allowing all annotations to be
+   present so they can be used to validate other aspects of the migration
+   script.
 
 #### The `@SCHEMA_UPGRADE_VERSION` Statement
 
-For sql stored procedures that are supposed to update previous schema
-versions you can use this attribute to put CQL into that mindset.
-This will make the columns hidden for the version in question rather than
-the current version.  This is important because older schema migration
-procedures might still refer to old columns.  Those columns truly exist
-at that schema version.
+For sql stored procedures that are supposed to update previous schema versions
+you can use this attribute to put CQL into that mindset. This will make the
+columns hidden for the version in question rather than the current version.
+This is important because older schema migration procedures might still refer to
+old columns.  Those columns truly exist at that schema version.
 
 #### The `@ENFORCE_STRICT` Statement
 
@@ -842,8 +885,6 @@ Switch to strict mode for the indicated item.  The choices and their meanings ar
 
   * `CAST` indicates that casts that would be a no-op should instead generate errors (e.g. `cast(1 as int)`)
   * `CURSOR HAS ROW` indicates that cursors with storage must first be tested to see if they have a row before non-null fields are accessed
-  * `ENCODE CONTEXT COLUMN` indicates that an encode context must be specified in when `vault_sensitive` is used
-  * `ENCODE CONTEXT TYPE` _type_ specifies the required type of encode context columns
   * `FOREIGN KEY ON DELETE` indicates there must be some `ON DELETE` action in every FK
   * `FOREIGN KEY ON UPDATE` indicates there must be some `ON UPDATE` action in every FK
   * `INSERT SELECT` indicates that insert with `SELECT` for values may not include top level joins (avoiding a SQLite bug)
@@ -860,14 +901,15 @@ Switch to strict mode for the indicated item.  The choices and their meanings ar
   * `WINDOW FUNCTION` indicates no window functions may be used (*)
   * `WITHOUT ROWID` indicates `WITHOUT ROWID` may not be used
 
-The items marked with * are present so that features can be disabled to
-target downlevel versions of SQLite that may not have those features.
+The items marked with * are present so that features can be disabled to target
+downlevel versions of SQLite that may not have those features.
 
-The items marked with ** are present so that features can be disabled to
-target downlevel versions of SQLite where this feature has bugs.
+The items marked with ** are present so that features can be disabled to target
+downlevel versions of SQLite where this feature has bugs.
 
-Most of the strict options were discovered via "The School of Hard Knocks", they are all recommended except for the (*) items
-where the target SQLite version is known.
+Most of the strict options were discovered via "The School of Hard Knocks", they
+are all recommended except for the (*) items where the target SQLite version is
+known.
 
 See the grammar details for exact syntax.
 
@@ -877,8 +919,8 @@ Turn off strict enforcement for the indicated item.
 
 #### The `@ENFORCE_PUSH` Statement
 
-Push the current strict settings onto the enforcement stack.  This does
-not change the current settings.
+Push the current strict settings onto the enforcement stack. This does not
+change the current settings.
 
 #### The `@ENFORCE_POP` Statement
 
@@ -889,10 +931,11 @@ Pop the previous current strict settings from the enforcement stack.
 Turns off all the strict modes.  Best used immediately after `@ENFORCE_PUSH`.
 
 #### The `@DECLARE_SCHEMA_REGION` Statement
-A schema region is a partitioning of the schema such that it only
-uses objects in the same partition or one of its declared dependencies.
-One schema region may be upgraded independently from any others (assuming
-they happen such that dependents are done first.)
+
+A schema region is a partitioning of the schema such that it only uses objects
+in the same partition or one of its declared dependencies. One schema region may
+be upgraded independently from any others (assuming they happen such that
+dependents are done first.)
 
 Here we validate:
 
@@ -902,25 +945,24 @@ Here we validate:
 
 #### The `@BEGIN_SCHEMA_REGION` Statement
 
-Entering a schema region makes all the objects that follow part of
-that region.  It also means that all the contained objects must refer to
-only pieces of schema that are in the same region or a dependent region.
-Here we validate that region we are entering is in fact a valid region
-and that there isn't already a schema region.
+Entering a schema region makes all the objects that follow part of that region.
+It also means that all the contained objects must refer to only pieces of schema
+that are in the same region or a dependent region. Here we validate that region
+we are entering is in fact a valid region and that there isn't already a schema
+region.
 
 #### The `@END_SCHEMA_REGION` Statement
 
-Leaving a schema region puts you back in the default region.
-Here we check that we are in a schema region.
+Leaving a schema region puts you back in the default region. Here we check that
+we are in a schema region.
 
 #### The `@EMIT_ENUMS` Statement
 
-Declared enumarations can be voluminous and it is undesirable for every
-emitted `.h` file to contain every enumeration.  To avoid this problem
-you can emit enumeration values of your choice using `@emit_enums x, y, z`
-which places the named enumerations into the `.h` file associated with
-the current translation unit. If no enumerations are listed, all enums
-are emitted.
+Declared enumarations can be voluminous and it is undesirable for every emitted
+`.h` file to contain every enumeration.  To avoid this problem you can emit
+enumeration values of your choice using `@emit_enums x, y, z` which places the
+named enumerations into the `.h` file associated with the current translation
+unit. If no enumerations are listed, all enums are emitted.
 
 NOTE: generated enum definitions are protected by `#ifndef X ... #endif`
 so multiple definitions are harmless and hence you can afford to use
@@ -930,45 +972,43 @@ so multiple definitions are harmless and hence you can afford to use
 
 #### The `@EMIT_CONSTANTS` Statement
 
-This statement is entirely analogous to the the `@EMIT_ENUMS` except
-that the parameters are one or more constant groups.  In fact constants
-are put into groups precisely so that they can be emitted in logical
-bundles (and to encourage keeping related constants together).  Placing
-`@EMIT_CONSTANTS` causes the C version of the named groups to go into
-the current `.h` file.
+This statement is entirely analogous to the the `@EMIT_ENUMS` except that the
+parameters are one or more constant groups.  In fact constants are put into
+groups precisely so that they can be emitted in logical bundles (and to
+encourage keeping related constants together).  Placing `@EMIT_CONSTANTS` causes
+the C version of the named groups to go into the current `.h` file.
 
 >NOTE: Global constants also appear in the JSON output in their own section.
 
 ### Important Program Fragments
 
-These items appear in a variety of places and are worthy of discussion.  They are generally handled uniformly.
+These items appear in a variety of places and are worthy of discussion.  They
+are generally handled uniformly.
 
 #### Argument Lists
 
-In each case we walk the entire list and do the type inference on each
-argument.  Note that this happens in the context of a function call,
-and depending on what the function is, there may be additional rules
-for compatibility of the arguments with the function.  The generic code
-doesn't do those checks, there is per-function code that handles that
-sort of thing.
+In each case we walk the entire list and do the type inference on each argument.
+Note that this happens in the context of a function call, and depending on what
+the function is, there may be additional rules for compatibility of the
+arguments with the function.  The generic code doesn't do those checks, there is
+per-function code that handles that sort of thing.
 
-At this stage the compiler computes the type of each argument and makes
-sure that, independently, they are not bogus.
+At this stage the compiler computes the type of each argument and makes sure
+that, independently, they are not bogus.
 
 #### Procedures that return a Result Set
 
-If a procedure is returning a select statement then we need to attach a
-result type to the procedure's semantic info.  We have to do some extra
-validation at this point, especially if the procedure already has some
-other select that might be returned.  The compiler ensures that all the
-possible select results are are 100% compatible.
+If a procedure is returning a select statement then we need to attach a result
+type to the procedure's semantic info.  We have to do some extra validation at
+this point, especially if the procedure already has some other select that might
+be returned.  The compiler ensures that all the possible select results are are
+100% compatible.
 
 #### General Name Lookups
 
-Every name is checked in a series of locations.  If the name is known
-to be a table, view, cursor, or some other specific type of object then
-only those name are considered.  If the name is more general a wider
-search is used.
+Every name is checked in a series of locations.  If the name is known to be a
+table, view, cursor, or some other specific type of object then only those name
+are considered.  If the name is more general a wider search is used.
 
 Among the places that are considered:
 
@@ -981,59 +1021,62 @@ Among the places that are considered:
 
 Discriminators can appear on any type, `int`, `real`, `object`, etc.
 
-Where there is a discriminator the compiler checks that (e.g.) `object<Foo>` only combines
-with `object<Foo>` or `object`.  `real<meters>` only combines with `real<meters>` or `real`.
-In this way its not possible to accidentally add `meters` to `kilograms` or to store
-an `int<task_id>` where an `int<person_id>` is required.
+Where there is a discriminator the compiler checks that (e.g.) `object<Foo>`
+only combines with `object<Foo>` or `object`.  `real<meters>` only combines with
+`real<meters>` or `real`. In this way its not possible to accidentally add
+`meters` to `kilograms` or to store an `int<task_id>` where an `int<person_id>`
+is required.
 
 #### The `CASE` Expression
 
-There are two parts to this: the "when" expression and the "then"
-expression.  We compute the aggregate type of the "when" expressions as
-we go, promoting it up to a larger type if needed (e.g. if one "when"
-is an int and the other is a real, then the result is a real).  Likewise,
-nullability is computed as the aggregate.  Note that if nothing matches,
-the result is null, so we always get a nullable resultm unless there is an
-"else" expression.  If we started with case expression, then each "when"
-expression must be comparable to the case expression.  If we started
-with case when xx then yy;  then each case expression must be numeric
-(typically boolean).
+There are two parts to this: the "when" expression and the "then" expression.
+We compute the aggregate type of the "when" expressions as we go, promoting it
+up to a larger type if needed (e.g. if one "when" is an int and the other is a
+real, then the result is a real).  Likewise, nullability is computed as the
+aggregate.  Note that if nothing matches, the result is null, so we always get a
+nullable resultm unless there is an "else" expression.  If we started with case
+expression, then each "when" expression must be comparable to the case
+expression.  If we started with case when xx then yy;  then each case expression
+must be numeric (typically boolean).
 
 #### The `BETWEEN` Expression
 
 Between requires type compatibility between all three of its arguments.
-Nullability follows the usual rules: if any might be null then the result
-type might be null.  In any case, the result's core type is BOOL.
+Nullability follows the usual rules: if any might be null then the result type
+might be null.  In any case, the result's core type is BOOL.
 
 #### The `CAST` Expression
 
-For cast expressions we use the provided semantic type; the only trick is
-that we preserve the extra properties of the input argument.  e.g. CAST
-does not remove `NOT NULL`.
+For cast expressions we use the provided semantic type; the only trick is that
+we preserve the extra properties of the input argument.  e.g. CAST does not
+remove `NOT NULL`.
+
+There is alternate postfix syntax for `CAST`, that is `CAST(x as y)` is
+the same as `x ~y~`.
 
 #### The `COALESCE` Function
 
-Coalesce requires type compatibility between all of its arguments.
-The result is a not null type if we find a not null item in the list.
-There should be nothing after that item.  Note that `ifnull` and `coalesce`
-are really the same thing except `ifnull` must have exactly two arguments.
+Coalesce requires type compatibility between all of its arguments. The result is
+a not null type if we find a not null item in the list. There should be nothing
+after that item.  Note that `ifnull` and `coalesce` are really the same thing
+except `ifnull` must have exactly two arguments.
 
 #### The `IN` AND `NOT IN` Expressions
 
-The in predicate is like many of the other multi-argument operators.
-All the items must be type compatible.  Note that in this case the
-nullablity of the items does not matter, only the nullability of the
-item being tested.  Note that null in (null) is null, not true.
+The in predicate is like many of the other multi-argument operators. All the
+items must be type compatible.  Note that in this case the nullablity of the
+items does not matter, only the nullability of the item being tested.  Note that
+null in (null) is null, not true.
 
 #### Aggregate Functions
 
-Aggregate functions can only be used in certain places.  For instance
-they may not appear in a `WHERE` clause.
+Aggregate functions can only be used in certain places.  For instance they may
+not appear in a `WHERE` clause.
 
 #### User Defined Functions
 
-User defined function - this is an external function.
-There are a few things to check:
+User defined function - this is an external function. There are a few things to
+check:
 
 * If this is declared without the select keyword then
   * we can't use these in SQL, so this has to be a loose expression
@@ -1053,13 +1096,13 @@ There are a few things to check:
 
 #### Root Expressions
 
-A top level expression defines the context for that evaluation.
-Different expressions can have constraints.  e.g. aggregate functions
-may not appear in the `WHERE` clause of a statement.  There are cases
-where expression nesting can happen. This nesting changes the evaluation
-context accordingly, e.g. you can put a nested select in a where clause
-and that nested select could legally have aggregates.  Root expressions
-keep a stack of nested contexts to facilitate the changes.
+A top level expression defines the context for that evaluation. Different
+expressions can have constraints.  e.g. aggregate functions may not appear in
+the `WHERE` clause of a statement.  There are cases where expression nesting can
+happen. This nesting changes the evaluation context accordingly, e.g. you can
+put a nested select in a where clause and that nested select could legally have
+aggregates.  Root expressions keep a stack of nested contexts to facilitate the
+changes.
 
 #### Table Factors
 
@@ -1073,96 +1116,108 @@ Each of these has its own rules discussed elsewhere.
 
 #### Joining with the `USING` Clause
 
-When specifying joins, one of the alternatives is to give the shared
-columns in the join e.g. select * from X inner join Y using (a,b).
-This method validates that all the columns are present on both sides
-of the join, that they are unique, and they are comparable.  The return
-code tells us if any columns had SENSITIVE data.   See the Special Note on
-JOIN...USING below
+When specifying joins, one of the alternatives is to give the shared columns in
+the join e.g. select * from X inner join Y using (a,b). This method validates
+that all the columns are present on both sides of the join, that they are
+unique, and they are comparable.  The return code tells us if any columns had
+SENSITIVE data.   See the Special Note on JOIN...USING below
 
 #### JOIN WITH THE `ON` Clause
 
-The most explicit join condition is a full expression in an ON clause this
-is like `select a,b from X inner join Y on X.id = Y.id;` The on expression
-should be something that can be used as a bool, so any numeric will do.
-The return code tells us if the ON condition used SENSITIVE data.
+The most explicit join condition is a full expression in an ON clause this is
+like `select a,b from X inner join Y on X.id = Y.id;` The on expression should
+be something that can be used as a bool, so any numeric will do. The return code
+tells us if the ON condition used SENSITIVE data.
 
 #### TABLE VALUED FUNCTIONS
 
-Table valued functions can appear anywhere a table is allowed.
-The validation rules are:
+Table valued functions can appear anywhere a table is allowed. The validation
+rules are:
 
 * must be a valid function
 * must return a struct type (i.e. a table-valued-function)
 * must have valid arg expressions
 * arg expressions must match formal parameters
+
 The name of the resulting table is the name of the function
  * but it can be aliased later with "AS"
 
  ### Special Note on the `select *` and `select T.*` forms
 
- The `select *` construct is very popular in many codebases but it can
- be unsafe to use in production code because, if the schema changes,
- the code might get columns it does not expect.  Note the extra
- columns could have appeared anywhere in the result set because the
- `*` applies to the entire result of the `FROM` clause, joins and all,
- so extra columns are not necessarily at the end and column ordinals
- are not preserved.  CQL mitigates this situation somewhat with some
- useful constraints/features:
+ The `select *` construct is very popular in many codebases but it can be unsafe
+ to use in production code because, if the schema changes, the code might get
+ columns it does not expect.  Note the extra columns could have appeared
+ anywhere in the result set because the `*` applies to the entire result of the
+ `FROM` clause, joins and all, so extra columns are not necessarily at the end
+ and column ordinals are not preserved.  CQL mitigates this situation somewhat
+ with some useful constraints/features:
 
-* in a `select *`, and indeed in any query, the column names of the select must be unique, this is because:
-   * they could form the field names of an automatically generated cursor (see the section on cursors)
-   * they could form the field names in a CQL result set (see section on result sets)
+* in a `select *`, and indeed in any query, the column names of the select must
+  be unique, this is because:
+   * they could form the field names of an automatically generated cursor (see
+     the section on cursors)
+   * they could form the field names in a CQL result set (see section on result
+     sets)
    * it's weird/confusing to not have unique names generally
-* when issuing a `select *` or a `select T.*` CQL will automatically expand the `*` into the actual logical columns that exist in the schema at the time the code was compiled
-   * this is important because if a column had been logically deleted from a table it would be unexpected in the result set even though it is still present in the database and would throw everything off
-   * likewise if the schema were to change without updating the code, the code will still get the columns it was compiled with, not new columns
+* when issuing a `select *` or a `select T.*` CQL will automatically expand the
+  `*` into the actual logical columns that exist in the schema at the time the
+  code was compiled
+   * this is important because if a column had been logically deleted from a
+     table it would be unexpected in the result set even though it is still
+     present in the database and would throw everything off
+   * likewise if the schema were to change without updating the code, the code
+     will still get the columns it was compiled with, not new columns
 
 Expanding the `*` at compile time means Sqlite cannot see anything that
 might tempt it to include different columns in the result than CQL saw
 at compile time.
 
-With this done we just have to look at the places a `select *` might
-appear so we can see if it is safe (or at least reasonably safe) to use
-`*` and, by extension of the same argument, `T.*`.
+With this done we just have to look at the places a `select *` might appear so
+we can see if it is safe (or at least reasonably safe) to use `*` and, by
+extension of the same argument, `T.*`.
 
 In an `EXISTS` or `NOT EXISTS` clause like `where not exists (select * from x)`*
 
-* this is perfectly safe; the particular columns do not matter; `select *` is not even expanded in this case.
+* this is perfectly safe; the particular columns do not matter; `select *` is
+  not even expanded in this case.
 
 In a statement that produces a result set like `select * from table_or_view`*
 
-* binding to a CQL result set is done by column name and we know those names are unique
-* we won't include any columns that are logically deleted, so if you try to use a deleted column you'll get a compile time error
+* binding to a CQL result set is done by column name and we know those names are
+  unique
+* we won't include any columns that are logically deleted, so if you try to use
+  a deleted column you'll get a compile time error
 
-In a cursor statement like `cursor C for select * from table_or_view` there are two cases here:
+In a cursor statement like `cursor C for select * from table_or_view` there are
+two cases here:
 
 *Automatic Fetch  `fetch C;`*
 
 * in this case you don't specify the column names yourself;2 they are inferred
-* you are therefore binding to the columns by name, so new columns in the cursor would be unused (until you choose to start using them)
+* you are therefore binding to the columns by name, so new columns in the cursor
+  would be unused (until you choose to start using them)
 * if you try to access a deleted column you get a compile-time error
 
 *Manual Fetch:  `fetch C into a, b, c;`*
 
-* In this case the number and type of the columns must match exactly with the specified variables
+* In this case the number and type of the columns must match exactly with the
+  specified variables
 * If new columns are added, deleted, or changed, the above code will not compile
 
-So considering the cases above we can conclude that auto expanding
-the `*` into the exact columns present in the compile-time schema
-version ensures that any incompatible changes result in compile time
-errors. Adding columns to tables does not cause problems even if the
-code is not recompiled. This makes the `*` construct much safer, if not
-perfect, but no semantic would be safe from arbitrary schema changes
-without recompilation.  At the very least here we can expect a meaningful
+So considering the cases above we can conclude that auto expanding the `*` into
+the exact columns present in the compile-time schema version ensures that any
+incompatible changes result in compile time errors. Adding columns to tables
+does not cause problems even if the code is not recompiled. This makes the `*`
+construct much safer, if not perfect, but no semantic would be safe from
+arbitrary schema changes without recompilation.  At the very least here we can
+expect a meaningful
 runtime error rather than silently fetching the wrong columns.
 
 ### Special Note on the JOIN...USING form
 
-CQL varies slightly from SQLite in terms of the expected results for joins
-if the USING syntax is employed.  This is not the most common syntax
-(typically an ON clause is used) but Sqlite has special rules for this
-kind of join.
+CQL varies slightly from SQLite in terms of the expected results for joins if
+the USING syntax is employed.  This is not the most common syntax (typically an
+ON clause is used) but Sqlite has special rules for this kind of join.
 
 Let's take a quick look.  First some sample data:
 
@@ -1186,60 +1241,70 @@ result:
 1|a1|b1|1|c1|d1
 2|a2|b2|2|c2|d2
 ```
-As expected, you get all the columns of A, and all the columns of B.  The 'id' column appears twice.
 
+As expected, you get all the columns of A, and all the columns of B.  The 'id'
+column appears twice.
 
 However, with the `USING` syntax:
 
 ```sql
 select * T1 inner join B T2 using (id);
+```
 
 result:
 
+```
 1|a1|b1|c1|d1
 2|a2|b2|c2|d2
 ```
-The `id` column is now appearing exactly once.  However, the situation
-is not so simple as that.  It seems that the `*` expansion has not included
-two copies of `id` but the following cases show that both copies of `id`
-are still logically in the join.
+
+The `id` column is now appearing exactly once.  However, the situation is not so
+simple as that.  It seems that the `*` expansion has not included two copies of
+`id` but the following cases show that both copies of `id` are still logically
+in the join.
 
 ```sql
 select T1.*, 'xxx', T2.* from A T1 inner join B T2 using (id);
+```
 
 result:
 
+```
 1|a1|b1|xxx|1|c1|d1
 2|a2|b2|xxx|2|c2|d2
 ```
-The `T2.id` column is part of the join, it just wasn't part of the `*`
+
+The `T2.id` column is part of the join, it just wasn't part of the `*`.
 
 In fact, looking further:
 
+```sql
+select T1.id, T1.a, T1.b, 'xxx', T2.id, T2.c, T2.d
+from A T1inner join B T2 using (id);
 ```
-select T1.id, T1.a, T1.b, 'xxx', T2.id, T2.c, T2.d from A T1 inner join B T2 using (id);
-
 result:
 
+```
 1|a1|b1|xxx|1|c1|d1
 2|a2|b2|xxx|2|c2|d2
 ```
-There is no doubt, `T2.id` is a valid column and can be used in
-expressions freely. That means the column cannot be removed from the
-type calculus.
 
-Now in CQL, the `*` and `T.*` forms are automatically expanded; SQLite
-doesn't see the `*`.  This is done so that if any columns have been
-logically deleted they can be elided from the result set.  Given that
-this happens, the `*` operator will expand to ALL the columns.  Just the
-same as if you did `T1.*` and `T2.*`.
+There is no doubt, `T2.id` is a valid column and can be used in expressions
+freely. That means the column cannot be removed from the type calculus.
 
-*As a result, in CQL, there is no difference between  the `USING` form of a join and the `ON` form of a join.*
+Now in CQL, the `*` and `T.*` forms are automatically expanded; SQLite doesn't
+see the `*`.  This is done so that if any columns have been logically deleted
+they can be elided from the result set even if they are still in the physical
+schema. Given that this happens, the `*` operator will expand to ALL the
+columns. Just the same as if you did `T1.*` and `T2.*`.
 
-In fact, only the `select *` form could possibly be different, so in most
-cases this ends up being moot anyway.  Typically, you can't use
-`*` in the presence of joins because of name duplication and ambiguity
-of the column names of the result set.  CQL's automatic expansion means
-you have a much better idea exactly what columns you will get - those
-that were present in the schema you declared.  The CQL `@COLUMNS` function
-(q.v.) can also help you to make good select lists more easily.
+*As a result, in CQL, there is no difference between the `USING` form of a join
+and the `ON` form of a join.*
+
+In fact, only the `select *` form could possibly be different, so in most cases
+this ends up being moot anyway.  Typically, you can't use `*` in the presence of
+joins because of name duplication and ambiguity of the column names of the
+result set.  CQL's automatic expansion means you have a much better idea exactly
+what columns you will get - those that were present in the schema you declared.
+The CQL `@COLUMNS` function (q.v.) can also help you to make good select lists
+more easily.

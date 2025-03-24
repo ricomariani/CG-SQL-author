@@ -19,7 +19,7 @@ Let's say we have this simple stored procedure:
 ```sql
 create table foo(id int!, b bool, t text);
 
-create proc read_foo(id_ int!)
+proc read_foo(id_ int!)
 begin
   select * from foo where id = id_;
 end;
@@ -209,7 +209,7 @@ Chapter 5.  Here we'll discuss the code generation behind that.
 
 Here’s an example from the CQL tests:
 ```sql
-create proc some_integers(start int!, stop int!)
+proc some_integers(start int!, stop int!)
 begin
   cursor C like select 1 v, 2 v_squared, "xx" some_text;
   var i int!;
@@ -283,7 +283,7 @@ including the reading of rowsets.
 ```sql
 -- hello.sql:
 
-create proc hello()
+proc hello()
 begin
 
   create table my_data(
@@ -517,7 +517,7 @@ declare proc child(y int!) (id int!, u text, v text);
 
 -- join together parent and child using 'id'
 -- example x_, y_ arguments for illustration only
-create proc parent_child(x_ int!, y_ int!)
+proc parent_child(x_ int!, y_ int!)
 begin
   out union call parent(x_) join call child(y_) using (id);
 end;
@@ -527,41 +527,45 @@ The generated code is simple enough, even though there's a good bit of it.
 But it's a useful exercise to look at it once.  Comments added for clarity.
 
 ```sql
-CREATE PROC parent_child (x_ INT!, y_ INT!)
+PROC parent_child (x_ INT!, y_ INT!)
 BEGIN
   DECLARE __result__0 BOOL!;
 
   -- we need a cursor to hold just the key of the child row
-  DECLARE __key__0 CURSOR LIKE child(id);
+  CURSOR __key__0 LIKE child(id);
 
   -- we need our partitioning object (there could be more than one per function
   -- so it gets a number, likewise everything else gets a number
   LET __partition__0 := cql_partition_create();
 
   -- we invoke the child and then iterate its rows
-  DECLARE __child_cursor__0 CURSOR FOR CALL child(y_);
+  CURSOR __child_cursor__0 FOR CALL child(y_);
   LOOP FETCH __child_cursor__0
   BEGIN
     -- we extract just the key fields (id in this case)
     FETCH __key__0(id) FROM VALUES(__child_cursor__0.id);
 
     -- we add this child to the partition using its key
-    SET __result__0 := cql_partition_cursor(__partition__0, __key__0, __child_cursor__0);
+    __result__0 := cql_partition_cursor(__partition__0, __key__0, __child_cursor__0);
   END;
 
-  -- we need a shape for our result, it is the columns of the parent plus the child rowset
-  DECLARE __out_cursor__0 CURSOR LIKE (id INT!, a INT, b INT,
-                                       child1 OBJECT<child SET> NOT NULL);
+  -- we need a shape for our result, the columns of the parent plus the child rowset
+  CURSOR __out_cursor__0 LIKE (
+    id INT!, a INT, b INT,
+    child1 OBJECT<child SET> NOT NULL);
 
   -- now we call the parent and iterate it
-  DECLARE __parent__0 CURSOR FOR CALL parent(x_);
+  CURSOR __parent__0 FOR CALL parent(x_);
   LOOP FETCH __parent__0
   BEGIN
     -- we load the key values out of the parent this time, same key fields
     FETCH __key__0(id) FROM VALUES(__parent__0.id);
 
     -- now we create a result row using the parent columns and the child result set
-    FETCH __out_cursor__0(id, a, b, child1) FROM VALUES(__parent__0.id, __parent__0.a, __parent__0.b, cql_extract_partition(__partition__0, __key__0));
+    FETCH __out_cursor__0(id, a, b, child1) FROM
+       VALUES(
+         __parent__0.id, __parent__0.a, __parent__0.b,
+         cql_extract_partition(__partition__0, __key__0));
 
     -- and then we emit that row
     OUT UNION __out_cursor__0;
@@ -609,7 +613,7 @@ And more generally, this examples shows a manual iteration:
 declare proc parent(x int!) (id int!, a int, b int);
 declare proc child(id int!) (id int!, u text, v text);
 
-create proc parent_child(x_ int!, y_ int!)
+proc parent_child(x_ int!, y_ int!)
 begin
   -- the result is like the parent with an extra column for the child
   cursor result like (like parent, child object<child set>);
@@ -631,7 +635,7 @@ After the sugar is applied to expand the types out, the net program is the follo
 DECLARE PROC parent (x INT!) (id INT!, a INT, b INT);
 DECLARE PROC child (id INT!) (id INT!, u TEXT, v TEXT);
 
-CREATE PROC parent_child (x_ INT!, y_ INT!)
+PROC parent_child (x_ INT!, y_ INT!)
 BEGIN
   CURSOR result LIKE (id INT!, a INT, b INT,
                               child OBJECT<child SET>);

@@ -97,7 +97,7 @@ could write a procedure something like this:
 ```sql
 create table foo(id int, t text);
 
-create procedure bar(id_ integer)
+proc bar(id_ integer)
 begin
    select strencode(T1.t) from foo T1 where T1.id = id_;
 end;
@@ -321,11 +321,13 @@ This is exactly the same as
 The two table functions are readily declared if they are needed like so:
 
 ```sql
-DECLARE SELECT FUNC json_each NO CHECK
-   (key BLOB, value BLOB, type TEXT, atom BLOB, id INT, parent INT, fullkey TEXT, path TEXT);
+SELECT FUNC json_each NO CHECK
+  (key BLOB, value BLOB, type TEXT, atom BLOB, id INT,
+     parent INT, fullkey TEXT, path TEXT);
 
-DECLARE SELECT FUNC json_tree NO CHECK
-   (key BLOB, value BLOB, type TEXT, atom BLOB, id INT, parent INT, fullkey TEXT, path TEXT);
+SELECT FUNC json_tree NO CHECK
+  (key BLOB, value BLOB, type TEXT, atom BLOB, id INT,
+      parent INT, fullkey TEXT, path TEXT);
 ```
 
 > NOTE: key, value, and atom can be any type and will require a cast operation similar to

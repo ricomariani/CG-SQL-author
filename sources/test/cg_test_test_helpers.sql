@@ -591,7 +591,7 @@ end;
 -- + PROC test_sample_proc27_read_experiment_value()
 -- + SELECT * FROM experiment_value
 [[autotest=((dummy_test, (experiment_value, (config, param, value, type, logging_id), ('rtc_overlayconfig_exampleconfig', 'enabled', '0', 9223372036854775807, '1234'), ('rtc_overlayconfig_exampleconfig', 'some_integer', '42', 9223372036854775807, '5678'))))]]
-CREATE PROCEDURE sample_proc27()
+PROC sample_proc27()
 BEGIN
   @enforce_normal join;
   SELECT * FROM experiment_value;
@@ -615,7 +615,7 @@ END;
 -- + PROC test_sample_proc28_read_X_tableX20a()
 -- + PROC test_sample_proc28_read_dbl_table()
 [[autotest=(dummy_test)]]
-CREATE PROCEDURE sample_proc28()
+PROC sample_proc28()
 BEGIN
   select * from `table a`;
 END;
@@ -636,7 +636,7 @@ END;
 -- - DROP TRIGGER IF EXISTS `trigger on table a`
 -- + PROC test_sample_proc29_read_dbl_table()
 [[autotest=(dummy_test)]]
-CREATE PROCEDURE sample_proc29()
+PROC sample_proc29()
 BEGIN
   select * from dbl_table;
 END;
@@ -659,7 +659,7 @@ END;
 -- + PROC test_sample_proc30_read_X_tableX20a
 -- + PROC test_sample_proc30_read_dbl_table()
 [[autotest=(dummy_test)]]
-CREATE PROCEDURE sample_proc30()
+PROC sample_proc30()
 BEGIN
   create trigger `also on table a`
       before delete on `table a`
@@ -695,7 +695,7 @@ END;
 -- + PROC test_sample_proc31_read_T4()
 -- + PROC test_sample_proc31_read_T3()
 [[autotest=(dummy_test)]]
-CREATE PROCEDURE sample_proc31()
+PROC sample_proc31()
 BEGIN
   insert into T1 (id) values(1);
 END;

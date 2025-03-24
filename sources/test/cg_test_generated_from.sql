@@ -16,7 +16,7 @@ create table bar(
 );
 
 -- A sample procedure.
-create procedure sample_proc()
+proc sample_proc()
 begin
 end;
 

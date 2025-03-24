@@ -209,7 +209,7 @@ set that can be used to mock a method.  I've replaced the real fields with
 'f1, 'f2' etc.
 
 ```sql
-CREATE PROCEDURE test_my_subject(
+PROC test_my_subject(
   f1_ LONG!,
   f2_ TEXT!,
   f3_ INT!,
@@ -232,7 +232,7 @@ END;
 This can be written much more maintainably as:
 
 ```sql
-CREATE PROCEDURE test_my_subject(like my_subject)
+PROC test_my_subject(like my_subject)
 BEGIN
   CURSOR C LIKE my_subject;
   FETCH C FROM ARGUMENTS;

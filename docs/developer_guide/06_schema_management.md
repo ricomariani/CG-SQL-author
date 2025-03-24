@@ -381,7 +381,7 @@ so we'll include this one in full.
   // code to read the facets into the hash table
 
   bprintf(&preamble, "@attribute(cql:private)\n");
-  bprintf(&preamble, "CREATE PROCEDURE %s_setup_facets()\n", global_proc_name);
+  bprintf(&preamble, "PROC %s_setup_facets()\n", global_proc_name);
   bprintf(&preamble, "BEGIN\n");
   bprintf(&preamble, "  TRY\n");
   bprintf(&preamble, "    SET %s_facets := cql_facets_new();\n", global_proc_name);
@@ -408,9 +408,9 @@ We'll go over this section by section.
   // the main upgrade worker
 
   bprintf(&main, "\n@attribute(cql:private)\n");
-  bprintf(&main, "CREATE PROCEDURE %s_perform_upgrade_steps()\n", global_proc_name);
+  bprintf(&main, "PROC %s_perform_upgrade_steps()\n", global_proc_name);
   bprintf(&main, "BEGIN\n");
-  bprintf(&main, "  DECLARE schema_version LONG!;\n");
+  bprintf(&main, "  VAR schema_version LONG!;\n");
 
   if (view_drops) {
     bprintf(&main, "    -- dropping all views --\n");

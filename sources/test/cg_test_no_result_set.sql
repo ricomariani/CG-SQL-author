@@ -13,7 +13,7 @@ create table bar(
   size REAL
 );
 
-create procedure outparm_test(out foo integer not null)
+proc outparm_test(out foo integer not null)
 begin
  set foo := 1;
  delete from bar where id = foo;

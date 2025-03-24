@@ -476,7 +476,7 @@ end;
 
 @MACRO(stmt_list) TEST!(name! expr, body! stmt_list)
 begin
-  create procedure @ID("test_", name!)()
+  proc @ID("test_", name!)()
   begin
     try
       body!;

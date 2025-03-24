@@ -1820,7 +1820,7 @@ void foo_user(cql_object_ref _Nullable *_Nonnull baz) {
 ```sql
 DECLARE FUNCTION foo() CREATE OBJECT;
 
-CREATE PROCEDURE foo_user (INOUT baz OBJECT)
+PROC foo_user (INOUT baz OBJECT)
 BEGIN
   DECLARE x OBJECT;
   SET x := foo();
@@ -1847,7 +1847,7 @@ cql_cleanup:
 ```sql
 DECLARE FUNCTION foo() OBJECT;
 
-CREATE PROCEDURE foo_user (INOUT baz OBJECT)
+PROC foo_user (INOUT baz OBJECT)
 BEGIN
   DECLARE x OBJECT;
   SET x := foo();

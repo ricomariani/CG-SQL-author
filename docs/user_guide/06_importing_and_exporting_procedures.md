@@ -233,7 +233,7 @@ Finally, this is a good place to reinforce that procedures with any of the struc
 result types (`select`, `out`, `out union`) can be used with a suitable cursor.
 
 ```sql
-create procedure get_stuff()
+proc get_stuff()
 begin
   select * from stuff;
 end;
@@ -242,7 +242,7 @@ end;
 Can be used in two interesting ways:
 
 ```sql
-create procedure meta_stuff(meta bool)
+proc meta_stuff(meta bool)
 begin
   if meta then
     call get_stuff();
@@ -258,7 +258,7 @@ as its own return value.
 But you could do more than simply pass on the result.
 
 ```sql
-create procedure meta_stuff(meta bool)
+proc meta_stuff(meta bool)
 begin
   cursor C for call get_stuff();  -- or get_meta_stuff(...)
   loop fetch C

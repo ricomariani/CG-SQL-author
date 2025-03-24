@@ -963,7 +963,7 @@ PROC test_perform_upgrade_steps(include_virtual_tables BOOL!)
 BEGIN
   LET facet := cql_compressed('cql_schema_crc_no_virtual');
   IF cql_facet_find(test_facets, facet) <> -500442630697164374 THEN
-    DECLARE schema_version LONG!;
+    VAR schema_version LONG!;
     -- dropping all views --
     CALL test_cql_drop_all_views();
 

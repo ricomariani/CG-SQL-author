@@ -8,7 +8,7 @@
 
 @include "utils/dump.sql"
 
-create procedure chapter_1 ()
+proc chapter_1 ()
 begin
   _!("## CHAPTER 1 — Primitive Datatypes and Operators\n");
 
@@ -150,7 +150,7 @@ begin
   EXAMPLE_NOTE!('This\nisn''t a C style string', "-- use '' to escape single quote ONLY");
 END;
 
-create procedure chapter_2 ()
+proc chapter_2 ()
 begin
   _!("## CHAPTER 2 — Simple Variables\n");
 
@@ -244,7 +244,7 @@ begin
   EXAMPLE_NOTE!(n_i, "-- nullable long variable initialized to 1");
 END;
 
-create procedure chapter_3 ()
+proc chapter_3 ()
 begin
   _!("## CHAPTER 3 — Control Flow\n");
 
@@ -302,7 +302,7 @@ begin
   end;
 END;
 
-create procedure chapter_4 ()
+proc chapter_4 ()
 begin
   _!("## CHAPTER 4 — Complex Expression Forms");
 
@@ -387,7 +387,7 @@ begin
   _!("");
 END;
 
-create procedure chapter_5 ()
+proc chapter_5 ()
 begin
   _!("## CHAPTER 5 — Working with and \"getting rid of\" nulls\n");
   _!("Null can be annoying, you might need a not null value.\n");
@@ -457,7 +457,7 @@ begin
 END;
 
 
-create procedure chapter_6 ()
+proc chapter_6 ()
 begin
   _!("## CHAPTER 6 — Tables, Views, Indices, Triggers\n");
 
@@ -510,7 +510,7 @@ begin
   _!("A complete discussion of DDL is out of scope, refer to sqlite.org");
 END;
 
-create procedure chapter_7 ()
+proc chapter_7 ()
 begin
   _!("## CHAPTER 7 — Selecting Data\n");
 
@@ -557,42 +557,42 @@ begin
   _!("");
 END;
 
-create procedure chapter_8 ()
+proc chapter_8 ()
 begin
   _!("## CHAPTER 8 — Procedures, Results, Exceptions\n");
 
   _!("TODO");
 END;
 
-create procedure chapter_9 ()
+proc chapter_9 ()
 begin
   _!("## CHAPTER 9 — Statement Cursors\n");
 
   _!("TODO");
 END;
 
-create procedure chapter_10 ()
+proc chapter_10 ()
 begin
   _!("## CHAPTER 10 — Value Cursors, Out, and Out Union\n");
 
   _!("TODO");
 END;
 
-create procedure chapter_11  ()
+proc chapter_11  ()
 begin
   _!("## CHAPTER 11 — Named Types and Enumerations\n");
 
   _!("TODO");
 END;
 
-create procedure chapter_12 ()
+proc chapter_12 ()
 begin
   _!("## CHAPTER 12 — Shapes and Their Uses\n");
 
   _!("TODO");
 END;
 
-create procedure chapter_13 ()
+proc chapter_13 ()
 begin
   _!("## CHAPTER 13 — INSERT USING and FETCH USING\n");
 

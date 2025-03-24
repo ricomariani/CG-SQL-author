@@ -1,6 +1,6 @@
 # Clean up output directory
 # Build CQL compiler
-cc -I. -Iout -g -Werror -c cqlrt.c -o out/cqlrt.o
+make: Nothing to be done for 'all'.
 # Generate stored procedures C and JSON output
 Sample.c
 Sample.json

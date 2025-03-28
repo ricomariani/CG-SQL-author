@@ -249,3 +249,26 @@ proc out__blob__not_null(out out__x blob!) begin out__x := (select CAST("blob" a
 proc out__blob__nullable(out out__x blob) begin out__x := NULL; end;
 -- proc out__object__not_null(out out__x integer!) begin out__x := 9876; end;
 -- proc out__object__nullable(out out__x integer) begin out__x := NULL; end;
+
+proc fib(n int!)
+begin
+  -- starting condition so that we get two 1s to start the sequence easily
+  let a := 0;
+  let b := 1;
+  let i := 1;
+
+  -- this is the shape of the output row we will create
+  cursor O like (i int!, val int!);
+
+  for n > 0; n -= 1; i += 1;
+  begin
+     -- emit 1 based index and the current fibonacci number
+     fetch O using i as i, b as val;
+     out union O;
+
+     -- compute the next and shift it down
+     let c := a + b;
+     a := b;
+     b := c;
+  end;
+end;

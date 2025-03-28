@@ -307,3 +307,5 @@ SELECT inout__blob__nullable(t.dummy) output, t.* FROM t WHERE t.cql = 'null'; -
 -- SELECT inout__object__nullable(t.dummy) output, t.* FROM t WHERE t.cql = 'null'; -- Expect ERROR
 
 select * from three_int_test(10,20,30);
+
+select * from fib(20);

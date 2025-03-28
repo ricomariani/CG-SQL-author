@@ -258,17 +258,25 @@ begin
   let i := 1;
 
   -- this is the shape of the output row we will create
-  cursor O like (i int!, val int!);
+  cursor result like (i int!, val int!);
 
   for n > 0; n -= 1; i += 1;
   begin
      -- emit 1 based index and the current fibonacci number
-     fetch O using i as i, b as val;
-     out union O;
+     fetch result using i as i, b as val;
+     out union result;
 
      -- compute the next and shift it down
      let c := a + b;
      a := b;
      b := c;
   end;
+end;
+
+proc sql_stuff()
+begin
+  create table if not exists foo(x int, y int);
+  delete from foo;
+  insert into foo values (1,1), (2,4), (3, 9);
+  select * from foo;
 end;

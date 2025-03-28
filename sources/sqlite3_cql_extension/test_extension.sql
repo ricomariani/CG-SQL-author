@@ -309,3 +309,5 @@ SELECT inout__blob__nullable(t.dummy) output, t.* FROM t WHERE t.cql = 'null'; -
 select * from three_int_test(10,20,30);
 
 select * from fib(20);
+
+select * from sql_stuff();

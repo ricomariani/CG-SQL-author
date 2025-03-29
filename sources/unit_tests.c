@@ -202,6 +202,38 @@ static bool test_unknown_macro() {
  return true;
 }
 
+cql_noexport char *Dirname(char *in);
+
+static bool test_Dirname() {
+   char buf[10];
+   char *result;
+
+   result = Dirname(NULL);
+   if (strcmp(result, ".")) return false;
+
+   strcpy(buf, "");
+   result = Dirname(buf);
+   if (strcmp(result, ".")) return false;
+
+   strcpy(buf, "no_dir");
+   result = Dirname(buf);
+   if (strcmp(result, ".")) return false;
+
+   strcpy(buf, "x\\y.z");
+   result = Dirname(buf);
+   if (strcmp(result, "x")) return false;
+
+   strcpy(buf, "x/y.z");
+   result = Dirname(buf);
+   if (strcmp(result, "x")) return false;
+
+   strcpy(buf, "/y.z");
+   result = Dirname(buf);
+   if (strcmp(result, "/")) return false;
+
+   return true;
+}
+
 cql_noexport void run_unit_tests() {
   TEST_ASSERT(test_strdup__empty_string());
   TEST_ASSERT(test_strdup__one_character_string());
@@ -235,6 +267,7 @@ cql_noexport void run_unit_tests() {
   TEST_ASSERT(test_sha256_example5());
   TEST_ASSERT(test_sha256_example6());
   TEST_ASSERT(test_unknown_macro());
+  TEST_ASSERT(test_Dirname());
 }
 
 #endif

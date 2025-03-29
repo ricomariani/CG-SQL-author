@@ -190,6 +190,18 @@ cql_noexport void gen_set_output_buffer(struct charbuf *buffer) {
   gen_output = buffer;
 }
 
+cql_noexport void gen_get_state(gen_sql_state *state) {
+  state->gen_output = gen_output;
+  state->gen_callbacks = gen_callbacks;
+  state->used_alias_syms = used_alias_syms;
+}
+
+cql_noexport void gen_set_state(gen_sql_state *state) {
+  gen_output = state->gen_output;
+  gen_callbacks = state->gen_callbacks;
+  used_alias_syms = state->used_alias_syms;
+}
+
 static void gen_name_ex(CSTR name, bool_t is_qid) {
   CHARBUF_OPEN(tmp);
   if (is_qid) {

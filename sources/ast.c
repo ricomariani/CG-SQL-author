@@ -1928,7 +1928,7 @@ static void expand_macro_refs(ast_node *ast) {
   //   let @tmp(x) := x!;
   //   let @id(y!) := inner!(@tmp(x));
   // end;
-  // 
+  //
   // one(expensive(100), zz)
   //
   // This must expand into:
@@ -1951,7 +1951,7 @@ static void expand_macro_refs(ast_node *ast) {
   // as usual.  Note that we never restore next_macro_count,
   // it counts up inexorably and is never reset until the next
   // run.
-    
+
   int32_t saved_macro_count = current_macro_count;
 
   if (is_ref) {

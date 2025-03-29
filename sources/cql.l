@@ -51,7 +51,7 @@ static char *Realpath(const char *relpath, char *absPathBuffer) {
 // used infrequently so we may as well just use a portable
 // version.
 
-static char *Dirname(char *path) {
+cql_noexport char *Dirname(char *path) {
   if (path == NULL || *path == '\0') {
     return ".";  // Return current directory for empty paths
   }

@@ -3159,14 +3159,39 @@ static bool_t cg_lua_call_in_cte(ast_node *cte_body, void *context, charbuf *buf
     // we're setting up the aliases for the callee right now and they aren't ready yet even
     // but that's ok because the expressions are in the context of the caller.
 
-    // todo: if the evaluation has a nested select statement then we will have to re-enter
-    // all of this.  We can either ban that (which isn't insane really) or else we can
-    // save the codegen state like callbacks and such so that it can re-enter.  That's
-    // the desired path.
+    // if the evaluation has a nested select statement then we will have to
+    // re-enter all of this.  Since we don't ban that  save the codegen state
+    // like callbacks and such so that it can re-enter.  That's the desired
+    // path.
+
+    gen_sql_state state;
+    gen_get_state(&state);
+    bytebuf sfs_saved;
+    memcpy(&sfs_saved, &lua_shared_fragment_strings, sizeof(bytebuf));
+    memset(&lua_shared_fragment_strings, 0, sizeof(bytebuf));
+
+    int cur_fragment_predicate_saved = lua_cur_fragment_predicate;
+    int max_fragment_predicate_saved = lua_max_fragment_predicate;
+    int prev_variable_count_saved = lua_prev_variable_count;
+    int cur_variable_count_saved = lua_cur_variable_count;
+    bool_t has_conditional_fragments_saved = lua_has_conditional_fragments;
+    bool_t has_shared_fragments_saved = lua_has_shared_fragments;
+    bool_t has_variables_saved = lua_has_variables;
 
     CG_LUA_PUSH_EVAL(expr, LUA_EXPR_PRI_ASSIGN);
     cg_lua_store(cg_main_output, alias_name, sem_type_var, sem_type_expr, expr_value.ptr);
     CG_LUA_POP_EVAL(expr);
+
+    lua_cur_variable_count = cur_variable_count_saved;
+    lua_prev_variable_count = prev_variable_count_saved;
+    lua_cur_fragment_predicate = cur_fragment_predicate_saved;
+    lua_max_fragment_predicate = max_fragment_predicate_saved;
+    lua_has_conditional_fragments = has_conditional_fragments_saved;
+    lua_has_shared_fragments = has_shared_fragments_saved;
+    lua_has_variables = has_variables_saved;
+
+    gen_set_state(&state);
+    memcpy(&lua_shared_fragment_strings, &sfs_saved, sizeof(bytebuf));
 
     // guaranteed to stay in lock step
     params = params->right;

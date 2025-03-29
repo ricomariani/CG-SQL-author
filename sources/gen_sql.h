@@ -190,3 +190,12 @@ cql_noexport void gen_any_text_arg(ast_node *_Nonnull ast);
 
 cql_noexport bool_t eval_variables_callback(ast_node *_Nonnull ast);
 cql_noexport bool_t eval_column_callback(ast_node *_Nonnull ast);
+
+typedef struct gen_sql_state {
+  charbuf *_Nullable gen_output;
+  gen_sql_callbacks *_Nullable gen_callbacks;
+  symtab *_Nullable used_alias_syms;
+} gen_sql_state;
+
+cql_noexport void gen_get_state(gen_sql_state *_Nonnull);
+cql_noexport void gen_set_state(gen_sql_state *_Nonnull);

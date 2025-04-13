@@ -22944,8 +22944,6 @@ begin
    call invalid_identity(2) join call test_child(1) using (x);
 end;
 
--- rico
-
 -- TEST: invalid child -- not a proc
 -- + error: % name not found 'does_not_exist'
 -- + {create_proc_stmt}: err

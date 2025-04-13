@@ -24254,7 +24254,16 @@ static void sem_child_results(ast_node *proc, ast_node *ast_err, ast_node *ast) 
   record_ok(ast_err);
 }
 
-// rico
+// We'll just need to do a few things, the re-write will force out the bulk of the
+// errors but we want to have some explicit checks:
+//   * the parent and child procs all exist
+//   * they have no errors
+//   * they return results
+//   * they have the join columns
+//   * the join columns are not null
+//
+// Everything else like arg validation can be deferred to after the rewrite and still
+// get good errors, so do that.
 static void sem_out_union_parent_child_stmt(ast_node *ast) {
   Contract(is_ast_out_union_parent_child_stmt(ast));
   EXTRACT_NOTNULL(call_stmt, ast->left);

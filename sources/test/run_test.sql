@@ -5914,7 +5914,7 @@ end);
 proc ch1()
 begin
   let base := 500;
-  cursor C like (k1 int, k2 text, v1 bool, v2 text, v3 real);
+  cursor C like (k1 int!, k2 text!, v1 bool, v2 text, v3 real);
   declare K cursor like C(k1,k2);
 
   let i := 0;
@@ -5934,7 +5934,7 @@ end;
 proc ch2()
 begin
   let base := 1000;
-  cursor C like (k3 integer, k4 text, v1 bool, v2 text, v3 real);
+  cursor C like (k3 int!, k4 text!, v1 bool, v2 text, v3 real);
   declare K cursor like C(k3, k4);
 
   let i := 0;
@@ -5951,7 +5951,7 @@ begin
   end;
 end;
 
-proc ch1_filter(k1 int, k2 text)
+proc ch1_filter(k1 int!, k2 text!)
 begin
   cursor C for call ch1();
   loop fetch C
@@ -5962,7 +5962,7 @@ begin
   end;
 end;
 
-proc ch2_filter(k3 int, k4 text)
+proc ch2_filter(k3 int!, k4 text!)
 begin
   cursor C for call ch2();
   loop fetch C
@@ -5975,7 +5975,7 @@ end;
 
 proc parent()
 begin
-  cursor C like (k1 int, k2 text, k3 int, k4 text, v1 bool, v2 text, v3 real);
+  cursor C like (k1 int!, k2 text!, k3 int!, k4 text!, v1 bool, v2 text, v3 real);
   declare D cursor like C;
   let i := 0;
   for i < 10; i += 1;

@@ -9507,7 +9507,6 @@ call non_sens_proc(int_nn);
 -- +2 error:
 call non_sens_proc_nonnull(X);
 
-
 declare proc ref_out_proc(out x text!);
 
 -- TEST: it's ok to invoke a procedure that has a not null ref out parameter with a nullable ref arg
@@ -9516,7 +9515,7 @@ declare proc ref_out_proc(out x text!);
 -- + {call_stmt}: ok
 -- + {arg_list}: ok
 -- + {name nullable_ok}: nullable_ok: text variable
-create proc ref_out_notnull()
+proc ref_out_notnull()
 begin
   var nullable_ok text;
   ref_out_proc(nullable_ok);
@@ -22866,14 +22865,14 @@ begin
   declare interface foo(LIKE interface1);
 end;
 
-proc test_parent(x_ integer)
+proc test_parent(x_ int!)
 begin
-  select x_ x;
+  select x_ x, 1 y, nullable(1) u, 1 v;
 end;
 
-proc test_child(x_ integer)
+proc test_child(x_ int!)
 begin
-  select x_ x;
+  select x_ x, 1 z, 1 u, nullable(1) v;
 end;
 
 -- TEST: Verify that the rewrite is successful including arg pass through
@@ -22889,17 +22888,17 @@ end;
 -- +     FETCH __key__0(x) FROM VALUES (__child_cursor__0.x);
 -- +     SET __result__0 := cql_partition_cursor(__partition__0, __key__0, __child_cursor__0);
 -- +   END;
--- +   CURSOR __out_cursor__0 LIKE (x INT, my_child OBJECT<test_child SET>!);
+-- +   CURSOR __out_cursor__0 LIKE (x INT!, y INT!,%my_child OBJECT<test_child SET>!);
 -- +   CURSOR __parent__0 FOR
 -- +     CALL test_parent(2);
 -- +   LOOP FETCH __parent__0
 -- +   BEGIN
 -- +     FETCH __key__0(x) FROM VALUES (__parent__0.x);
--- +     FETCH __out_cursor__0(x, my_child) FROM VALUES (__parent__0.x, cql_extract_partition(__partition__0, __key__0));
+-- +     FETCH __out_cursor__0(x, y,%my_child) FROM VALUES (__parent__0.x, __parent__0.y,%cql_extract_partition(__partition__0, __key__0));
 -- +     OUT UNION __out_cursor__0;
 -- +   END;
 -- + END;
--- + {create_proc_stmt}: __out_cursor__0: test_parent_child: { x: integer, my_child: object<test_child SET> notnull } variable dml_proc shape_storage uses_out_union value_cursor
+-- + {create_proc_stmt}: % test_parent_child: { x: integer notnull, y: integer notnull,%my_child: object<test_child SET> notnull } variable dml_proc shape_storage uses_out_union value_cursor
 -- - error:
 proc test_parent_child()
 begin
@@ -22907,12 +22906,94 @@ begin
    call test_parent(2) join call test_child(1) using (x) as my_child;
 end;
 
--- TEST: same writewrite with default column name
--- + {create_proc_stmt}: __out_cursor__1: test_parent_child2: { x: integer, child1: object<test_child SET> notnull } variable dml_proc shape_storage uses_out_union value_cursor
+-- TEST: same rewrite with default column name
+-- + {create_proc_stmt}: % test_parent_child2: { x: integer notnull, y: integer notnull,%child1: object<test_child SET> notnull } variable dml_proc shape_storage uses_out_union value_cursor
 proc test_parent_child2()
 begin
   out union
    call test_parent(2) join call test_child(1) using (x);
+end;
+
+-- TEST: invalid parent -- not a proc
+-- + error: % name not found 'does_not_exist'
+-- + {create_proc_stmt}: err
+-- +1 error:
+proc test_parent_child_invalid_parent1()
+begin
+  out union
+   call does_not_exist(2) join call test_child(1) using (x);
+end;
+
+-- TEST: invalid parent -- no result set
+-- + error: % proc has no result 'decl1'
+-- + {create_proc_stmt}: err
+-- +1 error:
+proc test_parent_child_invalid_parent2()
+begin
+  out union
+   call decl1(2) join call test_child(1) using (x);
+end;
+
+-- TEST: invalid parent -- proc had errors
+-- + error: % name not found (proc had errors, cannot be used) 'invalid_identity'
+-- + {create_proc_stmt}: err
+-- +1 error:
+proc test_parent_child_invalid_parent3()
+begin
+  out union
+   call invalid_identity(2) join call test_child(1) using (x);
+end;
+
+-- rico
+
+-- TEST: invalid child -- not a proc
+-- + error: % name not found 'does_not_exist'
+-- + {create_proc_stmt}: err
+-- +1 error:
+proc test_parent_child_invalid_child()
+begin
+  out union
+   call test_parent(2) join call does_not_exist(1) using (x);
+end;
+
+-- TEST: poarent child, bogus join column
+-- + error: % name not found (in parent) 'z'
+-- + {create_proc_stmt}: err
+-- +1 error:
+proc test_parent_child_invalid_join_parent()
+begin
+  out union
+   call test_parent(2) join call test_child(1) using (z);
+end;
+
+-- TEST: poarent child, bogus join column
+-- + error: % name not found (in child) 'y'
+-- + {create_proc_stmt}: err
+-- +1 error:
+proc test_parent_child_invalid_join_child()
+begin
+  out union
+   call test_parent(2) join call test_child(1) using (y);
+end;
+
+-- TEST: poarent child, bogus join column
+-- + error: % cannot assign/copy possibly null expression to not null target (parent) 'u'
+-- + {create_proc_stmt}: err
+-- +1 error:
+proc test_parent_child_invalid_join_parent_nullable()
+begin
+  out union
+   call test_parent(2) join call test_child(1) using (u);
+end;
+
+-- TEST: poarent child, bogus join column
+-- + error: % cannot assign/copy possibly null expression to not null target (child) 'v'
+-- + {create_proc_stmt}: err
+-- +1 error:
+proc test_parent_child_invalid_join_child_nullable()
+begin
+  out union
+   call test_parent(2) join call test_child(1) using (v);
 end;
 
 -- TEST: verify that type kinds that require particular shapes are getting them
@@ -26048,7 +26129,7 @@ CREATE TABLE map_xy(
 );
 
 [[shared_fragment]]
-create proc frag_xy(x_ long!, y_ long!)
+proc frag_xy(x_ long!, y_ long!)
 begin
   select x_ x, y_ y;
 end;
@@ -26059,7 +26140,7 @@ end;
 -- + {create_proc_stmt}: err
 -- +2 error:
 [[shared_fragment]]
-create proc mapped_xy(y_ long!)
+proc mapped_xy(y_ long!)
 begin
   with mapping as (
     select map_x from map_xy where map_y = y_

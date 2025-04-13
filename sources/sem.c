@@ -13389,10 +13389,8 @@ static void sem_shared_cte(ast_node *cte_body) {
   // to become a result-set procedure.
   sem_call_stmt_opt_cursor(call_stmt, NULL);
 
-  // cleawnup the current state and the restore, do this before any error handling
-  while (cte_cur) {
-    sem_pop_cte_state();
-  }
+  // cleanup the current state and the restore, do this before any error handling
+  while (cte_cur) sem_pop_cte_state();
 
   cte_cur = cte_cur_saved;
 
@@ -24169,8 +24167,110 @@ static void sem_out_union_stmt(ast_node *ast) {
   sem_out_any(ast);
 }
 
+static ast_node *find_proc_with_result(ast_node *ast_err, CSTR name) {
+  ast_node *proc = find_proc(name);
+  if (!proc) {
+    report_error(ast_err, "CQL0069: name not found", name);
+    return NULL;
+  }
+
+  if (is_error(proc)) {
+    report_error(ast_err, "CQL0069: name not found (proc had errors, cannot be used)", name);
+    return NULL;
+  }
+
+  if (!proc->sem->sptr) {
+    report_error(ast_err, "CQL0178: proc has no result", name);
+    return NULL;
+  }
+
+  return proc;
+}
+
+
+static void sem_child_results(ast_node *proc, ast_node *ast_err, ast_node *ast) {
+  Contract(is_ast_child_results(ast));
+
+  ast_node *item = ast;
+  while (item) {
+    Contract(is_ast_child_results(item));
+
+    EXTRACT_NOTNULL(child_result, item->left);
+    EXTRACT_NOTNULL(call_stmt, child_result->left);
+    EXTRACT_NOTNULL(named_result, child_result->right);
+    EXTRACT_STRING(name, call_stmt->left);
+
+    ast_node *child_proc = find_proc_with_result(ast_err, name);
+    if (!child_proc) {
+      return;
+    }
+
+    EXTRACT_NOTNULL(name_list, named_result->right);
+
+    while (name_list) {
+      EXTRACT_ANY_NOTNULL(name_ast, name_list->left);
+      EXTRACT_STRING(col, name_ast);
+
+      int icolParent = find_col_in_sptr(proc->sem->sptr, col);
+
+      if (icolParent < 0) {
+        report_error(name_ast, "CQL0069: name not found (in parent)", col);
+        record_error(name_ast);
+        record_error(ast_err);
+        return;
+      }
+
+      sem_t sem_type_parent = proc->sem->sptr->semtypes[icolParent];
+
+      if (is_nullable(sem_type_parent)) {
+        report_error(name_ast, "CQL0013: cannot assign/copy possibly null expression to not null target (parent)", col);
+        record_error(name_ast);
+        record_error(ast_err);
+        return;
+      }
+
+      int icolChild = find_col_in_sptr(child_proc->sem->sptr, col);
+
+      if (icolChild < 0) {
+        report_error(name_ast, "CQL0069: name not found (in child)", col);
+        record_error(name_ast);
+        record_error(ast_err);
+        return;
+      }
+
+      sem_t sem_type_child = child_proc->sem->sptr->semtypes[icolChild];
+      if (is_nullable(sem_type_child)) {
+        report_error(name_ast, "CQL0013: cannot assign/copy possibly null expression to not null target (child)", col);
+        record_error(name_ast);
+        record_error(ast_err);
+        return;
+      }
+
+      name_list = name_list->right;
+    }
+
+    item = item->right;
+  }
+  record_ok(ast_err);
+}
+
+// rico
 static void sem_out_union_parent_child_stmt(ast_node *ast) {
   Contract(is_ast_out_union_parent_child_stmt(ast));
+  EXTRACT_NOTNULL(call_stmt, ast->left);
+  EXTRACT_NOTNULL(child_results, ast->right);
+  EXTRACT_STRING(name, call_stmt->left);
+
+  ast_node *proc = find_proc_with_result(ast, name);
+  if (!proc) {
+    return;
+  }
+
+  sem_child_results(proc, ast, child_results);
+  if (is_error(ast)) {
+    return;
+  }
+
   rewrite_out_union_parent_child_stmt(ast);
 
   // analyze the first statement of the rewrite; the rest of the rewrite will

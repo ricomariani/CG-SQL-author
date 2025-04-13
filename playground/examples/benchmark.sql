@@ -4,7 +4,7 @@ DECLARE PROC printf NO CHECK;
 
 enum gender_type integer ( male = 0, female = 1, other );
 
-CREATE PROC User(id int, name text, gender gender_type, birth_year int)
+CREATE PROC User(id int!, name text, gender gender_type, birth_year int)
 BEGIN
   declare C cursor like User arguments;
   fetch C from arguments;

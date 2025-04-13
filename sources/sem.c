@@ -24223,7 +24223,7 @@ static void sem_child_results(ast_node *proc, ast_node *ast_err, ast_node *ast) 
       sem_t sem_type_parent = proc->sem->sptr->semtypes[icolParent];
 
       if (is_nullable(sem_type_parent)) {
-        report_error(name_ast, "CQL0013: cannot assign/copy possibly null expression to not null target (parent)", col);
+        report_error(name_ast, "CQL0013: cannot assign/copy possibly null expression to not null target (parent result is nullable)", col);
         record_error(name_ast);
         record_error(ast_err);
         return;
@@ -24240,7 +24240,7 @@ static void sem_child_results(ast_node *proc, ast_node *ast_err, ast_node *ast) 
 
       sem_t sem_type_child = child_proc->sem->sptr->semtypes[icolChild];
       if (is_nullable(sem_type_child)) {
-        report_error(name_ast, "CQL0013: cannot assign/copy possibly null expression to not null target (child)", col);
+        report_error(name_ast, "CQL0013: cannot assign/copy possibly null expression to not null target (child result is nullable)", col);
         record_error(name_ast);
         record_error(ast_err);
         return;

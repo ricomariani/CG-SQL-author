@@ -22975,7 +22975,7 @@ begin
 end;
 
 -- TEST: poarent child, bogus join column
--- + error: % cannot assign/copy possibly null expression to not null target (parent) 'u'
+-- + error: % cannot assign/copy possibly null expression to not null target (parent result is nullable) 'u'
 -- + {create_proc_stmt}: err
 -- +1 error:
 proc test_parent_child_invalid_join_parent_nullable()
@@ -22985,7 +22985,7 @@ begin
 end;
 
 -- TEST: poarent child, bogus join column
--- + error: % cannot assign/copy possibly null expression to not null target (child) 'v'
+-- + error: % cannot assign/copy possibly null expression to not null target (child result is nullable) 'v'
 -- + {create_proc_stmt}: err
 -- +1 error:
 proc test_parent_child_invalid_join_child_nullable()

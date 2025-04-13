@@ -88112,7 +88112,7 @@ BEGIN
     CALL test_child(1) USING (u);
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0013: cannot assign/copy possibly null expression to not null target (parent) 'u'
+test/sem_test.sql:XXXX:1: error: in str : CQL0013: cannot assign/copy possibly null expression to not null target (parent result is nullable) 'u'
 
   {create_proc_stmt}: err
   | {name test_parent_child_invalid_join_parent_nullable}: err
@@ -88141,7 +88141,7 @@ BEGIN
     CALL test_child(1) USING (v);
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0013: cannot assign/copy possibly null expression to not null target (child) 'v'
+test/sem_test.sql:XXXX:1: error: in str : CQL0013: cannot assign/copy possibly null expression to not null target (child result is nullable) 'v'
 
   {create_proc_stmt}: err
   | {name test_parent_child_invalid_join_child_nullable}: err

@@ -203,9 +203,16 @@ def emit_all_procs(data, cmd_args):
         data["general"],
         key=lambda proc: proc['canonicalName']
     ):
-        if "cql:private" in proc['attributes']: return
+        # these are the procedures that are suppressed from the public API
+        # they are used internally by other procedures but we can't call them
 
-        emit_proc_c_func_body(proc, cmd_args)
+        attributes = proc['attributes']
+        suppressed = ("cql:suppress_result_set" in attributes
+                      or "cql:private" in attributes
+                      or "cql:suppress_getters" in attributes)
+
+        if not suppressed:
+            emit_proc_c_func_body(proc, cmd_args)
 
 # This emits the main body of the C Interop function, this includes
 # * the Interop entry point for the procedure

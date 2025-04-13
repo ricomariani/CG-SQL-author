@@ -100874,3 +100874,186 @@ test/sem_test.sql:XXXX:1: error: in enum_value : CQL0355: evaluation failed 'ste
         | {name HarmonyTint}
         | {name garbonzo}
 
+The statement ending at line XXXX
+
+CREATE TABLE map_xy(
+  map_y LONG PRIMARY KEY,
+  map_x LONG!
+);
+
+  {create_table_stmt}: map_xy: { map_y: longint notnull primary_key, map_x: longint notnull }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name map_xy}
+  | {col_key_list}
+    | {col_def}: map_y: longint notnull primary_key
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |   | | {name map_y}
+    |   | | {type_long}: longint
+    |   | {col_attrs_pk}: ok
+    |     | {autoinc_and_conflict_clause}
+    | {col_key_list}
+      | {col_def}: map_x: longint notnull
+        | {col_def_type_attrs}: ok
+          | {col_def_name_type}
+          | | {name map_x}
+          | | {type_long}: longint
+          | {col_attrs_not_null}: ok
+
+The statement ending at line XXXX
+
+[[shared_fragment]]
+PROC frag_xy (x_ LONG!, y_ LONG!)
+BEGIN
+  SELECT x_ AS x, y_ AS y;
+END;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name shared_fragment}
+  | {create_proc_stmt}: frag_xy: { x: longint notnull, y: longint notnull } dml_proc
+    | {name frag_xy}: frag_xy: { x: longint notnull, y: longint notnull } dml_proc
+    | {proc_params_stmts}
+      | {params}: ok
+      | | {param}: x_: longint notnull variable in
+      | | | {param_detail}: x_: longint notnull variable in
+      | |   | {name x_}: x_: longint notnull variable in
+      | |   | {notnull}: longint notnull
+      | |     | {type_long}: longint
+      | | {params}
+      |   | {param}: y_: longint notnull variable in
+      |     | {param_detail}: y_: longint notnull variable in
+      |       | {name y_}: y_: longint notnull variable in
+      |       | {notnull}: longint notnull
+      |         | {type_long}: longint
+      | {stmt_list}: ok
+        | {select_stmt}: _select_: { x: longint notnull variable in, y: longint notnull variable in }
+          | {select_core_list}: _select_: { x: longint notnull variable in, y: longint notnull variable in }
+          | | {select_core}: _select_: { x: longint notnull variable in, y: longint notnull variable in }
+          |   | {select_expr_list_con}: _select_: { x: longint notnull variable in, y: longint notnull variable in }
+          |     | {select_expr_list}: _select_: { x: longint notnull variable in, y: longint notnull variable in }
+          |     | | {select_expr}: x: longint notnull variable in
+          |     | | | {name x_}: x_: longint notnull variable in
+          |     | | | {opt_as_alias}
+          |     | |   | {name x}
+          |     | | {select_expr_list}
+          |     |   | {select_expr}: y: longint notnull variable in
+          |     |     | {name y_}: y_: longint notnull variable in
+          |     |     | {opt_as_alias}
+          |     |       | {name y}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+[[shared_fragment]]
+PROC mapped_xy (y_ LONG!)
+BEGIN
+  WITH
+    mapping (map_x) AS (
+      SELECT map_x
+        FROM map_xy
+        WHERE map_y = y_
+    )
+  SELECT *
+    FROM (CALL frag_xy(( SELECT x
+        FROM mapping ), y_));
+END;
+
+test/sem_test.sql:XXXX:1: error: in table_or_subquery : CQL0095: table/view not defined 'mapping'
+test/sem_test.sql:XXXX:1: error: in select_stmt : additional info: calling 'frag_xy' argument #1 intended for parameter 'x_' has the problem
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name shared_fragment}
+  | {create_proc_stmt}: err
+    | {name mapped_xy}: err
+    | {proc_params_stmts}
+      | {params}: ok
+      | | {param}: y_: longint notnull variable in
+      |   | {param_detail}: y_: longint notnull variable in
+      |     | {name y_}: y_: longint notnull variable in
+      |     | {notnull}: longint notnull
+      |       | {type_long}: longint
+      | {stmt_list}: err
+        | {with_select_stmt}: err
+          | {with}
+          | | {cte_tables}: ok
+          |   | {cte_table}: mapping: { map_x: longint notnull }
+          |     | {cte_decl}: mapping: { map_x: longint notnull }
+          |     | | {name mapping}
+          |     | | {name_list}
+          |     |   | {name map_x}
+          |     | {select_stmt}: _select_: { map_x: longint notnull }
+          |       | {select_core_list}: _select_: { map_x: longint notnull }
+          |       | | {select_core}: _select_: { map_x: longint notnull }
+          |       |   | {select_expr_list_con}: _select_: { map_x: longint notnull }
+          |       |     | {select_expr_list}: _select_: { map_x: longint notnull }
+          |       |     | | {select_expr}: map_x: longint notnull
+          |       |     |   | {name map_x}: map_x: longint notnull
+          |       |     | {select_from_etc}: TABLE { map_xy: map_xy }
+          |       |       | {table_or_subquery_list}: TABLE { map_xy: map_xy }
+          |       |       | | {table_or_subquery}: TABLE { map_xy: map_xy }
+          |       |       |   | {name map_xy}: TABLE { map_xy: map_xy }
+          |       |       | {select_where}
+          |       |         | {opt_where}: bool notnull
+          |       |         | | {eq}: bool notnull
+          |       |         |   | {name map_y}: map_y: longint notnull
+          |       |         |   | {name y_}: y_: longint notnull variable in
+          |       |         | {select_groupby}
+          |       |           | {select_having}
+          |       | {select_orderby}
+          |         | {select_limit}
+          |           | {select_offset}
+          | {select_stmt}: err
+            | {select_core_list}: err
+            | | {select_core}: err
+            |   | {select_expr_list_con}: err
+            |     | {select_expr_list}: err
+            |     | | {star}
+            |     | {select_from_etc}: err
+            |       | {table_or_subquery_list}: err
+            |       | | {table_or_subquery}: err
+            |       |   | {shared_cte}: err
+            |       |     | {call_stmt}: err
+            |       |       | {name frag_xy}: frag_xy: { x: longint notnull, y: longint notnull } dml_proc
+            |       |       | {arg_list}: ok
+            |       |         | {select_stmt}: err
+            |       |         | | {select_core_list}: err
+            |       |         | | | {select_core}: err
+            |       |         | |   | {select_expr_list_con}: err
+            |       |         | |     | {select_expr_list}: err
+            |       |         | |     | | {select_expr}
+            |       |         | |     |   | {name x}
+            |       |         | |     | {select_from_etc}: err
+            |       |         | |       | {table_or_subquery_list}: err
+            |       |         | |       | | {table_or_subquery}: err
+            |       |         | |       |   | {name mapping}
+            |       |         | |       | {select_where}
+            |       |         | |         | {select_groupby}
+            |       |         | |           | {select_having}
+            |       |         | | {select_orderby}
+            |       |         |   | {select_limit}
+            |       |         |     | {select_offset}
+            |       |         | {arg_list}
+            |       |           | {name y_}
+            |       | {select_where}
+            |         | {select_groupby}
+            |           | {select_having}
+            | {select_orderby}
+              | {select_limit}
+                | {select_offset}
+

@@ -7698,6 +7698,60 @@ extern CQL_WARN_UNUSED cql_code expand_returning_star(sqlite3 *_Nonnull _db_);
 extern CQL_WARN_UNUSED cql_code upsert_returning_with_backing(sqlite3 *_Nonnull _db_);
 
 // The statement ending at line XXXX
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+#define CRC_get_xy -1118445625355748024L
+
+extern cql_string_ref _Nonnull get_xy_stored_procedure_name;
+
+#define get_xy_data_types_count 2
+
+extern uint8_t get_xy_data_types[get_xy_data_types_count];
+
+#ifndef result_set_type_decl_get_xy_result_set
+#define result_set_type_decl_get_xy_result_set 1
+cql_result_set_type_decl(get_xy_result_set, get_xy_result_set_ref);
+#endif
+#ifndef _get_xy_get_x_inline_
+#define _get_xy_get_x_inline_
+
+
+static inline cql_int64 get_xy_get_x(get_xy_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_int64_col((cql_result_set_ref)result_set, row, 0);
+}
+
+#endif
+
+#ifndef _get_xy_get_y_inline_
+#define _get_xy_get_y_inline_
+
+
+static inline cql_int64 get_xy_get_y(get_xy_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_int64_col((cql_result_set_ref)result_set, row, 1);
+}
+
+#endif
+
+
+extern cql_int32 get_xy_result_count(get_xy_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code get_xy_fetch_results(sqlite3 *_Nonnull _db_, get_xy_result_set_ref _Nullable *_Nonnull result_set);
+#define get_xy_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define get_xy_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
 extern cql_int32 this_is_the_end;
 
 // The statement ending at line XXXX

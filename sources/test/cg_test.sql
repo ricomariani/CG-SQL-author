@@ -6165,6 +6165,64 @@ begin
     returning `col 1`, `col 2`;
 end;
 
+CREATE TABLE map_xy(
+  map_y long PRIMARY KEY,
+	map_x long!
+);
+
+[[shared_fragment]]
+create proc frag_xy(x_ long!, y_ long!)
+begin
+  select x_ x, y_ y;
+end;
+
+[[shared_fragment]]
+create proc mapped_xy(y_ long!)
+begin
+	select * from (call frag_xy((
+     with mapping as (select map_x from map_xy where map_y = y_)
+     select map_x from mapping), y_));
+end;
+
+-- TEST: fragment args contain nested fragments
+-- the inner statement
+-- + _p1_y__ = 1;
+-- + _rc_ = cql_prepare(_db_, &_temp_stmt,
+-- +  " WITH "
+-- +    "mapping (map_x) AS ( "
+-- +    "SELECT map_x "
+-- +    "FROM map_xy "
+-- +    "WHERE map_y = ? "
+-- +    ") "
+-- +    "SELECT map_x "
+-- +    "FROM mapping");
+-- + cql_multibind(&_rc_, _db_, &_temp_stmt, 1,
+-- +   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT64, _p1_y__);
+-- the outer statement
+-- + _p2_x__ = _tmp_int64_0;
+-- + _p2_y__ = _p1_y__;
+-- + _rc_ = cql_prepare_var(_db_, _result_stmt,
+-- +   9, NULL,
+-- +   "SELECT x, y "
+-- +       "FROM (",
+-- +   "(",
+-- +   "SELECT x, y "
+-- +   "FROM (",
+-- +   "(",
+-- +   "SELECT ? AS x, ? AS y",
+-- +   ")",
+-- +   ")",
+-- +   ")",
+-- +   ")"
+-- +   );
+-- + cql_multibind(&_rc_, _db_, _result_stmt, 2,
+-- +   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT64, _p2_x__,
+-- +   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT64, _p2_y__);
+proc get_xy()
+begin
+ select * from (call mapped_xy(1));
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

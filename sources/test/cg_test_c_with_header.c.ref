@@ -669,6 +669,7 @@ extern cql_int32 an_alias_func(cql_int32 x);
 extern CQL_WARN_UNUSED cql_code a_backed_join(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code insert_returning_resultset(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code delete_returning_resultset(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+extern CQL_WARN_UNUSED cql_code get_xy(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 cql_string_literal(_literal_1_text_, "text");
 cql_string_literal(_literal_2_This_is_a_test_, "This is a \" \\ test '' \n \" ");
 cql_string_literal(_literal_3_b_, "b");
@@ -17656,6 +17657,146 @@ CQL_WARN_UNUSED cql_code upsert_returning_with_backing(sqlite3 *_Nonnull _db_) {
 cql_cleanup:
   cql_error_report();
   cql_finalize_stmt(&C_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+[[shared_fragment]]
+PROC frag_xy (x_ LONG!, y_ LONG!)
+BEGIN
+  SELECT x_ AS x, y_ AS y;
+END;
+*/
+
+// The statement ending at line XXXX
+
+/*
+[[shared_fragment]]
+PROC mapped_xy (y_ LONG!)
+BEGIN
+  SELECT _select_.x, _select_.y
+    FROM (CALL frag_xy((       WITH
+        mapping (map_x) AS (
+          SELECT map_x
+            FROM map_xy
+            WHERE map_y = y_
+        )
+      SELECT map_x
+        FROM mapping ), y_));
+END;
+*/
+
+// The statement ending at line XXXX
+
+/*
+PROC get_xy ()
+BEGIN
+  SELECT _select_.x, _select_.y
+    FROM (CALL mapped_xy(1));
+END;
+*/
+
+#define _PROC_ "get_xy"
+static int32_t get_xy_perf_index;
+
+cql_string_proc_name(get_xy_stored_procedure_name, "get_xy");
+
+typedef struct get_xy_row {
+  cql_int64 x;
+  cql_int64 y;
+} get_xy_row;
+
+uint8_t get_xy_data_types[get_xy_data_types_count] = {
+  CQL_DATA_TYPE_INT64 | CQL_DATA_TYPE_NOT_NULL, // x
+  CQL_DATA_TYPE_INT64 | CQL_DATA_TYPE_NOT_NULL, // y
+};
+
+static cql_uint16 get_xy_col_offsets[] = { 2,
+  cql_offsetof(get_xy_row, x),
+  cql_offsetof(get_xy_row, y)
+};
+
+cql_int32 get_xy_result_count(get_xy_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code get_xy_fetch_results(sqlite3 *_Nonnull _db_, get_xy_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_get_xy, &get_xy_perf_index);
+  cql_code rc = get_xy(_db_, &stmt);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = get_xy_data_types,
+    .col_offsets = get_xy_col_offsets,
+    .rowsize = sizeof(get_xy_row),
+    .crc = CRC_get_xy,
+    .perf_index = &get_xy_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+/*
+export:
+DECLARE PROC get_xy () (x LONG!, y LONG!);
+*/
+CQL_WARN_UNUSED cql_code get_xy(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  cql_error_prepare();
+  cql_int64 _tmp_int64_0 = 0;
+  cql_int64 _p1_y__ = 0;
+  cql_int64 _p2_x__ = 0;
+  sqlite3_stmt *_temp_stmt = NULL;
+  cql_int64 _p2_y__ = 0;
+
+  _p1_y__ = 1;
+  _rc_ = cql_prepare(_db_, &_temp_stmt,
+    " WITH "
+              "mapping (map_x) AS ( "
+                "SELECT map_x "
+                  "FROM map_xy "
+                  "WHERE map_y = ? "
+              ") "
+            "SELECT map_x "
+              "FROM mapping");
+  cql_multibind(&_rc_, _db_, &_temp_stmt, 1,
+                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT64, _p1_y__);
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = sqlite3_step(_temp_stmt);
+  if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
+    _tmp_int64_0 = sqlite3_column_int64(_temp_stmt, 0);
+  cql_finalize_stmt(&_temp_stmt);
+  _p2_x__ = _tmp_int64_0;
+  _p2_y__ = _p1_y__;
+  _rc_ = cql_prepare_var(_db_, _result_stmt,
+    9, NULL,
+  "SELECT x, y "
+      "FROM (",
+  "(",
+  "SELECT x, y "
+          "FROM (",
+  "(",
+  "SELECT ? AS x, ? AS y",
+  ")",
+  ")",
+  ")",
+  ")"
+  );
+  cql_multibind(&_rc_, _db_, _result_stmt, 2,
+                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT64, _p2_x__,
+                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT64, _p2_y__);
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_error_report();
+  cql_finalize_stmt(&_temp_stmt);
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
   return _rc_;
 }
 #undef _PROC_

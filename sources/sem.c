@@ -303,6 +303,8 @@ static void sem_insert_returning(ast_node *ast);
 static void sem_delete_returning(ast_node *ast);
 static void sem_update_returning(ast_node *ast);
 static void sem_upsert_returning(ast_node *ast);
+static void sem_push_cte_state();
+static void sem_pop_cte_state();
 
 // create a new id node either qid or normal based on the bool
 cql_noexport ast_node *new_str_or_qstr(CSTR name, sem_t sem_type) {
@@ -13363,11 +13365,38 @@ static void sem_shared_cte(ast_node *cte_body) {
   bool_t in_shared_fragment_call_saved = in_shared_fragment_call;
   in_shared_fragment_call = true;
 
+  // while we are inside this nested call, we do not have access to CTEs
+  // that were outside of it.  For instance:
+  // with foo(*) as (select 1 x) -- this would be more complicated
+  //  select * from (call bar((select * from foo))); -- bar defined elsewhere
+  //
+  // 'foo' is not in scope inside of the call to 'bar' this is becausse
+  // fundamentally all of the args to 'bar' are scalars and have to be computed
+  // before the outer fragment even runs.  That means any inner SQL has to be
+  // stand-alone.  This is a bit weird but it basically never comes up.  If you
+  // wanted anyhthing weird in that arg it would be more natural to hoist it:
+  //
+  // var x_ := (with foo(*) as (select 1 x) select * from foo);
+  // select * from (call bar(x_)); -- bar defined elsewhere
+
+  // no CTE state for the nested evaluation
+  cte_state *cte_cur_saved = cte_cur;
+  cte_cur = NULL;
+
   // The semantic info for this kind of call looks just like any other
   // we use the helper directly because this is not a loose call statement
   // but there is no cursor.  We don't want the procedure we are in (if any)
   // to become a result-set procedure.
   sem_call_stmt_opt_cursor(call_stmt, NULL);
+
+  // cleawnup the current state and the restore, do this before any error handling
+  while (cte_cur) {
+    sem_pop_cte_state();
+  }
+
+  cte_cur = cte_cur_saved;
+
+  // now handle the errors if any
   if (is_error(call_stmt)) {
     record_error(cte_body);
     goto cleanup;

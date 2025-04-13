@@ -26041,3 +26041,28 @@ enum GoalTint integer (
 enum ErroneousEnum integer (
   stew = HarmonyTint.garbonzo
 );
+
+CREATE TABLE map_xy(
+  map_y long PRIMARY KEY,
+	map_x long!
+);
+
+[[shared_fragment]]
+create proc frag_xy(x_ long!, y_ long!)
+begin
+  select x_ x, y_ y;
+end;
+
+-- TEST: do not allow the arguments of a call to a shared CTE to reference an outer CTE
+-- + error: % table/view not defined 'mapping'
+-- + error: % additional info: calling 'frag_xy' argument #1 intended for parameter 'x_' has the problem
+-- + {create_proc_stmt}: err
+-- +2 error:
+[[shared_fragment]]
+create proc mapped_xy(y_ long!)
+begin
+  with mapping as (
+    select map_x from map_xy where map_y = y_
+  )
+	select * from (call frag_xy((select x from mapping), y_));
+end;

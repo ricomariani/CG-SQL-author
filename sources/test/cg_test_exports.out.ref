@@ -282,4 +282,5 @@ DECLARE PROC delete_returning_cursor () USING TRANSACTION;
 DECLARE PROC delete_returning_resultset () (xy INT, ix INT, iy INT);
 DECLARE PROC expand_returning_star () USING TRANSACTION;
 DECLARE PROC upsert_returning_with_backing () USING TRANSACTION;
+DECLARE PROC get_xy () (x LONG!, y LONG!);
 DECLARE PROC end_proc ();

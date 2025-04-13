@@ -9277,6 +9277,78 @@ function select_if_nothing_or_null_throw(_db_, a_local)
   _temp1_stmt = nil
   return _rc_
 end
+
+-- The statement ending at line XXXX
+
+--[[
+PROC get_xy ()
+BEGIN
+  SELECT _select_.x, _select_.y
+    FROM (CALL mapped_xy(1));
+END;
+--]]
+
+function get_xy(_db_)
+  local _rc_ = CQL_OK
+  local _result_stmt = nil
+  local _tmp_int64_0 = 0
+  local _p1_y__ = 0
+  local _p2_x__ = 0
+  local _temp_stmt = nil
+  local _p2_y__ = 0
+
+  _p1_y__ = 1
+  _rc_, _temp_stmt = cql_prepare(_db_, 
+    " WITH mapping (map_x) AS ( SELECT map_x FROM map_xy WHERE map_y = ? ) SELECT map_x FROM mapping")
+  if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+  _rc_ = cql_multibind(_db_, _temp_stmt, "L", _p1_y__)
+  if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+  _rc_ = cql_step(_temp_stmt)
+  if _rc_ ~= CQL_ROW then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+    _tmp_int64_0 = cql_get_value(_temp_stmt, 0)
+  cql_finalize_stmt(_temp_stmt)
+  _temp_stmt = nil
+  _p2_x__ = _tmp_int64_0
+  _p2_y__ = _p1_y__
+  _rc_, _result_stmt = cql_prepare_var(_db_, 
+    9, nil,
+    {
+    "SELECT x, y FROM (",
+    "(",
+    "SELECT x, y FROM (",
+    "(",
+    "SELECT ? AS x, ? AS y",
+    ")",
+    ")",
+    ")",
+    ")"
+    }
+  )
+  if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+  _rc_ = cql_multibind(_db_, _result_stmt, "LL", _p2_x__, _p2_y__)
+  if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+  _rc_ = CQL_OK
+
+::cql_cleanup::
+  cql_finalize_stmt(_temp_stmt)
+  _temp_stmt = nil
+  if _rc_ == CQL_OK and _result_stmt == nil then _rc_, _result_stmt = cql_no_rows_stmt(_db_) end
+  return _rc_, _result_stmt
+end
+
+function get_xy_fetch_results(_db_)
+  local result_set = nil
+  local _rc_
+  _rc_, stmt = get_xy(_db_)
+  if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+  _rc_, result_set = cql_fetch_all_rows(stmt, "LL", { "x", "y" })
+
+::cql_cleanup::
+  cql_finalize_stmt(stmt)
+  stmt = nil
+  return _rc_, result_set
+end
+
 local this_is_the_end = 0
 
 -- The statement ending at line XXXX

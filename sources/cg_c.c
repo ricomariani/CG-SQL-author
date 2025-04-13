@@ -5084,16 +5084,21 @@ static bool_t cg_call_in_cte(ast_node *cte_body, void *context, charbuf *buffer)
 
     sem_t sem_type_expr = expr->sem->sem_type;
 
-    // evaluate the expression and assign
-    // note that any arg aliases here are in the context of the caller not the
-    // callee we're setting up the aliases for the callee right now and they
+    // Evaluate the arg expression and assign to a local variable.  These
+    // become the so-called argument alias variables.
+    //
+    // Note that any arg aliases here are in the context of the caller not the
+    // callee. We're setting up the aliases for the callee right now and they
     // aren't ready yet even but that's ok because the expressions are in the
-    // context of the caller.
+    // context of the caller. Note that in the context of the caller they will
+    // be simply bound variables in the SQL text. In the callee they are actual
+    // variables on the stack.
 
-    // if the evaluation has a nested select statement then we will have to
+    // If the evaluation has a nested select statement then we will have to
     // re-enter all of this.  Since we don't ban that  save the codegen state
     // like callbacks and such so that it can re-enter.  That's the desired
-    // path.
+    // path. The nested statement might have nested shared fragments so we
+    // push all our state and restore it.
 
     gen_sql_state state;
     gen_get_state(&state);

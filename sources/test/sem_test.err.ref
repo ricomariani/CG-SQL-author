@@ -1849,4 +1849,6 @@ test/sem_test.sql:XXXX:1: error: in assign : CQL0173: variable not found 'not_vi
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'doo'
 test/sem_test.sql:XXXX:1: error: in dot : CQL0357: enum does not contain 'garbonzo'
 test/sem_test.sql:XXXX:1: error: in enum_value : CQL0355: evaluation failed 'stew'
+test/sem_test.sql:XXXX:1: error: in table_or_subquery : CQL0095: table/view not defined 'mapping'
+test/sem_test.sql:XXXX:1: error: in select_stmt : additional info: calling 'frag_xy' argument #1 intended for parameter 'x_' has the problem
 semantic errors present; no code gen.

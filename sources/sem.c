@@ -10919,6 +10919,8 @@ static void sem_opt_partition_by(ast_node *ast) {
   POP_EXPR_CONTEXT();
 }
 
+// All we have to do here is decode the flags so that we know which combo we
+// are in We evaluate the expressions if they are present.
 static void sem_opt_frame_spec(ast_node *ast) {
   Contract(is_ast_opt_frame_spec(ast));
   EXTRACT_OPTION(flags, ast->left);
@@ -10926,27 +10928,46 @@ static void sem_opt_frame_spec(ast_node *ast) {
   EXTRACT_ANY(left_expr, expr_list->left);
   EXTRACT_ANY(right_expr, expr_list->right);
 
+  // We extract each chunk of flags for separate analysis
   int32_t frame_type_flags = flags & FRAME_TYPE_FLAGS;
   int32_t frame_boundary_flags = flags & FRAME_BOUNDARY_FLAGS;
   int32_t frame_boundary_start_flags = flags & FRAME_BOUNDARY_START_FLAGS;
   int32_t frame_boundary_end_flags = flags & FRAME_BOUNDARY_END_FLAGS;
   int32_t frame_exclude_flags = flags & FRAME_EXCLUDE_FLAGS;
+
   bool_t error = false;
 
-  Contract(frame_type_flags && frame_exclude_flags);
+  // There is always a frame type and always an exclude type, even if it's NONE
+  Contract(frame_type_flags);
+  Contract(frame_exclude_flags);
+
   if (frame_boundary_flags) {
+    // No boundary start or end flags
     Contract(!frame_boundary_start_flags && !frame_boundary_end_flags);
+
+    // One of:
+    // FRAME_BOUNDARY_UNBOUNDED (no expr)
+    // FRAME_BOUNDARY_PRECEDING (has an expr)
+    // FRAME_BOUNDARY_CURRENT_ROW (no expr)
+
     if (left_expr) {
       sem_root_expr(left_expr, SEM_EXPR_CONTEXT_WHERE);
       error = is_error(left_expr);
     }
   }
   else {
+    // Both boundary start and end flags
     Contract(frame_boundary_start_flags && frame_boundary_end_flags);
+
+    // All the flags like FRAME_BOUNDARY_END_PRECEDING are here
+    // FRAME_BOUNDARY_START_CURRENT_ROW and FRAME_BOUNDARY_END_CURRENT_ROW have
+    // no expr.
+
     if (left_expr) {
       sem_root_expr(left_expr, SEM_EXPR_CONTEXT_WHERE);
       error |= is_error(left_expr);
     }
+
     if (right_expr) {
       sem_root_expr(right_expr, SEM_EXPR_CONTEXT_WHERE);
       error |= is_error(right_expr);
@@ -10961,6 +10982,10 @@ static void sem_opt_frame_spec(ast_node *ast) {
   record_ok(ast);
 }
 
+// Check the various optional pieces of a window definition using the normal
+// helpers for that kind of part. The only difference is in which context we
+// will check the expresson. For instance aggregate functions are not allowed in
+// an orderby.  The rest get the same context/rules as a WHERE clause.
 static void sem_window_defn(ast_node *ast) {
   Contract(is_ast_window_defn(ast));
   EXTRACT(opt_partition_by, ast->left);
@@ -10973,10 +10998,12 @@ static void sem_window_defn(ast_node *ast) {
     sem_opt_partition_by(opt_partition_by);
     error = is_error(opt_partition_by);
   }
+
   if (opt_orderby) {
     sem_opt_orderby(opt_orderby);
     error |= is_error(opt_orderby);
   }
+
   if (opt_frame_spec) {
     sem_opt_frame_spec(opt_frame_spec);
     error |= is_error(opt_frame_spec);
@@ -11131,10 +11158,11 @@ static void sem_window_name_or_defn(ast_node *ast) {
   record_ok(ast);
 }
 
-// This validates that the window function call is to one of the window functions
-// that we know and then delegates to the appropriate shared helper function for
-// that type of window function call for additional validation. We compute the
-// semantic type of all the arguments before we validate the particular function.
+// This validates that the window function call is to one of the window
+// functions that we know and then delegates to the appropriate shared helper
+// function for that type of window function call for additional validation. We
+// compute the semantic type of all the arguments before we validate the
+// particular function.
 static void sem_expr_window_func_inv(ast_node *ast, CSTR cstr) {
   if (enforcement.strict_window_func) {
     report_error(ast, "CQL0312: window function invocation are forbidden if strict window function mode is enabled", NULL);
@@ -11156,11 +11184,14 @@ static void sem_expr_window_func_inv(ast_node *ast, CSTR cstr) {
   }
 
   bool_t error = false;
-  // We're making deferentiation between "window" context and "window filter" context because
-  // FILTER clause in may only be used with aggregate window functions.
+
+  // We're making deferentiation between "window" context and "window filter"
+  // context because FILTER clause in may only be used with aggregate window
+  // functions.
   uint32_t expr_context = opt_filter_clause ? SEM_EXPR_CONTEXT_WINDOW_FILTER : SEM_EXPR_CONTEXT_WINDOW;
 
-  // Set expression context because some function calls may only be valid when called in a window context
+  // Set expression context because some function calls may only be valid when
+  // called in a window context
   PUSH_EXPR_CONTEXT(expr_context);
   sem_expr_call(call, cstr);
   error = is_error(call);
@@ -11177,19 +11208,19 @@ static void sem_expr_window_func_inv(ast_node *ast, CSTR cstr) {
   ast->sem = call->sem;
 }
 
-// A top level expression defines the context for this evaluation.
-// There are cases where nesting can happen that changes the context,
-// e.g. you can put a nested select in a where clause and that nested select
-// could legally have aggregates.  This keeps the stack of contexts.
+// A top level expression defines the context for this evaluation. There are
+// cases where nesting can happen that changes the context, e.g. you can put a
+// nested select in a where clause and that nested select could legally have
+// aggregates.  This keeps the stack of contexts.
 cql_noexport void sem_root_expr(ast_node *ast, uint32_t expr_context) {
   PUSH_EXPR_CONTEXT(expr_context);
   sem_expr(ast);
   POP_EXPR_CONTEXT();
 }
 
-// This is the primary dispatch for all expression types.  We find the
-// type of expression and then dispatch to the appropriate helper.  This
-//  is also where the leaf types are handled (e.g. literals)
+// This is the primary dispatch for all expression types.  We find the type of
+// expression and then dispatch to the appropriate helper.  This is also where
+// the leaf types are handled (e.g. literals)
 cql_noexport void sem_expr(ast_node *ast) {
 
   // These are all the expressions there are, we have to find it in this table
@@ -11200,9 +11231,9 @@ cql_noexport void sem_expr(ast_node *ast) {
   disp->func(ast, disp->str);
 }
 
-// Naming of the an expression can happen in a number of places.  The way
-// this is done is that whoever should get the alias remembers themselves
-// as the alias target and that person then is renamed.  This is almost always
+// Naming of the an expression can happen in a number of places.  The way this
+// is done is that whoever should get the alias remembers themselves as the
+// alias target and that person then is renamed.  This is almost always
 // someone's sem->name field.
 static void sem_as_alias(ast_node *ast, CSTR *alias_target, ast_node *ast_target) {
   EXTRACT_STRING(name, ast->left);
@@ -11217,8 +11248,8 @@ static void sem_as_alias(ast_node *ast, CSTR *alias_target, ast_node *ast_target
 }
 
 // This is a possibly aliased element in the select list.  A "select expression"
-// The current joinscope is already set appropriately for this evaluation by
-// the caller.  There may be none (if there is no from clause).
+// The current joinscope is already set appropriately for this evaluation by the
+// caller.  There may be none (if there is no from clause).
 static void sem_select_expr(ast_node *ast) {
   Contract(is_ast_select_expr(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
@@ -11242,11 +11273,11 @@ static void sem_select_expr(ast_node *ast) {
   }
 }
 
-// This validates the select list, getting the type of each element.
-// If the select list is the special "*" select list, it must be the only
-// element and that is handled with a special helper.
-// Otherwise, get each item and validate.  At this point we compute the
-// net result type of the select from the select list.
+// This validates the select list, getting the type of each element. If the
+// select list is the special "*" select list, it must be the only element and
+// that is handled with a special helper. Otherwise, get each item and validate.
+// At this point we compute the net result type of the select from the select
+// list.
 static void sem_select_expr_list(ast_node *ast) {
   Contract(ast);
 
@@ -11296,12 +11327,11 @@ static void sem_select_expr_list(ast_node *ast) {
   Invariant(count == i);
 }
 
-// Helper function for looking up a table in a table factor context
-// This is the normal context where tables are found inside of select
-// statements.  We have to search the cte space as well as the normal
-// table names.  Note this is not a table alias, but an actual table
-// or cte.  So we don't use this for instance to resolve "T1.x" that's
-// done by normal name resolution rules.
+// Helper function for looking up a table in a table factor context This is the
+// normal context where tables are found inside of select statements.  We have
+// to search the cte space as well as the normal table names.  Note this is not
+// a table alias, but an actual table or cte.  So we don't use this for instance
+// to resolve "T1.x" that's done by normal name resolution rules.
 static ast_node *sem_find_table(CSTR name, ast_node *ast_error) {
   ast_node *table_ast = find_cte(name);
   if (!table_ast) {
@@ -11414,11 +11444,11 @@ static void sem_table_or_subquery(ast_node *ast) {
   }
 }
 
-// When specifying joins, one of the alternatives is to give the shared
-// columns in the join e.g. select * from X inner join Y using (a,b).
-// This method validates that all the columns are present on both sides of the
-// join, that they are unique, and they are comparable.
-// The return code tells us if any columns had SENSITIVE data.
+// When specifying joins, one of the alternatives is to give the shared columns
+// in the join e.g. select * from X inner join Y using (a,b). This method
+// validates that all the columns are present on both sides of the join, that
+// they are unique, and they are comparable. The return code tells us if any
+// columns had SENSITIVE data.
 static sem_t sem_join_using_columns(ast_node *join, ast_node *join_cond, sem_join *left, sem_join *right) {
   EXTRACT_ANY_NOTNULL(cond_type, join_cond->left);
   EXTRACT_NOTNULL(name_list, join_cond->right);
@@ -11491,11 +11521,10 @@ static sem_t sem_join_using_columns(ast_node *join, ast_node *join_cond, sem_joi
   return sem_sensitive;
 }
 
-// The most explicit join condition is a full expression in an ON clause
-// this is like select a,b from X inner join Y on X.id = Y.id;
-// The on expression should be something that can be used as a bool
-// so any numeric will do.
-// The return code tells us if the ON condition used SENSITIVE data.
+// The most explicit join condition is a full expression in an ON clause this is
+// like select a,b from X inner join Y on X.id = Y.id; The on expression should
+// be something that can be used as a bool so any numeric will do. The return
+// code tells us if the ON condition used SENSITIVE data.
 static sem_t sem_join_cond_on(ast_node *join, ast_node *join_cond) {
   EXTRACT_ANY_NOTNULL(cond_type, join_cond->left);
   EXTRACT_ANY_NOTNULL(expr, join_cond->right);
@@ -11532,8 +11561,9 @@ static void sem_join_target(ast_node *ast) {
   EXTRACT_ANY_NOTNULL(parent, join_target_list->parent);
   Contract(is_ast_join_clause(parent) || is_ast_join_target_list(parent));
   EXTRACT_ANY_NOTNULL(table_ref, parent->left);
-  // if this is the first join_target node under the join_clause node then the
-  // left table is a table_or_subquery node otherwise is a join_target node
+
+  // If this is the first join_target node under the join_clause node then the
+  // left table is a table_or_subquery node otherwise is a join_target node.
   Contract(is_ast_table_or_subquery(table_ref) || is_ast_join_target(table_ref));
 
   EXTRACT_OPTION(join_type, ast->left);
@@ -11554,8 +11584,8 @@ static void sem_join_target(ast_node *ast) {
     return;
   }
 
-  // Now do validation on the join condition, we get different results
-  // depending on the factor.
+  // Now do validation on the join condition, we get different results depending
+  // on the factor.
   EXTRACT(join_cond, table_join->right);
   if (join_cond) {
     EXTRACT_ANY_NOTNULL(cond_type, join_cond->left);
@@ -11570,7 +11600,8 @@ static void sem_join_target(ast_node *ast) {
       sem_type = sem_join_using_columns(ast, join_cond, table_ref->sem->jptr, table_or_subquery->sem->jptr);
     }
 
-    // We have to mark the entire join result as SENSITIVE if the join condition used SENSITIVE
+    // We have to mark the entire join result as SENSITIVE if the join condition
+    // used SENSITIVE
     if (sensitive_flag(sem_type)) {
       sem_add_flags_to_join(ast->sem->jptr, SEM_TYPE_SENSITIVE);
     }
@@ -11649,14 +11680,13 @@ static void sem_join_clause(ast_node *ast) {
   ast->sem = previous_join_target_list->left->sem;
 }
 
-// Whenever you see (X, Y, Z) in the from clause that is an unconstrained join of
-// those tables.  Since no join condition is specified there presumably
-// there will be something in the WHERE clause later.  This is non-ansi
-// legacy join syntax.  You don't get extra nulls so it's like an inner join in
-// that regard, it's not an OUTER join as there is no column correlation at all
-// it's just the cross product.  INNER join is used here to get the right
-// nullabilty result but actually it's not really an inner join in any
-// other respect.
+// Whenever you see (X, Y, Z) in the from clause that is an unconstrained join
+// of those tables.  Since no join condition is specified there presumably there
+// will be something in the WHERE clause later.  This is non-ansi legacy join
+// syntax.  You don't get extra nulls so it's like an inner join in that regard,
+// it's not an OUTER join as there is no column correlation at all it's just the
+// cross product.  INNER join is used here to get the right nullabilty result
+// but actually it's not really an inner join in any other respect.
 static void sem_query_parts(ast_node *ast) {
   Contract(is_ast_table_or_subquery_list(ast) || is_ast_join_clause(ast));
   if (is_ast_table_or_subquery_list(ast)) {
@@ -11759,9 +11789,8 @@ static void sem_groupby_list(ast_node *head) {
 }
 
 
-// A order-by list is a list of [expression, ASC/DESC].  These each
-// need to be validated.  Note this is a place where the expression context
-// changes.
+// A order-by list is a list of [expression, ASC/DESC].  These each need to be
+// validated.  Note this is a place where the expression context changes.
 static void sem_orderby_list(ast_node *head) {
   Contract(is_ast_orderby_list(head));
 
@@ -11861,10 +11890,10 @@ static void sem_opt_offset(ast_node *ast) {
   POP_JOIN();
 }
 
-// The select_from_etc node is the meat of the select statement.  Basically
-// all the stuff that starts with FROM.  You can do select 1,2 without going
-// here but after that you get all the goodness.  Here we extract each of
-// the fragments and pass them along to the appropriate helper.
+// The select_from_etc node is the meat of the select statement.  Basically all
+// the stuff that starts with FROM.  You can do select 1,2 without going here
+// but after that you get all the goodness.  Here we extract each of the
+// fragments and pass them along to the appropriate helper.
 static void sem_select_from(ast_node *ast) {
   Contract(is_ast_select_from_etc(ast));
   EXTRACT_ANY(query_parts, ast->left);
@@ -11881,8 +11910,9 @@ static void sem_select_from(ast_node *ast) {
   record_ok(ast);
 }
 
-// Do the semantic analysis of ORDER BY ... LIMIT ... OFFSET nodes.
-// It also expect that the join table infos are already pushed into the join stack by the callsite.
+// Do the semantic analysis of ORDER BY ... LIMIT ... OFFSET nodes. It also
+// expect that the join table infos are already pushed into the join stack by
+// the callsite.
 static bool_t sem_select_orderby(ast_node *ast) {
   Contract(is_ast_select_orderby(ast));
   EXTRACT(opt_orderby, ast->left);
@@ -11899,9 +11929,9 @@ static bool_t sem_select_orderby(ast_node *ast) {
     error |= is_error(opt_orderby);
   }
 
-  // These parts may not refer to columns, they will block the join.
-  // Blocking is necessary because this select could be nested in a larger
-  // select and we don't want to refer to any of THOSE columns either.
+  // These parts may not refer to columns, they will block the join. Blocking is
+  // necessary because this select could be nested in a larger select and we
+  // don't want to refer to any of THOSE columns either.
 
   if (opt_limit) {
     sem_opt_limit(opt_limit);
@@ -11924,10 +11954,10 @@ static bool_t sem_select_orderby(ast_node *ast) {
 
   if (sem_sensitive) {
     // Not really a fan of reaching up the tree to set the core list from here
-    // but flowing this computation would be pretty complicated and the AST
-    // is a fixed shape here (hence the strict extracts) so we'll do this the
-    // easy way for now.  If this gets more complicated then this case should
-    // be fused with the WHERE and HAVING case and happen at a higher level with
+    // but flowing this computation would be pretty complicated and the AST is a
+    // fixed shape here (hence the strict extracts) so we'll do this the easy
+    // way for now.  If this gets more complicated then this case should be
+    // fused with the WHERE and HAVING case and happen at a higher level with
     // some flow.
     EXTRACT_NOTNULL(select_stmt, ast->parent);
     EXTRACT_NOTNULL(select_core_list, select_stmt->left);
@@ -12037,12 +12067,12 @@ static sem_struct *select_expr_list_alias_sptr(ast_node *select_expr_list) {
   return sptr;
 }
 
-// The select ast below the statement starts with this construction node.
-// It has the select list and the query_parts.  The query_parts being the
-// tail of the select (after the FROM).  Here we simply dispatch the appropriate
-// helpers for both of these.  Note that if there is a FROM clause we push
-// that joinscope so that evaluations of the select list can use the results of
-// the join.  Otherwise you get your parent's chain, or nothing.
+// The select ast below the statement starts with this construction node. It has
+// the select list and the query_parts.  The query_parts being the tail of the
+// select (after the FROM).  Here we simply dispatch the appropriate helpers for
+// both of these.  Note that if there is a FROM clause we push that joinscope so
+// that evaluations of the select list can use the results of the join.
+// Otherwise you get your parent's chain, or nothing.
 static void sem_select_expr_list_con(ast_node *ast) {
   Contract(is_ast_select_expr_list_con(ast));
   EXTRACT_NOTNULL(select_expr_list, ast->left);
@@ -12222,12 +12252,12 @@ static void sem_values(ast_node *ast) {
       return;
     }
 
-    // To compute the type of each column in the VALUES clause we have to
-    // visit each node.  As we go along we're going to accumulate the type
-    // that best fits what we have seen so far or else produce an error
-    // if there is no type that can hold all the values in a column.
-    // Once this is done the values clause can be made to look just like a select
-    // result including the synthetic column names.
+    // To compute the type of each column in the VALUES clause we have to visit
+    // each node.  As we go along we're going to accumulate the type that best
+    // fits what we have seen so far or else produce an error if there is no
+    // type that can hold all the values in a column. Once this is done the
+    // values clause can be made to look just like a select result including the
+    // synthetic column names.
 
     uint32_t values_count = 0;
     ast_node *last_expr = NULL;
@@ -12264,11 +12294,13 @@ static void sem_values(ast_node *ast) {
           record_error(ast);
           return;
         }
-        // In a values clause the sem type of column is the combination of compatible sem type of
-        // all the values for that column. We've verified the compatibility of the values clause struct type
-        // with the column value. Now we need combine both sem type and flags.
-        // eg: VALUES (1), (2.2); the values statement has one column with an integer at the first
-        // row and real at the second raw. The final sem type of this column should be real.
+        // In a values clause the sem type of column is the combination of
+        // compatible sem type of all the values for that column. We've verified
+        // the compatibility of the values clause struct type with the column
+        // value. Now we need combine both sem type and flags. eg: VALUES (1),
+        // (2.2); the values statement has one column with an integer at the
+        // first row and real at the second raw. The final sem type of this
+        // column should be real.
         sem_type = sem_combine_types(sem_type, expr->sem->sem_type);
       }
 
@@ -12294,11 +12326,11 @@ static void sem_values(ast_node *ast) {
   ast->sem->used_symbols = NULL;
 }
 
-// select_core is the core component of the select statement diagram. It comprises
-// [SELECT ... FROM ... WHERE ... GROUP BY ...] or [VALUES (...), ...]. It does not
-// include [WITH ...], [ORDERBY ... LIMIT OFFSET ...]. Note that most of the clauses
-// in a select statement are optional. This function execute the semantic
-// anlysis of the select-core component.
+// select_core is the core component of the select statement diagram. It
+// comprises [SELECT...FROM...WHERE...GROUP BY...] or [VALUES (...), ...]. It
+// does not include [WITH ...], [ORDERBY ... LIMIT OFFSET ...]. Note that most
+// of the clauses in a select statement are optional. This function execute the
+// semantic anlysis of the select-core component.
 static void sem_select_core(ast_node *ast) {
   Contract(is_ast_select_core(ast));
 
@@ -12321,11 +12353,10 @@ static void sem_select_core(ast_node *ast) {
   has_dml = 1;
 }
 
-// Merge two used symbols list into one.
-// This is called to merge the symbols used in [select_orderby] to the symbols used
-// in [select_core]. If we dont do that then the list of used symbols in a
-// select statement will be incomplete and minify_aliases feature (CG_MINIFY_ALIASES)
-// won't work correctly
+// Merge two used symbols list into one. This is called to merge the symbols
+// used in [select_orderby] to the symbols used in [select_core]. If we dont do
+// that then the list of used symbols in a select statement will be incomplete
+// and minify_aliases feature (CG_MINIFY_ALIASES) won't work correctly
 static void sem_add_used_symbols(symtab **used_symbols, symtab *add_symbols) {
   if (*used_symbols == NULL) {
     *used_symbols = add_symbols;
@@ -12402,13 +12433,16 @@ static void sem_select_no_with(ast_node *ast) {
     PUSH_MONITOR_SYMTAB();
     if (select_core_compound || is_ast_values(select_core->right)) {
       // [SELECT ... UNION SELECT ...]
-      // For compounded select statement, the [select_orderby] can only reference the columns
-      // listed in [select_expr_list] therefore we should not push into the JOIN stack
-      // the columns from the table ([select_from_etc]).
-      // e.g: SELECT col1, col2 from t1 UNION SELECT col1, col2 FROM t2 ORDER BY t1.col3;
-      // You can not reference in ORDER BY statement a column from t1 table that is not
-      // listed in the [select_expr_list]. Below is a comand line execution to explain
-      // the above
+
+      // For compounded select statement, the [select_orderby] can only
+      // reference the columns listed in [select_expr_list] therefore we should
+      // not push into the JOIN stack the columns from the table
+      // ([select_from_etc]). e.g: SELECT col1, col2 from t1 UNION SELECT col1,
+      // col2 FROM t2 ORDER BY t1.col3; You can not reference in ORDER BY
+      // statement a column from t1 table that is not listed in the
+      // [select_expr_list]. Below is a comand line execution to explain the
+      // above
+
       // ------------------------------------------------------------------------
       // sqlite> create table t1(id int, name text);
       // sqlite> create table t2(id int, name text);
@@ -12416,24 +12450,27 @@ static void sem_select_no_with(ast_node *ast) {
       // Error: 1st ORDER BY term does not match any column in the result set
       // sqlite> SELECT id FROM t1 UNION SELECT id from t2 ORDER BY t1.id;
       // sqlite>
+      
       // ------------------------------------------------------------------------
-      // Sqilte produce an error on ORDER BY t1.name because column t1.name is not
-      // part of the result set of each compounded SELECT statement.
-      // This is the reason why we don't push the table(select_from_etc) sem_struct
-      // into the stack before semantic analysis of select_orderby ast.
+      // Sqilte produce an error on ORDER BY t1.name because column t1.name is
+      // not part of the result set of each compounded SELECT statement. This is
+      // the reason why we don't push the table(select_from_etc) sem_struct into
+      // the stack before semantic analysis of select_orderby ast.
       //
-      // [VALUES (...), (...), ...]
-      // For select values statement you can not reference the columns listed in [select_insert_list]
-      // because they are anonimous. Therefore we should not push into the JOIN stack the columns from
-      // [select_insert_list].
+      // [VALUES (...), (...), ...] For select values statement you can not
+      // reference the columns listed in [select_insert_list] because they are
+      // anonimous. Therefore we should not push into the JOIN stack the columns
+      // from [select_insert_list].
       error = sem_select_orderby_with_simple_ordering_only(select_orderby);
     }
     else {
       // [SELECT ...]
-      // For non compounded select statement we need both columns in [select_expr_list]
-      // and columns in the table [select_from_etc] to accurately validate the [select_orderby]
-      // ast because columns from [select_expr_list] and columns in the table [select_from_etc]
-      // can be referenced in the [select_orderby] statement
+
+      // For non compounded select statement we need both columns in
+      // [select_expr_list] and columns in the table [select_from_etc] to
+      // accurately validate the [select_orderby] ast because columns from
+      // [select_expr_list] and columns in the table [select_from_etc] can be
+      // referenced in the [select_orderby] statement
       Contract(is_ast_select_expr_list_con(select_core_right));
       EXTRACT_NOTNULL(select_from_etc, select_core_right->right);
 
@@ -12476,8 +12513,8 @@ static void sem_select_core_list(ast_node *ast) {
     return;
   }
 
-  // This means we have more than one select_core node. Which means select_core_list node
-  // is in a compounded select statement
+  // This means we have more than one select_core node. Which means
+  // select_core_list node is in a compounded select statement
   // e.g: SELECT ... UNION SELECT ...
   EXTRACT_NOTNULL(select_core_list, select_core_compound->right);
   sem_select_core_list(select_core_list);
@@ -12527,8 +12564,9 @@ static void sem_any_select(ast_node *ast) {
   select_level--;
 }
 
-// Any row source in any context (used when a select appears within another statement)
-// This is called only for the top level statements, nested selects are handled by sem_any_select
+// Any row source in any context (used when a select appears within another
+// statement) This is called only for the top level statements, nested selects
+// are handled by sem_any_select
 cql_noexport void sem_any_row_source(ast_node *ast) {
   if (is_select_variant(ast)) {
     sem_select_rewrite_backing(ast);
@@ -12574,11 +12612,11 @@ static void sem_select_rewrite_backing(ast_node *ast) {
   END_BACKING_REWRITE();
 }
 
-// This can only be used in the ELSE clause of a conditional fragment
-// it will expand into "select 0, 0, 0, 0 where 0" when we generate SQL.
-// But since it is known to generate zero rows the data types are
-// irrelevant.  We just make it go along for the ride so that it doesn't
-// cause errors in the fragment but creates errors elsewhere.
+// This can only be used in the ELSE clause of a conditional fragment it will
+// expand into "select 0, 0, 0, 0 where 0" when we generate SQL. But since it is
+// known to generate zero rows the data types are irrelevant.  We just make it
+// go along for the ride so that it doesn't cause errors in the fragment but
+// creates errors elsewhere.
 static void sem_select_nothing_stmt(ast_node *ast) {
   Contract(is_ast_select_nothing_stmt(ast));
 
@@ -12606,9 +12644,10 @@ error:
   record_error(ast);
 }
 
-// Top level statement list processing for select, note that a select *statement*
-// can't appear in other places (such as a nested expression).  This is only for
-// select in the context of a statement list.  Others use just 'sem_any_select'
+// Top level statement list processing for select, note that a select
+// *statement* can't appear in other places (such as a nested expression).  This
+// is only for select in the context of a statement list.  Others use just
+// 'sem_any_select'
 static void sem_select_stmt(ast_node *stmt) {
   sem_select_rewrite_backing(stmt);
   sem_update_proc_type_for_select(stmt);
@@ -12645,21 +12684,25 @@ static void sem_explain(ast_node *stmt) {
     goto cleanup;
   }
 
-  // Warning: The data returned by the EXPLAIN QUERY PLAN command is intended for
-  // interactive debugging only. The output format may change between SQLite releases.
-  // Applications should not depend on the output format of the EXPLAIN QUERY
-  // PLAN command.
-  // An EXPLAIN QUERY PLAN command returns zero or more rows of four columns each.
-  // The column names are "selectid", "order", "from", "detail". The first three columns
-  // contain an integer value. The final column, "detail", contains a text value which
-  // carries most of the useful information.
-  // EXPLAIN QUERY PLAN is most useful on a SELECT statement, but may also be appear with
-  // other statements that read data from database tables (e.g. UPDATE, DELETE, INSERT INTO ... SELECT)
+  // Warning: The data returned by the EXPLAIN QUERY PLAN command is intended
+  // for interactive debugging only. The output format may change between SQLite
+  // releases. Applications should not depend on the output format of the
+  // EXPLAIN QUERY PLAN command.
   //
-  // Because of the above explain statement will only be available in dev mode in CQL.
-  // Explain statement statement behave like a statement but does not list explicitely
-  // the column result there we have to manually build the sem_struct and sem_join that
-  // reflex the exact output of EXPLAIN QUERY PLAN [stmt] statement
+  // An EXPLAIN QUERY PLAN command returns zero or more rows of four columns
+  // each. The column names are "selectid", "order", "from", "detail". The first
+  // three columns contain an integer value. The final column, "detail",
+  // contains a text value which carries most of the useful information. EXPLAIN
+  // QUERY PLAN is most useful on a SELECT statement, but may also be appear
+  // with other statements that read data from database tables (e.g. UPDATE,
+  // DELETE, INSERT INTO ... SELECT)
+  //
+  // Because of the above explain statement will only be available in dev mode
+  // in CQL. Explain statement statement behave like a statement but does not
+  // list explicitely the column result there we have to manually build the
+  // sem_struct and sem_join that reflex the exact output of EXPLAIN QUERY PLAN
+  // [stmt] statement
+  
   sem_struct *sptr = new_sem_struct("explain_query", 4);
   sptr->semtypes[0] = SEM_TYPE_INTEGER | SEM_TYPE_NOTNULL;
   sptr->names[0] = "iselectid";
@@ -12680,7 +12723,8 @@ cleanup:
 
 // Top level statement list processing for explain stmt, note that an explain
 // statement can't appear in other places (such as a cursor stmt).  This is only
-// for explain in the context of a statement list.  Others use just 'sem_explain'
+// for explain in the context of a statement list.  Others use just
+// 'sem_explain'
 static void sem_explain_stmt(ast_node *stmt) {
   sem_explain(stmt);
   sem_update_proc_type_for_select(stmt);
@@ -12774,12 +12818,12 @@ typedef struct shared_cte_info {
   ast_node *non_select_stmt;
 } shared_cte_info;
 
-// Now we get the top level CTE tables out of the target procedure.
-// We need to scan the CTEs for entries that use LIKE, those are the table arguments
-// we will check the details those later, for now we just need the names
-// and the AST.  Note that we previously checked that any duplicate parameter
-// names were identically typed. e.g. in the below "source" must be identical
-// in both cases.
+// Now we get the top level CTE tables out of the target procedure. We need to
+// scan the CTEs for entries that use LIKE, those are the table arguments we
+// will check the details those later, for now we just need the names and the
+// AST.  Note that we previously checked that any duplicate parameter names were
+// identically typed. e.g. in the below "source" must be identical in both
+// cases.
 //
 //   if bb == 1 then
 //     with source(*) like (select 1 x)
@@ -12808,9 +12852,9 @@ static void sem_accumulate_cte_info(ast_node *stmt, shared_cte_info *info)
   }
 }
 
-// Walk a statement list inside of a shared fragment
-// in all such cases there can only be one statement in the list
-// anything else is an error and is dutifully recorded.
+// Walk a statement list inside of a shared fragment in all such cases there can
+// only be one statement in the list anything else is an error and is dutifully
+// recorded.
 static void sem_accumulate_stmt_list(ast_node *ast, shared_cte_info *info) {
   Contract(is_ast_stmt_list(ast));
 
@@ -12820,23 +12864,22 @@ static void sem_accumulate_stmt_list(ast_node *ast, shared_cte_info *info) {
     return;
   }
 
-  // note the representation of statement lists is such that they always have
-  // at least one statement, an empty statement list is represented by null
+  // note the representation of statement lists is such that they always have at
+  // least one statement, an empty statement list is represented by null
   // statement lists not null statements.
   EXTRACT_ANY_NOTNULL(stmt, ast->left);
   if (is_ast_with_select_stmt(stmt)) {
     sem_accumulate_cte_info(stmt, info);
   }
   else if (is_ast_select_nothing_stmt(stmt)) {
-    // nothing to do here, no info
-    // note that select nothing is not considered a select variant because
-    // it can only go in this one place, it's generally useless and cannot
-    // be used as say a row sourde or in other places a select might go
-    // If you look at sem_select_nothing_stmt you'll see the analysis will
-    // fail if it appears anywhere but exactly in else caluse of a conditional
-    // shared fragment. So this is literally the only place it is allowed to be.
-    // It was made to do this one job. An `else` clause or empty else rewrite that
-    // produces the correct shaped empty row.
+    // Nothing to do here, no info. note that select nothing is not considered a
+    // select variant because it can only go in this one place, it's generally
+    // useless and cannot be used as say a row sourde or in other places a
+    // select might go If you look at sem_select_nothing_stmt you'll see the
+    // analysis will fail if it appears anywhere but exactly in else caluse of a
+    // conditional shared fragment. So this is literally the only place it is
+    // allowed to be. It was made to do this one job. An `else` clause or empty
+    // else rewrite that produces the correct shaped empty row.
   }
   else if (!is_select_variant(stmt)) {
     info->non_select_stmt = stmt;
@@ -12845,8 +12888,8 @@ static void sem_accumulate_stmt_list(ast_node *ast, shared_cte_info *info) {
 }
 
 // The cond_action node is the predicate of an IF/ELSEIF and its statement list
-// the statement list must be non-empty.  The expression doesn't contribute
-// to the CTEs and is therefore ignored (it's checked elsewhere)
+// the statement list must be non-empty.  The expression doesn't contribute to
+// the CTEs and is therefore ignored (it's checked elsewhere)
 static void sem_accumulate_cond_action(ast_node *ast, shared_cte_info *info) {
   Contract(is_ast_cond_action(ast));
   EXTRACT(stmt_list, ast->right);
@@ -12870,11 +12913,11 @@ static void sem_accumulate_elseif_list(ast_node *ast, shared_cte_info *info) {
   }
 }
 
-// The if statement form has the main cond_action then an optional
-// elseif chain and then an optional else node.  The else node is not
-// actually optional for shared fragments so we will give an error
-// if it is absent.  Otherwise the helpers above descend into the pieces.
-// In each case we record the ast_node that should get the error if there is one.
+// The if statement form has the main cond_action then an optional elseif chain
+// and then an optional else node.  The else node is not actually optional for
+// shared fragments so we will give an error if it is absent.  Otherwise the
+// helpers above descend into the pieces. In each case we record the ast_node
+// that should get the error if there is one.
 static void sem_accumulate_if_stmt(ast_node *ast, shared_cte_info *info) {
   Contract(is_ast_if_stmt(ast));
   EXTRACT_NOTNULL(cond_action, ast->left);
@@ -12927,10 +12970,10 @@ static bool sem_create_migration_proc_prototype(ast_node *origin, CSTR name)
   return !is_error(declare_proc_stmt);
 }
 
-// The procedure is already known to be of the correct shape
-// that is, either one select, or else an if statement with one select
-// in each branch. We figure out which case we're in and then accumulate the
-// pieces using the callback to tell our caller what we found.
+// The procedure is already known to be of the correct shape that is, either one
+// select, or else an if statement with one select in each branch. We figure out
+// which case we're in and then accumulate the pieces using the callback to tell
+// our caller what we found.
 static void sem_accumulate_proc_cte_info(ast_node *create_proc_stmt, shared_cte_info *info) {
   Contract(is_ast_create_proc_stmt(create_proc_stmt));
 
@@ -12944,14 +12987,15 @@ static void sem_accumulate_proc_cte_info(ast_node *create_proc_stmt, shared_cte_
   else if (is_ast_if_stmt(stmt)) {
     sem_accumulate_if_stmt(stmt, info);
   }
-  // note, it might be a normal select, in which case there is nothing to do.
-  // a normal select has no CTE LIKE forms because it has no CTEs.
-  // We know it's one of the legal forms by the time we are here.
+
+  // note, it might be a normal select, in which case there is nothing to do. a
+  // normal select has no CTE LIKE forms because it has no CTEs. We know it's
+  // one of the legal forms by the time we are here.
 }
 
-// Save the name of the first table parameter that we find, this is
-// used in a context were we just want to know that there are none
-// so if we find one that's the error.
+// Save the name of the first table parameter that we find, this is used in a
+// context were we just want to know that there are none so if we find one
+// that's the error.
 static void found_any_table_params_callback(void *context, CSTR name, ast_node *cte_decl) {
   // save the first name we find
   if (!*(CSTR *)context) {
@@ -12959,8 +13003,8 @@ static void found_any_table_params_callback(void *context, CSTR name, ast_node *
   }
 }
 
-// Here we ensure that the called shared fragment does not need any table bindings
-// because none were provided!
+// Here we ensure that the called shared fragment does not need any table
+// bindings because none were provided!
 static void sem_shared_fragment_ensure_no_table_binding(
   ast_node *call_stmt,
   ast_node *create_proc_stmt)
@@ -12987,10 +13031,11 @@ static void sem_shared_fragment_ensure_no_table_binding(
   }
 }
 
-// Add the cte_decl to the list provided in context but de-duplicate
-// we're doing this because we will want this list to know if all of the required table parameters
-// are covered by the USING clause of the call.  We will have previously checked that
-// any duplicated table parameter names have exactly the same type.
+// Add the cte_decl to the list provided in context but de-duplicate we're doing
+// this because we will want this list to know if all of the required table
+// parameters are covered by the USING clause of the call.  We will have
+// previously checked that any duplicated table parameter names have exactly the
+// same type.
 static void make_distinct_table_params_list_callback(void *context, CSTR cte_name, ast_node *cte_decl) {
   list_item **head = (list_item**)context;
 
@@ -13012,8 +13057,9 @@ static void make_distinct_table_params_list_callback(void *context, CSTR cte_nam
 }
 
 
-// This is a recursive check for any embedded CTEs that have names that will conflict with a given binding
-// this can get quite complicated.  Here's an example:
+// This is a recursive check for any embedded CTEs that have names that will
+// conflict with a given binding this can get quite complicated.  Here's an
+// example:
 //
 // [[shared_fragment]]
 // create proc too()
@@ -13036,21 +13082,21 @@ static void make_distinct_table_params_list_callback(void *context, CSTR cte_nam
 // with foo(*) as (select 1 x)
 //   select * from (call goo() using foo as source);
 //
-// here the call to "goo" must fail because it tries to bind "foo" as source
-// and there is a "foo" inside of "too". This is a problem because "goo" calls "too"
+// Here the call to "goo" must fail because it tries to bind "foo" as source and
+// there is a "foo" inside of "too". This is a problem because "goo" calls "too"
 // and forwards its "source" formal to too.
 //
-// To find these we have to recursively walk procedure bindings to get to the deepest
-// shared fragment.  Note that we don't have to walk where there is no binding
-// nor do we have to walk if the binding does not forward an argument that is provided
-// externally.
+// To find these we have to recursively walk procedure bindings to get to the
+// deepest shared fragment.  Note that we don't have to walk where there is no
+// binding nor do we have to walk if the binding does not forward an argument
+// that is provided externally.
 cql_noexport void sem_check_bound_cte_name_conflict(ast_node *node, binding_info *info) {
   if (is_ast_cte_table(node)) {
     EXTRACT_NOTNULL(cte_decl, node->left);
     EXTRACT_ANY_NOTNULL(cte_body, node->right);
 
-    // this is a proxy node, it isn't a source of conflicts
-    // this name will be replaced, it's even ok if the arg name matches the formal name
+    // This is a proxy node, it isn't a source of conflicts. this name will be
+    // replaced, it's even ok if the arg name matches the formal name
     if (is_ast_like(cte_body)) {
       return;
     }
@@ -13068,8 +13114,9 @@ cql_noexport void sem_check_bound_cte_name_conflict(ast_node *node, binding_info
     EXTRACT_STRING(actual, node->left);
     EXTRACT_STRING(formal, node->right);
 
-    // if we are forwarding the table parameter then we have to analyze what's under us.
-    // for this analysis we don't use the formal name since that name is itself replaced
+    // if we are forwarding the table parameter then we have to analyze what's
+    // under us. for this analysis we don't use the formal name since that name
+    // is itself replaced
     if (!StrCaseCmp(info->formal, actual)) {
       binding_info new;
       new.err = info->err;
@@ -13088,12 +13135,13 @@ cql_noexport void sem_check_bound_cte_name_conflict(ast_node *node, binding_info
       }
     }
 
-    // nothing underneath a cte_binding anyway, so either it's an error or we're done, either way.
+    // nothing underneath a cte_binding anyway, so either it's an error or we're
+    // done, either way.
     return;
   }
 
-  // declare the new info in case we need it
-  // this has to be outside of the test below so it survives that block
+  // Declare the new info in case we need it. This has to be outside of the test
+  // below so it survives that block
   binding_info new_info;
 
   // if we're on a shared CTE usage, then we recurse into the CALL
@@ -13180,11 +13228,11 @@ static void sem_shared_fragment_table_binding(
     goto cleanup;
   }
 
-  // We need to scan the table arguments
-  // for each one of those we then need to ensure that the of the actual table is compatible
-  // with the type of the formal table and that the total number of columns is a match.
-  // Note that there cannot be extra columns because if there were that might create ambiguities
-  // in the result.
+  // We need to scan the table arguments. For each one of those we then need to
+  // ensure that the of the actual table is compatible with the type of the
+  // formal table and that the total number of columns is a match. Note that
+  // there cannot be extra columns because if there were that might create
+  // ambiguities in the result.
 
   for (list_item *it = parms_head; it; it = it->next) {
     EXTRACT_NOTNULL(cte_decl, it->ast);
@@ -13324,11 +13372,13 @@ static void sem_shared_fragment_table_binding(
     EXTRACT_NOTNULL(cte_table, cte_decl->parent);
     EXTRACT_ANY_NOTNULL(cte_body, cte_table->right);
 
-    // If this CTE declares a table parameter then this binding  will be checked when we invoke this
-    // shared fragment and an actual value is provided.  It would be meaningless to check if the name of the
-    // formal causes a conflict, that name won't be used unless the actual happens to match
-    // the formal.  In any case it is the actual parameter that matters.  We have to be in a shared fragment
-    // or the like form would be illegal in the first place and we wouldn't be here.
+    // If this CTE declares a table parameter then this binding  will be checked
+    // when we invoke this shared fragment and an actual value is provided.  It
+    // would be meaningless to check if the name of the formal causes a
+    // conflict, that name won't be used unless the actual happens to match the
+    // formal.  In any case it is the actual parameter that matters.  We have to
+    // be in a shared fragment or the like form would be illegal in the first
+    // place and we wouldn't be here.
     if (is_ast_like(cte_body)) {
       continue;
     }
@@ -13383,10 +13433,10 @@ static void sem_shared_cte(ast_node *cte_body) {
   cte_state *cte_cur_saved = cte_cur;
   cte_cur = NULL;
 
-  // The semantic info for this kind of call looks just like any other
-  // we use the helper directly because this is not a loose call statement
-  // but there is no cursor.  We don't want the procedure we are in (if any)
-  // to become a result-set procedure.
+  // The semantic info for this kind of call looks just like any other we use
+  // the helper directly because this is not a loose call statement but there is
+  // no cursor.  We don't want the procedure we are in (if any) to become a
+  // result-set procedure.
   sem_call_stmt_opt_cursor(call_stmt, NULL);
 
   // cleanup the current state and the restore, do this before any error handling
@@ -13417,7 +13467,8 @@ static void sem_shared_cte(ast_node *cte_body) {
   }
 
   if (cte_binding_list) {
-    // if there is a binding list we have to ensure the number and type of bindings are correct
+    // if there is a binding list we have to ensure the number and type of
+    // bindings are correct
     sem_shared_fragment_table_binding(call_stmt, proc_stmt, cte_binding_list);
     if (is_error(call_stmt)) {
       record_error(cte_body);
@@ -13425,7 +13476,8 @@ static void sem_shared_cte(ast_node *cte_body) {
     }
   }
   else {
-    // if there is no binding list we still have to ensure that there are no bindings required
+    // if there is no binding list we still have to ensure that there are no
+    // bindings required
     sem_shared_fragment_ensure_no_table_binding(call_stmt, proc_stmt);
     if (is_error(call_stmt)) {
       record_error(cte_body);
@@ -13518,11 +13570,11 @@ static void sem_cte_table(ast_node *ast)  {
       return;
     }
 
-    // at this point the cte is defined, we can analyze the entire select
-    // for the CTE.  This allows recursive references other parts of the select.
+    // at this point the cte is defined, we can analyze the entire select for
+    // the CTE. This allows recursive references other parts of the select.
     // However the type defined for the CTE is provisional, we haven't yet
-    // considered the effect of the union on nullability.  But what we have
-    // is what we will use for the recurrence.
+    // considered the effect of the union on nullability.  But what we have is
+    // what we will use for the recurrence.
 
     sem_select_no_with(select_stmt);
     if (is_error(select_stmt)) {
@@ -13531,8 +13583,8 @@ static void sem_cte_table(ast_node *ast)  {
     }
 
     // Once this is done we have to revise the semantic type to account for
-    // possible nulls in the other branches of the union.  This is the type
-    // we will expose to the world.
+    // possible nulls in the other branches of the union.  This is the type we
+    // will expose to the world.
 
     // replace the types but not the names!
     sem_struct *sptr1 = cte_decl->sem->sptr;
@@ -13563,8 +13615,8 @@ static void sem_cte_table(ast_node *ast)  {
     }
   }
   else {
-    // all the other forms are treated directly like a "local view"
-    // which is basically what a CTE is.  No special processing of the top half etc.
+    // all the other forms are treated directly like a "local view" which is
+    // basically what a CTE is.  No special processing of the top half etc.
 
     ast_node *select_stmt = cte_body;
 
@@ -13612,9 +13664,9 @@ static uint32_t sem_with_depth() {
   return depth;
 }
 
-// Add a new set of tables to the stack
-// Needed because WITH statements can be nested due to nested selects
-// So there can be multiple scopes within one select statement.
+// Add a new set of tables to the stack. Needed because WITH statements can be
+// nested due to nested selects So there can be multiple scopes within one
+// select statement.
 static void sem_push_cte_state() {
   cte_state *new_state = _ast_pool_new(cte_state);
 
@@ -13634,9 +13686,9 @@ static void sem_pop_cte_state() {
   // the CTE state is pool allocated so we don't have to free it
 }
 
-// Set up a new CTE context, chaining to the previous one (in case of
-// nested selects) and then do semantic analysis of the select that
-// was scoped by the WITH.
+// Set up a new CTE context, chaining to the previous one (in case of nested
+// selects) and then do semantic analysis of the select that was scoped by the
+// WITH.
 static void sem_with_select(ast_node *ast) {
   Contract(is_ast_with_select_stmt(ast));
   EXTRACT_ANY_NOTNULL(with_prefix, ast->left)
@@ -13744,11 +13796,11 @@ static void sem_validate_previous_trigger(ast_node *prev_trigger) {
       return;
     }
 
-    // If the table the trigger was on is going away then we don't need
-    // to verify that the trigger has a tombstone.  In fact is it not
-    // possible to declare the tombstone now because the table name is not
-    // valid.  There's no need for the tombstone anyway because when the
-    // table is deleted all its triggers will also be deleted.
+    // If the table the trigger was on is going away then we don't need to
+    // verify that the trigger has a tombstone.  In fact is it not possible to
+    // declare the tombstone now because the table name is not valid.  There's
+    // no need for the tombstone anyway because when the table is deleted all
+    // its triggers will also be deleted.
 
     EXTRACT_NAMED_NOTNULL(prev_trigger_condition, trigger_condition, prev_trigger_def->right);
     EXTRACT_NAMED_NOTNULL(prev_trigger_op_target, trigger_op_target, prev_trigger_condition->right);
@@ -13777,11 +13829,11 @@ static void sem_found_dep_in_view(CSTR _Nonnull name, ast_node *_Nonnull target_
   record_table_dependencies(create_view_stmt, target_ast);
 }
 
-// Here we peek into the view body and find the tables that it uses.
-// We're going to record those so that if a table is unsubscribed we can make sure
-// there are no lingering views still using it. We don't have to worry about nested views
-// because if the main view uses a nested view and that nested view uses the table then the nested view itself
-// will cause an error to be reported.
+// Here we peek into the view body and find the tables that it uses. We're going
+// to record those so that if a table is unsubscribed we can make sure there are
+// no lingering views still using it. We don't have to worry about nested views
+// because if the main view uses a nested view and that nested view uses the
+// table then the nested view itself will cause an error to be reported.
 static void sem_record_view_dependencies(ast_node *ast) {
   Contract(is_ast_create_view_stmt(ast));
 
@@ -13795,10 +13847,10 @@ static void sem_record_view_dependencies(ast_node *ast) {
   find_table_refs(&callbacks, ast);
 }
 
-// Create view analysis is very simple because select does the heavy lifting.  All we
-// have to do is validate that the view is unique then validate the select statement.
-// The view will be added to the table/view list.
-// Views must not be allowed to have any NULL type columns, all nulls must be converted to
+// Create view analysis is very simple because select does the heavy lifting.
+// All we have to do is validate that the view is unique then validate the
+// select statement. The view will be added to the table/view list. Views must
+// not be allowed to have any NULL type columns, all nulls must be converted to
 // some type with a CAST.
 static void sem_create_view_stmt(ast_node *ast) {
   Contract(!current_joinscope);  // I don't belong inside a select(!)
@@ -13812,12 +13864,14 @@ static void sem_create_view_stmt(ast_node *ast) {
   EXTRACT(name_list, view_details->right);
   EXTRACT_STRING(name, name_ast);
 
-  // if we're validating a previous view we don't want to parse the contents, we only want
-  // to verify that this view has resonable name and version markings and so forth.
-  // We can't try to analyze the previous version because, like with migration below
-  // the view may refer to previous view might refer to now deleted columns and so forth.
+  // if we're validating a previous view we don't want to parse the contents, we
+  // only want to verify that this view has resonable name and version markings
+  // and so forth. We can't try to analyze the previous version because, like
+  // with migration below the view may refer to previous view might refer to now
+  // deleted columns and so forth.
   if (validating_previous_schema) {
-    // begin in the ok state, validate (which may add errors) and then we're done here
+    // begin in the ok state, validate (which may add errors) and then we're
+    // done here
     record_ok(ast);
     sem_validate_previous_view(ast);
     return;
@@ -13828,15 +13882,16 @@ static void sem_create_view_stmt(ast_node *ast) {
   // if there is an existing view, save it here so we can check for duplicates later.
   ast_node *existing_defn = adding_current_entity ? find_table_or_view_even_deleted(name) : NULL;
 
-  // View declarations (i.e. outside of any proc) are totally ignored
-  // in the context of a schema migration script.  This prevents us from
-  // getting errors because the view refers to tables or columns that are not yet
-  // in existence in the version we are migrating.  If you need a view
-  // in your migration script you have to create it and use it yourself
-  // since you can't rely on the presence of that view during migration anyway.
+  // View declarations (i.e. outside of any proc) are totally ignored in the
+  // context of a schema migration script.  This prevents us from getting errors
+  // because the view refers to tables or columns that are not yet in existence
+  // in the version we are migrating.  If you need a view in your migration
+  // script you have to create it and use it yourself since you can't rely on
+  // the presence of that view during migration anyway.
   if (schema_upgrade_version > 0 && !current_proc) {
-    // burn the name, creating a bogus view, views are not allowed to be used in migration scripts anyway
-    // we add this stub so that we can produce a superior error if you try to refer to this view
+    // burn the name, creating a bogus view, views are not allowed to be used in
+    // migration scripts anyway we add this stub so that we can produce a
+    // superior error if you try to refer to this view
     symtab_add(tables, name, ast);
     // no other processing of semantics
     record_ok(ast);
@@ -13940,8 +13995,9 @@ static void sem_create_view_stmt(ast_node *ast) {
     // deleted or no it goes in the main list
     add_item_to_list(&all_views_list, ast);
 
-    // The name is consumed, some clients will use find_usable_and_not_deleted_table_or_view
-    // to not see deleted views (e.g. select) others don't (e.g. drop)
+    // The name is consumed, some clients will use
+    // find_usable_and_not_deleted_table_or_view to not see deleted views (e.g.
+    // select) others don't (e.g. drop)
     add_table_or_view(ast);
 
     // and record the annotation
@@ -14016,17 +14072,17 @@ static bool_t sem_validate_version_attrs(version_attrs_info *vers_info) {
     }
   }
   else {
-    // The delete version is the version that the column was deleted in.
-    // If we are migrating beyond that, the column is already deleted.
-    // if were on that version (in a migration context) then you're allowed
-    // to look at that column so that you can zero it or some such.
+    // The delete version is the version that the column was deleted in. If we
+    // are migrating beyond that, the column is already deleted. if were on that
+    // version (in a migration context) then you're allowed to look at that
+    // column so that you can zero it or some such.
     if (vers_info->delete_version != -1 && schema_upgrade_version > vers_info->delete_version) {
       vers_info->flags |= SEM_TYPE_DELETED;
     }
 
-    // The create version is the version that the column was created in.
-    // If we are migrating to a schema before the column was created then we
-    // cannot see it yet.
+    // The create version is the version that the column was created in. If we
+    // are migrating to a schema before the column was created then we cannot
+    // see it yet.
     if (vers_info->create_version != -1 && schema_upgrade_version < vers_info->create_version) {
       vers_info->flags |= SEM_TYPE_DELETED;
     }
@@ -14035,8 +14091,8 @@ static bool_t sem_validate_version_attrs(version_attrs_info *vers_info) {
   return true;
 }
 
-// Ensure that the table parameter is not a backed table, if it is
-// then mark an error at the indicated location
+// Ensure that the table parameter is not a backed table, if it is then mark an
+// error at the indicated location
 static void sem_non_backed_table(ast_node *ast_error, ast_node *ast_table) {
   Contract(ast_error);
   Contract(ast_table);
@@ -14054,8 +14110,8 @@ static void sem_non_backed_table(ast_node *ast_error, ast_node *ast_table) {
   record_ok(ast_error);
 }
 
-// Ensure that the table parameter is not blob storage, if it is
-// then mark an error at the indicated location
+// Ensure that the table parameter is not blob storage, if it is then mark an
+// error at the indicated location
 static void sem_non_blob_storage_table(ast_node *ast_error, ast_node *ast_table) {
   Contract(ast_error);
   Contract(ast_table);
@@ -14081,7 +14137,8 @@ static void sem_drop_table_stmt(ast_node *ast) {
   EXTRACT_NAME_AST(name_ast, ast->right);
   EXTRACT_STRING(name, name_ast);
 
-  // we might be making the dropped table a reality so it's ok to try to drop @deleted tables
+  // we might be making the dropped table a reality so it's ok to try to drop
+  // @deleted tables
   ast_node *table_ast = find_usable_table_or_view_even_deleted(name, name_ast, "CQL0108: table in drop statement does not exist");
   if (!table_ast) {
     record_error(ast);
@@ -14117,7 +14174,8 @@ static void sem_drop_view_stmt(ast_node *ast) {
   EXTRACT_NAME_AST(name_ast, ast->right);
   EXTRACT_STRING(name, name_ast);
 
-  // we might be making the dropped view a reality so it's ok to try to drop @deleted views
+  // we might be making the dropped view a reality so it's ok to try to drop
+  // @deleted views
   ast_node *view_ast = find_usable_table_or_view_even_deleted(name, name_ast, "CQL0110: view in drop statement does not exist");
   if (!view_ast) {
     record_error(ast);
@@ -14243,10 +14301,11 @@ static bool_t sem_validate_attrs_prev_cur(version_attrs_info *prev, version_attr
   }
 
   if (prev->recreate) {
-    // If we used to be on the @recreate plan then we don't have to check the current create version
-    // but we do have to make sure the recreate transition special action is being used.
-    // Note: if recreate is dropped and delete is added we give a better error later so that case
-    // is excluded here.
+    // If we used to be on the @recreate plan then we don't have to check the
+    // current create version but we do have to make sure the recreate
+    // transition special action is being used. Note: if recreate is dropped and
+    // delete is added we give a better error later so that case is excluded
+    // here.
     if (!cur->recreate && cur->delete_version < 0 && cur->create_code == SCHEMA_ANNOTATION_CREATE_TABLE) {
        if (!cur->create_proc || StrCaseCmp(CQL_FROM_RECREATE, cur->create_proc)) {
          report_error(name_ast, "CQL0377: table transitioning from @recreate to @create must use @create(nn,cql:from_recreate)", name);
@@ -14273,8 +14332,8 @@ static bool_t sem_validate_attrs_prev_cur(version_attrs_info *prev, version_attr
     return false;
   }
 
-  // adding a migrate proc when moving to the delete plan is ok
-  // if we were already on the delete plan then the migrate proc must match
+  // adding a migrate proc when moving to the delete plan is ok if we were
+  // already on the delete plan then the migrate proc must match
   if (prev->delete_version > 0) {
     if (!sem_match_optional_string(prev->delete_proc, cur->delete_proc)) {
       report_error(name_ast, "CQL0117: @delete procedure changed in object", name);
@@ -14285,9 +14344,9 @@ static bool_t sem_validate_attrs_prev_cur(version_attrs_info *prev, version_attr
   return true;
 }
 
-// Return the default value from the attribute list
-// This must be called when there is a default value by contract.
-// This has the side-effect of validating the HAS_DEFAULT flag
+// Return the default value from the attribute list. This must be called when
+// there is a default value by contract. This has the side-effect of validating
+// the HAS_DEFAULT flag
 cql_noexport ast_node *sem_get_col_default_value(ast_node *attrs) {
   Contract(attrs);
 
@@ -14334,9 +14393,9 @@ static void sem_validate_col_def_prev_cur(ast_node *def, ast_node *prev_def, ver
     return;
   }
 
-  // Partial pk is caught later by checking the PK constraint, which is more diagnostic so we don't
-  // detect that here.  Likewise weith SEM_TYPE_FK, this is caught later by the FK contraint or the
-  // FK attribute.
+  // Partial pk is caught later by checking the PK constraint, which is more
+  // diagnostic so we don't detect that here.  Likewise weith SEM_TYPE_FK, this
+  // is caught later by the FK contraint or the FK attribute.
 
   sem_t ok_diffs = SEM_TYPE_SENSITIVE | SEM_TYPE_DELETED | SEM_TYPE_FK | SEM_TYPE_PARTIAL_PK;
 
@@ -14378,9 +14437,10 @@ static void sem_validate_col_def_prev_cur(ast_node *def, ast_node *prev_def, ver
     }
   }
 
-  // The create case is a little easier (no -1 check) because if the column was just created then
-  // it isn't in the prevous schema at all and hence we wouldn't even be here.  This loop only
-  // covers columns that exist in previous by definition.
+  // The create case is a little easier (no -1 check) because if the column was
+  // just created then it isn't in the prevous schema at all and hence we
+  // wouldn't even be here.  This loop only covers columns that exist in
+  // previous by definition.
   if (!sem_match_optional_string(prev_cd_info.create_proc, cur_cd_info.create_proc)) {
     report_error(name_ast, "CQL0124: column @create procedure changed", name);
     record_error(prev_def);
@@ -14403,17 +14463,17 @@ static void sem_validate_col_def_prev_cur(ast_node *def, ast_node *prev_def, ver
   }
 }
 
-// In addition to the normal checking, we look at the canonical string
-// for the facet, if it's changed at all then there is an error.
-// Note that @create/@delete are not validated here.  Those are just
-// for columns and they are tested above.  Unstructured attributes like
-// @attribute are disregarded entirely because they are assumed to not
-// affect the schema and could be essential for codegen correctness.
-// NOTE: when validating table definition pieces we are generous with @sensitive
-// we already independently check if @sensitive was added and that does not cause
-// a schema failure (removing it does). Here we do not generate the text of @senstive
-// by providing callbacks so it looks like we're generating for SQLite.  This is
-// deliberate and the tests verify this.
+// In addition to the normal checking, we look at the canonical string for the
+// facet, if it's changed at all then there is an error. Note that
+// @create/@delete are not validated here.  Those are just for columns and they
+// are tested above. Unstructured attributes like @attribute are disregarded
+// entirely because they are assumed to not affect the schema and could be
+// essential for codegen correctness. NOTE: when validating table definition
+// pieces we are generous with @sensitive we already independently check if
+// @sensitive was added and that does not cause a schema failure (removing it
+// does). Here we do not generate the text of @senstive by providing callbacks
+// so it looks like we're generating for SQLite.  This is deliberate and the
+// tests verify this.
 static bool_t sem_validate_identical_coldef(ast_node *def, ast_node *prev_def) {
   gen_sql_callbacks callbacks;
   init_gen_sql_callbacks(&callbacks);
@@ -14456,9 +14516,10 @@ static bool_t sem_named_type_gen_sql_callback(ast_node *ast, void *context, char
   return false;
 }
 
-// Several places require identical definitions if names are duplicated
-// This method does the job for a variety of objects, it generates the canoncial text
-// for the AST and verifies that it is identical.  This works for all kinds of objects.
+// Several places require identical definitions if names are duplicated. This
+// method does the job for a variety of objects, it generates the canoncial text
+// for the AST and verifies that it is identical.  This works for all kinds of
+// objects.
 static bool_t sem_validate_identical_text(ast_node *prev, ast_node *cur, gen_func fn, gen_sql_callbacks *callbacks) {
   CHARBUF_OPEN(prev_sql);
   CHARBUF_OPEN(cur_sql);
@@ -14501,21 +14562,21 @@ static bool_t sem_validate_identical_text(ast_node *prev, ast_node *cur, gen_fun
 }
 
 // Here we're going to validate that two function declarations are identical.
-// We're going to do this by comparing the canonical sql for both.
-// We could compare the AST directly but to do so we would have to basically
-// recapitulate all of the same walking that the text generator does.
-// That is a maintenance problem but also doing it this way is economical
-// and it ensures that the string decoding is bug-free.
+// We're going to do this by comparing the canonical sql for both. We could
+// compare the AST directly but to do so we would have to basically recapitulate
+// all of the same walking that the text generator does. That is a maintenance
+// problem but also doing it this way is economical and it ensures that the
+// string decoding is bug-free.
 static bool_t sem_validate_identical_funcs(ast_node *prev_func, ast_node *cur_func) {
   return sem_validate_identical_text(cur_func, prev_func, gen_one_stmt, NULL);
 }
 
-// Here we're going to validate that two proc declarations are identical.
-// We're going to do this by comparing the canonical sql for both.
-// We could compare the AST directly but to do so we would have to basically
-// recapitulate all of the same walking that the text generator does.
-// That is a maintenance problem but also doing it this way is economical
-// and it ensures that the string decoding is bug-free.
+// Here we're going to validate that two proc declarations are identical. We're
+// going to do this by comparing the canonical sql for both. We could compare
+// the AST directly but to do so we would have to basically recapitulate all of
+// the same walking that the text generator does. That is a maintenance problem
+// but also doing it this way is economical and it ensures that the string
+// decoding is bug-free.
 static bool_t sem_validate_identical_procs(ast_node *prev_proc, ast_node *cur_proc) {
   return sem_validate_identical_text(prev_proc, cur_proc, gen_declare_proc_from_create_or_decl, NULL);
 }
@@ -14574,9 +14635,10 @@ static void sem_validate_previous_table(ast_node *prev_table) {
   EXTRACT_NAME_AST(name_ast, create_table_name_flags->right);
   EXTRACT_ANY_NOTNULL(col_key_list, ast->right);
 
-  // Tables that are missing from the previous schema have to be validated as well
-  // but using their own rules.  That happens in sem_validate_all_tables_not_in_previous.
-  // Once this flag is set sem_validate_all_tables_not_in_previous won't consider this table.
+  // Tables that are missing from the previous schema have to be validated as
+  // well but using their own rules.  That happens in
+  // sem_validate_all_tables_not_in_previous. Once this flag is set
+  // sem_validate_all_tables_not_in_previous won't consider this table.
   sem_add_flags(ast, SEM_TYPE_VALIDATED);
 
   if (is_table_backed) {
@@ -14612,8 +14674,8 @@ static void sem_validate_previous_table(ast_node *prev_table) {
     }
   }
 
-  // If we're on the @recreate plan then we can make any changes we like to the table
-  // We don't need to check the rest... drop/create works on everything.
+  // If we're on the @recreate plan then we can make any changes we like to the
+  // table We don't need to check the rest... drop/create works on everything.
   if (cur_info.recreate || prev_info.recreate) {
     return;
   }
@@ -14676,8 +14738,8 @@ static void sem_validate_previous_table(ast_node *prev_table) {
 
   // If there are any columns left then they should be only created columns
   // These are new created columns (that's fine and their created version must
-  // be >= the biggest schema version in the previous schema.
-  // It's ok to add more created columns to the current schema.
+  // be >= the biggest schema version in the previous schema. It's ok to add
+  // more created columns to the current schema.
 
   for ( ;item; item = item->right) {
     Contract(is_ast_col_key_list(item));
@@ -14702,8 +14764,9 @@ static void sem_validate_previous_table(ast_node *prev_table) {
       return;
     }
 
-    // The create version will have to be validated against the max version in the previous schema.
-    // We can't do that until the end when we know the max version.
+    // The create version will have to be validated against the max version in
+    // the previous schema. We can't do that until the end when we know the max
+    // version.
     add_item_to_list(&created_columns, cdef);
   }
 
@@ -14772,9 +14835,10 @@ static void sem_validate_previous_table(ast_node *prev_table) {
   enqueue_pending_region_validation(prev_table, ast, name);
 }
 
-// Verison info can be gathered from tables, views, or indices (columns are done seperately)
-// Here we emit a record the annotation with the correct code into the pending annotations buffer
-// this will be later sorted and used to drive schema migration if schema codegen happens.
+// Verison info can be gathered from tables, views, or indices (columns are done
+// seperately) Here we emit a record the annotation with the correct code into
+// the pending annotations buffer this will be later sorted and used to drive
+// schema migration if schema codegen happens.
 static void sem_record_annotation_from_vers_info(version_attrs_info *vers_info) {
   ast_node *target_ast = vers_info->target_ast;
 
@@ -14816,18 +14880,20 @@ static void sem_found_dep_in_trigger(CSTR _Nonnull target_name, ast_node *_Nonnu
   trigger_dep_context *info  = context;
 
   if (StrCaseCmp(info->trigger_on_table_name, target_name)) {
-    // we don't have to record that the trigger depends on the table that it is on
-    // if that table goes away the trigger is implicitly deleted anyway, it would
-    // just give us a bunch of false positives.  It's the other tables that need searching
+    // we don't have to record that the trigger depends on the table that it is
+    // on if that table goes away the trigger is implicitly deleted anyway, it
+    // would just give us a bunch of false positives.  It's the other tables
+    // that need searching
     record_table_dependencies(info->trigger_ast, target_ast);
   }
 }
 
-// Here we peek into the trigger body and find the tables that it uses.
-// We're going to record those so that if a table is unsubscribed we can make sure
-// there are no lingering triggers still using it.  We don't have to worry about views inside
-// the body because if the trigger uses a view and the view uses a table then that view itself
-// will cause an error to be reported if you attempt to unsubscribe the table.
+// Here we peek into the trigger body and find the tables that it uses. We're
+// going to record those so that if a table is unsubscribed we can make sure
+// there are no lingering triggers still using it.  We don't have to worry about
+// views inside the body because if the trigger uses a view and the view uses a
+// table then that view itself will cause an error to be reported if you attempt
+// to unsubscribe the table.
 static void sem_record_trigger_dependencies(ast_node *ast) {
   Contract(is_ast_create_trigger_stmt(ast));
 
@@ -14892,9 +14958,10 @@ static void sem_create_trigger_stmt(ast_node *ast) {
   EXTRACT_ANY(when_expr, trigger_when_stmts->left);
   EXTRACT_NOTNULL(stmt_list, trigger_when_stmts->right);
 
-  // as with many other constructs, if we're validating previous schema it isn't safe to look inside the trigger
-  // body because it likely refers to things that don't exist in the current schema.  This being the case
-  // we just do the previous validation and move on;  Views do the same.
+  // as with many other constructs, if we're validating previous schema it isn't
+  // safe to look inside the trigger body because it likely refers to things
+  // that don't exist in the current schema.  This being the case we just do the
+  // previous validation and move on;  Views do the same.
   if (validating_previous_schema) {
     record_ok(ast);
     sem_validate_previous_trigger(ast);
@@ -14906,10 +14973,10 @@ static void sem_create_trigger_stmt(ast_node *ast) {
   // if there is an existing trigger, save it here so we can check for duplicates later.
   ast_node *existing_defn = adding_current_entity ? find_trigger(trigger_name) : NULL;
 
-  // Trigger declarations (i.e. outside of any proc) are totally ignored
-  // in the context of a schema migration script.  This prevents us from
-  // getting errors because the trigger refers to tables or columns that are not yet
-  // in existence in the version we are migrating.
+  // Trigger declarations (i.e. outside of any proc) are totally ignored in the
+  // context of a schema migration script.  This prevents us from getting errors
+  // because the trigger refers to tables or columns that are not yet in
+  // existence in the version we are migrating.
   if (schema_upgrade_version > 0) {
     record_ok(ast);
     return;

@@ -1873,7 +1873,7 @@ static ast_node *rewrite_out_cursor_declare(
   );
 }
 
-ast_node *rewrite_load_child_keys_from_parent(
+static ast_node *rewrite_load_child_keys_from_parent(
   ast_node *child_results,
   CSTR parent_cursor_name,
   int32_t cursor_num,

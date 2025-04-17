@@ -941,7 +941,7 @@ static CSTR dup_expr_text_buffer(charbuf *tmp, ast_node *expr) {
 }
 
 // create a durable copy of the text of a simple expression
-CSTR dup_expr_text(ast_node *expr) {
+static CSTR dup_expr_text(ast_node *expr) {
   CHARBUF_OPEN(tmp);
   CSTR result = dup_expr_text_buffer(&tmp, expr);
   CHARBUF_CLOSE(tmp);
@@ -1116,8 +1116,10 @@ static ast_node *find_next_unique_key(ast_node *unq_def) {
 // goofy because this smaller key is already unique.
 static bool_t is_unique_key_valid(ast_node *table_ast, ast_node *uk) {
   Contract(is_ast_create_table_stmt(table_ast) && is_ast_unq_def(uk));
+
   EXTRACT_NOTNULL(indexed_columns_conflict_clause, uk->right);
   EXTRACT_NAMED_NOTNULL(indexed_columns1, indexed_columns, indexed_columns_conflict_clause->left);
+
   for (ast_node *unq_def = find_first_unique_key(table_ast); unq_def; unq_def = find_next_unique_key(unq_def)) {
     if (uk == unq_def) {
       break;
@@ -1129,6 +1131,7 @@ static bool_t is_unique_key_valid(ast_node *table_ast, ast_node *uk) {
       return false;
     }
   }
+
   return true;
 }
 
@@ -1986,7 +1989,7 @@ static bool_t add_interface_type(ast_node *ast, CSTR name) {
   return symtab_add(interfaces, name, ast);
 }
 
-ast_node *find_interface_type(CSTR name) {
+static ast_node *find_interface_type(CSTR name) {
   symtab_entry *entry = symtab_find(interfaces, name);
   return entry ? (ast_node*)(entry->val) : NULL;
 }
@@ -10398,7 +10401,7 @@ static void sem_user_func(ast_node *ast, ast_node *user_func) {
 //    | {select_orderby}
 //      | {select_limit}
 //        | {select_offset}
-bool_t is_no_clause_simple_select(ast_node *select_stmt) {
+static bool_t is_no_from_clause_simple_select(ast_node *select_stmt) {
   // accept only if simple select statement (no WITH variants etc.)
   if (is_ast_select_stmt(select_stmt)) {
     EXTRACT_NOTNULL(select_core_list, select_stmt->left);
@@ -10479,7 +10482,7 @@ static void sem_validate_expression_fragment(ast_node *ast, ast_node *proc) {
 
   EXTRACT_ANY_NOTNULL(select_stmt, stmt_list->left);
 
-  if (!is_no_clause_simple_select(select_stmt)) {
+  if (!is_no_from_clause_simple_select(select_stmt)) {
     report_error(ast, "CQL0450: a shared fragment used like a function must be a simple SELECT with no FROM clause", proc_name);
     record_error(ast);
     return;
@@ -12450,7 +12453,7 @@ static void sem_select_no_with(ast_node *ast) {
       // Error: 1st ORDER BY term does not match any column in the result set
       // sqlite> SELECT id FROM t1 UNION SELECT id from t2 ORDER BY t1.id;
       // sqlite>
-      
+
       // ------------------------------------------------------------------------
       // Sqilte produce an error on ORDER BY t1.name because column t1.name is
       // not part of the result set of each compounded SELECT statement. This is
@@ -12702,7 +12705,7 @@ static void sem_explain(ast_node *stmt) {
   // list explicitely the column result there we have to manually build the
   // sem_struct and sem_join that reflex the exact output of EXPLAIN QUERY PLAN
   // [stmt] statement
-  
+
   sem_struct *sptr = new_sem_struct("explain_query", 4);
   sptr->semtypes[0] = SEM_TYPE_INTEGER | SEM_TYPE_NOTNULL;
   sptr->names[0] = "iselectid";
@@ -13822,7 +13825,11 @@ static void sem_validate_previous_trigger(ast_node *prev_trigger) {
 }
 
 // When we locate a table used by a view we simply add that info to the dependency map in both directions
-static void sem_found_dep_in_view(CSTR _Nonnull name, ast_node *_Nonnull target_ast, void *_Nullable context) {
+static void sem_found_dep_in_view(
+  CSTR _Nonnull name,
+  ast_node *_Nonnull target_ast,
+  void *_Nullable context)
+{
   Contract(is_ast_create_table_stmt(target_ast) || is_ast_create_view_stmt(target_ast));
   EXTRACT_NOTNULL(create_view_stmt, context);
 
@@ -16192,7 +16199,7 @@ cleanup:
 // enough to represent an arbitrary LISP program but not totally arbitrary,
 // but it requires no validation beyond syntax!  So we're left with the
 // part that tells us the table shape.
-void sem_create_virtual_table_stmt(ast_node *ast) {
+static void sem_create_virtual_table_stmt(ast_node *ast) {
   Contract(is_ast_create_virtual_table_stmt(ast));
 
   EXTRACT_NOTNULL(module_info, ast->left);
@@ -20403,7 +20410,7 @@ static void sem_validate_one_interface(
   sem_struct *actual_sptr = create_proc_stmt->sem->sptr;
 
   // check the actual and required types, this might recurse
-  return validate_reqd_sptrs(
+  validate_reqd_sptrs(
     proc_name,
     interface_name,
     "procedure",
@@ -23904,7 +23911,7 @@ static void sem_proc_savepoint_stmt(ast_node *ast)
 // that parameter initialization checking becomes useless. There is nothing we
 // can do about that here: We must simply assume the programmer has used it
 // appropriately.
-void sem_find_ast_misc_attr_trycatch_is_proc_body_callback(
+static void sem_find_ast_misc_attr_trycatch_is_proc_body_callback(
   CSTR _Nullable misc_attr_prefix,
   CSTR _Nonnull misc_attr_name,
   ast_node *_Nullable ast_misc_attr_value_list,
@@ -26940,7 +26947,11 @@ typedef struct arg_pattern {
 
 static void sem_parse_arg_pattern(CSTR _Nonnull input, arg_pattern *_Nonnull out);
 
-static bool_t sem_validate_arg_pattern(CSTR type_string, ast_node *ast_call, uint32_t arg_count) {
+static bool_t sem_validate_arg_pattern(
+  CSTR type_string,
+  ast_node *ast_call,
+  uint32_t arg_count)
+{
   Contract(is_ast_call(ast_call));
   EXTRACT_NAME_AST(name_ast, ast_call->left);
   EXTRACT_STRING(name, name_ast);

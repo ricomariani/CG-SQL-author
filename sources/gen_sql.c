@@ -3540,7 +3540,7 @@ static void gen_alter_table_add_column_stmt(ast_node *ast) {
   gen_col_def(col_def);
 }
 
-bool_t eval_if_stmt_callback(ast_node *ast) {
+static bool_t eval_if_stmt_callback(ast_node *ast) {
   Contract(is_ast_if_stmt(ast));
 
   bool_t suppress = 0;

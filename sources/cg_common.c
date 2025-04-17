@@ -164,7 +164,7 @@ cql_noexport int64_t sha256_charbuf(charbuf *input) {
 // See cg_find_first_line for more details on why this is what it is.
 // All that's going on here is we recursively visit the tree and find the smallest
 // line number that matches the given file in that branch.
-int32_t cg_find_first_line_recursive(ast_node *ast, CSTR filename) {
+static int32_t cg_find_first_line_recursive(ast_node *ast, CSTR filename) {
   int32_t line = INT32_MAX;
   int32_t lleft = INT32_MAX;
   int32_t lright = INT32_MAX;

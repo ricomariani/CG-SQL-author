@@ -70,7 +70,7 @@ cql_noexport void print_sem_type(struct sem_node *sem) {}
 #define CURRENT_EXPR_CONTEXT_IS(x)  (!!(current_expr_context & (x)))
 #define CURRENT_EXPR_CONTEXT_IS_NOT(x)  (!(current_expr_context & (x)))
 
-// These let us form bit masks of acceptable types
+// These let us form bit masks of acceptable types for arg validation
 #define SEM_TYPE_MASK_NULL (1 << SEM_TYPE_NULL)          // code n
 #define SEM_TYPE_MASK_BOOL (1 << SEM_TYPE_BOOL)          // code f (flag)
 #define SEM_TYPE_MASK_INT  (1 << SEM_TYPE_INTEGER)       // code i
@@ -26947,6 +26947,34 @@ typedef struct arg_pattern {
 
 static void sem_parse_arg_pattern(CSTR _Nonnull input, arg_pattern *_Nonnull out);
 
+// This function is used to validate the arguments of a function call
+// against a pattern.  The pattern is a string of characters that
+// represent the types of arguments that are expected.  The pattern
+// can contain the following characters:
+//   n - NULL
+//   f - BOOL
+//   i - INT
+//   l - LONG
+//   d - REAL
+//   s - TEXT
+//   b - BLOB
+//   o - OBJECT
+//   [ - start of optional arguments
+//   ] - end of optional arguments
+//   * - optionally repeat the argument types in the group
+//
+// e.g. i,[filds,*]
+// means that the first argument is an INT, the second argument is
+// optional and can be a BOOL, INT, LONG, REAL, TEXT, BLOB or OBJECT
+// and it can repeat
+//
+// What we'll do is first parse the pattern into a simple struct
+// then we validate that the count can match the pattern, it has to
+// have the minimum number and if there is a repeating block
+// the entire block must be present and integral number of types
+//
+// Once the counts are verified it's easy to walk the pattern in order
+// and rewind when we find a '*'
 static bool_t sem_validate_arg_pattern(
   CSTR type_string,
   ast_node *ast_call,

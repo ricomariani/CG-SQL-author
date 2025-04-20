@@ -23511,14 +23511,13 @@ static void sem_proc_call_post_check(CSTR name, ast_node *ast, ast_node *arg_lis
 // The fetch statement has two forms:
 //   * fetch C into var1, var2, var3 etc.
 //   * fetch C;
-// The second form is called the auto_cursor.
-// In the first form the variables of the cursor must be assignment compatible
-// with declared structure type of the cursor and the count must be correct.
-// In the second form, the codegen will implicitly create local variables that
-// are exactly the correct type, but that's later.  Since no semantic error is
-// possible in that case we simply record that this is an auto_cursor and then
-// later we will allow the use of C.field during analysis.
-// Of course "C" must be a valid cursor.
+// The second form is called the auto_cursor. In the first form the variables of
+// the cursor must be assignment compatible with declared structure type of the
+// cursor and the count must be correct. In the second form, the codegen will
+// implicitly create local variables that are exactly the correct type, but
+// that's later.  Since no semantic error is possible in that case we simply
+// record that this is an auto_cursor and then later we will allow the use of
+// C.field during analysis. Of course "C" must be a valid cursor.
 static void sem_fetch_stmt(ast_node *ast) {
   Contract(is_ast_fetch_stmt(ast));
   EXTRACT_ANY_NOTNULL(cursor, ast->left);
@@ -23650,9 +23649,9 @@ static void sem_fetch_stmt(ast_node *ast) {
   }
 
   // Tag the cursor *variable* (i.e. the AST from the original definition site
-  // of the cursor) with FETCH_INTO. This is necessary because we need to
-  // have this information available during codegen before we see that the
-  // cursor was used in a fetch.  So we leave this breadcrumb.
+  // of the cursor) with FETCH_INTO. This is necessary because we need to have
+  // this information available during codegen before we see that the cursor was
+  // used in a fetch.  So we leave this breadcrumb.
 
   ast_node *cursor_var = find_local_or_global_variable(cursor->sem->name);
   Invariant(cursor_var);
@@ -23662,8 +23661,9 @@ static void sem_fetch_stmt(ast_node *ast) {
   ast->sem = cursor_var->sem;
 }
 
-// In this form we're working on a cursor that is going to be loaded by making a call.  This call statement
-// must be using the OUT statement and its OUT value must exactly match the shape of the target cursor.
+// In this form we're working on a cursor that is going to be loaded by making a
+// call.  This call statement must be using the OUT statement and its OUT value
+// must exactly match the shape of the target cursor.
 static void sem_fetch_call_stmt(ast_node *ast) {
   Contract(is_ast_fetch_call_stmt(ast));
   Contract(is_ast_call_stmt(ast->right));
@@ -23703,9 +23703,9 @@ static void sem_fetch_call_stmt(ast_node *ast) {
   record_ok(ast);
 }
 
-// Fetch the next statement assuming we're on a statement
-// this is only tricky because the parent node might not be a statement
-// list due to the way attributes on statements work.
+// Fetch the next statement assuming we're on a statement this is only tricky
+// because the parent node might not be a statement list due to the way
+// attributes on statements work.
 static ast_node *get_next_stmt(ast_node *ast) {
   ast_node *parent = ast->parent;
 
@@ -23718,8 +23718,8 @@ static ast_node *get_next_stmt(ast_node *ast) {
   return stmt_list->right;
 }
 
-// Some of the control flow statements like LEAVE, CONTINUE, and RETURN should have nothing
-// after them.  This handles those cases in a uniform way.
+// Some of the control flow statements like LEAVE, CONTINUE, and RETURN should
+// have nothing after them.  This handles those cases in a uniform way.
 static void sem_last_statement_in_block(ast_node *ast) {
   if (get_next_stmt(ast)) {
     report_error(ast, "CQL0308: statement should be the last thing in a statement list", NULL);
@@ -23783,8 +23783,8 @@ static void sem_return_common(ast_node *ast) {
   sem_last_statement_in_block(ast);
 }
 
-// The usual return rules plus a return statement may not appear inside of a proc savepoint
-// you have to use either rollback or commit return.
+// The usual return rules plus a return statement may not appear inside of a
+// proc savepoint you have to use either rollback or commit return.
 static void sem_return_stmt(ast_node *ast) {
   if (in_proc_savepoint) {
     report_error(ast, "CQL0352: use COMMIT RETURN or ROLLBACK RETURN in within a proc savepoint block", NULL);
@@ -23856,22 +23856,22 @@ static void sem_proc_savepoint_stmt(ast_node *ast)
   record_ok(ast);
 }
 
-// If [[try_is_proc_body]] is present, performs additional analysis
-// using the try/catch AST provided as `context` such that the statement list of
-// the TRY is treated as though it were the main body of the procedure. In
-// particular, it ensures that all parameters of the current procedure have been
-// initialized by the end of the TRY and prevents `sem_inside_create_proc_stmt`
-// from later doing the same at the end of the procedure.
+// If [[try_is_proc_body]] is present, performs additional analysis using the
+// try/catch AST provided as `context` such that the statement list of the TRY
+// is treated as though it were the main body of the procedure. In particular,
+// it ensures that all parameters of the current procedure have been initialized
+// by the end of the TRY and prevents `sem_inside_create_proc_stmt` from later
+// doing the same at the end of the procedure.
 //
-// The reason why [[try_is_proc_body]] is needed is that users, for
-// various reasons, sometimes need to wrap certain stored procedures in a
-// try/catch such that custom error handling or logging can be implemented. In
-// doing so, however, they break our assumptions about things like
-// initialization of OUT parameters: We normally enforce that parameters must be
-// initialized by the end of a procedure, but, if the procedure is wrapped in a
-// try/catch so that the CATCH can help perform some custom error reporting
-// (e.g., log the error and then rethrow the exception), any initialization
-// improvements made in the TRY will be unset at the end of the procedure.
+// The reason why [[try_is_proc_body]] is needed is that users, for various
+// reasons, sometimes need to wrap certain stored procedures in a try/catch such
+// that custom error handling or logging can be implemented. In doing so,
+// however, they break our assumptions about things like initialization of OUT
+// parameters: We normally enforce that parameters must be initialized by the
+// end of a procedure, but, if the procedure is wrapped in a try/catch so that
+// the CATCH can help perform some custom error reporting (e.g., log the error
+// and then rethrow the exception), any initialization improvements made in the
+// TRY will be unset at the end of the procedure.
 //
 // A somewhat contrived example use case for this is as follows:
 /*
@@ -23907,10 +23907,9 @@ static void sem_proc_savepoint_stmt(ast_node *ast)
 // within what is, conceptually, the main body of the procedure (i.e., the TRY)
 // and then not worry about it later on.
 //
-// NOTE: It is very possible to misuse [[try_is_proc_body]] such
-// that parameter initialization checking becomes useless. There is nothing we
-// can do about that here: We must simply assume the programmer has used it
-// appropriately.
+// NOTE: It is very possible to misuse [[try_is_proc_body]] such that parameter
+// initialization checking becomes useless. There is nothing we can do about
+// that here: We must simply assume the programmer has used it appropriately.
 static void sem_find_ast_misc_attr_trycatch_is_proc_body_callback(
   CSTR _Nullable misc_attr_prefix,
   CSTR _Nonnull misc_attr_name,
@@ -24026,8 +24025,8 @@ static void sem_throw_stmt(ast_node *ast) {
   Contract(is_ast_throw_stmt(ast));
 
   // "throw" implies that we have a return code which implies all of the proc
-  // things as surely as if we had used the database.  We need to be a proc
-  // with a result code.
+  // things as surely as if we had used the database.  We need to be a proc with
+  // a result code.
   has_dml = 1;
 
   // ok to throw at the end of any block
@@ -24056,9 +24055,9 @@ static void sem_commit_trans_stmt(ast_node *ast) {
   sem_verify_transaction_ok(ast);
 }
 
-// Rollback trans can go anywhere but if you're using the format
-// where you rollback to a particular save point then we must have
-// seen that name in a savepoint statement or it's an error.
+// Rollback trans can go anywhere but if you're using the format where you
+// rollback to a particular save point then we must have seen that name in a
+// savepoint statement or it's an error.
 static void sem_rollback_trans_stmt(ast_node *ast) {
   Contract(is_ast_rollback_trans_stmt(ast));
 
@@ -24084,8 +24083,8 @@ static void sem_savepoint_stmt(ast_node *ast) {
 
   EXTRACT_STRING(name, ast->left);
 
-  // these don't have lexical semantics but at least we can verify that
-  // you don't try to release or rollback to a savepoint we've never seen before
+  // these don't have lexical semantics but at least we can verify that you
+  // don't try to release or rollback to a savepoint we've never seen before
   symtab_add(savepoints, name, ast);  // if already exits, no problem.
 
   record_ok(ast);
@@ -24388,7 +24387,9 @@ static void sem_previous_schema_stmt(ast_node *ast) {
 
   validating_previous_schema = true;
   reset_enforcements();
-  enforcement.strict_cast = false;  // this is normally on by default, we want no strict in previous schema
+
+  // this is normally on by default, we want no strict in previous schema
+  enforcement.strict_cast = false;
 
   // we're entering the previous schema section, the regions will be redeclared.
   // later we'll want to validate against these;  we have to save the current
@@ -24438,9 +24439,9 @@ static void sem_schema_upgrade_script_stmt(ast_node *ast) {
   record_ok(ast);
 }
 
-// For sql stored procs that are supposed to update previous schema versions
-// you can use this attribute to put CQL into that mindset.  This will make
-// the columns deleted for the version in question rather than the current version.
+// For sql stored procs that are supposed to update previous schema versions you
+// can use this attribute to put CQL into that mindset.  This will make the
+// columns deleted for the version in question rather than the current version.
 // This is important because older schema migration procs might still refer to
 // old columns.  Those columns truly exist at that schema version.
 static void sem_schema_upgrade_version_stmt(ast_node *ast) {
@@ -24591,11 +24592,12 @@ static void sem_declare_out_call_stmt(ast_node *ast) {
     return;
   }
 
-  // Now we have to do a final swizzle, we want the call to have the IMPLICIT flag
-  // on the variable usages just as we set up above, but we only want *this* call
-  // to have them.  The flag must now be removed from the actual variables.  So we
-  // do the walk the code generator is going to do but sort of in reverse... we're
-  // wanting variables to undecorate.  The IMPLICIT bits are the bread crumbs we need.
+  // Now we have to do a final swizzle, we want the call to have the IMPLICIT
+  // flag on the variable usages just as we set up above, but we only want
+  // *this* call to have them.  The flag must now be removed from the actual
+  // variables.  So we do the walk the code generator is going to do but sort of
+  // in reverse... we're wanting variables to undecorate.  The IMPLICIT bits are
+  // the bread crumbs we need.
 
   arg_list = call_stmt->right;
 
@@ -24620,8 +24622,8 @@ static void sem_declare_out_call_stmt(ast_node *ast) {
 
 // This is the main entry point for any kind of statement.  When we don't know
 // what the statement is yet (such as we're walking a statement list) this will
-// dispatch to the correct method.  Also, the top level statement captures
-// any errors.
+// dispatch to the correct method.  Also, the top level statement captures any
+// errors.
 cql_noexport void sem_one_stmt(ast_node *stmt) {
   CHARBUF_OPEN(errbuf);
   bool_t capture_now = options.print_ast && error_capture == NULL;
@@ -24632,6 +24634,7 @@ cql_noexport void sem_one_stmt(ast_node *stmt) {
 
   ast_node *stmt_and_attr = NULL;
   bool_t error = false;
+
   // We need to validate attributions of a statement, such as cql:ok_table_scan
   // or cql:no_table_scan which can only appear on a specific type of stmt.
   // We also need to do basic validation of the attributes, in case of const expressions.
@@ -24855,8 +24858,8 @@ recurse:
       //   END;
       //
       // NOTE: We create another jump context here, but a normal context would
-      // work just as well because any improvements in effect before the loop that
-      // needed to be unset to ensure safety were already unset above.
+      // work just as well because any improvements in effect before the loop
+      // that needed to be unset to ensure safety were already unset above.
       FLOW_PUSH_CONTEXT_JUMP();
       if (true_expr) {
         sem_set_improvements_for_true_condition(true_expr);
@@ -24878,8 +24881,8 @@ cleanup:
 static void sem_expr_num(ast_node *ast, CSTR cstr) {
   Contract(is_ast_num(ast));
 
-  // we've processed this node before, we want to save the type kind
-  // if there is one from previous constant folding
+  // we've processed this node before, we want to save the type kind if there is
+  // one from previous constant folding
   if (ast->sem) {
     return;
   }
@@ -24940,13 +24943,15 @@ static void sem_expr_null(ast_node *ast, CSTR cstr) {
   ast->sem = new_sem(SEM_TYPE_NULL);
 }
 
-// The dot transform is the last chance for a valid expression
-// at this point.  That means we need 1) a valid left side, and
-// 2) a property that has a mapping to a function.  If any of
-// this fails we will mark the expression as an error.
-// The way this is going to work is if the transform is an option
-// we will try it. If there is no mapping the transform will produce
-// an meaningful error when evaluation proceeds.
+// The dot transform is the last chance for a valid expression at this point.
+// That means we need:
+// 1) a valid left side, and
+// 2) a property that has a mapping to a function.
+//
+// If any of this fails we will mark the expression as an error. The way this is
+// going to work is if the transform is an option we will try it. If there is no
+// mapping the transform will produce an meaningful error when evaluation
+// proceeds.
 static void sem_validate_dot_transform(ast_node *ast, CSTR op) {
   Contract(is_ast_dot(ast));
   Contract(is_id(ast->right));
@@ -24977,10 +24982,9 @@ static void sem_expr_dot(ast_node *ast, CSTR cstr) {
   EXTRACT_ANY_NOTNULL(expr, ast->left);
   EXTRACT_STRING(name, ast->right);
 
-  // if this is normal name syntax we have to first see
-  // if this resolves in the usual way.  This unfortunately
-  // means that we get two lookups.  We can do better than
-  // this but keeping it simple for now.
+  // if this is normal name syntax we have to first see if this resolves in the
+  // usual way.  This unfortunately means that we get two lookups.  We can do
+  // better than this but keeping it simple for now.
   if (is_id(expr)) {
     EXTRACT_STRING(scope, expr);
     // if we can resolve it the usual way then do
@@ -25002,29 +25006,22 @@ static void sem_expr_dot(ast_node *ast, CSTR cstr) {
   }
 }
 
-// This function is used to detect the pattern that leaks memory on SQLite.
-// The context is an INSERT statement that is using a SELECT for its data
-// the patterns detected that might leak are:
-//   insert X
-//     select * from X join Y
+// This function is used to detect the pattern that leaks memory on SQLite. The
+// context is an INSERT statement that is using a SELECT for its data the
+// patterns detected that might leak are: insert X select * from X join Y
 //
-//   insert X
-//     select * from X
-//     union all
-//     select * from Y
+//   insert X select * from X union all select * from Y
 //
 // The error tells you to replace these with something like
 //
-//   with cte(*) as (select * from X join Y)
-//     insert X select * from cte;
+//   with cte(*) as (select * from X join Y) insert X select * from cte;
 //
-// The idea is that the select that forms the insert cannot have a top level operand
-// like join or union.  But you can nest one without problem.
+// The idea is that the select that forms the insert cannot have a top level
+// operand like join or union.  But you can nest one without problem.
 //
 // Also ok:
 //
-//   insert X
-//     select * from (select * from X join Y)
+//   insert X select * from (select * from X join Y)
 //
 // So here we look at the various select forms:
 //   * explain form -> can't happen
@@ -25082,8 +25079,12 @@ static bool_t sem_select_stmt_is_mixed_results(ast_node *ast) {
   return is_ast_join_clause(query_parts);
 }
 
-// helper function to check if a select expression with a built-in aggregate function will always return a row
-static bool_t sem_check_aggregate_select_expr_must_return_a_row(ast_node *ast, ast_node *select_where) {
+// helper function to check if a select expression with a built-in aggregate
+// function will always return a row
+static bool_t sem_check_aggregate_select_expr_must_return_a_row(
+  ast_node *ast,
+  ast_node *select_where)
+{
   Contract(is_ast_select_stmt(ast));
   Contract(is_ast_select_where(select_where));
 
@@ -25096,13 +25097,14 @@ static bool_t sem_check_aggregate_select_expr_must_return_a_row(ast_node *ast, a
   EXTRACT_NOTNULL(select_offset, select_limit->right);
   EXTRACT(opt_offset, select_offset->left);
 
-  // Assume any OFFSET or GROUP BY clause may lead to aggregation not return a row. OFFSETs with constant of 0 or less
-  // are no-ops, but won't be considered
+  // Assume any OFFSET or GROUP BY clause may lead to aggregation not return a
+  // row. OFFSETs with constant of 0 or less are no-ops, but won't be considered
   if (is_ast_opt_offset(opt_offset) || is_ast_opt_groupby(opt_groupby)) {
     return false;
   }
 
-  // When LIMIT is used, if it cannot evaluate to a positive constant, then it might not return a row
+  // When LIMIT is used, if it cannot evaluate to a positive constant, then it
+  // might not return a row
   if (!opt_limit) {
     // Short circuit and allow error handling to kick in elsewhere
     return true;
@@ -25123,12 +25125,13 @@ static bool_t sem_check_aggregate_select_expr_must_return_a_row(ast_node *ast, a
   return true;
 }
 
-// Only for use in (select expr ...) so there is known to be exactly one item in the
-// select list.  This tells us if there is some way we can know that there will be
-// a row for sure in such an expression.  There are assorted special cases that are
-// helpful to handle such as:
-//   there is no FROM and no WHERE  e.g. (select 1)
-//   the select list is only COUNT or TOTAL e.g. (select count(*) from somewhere)
+// Only for use in (select expr ...) so there is known to be exactly one item in
+// the select list.  This tells us if there is some way we can know that there
+// will be a row for sure in such an expression.  There are assorted special
+// cases that are helpful to handle such as:
+//   * there is no FROM and no WHERE  e.g. (select 1)
+//   * the select list is only COUNT or TOTAL e.g. (select count(*) from foo)
+//
 // anything that looks complicated -> we assume it might not return rows
 static bool_t sem_select_expr_must_return_a_row(ast_node *ast) {
   // we only handle simple select forms, WITH etc. are assumed to be complex
@@ -25156,11 +25159,12 @@ static bool_t sem_select_expr_must_return_a_row(ast_node *ast) {
   }
 
   // No query_parts and opt_where means there is no FROM/WHERE clause, so the
-  // result can't be nullable due to zero rows.  It might be nullable for other
+  // result can't be nullable due to zero rows. It might be nullable for other
   // reasons already computed so the flag bit just stays
 
-  // note (SELECT EXISTS(whatever)) will fall into this form because there is
-  // no top level from or where clause.  Also exists isn't a proc call so it's not the next case
+  // note (SELECT EXISTS(whatever)) will fall into this form because there is no
+  // top level from or where clause.  Also exists isn't a proc call so it's not
+  // the next case
 
   if (!query_parts && !opt_where) {
     return true;
@@ -25196,8 +25200,8 @@ static bool_t sem_select_expr_must_return_a_row(ast_node *ast) {
     return sem_check_aggregate_select_expr_must_return_a_row(ast, select_where);;
   }
 
-  // min and max are aggregate functions if they have exactly one argument, they are scalar functions if they have two
-  // or more arguments
+  // min and max are aggregate functions if they have exactly one argument, they
+  // are scalar functions if they have two or more arguments
   if (
     !StrCaseCmp("max", name) ||
     !StrCaseCmp("min", name)
@@ -25246,13 +25250,12 @@ static void sem_expr_select(ast_node *ast, CSTR cstr) {
     return;
   }
 
-  // For purposes of testing "strict if nothing", a select on the left side of the if nothing
-  // operator is in an if nothing context  but the right side is not in an if nothing context.
-  //  e.g.
-  // in (select foo from bar if nothing (select baz)) the (select baz) is not in an
-  // if nothing context and hence would generate an error if "strict if nothing" is on.
-  // Inside of SQL is ok in all cases
-  // Trivial selects (e.g. (select <expr>)) are always ok
+  // For purposes of testing "strict if nothing", a select on the left side of
+  // the if nothing operator is in an if nothing context  but the right side is
+  // not in an if nothing context. e.g. in (select foo from bar if nothing
+  // (select baz)) the (select baz) is not in an if nothing context and hence
+  // would generate an error if "strict if nothing" is on. Inside of SQL is ok
+  // in all cases trivial selects (e.g. (select <expr>)) are always ok
 
   bool_t invalid_select  =
     enforcement.strict_if_nothing &&
@@ -25280,9 +25283,8 @@ static void sem_expr_select(ast_node *ast, CSTR cstr) {
   bool_t remove_notnull = 1;
 
   if (current_expr_context == SEM_EXPR_CONTEXT_NONE) {
-    // In a non-sql context (e.g. set x := (select 1); )
-    // a row is expected or there is an exception.
-    // So no need to remove nullability there.
+    // In a non-sql context (e.g. set x := (select 1); ) A row is expected or
+    // there is an exception. So no need to remove nullability there.
     remove_notnull = 0;
   }
   else if (sem_select_expr_must_return_a_row(ast)) {
@@ -25290,7 +25292,9 @@ static void sem_expr_select(ast_node *ast, CSTR cstr) {
     //  * no where clause
     //  * no from clause
     //  * select list uses only exists or count
-    // in those cases zero rows isn't an option so we don't have to concern ourselves removing nullability
+    //
+    // in those cases zero rows isn't an option so we don't have to concern
+    // ourselves removing nullability
     remove_notnull = 0;
   }
 
@@ -25302,7 +25306,8 @@ static void sem_expr_select(ast_node *ast, CSTR cstr) {
      return;
   }
 
-  // and boom remove the bit if we're supposed to remove it (most times except the above exceptions)
+  // and boom remove the bit if we're supposed to remove it (most times except
+  // the above exceptions)
   if (remove_notnull) {
     sem_type &= sem_not(SEM_TYPE_NOTNULL);
   }
@@ -25312,10 +25317,10 @@ static void sem_expr_select(ast_node *ast, CSTR cstr) {
   ast->sem->kind = sptr->kinds[0];
 }
 
-// If nothing throw is exactly the same as a normal select expr
-// the only difference is that it is legal inside of strict select if nothing
-// because the user has made the throw explicit so they're saying they
-// know it's gonna throw and that's ok.
+// If nothing throw is exactly the same as a normal `select expr` the only
+// difference is that it is legal inside of strict select if nothing because the
+// user has made the throw explicit so they're saying they know it's gonna throw
+// and that's ok.
 static void sem_expr_select_if_nothing_throw(ast_node *ast, CSTR op) {
   Contract(is_ast_select_if_nothing_throw_expr(ast));
   EXTRACT_ANY_NOTNULL(select_expr, ast->left);
@@ -25449,12 +25454,12 @@ static void sem_validate_old_object_or_marked_create(ast_node *root, ast_node *a
   report_and_capture_error(root, ast, err_msg, name);
 }
 
-// At this point all processing of input is complete.  So now we walk all the tables
-// that left the @recreate plan and make sure they entered the strong plan at the right
-// version number.
+// At this point all processing of input is complete.  So now we walk all the
+// tables that left the @recreate plan and make sure they entered the strong
+// plan at the right version number.
 //
-// Note: this processing does not happen in the context of a statement
-// so we have to do our own error capture logic.
+// Note: this processing does not happen in the context of a statement so we
+// have to do our own error capture logic.
 static void sem_validate_all_prev_recreate_tables(ast_node *root) {
   CHARBUF_OPEN(err_msg);
   bprintf(&err_msg, "CQL0399: table must leave @recreate management with @create(%d) or later", max_previous_schema_version);
@@ -25476,10 +25481,11 @@ static void sem_validate_all_prev_recreate_tables(ast_node *root) {
 // * the object was created at a late enough version
 // * or, the object was deleted at a late enough version
 //
-// Note: if it's both we will have previously validated that the versions are compatible with each other
+// Note: if it's both we will have previously validated that the versions are
+// compatible with each other
 //
-// Note: this processing does not happen in the context of a statement
-// so we have to do our own error capture logic.
+// Note: this processing does not happen in the context of a statement so we
+// have to do our own error capture logic.
 static void sem_validate_marked_create_or_delete(ast_node *root, ast_node *ast, CSTR err_msg, CSTR name) {
   Contract(root);
   Contract(ast);
@@ -25499,8 +25505,9 @@ static void sem_validate_marked_create_or_delete(ast_node *root, ast_node *ast, 
 
 // At this point all processing of input is complete.  So now we walk all the
 // created columns.
-// Note: this processing does not happen in the context of a statement
-// so we have to do our own error capture logic.
+//
+// Note: this processing does not happen in the context of a statement so we
+// have to do our own error capture logic.
 static void sem_validate_all_columns_not_in_previous(ast_node *root) {
   CHARBUF_OPEN(err_msg);
   bprintf(&err_msg, "CQL0310: new column must be added with @create(%d) or later", max_previous_schema_version);
@@ -25519,6 +25526,8 @@ static void sem_validate_all_columns_not_in_previous(ast_node *root) {
   CHARBUF_CLOSE(err_msg);
 }
 
+// Based on the AST encoding, we set or clear the right flag in the enforcement
+// options.
 static void sem_enforcement_options(ast_node *ast, bool_t strict) {
   EXTRACT_OPTION(option, ast);
 
@@ -25591,13 +25600,13 @@ static void sem_enforcement_options(ast_node *ast, bool_t strict) {
   }
 }
 
-// At this point all processing of input is complete.  So now we walk all the ad hoc rules
-// that we ever saw and visit any that have not already been validated.  This is
-// the set of rules not present in the previous schema.  All of these must be
-// marked at the most recent version.
+// At this point all processing of input is complete.  So now we walk all the ad
+// hoc rules that we ever saw and visit any that have not already been
+// validated.  This is the set of rules not present in the previous schema.  All
+// of these must be marked at the most recent version.
 //
-// Note: this processing does not happen in the context of a statement
-// so we have to do our own error capture logic.
+// Note: this processing does not happen in the context of a statement so we
+// have to do our own error capture logic.
 static void sem_validate_all_ad_hoc_not_in_previous(ast_node *root) {
   CHARBUF_OPEN(err_msg);
   bprintf(&err_msg, "new ad hoc rule must be added at version %d or later", max_previous_schema_version);
@@ -25679,8 +25688,8 @@ static bool_t verify_schema_region_out_of_proc(ast_node *ast) {
 }
 
 
-// Checks to see if a given region has any links that peek into the middle of an owned
-// Section; these are illegal
+// Checks to see if a given region has any links that peek into the middle of an
+// owned section; these are illegal
 static void sem_validate_region_links(ast_node *ast) {
   Contract(is_region(ast));
   EXTRACT_STRING(name, ast->left);
@@ -25712,11 +25721,10 @@ static void sem_validate_region_links(ast_node *ast) {
   }
 }
 
-// A schema region is an partitioning of the schema such that it
-// only uses objects in the same partition or one of its declared
-// dependencies.  One schema region may be upgraded independently
-// from any others (assuming they happen such that dependents are done first).
-// Here we validate:
+// A schema region is an partitioning of the schema such that it only uses
+// objects in the same partition or one of its declared dependencies.  One
+// schema region may be upgraded independently from any others (assuming they
+// happen such that dependents are done first). Here we validate:
 //  * the region name is unique
 //  * the dependencies (if any) are unique and exist
 static void sem_declare_schema_region_stmt(ast_node *ast) {
@@ -25761,14 +25769,14 @@ static void sem_declare_schema_region_stmt(ast_node *ast) {
   ast->sem = new_sem(sem_type);
   ast->sem->name = name;
 
-  // note that regions get a slightly different treatment when in previous schema
-  // validation mode.  Most entites are not added to the name tables at all
-  // we check it as we visit it and then move on;   We can't do that with regions
-  // because they are used by later things and the "new" regions (before the @previous_schema
-  // marker) might be very different. We need the "old" regions to calculate the
-  // old deployment regions and make sure they haven't changed.  So we can't just
-  // check them and move on like we do with other stuff.  At the end we'll have
-  // two symbol tables
+  // note that regions get a slightly different treatment when in previous
+  // schema validation mode.  Most entites are not added to the name tables at
+  // all we check it as we visit it and then move on;   We can't do that with
+  // regions because they are used by later things and the "new" regions (before
+  // the @previous_schema marker) might be very different. We need the "old"
+  // regions to calculate the old deployment regions and make sure they haven't
+  // changed.  So we can't just check them and move on like we do with other
+  // stuff.  At the end we'll have two symbol tables
 
   bool_t adding_current_entity = will_add_current_entity();
 
@@ -26352,6 +26360,12 @@ static void sem_emit_constants_stmt(ast_node *ast) {
   record_ok(ast);
 }
 
+// for query plans, some versions of SQLite do not include the table name in the
+// explain output if it was aliased.  e.g.  select * from foo T; will refer to
+// 'T' and not 'foo'.  This is less useful.  Setting this flag will cause us to
+// rename the table aliases to include the table name. that is, T becomes
+// `[TABLE table_name AS alias_name]`.  The explain output is then a bit more
+// useful.
 static void sem_keep_table_name_in_aliases_stmt(ast_node *ast) {
   Contract(is_ast_keep_table_name_in_aliases_stmt(ast));
   record_ok(ast);
@@ -26359,20 +26373,26 @@ static void sem_keep_table_name_in_aliases_stmt(ast_node *ast) {
   keep_table_name_in_aliases = 1;
 }
 
-// Add a special sem node to a string node to represent an "override" of the original string value.
-// This is currently used only for overriding table name aliases for better explain query plan analysis.
-static void insert_table_alias_string_overide(ast_node *_Nonnull ast, CSTR _Nonnull table_name) {
+// Add a special sem node to a string node to represent an "override" of the
+// original string value. This is currently used only for overriding table name
+// aliases for better explain query plan analysis.
+static void insert_table_alias_string_overide(
+  ast_node *_Nonnull ast,
+  CSTR _Nonnull table_name)
+{
   Contract(keep_table_name_in_aliases);
   Contract(is_ast_str(ast));
   EXTRACT_STRING(original_alias, ast);
 
-  // Don't do this renaming if the underlying construct isn't a table (e.g. a CTE instead).
+  // Don't do this renaming if the underlying construct isn't a table (e.g. a
+  // CTE instead).
   ast_node *table_ast = find_table_or_view_even_deleted(table_name);
   if (!table_ast) {
     return;
   }
 
-  // attemping to alias this table just makes it not work, you can't rename this virtual table
+  // attemping to alias this table just makes it not work, you can't rename this
+  // virtual table
   if (!strcmp(original_alias, "excluded")) {
     return;
   }
@@ -26404,7 +26424,8 @@ static void insert_table_alias_string_overide(ast_node *_Nonnull ast, CSTR _Nonn
   ast->sem = new_alias_sem;
 }
 
-// Return value of special sem node inserted by insert_table_alias_string_overide.
+// Return value of special sem node inserted by
+// insert_table_alias_string_overide.
 cql_noexport CSTR get_inserted_table_alias_string_override(ast_node *_Nonnull ast) {
   if (!ast->left->sem) {
     return NULL;
@@ -26415,7 +26436,11 @@ cql_noexport CSTR get_inserted_table_alias_string_override(ast_node *_Nonnull as
 
 // Helper for doing series of potential rewrites on column_values node for
 // update and update cursor statements.
-static void rewrite_column_values_for_update_stmts(ast_node *_Nonnull ast, ast_node *_Nonnull columns_values, sem_struct *sptr) {
+static void rewrite_column_values_for_update_stmts(
+  ast_node *_Nonnull ast,
+  ast_node *_Nonnull columns_values,
+  sem_struct *sptr)
+{
   // Any parent ast node to attach sem_err if needed.
   Contract(ast);
   // columns_values ast node to validate and rewrite
@@ -27065,6 +27090,12 @@ static bool_t sem_validate_arg_pattern(
   return true;
 }
 
+// This function parses the argument pattern string into a struct
+// that can be used to validate the arguments of a function call.
+// The pattern is validated here via Contract.  The resulting pattern
+// compiled pattern can be easily used with bitmask matching to
+// validate the various types.  The count of arguments is also readily
+// available for validation.
 static void sem_parse_arg_pattern(CSTR input, arg_pattern *out) {
    Contract(out);
    int16_t item = 0;

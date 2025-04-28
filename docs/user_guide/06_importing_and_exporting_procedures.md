@@ -107,11 +107,14 @@ created by adding something like `--generate_exports` to the command
 line. This will require an additional file name to be passed in the `--cg`
 portion to capture the exports.
 
-That file can then be used with `#include` when you combine the C
-pre-processor with CQL as is normally done.
+That file can then be referenced `@include` to add the declarations to the input
+stream. And of course these could be combined into useful units so that you
+don't have to name each include file individually every time.  Note that any
+given `@include` is processed exactly once, a second attempt to include the same
+file is disregarded.
 
 Nomenclature is perhaps a bit weird here.  You use `--generate_exports` to export
-the stored procedure declarations from the translation units.  Of course those
+the stored procedure declarations from a translation unit.  Of course those
 exported symbols are what you then import in some other module.  Sometimes this
 output file is called `foo_imports.sql` because those exports are of course exactly
 what you need to import `foo`.  You can use whatever convention you like of course,
@@ -125,7 +128,7 @@ Using the pre-processor you can get declarations from elsewhere with
 a directive like this:
 
 ```
-#include "foo_imports.sql"
+@include "foo_imports.sql"
 ```
 
 ### Declaration Examples

@@ -4980,7 +4980,7 @@ The error output contains the full text of both declarations to compare.
 The indicated name was used in a context where a variable group name was
 expected but there is no such group.
 
-Perhaps the group was not included (missing an #include) or else there is a
+Perhaps the group was not included (missing an @include) or else there is a
 typo.
 
 -----

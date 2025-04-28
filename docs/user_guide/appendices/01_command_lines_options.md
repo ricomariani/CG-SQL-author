@@ -127,9 +127,6 @@ cql --in test.sql --nolines --cg foo.h foo.c
 * if this option is used, the first argment to --cg controls only the output path and does not appear in include path at all
 * this form overrides --c_include_namespace if both are specified
 
-### --objc_c_include_path
-* for ObjC codegen runtimes that need to refer to the generated C code, this represents the header of the C generated code that will be used during inclusion from the ObjC file
-
 ### Result Types (--rt *)
 
 These are the various outputs the compiler can produce.
@@ -155,11 +152,6 @@ These are the various outputs the compiler can produce.
 #### --rt lua
 * requires one output file (foo.lua)
 * this is the standard Lua compilation of the sql file
-
-#### --rt objc
-* objective C wrappers for result sets produced by the stored procedures in the input
-* these depend on the output of a standard codegen run so this is additive
-* requires one output file (foo.h)
 
 #### --rt schema
 * produces the canonical schema for the given input files

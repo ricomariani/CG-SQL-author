@@ -1362,7 +1362,7 @@ declare obj object<T cursor>;
 
 Where `T` is the name of a shape. It can be a table name, or a view name, or it
 can be the name of the canonical procedure that returns the result.  T should be
-some kind of global name, something that could be accessed with `#include` in
+some kind of global name, something that could be accessed with `@include` in
 various places.  Referring to the examples above, choices for `T` might be
 `shape_source` the table or `proc_that_returns_a_shape` the procedure.
 

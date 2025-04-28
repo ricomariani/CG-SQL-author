@@ -24,8 +24,6 @@ And with no further delay, CQL in 20 minutes...
 
 /* C style comments also work
  *
- * C pre-processor features like #include and #define are generally available
- * CQL is typically run through the C pre-processor before it is compile.
  */
 ```
 

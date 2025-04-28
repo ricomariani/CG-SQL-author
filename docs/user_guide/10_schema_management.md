@@ -1044,7 +1044,7 @@ end;
 With the structure above specified, even if a new contribution to the
 `root` schema appears later, the rules enforce that this region cannot
 refer to anything other than things in `root`.  This can be very important
-if schema is being included via `#include` and might get pulled into
+if schema is being included via `@include` and might get pulled into
 the compilation in various orders.  A feature area might also have a
 named public region that others things can depend on (e.g. some views)
 and private regions (e.g. some tables, or whatever).

@@ -83,13 +83,13 @@ maintainable way, like so:
 
 ```sql
 -- prev_check.sql
-#include "table1.sql"
-#include "table2.sql"
-#include "table3.sql"
+@include "table1.sql"
+@include "table2.sql"
+@include "table3.sql"
 
 @previous_schema;
 
-#include "previous.sql"
+@include "previous.sql"
 ```
 
 Now importantly, in this configuration, everything that follows the

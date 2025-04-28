@@ -170,7 +170,7 @@ section of the JSON output.
 
 Global attributes give you a way to add global configuration information
 into the CQL JSON output. You can, for instance, include these attributes
-in some root file that you `#include` in the rest of your CQL code,
+in some root file that you `@include` in the rest of your CQL code,
 and by doing this, these attributes will be visible in any generated
 JSON for those files.
 

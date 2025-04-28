@@ -220,10 +220,10 @@ and you might skip over the `ROLLBACK` or `COMMIT` portions of the logic.  Avoid
 * `DECLARE PROCEDURE`
 
 The best practice is to put any declarations into a shared header file which you
-can `#include` in all the places it is needed. This is especially important
+can `@include` in all the places it is needed. This is especially important
 should you have to forward declare a procedure.  CQL normally provides exports
 for all procedures so you basically get an automatically generated and
-certain-to-be-correct `#include` file.  But, if the procedures are being
+certain-to-be-correct `@include` file.  But, if the procedures are being
 compiled together then an export file won't have been generated yet at the time
 you need it;  To work around this you use the ``DECLARE PROCEDURE`` form.
 However, procedure declarations are tricky;  they include not just the type of
@@ -232,7 +232,7 @@ procedure might have.  This must not be wrong or callers will get unpredictable
 failures.
 
 The easiest way to ensure it is correct is to use the same trick as you would in
-C -- make sure that you `#include` the declaration the in the translation unit
+C -- make sure that you `@include` the declaration the in the translation unit
 with the definition.  If they don't match there will be an error.
 
 A very useful trick: the error will include the exact text of the correct

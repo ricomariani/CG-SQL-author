@@ -1679,7 +1679,7 @@ very real way, behaving like a special SELECT.  It can therefore be used in a cu
 The indicated name was used in a context where an enumerated type name was
 expected but there is no such type.
 
-Perhaps the enum was not included (missing a #include) or else there is a typo.
+Perhaps the enum was not included (missing an @include?) or else there is a typo.
 
 -----
 
@@ -3295,7 +3295,7 @@ migration procedures are not allowed on indices and triggers.
 
 If you get this error it means that there is a typo in the name of the procedure
 you are trying to call, or else the declaration for the procedure is totally
-missing.  Maybe a necessary `#include` needs to be added to the compiland.
+missing.  Maybe a necessary `@include` needs to be added to the compiland.
 
 Previously if you attempted to call an unknown CQL would produce a generic
 function call. If you need to do this, especially a function with varargs, then

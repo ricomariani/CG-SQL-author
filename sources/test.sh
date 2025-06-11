@@ -183,13 +183,14 @@ some_lints() {
 
 building() {
   echo '--------------------------------- STAGE 1 -- make clean, then make'
-  TEST_NAME="build"
-  TEST_DESC="Building new CQL"
-  TEST_CMD="do_make clean >/dev/null 2>/dev/null && do_make all"
-  TEST_OUT="$O/build.out"
-  TEST_ERR="$O/build.err"
-  TEST_ERROR_MSG="Build CQL failed"
-  run_test_expect_success
+
+  echo building new cql
+  do_make clean >/dev/null 2>/dev/null
+  if ! do_make all >"$O/build.out" 2>"$O/build.err"; then
+    echo build cql failed:
+    cat "$O/build.err"
+    failed
+  fi
 
   if grep "^State.*conflicts:" "$O/cql.y.output" >"$O/build.err"; then
     echo "conflicts found in grammar, these must be fixed" >>"$O/build.err"

@@ -67,6 +67,10 @@ run_test_expect_success() {
     TEST_ERR="$O/${TEST_NAME}.err"
   fi
   
+  if [ -z "$TEST_ERROR_MSG" ]; then
+    TEST_ERROR_MSG="Test $TEST_NAME failed"
+  fi
+
   echo "$TEST_DESC"
   
   if ! eval "$TEST_CMD" >"$TEST_OUT" 2>"$TEST_ERR"; then
@@ -98,6 +102,10 @@ run_test_expect_fail() {
     TEST_ERR="$O/${TEST_NAME}.err"
   fi
   
+  if [ -z "$TEST_ERROR_MSG" ]; then
+    TEST_ERROR_MSG="Test $TEST_NAME failed"
+  fi
+
   echo "$TEST_DESC"
   
   if eval "$TEST_CMD" >"$TEST_OUT" 2>"$TEST_ERR"; then
@@ -114,42 +122,6 @@ run_test_expect_fail() {
   TEST_CMD=""
   TEST_OUT=""
   TEST_ERR=""
-}
-
-# Special case for semantic analysis tests
-run_sem_check() {
-  # Generate output file names automatically if not provided
-  if [ -z "$TEST_OUT" ]; then
-    TEST_OUT="$O/${TEST_NAME}.out"
-  fi
-  
-  if [ -z "$TEST_ERR" ]; then
-    TEST_ERR="$O/${TEST_NAME}.err"
-  fi
-  
-  echo "$TEST_DESC" "$TEST_OUT"
-  
-  ${CQL} $TEST_ARGS >"$TEST_OUT" 2>"$TEST_ERR"
-  if [ "$?" -ne "1" ]; then
-    echo "ERROR: $TEST_ERROR_MSG"
-    echo "Command: ${CQL} $TEST_ARGS"
-    echo "Output: $TEST_OUT"
-    echo "Errors: $TEST_ERR"
-    echo "All semantic analysis checks have errors in the test"
-    echo "The normal return code is \"1\" -- any other return code is bad news"
-    echo "A return code of zero indicates we reported success in the face of errors"
-    echo "A return code other than 1 indicates an unexpected fatal error of some type"
-    cat "$TEST_ERR"
-    failed
-  fi
-  
-  # Reset variables after use
-  TEST_NAME=""
-  TEST_DESC=""
-  TEST_ARGS=""
-  TEST_OUT=""
-  TEST_ERR=""
-  TEST_ERROR_MSG=""
 }
 
 do_make() {
@@ -284,6 +256,7 @@ basic_test() {
   TEST_OUT="$O/test.out"
   TEST_ERROR_MSG="Basic parsing test failed"
   run_test_expect_success
+
   TEST_NAME="test_out2"
   TEST_DESC="Testing echo output parses correctly"
   TEST_CMD="${CQL} --echo --dev --in \"$O/test.out\""
@@ -409,22 +382,19 @@ macro_test() {
 
 semantic_test() {
   echo '--------------------------------- STAGE 4 -- SEMANTIC ANALYSIS TEST'
-  echo running semantic analysis test
-  if ! sem_check --sem --ast --hide_builtins --dev --in "$T/sem_test.sql" >"$O/sem_test.out" 2>"$O/sem_test.err"; then
-    echo "CQL semantic analysis returned unexpected error code"
-    cat "$O/sem_test.err"
-    failed
-  fi
+
+  TEST_NAME="sem_test"
+  TEST_DESC="Running semantic analysis test"
+  TEST_CMD="sem_check --sem --ast --hide_builtins --dev --in \"$T/sem_test.sql\""
+  run_test_expect_success
 
   echo validating output trees
   cql_verify "$T/sem_test.sql" "$O/sem_test.out"
 
-  echo running dev semantic analysis test
-  if ! sem_check --sem --ast --in "$T/sem_test_dev.sql" >"$O/sem_test_dev.out" 2>"$O/sem_test_dev.err"; then
-    echo "CQL semantic analysis returned unexpected error code"
-    cat "$O/sem_test_dev.err"
-    failed
-  fi
+  TEST_NAME="sem_test_dev"
+  TEST_DESC="Running dev semantic analysis test"
+  TEST_CMD="sem_check --sem --ast --in \"$T/sem_test_dev.sql\""
+  run_test_expect_success
 
   echo validating output trees
   cql_verify "$T/sem_test_dev.sql" "$O/sem_test_dev.out"

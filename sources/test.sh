@@ -56,6 +56,102 @@ done
 
 MAKE_ARGS="${MAKE_COVERAGE_ARGS}"
 
+# Helper function for tests expected to succeed
+run_test_expect_success() {
+  # Generate output file names automatically if not provided
+  if [ -z "$TEST_OUT" ]; then
+    TEST_OUT="$O/${TEST_NAME}.out"
+  fi
+  
+  if [ -z "$TEST_ERR" ]; then
+    TEST_ERR="$O/${TEST_NAME}.err"
+  fi
+  
+  echo "$TEST_DESC"
+  
+  if ! eval "$TEST_CMD" >"$TEST_OUT" 2>"$TEST_ERR"; then
+    echo "ERROR: $TEST_ERROR_MSG"
+    echo "Command: $TEST_CMD"
+    echo "Output: $TEST_OUT"
+    echo "Errors: $TEST_ERR"
+    cat "$TEST_ERR"
+    failed
+  fi
+  
+  # Reset variables after use
+  TEST_NAME=""
+  TEST_DESC=""
+  TEST_CMD=""
+  TEST_OUT=""
+  TEST_ERR=""
+  TEST_ERROR_MSG=""
+}
+
+# Helper function for tests expected to fail
+run_test_expect_fail() {
+  # Generate output file names automatically if not provided
+  if [ -z "$TEST_OUT" ]; then
+    TEST_OUT="$O/${TEST_NAME}.out"
+  fi
+  
+  if [ -z "$TEST_ERR" ]; then
+    TEST_ERR="$O/${TEST_NAME}.err"
+  fi
+  
+  echo "$TEST_DESC"
+  
+  if eval "$TEST_CMD" >"$TEST_OUT" 2>"$TEST_ERR"; then
+    echo "ERROR: Command succeeded but was expected to fail"
+    echo "Command: $TEST_CMD"
+    echo "Output: $TEST_OUT"
+    echo "Errors: $TEST_ERR"
+    failed
+  fi
+  
+  # Reset variables after use
+  TEST_NAME=""
+  TEST_DESC=""
+  TEST_CMD=""
+  TEST_OUT=""
+  TEST_ERR=""
+}
+
+# Special case for semantic analysis tests
+run_sem_check() {
+  # Generate output file names automatically if not provided
+  if [ -z "$TEST_OUT" ]; then
+    TEST_OUT="$O/${TEST_NAME}.out"
+  fi
+  
+  if [ -z "$TEST_ERR" ]; then
+    TEST_ERR="$O/${TEST_NAME}.err"
+  fi
+  
+  echo "$TEST_DESC" "$TEST_OUT"
+  
+  ${CQL} $TEST_ARGS >"$TEST_OUT" 2>"$TEST_ERR"
+  if [ "$?" -ne "1" ]; then
+    echo "ERROR: $TEST_ERROR_MSG"
+    echo "Command: ${CQL} $TEST_ARGS"
+    echo "Output: $TEST_OUT"
+    echo "Errors: $TEST_ERR"
+    echo "All semantic analysis checks have errors in the test"
+    echo "The normal return code is \"1\" -- any other return code is bad news"
+    echo "A return code of zero indicates we reported success in the face of errors"
+    echo "A return code other than 1 indicates an unexpected fatal error of some type"
+    cat "$TEST_ERR"
+    failed
+  fi
+  
+  # Reset variables after use
+  TEST_NAME=""
+  TEST_DESC=""
+  TEST_ARGS=""
+  TEST_OUT=""
+  TEST_ERR=""
+  TEST_ERROR_MSG=""
+}
+
 do_make() {
   # echo gives us a free whitespace trim avoiding empty args with ""
   make $(echo "$@" "${MAKE_ARGS}")
@@ -115,13 +211,13 @@ some_lints() {
 
 building() {
   echo '--------------------------------- STAGE 1 -- make clean, then make'
-  echo building new cql
-  do_make clean >/dev/null 2>/dev/null
-  if ! do_make all >"$O/build.out" 2>"$O/build.err"; then
-    echo build cql failed:
-    cat "$O/build.err"
-    failed
-  fi
+  TEST_NAME="build"
+  TEST_DESC="Building new CQL"
+  TEST_CMD="do_make clean >/dev/null 2>/dev/null && do_make all"
+  TEST_OUT="$O/build.out"
+  TEST_ERR="$O/build.err"
+  TEST_ERROR_MSG="Build CQL failed"
+  run_test_expect_success
 
   if grep "^State.*conflicts:" "$O/cql.y.output" >"$O/build.err"; then
     echo "conflicts found in grammar, these must be fixed" >>"$O/build.err"
@@ -130,40 +226,45 @@ building() {
     failed
   fi
 
-  echo building cql amalgam
-  if ! do_make amalgam >"$O/build.out" 2>"$O/build.err"; then
-    echo build cql amalgam failed:
-    cat "$O/build.err"
-    failed
-  fi
+  TEST_NAME="build_amalgam"
+  TEST_DESC="Building CQL amalgam"
+  TEST_CMD="do_make amalgam"
+  TEST_OUT="$O/build.out"
+  TEST_ERR="$O/build.err"
+  TEST_ERROR_MSG="Build CQL amalgam failed"
+  run_test_expect_success
 
-  echo building cql amalgam test
-  if ! do_make amalgam_test >"$O/build.out" 2>"$O/build.err"; then
-    echo build cql amalgam test failed:
-    cat "$O/build.err"
-    failed
-  fi
+  TEST_NAME="build_amalgam_test"
+  TEST_DESC="Building CQL amalgam test"
+  TEST_CMD="do_make amalgam_test"
+  TEST_OUT="$O/build.out"
+  TEST_ERR="$O/build.err"
+  TEST_ERROR_MSG="Build CQL amalgam test failed"
+  run_test_expect_success
 
-  echo building cql-verify
-  if ! (do_make cql-verify) 2>"$O/build.err"; then
-    echo build cql-verify failed:
-    cat "$O/build.err"
-    failed
-  fi
+  TEST_NAME="build_cql_verify"
+  TEST_DESC="Building CQL-verify"
+  TEST_CMD="do_make cql-verify"
+  TEST_OUT="/dev/null"
+  TEST_ERR="$O/build.err"
+  TEST_ERROR_MSG="Build CQL-verify failed"
+  run_test_expect_success
 
-  echo building cql-linetest
-  if ! (do_make cql-linetest) 2>"$O/build.err"; then
-    echo build cql-linetest failed:
-    cat "$O/build.err"
-    failed
-  fi
+  TEST_NAME="build_cql_linetest"
+  TEST_DESC="Building CQL-linetest"
+  TEST_CMD="do_make cql-linetest"
+  TEST_OUT="/dev/null"
+  TEST_ERR="$O/build.err"
+  TEST_ERROR_MSG="Build CQL-linetest failed"
+  run_test_expect_success
 
-  echo building json-test
-  if ! (do_make json-test) 2>"$O/build.err"; then
-    echo build json-test failed:
-    cat "$O/build.err"
-    failed
-  fi
+  TEST_NAME="build_json_test"
+  TEST_DESC="Building JSON-test"
+  TEST_CMD="do_make json-test"
+  TEST_OUT="/dev/null"
+  TEST_ERR="$O/build.err"
+  TEST_ERROR_MSG="Build JSON-test failed"
+  run_test_expect_success
 
   errors_documented
   some_lints
@@ -177,22 +278,25 @@ create_unwritable_file() {
 
 basic_test() {
   echo '--------------------------------- STAGE 2 -- BASIC PARSING TEST'
-  echo running "$T/test.sql"
-  # exercising the non --in path (i.e. read from stdin)
-  if ! ${CQL} --echo --dev --include_paths "test" "test2" <"$T/test.sql" >"$O/test.out"; then
-    echo basic parsing test failed
-    failed
-  fi
-  if ! ${CQL} --echo --dev --in "$O/test.out" >"$O/test.out2"; then
-    echo "Echo output does not parse again correctly"
-    failed
-  fi
+  TEST_NAME="test"
+  TEST_DESC="Running \"$T/test.sql\""
+  TEST_CMD="${CQL} --echo --dev --include_paths \"test\" \"test2\" <\"$T/test.sql\""
+  TEST_OUT="$O/test.out"
+  TEST_ERROR_MSG="Basic parsing test failed"
+  run_test_expect_success
+  TEST_NAME="test_out2"
+  TEST_DESC="Testing echo output parses correctly"
+  TEST_CMD="${CQL} --echo --dev --in \"$O/test.out\""
+  TEST_OUT="$O/test.out2"
+  TEST_ERROR_MSG="Echo output does not parse again correctly"
+  run_test_expect_success
 
-  echo "creating basic ast for test.sql"
-  if ! ${CQL} --ast_no_echo --dev --include_paths test2 --in "$T/test.sql" >"$O/test_ast.out"; then
-    echo basic ast test failed
-    failed
-  fi
+  TEST_NAME="test_ast"
+  TEST_DESC="Creating basic AST for test.sql"
+  TEST_CMD="${CQL} --ast_no_echo --dev --include_paths test2 --in \"$T/test.sql\""
+  TEST_OUT="$O/test_ast.out"
+  TEST_ERROR_MSG="Basic AST test failed"
+  run_test_expect_success
 
   echo "  computing diffs (empty if none)"
   on_diff_exit test.out
@@ -204,59 +308,63 @@ basic_test() {
 
   echo running "$T/test.sql" "with CRLF line endings"
   sed -e "s/$/\\r/" <$T/test.sql >$O/test.sql
-  if ! ${CQL} --include_paths test test2 --echo --dev --in "$O/test.sql" >"$O/test.out2"; then
-    echo "Echo CRLF version does not parse correctly"
-    failed
-  fi
+  TEST_NAME="test_crlf"
+  TEST_DESC="Testing CRLF line endings"
+  TEST_CMD="${CQL} --include_paths test test2 --echo --dev --in \"$O/test.sql\""
+  TEST_OUT="$O/test.out2"
+  TEST_ERROR_MSG="Echo CRLF version does not parse correctly"
+  run_test_expect_success
 
   echo "  computing diffs CRLF parsing (empty if none)"
   mv "$O/test.out2" "$O/test.out"
   on_diff_exit test.out
 
-  echo running "$T/test.sql" "with macro expansion"
-  if ! ${CQL} --echo --dev --include_paths test2 --in "$T/test.sql" --exp >"$O/test_exp.out"; then
-    echo basic parsing with expansion test failed
-    failed
-  fi
+  TEST_NAME="test_exp"
+  TEST_DESC="Running \"$T/test.sql\" with macro expansion"
+  TEST_CMD="${CQL} --echo --dev --include_paths test2 --in \"$T/test.sql\" --exp"
+  TEST_ERROR_MSG="Basic parsing with expansion test failed"
+  run_test_expect_success
   echo "  computing diffs (empty if none)"
   on_diff_exit test_exp.out
 
-  echo testing include file not found
-  if ${CQL} --in "$T/test_include_file_not_found.sql" 2>"$O/include_not_found.err"; then
-    echo "error code should have indicated failure"
-    failed
-  fi
+  TEST_NAME="include_not_found"
+  TEST_DESC="Testing include file not found"
+  TEST_CMD="${CQL} --in \"$T/test_include_file_not_found.sql\""
+  TEST_ERR="$O/include_not_found.err"
+  TEST_OUT="/dev/null"
+  run_test_expect_fail
 
   echo "  computing diffs (empty if none)"
   on_diff_exit include_not_found.err
 
-  echo testing include files nested too deeply
-
-  if ${CQL} --in "$T/include_files_infinite_nesting.sql" 2>"$O/include_nesting.err"; then
-    echo "error code should have indicated failure"
-    failed
-  fi
+  TEST_NAME="include_nesting"
+  TEST_DESC="Testing include files nested too deeply"
+  TEST_CMD="${CQL} --in \"$T/include_files_infinite_nesting.sql\""
+  TEST_ERR="$O/include_nesting.err"
+  TEST_OUT="/dev/null"
+  run_test_expect_fail
 
   echo "  computing diffs (empty if none)"
   on_diff_exit include_nesting.err
 
-  echo "testing ifdef"
-  if ! ${CQL} --in "$T/test_ifdef.sql" --echo --defines foo >"$O/test_ifdef.out" 2>"$O/test_ifdef.err"; then
-    echo "basic parsing with ifdefs failed"
-    cat "$O/test_ifdef.err"
-    failed
-  fi
+  TEST_NAME="test_ifdef"
+  TEST_DESC="Testing ifdef"
+  TEST_CMD="${CQL} --in \"$T/test_ifdef.sql\" --echo --defines foo"
+  TEST_OUT="$O/test_ifdef.out"
+  TEST_ERR="$O/test_ifdef.err"
+  TEST_ERROR_MSG="Basic parsing with ifdefs failed"
+  run_test_expect_success
 
   echo "  computing diffs (empty if none)"
   on_diff_exit test_ifdef.out
 
-  echo "testing empty include file"
-
-  if ! ${CQL} --in "$T/include_empty.sql" --echo >"$O/include_empty.out" 2>"$O/include_empty.err"; then
-    echo "empty include file failed"
-    cat "$O/include_empty.err"
-    failed
-  fi
+  TEST_NAME="include_empty"
+  TEST_DESC="Testing empty include file"
+  TEST_CMD="${CQL} --in \"$T/include_empty.sql\" --echo"
+  TEST_OUT="$O/include_empty.out"
+  TEST_ERR="$O/include_empty.err"
+  TEST_ERROR_MSG="Empty include file failed"
+  run_test_expect_success
 
   echo "  computing diffs (empty if none)"
   on_diff_exit include_empty.out
@@ -264,12 +372,13 @@ basic_test() {
 
 macro_test() {
   echo '--------------------------------- STAGE 3 -- MACRO TEST'
-  echo running macro expansion test
-  if ! ${CQL} --test --exp --ast --hide_builtins --in "$T/macro_test.sql" >"$O/macro_test.out" 2>"$O/macro_test.err"; then
-    echo "CQL macro test returned unexpected error code"
-    cat "$O/macro_test.err"
-    failed
-  fi
+  TEST_NAME="macro_test"
+  TEST_DESC="Running macro expansion test"
+  TEST_CMD="${CQL} --test --exp --ast --hide_builtins --in \"$T/macro_test.sql\""
+  TEST_OUT="$O/macro_test.out"
+  TEST_ERR="$O/macro_test.err"
+  TEST_ERROR_MSG="CQL macro test returned unexpected error code"
+  run_test_expect_success
 
   echo validating output trees
   cql_verify "$T/macro_test.sql" "$O/macro_test.out"
@@ -277,22 +386,22 @@ macro_test() {
   echo "  computing diffs (empty if none)"
   on_diff_exit macro_test.out
 
-  echo running macro expansion error cases
-  if ${CQL} --exp --echo --in "$T/macro_exp_errors.sql" >"$O/macro_exp_errors.out" 2>"$O/macro_test.err.out"; then
-    echo "CQL macro error test returned unexpected error code"
-    cat "$O/macro_test.err.out"
-    failed
-  fi
+  TEST_NAME="macro_exp_errors"
+  TEST_DESC="Running macro expansion error cases"
+  TEST_CMD="${CQL} --exp --echo --in \"$T/macro_exp_errors.sql\""
+  TEST_OUT="$O/macro_exp_errors.out"
+  TEST_ERR="$O/macro_test.err.out"
+  run_test_expect_fail
 
   echo "  computing diffs (empty if none)"
   on_diff_exit macro_test.err.out
 
-  echo running macro expansion duplicate name
-  if ${CQL} --exp --in "$T/macro_test_dup_arg.sql" >"$O/macro_exp_errors.out" 2>"$O/macro_test_dup.err.out"; then
-    echo "CQL macro error test returned unexpected error code"
-    cat "$O/macro_test_dup.err.out"
-    failed
-  fi
+  TEST_NAME="macro_test_dup"
+  TEST_DESC="Running macro expansion duplicate name"
+  TEST_CMD="${CQL} --exp --in \"$T/macro_test_dup_arg.sql\""
+  TEST_OUT="$O/macro_exp_errors.out"
+  TEST_ERR="$O/macro_test_dup.err.out"
+  run_test_expect_fail
 
   echo "  computing diffs (empty if none)"
   on_diff_exit macro_test_dup.err.out
@@ -329,12 +438,12 @@ semantic_test() {
 
 code_gen_c_test() {
   echo '--------------------------------- STAGE 5 -- C CODE GEN TEST'
-  echo running codegen test
-  if ! ${CQL} --dev --test --cg "$O/cg_test_c.h" "$O/cg_test_c.c" "$O/cg_test_exports.out" --in "$T/cg_test.sql" --global_proc cql_startup --generate_exports 2>"$O/cg_test_c.err"; then
-    echo "ERROR:"
-    cat "$O/cg_test_c.err"
-    failed
-  fi
+  TEST_NAME="cg_test_c"
+  TEST_DESC="Running codegen test"
+  TEST_CMD="${CQL} --dev --test --cg \"$O/cg_test_c.h\" \"$O/cg_test_c.c\" \"$O/cg_test_exports.out\" --in \"$T/cg_test.sql\" --global_proc cql_startup --generate_exports"
+  TEST_ERR="$O/cg_test_c.err"
+  TEST_ERROR_MSG="Codegen test failed"
+  run_test_expect_success
 
   echo validating codegen
   cql_verify "$T/cg_test.sql" "$O/cg_test_c.c"
@@ -471,80 +580,90 @@ assorted_errors_test() {
   on_diff_exit cg_requires_file.err
 
   # wrong number of args specified in --cg (for lua)
-  if ${CQL} --dev --cg "$O/__temp" "$O/__temp2" --in "$T/cg_test.sql" --rt lua 2>"$O/cg_1_2.err"; then
-    echo "lua rt should require 1 files for the cg param but two were passed, should have failed"
-    failed
-  fi
+  TEST_NAME="cg_1_2"
+  TEST_DESC="Testing wrong number of args specified in --cg (for lua)"
+  TEST_CMD="${CQL} --dev --cg \"$O/__temp\" \"$O/__temp2\" --in \"$T/cg_test.sql\" --rt lua"
+  TEST_ERR="$O/cg_1_2.err"
+  TEST_OUT="/dev/null"
+  run_test_expect_fail
 
   # --generate_file_type did not specify a file type
-
-  if ${CQL} --generate_file_type 2>"$O/generate_file_type.err"; then
-    echo "failed to require a file type with --generate_file_type"
-    failed
-  fi
+  TEST_NAME="generate_file_type"
+  TEST_DESC="Testing --generate_file_type with no file type specified"
+  TEST_CMD="${CQL} --generate_file_type"
+  TEST_ERR="$O/generate_file_type.err"
+  TEST_OUT="/dev/null"
+  run_test_expect_fail
 
   on_diff_exit generate_file_type.err
 
   # --generate_file_type specified invalid file type (should cause an error)
-
-  if ${CQL} --generate_file_type foo 2>"$O/generate_file_file.err"; then
-    echo "failed to require a valid file type with --generate_file_type"
-    failed
-  fi
+  TEST_NAME="generate_file_file"
+  TEST_DESC="Testing --generate_file_type with invalid file type"
+  TEST_CMD="${CQL} --generate_file_type foo"
+  TEST_ERR="$O/generate_file_file.err"
+  TEST_OUT="/dev/null"
+  run_test_expect_fail
 
   on_diff_exit generate_file_file.err
 
   # --rt specified with no arg following it
-
-  if ${CQL} --rt 2>"$O/rt_arg_missing.err"; then
-    echo "failed to require a runtime with --rt"
-    failed
-  fi
+  TEST_NAME="rt_arg_missing"
+  TEST_DESC="Testing --rt with no argument"
+  TEST_CMD="${CQL} --rt"
+  TEST_ERR="$O/rt_arg_missing.err"
+  TEST_OUT="/dev/null"
+  run_test_expect_fail
 
   on_diff_exit rt_arg_missing.err
 
   # invalid result type specified with --rt, should force an error
-
-  if ${CQL} --rt foo 2>"$O/rt_arg_bogus.err"; then
-    echo "failed to require a valid result type with --rt"
-    failed
-  fi
+  TEST_NAME="rt_arg_bogus"
+  TEST_DESC="Testing --rt with invalid result type"
+  TEST_CMD="${CQL} --rt foo"
+  TEST_ERR="$O/rt_arg_bogus.err"
+  TEST_OUT="/dev/null"
+  run_test_expect_fail
 
   on_diff_exit rt_arg_bogus.err
 
   # --cqlrt specified but no file name present, should force an error
-
-  if ${CQL} --cqlrt 2>"$O/cqlrt_arg_missing.err"; then
-    echo "failed to require a file arg with --cqlrt"
-    failed
-  fi
+  TEST_NAME="cqlrt_arg_missing"
+  TEST_DESC="Testing --cqlrt with no file name"
+  TEST_CMD="${CQL} --cqlrt"
+  TEST_ERR="$O/cqlrt_arg_missing.err"
+  TEST_OUT="/dev/null"
+  run_test_expect_fail
 
   on_diff_exit cqlrt_arg_missing.err
 
   # --global_proc has no proc name
-
-  if ${CQL} --global_proc 2>"$O/global_proc_missing.err"; then
-    echo "failed to require a procedure name with --global_proc"
-    failed
-  fi
+  TEST_NAME="global_proc_missing"
+  TEST_DESC="Testing --global_proc with no procedure name"
+  TEST_CMD="${CQL} --global_proc"
+  TEST_ERR="$O/global_proc_missing.err"
+  TEST_OUT="/dev/null"
+  run_test_expect_fail
 
   on_diff_exit global_proc_missing.err
 
   # --in arg missing
-
-  if ${CQL} --in 2>"$O/in_arg_missing.err"; then
-    echo "failed to require a file name with --in"
-    failed
-  fi
+  TEST_NAME="in_arg_missing"
+  TEST_DESC="Testing --in with no file name"
+  TEST_CMD="${CQL} --in"
+  TEST_ERR="$O/in_arg_missing.err"
+  TEST_OUT="/dev/null"
+  run_test_expect_fail
 
   on_diff_exit in_arg_missing.err
 
   # no c_include_namespace arg
-
-  if ${CQL} --c_include_namespace 2>"$O/c_include_namespace_missing.err"; then
-    echo "failed to require a C namespace with --c_include_namespace"
-    failed
-  fi
+  TEST_NAME="c_include_namespace_missing"
+  TEST_DESC="Testing --c_include_namespace with no namespace"
+  TEST_CMD="${CQL} --c_include_namespace"
+  TEST_ERR="$O/c_include_namespace_missing.err"
+  TEST_OUT="/dev/null"
+  run_test_expect_fail
 
   on_diff_exit c_include_namespace_missing.err
 }
@@ -700,42 +819,50 @@ schema_migration_test() {
 
 misc_cases() {
   echo '--------------------------------- STAGE 8 -- MISC CASES'
-  echo running usage test
-  if ! ${CQL} >"$O/usage.out" 2>"$O/usage.err"; then
-    echo usage test failed
-    failed
-  fi
+  TEST_NAME="usage"
+  TEST_DESC="Running usage test"
+  TEST_CMD="${CQL}"
+  TEST_OUT="$O/usage.out"
+  TEST_ERR="$O/usage.err"
+  TEST_ERROR_MSG="Usage test failed"
+  run_test_expect_success
   on_diff_exit usage.out
 
-  echo running simple error test
-  if ${CQL} --in "$T/error.sql" >"$O/error.out" 2>"$O/simple_error.err"; then
-    echo simple error test failed
-    failed
-  fi
+  TEST_NAME="simple_error"
+  TEST_DESC="Running simple error test"
+  TEST_CMD="${CQL} --in \"$T/error.sql\""
+  TEST_OUT="$O/error.out"
+  TEST_ERR="$O/simple_error.err"
+  run_test_expect_fail
 
   on_diff_exit simple_error.err
 
-  echo running previous schema and codegen incompatible test
-  if ${CQL} --cg "$O/__temp.h" "$O/__temp.c" --in "$T/cg_test_prev_invalid.sql" 2>"$O/prev_and_codegen_incompat.err"; then
-    echo previous schema and codegen are supposed to be incompatible
-    failed
-  fi
+  TEST_NAME="prev_and_codegen_incompat"
+  TEST_DESC="Running previous schema and codegen incompatible test"
+  TEST_CMD="${CQL} --cg \"$O/__temp.h\" \"$O/__temp.c\" --in \"$T/cg_test_prev_invalid.sql\""
+  TEST_ERR="$O/prev_and_codegen_incompat.err"
+  TEST_OUT="/dev/null"
+  run_test_expect_fail
 
   on_diff_exit prev_and_codegen_incompat.err
 
-  echo running big quote test
-  if ! ${CQL} --cg "$O/__temp.h" "$O/__temp.c" --in "$T/bigquote.sql" --global_proc x >/dev/null 2>"$O/bigquote.err"; then
-    echo big quote test failed
-    failed
-  fi
+  TEST_NAME="bigquote"
+  TEST_DESC="Running big quote test"
+  TEST_CMD="${CQL} --cg \"$O/__temp.h\" \"$O/__temp.c\" --in \"$T/bigquote.sql\" --global_proc x"
+  TEST_OUT="/dev/null"
+  TEST_ERR="$O/bigquote.err"
+  TEST_ERROR_MSG="Big quote test failed"
+  run_test_expect_success
 
   on_diff_exit bigquote.err
 
-  echo running alternate cqlrt.h test
-  if ! ${CQL} --dev --cg "$O/__temp.h" "$O/__temp.c" --in "$T/cg_test.sql" --global_proc x --cqlrt alternate_cqlrt.h 2>"$O/alt_cqlrt.err"; then
-    echo alternate cqlrt test failed
-    failed
-  fi
+  TEST_NAME="alt_cqlrt"
+  TEST_DESC="Running alternate cqlrt.h test"
+  TEST_CMD="${CQL} --dev --cg \"$O/__temp.h\" \"$O/__temp.c\" --in \"$T/cg_test.sql\" --global_proc x --cqlrt alternate_cqlrt.h"
+  TEST_OUT="/dev/null"
+  TEST_ERR="$O/alt_cqlrt.err"
+  TEST_ERROR_MSG="Alternate cqlrt test failed"
+  run_test_expect_success
 
   if ! grep alternate_cqlrt.h "$O/__temp.h" >/dev/null; then
     echo alternate cqlrt did not appear in the output header
@@ -744,35 +871,39 @@ misc_cases() {
 
   on_diff_exit alt_cqlrt.err
 
-  echo running too few -cg arguments with --generate_exports test
-  if ${CQL} --dev --cg "$O/__temp.c" "$O/__temp.h" --in "$T/cg_test.sql" --global_proc x --generate_exports 2>"$O/gen_exports_args.err"; then
-    echo too few --cg args test failed
-    failed
-  fi
+  TEST_NAME="gen_exports_args"
+  TEST_DESC="Running too few -cg arguments with --generate_exports test"
+  TEST_CMD="${CQL} --dev --cg \"$O/__temp.c\" \"$O/__temp.h\" --in \"$T/cg_test.sql\" --global_proc x --generate_exports"
+  TEST_OUT="/dev/null"
+  TEST_ERR="$O/gen_exports_args.err"
+  run_test_expect_fail
 
   on_diff_exit gen_exports_args.err
 
-  echo running invalid include regions test
-  if ${CQL} --cg "$O/cg_test_schema_partial_upgrade.out" --in "$T/cg_test_schema_upgrade.sql" --global_proc test --rt schema_upgrade --include_regions bogus --exclude_regions shared 2>"$O/inc_invalid_regions.err"; then
-    echo invalid include region test failed
-    failed
-  fi
+  TEST_NAME="inc_invalid_regions"
+  TEST_DESC="Running invalid include regions test"
+  TEST_CMD="${CQL} --cg \"$O/cg_test_schema_partial_upgrade.out\" --in \"$T/cg_test_schema_upgrade.sql\" --global_proc test --rt schema_upgrade --include_regions bogus --exclude_regions shared"
+  TEST_ERR="$O/inc_invalid_regions.err"
+  TEST_OUT="/dev/null"
+  run_test_expect_fail
 
   on_diff_exit inc_invalid_regions.err
 
-  echo running invalid exclude regions test
-  if ${CQL} --cg "$O/cg_test_schema_partial_upgrade.out" --in "$T/cg_test_schema_upgrade.sql" --global_proc test --rt schema_upgrade --include_regions extra --exclude_regions bogus 2>"$O/excl_invalid_regions.err"; then
-    echo invalid exclude region test failed
-    failed
-  fi
+  TEST_NAME="excl_invalid_regions"
+  TEST_DESC="Running invalid exclude regions test"
+  TEST_CMD="${CQL} --cg \"$O/cg_test_schema_partial_upgrade.out\" --in \"$T/cg_test_schema_upgrade.sql\" --global_proc test --rt schema_upgrade --include_regions extra --exclude_regions bogus"
+  TEST_ERR="$O/excl_invalid_regions.err"
+  TEST_OUT="/dev/null"
+  run_test_expect_fail
 
   on_diff_exit excl_invalid_regions.err
 
-  echo running global proc is needed but not present test
-  if ${CQL} --cg "$O/__temp.c" "$O/__temp.h" --in "$T/bigquote.sql" 2>"$O/global_proc_needed.err"; then
-    echo global proc needed but absent failed
-    failed
-  fi
+  TEST_NAME="global_proc_needed"
+  TEST_DESC="Running global proc is needed but not present test"
+  TEST_CMD="${CQL} --cg \"$O/__temp.c\" \"$O/__temp.h\" --in \"$T/bigquote.sql\""
+  TEST_ERR="$O/global_proc_needed.err"
+  TEST_OUT="/dev/null"
+  run_test_expect_fail
 
   on_diff_exit global_proc_needed.err
 
@@ -818,26 +949,29 @@ misc_cases() {
   fi
 
   on_diff_exit parse_test_cql_inferred_notnull.err
+
+  on_diff_exit parse_test_cql_inferred_notnull.err
 }
 
 json_validate() {
   sql_file=$1
-  echo "checking for valid JSON formatting of ${sql_file} (test mode disabled)"
-  if ! ${CQL} --cg "$O/__temp.out" --in "${sql_file}" --rt json_schema 2>"$O/cg_test_json_schema.err"; then
-    cat "$O/cg_test_json_schema.err"
-    echo "non-test JSON output failed for ${sql_file}"
-    failed
-  fi
-
-  echo checking for well formed JSON using python
+  TEST_NAME="json_validate_${sql_file##*/}"
+  TEST_DESC="Checking for valid JSON formatting of ${sql_file} (test mode disabled)"
+  TEST_CMD="${CQL} --cg \"$O/__temp.out\" --in \"${sql_file}\" --rt json_schema"
+  TEST_OUT="/dev/null"
+  TEST_ERR="$O/cg_test_json_schema.err"
+  TEST_ERROR_MSG="Non-test JSON output failed for ${sql_file}"
+  run_test_expect_success
+  
+  echo "Checking for well formed JSON using python"
   if ! common/json_check.py <"$O/__temp.out" >/dev/null; then
-    echo "json is badly formed for ${sql_file} -- see $O/__temp.out"
+    echo "JSON is badly formed for ${sql_file} -- see $O/__temp.out"
     failed
   fi
-
-  echo checking for CQL JSON grammar conformance
+  
+  echo "Checking for CQL JSON grammar conformance"
   if ! out/json_test <"$O/__temp.out" >"$O/json_errors.txt"; then
-    echo "json did not pass grammar check for ${sql_file} (see $O/__temp.out)"
+    echo "JSON did not pass grammar check for ${sql_file} (see $O/__temp.out)"
     cat "$O/json_errors.txt"
     failed
   fi
@@ -845,35 +979,37 @@ json_validate() {
 
 json_schema_test() {
   echo '--------------------------------- STAGE 9 -- JSON SCHEMA TEST'
-  echo running json schema test
-  if ! ${CQL} --test --cg "$O/cg_test_json_schema.out" --in "$T/cg_test_json_schema.sql" --rt json_schema 2>"$O/cg_test_json_schema.err"; then
-    echo "ERROR:"
-    cat "$O/cg_test_json_schema.err"
-    failed
-  fi
+  TEST_NAME="json_schema_test"
+  TEST_DESC="Running JSON schema test"
+  TEST_CMD="${CQL} --test --cg \"$O/cg_test_json_schema.out\" --in \"$T/cg_test_json_schema.sql\" --rt json_schema"
+  TEST_OUT="/dev/null"
+  TEST_ERR="$O/cg_test_json_schema.err"
+  TEST_ERROR_MSG="JSON schema test failed"
+  run_test_expect_success
 
-  echo validating json output
+  echo "Validating JSON output"
   cql_verify "$T/cg_test_json_schema.sql" "$O/cg_test_json_schema.out"
 
   json_validate "$T/cg_test_json_schema.sql"
 
-  echo running json codegen test for an empty file
+  echo "Running JSON codegen test for an empty file"
   echo "" >"$O/__temp"
   json_validate "$O/__temp"
 
-  echo validating json codegen
+  echo "Validating JSON codegen"
   echo "  computing diffs (empty if none)"
   on_diff_exit cg_test_json_schema.out
 }
 
 test_helpers_test() {
   echo '--------------------------------- STAGE 10 -- TEST HELPERS TEST'
-  echo running test builders test
-  if ! ${CQL} --test --cg "$O/cg_test_test_helpers.out" --in "$T/cg_test_test_helpers.sql" --rt test_helpers 2>"$O/cg_test_test_helpers.err"; then
-    echo "ERROR:"
-    cat "$O/cg_test_test_helpers.err"
-    failed
-  fi
+  TEST_NAME="cg_test_test_helpers"
+  TEST_DESC="Running test builders test"
+  TEST_CMD="${CQL} --test --cg \"$O/cg_test_test_helpers.out\" --in \"$T/cg_test_test_helpers.sql\" --rt test_helpers"
+  TEST_OUT="/dev/null"
+  TEST_ERR="$O/cg_test_test_helpers.err"
+  TEST_ERROR_MSG="Test builders test failed"
+  run_test_expect_success
 
   echo validating test helpers output
   cql_verify "$T/cg_test_test_helpers.sql" "$O/cg_test_test_helpers.out"
@@ -1139,12 +1275,13 @@ line_number_test() {
 
 stats_test() {
   echo '--------------------------------- STAGE 15 -- STATS OUTPUT TEST'
-  echo running status test
-  if ! ${CQL} --cg "$O/stats.csv" --in "$T/stats_test.sql" --rt stats 2>"$O/stats_test.err"; then
-    echo "ERROR:"
-    cat "$O/stats_test.err"
-    failed
-  fi
+  TEST_NAME="stats_test"
+  TEST_DESC="Running stats output test"
+  TEST_CMD="${CQL} --cg \"$O/stats.csv\" --in \"$T/stats_test.sql\" --rt stats"
+  TEST_OUT="/dev/null"
+  TEST_ERR="$O/stats_test.err"
+  TEST_ERROR_MSG="Stats output test failed"
+  run_test_expect_success
 
   echo "  computing diffs (empty if none)"
   on_diff_exit stats.csv

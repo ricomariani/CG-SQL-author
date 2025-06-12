@@ -252,7 +252,6 @@ basic_test() {
   TEST_NAME="test_out2"
   TEST_DESC="Testing echo output parses correctly"
   TEST_CMD="${CQL} --echo --dev --in \"$O/test.out\""
-  TEST_OUT="$O/test.out2"
   TEST_ERROR_MSG="Echo output does not parse again correctly"
   run_test_expect_success
 
@@ -267,7 +266,7 @@ basic_test() {
   on_diff_exit test_ast.out
 
   echo "  computing diffs second parsing (empty if none)"
-  mv "$O/test.out2" "$O/test.out"
+  mv "$O/test_out2.out" "$O/test.out"
   on_diff_exit test.out
 
   echo running "$T/test.sql" "with CRLF line endings"
@@ -732,7 +731,6 @@ misc_cases() {
   TEST_DESC="Running previous schema and codegen incompatible test"
   TEST_CMD="${CQL} --cg \"$O/__temp.h\" \"$O/__temp.c\" --in \"$T/cg_test_prev_invalid.sql\""
   TEST_ERR="$O/prev_and_codegen_incompat.err"
-  TEST_OUT="/dev/null"
   run_test_expect_fail
 
   on_diff_exit prev_and_codegen_incompat.err
@@ -740,8 +738,6 @@ misc_cases() {
   TEST_NAME="bigquote"
   TEST_DESC="Running big quote test"
   TEST_CMD="${CQL} --cg \"$O/__temp.h\" \"$O/__temp.c\" --in \"$T/bigquote.sql\" --global_proc x"
-  TEST_OUT="/dev/null"
-  TEST_ERR="$O/bigquote.err"
   TEST_ERROR_MSG="Big quote test failed"
   run_test_expect_success
 
@@ -750,8 +746,6 @@ misc_cases() {
   TEST_NAME="alt_cqlrt"
   TEST_DESC="Running alternate cqlrt.h test"
   TEST_CMD="${CQL} --dev --cg \"$O/__temp.h\" \"$O/__temp.c\" --in \"$T/cg_test.sql\" --global_proc x --cqlrt alternate_cqlrt.h"
-  TEST_OUT="/dev/null"
-  TEST_ERR="$O/alt_cqlrt.err"
   TEST_ERROR_MSG="Alternate cqlrt test failed"
   run_test_expect_success
 
@@ -765,8 +759,6 @@ misc_cases() {
   TEST_NAME="gen_exports_args"
   TEST_DESC="Running too few -cg arguments with --generate_exports test"
   TEST_CMD="${CQL} --dev --cg \"$O/__temp.c\" \"$O/__temp.h\" --in \"$T/cg_test.sql\" --global_proc x --generate_exports"
-  TEST_OUT="/dev/null"
-  TEST_ERR="$O/gen_exports_args.err"
   run_test_expect_fail
 
   on_diff_exit gen_exports_args.err
@@ -774,8 +766,6 @@ misc_cases() {
   TEST_NAME="inc_invalid_regions"
   TEST_DESC="Running invalid include regions test"
   TEST_CMD="${CQL} --cg \"$O/cg_test_schema_partial_upgrade.out\" --in \"$T/cg_test_schema_upgrade.sql\" --global_proc test --rt schema_upgrade --include_regions bogus --exclude_regions shared"
-  TEST_ERR="$O/inc_invalid_regions.err"
-  TEST_OUT="/dev/null"
   run_test_expect_fail
 
   on_diff_exit inc_invalid_regions.err
@@ -783,8 +773,6 @@ misc_cases() {
   TEST_NAME="excl_invalid_regions"
   TEST_DESC="Running invalid exclude regions test"
   TEST_CMD="${CQL} --cg \"$O/cg_test_schema_partial_upgrade.out\" --in \"$T/cg_test_schema_upgrade.sql\" --global_proc test --rt schema_upgrade --include_regions extra --exclude_regions bogus"
-  TEST_ERR="$O/excl_invalid_regions.err"
-  TEST_OUT="/dev/null"
   run_test_expect_fail
 
   on_diff_exit excl_invalid_regions.err
@@ -792,8 +780,6 @@ misc_cases() {
   TEST_NAME="global_proc_needed"
   TEST_DESC="Running global proc is needed but not present test"
   TEST_CMD="${CQL} --cg \"$O/__temp.c\" \"$O/__temp.h\" --in \"$T/bigquote.sql\""
-  TEST_ERR="$O/global_proc_needed.err"
-  TEST_OUT="/dev/null"
   run_test_expect_fail
 
   on_diff_exit global_proc_needed.err
@@ -840,17 +826,13 @@ misc_cases() {
   fi
 
   on_diff_exit parse_test_cql_inferred_notnull.err
-
-  on_diff_exit parse_test_cql_inferred_notnull.err
 }
 
 json_validate() {
   sql_file=$1
-  TEST_NAME="json_validate_${sql_file##*/}"
+  TEST_NAME="json_validate"
   TEST_DESC="Checking for valid JSON formatting of ${sql_file} (test mode disabled)"
   TEST_CMD="${CQL} --cg \"$O/__temp.out\" --in \"${sql_file}\" --rt json_schema"
-  TEST_OUT="/dev/null"
-  TEST_ERR="$O/cg_test_json_schema.err"
   TEST_ERROR_MSG="Non-test JSON output failed for ${sql_file}"
   run_test_expect_success
 
@@ -870,11 +852,9 @@ json_validate() {
 
 json_schema_test() {
   echo '--------------------------------- STAGE 9 -- JSON SCHEMA TEST'
-  TEST_NAME="json_schema_test"
+  TEST_NAME="cg_test_json_schema"
   TEST_DESC="Running JSON schema test"
   TEST_CMD="${CQL} --test --cg \"$O/cg_test_json_schema.out\" --in \"$T/cg_test_json_schema.sql\" --rt json_schema"
-  TEST_OUT="/dev/null"
-  TEST_ERR="$O/cg_test_json_schema.err"
   TEST_ERROR_MSG="JSON schema test failed"
   run_test_expect_success
 
@@ -897,8 +877,6 @@ test_helpers_test() {
   TEST_NAME="cg_test_test_helpers"
   TEST_DESC="Running test builders test"
   TEST_CMD="${CQL} --test --cg \"$O/cg_test_test_helpers.out\" --in \"$T/cg_test_test_helpers.sql\" --rt test_helpers"
-  TEST_OUT="/dev/null"
-  TEST_ERR="$O/cg_test_test_helpers.err"
   TEST_ERROR_MSG="Test builders test failed"
   run_test_expect_success
 
@@ -943,16 +921,12 @@ run_test() {
   TEST_NAME="run_test_codegen"
   TEST_DESC="Generating run test code"
   TEST_CMD="${CQL} --nolines --cg \"$O/run_test.h\" \"$O/run_test.c\" --in \"$T/run_test.sql\" --global_proc cql_startup --rt c"
-  TEST_OUT="/dev/null"
-  TEST_ERR="/dev/null"
   TEST_ERROR_MSG="Run test code generation failed"
   run_test_expect_success
 
   TEST_NAME="run_test_modern_codegen"
   TEST_DESC="Generating modern run test code"
   TEST_CMD="${CQL} --defines modern_test --nolines --cg \"$O/run_test_modern.h\" \"$O/run_test_modern.c\" --in \"$T/run_test.sql\" --global_proc cql_startup --rt c"
-  TEST_OUT="/dev/null"
-  TEST_ERR="/dev/null"
   TEST_ERROR_MSG="Modern run test code generation failed"
   run_test_expect_success
 
@@ -1013,8 +987,6 @@ upgrade_test() {
   TEST_NAME="upgrade_test"
   TEST_DESC="Running schema upgrade test"
   TEST_CMD="upgrade/upgrade_test.sh \"${TEST_COVERAGE_ARGS}\""
-  TEST_OUT="/dev/null"
-  TEST_ERR="/dev/null"
   TEST_ERROR_MSG="Schema upgrade test failed"
   run_test_expect_success
 }
@@ -1025,24 +997,18 @@ query_plan_test() {
   TEST_NAME="query_plan_sem"
   TEST_DESC="Baseline semantic analysis of query plan test"
   TEST_CMD="${CQL} --sem --ast --dev --in \"$T/cg_test_query_plan.sql\""
-  TEST_OUT="$O/__temp"
-  TEST_ERR="$O/cg_test_query_plan.err"
   TEST_ERROR_MSG="Query plan semantic analysis failed"
   run_test_expect_success
 
   TEST_NAME="query_plan_codegen"
   TEST_DESC="Generating query plan code"
   TEST_CMD="${CQL} --test --dev --cg \"$O/cg_test_query_plan.out\" --in \"$T/cg_test_query_plan.sql\" --rt query_plan"
-  TEST_OUT="/dev/null"
-  TEST_ERR="$O/cg_test_query_plan.err"
   TEST_ERROR_MSG="Query plan code generation failed"
   run_test_expect_success
 
   TEST_NAME="query_plan_sem_analysis"
   TEST_DESC="Running semantic analysis on generated query plan"
   TEST_CMD="${CQL} --sem --ast --dev --test --in \"$O/cg_test_query_plan.out\""
-  TEST_OUT="$O/__temp"
-  TEST_ERR="$O/cg_test_query_plan.err"
   TEST_ERROR_MSG="Query plan semantic analysis failed"
   run_test_expect_success
 
@@ -1056,48 +1022,36 @@ query_plan_test() {
   TEST_NAME="query_plan_c_build"
   TEST_DESC="Building query plan C code"
   TEST_CMD="${CQL} --test --dev --cg \"$O/query_plan.h\" \"$O/query_plan.c\" --in \"$O/cg_test_query_plan.out\""
-  TEST_OUT="/dev/null"
-  TEST_ERR="$O/query_plan_print.err"
   TEST_ERROR_MSG="Query plan C code generation failed"
   run_test_expect_success
 
   TEST_NAME="query_plan_compile"
   TEST_DESC="Compiling query plan code"
   TEST_CMD="do_make query_plan_test"
-  TEST_OUT="/dev/null"
-  TEST_ERR="/dev/null"
   TEST_ERROR_MSG="Query plan compilation failed"
   run_test_expect_success
 
   TEST_NAME="query_plan_run"
   TEST_DESC="Running query plan in C"
   TEST_CMD="./$O/query_plan_test"
-  TEST_OUT="$O/cg_test_query_plan_view.out"
-  TEST_ERR="$O/cg_test_query_plan_view.err"
   TEST_ERROR_MSG="Query plan execution failed"
   run_test_expect_success
 
   TEST_NAME="query_plan_json_validate"
   TEST_DESC="Validating JSON format of query plan report"
-  TEST_CMD="common/json_check.py <\"$O/cg_test_query_plan_view.out\""
-  TEST_OUT="$O/cg_test_query_plan_js.out"
-  TEST_ERR="$O/cg_test_query_plan_js.err"
+  TEST_CMD="common/json_check.py <\"$O/query_plan_run.out\""
   TEST_ERROR_MSG="Query plan JSON validation failed"
   run_test_expect_success
 
   TEST_NAME="query_plan_empty_codegen"
   TEST_DESC="Generating empty query plan code"
   TEST_CMD="${CQL} --test --dev --cg \"$O/cg_test_query_plan_empty.out\" --in \"$T/cg_test_query_plan_empty.sql\" --rt query_plan"
-  TEST_OUT="/dev/null"
-  TEST_ERR="$O/cg_test_query_plan_empty.err"
   TEST_ERROR_MSG="Empty query plan code generation failed"
   run_test_expect_success
 
   TEST_NAME="query_plan_empty_sem"
   TEST_DESC="Running semantic analysis on empty query plan"
   TEST_CMD="${CQL} --sem --ast --dev --test --in \"$O/cg_test_query_plan_empty.out\""
-  TEST_OUT="$O/__temp"
-  TEST_ERR="$O/cg_test_query_plan_empty.err"
   TEST_ERROR_MSG="Empty query plan semantic analysis failed"
   run_test_expect_success
 
@@ -1108,38 +1062,30 @@ query_plan_test() {
   TEST_NAME="query_plan_empty_c_build"
   TEST_DESC="Building empty query plan C code"
   TEST_CMD="${CQL} --test --dev --cg \"$O/query_plan.h\" \"$O/query_plan.c\" --in \"$O/cg_test_query_plan_empty.out\""
-  TEST_OUT="/dev/null"
-  TEST_ERR="$O/query_plan_print.err"
   TEST_ERROR_MSG="Empty query plan C code generation failed"
   run_test_expect_success
 
   TEST_NAME="query_plan_empty_compile"
   TEST_DESC="Compiling empty query plan code"
   TEST_CMD="rm $O/query_plan.o && do_make query_plan_test"
-  TEST_OUT="/dev/null"
-  TEST_ERR="/dev/null"
   TEST_ERROR_MSG="Empty query plan compilation failed"
   run_test_expect_success
 
   TEST_NAME="query_plan_empty_run"
   TEST_DESC="Running empty query plan in C"
   TEST_CMD="./$O/query_plan_test"
-  TEST_OUT="$O/cg_test_query_plan_view.out"
-  TEST_ERR="$O/cg_test_query_plan_view.err"
   TEST_ERROR_MSG="Empty query plan execution failed"
   run_test_expect_success
 
   TEST_NAME="query_plan_empty_json_validate"
   TEST_DESC="Validating JSON format of empty query plan report"
-  TEST_CMD="common/json_check.py <\"$O/cg_test_query_plan_view.out\""
-  TEST_OUT="$O/cg_test_query_plan_js.out"
-  TEST_ERR="$O/cg_test_query_plan_js.err"
+  TEST_CMD="common/json_check.py <\"$O/query_plan_empty_run.out\""
   TEST_ERROR_MSG="Empty query plan JSON validation failed"
   run_test_expect_success
 
   echo "validating query plan empty result (this is stable)"
   echo "  computing diffs (empty if none)"
-  on_diff_exit cg_test_query_plan_view.out
+  on_diff_exit query_plan_empty_run.out
 }
 
 line_number_test() {

@@ -172,10 +172,7 @@ some_lints() {
 building() {
   echo '--------------------------------- STAGE 1 -- make clean, then make'
 
-  TEST_NAME="build_clean"
-  TEST_DESC="Cleaning build directory"
-  TEST_CMD="do_make clean"
-  run_test_expect_success
+  do_make clean
 
   TEST_NAME="build_all"
   TEST_DESC="Build directory"

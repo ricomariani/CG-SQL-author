@@ -381,12 +381,11 @@ code_gen_c_test() {
   echo validating codegen
   cql_verify "$T/cg_test.sql" "$O/cg_test_c.c"
 
-  echo testing for successful compilation of generated C
   rm -f out/cg_test_c.o
-  if ! do_make out/cg_test_c.o; then
-    echo "ERROR: failed to compile the C code from the code gen test"
-    failed
-  fi
+  TEST_DESC="Testing for successful compilation of generated C"
+  TEST_CMD="do_make out/cg_test_c.o"
+  TEST_ERROR_MSG="Generated C code compilation failed"
+  run_test_expect_success
 
   TEST_NAME="cg_test_c_globals_no_global_proc"
   TEST_DESC="Verifying globals codegen does not require a global proc"
@@ -412,12 +411,12 @@ code_gen_c_test() {
   echo validating codegen
   cql_verify "$T/cg_test_c_type_getters.sql" "$O/cg_test_c_with_type_getters.h"
 
-  echo testing for successful compilation of generated C with type getters
   rm -f out/cg_test_c_with_type_getters.o
-  if ! do_make out/cg_test_c_with_type_getters.o; then
-    echo "ERROR: failed to compile the C code from the type getters code gen test"
-    failed
-  fi
+  TEST_NAME="cg_test_c_with_type_getters_compile"
+  TEST_DESC="Compiling generated C code from type getters codegen test"
+  TEST_CMD="do_make $O/cg_test_c_with_type_getters.o"
+  TEST_ERROR_MSG="Generated C code compilation from type getters failed"
+  run_test_expect_success
 
   TEST_NAME="cg_test_c_with_namespace"
   TEST_DESC="Running codegen test with namespace enabled"
@@ -608,17 +607,15 @@ schema_migration_test() {
   echo validating output trees
   cql_verify "$T/cg_test_schema_upgrade.sql" "$O/cg_test_schema_upgrade.out"
 
-  echo "  compiling the upgrade script with CQL"
-  if ! ${CQL} --cg "$O/cg_test_schema_upgrade.h" "$O/cg_test_schema_upgrade.c" --in "$O/cg_test_schema_upgrade.out"; then
-    echo CQL compilation failed
-    failed
-  fi
+  TEST_NAME="cg_test_schema_upgrade_compile_c"
+  TEST_DESC="Compiling the upgrade script with CQL"
+  TEST_CMD="${CQL} --cg \"$O/cg_test_schema_upgrade.h\" \"$O/cg_test_schema_upgrade.c\" --in \"$O/cg_test_schema_upgrade.out\""
+  run_test_expect_success
 
-  echo "  compiling the upgrade script with C"
-  if ! do_make cg_test_schema_upgrade; then
-    echo CQL migration script compilation failed.
-    failed
-  fi
+  TEST_NAME="cg_test_schema_upgrade_compile_cql"
+  TEST_DESC="Compiling the upgrade script with CQL"
+  TEST_CMD="do_make cg_test_schema_upgrade"
+  run_test_expect_success
 
   echo "  computing diffs (empty if none)"
 
@@ -629,14 +626,12 @@ schema_migration_test() {
   TEST_NAME="cg_test_schema_prev"
   TEST_DESC="Running code gen to produce previous schema"
   TEST_CMD="${CQL} --cg \"$O/cg_test_schema_prev.out\" --in \"$T/cg_test_schema_upgrade.sql\" --rt schema"
-  TEST_ERROR_MSG="Previous schema code generation failed"
   run_test_expect_success
 
   echo '---------------------------------'
   TEST_NAME="cg_test_schema_sqlite"
   TEST_DESC="Running code gen to produce raw sqlite schema"
   TEST_CMD="${CQL} --cg \"$O/cg_test_schema_sqlite.out\" --in \"$T/cg_test_schema_upgrade.sql\" --rt schema_sqlite"
-  TEST_ERROR_MSG="Raw SQLite schema code generation failed"
   run_test_expect_success
 
   echo combining generated previous schema with itself to ensure it self validates

@@ -58,14 +58,8 @@ MAKE_ARGS="${MAKE_COVERAGE_ARGS}"
 
 # Helper function for tests expected to succeed
 run_test_expect_success() {
-  # Generate output file names automatically if not provided
-  if [ -z "$TEST_OUT" ]; then
-    TEST_OUT="$O/${TEST_NAME}.out"
-  fi
-
-  if [ -z "$TEST_ERR" ]; then
-    TEST_ERR="$O/${TEST_NAME}.err"
-  fi
+  TEST_OUT="$O/${TEST_NAME}.out"
+  TEST_ERR="$O/${TEST_NAME}.err"
 
   if [ -z "$TEST_ERROR_MSG" ]; then
     TEST_ERROR_MSG="Test $TEST_NAME failed"
@@ -93,14 +87,8 @@ run_test_expect_success() {
 
 # Helper function for tests expected to fail
 run_test_expect_fail() {
-  # Generate output file names automatically if not provided
-  if [ -z "$TEST_OUT" ]; then
-    TEST_OUT="$O/${TEST_NAME}.out"
-  fi
-
-  if [ -z "$TEST_ERR" ]; then
-    TEST_ERR="$O/${TEST_NAME}.err"
-  fi
+  TEST_OUT="$O/${TEST_NAME}.out"
+  TEST_ERR="$O/${TEST_NAME}.err"
 
   if [ -z "$TEST_ERROR_MSG" ]; then
     TEST_ERROR_MSG="Test $TEST_NAME failed"
@@ -1170,8 +1158,6 @@ code_gen_lua_test() {
   TEST_NAME="cg_test_lua"
   TEST_DESC="Running Lua codegen test"
   TEST_CMD="${CQL} --dev --test --cg \"$O/cg_test_lua.lua\" --in \"$T/cg_test_lua.sql\" --global_proc cql_startup --rt lua"
-  TEST_OUT="/dev/null"
-  TEST_ERR="$O/cg_test_lua.err"
   TEST_ERROR_MSG="Lua codegen test failed"
   run_test_expect_success
 
@@ -1188,8 +1174,6 @@ code_gen_lua_test() {
   TEST_NAME="lua_run_test"
   TEST_DESC="Testing successful compilation of Lua run test (cannot run by default due to runtime requirements)"
   TEST_CMD="lua_demo/prepare_run_test.sh"
-  TEST_OUT="/dev/null"
-  TEST_ERR="/dev/null"
   TEST_ERROR_MSG="Lua run test preparation failed"
   run_test_expect_success
 
@@ -1216,8 +1200,6 @@ cqlrt_diag() {
   TEST_NAME="cqlrt_diag"
   TEST_DESC="Building $O/cqlrt_diag.o with high warnings enabled"
   TEST_CMD="do_make $O/cqlrt_diag.o"
-  TEST_OUT="/dev/null"
-  TEST_ERR="/dev/null"
   TEST_ERROR_MSG="Warnings discovered in cqlrt"
   run_test_expect_success
 }
@@ -1229,8 +1211,6 @@ signatures_test() {
   TEST_NAME="signatures_test"
   TEST_DESC="Checking for signatures in reference files"
   TEST_CMD="! grep \"$AT_GENERATED_TAG SignedSource\" $T/*.ref"
-  TEST_OUT="/dev/null"
-  TEST_ERR="/dev/null"
   TEST_ERROR_MSG="Signatures found in reference files, this is never valid. Change the test logic so that it validates the presence of the signature which then strips it. It's likely that one of those validations is missing which caused a signature to be copied into a .ref file."
   run_test_expect_success
 }

@@ -1094,8 +1094,6 @@ line_number_test() {
   TEST_NAME="line_directives_presence"
   TEST_DESC="Checking for presence of # line directives"
   TEST_CMD="${CQL} --cg \"$O/cg_test_generated_from.h\" \"$O/cg_test_generated_from.c\" \"$O/cg_test_generated_from.out\" --in \"$T/cg_test_generated_from.sql\""
-  TEST_OUT="/dev/null"
-  TEST_ERR="$O/cg_test_generated_from.err"
   TEST_ERROR_MSG="Line directives test failed"
   run_test_expect_success
 
@@ -1112,13 +1110,11 @@ line_number_test() {
   TEST_NAME="line_directives_suppression"
   TEST_DESC="Testing the suppression of # line directives"
   TEST_CMD="${CQL} --nolines --cg \"$O/cg_test_generated_from.h\" \"$O/cg_test_generated_from.c\" \"$O/cg_test_generated_from.out\" --in \"$T/cg_test_generated_from.sql\""
-  TEST_OUT="/dev/null"
-  TEST_ERR="$O/cg_test_generated_from.err"
   TEST_ERROR_MSG="Line directives suppression test failed"
   run_test_expect_success
 
   if grep "^#line " "$O/cg_test_generated_from.c" >/dev/null; then
-    echo "# line directives were not correctly suppresed. See" "$O/cg_test_generated_from.c" 2>"$O/cg_test_generated_from.err"
+    echo "# line directives were not correctly suppressed. See" "$O/cg_test_generated_from.c" 2>"$O/cg_test_generated_from.err"
     failed
   fi
 
@@ -1139,8 +1135,6 @@ stats_test() {
   TEST_NAME="stats_test"
   TEST_DESC="Running stats output test"
   TEST_CMD="${CQL} --cg \"$O/stats.csv\" --in \"$T/stats_test.sql\" --rt stats"
-  TEST_OUT="/dev/null"
-  TEST_ERR="$O/stats_test.err"
   TEST_ERROR_MSG="Stats output test failed"
   run_test_expect_success
 
@@ -1167,8 +1161,6 @@ unit_tests() {
   TEST_NAME="unit_tests"
   TEST_DESC="Running CQL unit tests"
   TEST_CMD="${CQL} --run_unit_tests"
-  TEST_OUT="/dev/null"
-  TEST_ERR="/dev/null"
   TEST_ERROR_MSG="CQL unit tests failed"
   run_test_expect_success
 }

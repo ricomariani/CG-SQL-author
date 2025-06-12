@@ -62,17 +62,17 @@ run_test_expect_success() {
   if [ -z "$TEST_OUT" ]; then
     TEST_OUT="$O/${TEST_NAME}.out"
   fi
-  
+
   if [ -z "$TEST_ERR" ]; then
     TEST_ERR="$O/${TEST_NAME}.err"
   fi
-  
+
   if [ -z "$TEST_ERROR_MSG" ]; then
     TEST_ERROR_MSG="Test $TEST_NAME failed"
   fi
 
   echo "$TEST_DESC"
-  
+
   if ! eval "$TEST_CMD" >"$TEST_OUT" 2>"$TEST_ERR"; then
     echo "ERROR: $TEST_ERROR_MSG"
     echo "Command: $TEST_CMD"
@@ -81,7 +81,7 @@ run_test_expect_success() {
     cat "$TEST_ERR"
     failed
   fi
-  
+
   # Reset variables after use
   TEST_NAME=""
   TEST_DESC=""
@@ -97,17 +97,17 @@ run_test_expect_fail() {
   if [ -z "$TEST_OUT" ]; then
     TEST_OUT="$O/${TEST_NAME}.out"
   fi
-  
+
   if [ -z "$TEST_ERR" ]; then
     TEST_ERR="$O/${TEST_NAME}.err"
   fi
-  
+
   if [ -z "$TEST_ERROR_MSG" ]; then
     TEST_ERROR_MSG="Test $TEST_NAME failed"
   fi
 
   echo "$TEST_DESC"
-  
+
   if eval "$TEST_CMD" >"$TEST_OUT" 2>"$TEST_ERR"; then
     echo "ERROR: Command succeeded but was expected to fail"
     echo "Command: $TEST_CMD"
@@ -115,7 +115,7 @@ run_test_expect_fail() {
     echo "Errors: $TEST_ERR"
     failed
   fi
-  
+
   # Reset variables after use
   TEST_NAME=""
   TEST_DESC=""
@@ -184,13 +184,15 @@ some_lints() {
 building() {
   echo '--------------------------------- STAGE 1 -- make clean, then make'
 
-  echo building new cql
-  do_make clean >/dev/null 2>/dev/null
-  if ! do_make all >"$O/build.out" 2>"$O/build.err"; then
-    echo build cql failed:
-    cat "$O/build.err"
-    failed
-  fi
+  TEST_NAME="build_clean"
+  TEST_DESC="Cleaning build directory"
+  TEST_CMD="do_make clean"
+  run_test_expect_success
+
+  TEST_NAME="build_all"
+  TEST_DESC="Build directory"
+  TEST_CMD="do_make all"
+  run_test_expect_success
 
   if grep "^State.*conflicts:" "$O/cql.y.output" >"$O/build.err"; then
     echo "conflicts found in grammar, these must be fixed" >>"$O/build.err"
@@ -202,40 +204,30 @@ building() {
   TEST_NAME="build_amalgam"
   TEST_DESC="Building CQL amalgam"
   TEST_CMD="do_make amalgam"
-  TEST_OUT="$O/build.out"
-  TEST_ERR="$O/build.err"
   TEST_ERROR_MSG="Build CQL amalgam failed"
   run_test_expect_success
 
   TEST_NAME="build_amalgam_test"
   TEST_DESC="Building CQL amalgam test"
   TEST_CMD="do_make amalgam_test"
-  TEST_OUT="$O/build.out"
-  TEST_ERR="$O/build.err"
   TEST_ERROR_MSG="Build CQL amalgam test failed"
   run_test_expect_success
 
   TEST_NAME="build_cql_verify"
   TEST_DESC="Building CQL-verify"
   TEST_CMD="do_make cql-verify"
-  TEST_OUT="/dev/null"
-  TEST_ERR="$O/build.err"
   TEST_ERROR_MSG="Build CQL-verify failed"
   run_test_expect_success
 
   TEST_NAME="build_cql_linetest"
   TEST_DESC="Building CQL-linetest"
   TEST_CMD="do_make cql-linetest"
-  TEST_OUT="/dev/null"
-  TEST_ERR="$O/build.err"
   TEST_ERROR_MSG="Build CQL-linetest failed"
   run_test_expect_success
 
   TEST_NAME="build_json_test"
   TEST_DESC="Building JSON-test"
   TEST_CMD="do_make json-test"
-  TEST_OUT="/dev/null"
-  TEST_ERR="$O/build.err"
   TEST_ERROR_MSG="Build JSON-test failed"
   run_test_expect_success
 
@@ -254,7 +246,6 @@ basic_test() {
   TEST_NAME="test"
   TEST_DESC="Running \"$T/test.sql\""
   TEST_CMD="${CQL} --echo --dev --include_paths \"test\" \"test2\" <\"$T/test.sql\""
-  TEST_OUT="$O/test.out"
   TEST_ERROR_MSG="Basic parsing test failed"
   run_test_expect_success
 
@@ -268,7 +259,6 @@ basic_test() {
   TEST_NAME="test_ast"
   TEST_DESC="Creating basic AST for test.sql"
   TEST_CMD="${CQL} --ast_no_echo --dev --include_paths test2 --in \"$T/test.sql\""
-  TEST_OUT="$O/test_ast.out"
   TEST_ERROR_MSG="Basic AST test failed"
   run_test_expect_success
 
@@ -285,12 +275,11 @@ basic_test() {
   TEST_NAME="test_crlf"
   TEST_DESC="Testing CRLF line endings"
   TEST_CMD="${CQL} --include_paths test test2 --echo --dev --in \"$O/test.sql\""
-  TEST_OUT="$O/test.out2"
   TEST_ERROR_MSG="Echo CRLF version does not parse correctly"
   run_test_expect_success
 
   echo "  computing diffs CRLF parsing (empty if none)"
-  mv "$O/test.out2" "$O/test.out"
+  mv "$O/test_crlf.out" "$O/test.out"
   on_diff_exit test.out
 
   TEST_NAME="test_exp"
@@ -298,14 +287,13 @@ basic_test() {
   TEST_CMD="${CQL} --echo --dev --include_paths test2 --in \"$T/test.sql\" --exp"
   TEST_ERROR_MSG="Basic parsing with expansion test failed"
   run_test_expect_success
+
   echo "  computing diffs (empty if none)"
   on_diff_exit test_exp.out
 
   TEST_NAME="include_not_found"
   TEST_DESC="Testing include file not found"
   TEST_CMD="${CQL} --in \"$T/test_include_file_not_found.sql\""
-  TEST_ERR="$O/include_not_found.err"
-  TEST_OUT="/dev/null"
   run_test_expect_fail
 
   echo "  computing diffs (empty if none)"
@@ -314,8 +302,6 @@ basic_test() {
   TEST_NAME="include_nesting"
   TEST_DESC="Testing include files nested too deeply"
   TEST_CMD="${CQL} --in \"$T/include_files_infinite_nesting.sql\""
-  TEST_ERR="$O/include_nesting.err"
-  TEST_OUT="/dev/null"
   run_test_expect_fail
 
   echo "  computing diffs (empty if none)"
@@ -324,8 +310,6 @@ basic_test() {
   TEST_NAME="test_ifdef"
   TEST_DESC="Testing ifdef"
   TEST_CMD="${CQL} --in \"$T/test_ifdef.sql\" --echo --defines foo"
-  TEST_OUT="$O/test_ifdef.out"
-  TEST_ERR="$O/test_ifdef.err"
   TEST_ERROR_MSG="Basic parsing with ifdefs failed"
   run_test_expect_success
 
@@ -335,8 +319,6 @@ basic_test() {
   TEST_NAME="include_empty"
   TEST_DESC="Testing empty include file"
   TEST_CMD="${CQL} --in \"$T/include_empty.sql\" --echo"
-  TEST_OUT="$O/include_empty.out"
-  TEST_ERR="$O/include_empty.err"
   TEST_ERROR_MSG="Empty include file failed"
   run_test_expect_success
 
@@ -349,8 +331,6 @@ macro_test() {
   TEST_NAME="macro_test"
   TEST_DESC="Running macro expansion test"
   TEST_CMD="${CQL} --test --exp --ast --hide_builtins --in \"$T/macro_test.sql\""
-  TEST_OUT="$O/macro_test.out"
-  TEST_ERR="$O/macro_test.err"
   TEST_ERROR_MSG="CQL macro test returned unexpected error code"
   run_test_expect_success
 
@@ -363,22 +343,18 @@ macro_test() {
   TEST_NAME="macro_exp_errors"
   TEST_DESC="Running macro expansion error cases"
   TEST_CMD="${CQL} --exp --echo --in \"$T/macro_exp_errors.sql\""
-  TEST_OUT="$O/macro_exp_errors.out"
-  TEST_ERR="$O/macro_test.err.out"
   run_test_expect_fail
 
   echo "  computing diffs (empty if none)"
-  on_diff_exit macro_test.err.out
+  on_diff_exit macro_exp_errors.err
 
   TEST_NAME="macro_test_dup"
   TEST_DESC="Running macro expansion duplicate name"
   TEST_CMD="${CQL} --exp --in \"$T/macro_test_dup_arg.sql\""
-  TEST_OUT="$O/macro_exp_errors.out"
-  TEST_ERR="$O/macro_test_dup.err.out"
   run_test_expect_fail
 
   echo "  computing diffs (empty if none)"
-  on_diff_exit macro_test_dup.err.out
+  on_diff_exit macro_test_dup.err
 }
 
 semantic_test() {
@@ -412,7 +388,6 @@ code_gen_c_test() {
   TEST_NAME="cg_test_c"
   TEST_DESC="Running codegen test"
   TEST_CMD="${CQL} --dev --test --cg \"$O/cg_test_c.h\" \"$O/cg_test_c.c\" \"$O/cg_test_exports.out\" --in \"$T/cg_test.sql\" --global_proc cql_startup --generate_exports"
-  TEST_ERR="$O/cg_test_c.err"
   TEST_ERROR_MSG="Codegen test failed"
   run_test_expect_success
 
@@ -429,16 +404,12 @@ code_gen_c_test() {
   TEST_NAME="cg_test_c_globals_no_global_proc"
   TEST_DESC="Verifying globals codegen does not require a global proc"
   TEST_CMD="${CQL} --cg \"$O/cg_test_c_globals.h\" \"$O/cg_test_c_globals.c\" --in \"$T/cg_test_c_globals.sql\""
-  TEST_OUT="/dev/null"
-  TEST_ERR="$O/cg_test_c.err"
   TEST_ERROR_MSG="Globals codegen without global proc failed"
   run_test_expect_success
 
   TEST_NAME="cg_test_c_globals"
   TEST_DESC="Running codegen test for global variables group"
   TEST_CMD="${CQL} --test --cg \"$O/cg_test_c_globals.h\" \"$O/cg_test_c_globals.c\" --in \"$T/cg_test_c_globals.sql\""
-  TEST_OUT="/dev/null"
-  TEST_ERR="$O/cg_test_c.err"
   TEST_ERROR_MSG="Codegen test for global variables failed"
   run_test_expect_success
 
@@ -448,8 +419,6 @@ code_gen_c_test() {
   TEST_NAME="cg_test_c_type_getters"
   TEST_DESC="Running codegen test with type getters enabled"
   TEST_CMD="${CQL} --test --cg \"$O/cg_test_c_with_type_getters.h\" \"$O/cg_test_c_with_type_getters.c\" --in \"$T/cg_test_c_type_getters.sql\" --global_proc cql_startup"
-  TEST_OUT="/dev/null"
-  TEST_ERR="$O/cg_test_c.err"
   TEST_ERROR_MSG="Codegen test with type getters failed"
   run_test_expect_success
 
@@ -466,8 +435,6 @@ code_gen_c_test() {
   TEST_NAME="cg_test_c_with_namespace"
   TEST_DESC="Running codegen test with namespace enabled"
   TEST_CMD="${CQL} --dev --test --cg \"$O/cg_test_c_with_namespace.h\" \"$O/cg_test_c_with_namespace.c\" \"$O/cg_test_imports_with_namespace.ref\" --in \"$T/cg_test.sq\"l --global_proc cql_startup --c_include_namespace test_namespace --generate_exports"
-  TEST_OUT="/dev/null"
-  TEST_ERR="$O/cg_test_c.err"
   TEST_ERROR_MSG="Codegen test with namespace failed"
   run_test_expect_success
 
@@ -477,8 +444,6 @@ code_gen_c_test() {
   TEST_NAME="cg_test_c_with_header"
   TEST_DESC="Running codegen test with c_include_path specified"
   TEST_CMD="${CQL} --dev --test --cg \"$O/cg_test_c_with_header.h\" \"$O/cg_test_c_with_header.c\" --in \"$T/cg_test.sql\" --global_proc cql_startup --c_include_path \"somewhere/something.h\""
-  TEST_OUT="/dev/null"
-  TEST_ERR="$O/cg_test_c.err"
   TEST_ERROR_MSG="Codegen test with c_include_path failed"
   run_test_expect_success
 
@@ -501,32 +466,26 @@ code_gen_c_test() {
 
   echo "  compiling code"
 
-  if ! do_make cg_test; then
-    echo CQL generated invalid C code
-    failed
-  fi
+  TEST_NAME="cg_compile_generated"
+  TEST_DESC="Compiling generated C code from codegen test"
+  TEST_CMD="do_make cg_test"
+  TEST_ERROR_MSG="Generated C code compilation failed"
 }
 
 assorted_errors_test() {
   echo '--------------------------------- STAGE 6 -- FAST FAIL CASES'
   echo running various failure cases that cause no output
 
-  # the output path doesn't exist, should cause an error
   TEST_NAME="badpath"
   TEST_DESC="Testing reading from non-existent file"
   TEST_CMD="${CQL} --in /xx/yy/zz"
-  TEST_ERR="$O/badpath.err"
-  TEST_OUT="/dev/null"
   run_test_expect_fail
 
   on_diff_exit badpath.err
 
-  # the output file is not writeable, should cause an error
   TEST_NAME="unwriteable"
   TEST_DESC="Testing writing to unwriteable file"
   TEST_CMD="${CQL} --dev --cg /xx/yy/zz /xx/yy/zzz --in \"$T/cg_test.sql\" --global_proc xx"
-  TEST_ERR="$O/unwriteable.err"
-  TEST_OUT="/dev/null"
   run_test_expect_fail
 
   on_diff_exit unwriteable.err
@@ -534,116 +493,81 @@ assorted_errors_test() {
   TEST_NAME="sem_abort"
   TEST_DESC="Testing simple semantic error to abort output"
   TEST_CMD="${CQL} --cg \"$O/__temp\" /xx/yy/zz --in \"$T/semantic_error.sql\""
-  TEST_ERR="$O/sem_abort.err"
-  TEST_OUT="/dev/null"
   run_test_expect_fail
 
   on_diff_exit sem_abort.err
 
-  # bogus arg should report error
   TEST_NAME="invalid_arg"
   TEST_DESC="Testing invalid argument"
   TEST_CMD="${CQL} --garbonzo!!"
-  TEST_ERR="$O/invalid_arg.err"
-  TEST_OUT="/dev/null"
   run_test_expect_fail
 
   on_diff_exit invalid_arg.err
 
-  # --cg did not have any following args, should force an error
   TEST_NAME="cg_requires_file"
   TEST_DESC="Testing --cg with no file name"
   TEST_CMD="${CQL} --cg"
-  TEST_ERR="$O/cg_requires_file.err"
-  TEST_OUT="/dev/null"
   run_test_expect_fail
 
   on_diff_exit cg_requires_file.err
 
-  # wrong number of args specified in --cg (for lua)
   TEST_NAME="cg_1_2"
   TEST_DESC="Testing wrong number of args specified in --cg (for lua)"
   TEST_CMD="${CQL} --dev --cg \"$O/__temp\" \"$O/__temp2\" --in \"$T/cg_test.sql\" --rt lua"
-  TEST_ERR="$O/cg_1_2.err"
-  TEST_OUT="/dev/null"
   run_test_expect_fail
 
-  # --generate_file_type did not specify a file type
   TEST_NAME="generate_file_type"
   TEST_DESC="Testing --generate_file_type with no file type specified"
   TEST_CMD="${CQL} --generate_file_type"
-  TEST_ERR="$O/generate_file_type.err"
-  TEST_OUT="/dev/null"
   run_test_expect_fail
 
   on_diff_exit generate_file_type.err
 
-  # --generate_file_type specified invalid file type (should cause an error)
   TEST_NAME="generate_file_file"
   TEST_DESC="Testing --generate_file_type with invalid file type"
   TEST_CMD="${CQL} --generate_file_type foo"
-  TEST_ERR="$O/generate_file_file.err"
-  TEST_OUT="/dev/null"
   run_test_expect_fail
 
   on_diff_exit generate_file_file.err
 
-  # --rt specified with no arg following it
   TEST_NAME="rt_arg_missing"
   TEST_DESC="Testing --rt with no argument"
   TEST_CMD="${CQL} --rt"
-  TEST_ERR="$O/rt_arg_missing.err"
-  TEST_OUT="/dev/null"
   run_test_expect_fail
 
   on_diff_exit rt_arg_missing.err
 
-  # invalid result type specified with --rt, should force an error
   TEST_NAME="rt_arg_bogus"
   TEST_DESC="Testing --rt with invalid result type"
   TEST_CMD="${CQL} --rt foo"
-  TEST_ERR="$O/rt_arg_bogus.err"
-  TEST_OUT="/dev/null"
   run_test_expect_fail
 
   on_diff_exit rt_arg_bogus.err
 
-  # --cqlrt specified but no file name present, should force an error
   TEST_NAME="cqlrt_arg_missing"
   TEST_DESC="Testing --cqlrt with no file name"
   TEST_CMD="${CQL} --cqlrt"
-  TEST_ERR="$O/cqlrt_arg_missing.err"
-  TEST_OUT="/dev/null"
   run_test_expect_fail
 
   on_diff_exit cqlrt_arg_missing.err
 
-  # --global_proc has no proc name
   TEST_NAME="global_proc_missing"
   TEST_DESC="Testing --global_proc with no procedure name"
   TEST_CMD="${CQL} --global_proc"
-  TEST_ERR="$O/global_proc_missing.err"
-  TEST_OUT="/dev/null"
   run_test_expect_fail
 
   on_diff_exit global_proc_missing.err
 
-  # --in arg missing
   TEST_NAME="in_arg_missing"
   TEST_DESC="Testing --in with no file name"
   TEST_CMD="${CQL} --in"
-  TEST_ERR="$O/in_arg_missing.err"
-  TEST_OUT="/dev/null"
   run_test_expect_fail
 
   on_diff_exit in_arg_missing.err
 
-  # no c_include_namespace arg
   TEST_NAME="c_include_namespace_missing"
   TEST_DESC="Testing --c_include_namespace with no namespace"
   TEST_CMD="${CQL} --c_include_namespace"
-  TEST_ERR="$O/c_include_namespace_missing.err"
-  TEST_OUT="/dev/null"
   run_test_expect_fail
 
   on_diff_exit c_include_namespace_missing.err
@@ -654,8 +578,6 @@ schema_migration_test() {
   TEST_NAME="sem_test_migrate"
   TEST_DESC="Running semantic analysis for migration test"
   TEST_CMD="sem_check --sem --ast --in \"$T/sem_test_migrate.sql\""
-  TEST_OUT="$O/sem_test_migrate.out"
-  TEST_ERR="$O/sem_test_migrate.err"
   TEST_ERROR_MSG="Migration semantic analysis failed"
   run_test_expect_success
 
@@ -670,8 +592,6 @@ schema_migration_test() {
   TEST_NAME="schema_version_error"
   TEST_DESC="Running schema migrate proc test"
   TEST_CMD="sem_check --sem --in \"$T/schema_version_error.sql\" --ast"
-  TEST_OUT="$O/schema_version_error.out"
-  TEST_ERR="$O/schema_version_error.err.out"
   TEST_ERROR_MSG="Schema version error test failed"
   run_test_expect_success
 
@@ -681,8 +601,6 @@ schema_migration_test() {
   TEST_NAME="sem_test_prev"
   TEST_DESC="Running semantic analysis for previous schema error checks test"
   TEST_CMD="sem_check --sem --ast --exclude_regions high_numbered_thing --in \"$T/sem_test_prev.sql\""
-  TEST_OUT="$O/sem_test_prev.out"
-  TEST_ERR="$O/sem_test_prev.err"
   TEST_ERROR_MSG="Previous schema error checks test failed"
   run_test_expect_success
 
@@ -697,8 +615,6 @@ schema_migration_test() {
   TEST_NAME="cg_test_schema_upgrade"
   TEST_DESC="Running code gen for migration test"
   TEST_CMD="${CQL} --cg \"$O/cg_test_schema_upgrade.out\" --in \"$T/cg_test_schema_upgrade.sql\" --global_proc test --rt schema_upgrade"
-  TEST_OUT="/dev/null"
-  TEST_ERR="$O/cg_test_schema_upgrade.err"
   TEST_ERROR_MSG="Schema upgrade code generation failed"
   run_test_expect_success
 
@@ -726,8 +642,6 @@ schema_migration_test() {
   TEST_NAME="cg_test_schema_prev"
   TEST_DESC="Running code gen to produce previous schema"
   TEST_CMD="${CQL} --cg \"$O/cg_test_schema_prev.out\" --in \"$T/cg_test_schema_upgrade.sql\" --rt schema"
-  TEST_OUT="/dev/null"
-  TEST_ERR="$O/cg_test_schema_prev.err"
   TEST_ERROR_MSG="Previous schema code generation failed"
   run_test_expect_success
 
@@ -735,8 +649,6 @@ schema_migration_test() {
   TEST_NAME="cg_test_schema_sqlite"
   TEST_DESC="Running code gen to produce raw sqlite schema"
   TEST_CMD="${CQL} --cg \"$O/cg_test_schema_sqlite.out\" --in \"$T/cg_test_schema_upgrade.sql\" --rt schema_sqlite"
-  TEST_OUT="/dev/null"
-  TEST_ERR="$O/cg_test_schema_sqlite.err"
   TEST_ERROR_MSG="Raw SQLite schema code generation failed"
   run_test_expect_success
 
@@ -775,8 +687,6 @@ schema_migration_test() {
   TEST_NAME="cg_test_schema_partial_upgrade"
   TEST_DESC="Running schema migration with include/exclude args"
   TEST_CMD="${CQL} --cg \"$O/cg_test_schema_partial_upgrade.out\" --in \"$T/cg_test_schema_upgrade.sql\" --global_proc test --rt schema_upgrade --include_regions extra --exclude_regions shared"
-  TEST_OUT="/dev/null"
-  TEST_ERR="$O/cg_test_schema_partial_upgrade.err"
   TEST_ERROR_MSG="Schema migration with include/exclude regions failed"
   run_test_expect_success
 
@@ -790,11 +700,9 @@ schema_migration_test() {
   on_diff_exit cg_test_schema_partial_upgrade.out
   on_diff_exit cg_test_schema_partial_upgrade.err
 
-  TEST_NAME="cg_test_schema_min_version"
+  TEST_NAME="cg_test_schema_min_version_upgrade"
   TEST_DESC="Running schema migration with min version args"
   TEST_CMD="${CQL} --cg \"$O/cg_test_schema_min_version_upgrade.out\" --in \"$T/cg_test_schema_upgrade.sql\" --global_proc test --rt schema_upgrade --min_schema_version 3"
-  TEST_OUT="/dev/null"
-  TEST_ERR="$O/cg_test_schema_min_version_upgrade.err"
   TEST_ERROR_MSG="Schema migration with min version failed"
   run_test_expect_success
 
@@ -808,8 +716,6 @@ misc_cases() {
   TEST_NAME="usage"
   TEST_DESC="Running usage test"
   TEST_CMD="${CQL}"
-  TEST_OUT="$O/usage.out"
-  TEST_ERR="$O/usage.err"
   TEST_ERROR_MSG="Usage test failed"
   run_test_expect_success
   on_diff_exit usage.out
@@ -817,7 +723,6 @@ misc_cases() {
   TEST_NAME="simple_error"
   TEST_DESC="Running simple error test"
   TEST_CMD="${CQL} --in \"$T/error.sql\""
-  TEST_OUT="$O/error.out"
   TEST_ERR="$O/simple_error.err"
   run_test_expect_fail
 
@@ -948,13 +853,13 @@ json_validate() {
   TEST_ERR="$O/cg_test_json_schema.err"
   TEST_ERROR_MSG="Non-test JSON output failed for ${sql_file}"
   run_test_expect_success
-  
+
   echo "Checking for well formed JSON using python"
   if ! common/json_check.py <"$O/__temp.out" >/dev/null; then
     echo "JSON is badly formed for ${sql_file} -- see $O/__temp.out"
     failed
   fi
-  
+
   echo "Checking for CQL JSON grammar conformance"
   if ! out/json_test <"$O/__temp.out" >"$O/json_errors.txt"; then
     echo "JSON did not pass grammar check for ${sql_file} (see $O/__temp.out)"
@@ -1299,12 +1204,10 @@ stats_test() {
 
 amalgam_test() {
   echo '--------------------------------- STAGE 16 -- TEST AMALGAM'
-  
-  TEST_NAME="amalgam_test"
+
+  TEST_NAME="cql_amalgam_test"
   TEST_DESC="Running CQL amalgam tests"
   TEST_CMD="./$O/amalgam_test \"$T/cql_amalgam_test_success.sql\" \"$T/cql_amalgam_test_semantic_error.sql\" \"$T/cql_amalgam_test_syntax_error.sql\""
-  TEST_OUT="$O/cql_amalgam_test.out"
-  TEST_ERR="$O/cql_amalgam_test.err"
   TEST_ERROR_MSG="CQL amalgam tests failed"
   run_test_expect_success
 
@@ -1362,7 +1265,6 @@ dot_test() {
   TEST_NAME="dottest"
   TEST_DESC="Running $T/dottest.sql"
   TEST_CMD="${CQL} --dot --hide_builtins --in \"$T/dottest.sql\""
-  TEST_OUT="$O/dottest.out"
   TEST_ERR="/dev/null"
   TEST_ERROR_MSG="DOT syntax test failed"
   run_test_expect_success

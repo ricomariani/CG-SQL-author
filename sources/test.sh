@@ -179,12 +179,11 @@ building() {
   TEST_CMD="do_make all"
   run_test_expect_success
 
-  if grep "^State.*conflicts:" "$O/cql.y.output" >"$O/build.err"; then
-    echo "conflicts found in grammar, these must be fixed" >>"$O/build.err"
-    echo "look at the conflicting states in" "$O/cql.y.output" "to debug" >>"$O/build.err"
-    cat "$O/build.err"
-    failed
-  fi
+  TEST_NAME="check_conflicts"
+  TEST_DESC="Checking for parser conflicts"
+  TEST_CMD="grep '^State.*conflicts:' $O/cql.y.output"
+  TEST_ERROR_MSG="conflicts found in grammar, these must be fixed. Look at the conflicting states in $O/cql.y.output to debug"
+  run_test_expect_fail
 
   TEST_NAME="build_amalgam"
   TEST_DESC="Building CQL amalgam"
@@ -805,24 +804,25 @@ misc_cases() {
 
 json_validate() {
   sql_file=$1
+  json_file="$O/cql_test.json"
+
   TEST_NAME="json_validate"
   TEST_DESC="Checking for valid JSON formatting of ${sql_file} (test mode disabled)"
-  TEST_CMD="${CQL} --cg \"$O/__temp.out\" --in \"${sql_file}\" --rt json_schema"
+  TEST_CMD="${CQL} --cg \"${json_file}\" --in \"${sql_file}\" --rt json_schema"
   TEST_ERROR_MSG="Non-test JSON output failed for ${sql_file}"
   run_test_expect_success
 
-  echo "Checking for well formed JSON using python"
-  if ! common/json_check.py <"$O/__temp.out" >/dev/null; then
-    echo "JSON is badly formed for ${sql_file} -- see $O/__temp.out"
-    failed
-  fi
+  TEST_NAME="json_validate_using_python"
+  TEST_DESC="Checking for well formed JSON using python for ${sql_file}"
+  TEST_CMD="common/json_check.py <\"${json_file}\""
+  TEST_ERROR_MSG="JSON is badly formed for ${sql_file} -- see ${json_file}"
+  run_test_expect_success
 
-  echo "Checking for CQL JSON grammar conformance"
-  if ! out/json_test <"$O/__temp.out" >"$O/json_errors.txt"; then
-    echo "JSON did not pass grammar check for ${sql_file} (see $O/__temp.out)"
-    cat "$O/json_errors.txt"
-    failed
-  fi
+  TEST_NAME="json_grammar_conformance"
+  TEST_DESC="Checking for CQL JSON grammar conformance for ${sql_file}"
+  TEST_CMD="out/json_test <\"${json_file}\""
+  TEST_ERROR_MSG="JSON did not pass grammar check for ${sql_file} -- see ${json_file}"
+  run_test_expect_success
 }
 
 json_schema_test() {

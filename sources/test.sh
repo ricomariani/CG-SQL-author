@@ -726,12 +726,12 @@ misc_cases() {
   TEST_ERROR_MSG="Alternate cqlrt test failed"
   run_test_expect_success
 
-  if ! grep alternate_cqlrt.h "$O/__temp.h" >/dev/null; then
-    echo alternate cqlrt did not appear in the output header
-    failed
-  fi
-
   on_diff_exit alt_cqlrt.err
+
+  TEST_NAME="alt_cqlrt_check"
+  TEST_DESC="Checking alternate cqlrt.h inclusion"
+  TEST_CMD="grep alternate_cqlrt.h \"$O/__temp.h\""
+  run_test_expect_success
 
   TEST_NAME="gen_exports_args"
   TEST_DESC="Running too few -cg arguments with --generate_exports test"
@@ -761,22 +761,20 @@ misc_cases() {
 
   on_diff_exit global_proc_needed.err
 
-  echo running test where output file cannot be written
   create_unwritable_file "$O/unwritable.h.out"
   create_unwritable_file "$O/unwritable.c.out"
-  if ${CQL} --dev --cg "$O/unwritable.h".out "$O/unwritable.c".out --in "$T/cg_test.sql" --rt c --global_proc cql_startup 2>"$O/write_fail.err"; then
-    echo writing should have failed
-    failed
-  fi
+
+  TEST_NAME="write_fail"
+  TEST_DESC="Running test where output file cannot be written"
+  TEST_CMD="${CQL} --dev --cg \"$O/unwritable.h.out\" \"$O/unwritable.c.out\" --in \"$T/cg_test.sql\" --rt c --global_proc cql_startup"
+  run_test_expect_fail
 
   on_diff_exit write_fail.err
 
-  echo 'testing the generated from comments in non-test environment.'
-  if ! ${CQL} --cg "$O/cg_test_generated_from.h" "$O/cg_test_generated_from.c" "$O/cg_test_generated_from.out" --in "$T/cg_test_generated_from.sql" 2>"$O/cg_test_generated_from.err"; then
-    cat "$O/cg_test_generated_from.err"
-    echo 'ERROR: Compilation failed.'
-    failed
-  fi
+  TEST_NAME="cg_test_generated_from"
+  TEST_DESC="Testing the generated from comments in non-test environment"
+  TEST_CMD="${CQL} --cg \"$O/cg_test_generated_from.h\" \"$O/cg_test_generated_from.c\" --in \"$T/cg_test_generated_from.sql\""
+  run_test_expect_success
 
   if ! grep "Generated from test/cg_test_generated_from.sql:21" "$O/cg_test_generated_from.h" >/dev/null; then
     echo Generated from text did not appear in the header output.

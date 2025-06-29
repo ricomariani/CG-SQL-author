@@ -776,29 +776,29 @@ misc_cases() {
   TEST_CMD="${CQL} --cg \"$O/cg_test_generated_from.h\" \"$O/cg_test_generated_from.c\" --in \"$T/cg_test_generated_from.sql\""
   run_test_expect_success
 
-  if ! grep "Generated from test/cg_test_generated_from.sql:21" "$O/cg_test_generated_from.h" >/dev/null; then
-    echo Generated from text did not appear in the header output.
-    failed
-  fi
+  TEST_NAME="cg_test_generated_from_test_h_21"
+  TEST_DESC="Testing the 'generated from' comments in test environment (line 21)"
+  TEST_CMD="grep 'Generated from test/cg_test_generated_from.sql:21' \"$O/cg_test_generated_from.h\""
+  run_test_expect_success
 
-  if ! grep "Generated from test/cg_test_generated_from.sql:21" "$O/cg_test_generated_from.c" >/dev/null; then
-    echo Generated from text did not appear in the implementation output.
-    failed
-  fi
+  TEST_NAME="cg_test_generated_from_test_c_21"
+  TEST_DESC="Testing the 'generated from' comments in test environment (line 21)"
+  TEST_CMD="grep 'Generated from test/cg_test_generated_from.sql:21' \"$O/cg_test_generated_from.c\""
+  run_test_expect_success
 
-  echo 'running parser disallows columns in FETCH FROM CALL test'
-  if ${CQL} --in "$T/parse_test_fetch_from_call_columns.sql" 2>"$O/parse_test_fetch_from_call_columns.err"; then
-    echo 'failed to disallow cursor columns in FETCH FROM CALL'
-    failed
-  fi
+  TEST_NAME="parse_test_fetch_from_call_columns"
+  TEST_DESC="Running parser disallows columns in FETCH FROM CALL test"
+  TEST_CMD="${CQL} --in \"$T/parse_test_fetch_from_call_columns.sql\""
+  TEST_ERROR_MSG="failed to disallow cursor columns in FETCH FROM CALL"
+  run_test_expect_fail
 
   on_diff_exit parse_test_fetch_from_call_columns.err
 
-  echo 'running parser disallows cql_inferred_notnull test'
-  if ${CQL} --in "$T/parse_test_cql_inferred_notnull.sql" 2>"$O/parse_test_cql_inferred_notnull.err"; then
-    echo 'failed to disallow cql_inferred_notnull'
-    failed
-  fi
+  TEST_NAME="parse_test_cql_inferred_notnull"
+  TEST_DESC="Running parser disallows cql_inferred_notnull test"
+  TEST_CMD="${CQL} --in \"$T/parse_test_cql_inferred_notnull.sql\""
+  TEST_ERROR_MSG="failed to disallow cql_inferred_notnull"
+  run_test_expect_fail
 
   on_diff_exit parse_test_cql_inferred_notnull.err
 }

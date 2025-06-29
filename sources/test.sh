@@ -664,14 +664,14 @@ schema_migration_test() {
   TEST_NAME="cg_test_schema_partial_upgrade"
   TEST_DESC="Running schema migration with include/exclude args"
   TEST_CMD="${CQL} --cg \"$O/cg_test_schema_partial_upgrade.out\" --in \"$T/cg_test_schema_upgrade.sql\" --global_proc test --rt schema_upgrade --include_regions extra --exclude_regions shared"
-  TEST_ERROR_MSG="Schema migration with include/exclude regions failed"
   run_test_expect_success
 
   echo "  compiling the upgrade script with CQL"
-  if ! ${CQL} --cg "$O/cg_test_schema_partial_upgrade.h" "$O/cg_test_schema_partial_upgrade.c" --in "$O/cg_test_schema_partial_upgrade.out"; then
-    echo CQL compilation failed
-    failed
-  fi
+
+  TEST_NAME="cg_test_schema_partial_upgrade_compile_cql"
+  TEST_DESC="Compiling the partial upgrade script with CQL"
+  TEST_CMD="${CQL} --cg \"$O/cg_test_schema_partial_upgrade.h\" \"$O/cg_test_schema_partial_upgrade.c\" --in \"$O/cg_test_schema_partial_upgrade.out\""
+  run_test_expect_success
 
   echo "  computing diffs (empty if none)"
   on_diff_exit cg_test_schema_partial_upgrade.out
@@ -680,7 +680,6 @@ schema_migration_test() {
   TEST_NAME="cg_test_schema_min_version_upgrade"
   TEST_DESC="Running schema migration with min version args"
   TEST_CMD="${CQL} --cg \"$O/cg_test_schema_min_version_upgrade.out\" --in \"$T/cg_test_schema_upgrade.sql\" --global_proc test --rt schema_upgrade --min_schema_version 3"
-  TEST_ERROR_MSG="Schema migration with min version failed"
   run_test_expect_success
 
   echo "  computing diffs (empty if none)"

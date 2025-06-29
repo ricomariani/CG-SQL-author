@@ -602,9 +602,8 @@ X'({hex}{hex})*'                 { yylval.sval = Strdup(yytext); return BLOBLIT;
 \{                               { return yytext[0]; }
 \}                               { return yytext[0]; }
 {id}                             { yylval.sval = Strdup(yytext); return ID; }
-
-[ \t\r\n]                        ;
-\-\-.*                           ;
+[ \t\r\n]                        { YY_BREAK; }
+\-\-.*                           { YY_BREAK; }
 
 .                                { yyerror("Unexpected %s\n", yytext); }
 

@@ -631,25 +631,23 @@ schema_migration_test() {
   TEST_CMD="${CQL} --cg \"$O/cg_test_schema_sqlite.out\" --in \"$T/cg_test_schema_upgrade.sql\" --rt schema_sqlite"
   run_test_expect_success
 
-  echo combining generated previous schema with itself to ensure it self validates
+  echo "combining generated previous schema with itself to ensure it self validates"
 
   cat "$O/cg_test_schema_prev.out" >"$O/prev_loop.out"
   echo "@previous_schema;" >>"$O/prev_loop.out"
   cat "$O/cg_test_schema_prev.out" >>"$O/prev_loop.out"
 
-  if ! ${CQL} --cg "$O/prev_twice.out" --in "$O/prev_loop.out" --rt schema 2>"$O/cg_test_schema_prev_twice.err"; then
-    echo "ERROR:"
-    cat "$O/cg_test_schema_prev_twice.err"
-    failed
-  fi
+  TEST_NAME="cg_test_schema_prev_twice"
+  TEST_DESC="Validating previous schema combined with itself"
+  TEST_CMD="${CQL} --cg \"$O/prev_twice.out\" --in \"$O/prev_loop.out\" --rt schema"
+  run_test_expect_success
 
-  echo comparing the generated previous schema from that combination and it should be identical to the original
+  echo "comparing the generated previous schema from that combination and it should be identical to the original"
 
-  if ! ${CQL} --cg "$O/prev_thrice.out" --in "$O/prev_twice.out" --rt schema 2>"$O/cg_test_schema_prev_thrice.err"; then
-    echo "ERROR:"
-    cat "$O/cg_test_schema_prev_thrice.err"
-    failed
-  fi
+  TEST_NAME="cg_test_schema_prev_thrice"
+  TEST_DESC="Validating previous schema combined with itself"
+  TEST_CMD="${CQL} --cg \"$O/prev_thrice.out\" --in \"$O/prev_twice.out\" --rt schema"
+  run_test_expect_success
 
   echo "  computing diffs after several applications (empty if none)"
   __on_diff_exit "$O/cg_test_schema_prev.out" "$O/prev_twice.out"

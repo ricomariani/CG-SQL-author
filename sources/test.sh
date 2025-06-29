@@ -148,25 +148,30 @@ errors_documented() {
 
 some_lints() {
   echo '--------------------------------- VERIFYING A FEW CODE LINTS'
-  if grep ' for(' ./*.c ./*.h; then
-    echo "anti pattern 'for(' found, use 'for ('"
-    failed
-  fi
 
-  if grep ' if(' ./*.c ./*.h; then
-    echo "anti pattern 'if(' found, use 'if ('"
-    failed
-  fi
+  TEST_NAME="check_for_statement"
+  TEST_DESC="Checking for 'for(' anti-pattern"
+  TEST_CMD="grep ' for(' ./*.c ./*.h"
+  TEST_ERROR_MSG="anti pattern 'for(' found, use 'for ('"
+  run_test_expect_fail
 
-  if grep ' while(' ./*.c ./*.h; then
-    echo "anti pattern 'while(' found, use 'while ('"
-    failed
-  fi
+  TEST_NAME="check_if_statement"
+  TEST_DESC="Checking for 'if(' anti-pattern"
+  TEST_CMD="grep ' if(' ./*.c ./*.h"
+  TEST_ERROR_MSG="anti pattern 'if(' found, use 'if ('"
+  run_test_expect_fail
 
-  if grep ' switch(' ./*.c ./*.h; then
-    echo "anti pattern 'switch(' found, use 'switch ('"
-    failed
-  fi
+  TEST_NAME="check_while_statement"
+  TEST_DESC="Checking for 'while(' anti-pattern"
+  TEST_CMD="grep ' while(' ./*.c ./*.h"
+  TEST_ERROR_MSG="anti pattern 'while(' found, use 'while ('"
+  run_test_expect_fail
+
+  TEST_NAME="check_switch_statement"
+  TEST_DESC="Checking for 'switch(' anti-pattern"
+  TEST_CMD="grep ' switch(' ./*.c ./*.h"
+  TEST_ERROR_MSG="anti pattern 'switch(' found, use 'switch ('"
+  run_test_expect_fail
 }
 
 building() {

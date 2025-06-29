@@ -862,32 +862,25 @@ test_helpers_test() {
   echo "  computing diffs (empty if none)"
   on_diff_exit cg_test_test_helpers.out
 
-  echo running semantic analysis on test helpers output
-  if ! ${CQL} --sem --ast --in "$O/cg_test_test_helpers.out" >/dev/null 2>"$O/cg_test_test_helpers.err"; then
-    echo "CQL semantic analysis returned unexpected error code"
-    cat "$O/cg_test_test_helpers.err"
-    failed
-  fi
+  TEST_NAME="cg_test_test_helpers_sem_analysis"
+  TEST_DESC="Running semantic analysis on test helpers output"
+  TEST_CMD="${CQL} --sem --ast --in \"$O/cg_test_test_helpers.out\""
+  run_test_expect_success
 
-  echo build test helpers c codegen
-  if ! ${CQL} --test --dev --cg "$O/test_helpers.h" "$O/test_helpers.c" --in "$O/cg_test_test_helpers.out" 2>"$O/cg_test_test_helpers.err"; then
-    echo "ERROR:"
-    cat "$O/cg_test_test_helpers.err"
-    failed
-  fi
+  TEST_NAME="cg_test_test_helpers_c_codegen"
+  TEST_DESC="Generating test helpers c code"
+  TEST_CMD="${CQL} --test --dev --cg \"$O/test_helpers.h\" \"$O/test_helpers.c\" --in \"$O/cg_test_test_helpers.out\""
+  run_test_expect_success
 
-  echo compile test helpers c code
-  if ! do_make test_helpers_test; then
-    echo build failed
-    failed
-  fi
+  TEST_NAME="cg_test_test_helpers_c_compile"
+  TEST_DESC="Compiling test helpers c code"
+  TEST_CMD="do_make test_helpers_test"
+  run_test_expect_success
 
-  echo run test helpers in c
-  if ! "./$O/test_helpers_test" >/dev/null 2>"$O/cg_test_test_helpers.err"; then
-    echo "$O/test_helpers_test returned a failure code"
-    cat "$O/cg_test_test_helpers.err"
-    failed
-  fi
+  TEST_NAME="cg_test_test_helpers_c_run"
+  TEST_DESC="Running test helpers in c"
+  TEST_CMD="./$O/test_helpers_test"
+  run_test_expect_success
 }
 
 run_test() {

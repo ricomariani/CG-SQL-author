@@ -883,6 +883,17 @@ test_helpers_test() {
   run_test_expect_success
 }
 
+run_test_compile() {
+  echo "  compiling code"
+  do_make run_test
+  MAKE_ARGS_SAVED=${MAKE_ARGS}
+  # echo gives us a free whitespace trim avoiding empty args with ""
+  MAKE_ARGS=$(echo SQLITE_PATH=./sqlite ${MAKE_ARGS})
+  do_make sqlite
+  do_make run_test_modern
+  MAKE_ARGS=${MAKE_ARGS_SAVED}
+}
+
 run_test() {
   echo '--------------------------------- STAGE 11 -- RUN CODE TEST'
 
@@ -898,60 +909,41 @@ run_test() {
   TEST_ERROR_MSG="Modern run test code generation failed"
   run_test_expect_success
 
-  if ! (
-    echo "  compiling code"
-    do_make run_test
-    MAKE_ARGS_SAVED=${MAKE_ARGS}
-    # echo gives us a free whitespace trim avoiding empty args with ""
-    MAKE_ARGS=$(echo SQLITE_PATH=./sqlite ${MAKE_ARGS})
-    do_make sqlite
-    do_make run_test_modern
-    MAKE_ARGS=${MAKE_ARGS_SAVED}
-  ); then
-    echo build failed
-    failed
-  fi
+  TEST_NAME="run_test_compile_code"
+  TEST_DESC="Compiling run test code"
+  TEST_CMD="run_test_compile"
+  TEST_ERROR_MSG="Run test compilation failed"
+  run_test_expect_success
 
-  if ! (
-    echo "  executing tests"
-    "./$O/run_test"
-  ); then
-    echo tests failed
-    failed
-  fi
+  TEST_NAME="run_test_run"
+  TEST_DESC="Running run test in C"
+  TEST_CMD="./$O/run_test"
+  run_test_expect_success
 
-  if ! (
-    echo "  executing tests with modern SQLite"
-    "./$O/run_test_modern"
-  ); then
-    echo modern run tests failed
-    failed
-  fi
+  TEST_NAME="run_test_modern_sqlite"
+  TEST_DESC="Running run test for modern SQLite"
+  TEST_CMD="./$O/run_test_modern"
+  run_test_expect_success
 
-  if ! ${CQL} --compress --cg "$O/run_test_compressed.h" "$O/run_test_compressed.c" --in "$T/run_test.sql" --global_proc cql_startup --rt c; then
-    echo compressed codegen failed.
-    failed
-  fi
+  TEST_NAME="run_test_compressed_codegen"
+  TEST_DESC="Generating compressed run test code"
+  TEST_CMD="${CQL} --compress --cg \"$O/run_test_compressed.h\" \"$O/run_test_compressed.c\" --in \"$T/run_test.sql\" --global_proc cql_startup --rt c"
+  run_test_expect_success
 
-  if ! (
-    echo "  compiling code (compressed version)"
-    do_make run_test_compressed
-  ); then
-    echo build failed
-    failed
-  fi
+  TEST_NAME="run_test_compressed_compile_code"
+  TEST_DESC="Compiling compressed run test code"
+  TEST_CMD="do_make run_test_compressed"
+  run_test_expect_success
 
-  if ! (
-    echo "  executing tests (compressed version)"
-    "./$O/run_test_compressed"
-  ); then
-    echo tests failed
-    failed
-  fi
+  TEST_NAME="run_test_compressed_run"
+  TEST_DESC="Running compressed run test in C"
+  TEST_CMD="./$O/run_test_compressed"
+  run_test_expect_success
 }
 
 upgrade_test() {
   echo '--------------------------------- STAGE 12 -- SCHEMA UPGRADE TEST'
+
   TEST_NAME="upgrade_test"
   TEST_DESC="Running schema upgrade test"
   TEST_CMD="upgrade/upgrade_test.sh \"${TEST_COVERAGE_ARGS}\""

@@ -183,7 +183,8 @@ $O/run_test_client.o: run_test_client.c
 
 $O/result_set_extension.o: result_set_extension.c
 
-$O/query_plan_test.o: query_plan_test.c
+$O/query_plan_test.o: $T/query_plan_test.c
+	$(CC) $(CFLAGS) -c -o $O/query_plan_test.o $T/query_plan_test.c
 
 $O/query_plan.o: $O/query_plan.c
 

@@ -189,7 +189,8 @@ $O/query_plan.o: $O/query_plan.c
 
 $O/test_helpers.o: $O/test_helpers.c
 
-$O/test_helpers_test.o: test_helpers_test.c
+$O/test_helpers_test.o: $T/test_helpers_test.c
+	$(CC) $(CFLAGS) -c -o $O/test_helpers_test.o $T/test_helpers_test.c
 
 $O/cqlrt_mocked.o: cqlrt.c cqlrt.h cqlrt_common.c cqlrt_common.h
 	$(CC) $(CFLAGS) -DCQL_RUN_TEST -c -o $O/cqlrt_mocked.o cqlrt.c

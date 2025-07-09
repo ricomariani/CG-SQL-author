@@ -321,7 +321,7 @@ query_plan: $(source) c
 > $(CQL) --nolines --include_paths $(SCRIPT_DIR_RELATIVE) --in $(source) --rt query_plan --cg $O/query_plan.sql;
 > $(CQL) --nolines --dev --include_paths $(SCRIPT_DIR_RELATIVE) --in $O/query_plan.sql --cg $O/query_plan.h $O/query_plan.c;
 > cc --compile -I$O -I$(SCRIPT_DIR_RELATIVE) -I$(CQL_ROOT_DIR) $O/query_plan.c -o $O/query_plan.o;
-> cc --compile -I$O -I$(SCRIPT_DIR_RELATIVE) -I$(CQL_ROOT_DIR) $(CQL_ROOT_DIR)/query_plan_test.c -o $O/query_plan_test.o;
+> cc --compile -I$O -I$(SCRIPT_DIR_RELATIVE) -I$(CQL_ROOT_DIR) $(CQL_ROOT_DIR)/test/query_plan_test.c -o $O/query_plan_test.o;
 > cc --debug --optimize -I$O -I$(SCRIPT_DIR_RELATIVE) -I$(CQL_ROOT_DIR) $O/query_plan.o $O/query_plan_test.o $(CQL_ROOT_DIR)/cqlrt.c --output $O/query_plan -lsqlite3 && rm -rf "$O/query_plan.dSYM";
 
 $O/cqlrt.lua:

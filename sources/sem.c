@@ -339,10 +339,17 @@ static void copy_sensitivity(ast_node *ast, sem_t sensitive) {
 #define SEM_REVERSE_APPLY_REWRITE_ONLY 0
 static bool_t sem_reverse_apply_if_needed(ast_node *ast, bool_t analyze);
 
+// this is the void/void* function that does the cleanup for symtab
 static void lazy_free_symtab(void *syms) {
   symtab_delete(syms);
 }
 
+// This is used to add a symtab to the lazy free list so that it will be
+// freed at when complication is done.  This is used for symbol tables
+// which otherwise have a complicated lifetime.  For example, the symbol
+// table that tracks which aliases of a select statement are used needs
+// to live until the end of the compilation process, regardless of which passes
+// are being executed.
 static void add_pending_symtab_free(symtab *syms) {
   lazy_free *p = _new(lazy_free);
   p->context = syms;

@@ -20,7 +20,6 @@ cql_noexport void minipool_open(minipool *_Nullable *_Nonnull pool);
 cql_noexport void minipool_close(minipool *_Nullable *_Nonnull pool);
 cql_noexport void *_Nonnull minipool_alloc(minipool *_Nonnull pool, uint32_t needed);
 
-
 // lazy free service for misc pool contents
 
 typedef struct lazy_free {
@@ -29,12 +28,15 @@ typedef struct lazy_free {
   void (*_Nonnull teardown)(void *_Nullable context);
 } lazy_free;
 
+// for deferred free of things that need cleanup (e.g. symtab)
 cql_noexport void add_lazy_free(lazy_free *_Nonnull p);
 cql_noexport void run_lazy_frees(void);
 
+// convenience macros for allocating from any minipool
 #define _pool_new(p, x) ((x*)minipool_alloc(p, (int32_t)sizeof(x)))
 #define _pool_new_array(p, x, c) ((x*)minipool_alloc(p, c*(int32_t)sizeof(x)))
 
+// almost everything ends up in the AST pool, so we have a macro for it
 #define _ast_pool_new(x) _pool_new(ast_pool, x)
 #define _ast_pool_new_array(x, c) _pool_new_array(ast_pool, x, c)
 

@@ -672,4 +672,3 @@ However, by way of motivational examples here are some possible transforms in ta
 |`cont.y += 1`   | `set_y(cont, get_y(cont) + 1)` |
 |`cont.z += 1`   | `set(cont, "z", get(cont, "z") + 1)` |
 |`a[u,v] += 1`   | `set_uv(a, u, v, get_uv(a, u, v) + 1)` |
-```

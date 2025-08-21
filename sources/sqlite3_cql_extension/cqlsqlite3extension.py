@@ -170,6 +170,9 @@ int sqlite3_cqlextension_init(sqlite3 *_Nonnull db, char *_Nonnull *_Nonnull pzE
   int rc = SQLITE_OK;
   cql_rowset_aux_init *aux = NULL;""")
     for proc in data['queries'] + data['deletes'] + data['inserts'] + data['generalInserts'] + data['updates'] + data['general']:
+		if "cql:private" in proc['attributes']:
+            continue
+
         proc_name = proc['canonicalName']
         has_projection = 'projection' in proc
 

@@ -87,7 +87,7 @@ declare proc read_stuff() using transaction;
 
 @echo lua, '
 
-func read_stuff(db)
+function read_stuff(db)
   local rc
   local result
   rc, result = use_f_fetch_results(db, 5)

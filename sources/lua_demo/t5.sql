@@ -10,12 +10,12 @@ declare proc print no check;
 create proc make_schema()
 begin
   create table p_table (
-    id integer primary key,
+    id int! primary key,
     name text
   );
 
   create table c_table (
-    id integer references p_table(id),
+    id int! references p_table(id),
     info text
   );
 
@@ -44,7 +44,6 @@ create proc child2(id_ integer not null)
 begin
   select * from c_table where id = id_;
 end;
-
 
 create proc parent_manual_child()
 begin

@@ -1096,8 +1096,8 @@ static void gen_expr_list(ast_node *ast) {
 
 static void gen_shape_arg(ast_node *ast) {
   Contract(is_ast_from_shape(ast));
-  EXTRACT_STRING(shape, ast->left);
-  gen_printf("FROM %s", shape);
+  gen_printf("FROM ");
+  gen_name(ast->left);
   if (ast->right) {
     gen_printf(" ");
     gen_shape_def(ast->right);

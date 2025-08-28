@@ -117,7 +117,7 @@ jobs:
             flex \
             gcc \
             libsqlite3-dev \
-            luarocks=3.11.0-* \
+            luarocks=3.8.0-* \
             lua5.4 liblua5.4-dev \
             sqlite3 \
             jq \

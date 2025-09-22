@@ -51,16 +51,26 @@ static void eval_num_str(CSTR lit, int32_t num_type, eval_node *result) {
 
   switch (num_type) {
   case NUM_BOOL:
+    // Using strtol for bool keeps one uniform parser path; any non-zero literal
+    // becomes true.  We intentionally do not verify canonical forms (e.g. "01")
+    // because upstream lexical analysis already accepted the token and SQL
+    // semantics treat any non-zero numeric literal as true.
     result->bool_value = (bool_t)!!strtol(lit, NULL, 10);
     result->sem_type = SEM_TYPE_BOOL;
     break;
 
   case NUM_INT:
+    // strtol/strtoll with an explicit radix determined by has_hex_prefix keeps
+    // the integer parsing branch centralized; overflow checking for constants
+    // is deferred to later semantic phases so we don't duplicate it here.
     result->int32_value = (int32_t)strtol(lit, NULL, has_hex_prefix(lit) ? 16 : 10);
     result->sem_type = SEM_TYPE_INTEGER;
     break;
 
   case NUM_LONG:
+    // 64-bit path mirrors the 32-bit logic; we rely on the host C library's
+    // parsing so platform-specific edge nuances (e.g. leading +) are consistent
+    // everywhere rather than re-specifying integer grammar in the evaluator.
     result->int64_value = (int64_t)strtoll(lit, NULL, has_hex_prefix(lit) ? 16 : 10);
     result->sem_type = SEM_TYPE_LONG_INTEGER;
     break;
@@ -100,6 +110,13 @@ cql_noexport void eval_cast_to(eval_node *result, sem_t sem_type) {
   if (core_type_source == core_type_target) {
     return;
   }
+
+  // The nested switch below is deliberately fully spelled out rather than
+  // using tables/macros: clarity of the narrow set of legal numeric pathways
+  // matters more than code size.  We rely on C's native casts for truncation
+  // semantics, matching runtime behavior.  Overflow detection is intentionally
+  // absent here; semantic analysis guarantees that any required diagnostics
+  // have already fired before constant folding runs.
 
   switch (core_type_target) {
     case SEM_TYPE_REAL:
@@ -198,6 +215,10 @@ cql_noexport ast_node *eval_set(ast_node *expr, eval_node *result) {
       // later stages of the compiler are looking for this case and will rewrite
       // it as "_64(-9223372036854775807) - 1" we encode it this way because
       // that's how its appears for users
+      // Rationale: the most negative 64-bit value can't be written as a positive
+      // literal with a unary minus inside range (two's complement asymmetry).
+      // Representing it structurally avoids depending on target lexer acceptance
+      // of the raw literal and keeps downstream rewriting logic simple.
       new_num = new_ast_uminus(new_ast_num(NUM_LONG, dup_printf("9223372036854775808")));
     }
     else {
@@ -344,6 +365,12 @@ static sem_t eval_combined_type(eval_node *left, eval_node *right) {
   \
   Invariant(result->sem_type == core_type)
 
+// Rationale: The macro above centralizes error/null checks, type promotion, and
+// divide-by-zero guarding so every arithmetic operator stays behaviorally
+// identical.  This avoids subtle drift when adding new numeric kinds and keeps
+// three-valued (error/null/value) logic uniform.  The small cost in readability
+// is traded for semantic consistency and easier auditing.
+
 // This is exactly like the standard binary operator macro except it is for the
 // operators that are not allowed to apply to real numbers.  e.g. bitwise and/or
 // and left/right shift.
@@ -396,6 +423,10 @@ static sem_t eval_combined_type(eval_node *left, eval_node *right) {
   } \
   \
   Invariant(result->sem_type == core_type)
+
+// Rationale: Variant of BINARY_OP that intentionally forbids REAL results.
+// Using a separate macro rather than a flag keeps expansion simple and lets
+// the compiler enforce missing REAL branches as invariants.
 
 // The final large class of operators are the comparisons. These have similar
 // rules to the normal operators but the return type is bool/null/error.  The
@@ -456,6 +487,11 @@ static sem_t eval_combined_type(eval_node *left, eval_node *right) {
   \
   Invariant(result->sem_type == SEM_TYPE_BOOL);
 
+// Rationale: Comparison operators always return BOOL (or NULL / ERROR earlier).
+// Implemented as a macro to mirror arithmetic promotion rules precisely; this
+// ensures any future change in numeric widening only needs to occur in one
+// helper (eval_combined_type).
+
 // True if the node is a zero; not err, not NULL, an actual zero
 static bool_t result_is_false(eval_node *result) {
   Contract(result->sem_type != SEM_TYPE_ERROR);
@@ -464,6 +500,10 @@ static bool_t result_is_false(eval_node *result) {
   if (result->sem_type == SEM_TYPE_NULL) {
     return false;
   }
+
+  // Treating NULL as neither true nor false preserves SQL's three-valued logic.
+  // We explicitly avoid folding NULL into boolean conversions here so callers
+  // can differentiate "unknown" from an actual zero value.
 
   eval_node temp = *result;
   eval_cast_to(&temp, SEM_TYPE_BOOL);
@@ -478,6 +518,9 @@ static bool_t result_is_true(eval_node *result) {
   if (result->sem_type == SEM_TYPE_NULL) {
     return false;
   }
+
+  // Same reasoning as result_is_false: NULL propagates separately; short-circuit
+  // logic relies on this to decide whether to evaluate right-hand expressions.
 
   eval_node temp = *result;
   eval_cast_to(&temp, SEM_TYPE_BOOL);
@@ -746,6 +789,11 @@ static void eval_uminus(ast_node *expr, eval_node *result) {
     }
   }
 
+  // Rationale: The literal 9223372036854775808 only appears legally as part
+  // of forming the most negative 64-bit value via unary minus.  Capturing it
+  // here avoids overflow in intermediate representation and keeps later
+  // constant folding stages consistent across host platforms.
+
   eval(expr->left, result);
   if (result->sem_type == SEM_TYPE_ERROR || result->sem_type == SEM_TYPE_NULL) {
     return;
@@ -868,6 +916,11 @@ static void eval_or(ast_node *expr, eval_node *result) {
   result->bool_value = 0;
 }
 
+// Rationale (eval_and / eval_or): Short-circuiting mirrors runtime evaluation
+// order so constant folding preserves observable side-effect possibilities
+// (even though const expressions lack side effects).  Propagating NULL only
+// after confirming non-short-circuit cases maintains faithful SQL 3VL tables.
+
 // Cast is super easy because we arleady have the eval_cast_to helper
 // we just do the evaluation it and early out on error or null
 static void eval_cast_expr(ast_node *expr, eval_node *result) {
@@ -960,6 +1013,10 @@ static void eval_case_expr(ast_node *ast, eval_node *result) {
       return;
     }
 
+    // Rationale: Test expression evaluated exactly once to match SQL semantics
+    // and avoid duplicated work; subsequent WHEN clauses compare against the
+    // frozen value even if they could themselves fold to errors/null.
+
     // now walk through the case list, and choose the matching THEN
     ast = case_list;
     while (ast) {
@@ -1039,6 +1096,10 @@ cql_noexport void eval_add_one(eval_node *result) {
   }
 }
 
+// Rationale: Incrementing BOOL toggles it rather than promoting; this matches
+// internal needs where bool counters are logically bits, and keeps folding
+// deterministic without introducing implicit widening here.
+
 cql_noexport void eval_format_number(eval_node *result, int32_t format_mode, charbuf *output) {
   Contract(result->sem_type != SEM_TYPE_ERROR);
   Contract(result->sem_type != SEM_TYPE_NULL);
@@ -1109,6 +1170,10 @@ cql_noexport void eval(ast_node *expr, eval_node *result) {
     *result = err_result;  // blast any state that may be in there leaving just the error
   }
 }
+
+// Rationale: Unknown node kinds become hard errors rather than silently
+// propagating; constant folding must be conservative so we never risk folding
+// partially-understood trees.
 
 #undef EXPR_INIT
 #define EXPR_INIT(x) symtab_add(evals, #x, (void *)eval_ ## x)

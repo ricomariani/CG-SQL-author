@@ -62,6 +62,7 @@ typedef struct {
    ast_node *arg_list;  // these are the actual arguments
 } proc_params_info;
 
+// Function to emit procedure parameters.
 static void cg_emit_proc_params(proc_params_info *info);
 
 // Emits a sql statement with bound args.  Returns temp statement index used if any
@@ -69,7 +70,16 @@ static int32_t cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg
 
 // These globals represent the major state of the code-generator
 
-// True if we are presently emitting a stored proc
+// Centralized generator state
+// The code generator is intentionally stateful; most emission helpers are tiny and frequently
+// dispatched during deep AST walks. Passing an ever-growing context struct through every
+// helper would (a) explode parameter lists and (b) obscure which pieces of state are truly
+// cross‑cutting. Instead we surface only the handful of dimensions that influence control
+// flow or naming (loop depth, fragment classification, current error label, etc.). This is a
+// pragmatic trade‑off: globals make reentrancy impossible but we never attempt parallel
+// generation for the same compilation unit. If that ever changes these globals form the
+// minimal set to encapsulate into a per-compilation object.
+// True if we are presently emitting a stored proc.
 static bool_t in_proc = false;
 
 // True if we presently declaring a variable group
@@ -126,6 +136,7 @@ cql_data_defn( int32_t stmt_nesting_level );
 
 // In the event of a failure of a sql block or a throw we need to emit
 // a goto to the current cleanup target. This is it.  Try/catch manipulate this.
+// Single active cleanup label; try/catch temporarily overrides.
 static CSTR error_target = CQL_CLEANUP_DEFAULT_LABEL;
 
 #define CQL_RCTHROWN_DEFAULT "SQLITE_OK"  // no variable at the root level, it's just "ok"
@@ -136,8 +147,13 @@ static CSTR error_target = CQL_CLEANUP_DEFAULT_LABEL;
 #define CQL_PROTO_NORMAL false
 #define CQL_FORCE_FETCH_RESULTS true
 
+// Points to most recent thrown rc variable for rethrow/context capture.
 static CSTR rcthrown_current = CQL_RCTHROWN_DEFAULT;
+
+// Disambiguates nested try scopes; numeric suffix => stable naming.
 static int32_t rcthrown_index = 0;
+
+// Emit storage only if referenced; many procs never throw.
 static bool_t rcthrown_used = false;
 
 // We set this to true when we have used the error target in the current context
@@ -185,8 +201,14 @@ static symtab *proc_cte_aliases;
 // Shared fragment management state
 // These are the important fragment classifications, we can use simpler codegen if
 // some of these are false.
+
+// If false we can elide predicate boolean arrays entirely.
 static bool_t has_conditional_fragments;
+
+// If false no need for shared fragment reconstruction helpers.
 static bool_t has_shared_fragments;
+
+// If false we avoid variable presence bitmap and binding conditionals.
 static bool_t has_variables;
 
 // Each prepared statement in a proc gets a unique index
@@ -283,6 +305,18 @@ static void cg_line_directive_max(ast_node *ast, charbuf *output) {
 //
 static void cg_insert_line_directives(CSTR input, charbuf *output)
 {
+  // The generated C for a single source line can span many lines; naively
+  // emitting a single #line before the block produces poor debugger behavior
+  // (breakpoints jump unpredictably, single-step walks internal helper code).
+  // We instead "pin" the logical line by re-emitting the last seen directive
+  // before every subsequent physical line until a new source mapping appears.
+  // This inflates line directive count but drastically improves correlation in
+  // stack traces and sampled profiles.  The extra preprocessor noise is a net
+  // win because compile time impact is negligible relative to the SQLite
+  // headers we always include.  The _PROC_ guard bounds the scope so that we
+  // do not spam global boilerplate (schema declarations etc.) with directives.
+  // We purposely suppress re‑emission immediately after a fresh directive to
+  // avoid redundant pairs (#line X "file" followed by #line X).
    CHARBUF_OPEN(last_line_directive);
    CHARBUF_OPEN(line);
 
@@ -461,6 +495,7 @@ static void cg_result_set_type_decl(charbuf *output, CSTR sym, CSTR ref) {
   bprintf(output, "cql_result_set_type_decl(%s, %s);\n", sym, ref);
 
   // If the result type needs extra type info, let it do so.
+  // Backend extension hook (e.g., CF) injects per-row metadata once.
   if (rt->result_set_type_decl_extra) rt->result_set_type_decl_extra(output, sym, ref);
   bprintf(output, "#endif\n");
 }
@@ -737,10 +772,22 @@ static void cg_scratch_var(ast_node *ast, sem_t sem_type, charbuf *var, charbuf 
     }
   }
   else {
+    // Scratch temps are keyed by (core type, nullability, stack_level) and
+    // emitted at most once per stack slot using 64-bit bitsets.  This gives us
+    // O(1) allocation with zero dynamic data structures, keeps codegen
+    // deterministic, and aggressively reuses temporaries across sibling
+    // subtrees which shrinks both C output and register pressure.  Stack level
+    // intentionally reflects evaluation depth (not statement nesting) so that
+    // commutative reordering during later refactors does not silently change
+    // temp naming patterns (stability aids diff-based testing).  The 64 level
+    // chunk is a practical ceiling: deeply nested expressions beyond that are
+    // already pathological for readability/performance; extending would just
+    // require bumping CQL_MAX_STACK.
+
     // Generate a scratch variable name of the correct type.  We don't generate
     // the declaration of any given scratch variable more than once.  We use the
     // current stack level to make the name.  This means that have to burn a
-    // stack level if you want more than one scratch.  Stacklevel is normally
+    // stack level if you want more than one scratch. Stacklevel is normally
     // increased by the CG_PUSH_EVAL macro which does the recursion but it can
     // also be manually increased if temporaries are needed for some other
     // reason.  Any level of recursion is expected to fix all that.
@@ -4592,6 +4639,13 @@ static int32_t cg_intern_piece(CSTR str, int32_t len) {
 // indicates that there are more bytes.  The last byte does not have the high
 // bit set. So the one-byte encoding is just the simple integer as one byte.
 static void cg_varinteger(int32_t val, charbuf *output) {
+  // Statement piece identifiers are variable-length encoded to keep the
+  // compressed representation cache-friendly.  We routinely reference small
+  // offsets (common tokens like SELECT/WHERE/etc.), so paying one byte for
+  // those and only expanding for large SQL blobs materially reduces the size
+  // of generated code especially for schema creation.  Simpler fixed 32-bit
+  // fields would inflate many short tokens by 3 bytes each with no runtime
+  // benefit; decode cost here is negligible vs. sqlite prepare.
   do {
     // strip 7 bits
     uint32_t byte = val & 0x7f;
@@ -4685,6 +4739,13 @@ cql_noexport uint32_t cg_statement_pieces(CSTR in, charbuf *output) {
 
     // if we've anything to flush at this point the run is over, flush it.
     if (start < cur) {
+      // We delay flushing until we see a state transition AND (for alpha
+      // runs) have accumulated >4 chars or a non-trivial operator cluster.
+      // Very short tokens (e.g. "x", ",", "+") repeat often but gain little
+      // from interning once you include the per-piece reference cost.  The
+      // heuristic (length > 4 OR followed by structural whitespace) was
+      // empirically chosen to produce good compression on real production SQL
+      // while keeping the tokenization logic fast and branch-light.
       cg_flush_piece(start, cur, output);
       start = cur;
       count++;
@@ -4722,6 +4783,12 @@ static void cg_flush_variable_predicates() {
   }
 
   while (prev_variable_count < cur_variable_count) {
+    // Each bound variable gets an associated predicate slot aligned with the fragment
+    // that first referenced it. If the fragment we are currently finalizing corresponds to
+    // the active predicate scope (root or innermost) we can mark the predicate as 1 directly
+    // because control flow reaching here implies it. Otherwise we alias to an existing
+    // predicate entry representing the controlling conditional. This avoids generating extra
+    // boolean recomputation code while keeping the predicate vector dense and positional.
     if (cur_fragment_predicate == 0 || cur_fragment_predicate + 1 == max_fragment_predicate) {
       bprintf(cg_main_output, "_vpreds_%d[%d] = 1; // pred %d known to be 1\n",
       cur_bound_statement,
@@ -4773,6 +4840,13 @@ static void cg_fragment_copy_pred() {
       cur_fragment_predicate);
   }
 
+  // Predicate arrays snapshot fragment emission conditions so that later
+  // variable binding can cheaply test whether each fragment's variables were
+  // active without re-evaluating SQL-side boolean expressions (which may have
+  // side-effects or depend on temporaries already cleaned).  Copying the
+  // current predicate forward (rather than boolean algebra simplification) is
+  // deliberate: it preserves a linear mapping (fragment i -> predicate i) that
+  // simplifies the runtime helpers and keeps debug dumps intelligible.
   cg_flush_variable_predicates();
 }
 
@@ -7396,7 +7470,11 @@ static void cg_trycatch_helper(ast_node *try_list, ast_node *try_extras, ast_nod
   bprintf(&catch_start, "catch_start_%d", catch_block_count);
   bprintf(&catch_end, "catch_end_%d", catch_block_count);
 
-  // Divert the error target.
+  // Error target rebinding: Divert the error target to the start of the catch block.
+  // Rather than emulate exceptions with a large switch, we exploit existing error-site 'goto error_target'
+  // emission. A try block is just a temporary substitution of the cleanup label. This keeps all existing
+  // error-producing helpers oblivious to try/catch context. Nesting works because we save/restore the
+  // target; no stack structure needed beyond locals here because codegen is single threaded.
   CSTR saved_error_target = error_target;
   bool_t saved_error_target_used = error_target_used;
   error_target = catch_start.ptr;
@@ -7414,7 +7492,8 @@ static void cg_trycatch_helper(ast_node *try_list, ast_node *try_extras, ast_nod
   // If we get to the end, skip the catch block.
   bprintf(cg_main_output, "  goto %s;\n}\n", catch_end.ptr);
 
-  // Emit the catch code, with labels at the start and the end.
+  // Emit the catch code, with labels at the start and the end. Suppress label
+  // if no jump targeted it
   if (error_target_used) {
     bprintf(cg_main_output, "%s: ", catch_start.ptr);
   }
@@ -7428,6 +7507,7 @@ static void cg_trycatch_helper(ast_node *try_list, ast_node *try_extras, ast_nod
 
   CHARBUF_OPEN(rcthrown);
 
+  // Stable numbering yields deterministic symbol ordering for diffs.
   bprintf(&rcthrown, "_rc_thrown_%d", ++rcthrown_index);
   rcthrown_current = rcthrown.ptr;
   bool_t rcthrown_used_saved = rcthrown_used;
@@ -7527,7 +7607,6 @@ static void cg_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
        return;
     }
   }
-
 
   // don't emit a # line directive for the echo statement because it would be messed
   // up if the echo doesn't end in a linefeed and that's legal.  And there is

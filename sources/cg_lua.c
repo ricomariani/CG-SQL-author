@@ -237,6 +237,9 @@ static bool_t lua_needs_paren(ast_node *ast, int32_t pri_new, int32_t pri) {
 // emits a cql_to_num call including a few special cases
 // e.g. cql_to_num(true) and cql_to_num(false) are very common
 static void cg_lua_emit_to_num(charbuf *output, CSTR input) {
+  // Fast-path the most common literal coercions (true/false/nil) so that
+  // arithmetic with boolean expressions doesn't pay a helper call. Centralizing
+  // here avoids scattering boolean->int policy across arithmetic emitters.
   if (!strcmp("true", input)) {
     bprintf(output, "1");
     return;
@@ -266,6 +269,8 @@ static void cg_lua_to_num(sem_t sem_type, charbuf *value) {
 
 // emits a cql_to_float call
 static void cg_lua_emit_to_float(charbuf *output, CSTR input) {
+  // Preserve nil (do not coerce to 0.0) so NULL arithmetic propagates;
+  // matches SQLite semantics and the C backend's three-valued logic strategy.
   if (!strcmp("nil", input)) {
     bprintf(output, "nil");
     return;
@@ -288,6 +293,8 @@ static void cg_lua_to_float(sem_t sem_type, charbuf *value) {
 // Emits cql_to_bool include special cases for the most common conversions
 // 0, 1, and nil all get hard coded treatment, otherwise use the helper.
 static void cg_lua_emit_to_bool(charbuf *output, CSTR input) {
+  // Keep nil distinct from false; later cql_is_* helpers rely on that
+  // distinction to preserve SQL NULL semantics in boolean contexts.
   if (!strcmp("1", input)) {
     bprintf(output, "true");
     return;
@@ -475,6 +482,14 @@ static void cg_lua_scratch_var(ast_node *ast, sem_t sem_type, charbuf *var, char
     // increased if temporaries are needed for some other reason.  Any level of
     // recursion is expected to fix all that.
 
+    // This depth + type keying mirrors the C generator so diffs across
+    // backends remain comparable and stable. Deterministic naming helps
+    // golden-file tests and simplifies manual reasoning about temp reuse.
+
+    // Non-null scalars get an explicit neutral initializer for readability
+    // and to mirror C zero-init; reference types stay nil so release logic is
+    // uniform and we never accidentally release an arbitrary sentinel.
+
     CSTR prefix;
 
     cg_lua_type_masks *pmask;
@@ -647,6 +662,9 @@ static void cg_lua_binary(ast_node *ast, CSTR op, charbuf *value, int32_t pri, i
     bprintf(value, "nil");
     return;
   }
+  // Early nil result lets subsequent coercion layers skip work and
+  // preserves three-valued logic exactly; we don't attempt constant folding
+  // beyond this because Lua helpers already centralize numeric conversions.
 
   // this hold the formula for the answer
   CG_LUA_PUSH_EVAL(l, pri_new);
@@ -662,6 +680,9 @@ static void cg_lua_binary(ast_node *ast, CSTR op, charbuf *value, int32_t pri, i
     bprintf(value, "cql_%s(%s, %s)", op_name, l_value.ptr, r_value.ptr);
   }
   else {
+    // Direct operator form only when semantics exactly match Lua defaults
+    // (no nullables, no sign quirks, no blob compare); this keeps generated
+    // code smaller and more JIT-friendly while helpers encapsulate edge cases.
     if (lua_needs_paren(ast, pri_new, pri)) {
       bprintf(value, "(%s %s %s)", l_value.ptr, op, r_value.ptr);
     }

@@ -13,6 +13,8 @@
 static void symtab_rehash(symtab *syms);
 
 static void set_payload(symtab *syms) {
+  // Zeroed allocation ensures empty-slot test is just pointer NULL check; no
+  // explicit 'in_use' bit needed. calloc used over malloc+memset for clarity.
   syms->payload = (symtab_entry *)calloc(syms->capacity, sizeof(symtab_entry));
 }
 
@@ -99,6 +101,10 @@ cql_noexport void symtab_delete(symtab *syms) {
 // and hashing functions can be changed at the time the table is created.
 // But if you change them after inserting anything you will have to rehash the table.
 // Generally, this is a really bad idea.
+
+// We avoid tombstones and deletions altogether—symbol tables are append-only for the
+// compiler's lifetime. This simplifies rehash (no skip logic) and keeps probe chains
+// short/predictable. Rehash threshold uses load factor to keep worst-case probe small.
 cql_noexport bool_t symtab_add(symtab *syms, const char *sym_new, void *val_new) {
   uint32_t hash = syms->hash(sym_new);
   uint32_t offset = hash % syms->capacity;
@@ -138,7 +144,7 @@ cql_noexport bool_t symtab_add(symtab *syms, const char *sym_new, void *val_new)
 
 // The find operation is a simple matter of hashing the symbol and then
 // doing a linear probe until we find the symbol or an empty slot.
-// We return the payload slow which allows us to modify the stored value
+// We return the payload  which allows us to modify the stored value
 // if we want to.
 cql_noexport symtab_entry *symtab_find(symtab *syms, const char *sym_needed) {
   if (!syms) {
@@ -193,15 +199,21 @@ static void symtab_rehash(symtab *syms) {
   free(old_payload);
 }
 
-// patternlint-disable-next-line prefer-sized-ints-in-msys
 cql_noexport int default_symtab_comparator(symtab_entry *entry1, symtab_entry *entry2) {
   return strcmp(entry1->sym, entry2->sym);
 }
 
-// This helper function makes a copy of the payload entires and
-// then storts them according to the provided comparator.  Any
-// null in the payload array are skipped.
-cql_noexport symtab_entry *symtab_copy_sorted_payload(symtab *syms, int (*comparator)(symtab_entry *entry1, symtab_entry *entry2)) {
+// This helper function makes a copy of the payload entries and then sorts them
+// according to the provided comparator. Any nulls in the payload array are
+// skipped.
+//
+// Many generated artifacts (e.g., schema dumps) need stable ordering
+// independent of hash table capacity evolution; copying only live entries then
+// qsort yields reproducible output.
+cql_noexport symtab_entry *symtab_copy_sorted_payload(
+  symtab *syms,
+  int (*comparator)(symtab_entry *entry1, symtab_entry *entry2))
+{
   uint32_t count = syms->count;
   size_t size = sizeof(symtab_entry);
   symtab_entry *sorted = calloc(count, size);
@@ -221,12 +233,15 @@ cql_noexport symtab_entry *symtab_copy_sorted_payload(symtab *syms, int (*compar
 // first special case teardown
 //  * a symbol table with payload of symbol tables
 static void symtab_teardown(void *val) {
+  // Delegated teardown allows arbitary cleanup. For instance nested symbol
+  // tables to own their children while preserving generic symtab_delete logic.
   symtab_delete(val);
 }
 
 // second special case teardown
 //  * a symbol table with payload of bytebuffers
 static void bytebuf_teardown(void *val) {
+  // Ensure bytebuf_close runs before freeing raw struct (ordering matters for internal invariants).
   bytebuf_close((bytebuf*)val);
   free(val);
 }
@@ -234,6 +249,7 @@ static void bytebuf_teardown(void *val) {
 // third special case teardown
 //  * a symbol table with payload of character buffers
 static void charbuf_teardown(void *val) {
+  // bclose handles any internal allocations; then struct freed.
   bclose((charbuf*)val);
   free(val);
 }

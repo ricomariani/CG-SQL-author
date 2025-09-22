@@ -1523,7 +1523,6 @@ static void gen_field_hash(ast_node *ast) {
 }
 
 
-// patternlint-disable-next-line prefer-sized-ints-in-msys
 // get CSTR out of the array and compare case insensitively
 static int case_cmp(void *p1, void *p2) {
   CSTR c1 = *(CSTR*)p1;

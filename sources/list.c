@@ -12,6 +12,7 @@
 #include "list.h"
 
 cql_noexport void add_item_to_list(list_item **head, struct ast_node *ast) {
+  // Prepend-only insertion keeps O(1) append semantics (logical) with no tail tracking.
   list_item *item = _ast_pool_new(list_item);
   item->next = *head;
   item->ast = ast;
@@ -19,6 +20,7 @@ cql_noexport void add_item_to_list(list_item **head, struct ast_node *ast) {
 }
 
 cql_noexport void reverse_list(list_item **head) {
+  // Deferred reversal converts many O(n) tail appends into one O(n) pass.
   list_item *cur = *head;
   list_item *prev = NULL;
   list_item *next = NULL;
@@ -29,5 +31,5 @@ cql_noexport void reverse_list(list_item **head) {
       prev = cur;
       cur = next;
   }
-  *head = prev;
+  *head = prev; // Now in original insertion order if caller built via prepend.
 }

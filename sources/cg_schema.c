@@ -120,7 +120,6 @@ static bool_t include_from_region(CSTR region, int32_t mode) {
 //  * table name
 //  * column ordinal
 //  * there can be no ties, the above is a unique annotation key
-// patternlint-disable-next-line prefer-sized-ints-in-msys
 static int annotation_comparator(const void *v1, const void *v2) {
   const schema_annotation *a1 = (const schema_annotation *)v1;
   const schema_annotation *a2 = (const schema_annotation *)v2;
@@ -161,8 +160,6 @@ static int annotation_comparator(const void *v1, const void *v2) {
 //  function, we iterate the list in reverse to drop tables that are weak first and strong last.
 //  That is the later tables may have FK to the earlier tables but not the reverse. We don't want
 //  to cause FK action for no reason since the whole group is being dropped anyway.
-
-// patternlint-disable-next-line prefer-sized-ints-in-msys
 static int recreate_comparator(const void *v1, const void *v2) {
   const recreate_annotation *a1 = (const recreate_annotation *)v1;
   const recreate_annotation *a2 = (const recreate_annotation *)v2;

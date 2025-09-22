@@ -24,6 +24,7 @@
 
 
 // Make a pool node, set it's size to MINIBLOCK
+// Initializes first block eagerly so initial allocations are just pointer math.
 cql_noexport void minipool_open(minipool **pool) {
   *pool = _new(minipool);
   (*pool)->bytes = malloc(MINIBLOCK);

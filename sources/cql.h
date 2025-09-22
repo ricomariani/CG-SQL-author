@@ -68,7 +68,6 @@ typedef long long int llint_t;
 #define _64(x) x##LL
 #endif
 
-// patternlint-disable-next-line prefer-sized-ints-in-msys
 int main(int argc, char **argv);
 
 // we need this for some callbacks

@@ -22,6 +22,9 @@
 
 declare procedure printf no check;
 
+-- these are the standard helper methods from cqlhelp.c
+-- they give us basic file and string handling needed for simple
+-- command line tools.
 func cql_fopen(name text!, mode text!) create object<file>;
 func readline_object_file(f object<file>!) create text;
 func atoi_at_text(str text, `offset` int!) int!;
@@ -32,6 +35,8 @@ func starts_with_text(haystack text!, needle text!) bool!;
 func index_of_text(haystack text!, needle text!) int!;
 func contains_at_text(haystack text!, needle text!, `offset` int!) bool!;
 
+-- map the methods to operators for easier use
+-- this enables things like :len, :after, :starts_with, etc.
 @op object<file>: call readline as readline_object_file;
 @op text: call atoi_at as atoi_at_text;
 @op text: call len as len_text;
@@ -44,6 +49,7 @@ func contains_at_text(haystack text!, needle text!, `offset` int!) bool!;
 @op text: call right as str_right;
 @op text: call left as str_left;
 
+-- global variables to track state, mostly stats.
 var proc_count int!;
 var compares int!;
 var errors int!;
@@ -52,6 +58,7 @@ var actual_name text;
 
 -- setup the table and the index
 [[private]]
+-- This procedure sets up the necessary tables and indexes for the linetest tool.
 proc setup()
 begin
   create table linedata(
@@ -70,6 +77,7 @@ end;
 
 -- add a row to the results table
 [[private]]
+-- This procedure adds a row to the linedata table and ensures the procname is added to the procs table.
 proc add_linedata(like linedata)
 begin
   insert into linedata from arguments;
@@ -77,6 +85,7 @@ begin
 end;
 
 [[private]]
+-- This procedure dumps all records for a given procedure and source from the linedata table.
 proc dump_proc_records(source_ text!, procname_ text!)
 begin
   declare C cursor for select * from linedata where procname = procname_ and source = source_;
@@ -87,6 +96,7 @@ begin
 end;
 
 [[private]]
+-- This procedure prints the differences between the expected and actual data for a given procedure.
 proc dump(procname text!)
 begin
   printf("%s: difference encountered\n", procname);
@@ -97,6 +107,7 @@ begin
 end;
 
 [[private]]
+-- This procedure compares the lines of the expected and actual data, reporting any differences.
 proc compare_lines()
 begin
   declare p cursor for select * from procs;
@@ -104,12 +115,12 @@ begin
   begin
     proc_count += 1;
 
-    declare actual cursor for
+    cursor actual for
       select * from linedata where
         source = 'act' and
         procname = p.procname;
 
-    declare expected cursor for
+    cursor expected for
       select * from linedata where
         source = 'exp' and
         procname = p.procname;
@@ -119,9 +130,8 @@ begin
 
     while actual and expected
     begin
-      set compares := compares + 1;
-      if (actual.line != expected.line or
-          actual.data != expected.data) then
+      compares += 1;
+      if actual.line != expected.line or actual.data != expected.data then
           dump(p.procname);
           printf("\nFirst difference:\n");
           printf("expected: %5d %s\n", expected.line, expected.data);
@@ -156,17 +166,18 @@ begin
 end;
 
 [[private]]
+-- This procedure reads a file, processes its lines, and adds the data to the linedata table.
 proc read_file(input_name text!, source text!)
 begin
-  let prefix1 := '#define _PROC_ ';
-  let prefix2 := '#undef _PROC_';
-  let prefix3 := '#line ';
-  let prefix4 := '# ';
+  let proc_start_prefix := '#define _PROC_ ';
+  let proc_undef_prefix := '#undef _PROC_';
+  let line_directive_prefix := '#line ';
+  let short_line_directive_prefix := '# ';
 
-  let prefix1_len := prefix1:len;
-  let prefix2_len := prefix2:len;
-  let prefix3_len := prefix3:len;
-  let prefix4_len := prefix4:len;
+  let proc_start_prefix_len := proc_start_prefix:len;
+  let proc_undef_prefix_len := proc_undef_prefix:len;
+  let line_directive_prefix_len := line_directive_prefix:len;
+  let short_line_directive_prefix_len := short_line_directive_prefix:len;
 
   let input_file := cql_fopen(input_name, "r");
   if input_file is null then
@@ -174,10 +185,24 @@ begin
     throw;
   end if;
 
+  -- this means the next line will be the first line of a new proc
   let base_at_next_line := false;
+
+  -- this is the current logical line in the proc
   let line := 0;
+
+  -- this is the base adjustment, we normalize the first line of a proc to 1
+  -- so even if it starts at 3000 or whatever that becomes the new 1.  We do
+  -- this so that changes in the file that add or remove lines before the proc
+  -- don't cause all the line numbers to shift and break everything.  All we're
+  -- doing is making sure that the lines in the proc are consistent with
+  -- the expected line numbers in the baseline.
   let line_base := 0;
+
+  -- this is the actual physical line in the file, used for error reporting
   let physical_line := 0;
+
+  -- current procedure name, null means no current proc
   var procname text;
 
   while true
@@ -185,17 +210,23 @@ begin
     let data := input_file:readline();
     if data is null leave;
 
+    -- we need to track the actual line number in the file for error reporting
+    -- this is a bit weird because we are tracking line numbers and checking
+    -- for differences but the errors have to relative to the input stream
+    -- not relative to the logical line number the compiler would see/emit.
     physical_line += 1;
 
-    if data:starts_with(prefix1) then
+    -- Check for procedure start
+    if data:starts_with(proc_start_prefix) then
       -- we keep the name quotes and all, it doesn't matter
       -- as long as it's unique
-      procname := data:after(prefix1_len);
+      procname := data:after(proc_start_prefix_len);
       base_at_next_line := true;
       line := 0;
     end if;
 
-    if data:starts_with(prefix2) then
+    -- undef means no current proc
+    if data:starts_with(proc_undef_prefix) then
       procname := null;
       line := 0;
       line_base := 0;
@@ -203,32 +234,42 @@ begin
 
     let line_start := -1;
 
-    let p3 := data:index_of(prefix3);
-    if p3 >= 0 then
-      line_start := p3 + prefix3_len;
+    -- Check for line directive (#line form)
+    let line_directive_position := data:index_of(line_directive_prefix);
+    if line_directive_position >= 0 then
+      line_start := line_directive_position + line_directive_prefix_len;
     end if;
 
-    let p4 := data:index_of(prefix4);
-    if p4 >= 0 then
-      line_start := p4 + prefix4_len;
+    -- Check for short line directive (# form)
+    let short_line_directive_position := data:index_of(short_line_directive_prefix);
+    if short_line_directive_position >= 0 then
+      line_start := short_line_directive_position + short_line_directive_prefix_len;
     end if;
 
+    -- If we found a line directive, parse the line number
     if line_start >= 0 then
       line := data:atoi_at(line_start);
       if base_at_next_line then
+        -- we're normalizing to the start of the proc
+        -- we will verify as though the proc started at line 1
         line_base := line - 1;
         base_at_next_line := false;
       end if;
+      -- all lines within the proc are adjusted by line_base
       line -= line_base;
       continue;
     end if;
 
+    -- skip non-proc lines
     if procname is null continue;
+
+    -- we have something to record
     add_linedata(source, procname, line, data, physical_line);
   end;
 end;
 
 [[private]]
+-- This procedure parses the command-line arguments and sets the expected and actual file names.
 proc parse_args(args cql_string_list!)
 begin
   let argc := args.count;
@@ -246,6 +287,7 @@ begin
 end;
 
 -- main entry point
+-- This is the main entry point for the linetest tool, orchestrating the setup, file reading, and comparison.
 proc linetest_main(args cql_string_list!)
 begin
   setup();

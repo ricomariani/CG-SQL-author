@@ -168,42 +168,42 @@ DECLARE PROC cql_cursor_from_blob_stream (C CURSOR, b BLOB, i INT!) USING TRANSA
 #undef cql_error_trace
 #define cql_error_trace() fprintf(stderr, "SQL Failure %d %s: %s %d\n", _rc_, sqlite3_errmsg(_db_), __FILE__, __LINE__)
 
-// Generated from linetest.sql:47
+// Generated from linetest.sql:53
 
 /*
 DECLARE proc_count INT!;
 */
 cql_int32 proc_count = 0;
 
-// Generated from linetest.sql:48
+// Generated from linetest.sql:54
 
 /*
 DECLARE compares INT!;
 */
 cql_int32 compares = 0;
 
-// Generated from linetest.sql:49
+// Generated from linetest.sql:55
 
 /*
 DECLARE errors INT!;
 */
 cql_int32 errors = 0;
 
-// Generated from linetest.sql:50
+// Generated from linetest.sql:56
 
 /*
 DECLARE expected_name TEXT;
 */
 cql_string_ref expected_name = NULL;
 
-// Generated from linetest.sql:51
+// Generated from linetest.sql:57
 
 /*
 DECLARE actual_name TEXT;
 */
 cql_string_ref actual_name = NULL;
 
-// Generated from linetest.sql:69
+// Generated from linetest.sql:76
 
 /*
 [[private]]
@@ -253,7 +253,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from linetest.sql:77
+// Generated from linetest.sql:85
 
 /*
 [[private]]
@@ -299,7 +299,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from linetest.sql:87
+// Generated from linetest.sql:96
 
 /*
 [[private]]
@@ -379,7 +379,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from linetest.sql:97
+// Generated from linetest.sql:107
 
 /*
 [[private]]
@@ -415,7 +415,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from linetest.sql:156
+// Generated from linetest.sql:166
 
 /*
 [[private]]
@@ -655,20 +655,20 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from linetest.sql:229
+// Generated from linetest.sql:269
 
 /*
 [[private]]
 PROC read_file (input_name TEXT!, source TEXT!)
 BEGIN
-  LET prefix1 := '#define _PROC_ ';
-  LET prefix2 := '#undef _PROC_';
-  LET prefix3 := '#line ';
-  LET prefix4 := '# ';
-  LET prefix1_len := len_text(prefix1);
-  LET prefix2_len := len_text(prefix2);
-  LET prefix3_len := len_text(prefix3);
-  LET prefix4_len := len_text(prefix4);
+  LET proc_start_prefix := '#define _PROC_ ';
+  LET proc_undef_prefix := '#undef _PROC_';
+  LET line_directive_prefix := '#line ';
+  LET short_line_directive_prefix := '# ';
+  LET proc_start_prefix_len := len_text(proc_start_prefix);
+  LET proc_undef_prefix_len := len_text(proc_undef_prefix);
+  LET line_directive_prefix_len := len_text(line_directive_prefix);
+  LET short_line_directive_prefix_len := len_text(short_line_directive_prefix);
   LET input_file := cql_fopen(input_name, "r");
   IF input_file IS NULL THEN
     CALL printf("unable to open file '%s'\n", input_name);
@@ -686,24 +686,24 @@ BEGIN
       LEAVE;
     END;
     SET physical_line := physical_line + 1;
-    IF starts_with_text(data, prefix1) THEN
-      SET procname := after_text(data, prefix1_len);
+    IF starts_with_text(data, proc_start_prefix) THEN
+      SET procname := after_text(data, proc_start_prefix_len);
       SET base_at_next_line := TRUE;
       SET line := 0;
     END;
-    IF starts_with_text(data, prefix2) THEN
+    IF starts_with_text(data, proc_undef_prefix) THEN
       SET procname := NULL;
       SET line := 0;
       SET line_base := 0;
     END;
     LET line_start := -1;
-    LET p3 := index_of_text(data, prefix3);
-    IF p3 >= 0 THEN
-      SET line_start := p3 + prefix3_len;
+    LET line_directive_position := index_of_text(data, line_directive_prefix);
+    IF line_directive_position >= 0 THEN
+      SET line_start := line_directive_position + line_directive_prefix_len;
     END;
-    LET p4 := index_of_text(data, prefix4);
-    IF p4 >= 0 THEN
-      SET line_start := p4 + prefix4_len;
+    LET short_line_directive_position := index_of_text(data, short_line_directive_prefix);
+    IF short_line_directive_position >= 0 THEN
+      SET line_start := short_line_directive_position + short_line_directive_prefix_len;
     END;
     IF line_start >= 0 THEN
       SET line := atoi_at_text(data, line_start);
@@ -726,14 +726,14 @@ END;
 static CQL_WARN_UNUSED cql_code read_file(sqlite3 *_Nonnull _db_, cql_string_ref _Nonnull input_name, cql_string_ref _Nonnull source) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
-  cql_string_ref prefix1 = NULL;
-  cql_string_ref prefix2 = NULL;
-  cql_string_ref prefix3 = NULL;
-  cql_string_ref prefix4 = NULL;
-  cql_int32 prefix1_len = 0;
-  cql_int32 prefix2_len = 0;
-  cql_int32 prefix3_len = 0;
-  cql_int32 prefix4_len = 0;
+  cql_string_ref proc_start_prefix = NULL;
+  cql_string_ref proc_undef_prefix = NULL;
+  cql_string_ref line_directive_prefix = NULL;
+  cql_string_ref short_line_directive_prefix = NULL;
+  cql_int32 proc_start_prefix_len = 0;
+  cql_int32 proc_undef_prefix_len = 0;
+  cql_int32 line_directive_prefix_len = 0;
+  cql_int32 short_line_directive_prefix_len = 0;
   cql_object_ref input_file = NULL;
   cql_bool base_at_next_line = 0;
   cql_int32 line = 0;
@@ -743,17 +743,17 @@ static CQL_WARN_UNUSED cql_code read_file(sqlite3 *_Nonnull _db_, cql_string_ref
   cql_bool _tmp_bool_0 = 0;
   cql_string_ref data = NULL;
   cql_int32 line_start = 0;
-  cql_int32 p3 = 0;
-  cql_int32 p4 = 0;
+  cql_int32 line_directive_position = 0;
+  cql_int32 short_line_directive_position = 0;
 
-  cql_set_string_ref(&prefix1, _literal_3_define_PROC_read_file);
-  cql_set_string_ref(&prefix2, _literal_4_undef_PROC_read_file);
-  cql_set_string_ref(&prefix3, _literal_5_line_read_file);
-  cql_set_string_ref(&prefix4, _literal_6_read_file);
-  prefix1_len = len_text(prefix1);
-  prefix2_len = len_text(prefix2);
-  prefix3_len = len_text(prefix3);
-  prefix4_len = len_text(prefix4);
+  cql_set_string_ref(&proc_start_prefix, _literal_3_define_PROC_read_file);
+  cql_set_string_ref(&proc_undef_prefix, _literal_4_undef_PROC_read_file);
+  cql_set_string_ref(&line_directive_prefix, _literal_5_line_read_file);
+  cql_set_string_ref(&short_line_directive_prefix, _literal_6_read_file);
+  proc_start_prefix_len = len_text(proc_start_prefix);
+  proc_undef_prefix_len = len_text(proc_undef_prefix);
+  line_directive_prefix_len = len_text(line_directive_prefix);
+  short_line_directive_prefix_len = len_text(short_line_directive_prefix);
   cql_set_created_object_ref(&input_file, cql_fopen(input_name, _literal_7_r_read_file));
   if (!input_file) {
     cql_alloc_cstr(_cstr_5, input_name);
@@ -774,26 +774,26 @@ static CQL_WARN_UNUSED cql_code read_file(sqlite3 *_Nonnull _db_, cql_string_ref
       break;
     }
     physical_line = physical_line + 1;
-    _tmp_bool_0 = starts_with_text(data, prefix1);
+    _tmp_bool_0 = starts_with_text(data, proc_start_prefix);
     if (_tmp_bool_0) {
-      cql_set_created_string_ref(&procname, after_text(data, prefix1_len));
+      cql_set_created_string_ref(&procname, after_text(data, proc_start_prefix_len));
       base_at_next_line = 1;
       line = 0;
     }
-    _tmp_bool_0 = starts_with_text(data, prefix2);
+    _tmp_bool_0 = starts_with_text(data, proc_undef_prefix);
     if (_tmp_bool_0) {
       cql_set_string_ref(&procname, NULL);
       line = 0;
       line_base = 0;
     }
     line_start = - 1;
-    p3 = index_of_text(data, prefix3);
-    if (p3 >= 0) {
-      line_start = p3 + prefix3_len;
+    line_directive_position = index_of_text(data, line_directive_prefix);
+    if (line_directive_position >= 0) {
+      line_start = line_directive_position + line_directive_prefix_len;
     }
-    p4 = index_of_text(data, prefix4);
-    if (p4 >= 0) {
-      line_start = p4 + prefix4_len;
+    short_line_directive_position = index_of_text(data, short_line_directive_prefix);
+    if (short_line_directive_position >= 0) {
+      line_start = short_line_directive_position + short_line_directive_prefix_len;
     }
     if (line_start >= 0) {
       line = atoi_at_text(data, line_start);
@@ -814,10 +814,10 @@ static CQL_WARN_UNUSED cql_code read_file(sqlite3 *_Nonnull _db_, cql_string_ref
 
 cql_cleanup:
   cql_error_report();
-  cql_string_release(prefix1);
-  cql_string_release(prefix2);
-  cql_string_release(prefix3);
-  cql_string_release(prefix4);
+  cql_string_release(proc_start_prefix);
+  cql_string_release(proc_undef_prefix);
+  cql_string_release(line_directive_prefix);
+  cql_string_release(short_line_directive_prefix);
   cql_object_release(input_file);
   cql_string_release(procname);
   cql_string_release(data);
@@ -825,7 +825,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from linetest.sql:246
+// Generated from linetest.sql:287
 
 /*
 [[private]]
@@ -883,7 +883,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from linetest.sql:270
+// Generated from linetest.sql:312
 
 /*
 PROC linetest_main (args OBJECT<cql_string_list>!)

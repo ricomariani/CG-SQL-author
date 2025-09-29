@@ -180,49 +180,49 @@ DECLARE PROC cql_cursor_from_blob_stream (C CURSOR, b BLOB, i INT!) USING TRANSA
 #undef cql_error_trace
 #define cql_error_trace() fprintf(stderr, "SQL Failure %d %s: %s %d\n", _rc_, sqlite3_errmsg(_db_), __FILE__, __LINE__)
 
-// Generated from cql-verify.sql:50
+// Generated from cql-verify.sql:56
 
 /*
 DECLARE sql_file_name TEXT;
 */
 cql_string_ref sql_file_name = NULL;
 
-// Generated from cql-verify.sql:51
+// Generated from cql-verify.sql:57
 
 /*
 DECLARE result_file_name TEXT;
 */
 cql_string_ref result_file_name = NULL;
 
-// Generated from cql-verify.sql:52
+// Generated from cql-verify.sql:58
 
 /*
 DECLARE attempts INT!;
 */
 cql_int32 attempts = 0;
 
-// Generated from cql-verify.sql:53
+// Generated from cql-verify.sql:59
 
 /*
 DECLARE errors INT!;
 */
 cql_int32 errors = 0;
 
-// Generated from cql-verify.sql:54
+// Generated from cql-verify.sql:60
 
 /*
 DECLARE tests INT!;
 */
 cql_int32 tests = 0;
 
-// Generated from cql-verify.sql:55
+// Generated from cql-verify.sql:61
 
 /*
 DECLARE last_rowid LONG!;
 */
 cql_int64 last_rowid = 0;
 
-// Generated from cql-verify.sql:76
+// Generated from cql-verify.sql:82
 
 /*
 [[private]]
@@ -272,7 +272,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:104
+// Generated from cql-verify.sql:110
 
 /*
 [[private]]
@@ -361,7 +361,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:123
+// Generated from cql-verify.sql:129
 
 /*
 [[private]]
@@ -426,7 +426,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:134
+// Generated from cql-verify.sql:140
 
 /*
 [[private]]
@@ -475,7 +475,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:144
+// Generated from cql-verify.sql:154
 
 /*
 [[private]]
@@ -515,7 +515,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:161
+// Generated from cql-verify.sql:171
 
 /*
 [[private]]
@@ -565,7 +565,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:179
+// Generated from cql-verify.sql:189
 
 /*
 [[private]]
@@ -643,7 +643,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:202
+// Generated from cql-verify.sql:213
 
 /*
 [[private]]
@@ -741,7 +741,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:231
+// Generated from cql-verify.sql:242
 
 /*
 [[private]]
@@ -817,7 +817,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:260
+// Generated from cql-verify.sql:271
 
 /*
 [[private]]
@@ -862,7 +862,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:276
+// Generated from cql-verify.sql:287
 
 /*
 [[private]]
@@ -919,7 +919,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:359
+// Generated from cql-verify.sql:370
 
 /*
 PROC match_actual (buffer TEXT!, expectation_line INT!)
@@ -1097,7 +1097,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:370
+// Generated from cql-verify.sql:381
 
 /*
 [[private]]
@@ -1139,7 +1139,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:385
+// Generated from cql-verify.sql:397
 
 /*
 [[private]]
@@ -1199,7 +1199,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:421
+// Generated from cql-verify.sql:433
 
 /*
 [[private]]
@@ -1291,7 +1291,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:446
+// Generated from cql-verify.sql:458
 
 /*
 [[private]]
@@ -1369,7 +1369,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:453
+// Generated from cql-verify.sql:465
 
 /*
 [[private]]
@@ -1397,7 +1397,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:470
+// Generated from cql-verify.sql:482
 
 /*
 [[private]]
@@ -1453,7 +1453,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:482
+// Generated from cql-verify.sql:494
 
 /*
 PROC dbhelp_main (args OBJECT<cql_string_list>!)

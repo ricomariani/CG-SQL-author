@@ -22,6 +22,9 @@
 
 declare proc printf no check;
 
+-- these are the standard helper methods from cqlhelp.c
+-- they give us basic file and string handling needed for simple
+-- command line tools.
 func cql_fopen(name text!, mode text!) create object<file>;
 func readline_object_file(f object<file>!) create text;
 func atoi_at_text(str text, `offset` int!) int!;
@@ -35,6 +38,8 @@ func str_mid(self text!, `offset` int!, `len` int!) create text;
 func str_right(self text!, `len` int!) create text;
 func str_left(self text!, `len` int!) create text;
 
+-- map the methods to operators for easier use
+-- this enables things like :len, :after, :starts_with, etc.
 @op object<file>: call readline as readline_object_file;
 @op text: call atoi_at as atoi_at_text;
 @op text: call len as len_text;
@@ -47,6 +52,7 @@ func str_left(self text!, `len` int!) create text;
 @op text: call right as str_right;
 @op text: call left as str_left;
 
+-- global variables to track state, mostly stats.
 var sql_file_name text;
 var result_file_name text;
 var attempts int!;
@@ -108,7 +114,7 @@ end;
 proc find_next(pattern text!, test_output_line int!, out found int!)
 begin
   -- once we have it, search for matches on that line and return the number we found
-  declare C cursor for
+  cursor C for
     select rowid
       from test_results
       where line = test_output_line and data like ("%" || pattern || "%") and rowid > last_rowid;
@@ -140,7 +146,11 @@ end;
 proc find_count(pattern text!, test_output_line int!, out found int!)
 begin
   -- once we have it, search for matches on that line and return the number we found
-  set found := (select count(*) from test_results where line = test_output_line and data like ("%" || pattern || "%"));
+  set found := (
+    select count(*)
+    from test_results
+    where line = test_output_line and data like ("%" || pattern || "%")
+  );
 end;
 
 -- This code uses The Price Is Right algorithm, i.e.,  get
@@ -164,7 +174,7 @@ end;
 [[private]]
 proc dump_source(line1 int!, line2 int!, current_line int!)
 begin
-  declare C cursor for
+  cursor C for
     select line, data
       from test_input
       where line > line1 and line <= line2;
@@ -185,9 +195,10 @@ end;
 proc dump_output(test_output_line int!, pat text!)
 begin
   let p := (select "%" || pat || "%");
-  declare C cursor for
+  cursor C for
     select rowid, line, data
     from test_results where line = test_output_line;
+
   loop fetch C
   begin
     printf(
@@ -373,7 +384,8 @@ end;
 create proc process()
 begin
   -- this procedure gets us all of the lines and the data on those lines in order
-  declare C cursor for select * from test_input;
+  cursor C for
+    select * from test_input;
 
   -- get the count of rows (lines) and start looping
   loop fetch C

@@ -63,22 +63,29 @@ static void cg_schema_manage_recreate_tables(charbuf *output, charbuf *decls, re
 static void cg_schema_name_as_cql_string(charbuf *output, ast_node *ast) {
   EXTRACT_STRING(name, ast);
   if (is_qid(ast)) {
+    // This gives us things like `foo bar` including the backticks
     cg_decode_qstr(output, name);
   }
   else {
+    // this is a normal identifier like foo_bar_123
     bprintf(output, "%s", name);
   }
 }
 
+// we're converting an identifier to a quoted C string literal
+// it could be a quoted identifier or a normal one (i.e. `foo bar` or foo_bar)
 static void cg_schema_name_quoted(charbuf *output, ast_node *ast) {
   EXTRACT_STRING(name, ast);
   CHARBUF_OPEN(tmp);
   if (is_qid(ast)) {
+    // if a qid we first need to unquote it
     cg_unquote_encoded_qstr(&tmp, name);
   }
   else {
     bprintf(&tmp, "%s", name);
   }
+
+  // the raw text is now ready for quoting and C escaping.
   cg_encode_c_string_literal(tmp.ptr, output);
   CHARBUF_CLOSE(tmp);
 }

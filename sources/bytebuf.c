@@ -25,19 +25,29 @@ cql_noexport void bytebuf_close(bytebuf *_Nonnull buf) {
 
 // This creates the needed space in the bytebuf, the buffer grows if it has to.
 // The newly allocated memory begins with garbage data..
-cql_noexport void *_Nonnull bytebuf_alloc(bytebuf *_Nonnull buf, uint32_t needed) {
+cql_noexport void *_Nonnull bytebuf_alloc(
+  bytebuf *_Nonnull buf, 
+  uint32_t needed)
+{
   uint32_t avail = buf->max - buf->used;
 
   if (needed > avail) {
+    // create more space
     buf->max += needed + BYTEBUF_GROWTH_SIZE;
     char *newptr = _new_array(char, buf->max);
 
-    if (buf->used) memcpy(newptr, buf->ptr, buf->used);
+    // copy any used bytes
+    if (buf->used) {
+      // note: buf->ptr could be null here if buf->used is zero, so we avoid this call
+      memcpy(newptr, buf->ptr, buf->used);
+    }
 
+    // free the old buffer and switch to the new one
     free(buf->ptr);
     buf->ptr = newptr;
   }
 
+  // return the pointer to the new space and update used size
   void *result = buf->ptr + buf->used;
   buf->used += needed;
   return result;
@@ -46,7 +56,11 @@ cql_noexport void *_Nonnull bytebuf_alloc(bytebuf *_Nonnull buf, uint32_t needed
 // The most common operation is to append into an existing bytebuf, this is the alloc operation
 // followed by a copy.  Callers often do other things like retain embedded pointers or whatnot
 // but the bytebuf is below anything like that.
-cql_noexport void bytebuf_append(bytebuf *_Nonnull buf, const void *_Nonnull bytes, uint32_t count) {
+cql_noexport void bytebuf_append(
+  bytebuf *_Nonnull buf,
+  const void *_Nonnull bytes,
+  uint32_t count)
+{
   void *mem = bytebuf_alloc(buf, count);
   memcpy(mem, bytes, count);
 }

@@ -912,7 +912,15 @@ cql_noexport void print_root_ast(ast_node *node) {
   print_ast(node, NULL, 0, false);
 }
 
-cql_noexport void print_ast(ast_node *node, ast_node *parent, int32_t pad, bool_t flip) {
+// This is the recursive ast printer function that handles nesting and pretty-printing
+// of values and statements generally.  The ast is printed using cql_output which is
+// usually stdout but can go wherever it is needed.
+cql_noexport void print_ast(
+  ast_node *node,
+  ast_node *parent,
+  int32_t pad,
+  bool_t flip)
+{
   if (pad == 0) {
     padbuffer[0] = '\0';
   }
@@ -979,17 +987,33 @@ cql_noexport void print_ast(ast_node *node, ast_node *parent, int32_t pad, bool_
     cql_output("%llx: ", (long long)node);
 #endif
     print_ast_type(node);
+
+    // flip tells us whether we should remove the last vertical bar
+    // because we are the right child of our parent.  The idea is
+    // that we do not want the left, we want the right
+    //     w                   w
+    //     | x                 | x
+    //     | | y                 | y
+    //     | | z                 | z
+
     if (flip && pad >= 2) {
       padbuffer[pad-2] = ' ';
     }
+
+    // add new indenting as appropriate, this saves us from
+    // lots of looping and printing spaces and easily handles the "flip"
+    // case above where we "flip" from vertical bar to space
+
     if (pad == 0) {
       padbuffer[pad] = ' ';
     }
     else {
       padbuffer[pad] = '|';
     }
+
     padbuffer[pad+1] = ' ';
     padbuffer[pad+2] = '\0';
+
     print_ast(node->left, node, pad+2, !node->right);
     print_ast(node->right, node, pad+2, 1);
     padbuffer[pad] = '\0';

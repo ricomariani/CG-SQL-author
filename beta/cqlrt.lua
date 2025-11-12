@@ -382,6 +382,10 @@ function cql_is_not_false(x)
   return x ~= 0 and x ~= false
 end
 
+function cql_not_like(x,y)
+  return cql_unary_not(cql_like(x,y))
+end
+
 function cql_like(x, y)
   if x == nil or y == nil then
     return nil
@@ -648,7 +652,6 @@ function cql_autodrop(db, autodrops)
     cql_exec_internal(db, "drop table if exists "..tab)
   end
 end
-
 
 function cql_fetch_all_rows(stmt, types, columns)
   local rc

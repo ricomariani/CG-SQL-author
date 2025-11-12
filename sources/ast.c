@@ -929,7 +929,7 @@ cql_noexport void print_ast(
     return;
   }
 
-// Verifies that the parent pointer is corrent
+// Verifies that the parent pointer is correct
 #ifdef EMIT_BROKEN_AST_WARNING
   if (ast_has_right(node) && node->right->parent != node) {
     cql_output("%llx ast broken right", (long long)node);

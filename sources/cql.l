@@ -24,15 +24,18 @@
 #include <symtab.h>
 
 #ifndef _MSC_VER
+
 #include <libgen.h>
 
-// these stubs are only here for debugging
+// standard shim for most linux builds
 
 static char *Realpath(const char *relpath, char *absPathBuffer) {
   return realpath(relpath, absPathBuffer);
 }
 
 #else
+
+// MSC has no useful realpath
 
 static char *Realpath(const char *relpath, char *absPathBuffer) {
   // Check if the file exists before resolving
@@ -98,7 +101,15 @@ int fileno(FILE *);
 
 #endif
 
-
+// This gives us access to text of the last thing that looked like a doc
+// comment.  We store these as the comments are processed and by the time we are
+// reducing the procedure/table/column/view this is attached to the comment is long gone.
+// Importantly the places these are used must ensure that a "reduce" happens
+// before the next doc comment or it will be lost. In particular, the comment
+// that is a associated with a table must be absorbed into the AST before
+// the comments that are associated with columns.  In principle a doc comment can
+// go anywhere a misc attribute can go because that's what it turns into.  In practice
+// we only capture them for tables, columns, procedures, and views.
 cql_noexport CSTR get_last_doc_comment() {
   CSTR result = last_doc_comment;
   last_doc_comment = NULL;
@@ -113,6 +124,13 @@ static YY_BUFFER_STATE cql_main_buffer;
 // later paths are relative to this by default
 static char ambient_path[PATH_MAX];
 
+// Here we store the original input source, saving it in cql_main_buffer and
+// then we set up the lexer to read from the text returned by cql_builtin_text()
+// when that ends we will switch to the main buffer.
+//
+// There are many declarations in the builtin stream and it is much more
+// economical to process those as text than to record the various ast fragments
+// we would need (and they might change over time).
 cql_noexport void cql_setup_for_builtins() {
   // stash a buffer for the main input, note that we might already have a buffer
   // in the amalgam case, if we do then use that.
@@ -131,6 +149,7 @@ cql_noexport void cql_setup_for_builtins() {
   cql_builtins_processing = true;
 
   // use the path part of the initial input file as the starting ambient path
+  // this is the path that later @include directive paths will be relative to.
   if (!strcmp("<stdin>", current_file)) {
      ambient_path[0] = '\0';
   }
@@ -155,6 +174,9 @@ static int cql_include_index = 0;
 
 static symtab *processed_files;
 
+// set things up for start of a new compile.  All memory
+// of previously processed files is removed.  The include stack
+// is cleared.
 cql_noexport void cql_reset_open_includes() {
   ambient_path[0] = '\0';
   cql_include_index = 0;
@@ -165,6 +187,8 @@ cql_noexport void cql_reset_open_includes() {
   }
 }
 
+// cleanup the memory associated with any pending files
+// in the include stack.
 cql_noexport void cql_cleanup_open_includes() {
   for (int32_t i = 0; i < cql_include_index; i++) {
      cql_include_state *inc = &cql_includes[i];
@@ -172,6 +196,12 @@ cql_noexport void cql_cleanup_open_includes() {
   }
   cql_reset_open_includes();
 }
+
+// we're starting a new @include directive.  We'll need
+// to record that this file has been seen (we don't allowed
+// a file to be processed more than once).  We'll issue an
+// error if we are nesting too deeply.  Otherwise we're going
+// to update the stack of includes and set a new ambient path.
 
 static void cql_setup_for_include(CSTR str) {
   if (!processed_files) {
@@ -195,11 +225,12 @@ static void cql_setup_for_include(CSTR str) {
   CHARBUF_OPEN(path);
   char resolved_path[PATH_MAX];  // PATH_MAX is defined in limits.h
 
+  // first get the path as specified
   cg_decode_c_string_literal(str, &name);
 
   yyin = NULL;
 
-  // Call Realpath to resolve the pathname
+  // second, prepend the ambient path if there is one
   bclear(&path);
   if (ambient_path[0]) {
     bprintf(&path, "%s/%s", ambient_path, name.ptr);
@@ -208,18 +239,27 @@ static void cql_setup_for_include(CSTR str) {
     bprintf(&path, "%s", name.ptr);
   }
 
-  CSTR opened_name = path.ptr;
+  // Next call Realpath to resolve the pathname to an absolute path
 
+  CSTR opened_name = path.ptr;
   char *abspath = Realpath(path.ptr, resolved_path);
   if (abspath) {
+
+    // skip the file if it's already been processed
+    // the input is set to empty so we will just pop instantly
     if (cql_already_processed_file(abspath)) {
       yy_switch_to_buffer(yy_scan_string(""));
       goto done;
     }
+
     strcpy(ambient_path, path.ptr);
     Dirname(ambient_path);
     yyin = fopen(abspath, "r");
   }
+
+  // if the path we tried, the ambient path, did not result in
+  // a viable include stream then we try all the paths that were
+  // specified on the command line.
 
   if (!yyin) {
      for (int i = 0; i < options.include_paths_count; i++) {
@@ -227,6 +267,7 @@ static void cql_setup_for_include(CSTR str) {
         bprintf(&path, "%s/%s", options.include_paths[i], name.ptr);
         abspath = Realpath(path.ptr, resolved_path);
         if (abspath) {
+          // as above, pop instantly if the file has already been processed.
           if (cql_already_processed_file(abspath)) {
             yy_switch_to_buffer(yy_scan_string(""));
             goto done;
@@ -243,16 +284,20 @@ static void cql_setup_for_include(CSTR str) {
      }
   }
 
+  // if we got this far there's nothing to do, can't find the file
+  // time to report an error.
   if (!yyin) {
      cql_error("%s:%d unable to open %s\n", current_file, yylineno, str);
      cql_cleanup_and_exit(1);
   }
 
+  // we have a file and path now, so mark it as processed and make the buffer
   cql_record_processed_file(abspath);
   yy_switch_to_buffer(yy_create_buffer(yyin, YY_BUF_SIZE));
 
 done:
 
+  // we have some buffer here, it may be empty.
   yylineno = 1;
   current_file = Strdup(opened_name);
 
@@ -260,18 +305,21 @@ done:
   CHARBUF_CLOSE(name);
 }
 
-static void cql_finish_stream() {
+// The builtin stream is ending, switch to the stored main buffer.
+static void cql_finish_builtin_stream() {
   // when we read the end of the temporary buffer we switch to the main buffer
   cql_builtins_processing = false;
   yy_delete_buffer(YY_CURRENT_BUFFER);
   yy_switch_to_buffer(cql_main_buffer);
 }
 
+// stores absolute paths of the processed files
 static void cql_record_processed_file(CSTR str) {
   Contract(processed_files);
   symtab_add(processed_files, Strdup(str), NULL);
 }
 
+// true if we've already scanned this file
 static bool_t cql_already_processed_file(CSTR str) {
   Contract(processed_files);
   return !!symtab_find(processed_files, str);
@@ -639,7 +687,7 @@ X'({hex}{hex})*'                 { yylval.sval = Strdup(yytext); return BLOBLIT;
 
 <<EOF>>                          {
                                    if (cql_builtins_processing)  {
-                                     cql_finish_stream();
+                                     cql_finish_builtin_stream();
                                    }
                                    else if (!cql_include_index) {
                                      if (cql_delete_main_buffer) {

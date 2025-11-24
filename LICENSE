@@ -29,3 +29,9 @@ including those that came well after Meta's involvement ended.
 Meta continues to make periodic ad hoc contributions to this fork and merge
 corrections back to their private repo.  The maintainer thanks Meta
 for this continued informal cooperation.
+
+I have begun the practice of tagging the copyright of individual files with the
+copyright owner, which is sometimes not Meta.  It seems not appropriate to
+tag entirely with the Meta tag.  However, the entire work continues to be
+licensed uniformly with the MIT license above.
+

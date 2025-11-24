@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright (c) Meta Platforms, Inc. and affiliates.
+# Copyright (c) Rico Mariani
 #
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
@@ -15,7 +15,7 @@
 # NB: This code should be considered SAMPLE code, not production code.
 # Which is to say you can reasonably expect that the specifics of the diagrams
 # and the database produced here are likely to change at whim.  If you need
-# a particular output, you are enouraged to FORK this sample into something
+# a particular output, you are encouraged to FORK this sample into something
 # stable.  The JSON format itself is the contract and it evolves in a backwards
 # compatible way.  This script is likely to change to make different pretty
 # pictures at various times.

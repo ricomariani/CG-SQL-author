@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Copyright (c) Joris Garonian and Rico Mariani
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+
 set -o errexit -o nounset
 
 S=$(cd $(dirname "$0"); pwd)

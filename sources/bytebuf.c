@@ -26,7 +26,7 @@ cql_noexport void bytebuf_close(bytebuf *_Nonnull buf) {
 // This creates the needed space in the bytebuf, the buffer grows if it has to.
 // The newly allocated memory begins with garbage data..
 cql_noexport void *_Nonnull bytebuf_alloc(
-  bytebuf *_Nonnull buf, 
+  bytebuf *_Nonnull buf,
   uint32_t needed)
 {
   uint32_t avail = buf->max - buf->used;

@@ -1966,23 +1966,23 @@ create table `a table`(
 
 insert into `a table`(id)
   values (1, 2)
-on conflict (`col 1`) 
+on conflict (`col 1`)
 where `col 2` = 1 do update
   set `col 1` = `col 2`
   returning `col 1`, `col 2`;
 
-cursor C  for 
+cursor C  for
 insert into `a table`(id)
   values (1, 2)
-on conflict (`col 1`) 
+on conflict (`col 1`)
 where `col 2` = 1 do update
   set `col 1` = `col 2`
   returning `col 1`, `col 2`;
 
-cursor C  for 
+cursor C  for
 insert into `a table`(id)
   values (1, 2)
-on conflict (`col 1`) 
+on conflict (`col 1`)
 where `col 2` = 1 do update
   set `col 1` = `col 2`;
 

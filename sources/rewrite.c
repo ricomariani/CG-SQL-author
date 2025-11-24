@@ -3054,7 +3054,7 @@ static ast_node *rewrite_child_partition_creation(
 // access to the partitioned child data that corresponds to each parent row.
 //
 // Example transformation for two child results:
-// child_results: [CALL proc1(...) AS child1, CALL proc2(...) AS child2]  
+// child_results: [CALL proc1(...) AS child1, CALL proc2(...) AS child2]
 // Into: child1 OBJECT<proc1 SET> NOT NULL, child2 OBJECT<proc2 SET> NOT NULL
 //
 // The OBJECT<proc_name SET> type represents a result set from the specified procedure,
@@ -3356,7 +3356,7 @@ static ast_node *rewrite_declare_parent_cursor(
 // FETCH __out_cursor__ FROM VALUES(
 //   from __parent__,                                    -- order_id, customer, date, total
 //   cql_extract_partition(__partition__0, __key__0),   -- items result set
-//   cql_extract_partition(__partition__1, __key__1)    -- payments result set  
+//   cql_extract_partition(__partition__1, __key__1)    -- payments result set
 // );
 //
 // The resulting output cursor contains:
@@ -3444,7 +3444,7 @@ static ast_node *rewrite_fetch_results(
 //
 // Example transformation for parent "orders" with children "items" and "payments":
 // LOOP FETCH __parent__ BEGIN
-//   FETCH __key__0 FROM __parent__(LIKE __key__0);                    -- extract order_id  
+//   FETCH __key__0 FROM __parent__(LIKE __key__0);                    -- extract order_id
 //   FETCH __key__1 FROM __parent__(LIKE __key__1);                    -- extract customer_id
 //   FETCH __out_cursor__ FROM VALUES(
 //     from __parent__,                                                -- parent: order_id, customer, date, total

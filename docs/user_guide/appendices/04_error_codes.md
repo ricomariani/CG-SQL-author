@@ -3094,7 +3094,7 @@ The named shape was used in a fetch statement but the number of columns fetched
 is smaller than the number required by the statement we are processing.
 
 If you need to use the cursor plus some other data then you can't use this form,
-you'll have to use each field individually like 
+you'll have to use each field individually like
 
 ```sql
 from values(C.x, C.y, C.z, other_stuff)

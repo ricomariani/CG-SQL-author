@@ -31,7 +31,7 @@ function extract_quoted_string(start_quoting_char) {
         put(char);
         if (char == "\\") {
             put(take());
-        } 
+        }
     }
 }
 

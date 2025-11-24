@@ -26,20 +26,20 @@ demo.sh
 
 ### Essential Files
 
-* `Sample.sql` 
+* `Sample.sql`
   * contains the CQL that we are trying to project into SQLite
 * `TestCases.sql`
   * contains test cases that use the procedures in the Sample and verify their output
   * the test cases are written in CQL but they invoke the sample code via the SQLite
     mechanism not my calling it directly
-* `cqlsqlite3extension.py` 
+* `cqlsqlite3extension.py`
   * This is the python that creates the necessary glue code to invoke the procedures
 * `cql_sqlite_extension.h` and `cql_sqlite_extension.c`
   * These contain the standard helper functions needed to do table valued functions
 
 ### Generated:
 
-* `out/Sample.c` `out/Sample.h` 
+* `out/Sample.c` `out/Sample.h`
   * the normal C code that corrsponds to `Sample.sql`
 * `out/Sample.json`
   * the JSON schema for `Sample.sql` generated with `--rt json_schema`

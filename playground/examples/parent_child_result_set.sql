@@ -89,7 +89,7 @@ proc print_two_selects_method()
 begin
   printf("compute nested result via two selects\n");
   printf("  this has the fewest sql queries and does an in-memory join\n");
-  
+
   declare C cursor for call parent_child_join('foo');
   loop fetch C
   begin

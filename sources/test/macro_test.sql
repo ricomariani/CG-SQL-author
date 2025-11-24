@@ -524,7 +524,7 @@ end;
 -- TEST: make sure that proc is not evaluated inside of macro args
 -- indeed @text and @id must not do their job until after they are
 -- out of any macro arg. They can only evaluate their arguments
--- and never @proc.  The code below doen't appear in the context 
+-- and never @proc.  The code below doen't appear in the context
 -- of the proc.  The macros have to unwind first, hence the test.
 --
 -- + LET x := 'macro_test_proc';

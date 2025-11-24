@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) Joris Garonian and Rico Mariani
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 .load out/cqlextension
 
 -- These test cases are no longer used but I (Rico) did not want to

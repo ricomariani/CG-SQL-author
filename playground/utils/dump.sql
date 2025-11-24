@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 DECLARE PROC printf NO CHECK;
 
 @macro(stmt_list) dumper_procs!(t! expr, eval! expr)
@@ -43,12 +50,12 @@ dumper_procs!("blob", "[Blob]");
 @op NULL : call format as format_null;
 @op NULL : call get_type as get_type_null;
 
-proc format_null(value int, out result text!) 
+proc format_null(value int, out result text!)
 begin
   result := "NULL";
 end;
 
-proc get_type_null(value int, out result text!) 
+proc get_type_null(value int, out result text!)
 begin
   result := '("null")';
 end;

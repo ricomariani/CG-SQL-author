@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) Joris Garonian and Rico Mariani
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 #include "cqlrt.h"
 
 cql_bool is_sqlite3_type_compatible_with_cql_core_type(int sqlite_type, int8_t cql_core_type, cql_bool is_nullable);

@@ -26,7 +26,7 @@ $ unzip rr-2.5-java11.zip -d ./rr-2.5-java11
 $ mv ./rr-2.5-java11 ~/rr-2.5-java11
 
 Note:
-The above is not the official site for this software - that would be https://www.bottlecaps.de/rr/ui. 
+The above is not the official site for this software - that would be https://www.bottlecaps.de/rr/ui.
 However, the official site is only available via IPv6. This site is also available via IPv4,
 and is based on a fork (which includes this paragraph, and may diverge slightly
 from the software on the official site).

@@ -1873,7 +1873,7 @@ delete_stmt:
    | with_prefix delete_stmt_plain {
      $$ = new_ast_with_delete_stmt($with_prefix, $delete_stmt_plain); }
    | with_prefix delete_stmt_plain returning_suffix {
-     ast_node *tmp = new_ast_with_delete_stmt($with_prefix, $delete_stmt_plain); 
+     ast_node *tmp = new_ast_with_delete_stmt($with_prefix, $delete_stmt_plain);
      $$ = new_ast_delete_returning_stmt(tmp, $returning_suffix); }
    ;
 
@@ -1957,7 +1957,7 @@ insert_stmt:
    | with_prefix insert_stmt_plain {
      $$ = new_ast_with_insert_stmt($with_prefix, $insert_stmt_plain); }
    | with_prefix insert_stmt_plain returning_suffix {
-     ast_node *tmp = new_ast_with_insert_stmt($with_prefix, $insert_stmt_plain); 
+     ast_node *tmp = new_ast_with_insert_stmt($with_prefix, $insert_stmt_plain);
      $$ = new_ast_insert_returning_stmt(tmp, $returning_suffix); }
    ;
 
@@ -1988,7 +1988,7 @@ update_stmt:
    | with_prefix update_stmt_plain {
      $$ = new_ast_with_update_stmt($with_prefix, $update_stmt_plain); }
    | with_prefix update_stmt_plain returning_suffix {
-     ast_node *tmp = new_ast_with_update_stmt($with_prefix, $update_stmt_plain); 
+     ast_node *tmp = new_ast_with_update_stmt($with_prefix, $update_stmt_plain);
      $$ = new_ast_update_returning_stmt(tmp, $returning_suffix); }
    ;
 
@@ -2026,7 +2026,7 @@ upsert_stmt:
    | with_prefix upsert_stmt_plain {
      $$ = new_ast_with_upsert_stmt($with_prefix, $upsert_stmt_plain); }
    | with_prefix upsert_stmt_plain returning_suffix {
-     ast_node *tmp = new_ast_with_upsert_stmt($with_prefix, $upsert_stmt_plain); 
+     ast_node *tmp = new_ast_with_upsert_stmt($with_prefix, $upsert_stmt_plain);
      $$ = new_ast_upsert_returning_stmt(tmp, $returning_suffix); }
 
 upsert_stmt_plain:
@@ -2248,7 +2248,7 @@ declare_value_cursor:
   | CURSOR name LIKE '(' typed_names ')' { $$ = new_ast_declare_cursor_like_typed_names($name, $typed_names); }
   ;
 
-row_source: select_stmt | explain_stmt | insert_stmt | delete_stmt | update_stmt | upsert_stmt | call_stmt 
+row_source: select_stmt | explain_stmt | insert_stmt | delete_stmt | update_stmt | upsert_stmt | call_stmt
   ;
 
 declare_forward_read_cursor_stmt:

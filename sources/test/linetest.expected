@@ -8,10 +8,11 @@
 LINE TEST EXPECTED OUTPUT
 
 line numbers are relative to the line the #define _PROC_
-anything outside the #define and #undef for _PROC is ignored
 
-The test cases and remember this outside stuff is ignored in this file,
-it's just here for your viewing pleasure.  The source of truth is in "test/linetest.sql"
+Anything outside the #define and #undef for _PROC is IGNORED, it's just comments.
+
+The test cases are echoed here but again, that will be ignored, it's just here
+for your viewing pleasure.  The source of truth is in "test/linetest.sql"
 annotated source code from there included.
 
 ------------------------ ------------------------ ------------------------

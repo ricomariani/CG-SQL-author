@@ -180,4 +180,4 @@ let z := @proc;
 create proc error_proc()
 begin
   not_a_real_macro!;
-end; 
+end;

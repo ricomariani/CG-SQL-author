@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) Joris Garonian and Rico Mariani
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 // This file contains the implementation of the CQL SQLite extension
 // helper functions. These functions are used to convert SQLite values
 // to CQL types and vice versa so that CQL procedures can be called
@@ -14,7 +21,7 @@ extern const sqlite3_api_routines *sqlite3_api;
 #define trace_printf(x, ...)
 // #define trace_printf printf
 
-// This is used to validate if an imcoming argument
+// This is used to validate if an incoming argument
 // is compatible with the required CQL type.  If the
 // argument is not compatible then an error is ultimately
 // generated for this call. If you're using CQL to call

@@ -422,6 +422,14 @@ static void cg_error_on_not_sqlite_ok() {
   cg_error_on_expr("_rc_ != SQLITE_OK");
 }
 
+// Helper to check if an AST node is a comparison operator (lt, gt, le, ge, eq, ne)
+// These need special handling because chained comparisons like "a < b < c" trigger
+// the C compiler's -Wparentheses warning.
+static bool_t is_comparison_ast(ast_node *ast) {
+  return is_ast_lt(ast) || is_ast_gt(ast) || is_ast_le(ast) ||
+         is_ast_ge(ast) || is_ast_eq(ast) || is_ast_ne(ast);
+}
+
 // This tells us if a subtree should be wrapped in ()
 // Basically we know the binding strength of the context (pri) and the current
 // element (pri_new) Weaker contexts get parens.  Equal contexts get parens on
@@ -434,6 +442,16 @@ static bool_t needs_paren(ast_node *ast, int32_t pri_new, int32_t pri) {
 
   if (pri_new != pri) {
     return pri_new < pri;
+  }
+
+  // Special case for comparison operators: always add parens when a comparison
+  // is nested inside another comparison at the same priority level.
+  // This prevents the C compiler's -Wparentheses warning for chained comparisons
+  // like "5 > 3 > -1" which would otherwise generate "5 > 3 > -1" in C.
+  // The warning exists because in C, "5 > 3 > -1" evaluates as "(5 > 3) > -1"
+  // which is "1 > -1" = 1, not a mathematical range check.
+  if (is_comparison_ast(ast) && ast->parent && is_comparison_ast(ast->parent)) {
+    return true;
   }
 
   // If equal binding strength, put parens on the right of the expression

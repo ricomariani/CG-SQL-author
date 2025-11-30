@@ -434,21 +434,6 @@ program: top_level_stmts[stmts] {
   }
   ;
 
-  // Top-level statement ordering rules:
-  //
-  // IMPORTANT: stmt_list must NEVER appear before include_stmts or top_of_file_stmts.
-  // The valid orderings from a user's perspective are:
-  //   1. top_of_file_stmts? include_stmts? stmt_list?
-  //
-  // However, CQL loads builtins as an implicit @include BEFORE the user's file content.
-  // This means the parser sees: [builtin includes] [user's file content]
-  // So we need additional rules to handle include_stmts appearing before top_of_file_stmts,
-  // but ONLY because those leading includes are the implicit builtins, not user code.
-  //
-  // The grammar cannot distinguish builtin includes from user includes, so it is
-  // technically more permissive than the intended semantics. Semantic analysis
-  // enforces the actual placement rules (e.g., @schema_upgrade_version must come
-  // before any tables are declared).
   top_level_stmts:
     /* nil */  { $$ = NULL; }
     | include_stmts { $$ = $include_stmts; }
@@ -501,11 +486,11 @@ program: top_level_stmts[stmts] {
        }
        $$->parent = current_tail;
    }
-    // The following rules exist to handle the implicit builtin includes that CQL
-    // loads before the user's file. The leading include_stmts represents builtins,
-    // NOT user @include statements (which should come after top_of_file_stmts).
     | include_stmts[s1] top_of_file_stmts[s2] {
-       // Builtins (implicit include) then top-of-file statements
+       // The following rules handle the implicit builtin includes that CQL loads
+       // before the user's file. The leading include_stmts represents builtins,
+       // NOT user @include statements (which should come after top_of_file_stmts).
+       // IMPORTANT: stmt_list must NEVER appear before include_stmts or top_of_file_stmts.
        $$ = $s1;
        if ($s2) {
          ast_node *tail = $s1->parent;
@@ -574,14 +559,10 @@ program: top_level_stmts[stmts] {
    }
    ;
 
-// Statements that can ONLY appear at the very top of a file, before any other content.
-// These statements are not valid as regular statements within the file.
-// Currently only @schema_upgrade_version is in this category.
 top_of_file_stmt:
     schema_upgrade_version_stmt ';'
     ;
 
-// One or more top-of-file statements
 top_of_file_stmts:
     top_of_file_stmt {
       $$ = new_ast_stmt_list($top_of_file_stmt, NULL);

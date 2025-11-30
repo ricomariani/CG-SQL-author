@@ -186,9 +186,13 @@ building() {
 
   TEST_NAME="check_conflicts"
   TEST_DESC="Checking for parser conflicts"
-  TEST_CMD="grep '^State.*conflicts:' $O/cql.y.output"
-  TEST_ERROR_MSG="conflicts found in grammar, these must be fixed. Look at the conflicting states in $O/cql.y.output to debug"
-  run_test_expect_fail
+  # We expect exactly 5 shift/reduce conflicts due to @schema_upgrade_version appearing
+  # in both top_of_file_stmts and any_stmt. These are accepted via %expect 5 in cql.y.
+  # The test verifies we have exactly 5 conflicts (not more, not less).
+  EXPECTED_CONFLICTS=5
+  TEST_CMD="test \$(grep -c '^State.*conflicts:' $O/cql.y.output) -eq $EXPECTED_CONFLICTS"
+  TEST_ERROR_MSG="Expected exactly $EXPECTED_CONFLICTS parser conflicts, but found a different number. Check $O/cql.y.output and update %expect in cql.y if needed."
+  run_test_expect_success
 
   TEST_NAME="build_amalgam"
   TEST_DESC="Building CQL amalgam"

@@ -17,6 +17,9 @@
 -- You cannot expect correct output if you also add the --sem flag to cql
 -- it will start to whine about all the mistakes.
 
+-- declare schema version (must be at top of file, before any @include)
+@schema_upgrade_version (112);
+
 @include "macro_basic_parse_test.sql"
 @include "line_directive_parse_test.sql"
 @include "test2_include_file.sql"

@@ -181,6 +181,11 @@ static void cql_reset_globals(void);
 
 %define parse.error verbose
 
+// Allow shift/reduce conflicts for @schema_upgrade_version which can appear
+// both as a top_of_file_stmt (before @include) and as a regular stmt.
+// Bison's default shift behavior correctly handles this ambiguity.
+%expect 5
+
 %union {
   struct ast_node *aval;
   int ival;
@@ -346,6 +351,7 @@ static void cql_reset_globals(void);
 %type <aval> macro_def_stmt opt_macro_args macro_args macro_arg op_stmt
 %type <aval> opt_macro_formals macro_formals macro_formal macro_type
 %type <aval> top_level_stmts include_stmts include_section
+%type <aval> top_of_file_stmt top_of_file_stmts
 %type <aval> stmt_list_macro_def expr_macro_def query_parts_macro_def cte_tables_macro_def select_core_macro_def select_expr_macro_def
 %type <aval> macro_ref
 
@@ -436,12 +442,139 @@ program: top_level_stmts[stmts] {
        $$ = $s2;
        if ($s1) {
          // use our tail pointer invariant so we can add at the tail without searching
-         // the re-stablish the invariant
+         // then re-establish the invariant
          ast_node *tail = $s1->parent;
          $s1->parent = $s2->parent;
          ast_set_right(tail, $s2);
          $$ = $s1;
       }
+   }
+    | top_of_file_stmts[s1] { $$ = $s1; }
+    | top_of_file_stmts[s1] include_stmts[s2] {
+       // Top-of-file statements (e.g., @schema_upgrade_version) then @include
+       $$ = $s1;
+       if ($s2) {
+         ast_node *tail = $s1->parent;
+         $s1->parent = $s2->parent;
+         ast_set_right(tail, $s2);
+      }
+   }
+    | top_of_file_stmts[s1] stmt_list[s2] {
+       // Top-of-file statements then regular statements (no includes)
+       $$ = $s1;
+       if ($s2) {
+         ast_node *tail = $s1->parent;
+         $s1->parent = $s2->parent;
+         ast_set_right(tail, $s2);
+      }
+   }
+    | top_of_file_stmts[s1] include_stmts[s2] stmt_list[s3] {
+       // Top-of-file statements, then @include, then regular statements
+       ast_node *s2_tail = $s2 ? $s2->parent : NULL;
+       ast_node *s3_tail = $s3 ? $s3->parent : NULL;
+
+       $$ = $s1;
+       ast_node *current_tail = $s1->parent;
+
+       if ($s2) {
+         ast_set_right(current_tail, $s2);
+         current_tail = s2_tail;
+       }
+       if ($s3) {
+         ast_set_right(current_tail, $s3);
+         current_tail = s3_tail;
+       }
+       $$->parent = current_tail;
+   }
+    | include_stmts[s1] top_of_file_stmts[s2] {
+       // Builtins (implicit include) then top-of-file statements
+       $$ = $s1;
+       if ($s2) {
+         ast_node *tail = $s1->parent;
+         $s1->parent = $s2->parent;
+         ast_set_right(tail, $s2);
+      }
+   }
+    | include_stmts[s1] top_of_file_stmts[s2] stmt_list[s3] {
+       // Builtins, top-of-file statements, then regular statements
+       ast_node *s2_tail = $s2 ? $s2->parent : NULL;
+       ast_node *s3_tail = $s3 ? $s3->parent : NULL;
+
+       $$ = $s1;
+       ast_node *current_tail = $s1->parent;
+
+       if ($s2) {
+         ast_set_right(current_tail, $s2);
+         current_tail = s2_tail;
+       }
+       if ($s3) {
+         ast_set_right(current_tail, $s3);
+         current_tail = s3_tail;
+       }
+       $$->parent = current_tail;
+   }
+    | include_stmts[s1] top_of_file_stmts[s2] include_stmts[s3] {
+       // Builtins, top-of-file statements, then user includes
+       ast_node *s2_tail = $s2 ? $s2->parent : NULL;
+       ast_node *s3_tail = $s3 ? $s3->parent : NULL;
+
+       $$ = $s1;
+       ast_node *current_tail = $s1->parent;
+
+       if ($s2) {
+         ast_set_right(current_tail, $s2);
+         current_tail = s2_tail;
+       }
+       if ($s3) {
+         ast_set_right(current_tail, $s3);
+         current_tail = s3_tail;
+       }
+       $$->parent = current_tail;
+   }
+    | include_stmts[s1] top_of_file_stmts[s2] include_stmts[s3] stmt_list[s4] {
+       // Builtins, top-of-file statements, user includes, then regular statements
+       ast_node *s2_tail = $s2 ? $s2->parent : NULL;
+       ast_node *s3_tail = $s3 ? $s3->parent : NULL;
+       ast_node *s4_tail = $s4 ? $s4->parent : NULL;
+
+       $$ = $s1;
+       ast_node *current_tail = $s1->parent;
+
+       if ($s2) {
+         ast_set_right(current_tail, $s2);
+         current_tail = s2_tail;
+       }
+       if ($s3) {
+         ast_set_right(current_tail, $s3);
+         current_tail = s3_tail;
+       }
+       if ($s4) {
+         ast_set_right(current_tail, $s4);
+         current_tail = s4_tail;
+       }
+       $$->parent = current_tail;
+   }
+   ;
+
+// Statements that can ONLY appear at the very top of a file, before any other content.
+// These statements are not valid as regular statements within the file.
+// Currently only @schema_upgrade_version is in this category.
+top_of_file_stmt:
+    schema_upgrade_version_stmt ';'
+    ;
+
+// One or more top-of-file statements
+top_of_file_stmts:
+    top_of_file_stmt {
+      $$ = new_ast_stmt_list($top_of_file_stmt, NULL);
+      $$->parent = $$;
+   }
+   | top_of_file_stmts[slist] top_of_file_stmt {
+      ast_node *new_stmt = new_ast_stmt_list($top_of_file_stmt, NULL);
+      ast_node *tail = $slist->parent;
+      ast_set_right(tail, new_stmt);
+      $slist->parent = new_stmt;
+      $$ = $slist;
    }
    ;
 

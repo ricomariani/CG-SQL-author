@@ -434,6 +434,21 @@ program: top_level_stmts[stmts] {
   }
   ;
 
+  // Top-level statement ordering rules:
+  //
+  // IMPORTANT: stmt_list must NEVER appear before include_stmts or top_of_file_stmts.
+  // The valid orderings from a user's perspective are:
+  //   1. top_of_file_stmts? include_stmts? stmt_list?
+  //
+  // However, CQL loads builtins as an implicit @include BEFORE the user's file content.
+  // This means the parser sees: [builtin includes] [user's file content]
+  // So we need additional rules to handle include_stmts appearing before top_of_file_stmts,
+  // but ONLY because those leading includes are the implicit builtins, not user code.
+  //
+  // The grammar cannot distinguish builtin includes from user includes, so it is
+  // technically more permissive than the intended semantics. Semantic analysis
+  // enforces the actual placement rules (e.g., @schema_upgrade_version must come
+  // before any tables are declared).
   top_level_stmts:
     /* nil */  { $$ = NULL; }
     | include_stmts { $$ = $include_stmts; }
@@ -486,6 +501,9 @@ program: top_level_stmts[stmts] {
        }
        $$->parent = current_tail;
    }
+    // The following rules exist to handle the implicit builtin includes that CQL
+    // loads before the user's file. The leading include_stmts represents builtins,
+    // NOT user @include statements (which should come after top_of_file_stmts).
     | include_stmts[s1] top_of_file_stmts[s2] {
        // Builtins (implicit include) then top-of-file statements
        $$ = $s1;
@@ -496,7 +514,7 @@ program: top_level_stmts[stmts] {
       }
    }
     | include_stmts[s1] top_of_file_stmts[s2] stmt_list[s3] {
-       // Builtins, top-of-file statements, then regular statements
+       // Builtins, then top-of-file statements, then regular statements
        ast_node *s2_tail = $s2 ? $s2->parent : NULL;
        ast_node *s3_tail = $s3 ? $s3->parent : NULL;
 
@@ -514,7 +532,7 @@ program: top_level_stmts[stmts] {
        $$->parent = current_tail;
    }
     | include_stmts[s1] top_of_file_stmts[s2] include_stmts[s3] {
-       // Builtins, top-of-file statements, then user includes
+       // Builtins, then top-of-file statements, then user includes
        ast_node *s2_tail = $s2 ? $s2->parent : NULL;
        ast_node *s3_tail = $s3 ? $s3->parent : NULL;
 
@@ -532,7 +550,7 @@ program: top_level_stmts[stmts] {
        $$->parent = current_tail;
    }
     | include_stmts[s1] top_of_file_stmts[s2] include_stmts[s3] stmt_list[s4] {
-       // Builtins, top-of-file statements, user includes, then regular statements
+       // Builtins, then top-of-file statements, then user includes, then regular statements
        ast_node *s2_tail = $s2 ? $s2->parent : NULL;
        ast_node *s3_tail = $s3 ? $s3->parent : NULL;
        ast_node *s4_tail = $s4 ? $s4->parent : NULL;

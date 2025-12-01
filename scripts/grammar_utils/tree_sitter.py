@@ -157,7 +157,7 @@ FIXED_RULES = """
        seq('--', /(\\\\(.|\\r?\\n)|[^\\\\\\n])*/),
        seq('/*', /[^*]*\\*+([^/*][^*]*\\*+)*/, '/'))),
 
-    stmt_list: $ => prec.left(repeat1(choice($.stmt, $.include_stmt, $.comment))),
+    stmt_list: $ => prec.left(repeat1(choice($.stmt, seq($.schema_upgrade_version_stmt, ';'), $.include_stmt, $.comment))),
 """
 
 # These are problematic rules to the cql tree-sitter grammar. We're just going

@@ -87,14 +87,16 @@ maintainable way, like so:
 @include "table2.sql"
 @include "table3.sql"
 
+-- contains @previous_schema only
 @include "prev_schema_marker.sql"
 
 @include "previous.sql"
 ```
 
-Include directives must be at the head of the file and other statements cannot
-go in that block.  To work around this simply put `@previous_schema;` in its own
-file.  Here it is "prev_schema_marker.sql".
+In this form we need a little work-around.  Include directives must be at the
+head of the file and other statements cannot go in that block.  To work around
+this we simply put `@previous_schema;` in its own file.  In the above that file
+is "prev_schema_marker.sql".
 
 In the above configuration, everything that follows the `@previous_schema`
 directive does not actually contribute to the declared schema.  This means the

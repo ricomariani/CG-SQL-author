@@ -2387,16 +2387,7 @@ found.
 
 -----
 
-### CQL0230: schema upgrade version declaration must be outside of any proc
-
-When authoring a schema migration procedure that was previously declared in an
-`@create` or `@delete` directive, the code in that procedure expects to see the
-schema as it existed at the version it is to migrate.  The
-`@schema_upgrade_version` directive allows you to set the visible schema version
-to something other than the latest.  There can only be one such directive.
-
-This error says that the `@schema_upgrade_version` directive was found inside of
-a stored procedure.  This is not allowed.
+### CQL0230 available for re-use
 
 -----
 

@@ -21,9 +21,10 @@ Follow the instructions provided after the installation. It should looke like th
 $ sudo ln -sfn /opt/homebrew/opt/openjdk/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk.jdk
 
 (2) Install railroad diagram generator
-$ wget https://rr.red-dove.com/download/rr-2.5-SNAPSHOT-java11.zip
-$ unzip rr-2.5-java11.zip -d ./rr-2.5-java11
-$ mv ./rr-2.5-java11 ~/rr-2.5-java11
+
+wget https://bottlecaps.de/rr/download/rr-2.5-java11.zip
+unzip rr-2.5-java11.zip -d ./rr-2.5-java11
+mv ./rr-2.5-java11 ~/rr-2.5-java11
 
 Note:
 The above is not the official site for this software - that would be https://www.bottlecaps.de/rr/ui.

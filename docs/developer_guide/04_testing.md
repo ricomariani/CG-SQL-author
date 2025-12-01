@@ -88,23 +88,39 @@ unremarkable stuff.
 ```bash
 basic_test() {
   echo '--------------------------------- STAGE 2 -- BASIC PARSING TEST'
-  echo running "$T/test.sql"
-  if ! ${CQL} --dev --in "$T/test.sql" >"$O/test.out"
-  then
-   echo basic parsing test failed
-   failed
-  fi
+  TEST_NAME="test"
+  TEST_DESC="Compiling basic parsing test \"$T/test.sql\""
+  TEST_CMD="${CQL} --echo --dev --include_paths \"test\" \"test2\" <\"$T/test.sql\""
+  run_test_expect_success
+
+  TEST_NAME="test_out2"
+  TEST_DESC="Testing echo output can be parsed correctly"
+  TEST_CMD="${CQL} --echo --dev --in \"$O/test.out\""
+  run_test_expect_success
+
+  TEST_NAME="test_ast"
+  TEST_DESC="Creating basic AST for test.sql"
+  TEST_CMD="${CQL} --ast_no_echo --dev --include_paths test2 --in \"$T/test.sql\""
+  run_test_expect_success
+
   echo "  computing diffs (empty if none)"
   on_diff_exit test.out
+  on_diff_exit test_ast.out
+
+  echo "  computing diffs second parsing (empty if none)"
+  mv "$O/test_out2.out" "$O/test.out"
+  on_diff_exit test.out
+
+  ...
 }
+
 ```
 
 * it's "STAGE 2" because "STAGE 1" was the build
 * all it tries to do is run the compiler over `test/test.sql`
 * if there are errors the test fails
 * if there are any differences between `test.out` and `test.out.ref` the test fails
-
-That's it.
+* there are additional test cases involving macro expansion and include files structured similarly
 
 ### Sematic Tests
 
@@ -115,28 +131,28 @@ First let's look at the shell script:
 ```bash
 semantic_test() {
   echo '--------------------------------- STAGE 4 -- SEMANTIC ANALYSIS TEST'
-  echo running semantic analysis test
-  if ! sem_check --sem --ast --dev --in "$T/sem_test.sql" >"$O/sem_test.out" 2>"$O/sem_test.err"
-  then
-     echo "CQL semantic analysis returned unexpected error code"
-     cat "$O/sem_test.err"
-     failed
-  fi
+
+  TEST_NAME="sem_test"
+  TEST_DESC="Running semantic analysis test"
+  TEST_CMD="sem_check --sem --ast --hide_builtins --dev --in \"$T/sem_test.sql\""
+  run_test_expect_success
 
   echo validating output trees
-  if ! "$O/cql-verify" "$T/sem_test.sql" "$O/sem_test.out"
-  then
-    echo failed verification
-    failed
-  fi
+  cql_verify "$T/sem_test.sql" "$O/sem_test.out"
 
-  echo running dev semantic analysis test
-  ... same thing again for sem_test_dev.sql
+  TEST_NAME="sem_test_dev"
+  TEST_DESC="Running dev semantic analysis test"
+  TEST_CMD="sem_check --sem --ast --in \"$T/sem_test_dev.sql\""
+  run_test_expect_success
+
+  echo validating output trees
+  cql_verify "$T/sem_test_dev.sql" "$O/sem_test_dev.out"
 
   echo "  computing diffs (empty if none)"
   on_diff_exit sem_test.out
   on_diff_exit sem_test.err
-  ... same thing again for sem_test_dev.out and .err
+  on_diff_exit sem_test_dev.out
+  on_diff_exit sem_test_dev.err
 }
 ```
 
@@ -154,13 +170,12 @@ In the first step the compiler MUST produce an error code, let's look at `sem_ch
 ```bash
 sem_check() {
   ${CQL} "$@"
-  if [ "$?" -ne "1" ]
-  then
-     echo 'All semantic analysis checks have errors in the test'
-     echo 'the normal return code is "1" -- any other return code is bad news'
-     echo 'A return code of zero indicates we reported success in the face of errors'
-     echo 'A return code other than 1 indicates an unexpected fatal error of some type'
-     return 1
+  if [ "$?" -ne "1" ]; then
+    echo 'All semantic analysis checks have errors in the test'
+    echo 'the normal return code is "1" -- any other return code is bad news'
+    echo 'A return code of zero indicates we reported success in the face of errors'
+    echo 'A return code other than 1 indicates an unexpected fatal error of some type'
+    return 1
   fi
 }
 ```

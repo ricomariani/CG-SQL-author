@@ -3844,6 +3844,11 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
+  {schema_upgrade_version_stmt}
+  | {int 112}
+
+The statement ending at line XXXX
+
   {expr_macro_def}
   | {macro_name_formals}
   | | {name foo}
@@ -11632,11 +11637,6 @@ The statement ending at line XXXX
           | {delete_attr}
             | {version_annotation}
               | {int 2}
-
-The statement ending at line XXXX
-
-  {schema_upgrade_version_stmt}
-  | {int 112}
 
 The statement ending at line XXXX
 

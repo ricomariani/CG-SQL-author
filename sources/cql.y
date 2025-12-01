@@ -429,24 +429,53 @@ program: top_level_stmts[stmts] {
   ;
 
   top_level_stmts:
-    /* nil */  { $$ = NULL; }
+    /* nil */ {
+      // Top-level statement ordering rules:
+      //
+      // IMPORTANT: stmt_list must NEVER appear before include_stmts or top_of_file_stmts.
+      // The valid orderings from a user's perspective are:
+      //   1. top_of_file_stmts? include_stmts? stmt_list?
+      //
+      // However, CQL loads builtins as an implicit @include BEFORE the user's file content.
+      // This means the parser sees: [builtin includes] [user's file content]
+      // So we need additional rules to handle include_stmts appearing before top_of_file_stmts,
+      // but ONLY because those leading includes are the implicit builtins, not user code.
+      //
+      // The grammar cannot distinguish builtin includes from user includes, so it is
+      // technically more permissive than the intended semantics. Semantic analysis
+      // enforces the actual placement rules (e.g., @schema_upgrade_version must come
+      // before any tables are declared).
+
+      // this handle the empty file case
+      $$ = NULL;
+    }
     | include_stmts { $$ = $include_stmts; }
     | stmt_list { $$ = $stmt_list; }
     | include_stmts[s1] stmt_list[s2] {
        $$ = $s2;
        if ($s1) {
-         // use our tail pointer invariant so we can add at the tail without searching
-         // the re-stablish the invariant
-         ast_node *tail = $s1->parent;
-         $s1->parent = $s2->parent;
-         ast_set_right(tail, $s2);
-         $$ = $s1;
+        // The following rules handle the implicit builtin includes that CQL loads
+        // before the user's file. The leading include_stmts represents builtins,
+        // NOT user @include statements (which should come after top_of_file_stmts).
+        // IMPORTANT: stmt_list must NEVER appear before include_stmts or top_of_file_stmts.
+
+        // use our tail pointer invariant so we can add at the tail without searching
+        // the re-stablish the invariant
+        ast_node *tail = $s1->parent;
+        $s1->parent = $s2->parent;
+        ast_set_right(tail, $s2);
+        $$ = $s1;
       }
    }
    ;
 
-include_section: BEGIN_INCLUDE top_level_stmts END_INCLUDE { $$ = $top_level_stmts; }
-   ;
+include_section:
+  BEGIN_INCLUDE top_level_stmts END_INCLUDE { $$ = $top_level_stmts; }
+  | schema_upgrade_version_stmt[u] ';' {
+     $$ = new_ast_stmt_list($u, NULL);
+     // set up the tail pointer invariant to use later
+     $$->parent = $$; }
+  ;
 
 include_stmts:
     include_section[s1] { $$ = $s1; }
@@ -607,7 +636,6 @@ any_stmt:
   | schema_ad_hoc_migration_stmt
   | schema_unsub_stmt
   | schema_upgrade_script_stmt
-  | schema_upgrade_version_stmt
   | set_stmt
   | switch_stmt
   | throw_stmt

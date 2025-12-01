@@ -1,3 +1,5 @@
+test/sem_test.sql:XXXX:1: error: in schema_upgrade_version_stmt : CQL0228: schema upgrade version must be a positive integer
+test/sem_test.sql:XXXX:1: error: in schema_upgrade_version_stmt : CQL0231: schema upgrade version declaration must come before any tables are declared
 test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : CQL0404: procedure cannot be both a normal procedure and an unchecked procedure 'printf'
 Incompatible declarations found
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CREATE TABLE foo(
@@ -600,9 +602,6 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0041: tables cannot have object col
 test/sem_test.sql:XXXX:1: error: in col_def : CQL0146: adding an auto increment column is not allowed 'id'
 test/sem_test.sql:XXXX:1: error: in str : CQL0144: table in alter statement does not exist 'garbonzo'
 test/sem_test.sql:XXXX:1: error: in str : CQL0144: cannot alter a view 'MyView'
-test/sem_test.sql:XXXX:1: error: in schema_upgrade_version_stmt : CQL0230: schema upgrade version declaration must be outside of any proc
-test/sem_test.sql:XXXX:1: error: in schema_upgrade_version_stmt : CQL0231: schema upgrade version declaration must come before any tables are declared
-test/sem_test.sql:XXXX:1: error: in schema_upgrade_version_stmt : CQL0228: schema upgrade version must be a positive integer
 test/sem_test.sql:XXXX:1: error: in col_def : CQL0145: version annotations not valid in alter statement 'name'
 test/sem_test.sql:XXXX:1: error: in col_def : CQL0145: version annotations not valid in alter statement 'name'
 test/sem_test.sql:XXXX:1: error: in delete_attr : CQL0026: duplicate version annotation

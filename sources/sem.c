@@ -24453,6 +24453,13 @@ static void sem_schema_upgrade_script_stmt(ast_node *ast) {
 // old columns.  Those columns truly exist at that schema version.
 static void sem_schema_upgrade_version_stmt(ast_node *ast) {
   Contract(is_ast_schema_upgrade_version_stmt(ast));
+
+  // the grammar disallows any possibility that we are in a proc because this must
+  // be in the include section (it has to come very early so it is allowed to mingle
+  // with @include).  This is unique to this statement.  Other normal statements have
+  // to come after the include block
+  Contract(!current_proc);
+
   EXTRACT_OPTION(vers, ast->left);
 
   if (vers <= 0) {
@@ -24463,12 +24470,6 @@ static void sem_schema_upgrade_version_stmt(ast_node *ast) {
 
   if (schema_upgrade_version > 0) {
     report_error(ast, "CQL0229: schema upgrade version declaration may only appear once", NULL);
-    record_error(ast);
-    return;
-  }
-
-  if (current_proc) {
-    report_error(ast, "CQL0230: schema upgrade version declaration must be outside of any proc", NULL);
     record_error(ast);
     return;
   }

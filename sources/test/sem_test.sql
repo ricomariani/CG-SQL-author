@@ -5,6 +5,21 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+-- schema upgrade statement has to be first, so we put it at the head of the sem_test file
+
+--- TEST: try to declare a bogus version number
+--- + error: % schema upgrade version must be a positive integer
+--- +1 error:
+@schema_upgrade_version(0);
+
+-- staying in the include section, we create a table
+@include "any_table.sql"
+
+--- TEST: try to declare a schema version after tables already defined
+--- + error: % schema upgrade version declaration must come before any tables are declared
+--- +1 error:
+@schema_upgrade_version(11);
+
 -- TEST: we'll be using printf in lots of places in the tests as an external proc
 -- + {declare_proc_no_check_stmt}: ok
 -- - error:
@@ -6537,24 +6552,6 @@ alter table garbonzo add column id integer primary key autoincrement;
 -- + {alter_table_add_column_stmt}: err
 -- +1 error:
 alter table MyView add column id integer primary key autoincrement;
-
--- TEST: try to declare a schema version inside of a proc
--- + error: % schema upgrade version declaration must be outside of any proc
--- +1 error:
-proc bogus_version()
-begin
-  @schema_upgrade_version(11);
-end;
-
--- TEST: try to declare a schema version after tables already defined
--- + error: % schema upgrade version declaration must come before any tables are declared
--- +1 error:
-@schema_upgrade_version(11);
-
--- TEST: try to declare a bogus version number
--- + error: % schema upgrade version must be a positive integer
--- +1 error:
-@schema_upgrade_version(0);
 
 -- TEST: try to alter a column with create version specs
 -- + error: % version annotations not valid in alter statement 'name'

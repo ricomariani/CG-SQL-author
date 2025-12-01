@@ -17,6 +17,9 @@
 -- You cannot expect correct output if you also add the --sem flag to cql
 -- it will start to whine about all the mistakes.
 
+-- declare schema version -- this must go first by syntax rules
+@schema_upgrade_version (112);
+
 @include "macro_basic_parse_test.sql"
 @include "line_directive_parse_test.sql"
 @include "test2_include_file.sql"
@@ -809,9 +812,6 @@ create table foo (id int @create(1, Foo) @delete(2, Bar));
 
 -- table with column create and delete version attribute (no procs)
 create table foo (id int @create(1) @delete(2));
-
--- declare schema version
-@schema_upgrade_version (112);
 
 -- declare a table with attributes
 create table foo(id integer) @create(1, foo) @delete(2, bar);

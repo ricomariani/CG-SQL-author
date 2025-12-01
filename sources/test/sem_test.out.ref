@@ -2,6 +2,42 @@
 
 The statement ending at line XXXX
 
+@SCHEMA_UPGRADE_VERSION (0);
+
+test/sem_test.sql:XXXX:1: error: in schema_upgrade_version_stmt : CQL0228: schema upgrade version must be a positive integer
+
+  {schema_upgrade_version_stmt}: err
+  | {int 0}
+
+The statement ending at line XXXX
+
+CREATE TABLE any_table_for_sem_test(
+  x INT
+);
+
+  {create_table_stmt}: any_table_for_sem_test: { x: integer }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name any_table_for_sem_test}
+  | {col_key_list}
+    | {col_def}: x: integer
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+          | {name x}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+@SCHEMA_UPGRADE_VERSION (11);
+
+test/sem_test.sql:XXXX:1: error: in schema_upgrade_version_stmt : CQL0231: schema upgrade version declaration must come before any tables are declared
+
+  {schema_upgrade_version_stmt}: err
+  | {int 11}
+
+The statement ending at line XXXX
+
 DECLARE PROC printf NO CHECK;
 
   {declare_proc_no_check_stmt}: ok
@@ -25447,40 +25483,6 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0144: cannot alter a view 'MyView'
       | {col_attrs_pk}
         | {autoinc_and_conflict_clause}
           | {col_attrs_autoinc}
-
-The statement ending at line XXXX
-
-PROC bogus_version ()
-BEGIN
-  @SCHEMA_UPGRADE_VERSION (11);
-END;
-
-test/sem_test.sql:XXXX:1: error: in schema_upgrade_version_stmt : CQL0230: schema upgrade version declaration must be outside of any proc
-
-  {create_proc_stmt}: err
-  | {name bogus_version}: err
-  | {proc_params_stmts}
-    | {stmt_list}: err
-      | {schema_upgrade_version_stmt}: err
-        | {int 11}
-
-The statement ending at line XXXX
-
-@SCHEMA_UPGRADE_VERSION (11);
-
-test/sem_test.sql:XXXX:1: error: in schema_upgrade_version_stmt : CQL0231: schema upgrade version declaration must come before any tables are declared
-
-  {schema_upgrade_version_stmt}: err
-  | {int 11}
-
-The statement ending at line XXXX
-
-@SCHEMA_UPGRADE_VERSION (0);
-
-test/sem_test.sql:XXXX:1: error: in schema_upgrade_version_stmt : CQL0228: schema upgrade version must be a positive integer
-
-  {schema_upgrade_version_stmt}: err
-  | {int 0}
 
 The statement ending at line XXXX
 

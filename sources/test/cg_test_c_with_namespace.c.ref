@@ -8,6 +8,7 @@
 #pragma clang diagnostic ignored "-Wshift-op-parentheses"
 #pragma clang diagnostic ignored "-Wlogical-not-parentheses"
 #pragma clang diagnostic ignored "-Wlogical-op-parentheses"
+#pragma clang diagnostic ignored "-Wparentheses"
 #pragma clang diagnostic ignored "-Wliteral-conversion"
 #pragma clang diagnostic ignored "-Wunused-but-set-variable"
 #pragma clang diagnostic ignored "-Wunused-function"

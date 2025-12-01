@@ -41,6 +41,6 @@ ls $OUT/cql_grammar.txt
 
 debug "Building CQL Grammar Javascript Tree Sitter"
 
-$SCRIPT_DIR_RELATIVE/grammar_utils/tree_sitter.py $OUT/cql_grammar.txt \
+python3 $SCRIPT_DIR_RELATIVE/grammar_utils/tree_sitter.py $OUT/cql_grammar.txt \
   > $OUT/cql_grammar.tree_sitter.js
 ls $OUT/cql_grammar.tree_sitter.js

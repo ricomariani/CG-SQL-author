@@ -396,6 +396,22 @@ static void cql_reset_globals(void);
 
 program: top_level_stmts[stmts] {
     if (!parse_error_occurred) {
+      // Top-level statement ordering rules:
+      //
+      // IMPORTANT: stmt_list must NEVER appear before include_stmts or top_of_file_stmts.
+      // The valid orderings from a user's perspective are:
+      //   1. top_of_file_stmts? include_stmts? stmt_list?
+      //
+      // However, CQL loads builtins as an implicit @include BEFORE the user's file content.
+      // This means the parser sees: [builtin includes] [user's file content]
+      // So we need additional rules to handle include_stmts appearing before top_of_file_stmts,
+      // but ONLY because those leading includes are the implicit builtins, not user code.
+      //
+      // The grammar cannot distinguish builtin includes from user includes, so it is
+      // technically more permissive than the intended semantics. Semantic analysis
+      // enforces the actual placement rules (e.g., @schema_upgrade_version must come
+      // before any tables are declared).
+
       gen_init();
       if (options.expand) {
         expand_macros($stmts);
@@ -429,26 +445,7 @@ program: top_level_stmts[stmts] {
   ;
 
   top_level_stmts:
-    /* nil */ {
-      // Top-level statement ordering rules:
-      //
-      // IMPORTANT: stmt_list must NEVER appear before include_stmts or top_of_file_stmts.
-      // The valid orderings from a user's perspective are:
-      //   1. top_of_file_stmts? include_stmts? stmt_list?
-      //
-      // However, CQL loads builtins as an implicit @include BEFORE the user's file content.
-      // This means the parser sees: [builtin includes] [user's file content]
-      // So we need additional rules to handle include_stmts appearing before top_of_file_stmts,
-      // but ONLY because those leading includes are the implicit builtins, not user code.
-      //
-      // The grammar cannot distinguish builtin includes from user includes, so it is
-      // technically more permissive than the intended semantics. Semantic analysis
-      // enforces the actual placement rules (e.g., @schema_upgrade_version must come
-      // before any tables are declared).
-
-      // this handle the empty file case
-      $$ = NULL;
-    }
+    /* nil */ { $$ = NULL; /* empty file case */ }
     | include_stmts { $$ = $include_stmts; }
     | stmt_list { $$ = $stmt_list; }
     | include_stmts[s1] stmt_list[s2] {

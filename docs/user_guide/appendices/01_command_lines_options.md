@@ -11,12 +11,6 @@ weight: 1
 
 CQL has a variety of command line (CLI) options but many of them are only interesting for cql development.  Nonetheless this is a comprehensive list:
 
->NOTE: CQL is often used after the c pre-processor is run so this kind of invocation is typical:
-
-```
-cc -E -x c foo.sql | cql [args]
-```
-
 ### With No Options
 * emits a usage message
 

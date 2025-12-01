@@ -87,25 +87,29 @@ maintainable way, like so:
 @include "table2.sql"
 @include "table3.sql"
 
-@previous_schema;
+@include "prev_schema_marker.sql"
 
 @include "previous.sql"
 ```
 
-Now importantly, in this configuration, everything that follows the
-`@previous_schema` directive does not actually contribute to the declared
-schema.  This means the `--rt schema` result type will not see it. Because of
-this, you can do your checking operation like so:
+Include directives must be at the head of the file and other statements cannot
+go in that block.  To work around this simply put `@previous_schema;` in its own
+file.  Here it is "prev_schema_marker.sql".
+
+In the above configuration, everything that follows the `@previous_schema`
+directive does not actually contribute to the declared schema.  This means the
+`--rt schema` result type will not see it. Because of this, you can do your
+checking operation like so:
 
 ```bash
-cc -E -x c prev_check.sql | cql --cg new_previous_schema.sql --rt schema
+cql --in prev_check.sql --cg new_previous_schema.sql --rt schema
 ```
 
-The above command will generate the schema in new_previous_schema and, if this
-command succeeds, it's safe to replace the existing `previous.sql` with
+The above command will generate the schema in `new_previous_schema.sql` and, if
+this command succeeds, it's safe to replace the existing `previous.sql` with
 `new_previous_schema`.
 
->NOTE: you can bootstrap the above by leaving off the `@previous_schema` and
+>NOTE: you can bootstrap the above by leaving off the previous schema parts and
 >what follows to get your first previous schema from the command above.
 
 Now, as you can imagine, comparing against the previous schema allows many more

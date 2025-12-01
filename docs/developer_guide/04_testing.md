@@ -472,46 +472,60 @@ less than 90s on my laptop.
 
 ```bash
 run_test() {
-  echo '--------------------------------- STAGE 13 -- RUN CODE TEST'
-  echo running codegen test with execution
-  if ! cc -E -x c -w "$T/run_test.sql" \
-    >"$O/run_test_cpp.out"
-  then
-    echo preprocessing failed.
-    failed
-  elif ! ${CQL} --nolines \
-    --cg "$O/run_test.h" "$O/run_test.c" \
-    --in "$O/run_test_cpp.out" \
-    --global_proc cql_startup --rt c
-  then
-    echo codegen failed.
-    failed
-  elif ! (echo "  compiling code"; do_make run_test )
-  then
-    echo build failed
-    failed
-  elif ! (echo "  executing tests"; "./$O/a.out")
-  then
-    echo tests failed
-    failed
-  fi
-  ...
+  echo '--------------------------------- STAGE 11 -- RUN CODE TEST'
+
+  TEST_NAME="run_test_codegen"
+  TEST_DESC="Generating run test code"
+  TEST_CMD="${CQL} --nolines --cg \"$O/run_test.h\" \"$O/run_test.c\" --in \"$T/run_test.sql\" --global_proc cql_startup --rt c"
+  run_test_expect_success
+
+  TEST_NAME="run_test_modern_codegen"
+  TEST_DESC="Generating modern SQLite run test code"
+  TEST_CMD="${CQL} --defines modern_test --nolines --cg \"$O/run_test_modern.h\" \"$O/run_test_modern.c\" --in \"$T/run_test.sql\" --global_proc cql_startup --rt c"
+  run_test_expect_success
+
+  TEST_NAME="run_test_compile_code"
+  TEST_DESC="Compiling run test code"
+  TEST_CMD="run_test_compile"
+  run_test_expect_success
+
+  TEST_NAME="run_test_run"
+  TEST_DESC="Running run test in C"
+  TEST_CMD="./$O/run_test"
+  run_test_expect_success
+
+  TEST_NAME="run_test_modern_sqlite"
+  TEST_DESC="Running run test for modern SQLite"
+  TEST_CMD="./$O/run_test_modern"
+  run_test_expect_success
+
+  TEST_NAME="run_test_compressed_codegen"
+  TEST_DESC="Generating compressed run test code"
+  TEST_CMD="${CQL} --compress --cg \"$O/run_test_compressed.h\" \"$O/run_test_compressed.c\" --in \"$T/run_test.sql\" --global_proc cql_startup --rt c"
+  run_test_expect_success
+
+  TEST_NAME="run_test_compressed_compile_code"
+  TEST_DESC="Compiling compressed run test code"
+  TEST_CMD="do_make run_test_compressed"
+  run_test_expect_success
+
+  TEST_NAME="run_test_compressed_run"
+  TEST_DESC="Running compressed run test in C"
+  TEST_CMD="./$O/run_test_compressed"
+  run_test_expect_success
+}
 ```
 
-The main structure is mostly what one would expect:
+The standard test helpers run these commands expecting success.
 
-* `cc -E -x c` : this is used to pre-process the run test file so that we can use C pre-processor features to define tests
-  * there are quite a few helpful macros as we'll see
-  * if pre-processing fails, the test fails
-* `{CQL} --nolines --cg ...` : this is used to create the `.h` and `.c` file for the compiland
-  * `--nolines` is used to suppress the `#` directives that would associate the generated code with the .sql file
-  * compilation failures cause the test to fail
-* `do_make` : as before this causes `make` to build the compiland (`run_test`)
-  * this build target includes the necessary bootstrap code to open a database and start the tests
-  * any failures cause the test to fail
-* `a.out` : the tests execute
-  * the tests return a failure status code if anything goes wrong
-  * any failure causes the test to fail
+The key commands are the ones like these:
+
+```
+${CQL} --nolines --cg \"$O/run_test.h\" \"$O/run_test.c\" --in \"$T/run_test.sql\" --global_proc cql_startup --rt c
+```
+
+These invoke the compiler and create the source.
+
 
 The test file `run_test.sql` includes test macros from `cqltest.h` -- all of these are very
 simple.  The main ones are `BEGIN_SUITE`, `END_SUITE`, `BEGIN_TEST` and `END_TEST` for

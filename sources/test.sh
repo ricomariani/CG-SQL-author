@@ -250,7 +250,7 @@ basic_test() {
   mv "$O/test_out2.out" "$O/test.out"
   on_diff_exit test.out
 
-  echo running "$T/test.sql" "with CRLF line endings"
+  echo Running "$T/test.sql" "with CRLF line endings"
   sed -e "s/$/\\r/" <$T/test.sql >$O/test.sql
   TEST_NAME="test_crlf"
   TEST_DESC="Testing CRLF line endings for correct parsing"
@@ -309,7 +309,7 @@ macro_test() {
   TEST_CMD="${CQL} --test --exp --ast --hide_builtins --in \"$T/macro_test.sql\""
   run_test_expect_success
 
-  echo validating output trees
+  echo Validating output trees
   cql_verify "$T/macro_test.sql" "$O/macro_test.out"
 
   echo "  computing diffs (empty if none)"
@@ -340,15 +340,15 @@ semantic_test() {
   TEST_CMD="sem_check --sem --ast --hide_builtins --dev --in \"$T/sem_test.sql\""
   run_test_expect_success
 
-  echo validating output trees
+  echo Validating output trees
   cql_verify "$T/sem_test.sql" "$O/sem_test.out"
 
   TEST_NAME="sem_test_dev"
-  TEST_DESC="Running dev semantic analysis test"
+  TEST_DESC="Running 'non-dev mode must fail' checks semantic analysis test"
   TEST_CMD="sem_check --sem --ast --in \"$T/sem_test_dev.sql\""
   run_test_expect_success
 
-  echo validating output trees
+  echo Validating output trees
   cql_verify "$T/sem_test_dev.sql" "$O/sem_test_dev.out"
 
   echo "  computing diffs (empty if none)"
@@ -365,7 +365,7 @@ code_gen_c_test() {
   TEST_CMD="${CQL} --dev --test --cg \"$O/cg_test_c.h\" \"$O/cg_test_c.c\" \"$O/cg_test_exports.out\" --in \"$T/cg_test.sql\" --global_proc cql_startup --generate_exports"
   run_test_expect_success
 
-  echo validating codegen
+  echo Validating codegen
   cql_verify "$T/cg_test.sql" "$O/cg_test_c.c"
 
   rm -f out/cg_test_c.o
@@ -383,7 +383,7 @@ code_gen_c_test() {
   TEST_CMD="${CQL} --test --cg \"$O/cg_test_c_globals.h\" \"$O/cg_test_c_globals.c\" --in \"$T/cg_test_c_globals.sql\""
   run_test_expect_success
 
-  echo validating codegen for globals
+  echo Validating codegen for globals
   cql_verify "$T/cg_test_c_globals.sql" "$O/cg_test_c_globals.h"
 
   TEST_NAME="cg_test_c_type_getters"
@@ -391,7 +391,7 @@ code_gen_c_test() {
   TEST_CMD="${CQL} --test --cg \"$O/cg_test_c_with_type_getters.h\" \"$O/cg_test_c_with_type_getters.c\" --in \"$T/cg_test_c_type_getters.sql\" --global_proc cql_startup"
   run_test_expect_success
 
-  echo validating codegen
+  echo Validating codegen
   cql_verify "$T/cg_test_c_type_getters.sql" "$O/cg_test_c_with_type_getters.h"
 
   rm -f out/cg_test_c_with_type_getters.o
@@ -405,7 +405,7 @@ code_gen_c_test() {
   TEST_CMD="${CQL} --dev --test --cg \"$O/cg_test_c_with_namespace.h\" \"$O/cg_test_c_with_namespace.c\" \"$O/cg_test_imports_with_namespace.ref\" --in \"$T/cg_test.sq\"l --global_proc cql_startup --c_include_namespace test_namespace --generate_exports"
   run_test_expect_success
 
-  echo validating codegen
+  echo Validating codegen
   cql_verify "$T/cg_test.sql" "$O/cg_test_c_with_namespace.c"
 
   TEST_NAME="cg_test_c_with_header"
@@ -413,7 +413,7 @@ code_gen_c_test() {
   TEST_CMD="${CQL} --dev --test --cg \"$O/cg_test_c_with_header.h\" \"$O/cg_test_c_with_header.c\" --in \"$T/cg_test.sql\" --global_proc cql_startup --c_include_path \"somewhere/something.h\""
   run_test_expect_success
 
-  echo validating codegen
+  echo Validating codegen
   cql_verify "$T/cg_test.sql" "$O/cg_test_c_with_header.c"
 
   echo "  computing diffs (empty if none)"
@@ -440,7 +440,7 @@ code_gen_c_test() {
 
 assorted_errors_test() {
   echo '--------------------------------- STAGE 6 -- FAST FAIL CASES'
-  echo running various failure cases that cause no output
+  echo Running various failure cases that cause no output
 
   TEST_NAME="badpath"
   TEST_DESC="Testing reading from non-existent file"
@@ -547,7 +547,7 @@ schema_migration_test() {
   TEST_ERROR_MSG="Migration semantic analysis failed"
   run_test_expect_success
 
-  echo validating output trees
+  echo Validating output trees
   cql_verify "$T/sem_test_migrate.sql" "$O/sem_test_migrate.out"
 
   echo "  computing diffs (empty if none)"
@@ -570,7 +570,7 @@ schema_migration_test() {
   TEST_ERROR_MSG="Previous schema error checks test failed"
   run_test_expect_success
 
-  echo validating output trees
+  echo Validating output trees
   cql_verify "$T/sem_test_prev.sql" "$O/sem_test_prev.out"
 
   echo "  computing diffs (empty if none)"
@@ -584,7 +584,7 @@ schema_migration_test() {
   TEST_ERROR_MSG="Schema upgrade code generation failed"
   run_test_expect_success
 
-  echo validating output trees
+  echo Validating output trees
   cql_verify "$T/cg_test_schema_upgrade.sql" "$O/cg_test_schema_upgrade.out"
 
   TEST_NAME="cg_test_schema_upgrade_compile_c"
@@ -614,7 +614,7 @@ schema_migration_test() {
   TEST_CMD="${CQL} --cg \"$O/cg_test_schema_sqlite.out\" --in \"$T/cg_test_schema_upgrade.sql\" --rt schema_sqlite"
   run_test_expect_success
 
-  echo "combining generated previous schema with itself to ensure it self validates"
+  echo "Combining generated previous schema with itself to ensure it self validates"
 
   cat "$O/cg_test_schema_prev.out" >"$O/prev_loop.out"
   echo "@previous_schema;" >>"$O/prev_loop.out"
@@ -625,7 +625,7 @@ schema_migration_test() {
   TEST_CMD="${CQL} --cg \"$O/prev_twice.out\" --in \"$O/prev_loop.out\" --rt schema"
   run_test_expect_success
 
-  echo "comparing the generated previous schema from that combination and it should be identical to the original"
+  echo "Comparing the generated previous schema from that combination and it should be identical to the original"
 
   TEST_NAME="cg_test_schema_prev_thrice"
   TEST_DESC="Validating previous schema combined with itself"
@@ -830,10 +830,10 @@ test_helpers_test() {
   TEST_ERROR_MSG="Test builders test failed"
   run_test_expect_success
 
-  echo validating test helpers output
+  echo Validating test helpers output
   cql_verify "$T/cg_test_test_helpers.sql" "$O/cg_test_test_helpers.out"
 
-  echo validating test helpers cql codegen
+  echo Validating test helpers cql codegen
   echo "  computing diffs (empty if none)"
   on_diff_exit cg_test_test_helpers.out
 
@@ -940,10 +940,10 @@ query_plan_test() {
   TEST_CMD="${CQL} --sem --ast --dev --test --in \"$O/cg_test_query_plan.out\""
   run_test_expect_success
 
-  echo validating test results
+  echo Validating test results
   cql_verify "$T/cg_test_query_plan.sql" "$O/cg_test_query_plan.out"
 
-  echo validating query plan codegen
+  echo Validating query plan codegen
   echo "  computing diffs (empty if none)"
   on_diff_exit cg_test_query_plan.out
 
@@ -977,7 +977,7 @@ query_plan_test() {
   TEST_CMD="${CQL} --sem --ast --dev --test --in \"$O/cg_test_query_plan_empty.out\""
   run_test_expect_success
 
-  echo validating query plan codegen empty query plan
+  echo Validating query plan codegen empty query plan
   echo "  computing diffs (empty if none)"
   on_diff_exit cg_test_query_plan_empty.out
 
@@ -1001,7 +1001,7 @@ query_plan_test() {
   TEST_CMD="common/json_check.py <\"$O/query_plan_empty_run.out\""
   run_test_expect_success
 
-  echo "validating query plan empty result (this is stable)"
+  echo "Validating query plan empty result (this is stable)"
   echo "  computing diffs (empty if none)"
   on_diff_exit query_plan_empty_run.out
 }
@@ -1086,7 +1086,7 @@ code_gen_lua_test() {
   TEST_CMD="${CQL} --dev --test --cg \"$O/cg_test_lua.lua\" --in \"$T/cg_test_lua.sql\" --global_proc cql_startup --rt lua"
   run_test_expect_success
 
-  echo validating codegen
+  echo Validating codegen
   cql_verify "$T/cg_test_lua.sql" "$O/cg_test_lua.lua"
 
   #  echo testing for successful compilation of generated lua

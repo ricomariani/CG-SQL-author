@@ -1,14 +1,7 @@
 # Summary
 
-This is a snapshot of the key runtime files plus the compiler in amalgam form.  
-
-Major releases will include a pre-built version of the amalgam at that point in time and the necessary runtime libraries that went with it.
-
-You can make your own amalgam using the `make_amalgam.sh` script in the sources directory,
-the result goes in `sources/out/cql_amalgam.c`
-
-This one-file version of the compiler can be stripped to just the parts you want using various defines
-(see `test_amalgam.sh` for examples) and it is easily consumed.
+This is a snapshot of the key runtime files plus the compiler in amalgam form.  The `beta` drop
+is updated more frequently than the release drop but the mechanism is the same.
 
 The idea is that you can readily consume the beta without needing to meet the requirements of
 a build.  i.e. you don't need `bison` or `flex` for instance.
@@ -27,5 +20,4 @@ publish can be useful.
 * `cqlrt_common.c` -- the common parts of the runtime (uses `cqlrt` or `cqlrt_cf`)
 * `cqlrt_common.h` -- headers for the same
 * `cql_amalgam.c` -- the compiler in amalgam form
-* `make_release.sh` -- script to create the above and do basic testing on it
-* `test_amalgam.sh` -- verifies that the amalgam can be used as expected with various `-D` options
+* `make_beta.sh` -- script to create the above and do basic testing on it

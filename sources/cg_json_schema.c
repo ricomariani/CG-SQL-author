@@ -515,7 +515,13 @@ static void cg_json_enums(charbuf* output) {
     EXTRACT_STRING(name, name_ast);
     EXTRACT_ANY_NOTNULL(type, typed_name->right);
 
-    cg_json_test_details(output, ast, NULL);
+    ast_node *misc_attrs = NULL;
+    if (is_ast_stmt_and_attr(ast->parent)) {
+      EXTRACT_STMT_AND_MISC_ATTRS(stmt, misc, ast->parent->parent);
+      misc_attrs = misc;
+    }
+
+    cg_json_test_details(output, ast, misc_attrs);
 
     COMMA;
     bprintf(output, "{\n");
@@ -523,6 +529,11 @@ static void cg_json_enums(charbuf* output) {
     bprintf(output, "\"name\" : \"%s\",\n", name);
     cg_json_data_type(output, type->sem->sem_type | SEM_TYPE_NOTNULL, NULL);
     bprintf(output, ",\n");
+
+    if (misc_attrs) {
+      cg_json_misc_attrs(output, misc_attrs);
+      bprintf(output, ",\n");
+    }
 
     cg_json_enum_values(enum_values, output);
 
@@ -593,12 +604,23 @@ static void cg_json_constant_groups(charbuf* output) {
     EXTRACT_NOTNULL(const_values, ast->right);
     EXTRACT_STRING(name, name_ast);
 
-    cg_json_test_details(output, ast, NULL);
+    ast_node *misc_attrs = NULL;
+    if (is_ast_stmt_and_attr(ast->parent)) {
+      EXTRACT_STMT_AND_MISC_ATTRS(stmt, misc, ast->parent->parent);
+      misc_attrs = misc;
+    }
+
+    cg_json_test_details(output, ast, misc_attrs);
 
     COMMA;
     bprintf(output, "{\n");
     BEGIN_INDENT(t, 2);
     bprintf(output, "\"name\" : \"%s\",\n", name);
+
+    if (misc_attrs) {
+      cg_json_misc_attrs(output, misc_attrs);
+      bprintf(output, ",\n");
+    }
 
     cg_json_const_values(const_values, output);
 

@@ -8842,6 +8842,7 @@
     }
     The statement ending at line XXXX
 
+    [[builtin]]
     CONST GROUP cql_data_types (
       CQL_DATA_TYPE_NULL = 0,
       CQL_DATA_TYPE_INT32 = 1,
@@ -8859,6 +8860,12 @@
     ,
     {
       "name" : "cql_data_types",
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
       "values" : [
         {
           "name" : "CQL_DATA_TYPE_NULL",

@@ -686,6 +686,7 @@ enum: '{'
       NAME STRING_LITERAL ','
       TYPE STRING_LITERAL ','
       IS_NOT_NULL '1' ','
+      opt_attributes
       VALUES '[' enum_values ']'
       '}'
   ;
@@ -819,6 +820,7 @@ const_groups: const_group | const_group ',' const_groups
 
 const_group: '{'
       NAME STRING_LITERAL ','
+      opt_attributes
       VALUES '[' const_values ']'
       '}'
   ;

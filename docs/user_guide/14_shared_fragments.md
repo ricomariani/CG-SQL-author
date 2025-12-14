@@ -9,10 +9,10 @@ weight: 14
 -- LICENSE file in the root directory of this source tree.
 -->
 
-Shared fragments allows you to reuse and compose SQL queires in a safe
+Shared fragments allow you to reuse and compose SQL queries in a safe
 (type checked) and efficient manner. They are based on [Common Table
 Expressions (CTEs)](https://www.sqlite.org/lang_with.html), so some
-basic knowledge of that is recommended before using Shared Fragments.
+basic knowledge of CTEs is recommended before using Shared Fragments.
 
 You can think of shared fragments as being somewhat like a parameterized
 view, but the parameters are both value parameters and type parameters. In
@@ -39,24 +39,26 @@ split_text(tok) AS (
 )
 ```
 
-This text might appear in dozens of places where a comma separated list
-needs to be split into pieces and there is no good way to share the code
-between these locations.  CQL can also do fragments with macros but this
-loses some benefits so there is a trade off, for instance, if use `@macro`
-to build fragments:
+This text might appear in dozens of places where a comma separated list needs to
+be split into pieces and there is no good way to share the code between these
+locations.  CQL can also do creeate something very much like fragments usihg the
+macro features (see below) but this loses some benefits, so there is a trade off
+to be had. For instance, if use `@macro` to build fragments:
 
-* any errors in the macro do not appear until the macro is used
-* the compiler does not then know that the origin of the text really is the same
-  * thus it has no clue that sharing the text of the string might be a good idea
-* if you try to compose such macros it only gets worse; it's more code duplication and harder error cases
+* any semantic errors in the macro do not appear until the macro is used
+* the expansion is very general and therefore it cannot be split into sharable
+  pieces that can be re-used
+* if you try to compose such macros the above only gets worse; it's more code
+  duplication and harder error cases
 
-None of this is any good but the desire to create helpers like this is
-real both for correctness and for performance.
+Macros therefore present problems as a primary API to shared functionality bu
+the need to create re-usable helpers is very real both for correctness and for
+performance.
 
-To make these things possible, we introduce the notion of shared
-fragments.  We need to give them parameters and the natural way to
-create a select statement that is bindable in CQL is the procedure. So
-the shape we choose looks like this:
+To make these things possible, we introduce the notion of shared fragments.  We
+need to give them parameters and the natural way to create a select statement
+that is bindable in CQL is the procedure. So the shape we choose looks like
+this:
 
 ```sql
 [[shared_fragment]]
@@ -78,10 +80,10 @@ BEGIN
 END;
 ```
 
-The introductory attribute `[[shared_fragment]]` indicates that the
-procedure is to produce no code, but rather will be inlined as a CTE in
-other locations.  To use it, we introduce the ability to call a procedure
-as part of a CTE declaration.  Like so:
+The introductory attribute `[[shared_fragment]]` indicates that the procedure is
+to produce no code, but rather will be inlined as a CTE in other locations. To
+use it, we introduce the ability to call a procedure as part of a CTE
+declaration.  Like so:
 
 ```sql
 WITH
@@ -98,7 +100,7 @@ PROC print_parts(value TEXT)
 BEGIN
   CURSOR C FOR
     WITH
-      result(v) as (CALL split_text('x,y,z'))
+      result(v) as (CALL split_text(value))
       SELECT * from result;
 
   LOOP FETCH C
@@ -128,9 +130,10 @@ PROC print_ids(value TEXT)
 BEGIN
   CURSOR C FOR
     WITH
-      result(id) as (CALL ids_from_string('1,2,3'))
+      result(id) as (CALL ids_from_string(value))
       SELECT * from result;
 
+  -- value has been parsed into ints and is in a result set, boom.
   LOOP FETCH C
   BEGIN
      CALL printf("%ld\n", C.id);
@@ -138,9 +141,9 @@ BEGIN
 END;
 ```
 
-Of course these are very simple examples but in principle you can use
-the generated tables in whatever way is necessary.  For instance, here's
-a silly but illustrative example:
+Of course these are very simple examples but in principle you can use the
+generated tables in whatever way is necessary.  For instance, here's a silly but
+illustrative example:
 
 ```sql
 /* This is a bit silly */
@@ -154,6 +157,7 @@ BEGIN
       INTERSECT
       SELECT * from v2;
 
+  -- only prints the common ids, i.e. 2
   LOOP FETCH C
   BEGIN
      CALL printf("%ld\n", C.id);
@@ -240,22 +244,26 @@ BEGIN
 END;
 ```
 
-These examples have made very little use of the database but of course
-normal data is readily available, so shared fragments can make a great
-way to provide access to complex data with shareable, correct code.
-For instance, you could write a fragment that provides the ids of all
-open businesses matching a name from a combination of tables.  This is
-similar to what you could do with a `VIEW` plus a `WHERE` clause but:
+These examples have made very little use of the database but of course normally
+the data you need for your use-case is readily available, so shared fragments
+can make a great way to provide access to complex data with shareable, correct
+code. For instance, you could write a fragment that provides the ids of all open
+businesses matching a name from a combination of tables.  This is similar to
+what you could do with a `VIEW` plus a `WHERE` clause but:
 
 * such a system can give you well controlled combinations known to work well
 * there is no schema required, so your database load time can still be fast
 * parameterization is not limited to filtering VIEWs after the fact
-* "generic" patterns are available, allowing arbitrary data sources to be filtered, validated, augmented
-* each fragment can be tested separately with its own suite rather than only in the context of some larger thing
-* code generation can be more economical because the compiler is aware of what is being shared
+* "generic" patterns are available, allowing arbitrary data sources to be
+  filtered, validated, augmented
+* each fragment can be tested separately with its own suite rather than only in
+  the context of some larger thing
+* code generation can be more economical because the compiler is aware of what
+  is being shared
 
-In short, shared fragments can help with the composition of any complicated kinds of queries.
-If you're producing an SDK to access a data set, they are indispensible.
+In short, shared fragments can help with the composition of any complicated
+kinds of queries. If you're producing an SDK to access a data set, they are
+indispensible.
 
 #### Creating and Using Valid Shared Fragments
 
@@ -272,46 +280,62 @@ When creating a fragment the following rules are enforced:
 Usage of a fragment is always introduced by a "call" to the fragment name in a CTE body.
 When using a fragment the following rules are enforced.
 
-* the provided parameters must create a valid procedure call just like normal procedure calls
+* the provided parameters must create a valid procedure call just like normal
+  procedure calls
   * i.e. the correct number and type of arguments
 * the provided parameters may not use nested `(SELECT ...)` expressions
-  * this could easily create fragment building within fragment building which seems not worth the complexity
-  * if database access is required in the parameters simply wrap it in a helper procedure
-* the optional USING clause must specify each required table parameter exactly once and no other tables
+  * this could easily create fragment building within fragment building which
+    seems not worth the complexity
+  * if database access is required in the parameters simply wrap it in a helper
+    procedure
+* the optional USING clause must specify each required table parameter exactly
+  once and no other tables
   * a fragment that requires table parameters be invoked without a USING clause
-* every actual table provided must match the column names of the corresponding table parameter
-  * i.e. in `USING my_data AS values` the actual columns in `my_data` must be the same as in the `values` parameter
+* every actual table provided must match the column names of the corresponding
+  table parameter
+  * i.e. in `USING my_data AS values` the actual columns in `my_data` must be
+    the same as in the `values` parameter
   * the columns need not be in the same order
-* each column in any actual table must be "assignment compatible" with its corresponding column in the parameters
-  * i.e. the actual type could be converted to the formal type using the same rules as the := operator
-  * these are the same rules used for procedure calls, for instance, where the call is kind of like assigning the actual parameter values to the formal parameter variables
-* the provided table values must not conflict with top level CTEs in the shared fragment
+* each column in any actual table must be "assignment compatible" with its
+  corresponding column in the parameters
+  * i.e. the actual type could be converted to the formal type using the same
+    rules as the := operator
+  * these are the same rules used for procedure calls, for instance, where the
+    call is kind of like assigning the actual parameter values to the formal
+    parameter variables
+* the provided table values must not conflict with top level CTEs in the shared
+  fragment
   * exception: the top level CTEs that were parameters do not create conflicts
-  * e.g. it's common to do `values(*) as (CALL something() using source as source)` - here the caller's "source" takes the value of the fragment's "source", which is not a true conflict
-  * however, the caller's source might itself have been a parameter in which case the value provided could create an inner conflict
-    * all these problems are easily avoided with a simple naming convention for parameters so that real arguments never look like parameter names and parameter forwarding is apparent
-    * e.g. `USING _source AS _source` makes it clear that a parameter is being forwarded and `_source` is not likely to conflict with real table or view names
+  * e.g. it's common to do `values(*) as (CALL something() using source as
+    source)` - here the caller's "source" takes the value of the fragment's
+    "source", which is not a true conflict
+  * however, the caller's source might itself have been a parameter in which
+    case the value provided could create an inner conflict
+    * all these problems are easily avoided with a simple naming convention for
+      parameters so that real arguments never look like parameter names and
+      parameter forwarding is apparent
+    * e.g. `USING _source AS _source` makes it clear that a parameter is being
+      forwarded and `_source` is not likely to conflict with real table or view
+      names
 
-Note that when shared fragments are used, the generated SQL has the text
-split into parts, with each fragment and its surroundings separated,
-therefore the text of shared fragments is shared(!) between usages if
-normal linker optimizations for text folding are enabled (common in
-production code.)
+Note that when shared fragments are used, the generated SQL has the text split
+into parts, with each fragment and its surroundings separated, therefore the
+text of shared fragments is shared(!) between usages if normal linker
+optimizations for text folding are enabled (common in production code.)
 
 ### Shared Fragments with Conditionals
 
-Shared fragments use dynamic assembly of the text to do the sharing
-but it is also possible to create alternative texts.  There are many
-instances where it is desirable to not just replace parameters but use,
-for instance, an entirely different join sequence.  Without shared
-fragments, the only way to accomplish this is to fork the desired query
-at the topmost level (because SQLite has no internal possibility of "IF"
-conditions.)  This is expensive in terms of code size and also cognitive
-load because the entire alternative sequences have to be kept carefully
-in sync.  Macros can help with this but then you get the usual macro
-maintenance problems, including poor diagnostics.  And of course there
-is no possibility to share the common parts of the text of the code if
-it is forked.
+Shared fragments use dynamic assembly of the text to do the sharing but it is
+also possible to create alternative texts.  There are many instances where it is
+desirable to not just replace parameters but use, for instance, an entirely
+different join sequence.  Without shared fragments, the only way to accomplish
+this is to fork the desired query at the topmost level (because SQLite has no
+internal possibility of "IF" conditions.)  This is expensive in terms of code
+size and also cognitive load because the entire alternative sequences have to be
+kept carefully in sync.  Macros can help with this but then you get the usual
+macro maintenance problems, including poor diagnostics.  And of course there is
+no possibility to share the common parts of the text of the code if it is
+forked.
 
 However, conditional shared fragments allow forms like this:
 
@@ -336,15 +360,16 @@ Now we can do something like:
   ids(*) AS (CALL ids_from_string(str))
 ```
 
-In this case, if the string `val` is empty then SQLite will not see the
-complex comma splitting code, and instead will see the trivial case
-`select 0 id where 0`.  The code in a conditional fragment might be
-entirely different between the branches removing unnecessary code,
-or swapping in a new experimental cache in your test environment, or
-anything like that.
+In this case, if the string `val` is empty then SQLite will not see the complex
+comma splitting code, and instead will see the trivial case `select 0 id where
+0`.  The code in a conditional fragment might be entirely different between the
+branches removing unnecessary code, or swapping in a new experimental cache in
+your test environment, or anything like that.
 
 #### Conditionals without ELSE clauses
-When a condiitional is specified without an else clause, the fragment would return a result with no rows if none of the specified conditionals are truthy.
+
+When a condiitional is specified without an else clause, the fragment would
+return a result with no rows if none of the specified conditionals are truthy.
 
 For example:
 ```sql
@@ -358,6 +383,7 @@ END;
 ```
 
 Internally, this is actually equivalent to the following:
+
 ```sql
 [[shared_fragment]]
 PROC maybe_empty(cond BOOL!)
@@ -371,6 +397,7 @@ END;
 ```
 
 The `SELECT NOTHING` expands to the a query that returns no rows, like this:
+
 ```sql
 SELECT 0,0,0 WHERE 0; -- number of columns match the query returned by the main conditional.
 ```
@@ -382,20 +409,21 @@ The generalization is simply this:
 * instead of just one select statement there is one top level "IF" statement
 * each statement list of the IF must be exactly one select statement
 * the select statements must be type compatible, just like in a normal procedure
-* any table parameters with the same name in different branches must have the same type
-  * otherwise it would be impossible to provide a single actual table for those table parameters
+* any table parameters with the same name in different branches must have the
+  same type
+  * otherwise it would be impossible to provide a single actual table for those
+    table parameters
 
 With this additional flexibility a wide variety of SQL statements can be
-constructed economically and maintainability.  Importantly, consumers of
-the fragments need not deal with all these various alternate possibilities
-but they can readily create their own useful combinations out of building
-blocks.
+constructed economically and maintainability.  Importantly, consumers of the
+fragments need not deal with all these various alternate possibilities but they
+can readily create their own useful combinations out of building blocks.
 
-Ultimately, from SQLite's perspective, all of these shared fragment
-forms result in nothing more complicated than a chain of CTE expressions.
+Ultimately, from SQLite's perspective, all of these shared fragment forms result
+in nothing more complicated than a chain of CTE expressions.
 
-See Appendix 8 for an extensive section on best practices around fragments
-and common table expressions in general.
+See Appendix 8 for an extensive section on best practices around fragments and
+common table expressions in general.
 
 >TIP: If you use CQL's query planner on shared fragments with conditionals, the
 >query planner will only analyze the first branch by default. You need to use
@@ -414,19 +442,19 @@ an equivalent `@macro(expr)`.  Expression fragments shine when:
 * its used frequently (hence providing significant space savings)
 * the arguments are complex, potentially used many times in the expression
 
-From a raw performance perspective, the best you can hope for with
-any of the fragment approaches is a "tie" on speed compared do directly
-inlining equivalent SQL or using a macro to do the same.  However, from a
-correctness and space perspective it is very possible to come out ahead.
-It's fair to say that expression fragments have the greatest overhead
-compared to the other types and so they are best used in cases where
-the size benefits are going to be important.
+From a raw performance perspective, the best you can hope for with any of the
+fragment approaches is a "tie" on speed compared do directly inlining equivalent
+SQL or using a macro to do the same.  However, from a correctness and space
+perspective it is very possible to come out ahead. It's fair to say that
+expression fragments have the greatest overhead compared to the other types and
+so they are best used in cases where the size benefits are going to be
+important.
 
 #### Syntax
 
-An expression fragment is basically a normal shared fragment with no
-top-level `FROM` clause that generates a single column.  A typical one
-might look like this:
+An expression fragment is basically a normal shared fragment with no top-level
+`FROM` clause that generates a single column.  A typical one might look like
+this:
 
 ```sql
 -- this isn't very exciting because regular max would do the job
@@ -468,14 +496,13 @@ it will concatenate the following three strings:
 " from (select T1.column1 x, column2 y))"        // string3
 ```
 
-Importantly, `string2` is fixed for any given fragment.  The only
-thing that changes is `string3`, i.e., the arguments.  In any modern C
-compilation system, the linker will unify the `string2` literal across
-all translation units so you only pay for the cost of that text one time.
-It also means that the text of the arguments appears exactly one time,
-no matter how complex they are.  For these benefits, we pay the cost of
-the select wrapper on the arguments.  If the arguments are complex that
-"cost" is negative.  Consider the following:
+Importantly, `string2` is fixed for any given fragment.  The only thing that
+changes is `string3`, i.e., the arguments.  In any modern C compilation system,
+the linker will unify the `string2` literal across all translation units so you
+only pay for the cost of that text one time. It also means that the text of the
+arguments appears exactly one time, no matter how complex they are.  For these
+benefits, we pay the cost of the select wrapper on the arguments.  If the
+arguments are complex that "cost" is negative.  Consider the following:
 
 ```sql
 select max_func((select max(T.m) from T), (select max(U.m) from U))
@@ -514,7 +541,7 @@ end;
 Again, this particular example is a waste because regular `max` would
 already do the job better.
 
-To give another example, common mappings from one kind of code to another
+To give another example, common mappings from one kind of id value to another
 using case/when can be written and shared this way:
 
 ```sql
@@ -538,15 +565,18 @@ In the following:
 select remap(T1.c), remap(T2.d), remap(T3.e) from T1, T2, T3... etc.
 ```
 
-The text for `remap` will appear three times in the generated SQL query but only one time in your binary.
+The text for `remap` will appear three times in the generated SQL query but only
+one time in your binary.
 
 #### Restrictions
 
 * the fragment must consist of exactly one simple select statement
   * no `FROM`, `WHERE`, `HAVING`, etc. -- the result is an expression
 * the select list must have exactly one value
-  * Note the expression can be a nested `SELECT` which could then have all the usual `SELECT` elements
-* the usual shared fragment rules apply, e.g. no out-parameters, exactly one statement, etc.
+  * Note the expression can be a nested `SELECT` which could then have all the
+    usual `SELECT` elements
+* the usual shared fragment rules apply, e.g. no out-parameters, exactly one
+  statement, etc.
 
 
 #### Additional Notes
@@ -575,9 +605,12 @@ end;
 
 The macro does give you a ton of flexibility, but it has many problems:
 
-* the compiler doesn't know that the sharing is going on so it won't be able to share text between call sites
-* the arguments can be evaluated many times each which could be expensive, bloaty, or wrong
-* there is no type-checking of arguments to the macro so you may or may not get compilation errors after expansion
+* the compiler doesn't know that the sharing is going on so it won't be able to
+  share text between call sites
+* the arguments can be evaluated many times each which could be expensive,
+  bloaty, or wrong
+* there is no type-checking of arguments to the macro so you may or may not get
+  compilation errors after expansion
 
 In general, macros _can_ be used as an alternative to expression fragments,
 especially for small fragments.  But, this gets to be a worse idea as such
@@ -587,7 +620,8 @@ provides expression fragments.
 
 ### Macros vs. Shared Fragments Example
 
-This bit of sample code illustrates the different flexibilities of macros vs. shared fragments.
+This bit of sample code illustrates the different flexibilities of macros vs.
+shared fragments.
 
 ```sql
 declare proc printf no check;

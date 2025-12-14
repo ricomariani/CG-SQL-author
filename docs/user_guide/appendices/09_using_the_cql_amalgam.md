@@ -13,15 +13,18 @@ This is a brief discussion of the CQL Amalgam and its normal usage patterns.
 
 ### What is an Amalgam?  What is it for?
 
-The amalgam is not much more than a concatenation of all of the `.h` files and the `.c` files into one big `cql_amalgam.c` file.
-With that files you can trivially make the compiler with a single `cc cql_amalgam.c` command.
+The amalgam is not much more than a concatenation of all of the `.h` files and
+the `.c` files into one big `cql_amalgam.c` file. With that files you can
+trivially make the compiler with a single `cc cql_amalgam.c` command.
 
-Because of this simplicity, the amalgam gives you a convenient way to consume the compiler in a different/unique build
-environment and, if desired, strip it down to just the parts you want while controlling its inputs more precisely than
+Because of this simplicity, the amalgam gives you a convenient way to consume
+the compiler in a different/unique build environment and, if desired, strip it
+down to just the parts you want while controlling its inputs more precisely than
 you can with just a command line tool.
 
-If you want to snapshot a particular CQL compiler the easiest way to do so is to use make an amalgam
-at that version and then check in the output `cql_amalgam.c`.  Just like with SQLite and its amalgam.
+If you want to snapshot a particular CQL compiler the easiest way to do so is to
+use make an amalgam at that version and then check in the output
+`cql_amalgam.c`.  Just like with SQLite and its amalgam.
 
 There are many other uses of the amalgam:
 * It's possible to tweak the amalgam with a little pre-processing to make a windows binary, last time I attempted this it took about 10 minutes
@@ -32,29 +35,33 @@ There are many other uses of the amalgam:
   * You can make any kind of tool of your own that wants to consume the AST or the output parts
   * You can invoke the CQL compiler without launching a new process from inside your environment
 
-Generally the amalgam makes it easier for you to host the CQL compiler in some new environment.
+Generally the amalgam makes it easier for you to host the CQL compiler in some
+new environment.
 
 ### Creating the Amalgam
 
-The amalgam has to include the results of bison and flex, so a normal build must run first.  The simplest
-way to build it starting from the `sources` directory is:
+The amalgam has to include the results of bison and flex, so a normal build must
+run first.  The simplest way to build it starting from the `sources` directory
+is:
 
 ```bash
 make
 ./make_amalgam.sh
 ```
 
-The result goes in `out/cql_amalgam.c`.  It can then be built using `cc` with whatever flags you might
-desire.  With a few `-D` directives it can readily be compiled with Microsoft C and it also works with
-Emscripten (`emcc`) basically unchanged.  Clang and Gcc of course also work.
+The result goes in `out/cql_amalgam.c`.  It can then be built using `cc` with
+whatever flags you might desire.  With a few `-D` directives it can readily be
+compiled with Microsoft C and it also works with Emscripten (`emcc`) basically
+unchanged.  Clang and Gcc of course also work.
 
-The standard test script `test.sh` builds the amalgam and attempts to compile it as well, which ensures
-that the amalgam can at least compile at all times.
+The standard test script `test.sh` builds the amalgam and attempts to compile it
+as well, which ensures that the amalgam can at least compile at all times.
 
 ### Testing the Amalgam
 
-Of course you can do whatever tests you might like by simply compiling the amalgam as is and then using
-it to compile things.  But importantly the test script `test.sh` can test the amalgam build like so:
+Of course you can do whatever tests you might like by simply compiling the
+amalgam as is and then using it to compile things.  But importantly the test
+script `test.sh` can test the amalgam build like so:
 
 ```bash
 test.sh --use_amalgam
@@ -112,7 +119,9 @@ in all the ways you desire.
 You'll want to avoid calling any internal functions other than `cql_main`
 because they are liable to change.
 
->NOTE: The amalgam is C code not C++ code.  Do not attempt to use it inside of an `extern "C"` block in a C++ file.  It won't build.  If you want a C++ API, expose the C functions you need and write a wrapper class.
+>NOTE: The amalgam is C code not C++ code.  Do not attempt to use it inside of
+>an `extern "C"` block in a C++ file.  It won't build.  If you want a C++ API,
+>expose the C functions you need and write a wrapper class.
 
 ### CQL Amalgam Options
 

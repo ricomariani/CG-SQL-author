@@ -25,6 +25,7 @@ The complete list (as of this writing) is:
   * `UPSERT STATEMENT`: the upsert form is disallowed (useful if targeting old versions of SQLite)
 
 `@SENSITIVE`
+
  * marks a column or variable as 'sensitive' for privacy purposes, this behaves somewhat like nullability (See Chapter 3) in that it is radioactive, contaminating anything it touches
  * the intent of this annotation is to make it clear where sensitive data is being returned or consumed in your procedures
  * this information appears in the JSON output for further codegen or for analysis (See Chapter 13)
@@ -37,26 +38,32 @@ The complete list (as of this writing) is:
  * These directives control the declaration of schema regions and allow you to place things into those regions -- see [Chapter 10](../10_schema_management.md)
 
 `@SCHEMA_AD_HOC_MIGRATION`
+
  * Allows for the creation of a ad hoc migration step at a given schema version, (See Chapter 10)
 
 `@ECHO`
+
  * Emits text into the C output stream, useful for emiting things like function prototypes or preprocessor directives
  * e.g. `echo C, '#define foo bar'
 
 `@RECREATE`
 `@CREATE`
 `@DELETE`
+
   * used to mark the schema version where an object is created or deleted, or alternatively indicate the the object is always dropped and recreated when it changes (See Chapter 10)
 
 `@SCHEMA_UPGRADE_VERSION`
+
  * used to indicate that the code that follows is part of a migration script for the indicated schema version
  * this has the effect of making the schema appear to be how it existed at the indicated version
  * the idea here is that migration procedures operate on previous versions of the schema where (e.g.) some columns/tables hadn't been deleted yet
 
 `@PREVIOUS_SCHEMA`
+
  * indicates the start of the previous version of the schema for comparison (See Chapter 11)
 
 `@SCHEMA_UPGRADE_SCRIPT`
+
  * CQL emits a schema upgrade script as part of its upgrade features, this script declares tables in their final form but also creates the same tables as they existed when they were first created
  * this directive instructs CQL to ignore the incompatible creations, the first declaration controls
  * the idea here is that the upgrade script is in the business of getting you to the finish line in an orderly fashion and some of the interim steps are just not all the way there yet
@@ -65,12 +72,15 @@ The complete list (as of this writing) is:
 `@DUMMY_NULLABLES`
 `@DUMMY_DEFAULTS`
 `@DUMMY_SEED`
+
  * these control the creation of dummy data for `insert` and `fetch` statements (See Chapters 5 and 12)
 
 `@FILE`
+
  * a string literal that corresponds to the current file name with a prefix stripped (to remove build lab junk in the path)
 
 `@ATTRIBUTE`
+
   * the main purpose of `@attribute` is to appear in the JSON output so that it can control later codegen stages in whatever way you deem appropriate
   * the nested nature of attribute values is sufficiently flexible than you could encode an arbitrary LISP program in an attribute, so really anything you might need to express is possible
   * there are a number of attributes known to the compiler which are listed below (complete as of this writing)
@@ -108,5 +118,6 @@ The complete list (as of this writing) is:
   * `cql:module_must_not_be_deleted_see_docs_for_CQL0392` must be added to an `@delete` attribute on a virtual table to remind the developer that the module for the virtual table must never be deleted elsewise database upgrades will fail.  See [`CQL0392`](#cql0392-when-deleting-a-virtual-table-you-must-specify-deletenn-cqlmodule_must_not_be_deleted_see_docs_for_cql0392-as-a-reminder-not-to-delete-the-module-for-this-virtual-table)
 
 ### Deprecated attributes
+
   * `cql:alt_prefix=prefix` this may be applied to a procedure definition or declaration to override the prefix found in `rt_common.c`, this is really only interesting if there is a prefix in the first place so the default configuration of `rt_common.c` doesn't make this very interesting.  However it is possible to change `.symbol_prefix` (Meta does) and having done so you might want to change it to something else.
   * `cql:custom_type_for_encoded_column` the objective C output has the option of using different type for strings that have been encoded because they are sensitive.  This attribute is placed on a procedure and it causes all strings in result sets to be declared with `cql_string_ref_encode` from the objc result type.  The type is ocnfigured with `RT_STRING_ENCODE` which is `cql_string_ref_encode` by default.  This is deprecated because the entire `--rt objc` feature is slated for destruction to be replaced with python that processes the JSON like the Java case.

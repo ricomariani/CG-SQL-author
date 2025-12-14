@@ -41,16 +41,14 @@ split_text(tok) AS (
 
 This text might appear in dozens of places where a comma separated list
 needs to be split into pieces and there is no good way to share the code
-between these locations.  CQL is frequently used in conjunction with the
-C-pre-processor so you could come up with something using the #define
-construct but this is problematic for several reasons:
+between these locations.  CQL can also do fragments with macros but this
+loses some benefits so there is a trade off, for instance, if use `@macro`
+to build fragments:
 
+* any errors in the macro do not appear until the macro is used
 * the compiler does not then know that the origin of the text really is the same
   * thus it has no clue that sharing the text of the string might be a good idea
-* any error messages happen in the context of the use of the macro not the definition
-* bonus: a multi-line macro like the above gets folded into one line so any error messages are impenetrable
 * if you try to compose such macros it only gets worse; it's more code duplication and harder error cases
-* any IDE support for syntax coloring and so forth will be confused by the macro as it's not part of the language
 
 None of this is any good but the desire to create helpers like this is
 real both for correctness and for performance.
@@ -399,17 +397,18 @@ forms result in nothing more complicated than a chain of CTE expressions.
 See Appendix 8 for an extensive section on best practices around fragments
 and common table expressions in general.
 
->TIP:
->If you use CQL's query planner on shared fragments with conditionals, the query planner will only analyze the first branch by default. You need to use `[[query_plan_branch={an_integer}]]` to modify the behavior. Read
->[Query Plan Generation](./15_query_plan_generation.md) for details.
+>TIP: If you use CQL's query planner on shared fragments with conditionals, the
+>query planner will only analyze the first branch by default. You need to use
+>`[[query_plan_branch={an_integer}]]` to modify the behavior. Read [Query Plan
+>Generation](./15_query_plan_generation.md) for details.
 
 ### Shared Fragments as Expressions
 
 The shared fragment system also has the ability to create re-usable
-expression-style fragments giving you something like SQL inline functions.
-These do come with some performance cost so they should be used for larger
-fragments.  In many systems a simple shared fragment would not compete
-well with an equivalent `#define`.  Expression fragments shine when:
+expression-style fragments giving you something like SQL inline functions. These
+do come with some performance cost so they should be used for larger fragments.
+In many systems a simple shared expression fragment would not compete well with
+an equivalent `@macro(expr)`.  Expression fragments shine when:
 
 * the fragment is quite large
 * its used frequently (hence providing significant space savings)
@@ -491,14 +490,16 @@ case when (select max(T.m) from T) >= (select max(U.m) from U)
 end;
 ```
 
-The above could be accomplished with a simple `#define` style
-macro. However, the expression fragment generates the following code:
+The above could be accomplished with a simple `@macro(expr)`
+construct. However, the expression fragment generates the following code:
 
 ```sql
 select (
   select case when x >= y then x else y end
     from select (select max(T.m) from T) x, (select max(U.m) from U) y))
 ```
+
+Meaning that the values arguments evaluated exactly once.
 
 Expression fragments can nest, so you could write:
 
@@ -566,18 +567,138 @@ sharing code in, say, the `WHERE` clause of a larger select statement.
 Commpared to something like
 
 ```sql
-#define max_func(x,y) case when (x) >= (y) then x else y end;
+@macro(expr) max_func!(x! expr, y! expr)
+begin
+  case when x! >= y! then x! else y! end
+end;
 ```
 
 The macro does give you a ton of flexibility, but it has many problems:
 
-* if the macro has an error, you see the error in the call site with really bad diagnostic info
 * the compiler doesn't know that the sharing is going on so it won't be able to share text between call sites
 * the arguments can be evaluated many times each which could be expensive, bloaty, or wrong
 * there is no type-checking of arguments to the macro so you may or may not get compilation errors after expansion
-* you have to deal with all the usual pre-processor hazards
 
-In general, macros _can_ be used (as in C and C++) as an alternative to
-expression fragments, especially for small fragments.  But, this gets
-to be a worse idea as such macros grow.  For larger cases, C and C++
-provide inline functions -- CQL provides expression fragments.
+In general, macros _can_ be used as an alternative to expression fragments,
+especially for small fragments.  But, this gets to be a worse idea as such
+macros grow.  For larger cases, C and C++ provide inline functions -- CQL
+provides expression fragments.
+
+
+### Macros vs. Shared Fragments Example
+
+This bit of sample code illustrates the different flexibilities of macros vs. shared fragments.
+
+```sql
+declare proc printf no check;
+
+create proc setup()
+begin
+    /*
+       This view is sort of the most basic form of a shared fragment. It can
+       have no parameters and cannot customized beyond the one statement.
+    */
+    create view v1 as
+        with cte as (
+            select 1 as N
+            union all
+            select n + 1 N from cte where cte.n < 100
+        )
+        select N from cte;
+end;
+
+/*
+    This shared fragment produces a CTE that counts from 1 to lim. The value of
+    this form is that:
+    * lim is strongly typed * it can be independently error checked
+    * the exact text will be the same except for variables hence it can be
+      shared in the code
+    * it can be invoked with call where a CTE could go and composes in the usual
+      SQL ways
+    * it has a consistent known signature for its inputs and outputs so strong
+      error checking is possible
+    * Note that conditional fragments allow you to get different SQL depending
+      on the input arguments but they always result in the same shape
+*/
+[[shared_fragment]]
+proc counter(lim int)
+begin
+    with cte as (
+        select 1 as N
+        union all
+        select n + 1 N from cte where cte.n < lim
+    )
+    select N from cte;
+end;
+
+/* This macro definition acts very much like a shared fragment. The value of
+   this form is that:
+    * the end expression can be anything that is valid SQL, and it will be
+       evaluated in the context of the statement not in the context of the
+       caller
+    * it could include other macro parameters to for instance rename the cte
+    * it could include other macro arguments to otherwise alter the shape of the
+      query, like a predicate
+    * The downside is that it cannot be checked until it is used (still at
+      compile time) hence errors will be weirder
+    * It could generate wildly different SQL depending on the arguments passed
+      to it, hence the text cannot be shared.
+    * Certainly this form can do anything that a shared fragment can do, but
+      with less control.
+*/
+@macro(cte_tables) counter!(lim! expr)
+begin
+    cte as (
+        select 1 as N
+        union all
+        select n + 1 N from cte where cte.n < lim!
+    )
+end;
+
+/* The various forms can be used similarly.  The shared fragment is kind of like
+   an inline function compared to the macro being, well, a macro. It's more
+   flexible and composes more generally but the usual macro issues.  One issue
+   we don't have is text based replacement causing weird order of operations. In
+   CQL all macro arguments flow in as AST fragments and remain atomic.  You do
+   not have to add extra parens to keep the evaluation consistent like in C.
+   Also macros arguments have a certain type so you can't put a statement where
+   an expression is expected.
+   */
+
+proc test()
+begin
+    setup();
+
+    -- loop over the shared fragment
+    cursor C for with (call counter(5))
+    select * from counter;
+
+    loop fetch C
+    begin
+        printf("C: %d\n", C.N);
+    end;
+
+    -- loop over the macro
+    cursor D for with counter!(5)
+    select N from cte;
+
+    loop fetch D
+    begin
+        printf("D: %d\n", D.N);
+    end;
+
+    -- loop over the view
+    cursor E for select * from V1 where N <= 5;
+    loop fetch E
+    begin
+        printf("E: %d\n", E.N);
+    end;
+
+end;
+
+
+@ECHO lua, '
+os.exit(test(sqlite3.open(":memory:")))
+';
+
+```

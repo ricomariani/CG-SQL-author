@@ -630,7 +630,9 @@ create proc setup()
 begin
     /*
        This view is sort of the most basic form of a shared fragment. It can
-       have no parameters and cannot customized beyond the one statement.
+       have no parameters and cannot be customized beyond the one statement.
+       The text won't appear in your program over and over no matter how many
+       times you use the view.
     */
     create view v1 as
         with cte as (
@@ -644,7 +646,8 @@ end;
 /*
     This shared fragment produces a CTE that counts from 1 to lim. The value of
     this form is that:
-    * lim is strongly typed * it can be independently error checked
+    * lim is strongly typed
+      * it can be independently error checked
     * the exact text will be the same except for variables hence it can be
       shared in the code
     * it can be invoked with call where a CTE could go and composes in the usual
@@ -697,7 +700,7 @@ end;
    not have to add extra parens to keep the evaluation consistent like in C.
    Also macros arguments have a certain type so you can't put a statement where
    an expression is expected.
-   */
+*/
 
 proc test()
 begin
@@ -705,7 +708,7 @@ begin
 
     -- loop over the shared fragment
     cursor C for with (call counter(5))
-    select * from counter;
+      select * from counter;
 
     loop fetch C
     begin
@@ -714,7 +717,7 @@ begin
 
     -- loop over the macro
     cursor D for with counter!(5)
-    select N from cte;
+      select N from cte;
 
     loop fetch D
     begin
@@ -722,7 +725,9 @@ begin
     end;
 
     -- loop over the view
-    cursor E for select * from V1 where N <= 5;
+    cursor E for
+      select * from V1 where N <= 5;
+
     loop fetch E
     begin
         printf("E: %d\n", E.N);

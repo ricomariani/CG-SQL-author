@@ -16,13 +16,23 @@ The complete list (as of this writing) is:
 `@ENFORCE_STRICT`
 `@ENFORCE_NORMAL`
 
-* These enable or disable more strict semanic checking the sub options are
-  * `FOREIGN KEY ON UPDATE`: all FK's must choose some `ON UPDATE` strategy
-  * `FOREIGN KEY ON DELETE`: all FK's must choose some `ON DELETE` strategy
-  * `PROCEDURE`: all procedures must be declared before they are called (eliminating the vanilla `C` call option)
-  * `JOIN`: all joins must be ANSI style, the form `FROM A,B` is not allowed (replace with `A INNER JOIN B`
-  * `WINDOW FUNC`: window functions are disallowed (useful if targeting old versions of SQLite)
-  * `UPSERT STATEMENT`: the upsert form is disallowed (useful if targeting old versions of SQLite)
+* These enable or disable more strict semantic checking. The sub-options are:
+  * `FOREIGN KEY ON UPDATE`: all foreign keys must choose some `ON UPDATE` strategy
+  * `FOREIGN KEY ON DELETE`: all foreign keys must choose some `ON DELETE` strategy
+  * `JOIN`: all joins must be ANSI style, the form `FROM A,B` is not allowed (replace with `A INNER JOIN B`)
+  * `UPSERT STATEMENT`: the upsert form is disallowed (useful if targeting SQLite versions before 3.24.0)
+  * `WINDOW FUNC`: window functions are disallowed (useful if targeting SQLite versions before 3.25.0)
+  * `WITHOUT ROWID`: `WITHOUT ROWID` tables are forbidden
+  * `TRANSACTION`: transaction operations (`BEGIN`, `COMMIT`, `ROLLBACK`, etc.) are disallowed
+  * `SELECT IF NOTHING`: all scalar `(select ...)` expressions must include `IF NOTHING`, `IF NOTHING OR NULL`, or `IF NOTHING THROW` to handle the case when the select returns no rows
+  * `INSERT SELECT`: `INSERT ... SELECT` statements may not include joins
+  * `TABLE FUNCTION`: table-valued functions cannot be used on left/right joins (avoids a SQLite bug)
+  * `IS TRUE`: `IS TRUE`, `IS FALSE`, `IS NOT TRUE`, `IS NOT FALSE` operators are disallowed (useful if targeting SQLite versions before 3.24.0)
+  * `CAST`: no-op casts (where source and target types are the same) result in errors. **This is enabled by default.**
+  * `SIGN FUNCTION`: the SQLite `sign()` function may not be used (useful if targeting SQLite versions before 3.35.0)
+  * `CURSOR HAS ROW`: auto cursors require a has-row check (e.g., `IF cursor THEN`) before accessing cursor fields
+  * `UPDATE FROM`: the `UPDATE ... FROM` clause is disallowed (useful if targeting SQLite versions before 3.33.0)
+  * `AND OR NOT NULL CHECK`: enables stricter nullability analysis on `AND`/`OR` logical expressions
 
 `@SENSITIVE`
 

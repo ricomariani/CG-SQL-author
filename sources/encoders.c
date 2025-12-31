@@ -141,15 +141,86 @@ cql_noexport void cg_encode_c_string_literal(CSTR str, charbuf *output) {
   bputc(output, quote);
 }
 
+// Returns the expected length of a UTF-8 sequence based on its lead byte.
+// Returns 0 if the byte is not a valid UTF-8 lead byte.
+static int32_t utf8_sequence_length(unsigned char lead_byte) {
+  if ((lead_byte & 0x80) == 0x00) return 1;       // 0xxxxxxx - ASCII
+  if ((lead_byte & 0xE0) == 0xC0) return 2;       // 110xxxxx - 2-byte sequence
+  if ((lead_byte & 0xF0) == 0xE0) return 3;       // 1110xxxx - 3-byte sequence
+  if ((lead_byte & 0xF8) == 0xF0) return 4;       // 11110xxx - 4-byte sequence
+  return 0;  // Invalid lead byte (continuation byte or invalid)
+}
+
+// Checks if a byte is a valid UTF-8 continuation byte (10xxxxxx)
+static bool_t is_utf8_continuation(unsigned char byte) {
+  return (byte & 0xC0) == 0x80;
+}
+
+// Validates a complete UTF-8 sequence starting at p.
+// Returns the sequence length if valid, 0 if invalid.
+static int32_t valid_utf8_sequence(const unsigned char *p) {
+  int32_t len = utf8_sequence_length(p[0]);
+  if (len == 0) return 0;  // Invalid lead byte
+  if (len == 1) return 1;  // ASCII, always valid
+
+  // Check that we have the right number of valid continuation bytes
+  for (int32_t i = 1; i < len; i++) {
+    if (!p[i] || !is_utf8_continuation(p[i])) {
+      return 0;  // Missing or invalid continuation byte
+    }
+  }
+
+  // Validate the encoded codepoint is in the valid range for its length
+  // (rejects overlong encodings and invalid codepoints)
+  uint32_t codepoint = 0;
+  switch (len) {
+    case 2:
+      codepoint = (uint32_t)(((p[0] & 0x1F) << 6) | (p[1] & 0x3F));
+      if (codepoint < 0x80) return 0;  // Overlong encoding
+      break;
+    case 3:
+      codepoint = (uint32_t)(((p[0] & 0x0F) << 12) | ((p[1] & 0x3F) << 6) | (p[2] & 0x3F));
+      if (codepoint < 0x800) return 0;  // Overlong encoding
+      if (codepoint >= 0xD800 && codepoint <= 0xDFFF) return 0;  // Surrogate pairs
+      break;
+    case 4:
+      codepoint = (uint32_t)(((p[0] & 0x07) << 18) | ((p[1] & 0x3F) << 12) | ((p[2] & 0x3F) << 6) | (p[3] & 0x3F));
+      if (codepoint < 0x10000) return 0;  // Overlong encoding
+      if (codepoint > 0x10FFFF) return 0;  // Beyond Unicode range
+      break;
+  }
+
+  return len;
+}
+
 // This converts from a plain string to JSON string literal
+// UTF-8 sequences are passed through unchanged; invalid/isolated high bytes are escaped.
 cql_noexport void cg_encode_json_string_literal(CSTR str, charbuf *output) {
   const char quote = '"';
-  const char *p = str;
+  const unsigned char *p = (const unsigned char *)str;
 
   bputc(output, quote);
 
-  for ( ;p[0]; p++) {
-    cg_encode_char_as_json_string_literal(p[0], output);
+  while (*p) {
+    unsigned char c = *p;
+
+    // Check for multi-byte UTF-8 sequence
+    if (c >= 0x80) {
+      int32_t seq_len = valid_utf8_sequence(p);
+      if (seq_len > 1) {
+        // Valid UTF-8 multi-byte sequence - pass through unchanged
+        for (int32_t i = 0; i < seq_len; i++) {
+          bputc(output, (char)p[i]);
+        }
+        p += seq_len;
+        continue;
+      }
+      // Invalid/isolated high byte - fall through to escape it
+    }
+
+    // Use existing character encoder for ASCII and invalid bytes
+    cg_encode_char_as_json_string_literal((char)c, output);
+    p++;
   }
   bputc(output, quote);
 }

@@ -47,7 +47,7 @@ approximately 150 such tokens, but the following points are of general interest:
 
 * the lexer expects plain text files, and all the tokens are defined in plain
   ASCII only, however
-  * the presence of UTF8 characters in places where any text is legal (such as
+  * the presence of UTF8 characters in places where "any text" is legal (such as
     string literals) should just work
 * all of the tokens are case-insensitive
   * this means only vanilla ASCII insensitivity; no attempt is made to
@@ -67,7 +67,7 @@ approximately 150 such tokens, but the following points are of general interest:
 * there is special processing needed to lex `/* ... */` comments correctly
 * there are token types for each of the sorts of literals that can be
   encountered
-  * special care is taken to keep the literals in string form so that no
+  * special care is taken to keep numeric literals in string form so that no
     precision is lost
   * integer literals are compared against 0x7fffffff and if greater they
     automatically become long literals even if they are not marked with the
@@ -114,7 +114,7 @@ These represent the AST "base type", if you like.
 * `sem` : begins as `NULL` this is where the semantic type goes once semantic
   processing happens
 * `parent` : the parent node in the AST (not often used but sometimes
-  indispensible)
+  indispensable)
 * `lineno` : the line number of the file that had the text that led to this AST
   (useful for errors)
 * `filename` : the name of the file that had the text that led to this AST
@@ -146,12 +146,13 @@ SET X := 1 + 3;
 ```
 
 In the above, "assign" and "add" are the generic nodes.  Note that this node
-type can be a leaf but usually is not.  The other types are always leaves.
+type (the generic binary tree node) *can* be a leaf but usually *isn't*. The
+other types (e.g. literals) can only be leaves.
 
 Note that in the above output, the node `type` was directly printed (because
 it's a meaningful name).  Likewise, the type needs no decoding when viewing the
 AST in a debugger.  Simply printing the node with something like `p *ast` in
-lldb will show you all the node fields and the type in human-readable form.
+`lldb` will show you all the node fields and the type in human-readable form.
 
 #### The Grammar Code Node `int_ast_node`
 
@@ -163,7 +164,7 @@ typedef struct int_ast_node {
 ```
 
 This kind of node holds an integer that quantifies some kind of choice in the
-grammar.  Note that this does NOT hold numeric literals (see below). The file
+grammar.  Note that this does *NOT* hold numeric literals (see below). The file
 `ast.h` includes many `#define` constants for this purpose such as:
 
 ```c
@@ -205,10 +206,14 @@ This node type is always a leaf.
 #### The String Node `str_ast_node`
 
 ```c
+#define STRING_TYPE_SQL 0
+#define STRING_TYPE_C 1
+#define STRING_TYPE_QUOTED_ID 2
+
 typedef struct str_ast_node {
   ... the common fields
   const char *_Nullable value;
-  bool_t cstr_literal;
+  uint8_t str_type;
 } str_ast_node;
 ```
 
@@ -218,15 +223,25 @@ This node type holds:
  * identifiers
 
 * `value` : the text of the string
-* `cstr_literal` : true if the string was specified using "C" syntax (see below)
+* `str_type` : indicates the sort of string we're talking about (see below)
 
 CQL supports C style string literals with C style escapes such as `"foo\n"`.
 These are normalized into the SQL version of the same literal so that SQLite
 will see a literal it understands.  However, if the origin of the string was the
-C string form (i.e. like `"foo"` rather than `'bar'`) then the `cstr_literal`
-boolean flag will be set.  When echoing the program back as plain text, the C
-string will be converted back to the C form for display to a user. But when
-providing the string to Sqlite, it's in SQL format.
+C string form (i.e. like `"foo"` rather than `'bar'`) then the str_type will be
+`STRING_TYPE_C`.  When echoing the program back as plain text, the C string will
+be converted back to the C form for display to a user. But when providing the
+string to Sqlite, it's in SQL format.
+
+A quoted identifier uses backquotes to make a name that would otherwise be illegal.
+For instance:
+
+```sql
+let `foo bar` = 1;
+```
+
+To indicate a quoted identifier, we use `STR_TYPE_QUOTED_ID`.  This is sometimes
+just referred to as a `QID` in the code.
 
 Identifiers can be distinguished from string literals because the quotation
 marks (always `''`) are still in the string.
@@ -246,13 +261,14 @@ typedef struct num_ast_node {
 * `num_type` : the kind of numeric
 * `value` : the text of the number
 
-All numerics are stored as strings so that there is no loss of precision.  This
-is important because it is entirely possible that the CQL compiler is built with
-a different floating point library, than the target system, or different integer
-sizes.  As a result CQL does not evaluate anything outside of an explicit
-`const(...)` expression.  This policy avoids integer overflows at compile time
-or loss of floating point precision. Constants in the text of the output are
-emitted byte-for-byte as they appeared in the source code.
+All numeric literals are stored as strings so that there is no loss of
+precision.  This is important because it is entirely possible that the CQL
+compiler is built with a different floating point library, than the target
+system, or different integer sizes.  As a result CQL does not evaluate anything
+outside of an explicit `const(...)` expression.  This policy avoids integer
+overflows at compile time or loss of floating point precision. Constants in the
+text of the output are emitted byte-for-byte as they appeared in the source
+code.
 
 This node type is always a leaf.
 
@@ -272,8 +288,8 @@ LET x := 1 + (3 - 2);
       | {int 2}
 ```
 
-Note that there are no parentheses in the AST but it exactly and authoritatively
-captures the precedence with its shape. This means, among other things, that
+Note that there are no parentheses in the AST, it exactly and authoritatively
+captures precedence with its shape. This means, among other things, that
 when CQL echos its input, any redundant parentheses will be gone.
 
 #### Example 2: An IF/ELSE construct

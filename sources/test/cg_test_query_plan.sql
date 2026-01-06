@@ -477,7 +477,7 @@ insert into `table one`(id, name) values(1, 'Irene') on conflict(id) do update s
 
 -- [WITH...UPSERT] stmt
 with some_cte(id, name) as (select 1, 'Irene')
-insert into `table one`(id, name) select * from some_cte where id = 1 on conflict(id) do update set name = excluded.name || 'replace' || ' • ' || '\x01\x02\xA1\x1b\x00\xg' || 'it''s high noon\r\n\f\b\t\v' || "it's" || name;
+insert into `table one`(id, name) select * from some_cte where id = 1 on conflict(id) do update set name = excluded.name || 'replace' || ' • ' || ' 😀 ' || ' é ' || '\x01\x02\xA1\x1b\x00\xg' || 'it''s high noon\r\n\f\b\t\v' || "it's" || name;
 
 -- COMMIT stmt
 commit transaction;

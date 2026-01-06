@@ -15,6 +15,7 @@ cql_noexport void run_unit_tests() {}
 #include "cql.h"
 #include "cg_common.h"
 #include "unit_tests.h"
+#include "encoders.h"
 
 // This file implement very simple unit tests for functions that are too complicated
 // to test directly through invocations of the CQL tool.
@@ -234,6 +235,43 @@ static bool test_Dirname() {
    return true;
 }
 
+// We're going to try to convert utf8 that is badly formed in such cases the
+// encoder should escape the bad bytes with \u00XX escapes this is imperfect but
+// it's the best we can do without rejecting the input entirely and there is no
+// meaningful way to map invalid utf8 into valid utf8 we could make these errors
+// in the parser but that would be disruptive and in any case the code has to do
+// something with bogus buffers... even if we trimmed them upstream there is no
+// guarantee that the data is valid utf8 later on all future paths so we have to
+// deal with it here.
+static bool test_badly_formed_utf8() {
+  bool result = true;
+
+  CHARBUF_OPEN(temp);
+
+  // control case -- well formed utf8 passes through unchanged
+  cg_encode_json_string_literal(" \xe2\x80\xa2 ", &temp);
+  result &= !strcmp(temp.ptr, "\" \xe2\x80\xa2 \"");
+
+  // case 1: isolated continuation byte
+  bclear(&temp);
+  cg_encode_json_string_literal("\x81", &temp);
+  result &= !strcmp(temp.ptr, "\"\\u0081\"");
+
+  // case 2: overlong sequence
+  bclear(&temp);
+  cg_encode_json_string_literal(" \xe2\x80\xa2\xa2 ", &temp);
+  result &= !strcmp(temp.ptr, "\" \\u00e2\\u0080\\u00a2\\u00a2 \"");
+ 
+  // case 3: truncated sequence
+  bclear(&temp);
+  cg_encode_json_string_literal(" \xe2\x80 ", &temp);
+  result &= !strcmp(temp.ptr, "\" \\u00e2\\u0080 \"");
+
+  CHARBUF_CLOSE(temp);
+
+  return result;
+}
+
 cql_noexport void run_unit_tests() {
   TEST_ASSERT(test_strdup__empty_string());
   TEST_ASSERT(test_strdup__one_character_string());
@@ -268,6 +306,7 @@ cql_noexport void run_unit_tests() {
   TEST_ASSERT(test_sha256_example6());
   TEST_ASSERT(test_unknown_macro());
   TEST_ASSERT(test_Dirname());
+  TEST_ASSERT(test_badly_formed_utf8());
 }
 
 #endif

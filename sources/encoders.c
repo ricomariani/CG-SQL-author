@@ -169,6 +169,10 @@ static int32_t valid_utf8_sequence(const unsigned char *p) {
       return 0;  // Missing or invalid continuation byte
     }
   }
+  
+  if (is_utf8_continuation(p[len])) {
+    return 0; // Next byte is also a continuation byte, invalid sequence
+  }
 
   // Validate the encoded codepoint is in the valid range for its length
   // (rejects overlong encodings and invalid codepoints)

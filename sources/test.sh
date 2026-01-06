@@ -791,12 +791,12 @@ json_validate() {
   run_test_expect_success
 
   TEST_NAME="json_validate_using_python"
-  TEST_DESC="Checking for well formed JSON using python for ${sql_file} which creatged ${json_file}"
+  TEST_DESC="Checking for well formed JSON using python for ${sql_file} which created ${json_file}"
   TEST_CMD="common/json_check.py <\"${json_file}\""
   run_test_expect_success
 
   TEST_NAME="json_grammar_conformance"
-  TEST_DESC="Checking for CQL JSON grammar conformance for ${sql_file} which creatged ${json_file}"
+  TEST_DESC="Checking for CQL JSON grammar conformance for ${sql_file} which created ${json_file}"
   TEST_CMD="out/json_test <\"${json_file}\""
   run_test_expect_success
 }

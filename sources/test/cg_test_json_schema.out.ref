@@ -3964,7 +3964,7 @@
     {
       "name" : "shared_frag_user_function_style",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1450,
+      "definedOnLine" : 1455,
       "args" : [
       ],
       "fromTables" : [ "T2" ],
@@ -3991,7 +3991,7 @@
     {
       "name" : "high_bit_escapes",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1459,
+      "definedOnLine" : 1464,
       "args" : [
       ],
       "usesTables" : [  ],
@@ -4017,7 +4017,7 @@
     {
       "name" : "potato",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1478,
+      "definedOnLine" : 1483,
       "args" : [
         {
           "name" : "i",
@@ -4071,7 +4071,7 @@
     {
       "name" : "uses_deleted_view_alias",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1512,
+      "definedOnLine" : 1517,
       "args" : [
       ],
       "usesTables" : [  ],
@@ -4102,7 +4102,7 @@
     {
       "name" : "test_interface1_implementation_correct",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1561,
+      "definedOnLine" : 1566,
       "args" : [
         {
           "name" : "id_",
@@ -4151,7 +4151,7 @@
     {
       "name" : "generate_quoted_items",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1942,
+      "definedOnLine" : 1947,
       "args" : [
       ],
       "fromTables" : [ "abc def" ],
@@ -4184,7 +4184,7 @@
     {
       "name" : "insert_returning_stmt",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1974,
+      "definedOnLine" : 1979,
       "args" : [
       ],
       "insertTables" : [ "returning_tests" ],
@@ -4221,7 +4221,7 @@
     {
       "name" : "delete_returning_stmt",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 2005,
+      "definedOnLine" : 2010,
       "args" : [
       ],
       "deleteTables" : [ "returning_tests" ],
@@ -4259,7 +4259,7 @@
     {
       "name" : "update_returning_stmt",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 2036,
+      "definedOnLine" : 2041,
       "args" : [
       ],
       "updateTables" : [ "returning_tests" ],
@@ -5123,7 +5123,7 @@
     {
       "name" : "using_kinds",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1354,
+      "definedOnLine" : 1359,
       "args" : [
         {
           "name" : "list",
@@ -5160,7 +5160,7 @@
     {
       "name" : "shared_frag_user",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1411,
+      "definedOnLine" : 1416,
       "args" : [
       ],
       "fromTables" : [ "Foo", "T1", "T2", "T6" ],
@@ -5191,7 +5191,7 @@
     {
       "name" : "shared_frag_user_nested_select",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1429,
+      "definedOnLine" : 1434,
       "args" : [
       ],
       "fromTables" : [ "Foo", "T1", "T2", "T6" ],
@@ -5218,7 +5218,7 @@
     {
       "name" : "string_literal_attr",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1468,
+      "definedOnLine" : 1473,
       "args" : [
       ],
       "usesTables" : [  ],
@@ -5249,7 +5249,7 @@
     {
       "name" : "insert_returning_cursor",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1955,
+      "definedOnLine" : 1960,
       "args" : [
       ],
       "insertTables" : [ "returning_tests" ],
@@ -5275,7 +5275,7 @@
     {
       "name" : "delete_returning_cursor",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1986,
+      "definedOnLine" : 1991,
       "args" : [
       ],
       "deleteTables" : [ "returning_tests" ],
@@ -5302,7 +5302,7 @@
     {
       "name" : "update_returning_cursor",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 2017,
+      "definedOnLine" : 2022,
       "args" : [
       ],
       "updateTables" : [ "returning_tests" ],
@@ -8626,7 +8626,7 @@
     {
       "name" : "interface1",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1558,
+      "definedOnLine" : 1563,
       "attributes" : [
         {
           "name" : "cql:java_package",
@@ -8757,6 +8757,7 @@
 
     The statement ending at line XXXX
 
+    [[dummy_attr]]
     ENUM some_reals REAL (
       one = 1.0,
       e = 2.718,
@@ -8767,6 +8768,12 @@
       "name" : "some_reals",
       "type" : "real",
       "isNotNull" : 1,
+      "attributes" : [
+        {
+          "name" : "cql:dummy_attr",
+          "value" : 1
+        }
+      ],
       "values" : [
         {
           "name" : "one",

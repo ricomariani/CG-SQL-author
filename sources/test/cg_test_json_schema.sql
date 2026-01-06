@@ -1238,12 +1238,17 @@ create table with_collate_and_check
 -- TEST: generate some enums in real form
 -- + "name" : "some_reals",
 -- + "type" : "real",
+-- + "attributes" : [
+-- + "name" : "cql:dummy_attr",
+-- + "value" : 1
+-- + "values" : [
 -- + "name" : "one",
 -- + "value" : 1.000000e+00
 -- + "name" : "e",
 -- + "value" : 2.718000e+00
 -- + "name" : "pi",
 -- + "value" : 3.140000e+00
+[[dummy_attr]]
 enum some_reals real (
   one = 1.0,
   e = 2.718,

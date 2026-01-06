@@ -4905,7 +4905,7 @@ CREATE TEMP TABLE t_becomes_temp_table(
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 1}
+  | | | {int 1} {temp}
   | | {name t_becomes_temp_table}
   | {col_key_list}
     | {col_def}: a: integer notnull
@@ -7453,7 +7453,7 @@ CREATE TEMP VIEW view_was_temp_but_now_it_is_not AS
   SELECT 1 AS X;
 
   {create_view_stmt}: ok
-  | {int 1}
+  | {int 1} {temp}
   | {view_and_attrs}
     | {view_details_select}
       | {view_details}
@@ -8604,7 +8604,7 @@ CREATE TEMP VIEW this_view_is_gone AS
   SELECT 1 AS x;
 
   {create_view_stmt}: ok
-  | {int 1}
+  | {int 1} {temp}
   | {view_and_attrs}
     | {view_details_select}
       | {view_details}
@@ -8635,7 +8635,7 @@ CREATE TEMP TABLE this_table_is_gone(
   {create_table_stmt}: this_table_is_gone: { id: integer }
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 1}
+  | | | {int 1} {temp}
   | | {name this_table_is_gone}
   | {col_key_list}
     | {col_def}: id: integer

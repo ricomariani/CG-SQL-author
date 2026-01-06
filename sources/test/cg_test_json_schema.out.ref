@@ -2758,15 +2758,15 @@
     CREATE TABLE epon_virt_table(
       id INT,
       t TEXT
-    ) WITHOUT ROWID @RECREATE
+    ) @RECREATE
 
     {
       "name" : "epon_virt_table",
-      "schema" : "CREATE TABLE epon_virt_table(\n  id INTEGER,\n  t TEXT\n) WITHOUT ROWID",
-      "CRC" : "-1341152214091400811",
+      "schema" : "CREATE TABLE epon_virt_table(\n  id INTEGER,\n  t TEXT\n)",
+      "CRC" : "7967496535969520493",
       "isTemp" : 0,
       "ifNotExists" : 0,
-      "withoutRowid" : 1,
+      "withoutRowid" : 0,
       "isAdded" : 0,
       "isDeleted" : 0,
       "isRecreated": 1,

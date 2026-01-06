@@ -5293,7 +5293,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 1}
+  | | | {int 1} {temp}
   | | {name foo}
   | {col_key_list}
     | {col_def}
@@ -5307,7 +5307,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 2}
+  | | | {int 2} {if_not_exists}
   | | {name foo}
   | {col_key_list}
     | {col_def}
@@ -5321,7 +5321,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 3}
+  | | | {int 3} {if_not_exists} {temp}
   | | {name foo}
   | {col_key_list}
     | {col_def}
@@ -5335,7 +5335,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 1}
+  | | | {int 1} {temp}
   | | {name temp_foo}
   | {col_key_list}
     | {shape_def}
@@ -5504,7 +5504,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 4}
+  | | | {int 4} {without_rowid}
   | | {name foo}
   | {col_key_list}
     | {col_def}
@@ -6937,7 +6937,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
   {create_view_stmt}
-  | {int 2}
+  | {int 2} {if_not_exists}
   | {view_and_attrs}
     | {view_details_select}
       | {view_details}
@@ -11507,7 +11507,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
   {create_view_stmt}
-  | {int 1}
+  | {int 1} {temp}
   | {view_and_attrs}
     | {view_details_select}
       | {view_details}
@@ -15349,7 +15349,7 @@ The statement ending at line XXXX
   | {create_table_stmt}
     | {create_table_name_flags}
     | | {table_flags_attrs}
-    | | | {int 4}
+    | | | {int 8} {eponymous}
     | | | {recreate_attr}
     | | {name foo}
     | {col_key_list}
@@ -15379,7 +15379,7 @@ The statement ending at line XXXX
   | {create_table_stmt}
     | {create_table_name_flags}
     | | {table_flags_attrs}
-    | | | {int 6}
+    | | | {int 10} {if_not_exists} {eponymous}
     | | | {recreate_attr}
     | | {name foo}
     | {col_key_list}
@@ -15409,7 +15409,7 @@ The statement ending at line XXXX
   | {create_table_stmt}
     | {create_table_name_flags}
     | | {table_flags_attrs}
-    | | | {int 6}
+    | | | {int 10} {if_not_exists} {eponymous}
     | | | {recreate_attr}
     | | {name foo}
     | {col_key_list}

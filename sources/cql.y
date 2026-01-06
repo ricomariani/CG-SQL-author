@@ -751,7 +751,7 @@ create_virtual_table_stmt: CREATE VIRTUAL TABLE opt_vtab_flags sql_name[table_na
     struct ast_node *version_info = $opt_delete_version_attr ? $opt_delete_version_attr : new_ast_recreate_attr(NULL, NULL);
     struct ast_node *table_flags_attrs = new_ast_table_flags_attrs(flags_node, version_info);
     struct ast_node *table_name_flags = new_ast_create_table_name_flags(table_flags_attrs, name);
-    struct ast_node *create_table_stmt =  new_ast_create_table_stmt(table_name_flags, col_key_list);
+    struct ast_node *create_table_stmt = new_ast_create_table_stmt(table_name_flags, col_key_list);
     struct ast_node *module_info = new_ast_module_info($module_name, $opt_module_args);
     $$ = new_ast_create_virtual_table_stmt(module_info, create_table_stmt);
   };

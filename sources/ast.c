@@ -548,6 +548,23 @@ cql_noexport bool_t print_ast_value(struct ast_node *node) {
       Contract(out); // if this fails there is a bogus join type in the AST
       cql_output(" %s", out);
     }
+
+    // standard view and table flags are super common
+    if (node->parent->type == k_ast_create_view_stmt || node->parent->type == k_ast_table_flags_attrs) {
+      if (inode->value & GENERIC_IF_NOT_EXISTS) {
+        cql_output(" {if_not_exists}");
+      }
+      if (inode->value & GENERIC_IS_TEMP) {
+        cql_output(" {temp}");
+      }
+      if (inode->value & TABLE_IS_NO_ROWID) {
+        cql_output(" {without_rowid}");
+      }
+      if (inode->value & VTAB_IS_EPONYMOUS) {
+        cql_output(" {eponymous}");
+      }
+    }
+
     ret = true;
   }
 

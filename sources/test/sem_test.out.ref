@@ -25323,7 +25323,7 @@ CREATE TEMP VIEW temp_view AS
   SELECT 1 AS A, 2 AS B;
 
   {create_view_stmt}: temp_view: { A: integer notnull, B: integer notnull }
-  | {int 1}
+  | {int 1} {temp}
   | {view_and_attrs}
     | {view_details_select}
       | {view_details}
@@ -30419,7 +30419,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0141: table has an AU
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 4}
+  | | | {int 4} {without_rowid}
   | | {name bogus_without_rowid}
   | {col_key_list}
     | {col_def}: id: integer notnull primary_key autoinc
@@ -32587,7 +32587,7 @@ CREATE TEMP TABLE nontemp_table_like_table(
   {create_table_stmt}: nontemp_table_like_table: { id: integer notnull }
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 1}
+  | | | {int 1} {temp}
   | | {name nontemp_table_like_table}
   | {col_key_list}
     | {col_def}: id: integer notnull
@@ -32606,7 +32606,7 @@ CREATE TEMP TABLE table_like_table(
   {create_table_stmt}: table_like_table: { id: integer notnull }
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 1}
+  | | | {int 1} {temp}
   | | {name table_like_table}
   | {col_key_list}
     | {col_def}: id: integer notnull
@@ -32627,7 +32627,7 @@ CREATE TEMP TABLE table_like_view(
   {create_table_stmt}: table_like_view: { f1: integer notnull, f2: integer notnull, f3: integer notnull }
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 1}
+  | | | {int 1} {temp}
   | | {name table_like_view}
   | {col_key_list}
     | {col_def}: f1: integer notnull
@@ -32662,7 +32662,7 @@ CREATE TEMP TABLE table_like_proc(
   {create_table_stmt}: table_like_proc: { id: integer notnull, name: text, rate: longint }
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 1}
+  | | | {int 1} {temp}
   | | {name table_like_proc}
   | {col_key_list}
     | {col_def}: id: integer notnull
@@ -32695,7 +32695,7 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0178: proc has no result 'proc1'
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 1}
+  | | | {int 1} {temp}
   | | {name table_like_proc_with_no_result}
   | {col_key_list}: err
     | {shape_def}: err
@@ -32713,7 +32713,7 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 1}
+  | | | {int 1} {temp}
   | | {name table_like_nonexistent_view}
   | {col_key_list}: err
     | {shape_def}: err
@@ -32734,7 +32734,7 @@ CREATE TEMP TABLE table_multiple_like(
   {create_table_stmt}: table_multiple_like: { f1: integer notnull, f2: integer notnull, f3: integer notnull, id: integer notnull, name: text, rate: longint }
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 1}
+  | | | {int 1} {temp}
   | | {name table_multiple_like}
   | {col_key_list}
     | {col_def}: f1: integer notnull
@@ -32790,7 +32790,7 @@ CREATE TEMP TABLE table_like_mixed(
   {create_table_stmt}: table_like_mixed: { garbage: text, f1: integer notnull, f2: integer notnull, f3: integer notnull, happy: integer }
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 1}
+  | | | {int 1} {temp}
   | | {name table_like_mixed}
   | {col_key_list}
     | {col_def}: garbage: text
@@ -32840,7 +32840,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0142: duplicate column name 'f1'
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 1}
+  | | | {int 1} {temp}
   | | {name table_with_dup_col}
   | {col_key_list}
     | {col_def}: f1: text
@@ -32878,7 +32878,7 @@ CREATE TEMP VIEW bogus_temp_view_with_versioning AS
 test/sem_test.sql:XXXX:1: error: in create_view_stmt : CQL0139: temp objects may not have versioning annotations 'bogus_temp_view_with_versioning'
 
   {create_view_stmt}: err
-  | {int 1}
+  | {int 1} {temp}
   | {view_and_attrs}
     | {view_details_select}
     | | {view_details}
@@ -32950,7 +32950,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0139: temp objects ma
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 1}
+  | | | {int 1} {temp}
   | | | {create_attr}
   | |   | {version_annotation}
   | |     | {int 1}
@@ -32973,7 +32973,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0139: temp objects ma
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 1}
+  | | | {int 1} {temp}
   | | | {delete_attr}
   | |   | {version_annotation}
   | |     | {int 1}
@@ -32996,7 +32996,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0139: temp objects ma
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 1}
+  | | | {int 1} {temp}
   | | | {recreate_attr}
   | | {name bogus_temp_with_recreate_versioning}
   | {col_key_list}
@@ -33017,7 +33017,7 @@ test/sem_test.sql:XXXX:1: error: in col_def : CQL0140: columns in a temp table m
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 1}
+  | | | {int 1} {temp}
   | | {name bogus_temp_with_versioning_in_column}
   | {col_key_list}
     | {col_def}: id: integer @create(2)
@@ -38692,7 +38692,7 @@ CREATE TEMP TABLE table1(
   {create_table_stmt}: table1: { id: integer }
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 1}
+  | | | {int 1} {temp}
   | | {name table1}
   | {col_key_list}
     | {col_def}: id: integer
@@ -38710,7 +38710,7 @@ CREATE TEMP TABLE table2(
   {create_table_stmt}: table2: { id: integer }
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 1}
+  | | | {int 1} {temp}
   | | {name table2}
   | {col_key_list}
     | {col_def}: id: integer
@@ -47841,7 +47841,7 @@ CREATE TEMP TABLE foo_data(
   {create_table_stmt}: foo_data: { c1: text notnull, c2: integer, c3: real, c4: real, c5: real, c6: real, c7: real, c8: real, c9: real, c10: real }
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 1}
+  | | | {int 1} {temp}
   | | {name foo_data}
   | {col_key_list}
     | {col_def}: c1: text notnull
@@ -48619,7 +48619,7 @@ CREATE TABLE IF NOT EXISTS foo(
   {create_table_stmt}: foo: { id: integer notnull primary_key autoinc } alias
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 2}
+  | | | {int 2} {if_not_exists}
   | | {name foo}
   | {col_key_list}
     | {col_def}: id: integer notnull primary_key autoinc
@@ -48637,7 +48637,7 @@ CREATE VIEW IF NOT EXISTS MyView AS
   SELECT 1 AS f1, 2 AS f2, 3 AS f3;
 
   {create_view_stmt}: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull } alias
-  | {int 2}
+  | {int 2} {if_not_exists}
   | {view_and_attrs}
     | {view_details_select}
       | {view_details}
@@ -51206,7 +51206,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0339: WITHOUT ROWID t
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 4}
+  | | | {int 4} {without_rowid}
   | | {name table_with_invalid_without_rowid_mode}
   | {col_key_list}
     | {col_def}: id: integer notnull primary_key
@@ -51233,7 +51233,7 @@ CREATE TABLE table_with_valid_without_rowid_mode(
   {create_table_stmt}: table_with_valid_without_rowid_mode: { id: integer notnull primary_key }
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 4}
+  | | | {int 4} {without_rowid}
   | | {name table_with_valid_without_rowid_mode}
   | {col_key_list}
     | {col_def}: id: integer notnull primary_key
@@ -75539,7 +75539,7 @@ CREATE VIRTUAL TABLE @EPONYMOUS epon USING epon AS (
   | {create_table_stmt}: epon: { id: integer sensitive, t: text } virtual @recreate
     | {create_table_name_flags}
     | | {table_flags_attrs}
-    | | | {int 4}
+    | | | {int 8} {eponymous}
     | | | {recreate_attr}
     | | {name epon}
     | {col_key_list}
@@ -75571,7 +75571,7 @@ test/sem_test.sql:XXXX:1: error: in create_virtual_table_stmt : CQL0447: virtual
   | {create_table_stmt}
     | {create_table_name_flags}
     | | {table_flags_attrs}
-    | | | {int 4}
+    | | | {int 8} {eponymous}
     | | | {recreate_attr}
     | | {name epony}
     | {col_key_list}
@@ -78981,7 +78981,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not su
   | {create_table_stmt}: err
     | {create_table_name_flags}
     | | {table_flags_attrs}
-    | | | {int 1}
+    | | | {int 1} {temp}
     | | {name temp_backing}
     | {col_key_list}
       | {col_def}: id: integer
@@ -79015,7 +79015,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not su
   | {create_table_stmt}: err
     | {create_table_name_flags}
     | | {table_flags_attrs}
-    | | | {int 4}
+    | | | {int 4} {without_rowid}
     | | {name norowid_backing}
     | {col_key_list}
       | {col_def}: k: blob
@@ -79659,7 +79659,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not su
   | {create_table_stmt}: err
     | {create_table_name_flags}
     | | {table_flags_attrs}
-    | | | {int 1}
+    | | | {int 1} {temp}
     | | {name temp_backed}
     | {col_key_list}
       | {col_def}: id: integer
@@ -79764,7 +79764,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not su
   | {create_table_stmt}: err
     | {create_table_name_flags}
     | | {table_flags_attrs}
-    | | | {int 4}
+    | | | {int 4} {without_rowid}
     | | {name norowid_backed}
     | {col_key_list}
       | {col_def}: id: integer
@@ -83747,7 +83747,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0459: table is not su
   | {create_table_stmt}: err
     | {create_table_name_flags}
     | | {table_flags_attrs}
-    | | | {int 1}
+    | | | {int 1} {temp}
     | | {name temp_blob_storage}
     | {col_key_list}
       | {col_def}: id: integer
@@ -83781,7 +83781,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0459: table is not su
   | {create_table_stmt}: err
     | {create_table_name_flags}
     | | {table_flags_attrs}
-    | | | {int 4}
+    | | | {int 4} {without_rowid}
     | | {name norowid_blob_storage}
     | {col_key_list}
       | {col_def}: id: integer

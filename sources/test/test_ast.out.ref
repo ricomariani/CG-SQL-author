@@ -13895,7 +13895,7 @@ The statement ending at line XXXX
   |     |     | | {window_defn}
   |     |     |   | {window_defn_orderby}
   |     |     |     | {opt_frame_spec}
-  |     |     |       | {int 20609}
+  |     |     |       | {int 20609} {frame_type_range} {frame_boundary_start_preceding} {frame_boundary_end_following} {frame_exclude_no_others}
   |     |     |       | {expr_list}
   |     |     |         | {ge}
   |     |     |         | | {name id}
@@ -14482,7 +14482,7 @@ The statement ending at line XXXX
   |     |       |     |   | {orderby_item}
   |     |       |     |     | {name month}
   |     |       |     | {opt_frame_spec}
-  |     |       |       | {int 266370}
+  |     |       |       | {int 266370} {frame_type_rows} {frame_boundary_start_preceding} {frame_boundary_end_following} {frame_exclude_none}
   |     |       |       | {expr_list}
   |     |       |         | {int 1}
   |     |       |         | {int 1}
@@ -14567,7 +14567,7 @@ The statement ending at line XXXX
   |     |       |     |   | {orderby_item}
   |     |       |     |     | {name month}
   |     |       |     | {opt_frame_spec}
-  |     |       |       | {int 20610}
+  |     |       |       | {int 20610} {frame_type_rows} {frame_boundary_start_preceding} {frame_boundary_end_following} {frame_exclude_no_others}
   |     |       |       | {expr_list}
   |     |       |         | {int 1}
   |     |       |         | {int 2}
@@ -14612,7 +14612,7 @@ The statement ending at line XXXX
   |     |       |     |   | {orderby_item}
   |     |       |     |     | {name month}
   |     |       |     | {opt_frame_spec}
-  |     |       |       | {int 36994}
+  |     |       |       | {int 36994} {frame_type_rows} {frame_boundary_start_preceding} {frame_boundary_end_following} {frame_exclude_current_row}
   |     |       |       | {expr_list}
   |     |       |         | {int 3}
   |     |       |         | {int 4}
@@ -14657,7 +14657,7 @@ The statement ending at line XXXX
   |     |       |     |   | {orderby_item}
   |     |       |     |     | {name month}
   |     |       |     | {opt_frame_spec}
-  |     |       |       | {int 69762}
+  |     |       |       | {int 69762} {frame_type_rows} {frame_boundary_start_preceding} {frame_boundary_end_following} {frame_exclude_group}
   |     |       |       | {expr_list}
   |     |       |         | {int 4}
   |     |       |         | {int 5}
@@ -14702,7 +14702,7 @@ The statement ending at line XXXX
   |     |       |     |   | {orderby_item}
   |     |       |     |     | {name month}
   |     |       |     | {opt_frame_spec}
-  |     |       |       | {int 135298}
+  |     |       |       | {int 135298} {frame_type_rows} {frame_boundary_start_preceding} {frame_boundary_end_following} {frame_exclude_ties}
   |     |       |       | {expr_list}
   |     |       |         | {int 6}
   |     |       |         | {int 7}
@@ -14747,7 +14747,7 @@ The statement ending at line XXXX
   |     |       |     |   | {orderby_item}
   |     |       |     |     | {name month}
   |     |       |     | {opt_frame_spec}
-  |     |       |       | {int 135297}
+  |     |       |       | {int 135297} {frame_type_range} {frame_boundary_start_preceding} {frame_boundary_end_following} {frame_exclude_ties}
   |     |       |       | {expr_list}
   |     |       |         | {int 8}
   |     |       |         | {int 9}
@@ -14792,7 +14792,7 @@ The statement ending at line XXXX
   |     |       |     |   | {orderby_item}
   |     |       |     |     | {name month}
   |     |       |     | {opt_frame_spec}
-  |     |       |       | {int 135300}
+  |     |       |       | {int 135300} {frame_type_groups} {frame_boundary_start_preceding} {frame_boundary_end_following} {frame_exclude_ties}
   |     |       |       | {expr_list}
   |     |       |         | {int 10}
   |     |       |         | {int 11}
@@ -14837,7 +14837,7 @@ The statement ending at line XXXX
   |     |       |     |   | {orderby_item}
   |     |       |     |     | {name month}
   |     |       |     | {opt_frame_spec}
-  |     |       |       | {int 135236}
+  |     |       |       | {int 135236} {frame_type_groups} {frame_boundary_start_unbounded} {frame_boundary_end_following} {frame_exclude_ties}
   |     |       |       | {expr_list}
   |     |       |         | {int 12}
   |     |       | {opt_as_alias}
@@ -14881,7 +14881,7 @@ The statement ending at line XXXX
   |     |       |     |   | {orderby_item}
   |     |       |     |     | {name month}
   |     |       |     | {opt_frame_spec}
-  |     |       |       | {int 263684}
+  |     |       |       | {int 263684} {frame_type_groups} {frame_boundary_start_following} {frame_boundary_end_preceding} {frame_exclude_none}
   |     |       |       | {expr_list}
   |     |       |         | {int 13}
   |     |       |         | {int 14}
@@ -14926,7 +14926,7 @@ The statement ending at line XXXX
   |     |       |     |   | {orderby_item}
   |     |       |     |     | {name month}
   |     |       |     | {opt_frame_spec}
-  |     |       |       | {int 270596}
+  |     |       |       | {int 270596} {frame_type_groups} {frame_boundary_start_current_row} {frame_boundary_end_unbounded} {frame_exclude_none}
   |     |       |       | {expr_list}
   |     |       | {opt_as_alias}
   |     |         | {name SalesMovingAverage}
@@ -14969,7 +14969,7 @@ The statement ending at line XXXX
   |     |       |     |   | {orderby_item}
   |     |       |     |     | {name month}
   |     |       |     | {opt_frame_spec}
-  |     |       |       | {int 264260}
+  |     |       |       | {int 264260} {frame_type_groups} {frame_boundary_start_unbounded} {frame_boundary_end_current_row} {frame_exclude_none}
   |     |       |       | {expr_list}
   |     |       | {opt_as_alias}
   |     |         | {name SalesMovingAverage}
@@ -15012,7 +15012,7 @@ The statement ending at line XXXX
   |     |       |     |   | {orderby_item}
   |     |       |     |     | {name month}
   |     |       |     | {opt_frame_spec}
-  |     |       |       | {int 133188}
+  |     |       |       | {int 133188} {frame_type_groups} {frame_boundary_start_unbounded} {frame_boundary_end_current_row} {frame_exclude_ties}
   |     |       |       | {expr_list}
   |     |       | {opt_as_alias}
   |     |         | {name SalesMovingAverage}
@@ -15058,7 +15058,7 @@ The statement ending at line XXXX
   |     |       |     |   | {orderby_item}
   |     |       |     |     | {name month}
   |     |       |     | {opt_frame_spec}
-  |     |       |       | {int 133188}
+  |     |       |       | {int 133188} {frame_type_groups} {frame_boundary_start_unbounded} {frame_boundary_end_current_row} {frame_exclude_ties}
   |     |       |       | {expr_list}
   |     |       | {opt_as_alias}
   |     |         | {name SalesMovingAverage}
@@ -15097,7 +15097,7 @@ The statement ending at line XXXX
   |     |       | | {window_defn}
   |     |       |   | {window_defn_orderby}
   |     |       |     | {opt_frame_spec}
-  |     |       |       | {int 262180}
+  |     |       |       | {int 262180} {frame_type_groups} {frame_boundary_current_row} {frame_exclude_none}
   |     |       |       | {expr_list}
   |     |       | {opt_as_alias}
   |     |         | {name SalesMovingAverage}

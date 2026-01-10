@@ -45899,7 +45899,7 @@ SELECT id,
   |     |   | | | {window_defn}: ok
   |     |   | |   | {window_defn_orderby}
   |     |   | |     | {opt_frame_spec}: ok
-  |     |   | |       | {int 131084}
+  |     |   | |       | {int 131084} {frame_type_groups} {frame_boundary_unbounded} {frame_exclude_ties}
   |     |   | |       | {expr_list}
   |     |   | | {opt_as_alias}
   |     |   |   | {name avg}
@@ -45913,7 +45913,7 @@ SELECT id,
   |     |         | {window_defn}: ok
   |     |           | {window_defn_orderby}
   |     |             | {opt_frame_spec}: ok
-  |     |               | {int 36994}
+  |     |               | {int 36994} {frame_type_rows} {frame_boundary_start_preceding} {frame_boundary_end_following} {frame_exclude_current_row}
   |     |               | {expr_list}
   |     |                 | {eq}: bool notnull
   |     |                 | | {name id}: id: integer notnull
@@ -45955,7 +45955,7 @@ SELECT id,
   |     |       | {window_defn}: ok
   |     |         | {window_defn_orderby}
   |     |           | {opt_frame_spec}: ok
-  |     |             | {int 73986}
+  |     |             | {int 73986} {frame_type_rows} {frame_boundary_start_current_row} {frame_boundary_end_unbounded} {frame_exclude_group}
   |     |             | {expr_list}
   |     | {select_from_etc}: TABLE { foo: foo }
   |       | {table_or_subquery_list}: TABLE { foo: foo }
@@ -45991,7 +45991,7 @@ SELECT id,
   |     |       | {window_defn}: ok
   |     |         | {window_defn_orderby}
   |     |           | {opt_frame_spec}: ok
-  |     |             | {int 131090}
+  |     |             | {int 131090} {frame_type_rows} {frame_boundary_preceding} {frame_exclude_ties}
   |     |             | {expr_list}
   |     |               | {gt}: bool notnull
   |     |                 | {name id}: id: integer notnull
@@ -46032,7 +46032,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'bogus'
   |     |       | {window_defn}: err
   |     |         | {window_defn_orderby}
   |     |           | {opt_frame_spec}: err
-  |     |             | {int 131090}
+  |     |             | {int 131090} {frame_type_rows} {frame_boundary_preceding} {frame_exclude_ties}
   |     |             | {expr_list}
   |     |               | {eq}: err
   |     |                 | {name bogus}: err
@@ -56150,7 +56150,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in t
   |     |       |     |   | {orderby_item}
   |     |       |     |     | {name month}: month: integer
   |     |       |     | {opt_frame_spec}: err
-  |     |       |       | {int 266370}
+  |     |       |       | {int 266370} {frame_type_rows} {frame_boundary_start_preceding} {frame_boundary_end_following} {frame_exclude_none}
   |     |       |       | {expr_list}
   |     |       |         | {int 1}: integer notnull
   |     |       |         | {call}: err
@@ -56210,7 +56210,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in t
   |     |       |   |         | {name month}: month: integer
   |     |       |   | {window_defn_orderby}
   |     |       |     | {opt_frame_spec}: ok
-  |     |       |       | {int 266370}
+  |     |       |       | {int 266370} {frame_type_rows} {frame_boundary_start_preceding} {frame_boundary_end_following} {frame_exclude_none}
   |     |       |       | {expr_list}
   |     |       |         | {int 1}: integer notnull
   |     |       |         | {int 3}: integer notnull
@@ -56261,7 +56261,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in t
   |     |       |     |   | {orderby_item}
   |     |       |     |     | {name month}: month: integer
   |     |       |     | {opt_frame_spec}: err
-  |     |       |       | {int 266370}
+  |     |       |       | {int 266370} {frame_type_rows} {frame_boundary_start_preceding} {frame_boundary_end_following} {frame_exclude_none}
   |     |       |       | {expr_list}
   |     |       |         | {call}: err
   |     |       |         | | {name sum}
@@ -56327,7 +56327,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in t
   |     |       |     |   | {orderby_item}
   |     |       |     |     | {name month}: month: integer
   |     |       |     | {opt_frame_spec}: ok
-  |     |       |       | {int 20610}
+  |     |       |       | {int 20610} {frame_type_rows} {frame_boundary_start_preceding} {frame_boundary_end_following} {frame_exclude_no_others}
   |     |       |       | {expr_list}
   |     |       |         | {int 1}: integer notnull
   |     |       |         | {int 2}: integer notnull

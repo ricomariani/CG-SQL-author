@@ -531,13 +531,16 @@ cql_noexport bool_t print_ast_value(struct ast_node *node) {
 #endif
     cql_output("%s", padbuffer);
 
-    // The join type case is common enough that we have special code for it.
-    // The rest are just formatted as a number.
     int_ast_node *inode = (int_ast_node *)node;
-    cql_output("{int %lld}", (llint_t)inode->value);
-    if (node->parent->type == k_ast_join_target) {
+    llint_t value = (llint_t)inode->value;
+    CSTR parent_type = node->parent->type;
+
+    cql_output("{int %lld}", value);
+
+    // join types have their own special names, emit those
+    if (parent_type == k_ast_join_target) {
       CSTR out = NULL;
-      switch (inode->value) {
+      switch (value) {
         case JOIN_INNER:       out = "{join_inner}";       break;
         case JOIN_CROSS:       out = "{join_cross}";       break;
         case JOIN_LEFT_OUTER:  out = "{join_left_outer}";  break;
@@ -549,20 +552,65 @@ cql_noexport bool_t print_ast_value(struct ast_node *node) {
       cql_output(" %s", out);
     }
 
-    // standard view and table flags are super common
-    if (node->parent->type == k_ast_create_view_stmt || node->parent->type == k_ast_table_flags_attrs) {
-      if (inode->value & GENERIC_IF_NOT_EXISTS) {
+    // standard view and table flags
+    if (parent_type == k_ast_create_view_stmt ||
+        parent_type == k_ast_table_flags_attrs) {
+      if (value & GENERIC_IF_NOT_EXISTS) {
         cql_output(" {if_not_exists}");
       }
-      if (inode->value & GENERIC_IS_TEMP) {
+      if (value & GENERIC_IS_TEMP) {
         cql_output(" {temp}");
       }
-      if (inode->value & TABLE_IS_NO_ROWID) {
+      if (value & TABLE_IS_NO_ROWID) {
         cql_output(" {without_rowid}");
       }
-      if (inode->value & VTAB_IS_EPONYMOUS) {
+      if (value & VTAB_IS_EPONYMOUS) {
         cql_output(" {eponymous}");
       }
+    }
+
+    // standard flag bits for frame clauses in window functions
+    if (parent_type == k_ast_frame_boundary_start ||
+      parent_type == k_ast_frame_boundary_end ||
+      parent_type == k_ast_opt_frame_spec) {
+      if (value & FRAME_TYPE_RANGE)
+        cql_output(" {frame_type_range}");
+      if (value & FRAME_TYPE_ROWS)
+        cql_output(" {frame_type_rows}");
+      if (value & FRAME_TYPE_GROUPS)
+        cql_output(" {frame_type_groups}");
+      if (value & FRAME_BOUNDARY_UNBOUNDED)
+        cql_output(" {frame_boundary_unbounded}");
+      if (value & FRAME_BOUNDARY_PRECEDING)
+        cql_output(" {frame_boundary_preceding}");
+      if (value & FRAME_BOUNDARY_CURRENT_ROW)
+        cql_output(" {frame_boundary_current_row}");
+      if (value & FRAME_BOUNDARY_START_UNBOUNDED)
+        cql_output(" {frame_boundary_start_unbounded}");
+      if (value & FRAME_BOUNDARY_START_PRECEDING)
+        cql_output(" {frame_boundary_start_preceding}");
+      if (value & FRAME_BOUNDARY_START_CURRENT_ROW)
+        cql_output(" {frame_boundary_start_current_row}");
+      if (value & FRAME_BOUNDARY_START_FOLLOWING)
+        cql_output(" {frame_boundary_start_following}");
+      if (value & FRAME_BOUNDARY_END_PRECEDING)
+        cql_output(" {frame_boundary_end_preceding}");
+      if (value & FRAME_BOUNDARY_END_CURRENT_ROW)
+        cql_output(" {frame_boundary_end_current_row}");
+      if (value & FRAME_BOUNDARY_END_FOLLOWING)
+        cql_output(" {frame_boundary_end_following}");
+      if (value & FRAME_BOUNDARY_END_UNBOUNDED)
+        cql_output(" {frame_boundary_end_unbounded}");
+      if (value & FRAME_EXCLUDE_NO_OTHERS)
+        cql_output(" {frame_exclude_no_others}");
+      if (value & FRAME_EXCLUDE_CURRENT_ROW)
+        cql_output(" {frame_exclude_current_row}");
+      if (value & FRAME_EXCLUDE_GROUP)
+        cql_output(" {frame_exclude_group}");
+      if (value & FRAME_EXCLUDE_TIES)
+        cql_output(" {frame_exclude_ties}");
+      if (value & FRAME_EXCLUDE_NONE)
+        cql_output(" {frame_exclude_none}");
     }
 
     ret = true;

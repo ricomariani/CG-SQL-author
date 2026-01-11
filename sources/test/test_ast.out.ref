@@ -12837,19 +12837,19 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
   {create_trigger_stmt}
-  | {int 3}
+  | {int 3} {temp} {if_not_exists}
   | {trigger_body_vers}
     | {trigger_def}
       | {name trigger1}
       | {trigger_condition}
-        | {int 4}
+        | {int 4} {before}
         | {trigger_op_target}
           | {trigger_operation}
-          | | {int 64}
+          | | {int 64} {delete}
           | {trigger_target_action}
             | {name target_table1}
             | {trigger_action}
-              | {int 256}
+              | {int 256} {for_each_row}
               | {trigger_when_stmts}
                 | {name complex_when_expression}
                 | {stmt_list}
@@ -12871,19 +12871,19 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
   {create_trigger_stmt}
-  | {int 3}
+  | {int 3} {temp} {if_not_exists}
   | {trigger_body_vers}
     | {trigger_def}
       | {name trigger1}
       | {trigger_condition}
-        | {int 4}
+        | {int 4} {before}
         | {trigger_op_target}
           | {trigger_operation}
-          | | {int 64}
+          | | {int 64} {delete}
           | {trigger_target_action}
             | {name target_table1}
             | {trigger_action}
-              | {int 256}
+              | {int 256} {for_each_row}
               | {trigger_when_stmts}
                 | {name complex_when_expression}
                 | {stmt_list}
@@ -12910,10 +12910,10 @@ The statement ending at line XXXX
     | {trigger_def}
       | {name trigger2}
       | {trigger_condition}
-        | {int 8}
+        | {int 8} {after}
         | {trigger_op_target}
           | {trigger_operation}
-          | | {int 128}
+          | | {int 128} {insert}
           | {trigger_target_action}
             | {name target_table2}
             | {trigger_action}
@@ -12935,10 +12935,10 @@ The statement ending at line XXXX
     | {trigger_def}
       | {name trigger3}
       | {trigger_condition}
-        | {int 16}
+        | {int 16} {instead_of}
         | {trigger_op_target}
           | {trigger_operation}
-          | | {int 32}
+          | | {int 32} {update}
           | {trigger_target_action}
             | {name target_table3}
             | {trigger_action}
@@ -12983,10 +12983,10 @@ The statement ending at line XXXX
     | {trigger_def}
       | {name trigger4}
       | {trigger_condition}
-        | {int 16}
+        | {int 16} {instead_of}
         | {trigger_op_target}
           | {trigger_operation}
-          | | {int 32}
+          | | {int 32} {update}
           | | {name_list}
           |   | {name x}
           |   | {name_list}
@@ -13526,10 +13526,10 @@ The statement ending at line XXXX
     | {trigger_def}
     | | {name deleted_trigger}
     | | {trigger_condition}
-    |   | {int 8}
+    |   | {int 8} {after}
     |   | {trigger_op_target}
     |     | {trigger_operation}
-    |     | | {int 128}
+    |     | | {int 128} {insert}
     |     | {trigger_target_action}
     |       | {name target_table2}
     |       | {trigger_action}

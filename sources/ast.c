@@ -613,6 +613,39 @@ cql_noexport bool_t print_ast_value(struct ast_node *node) {
         cql_output(" {frame_exclude_none}");
     }
 
+    if (parent_type == k_ast_trigger_operation ||
+        parent_type == k_ast_trigger_condition ||
+        parent_type == k_ast_trigger_action ||
+        parent_type == k_ast_create_trigger_stmt) {
+      if (value & TRIGGER_IS_TEMP) {
+        cql_output(" {temp}");
+      }
+      if (value & TRIGGER_IF_NOT_EXISTS) {
+        cql_output(" {if_not_exists}");
+      }
+      if (value & TRIGGER_BEFORE) {
+        cql_output(" {before}");
+      }
+      if (value & TRIGGER_AFTER) {
+        cql_output(" {after}");
+      }
+      if (value & TRIGGER_INSTEAD_OF) {
+        cql_output(" {instead_of}");
+      }
+      if (value & TRIGGER_UPDATE) {
+        cql_output(" {update}");
+      }
+      if (value & TRIGGER_DELETE) {
+        cql_output(" {delete}");
+      }
+      if (value & TRIGGER_INSERT) {
+        cql_output(" {insert}");
+      }
+      if (value & TRIGGER_FOR_EACH_ROW) {
+        cql_output(" {for_each_row}");
+      }
+    }
+
     ret = true;
   }
 

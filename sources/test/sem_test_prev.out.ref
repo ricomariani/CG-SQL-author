@@ -5489,10 +5489,10 @@ END;
     | {trigger_def}
       | {name trigger_added_no_problemo}
       | {trigger_condition}
-        | {int 4}
+        | {int 4} {before}
         | {trigger_op_target}
           | {trigger_operation}
-          | | {int 64}
+          | | {int 64} {delete}
           | {trigger_target_action}
             | {name foo}: foo: { id: integer notnull, id2: integer, name: text, name_2: text }
             | {trigger_action}
@@ -5530,10 +5530,10 @@ END @DELETE(2);
     | {trigger_def}
     | | {name trigger_will_be_deleted}
     | | {trigger_condition}
-    |   | {int 4}
+    |   | {int 4} {before}
     |   | {trigger_op_target}
     |     | {trigger_operation}
-    |     | | {int 64}
+    |     | | {int 64} {delete}
     |     | {trigger_target_action}
     |       | {name foo}: foo: { id: integer notnull, id2: integer, name: text, name_2: text }
     |       | {trigger_action}
@@ -5775,10 +5775,10 @@ test/sem_test_prev.sql:XXXX:1: error: in create_trigger_stmt : CQL0311: object's
     | {trigger_def}
       | {name TrigChanging}
       | {trigger_condition}
-        | {int 4}
+        | {int 4} {before}
         | {trigger_op_target}
           | {trigger_operation}
-          | | {int 64}
+          | | {int 64} {delete}
           | {trigger_target_action}
             | {name foo}: foo: { id: integer notnull, id2: integer, name: text, name_2: text }
             | {trigger_action}
@@ -7784,14 +7784,14 @@ test/sem_test_prev.sql:XXXX:1: error: in create_trigger_stmt : CQL0106: trigger 
     | {trigger_def}
       | {name trigger_removed_with_no_annotation}
       | {trigger_condition}
-        | {int 4}
+        | {int 4} {before}
         | {trigger_op_target}
           | {trigger_operation}
-          | | {int 64}
+          | | {int 64} {delete}
           | {trigger_target_action}
             | {name foo}
             | {trigger_action}
-              | {int 256}
+              | {int 256} {for_each_row}
               | {trigger_when_stmts}
                 | {gt}
                 | | {dot}
@@ -7830,10 +7830,10 @@ END;
     | {trigger_def}
       | {name trigger_will_be_deleted}
       | {trigger_condition}
-        | {int 4}
+        | {int 4} {before}
         | {trigger_op_target}
           | {trigger_operation}
-          | | {int 64}
+          | | {int 64} {delete}
           | {trigger_target_action}
             | {name foo}
             | {trigger_action}
@@ -8063,10 +8063,10 @@ END;
     | {trigger_def}
       | {name TrigChanging}
       | {trigger_condition}
-        | {int 4}
+        | {int 4} {before}
         | {trigger_op_target}
           | {trigger_operation}
-          | | {int 64}
+          | | {int 64} {delete}
           | {trigger_target_action}
             | {name foo}
             | {trigger_action}
@@ -8291,10 +8291,10 @@ END;
     | {trigger_def}
       | {name trigger_deleted_no_problemo}
       | {trigger_condition}
-        | {int 4}
+        | {int 4} {before}
         | {trigger_op_target}
           | {trigger_operation}
-          | | {int 64}
+          | | {int 64} {delete}
           | {trigger_target_action}
             | {name t_was_correctly_deleted}
             | {trigger_action}
@@ -8653,15 +8653,15 @@ BEGIN
 END;
 
   {create_trigger_stmt}: ok
-  | {int 1}
+  | {int 1} {temp}
   | {trigger_body_vers}
     | {trigger_def}
       | {name this_trigger_is_gone}
       | {trigger_condition}
-        | {int 4}
+        | {int 4} {before}
         | {trigger_op_target}
           | {trigger_operation}
-          | | {int 64}
+          | | {int 64} {delete}
           | {trigger_target_action}
             | {name foo}
             | {trigger_action}

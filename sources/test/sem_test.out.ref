@@ -32914,15 +32914,15 @@ END @DELETE(2);
 test/sem_test.sql:XXXX:1: error: in create_trigger_stmt : CQL0139: temp objects may not have versioning annotations 'bogus_temp_trigger'
 
   {create_trigger_stmt}: err
-  | {int 3}
+  | {int 3} {temp} {if_not_exists}
   | {trigger_body_vers}
     | {trigger_def}
     | | {name bogus_temp_trigger}
     | | {trigger_condition}
-    |   | {int 4}
+    |   | {int 4} {before}
     |   | {trigger_op_target}
     |     | {trigger_operation}
-    |     | | {int 64}
+    |     | | {int 64} {delete}
     |     | {trigger_target_action}
     |       | {name bar}
     |       | {trigger_action}
@@ -33316,19 +33316,19 @@ BEGIN
 END;
 
   {create_trigger_stmt}: ok
-  | {int 3}
+  | {int 3} {temp} {if_not_exists}
   | {trigger_body_vers}
     | {trigger_def}
       | {name trigger1}
       | {trigger_condition}
-        | {int 4}
+        | {int 4} {before}
         | {trigger_op_target}
           | {trigger_operation}
-          | | {int 64}
+          | | {int 64} {delete}
           | {trigger_target_action}
             | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
             | {trigger_action}
-              | {int 256}
+              | {int 256} {for_each_row}
               | {trigger_when_stmts}
                 | {eq}: bool notnull
                 | | {dot}: id: integer notnull
@@ -33368,10 +33368,10 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'new.id'
     | {trigger_def}
       | {name trigger1a}
       | {trigger_condition}
-        | {int 4}
+        | {int 4} {before}
         | {trigger_op_target}
           | {trigger_operation}
-          | | {int 64}
+          | | {int 64} {delete}
           | {trigger_target_action}
             | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
             | {trigger_action}
@@ -33404,10 +33404,10 @@ END;
     | {trigger_def}
       | {name trigger2}
       | {trigger_condition}
-        | {int 8}
+        | {int 8} {after}
         | {trigger_op_target}
           | {trigger_operation}
-          | | {int 128}
+          | | {int 128} {insert}
           | {trigger_target_action}
             | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
             | {trigger_action}
@@ -33440,10 +33440,10 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'old.id'
     | {trigger_def}
       | {name trigger2a}
       | {trigger_condition}
-        | {int 8}
+        | {int 8} {after}
         | {trigger_op_target}
           | {trigger_operation}
-          | | {int 128}
+          | | {int 128} {insert}
           | {trigger_target_action}
             | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
             | {trigger_action}
@@ -33484,10 +33484,10 @@ END;
     | {trigger_def}
       | {name trigger3}
       | {trigger_condition}
-        | {int 16}
+        | {int 16} {instead_of}
         | {trigger_op_target}
           | {trigger_operation}
-          | | {int 32}
+          | | {int 32} {update}
           | {trigger_target_action}
             | {name ViewShape}: ViewShape: { a: bool notnull, b: real notnull, c: text notnull }
             | {trigger_action}
@@ -33598,10 +33598,10 @@ END;
     | {trigger_def}
       | {name trigger3}
       | {trigger_condition}
-        | {int 16}
+        | {int 16} {instead_of}
         | {trigger_op_target}
           | {trigger_operation}
-          | | {int 32}
+          | | {int 32} {update}
           | {trigger_target_action}
             | {name ViewShape}: ViewShape: { a: bool notnull, b: real notnull, c: text notnull }
             | {trigger_action}
@@ -33728,10 +33728,10 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0136: trigger already exists 'trigg
     | {trigger_def}
       | {name trigger3}: err
       | {trigger_condition}
-        | {int 16}
+        | {int 16} {instead_of}
         | {trigger_op_target}
           | {trigger_operation}
-          | | {int 32}
+          | | {int 32} {update}
           | {trigger_target_action}
             | {name ViewShape}: ViewShape: { a: bool notnull, b: real notnull, c: text notnull }
             | {trigger_action}
@@ -33767,10 +33767,10 @@ END;
     | {trigger_def}
       | {name trigger4}
       | {trigger_condition}
-        | {int 16}
+        | {int 16} {instead_of}
         | {trigger_op_target}
           | {trigger_operation}
-          | | {int 32}
+          | | {int 32} {update}
           | | {name_list}
           |   | {name a}: a: bool notnull
           |   | {name_list}
@@ -33814,10 +33814,10 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0172: name list has duplicate name 
     | {trigger_def}
       | {name trigger4a}
       | {trigger_condition}
-        | {int 16}
+        | {int 16} {instead_of}
         | {trigger_op_target}
           | {trigger_operation}
-          | | {int 32}
+          | | {int 32} {update}
           | | {name_list}: err
           |   | {name a}: a: bool notnull
           |   | {name_list}
@@ -33861,10 +33861,10 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0138: a trigger on a view must be t
     | {trigger_def}
       | {name trigger4b}
       | {trigger_condition}
-        | {int 4}
+        | {int 4} {before}
         | {trigger_op_target}
           | {trigger_operation}
-          | | {int 32}
+          | | {int 32} {update}
           | {trigger_target_action}
             | {name ViewShape}: ViewShape: { a: bool notnull, b: real notnull, c: text notnull }
             | {trigger_action}
@@ -33902,10 +33902,10 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0137: table/view not found 'no_such
     | {trigger_def}
       | {name trigger4c}
       | {trigger_condition}
-        | {int 4}
+        | {int 4} {before}
         | {trigger_op_target}
           | {trigger_operation}
-          | | {int 32}
+          | | {int 32} {update}
           | {trigger_target_action}
             | {name no_such_table_dude}
             | {trigger_action}
@@ -33943,10 +33943,10 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'old.id'
     | {trigger_def}
       | {name trigger4d}
       | {trigger_condition}
-        | {int 4}
+        | {int 4} {before}
         | {trigger_op_target}
           | {trigger_operation}
-          | | {int 128}
+          | | {int 128} {insert}
           | {trigger_target_action}
             | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
             | {trigger_action}
@@ -33993,14 +33993,14 @@ END;
           | {trigger_def}
             | {name selecting_trigger}
             | {trigger_condition}
-              | {int 4}
+              | {int 4} {before}
               | {trigger_op_target}
                 | {trigger_operation}
-                | | {int 64}
+                | | {int 64} {delete}
                 | {trigger_target_action}
                   | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
                   | {trigger_action}
-                    | {int 256}
+                    | {int 256} {for_each_row}
                     | {trigger_when_stmts}
                       | {gt}: bool notnull
                       | | {dot}: id: integer notnull
@@ -34077,15 +34077,15 @@ BEGIN
 END;
 
   {create_trigger_stmt}: ok
-  | {int 3}
+  | {int 3} {temp} {if_not_exists}
   | {trigger_body_vers}
     | {trigger_def}
       | {name trigger5}
       | {trigger_condition}
-        | {int 4}
+        | {int 4} {before}
         | {trigger_op_target}
           | {trigger_operation}
-          | | {int 64}
+          | | {int 64} {delete}
           | {trigger_target_action}
             | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
             | {trigger_action}
@@ -34142,15 +34142,15 @@ END;
 test/sem_test.sql:XXXX:1: error: in num : CQL0093: RAISE 2nd argument must be a string
 
   {create_trigger_stmt}: err
-  | {int 3}
+  | {int 3} {temp} {if_not_exists}
   | {trigger_body_vers}
     | {trigger_def}
       | {name trigger6}
       | {trigger_condition}
-        | {int 4}
+        | {int 4} {before}
         | {trigger_op_target}
           | {trigger_operation}
-          | | {int 64}
+          | | {int 64} {delete}
           | {trigger_target_action}
             | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
             | {trigger_action}
@@ -34185,15 +34185,15 @@ END;
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 
   {create_trigger_stmt}: err
-  | {int 3}
+  | {int 3} {temp} {if_not_exists}
   | {trigger_body_vers}
     | {trigger_def}
       | {name trigger7}
       | {trigger_condition}
-        | {int 4}
+        | {int 4} {before}
         | {trigger_op_target}
           | {trigger_operation}
-          | | {int 64}
+          | | {int 64} {delete}
           | {trigger_target_action}
             | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
             | {trigger_action}
@@ -34229,15 +34229,15 @@ END @DELETE(1, MigrateProcFoo);
 test/sem_test.sql:XXXX:1: error: in create_trigger_stmt : CQL0321: migration proc not allowed on object 'trigger8'
 
   {create_trigger_stmt}: err
-  | {int 2}
+  | {int 2} {if_not_exists}
   | {trigger_body_vers}
     | {trigger_def}
     | | {name trigger8}
     | | {trigger_condition}
-    |   | {int 4}
+    |   | {int 4} {before}
     |   | {trigger_op_target}
     |     | {trigger_operation}
-    |     | | {int 64}
+    |     | | {int 64} {delete}
     |     | {trigger_target_action}
     |       | {name bar}
     |       | {trigger_action}
@@ -40091,10 +40091,10 @@ END;
     | {trigger_def}
       | {name a_trigger_in_root_region}
       | {trigger_condition}
-        | {int 4}
+        | {int 4} {before}
         | {trigger_op_target}
           | {trigger_operation}
-          | | {int 64}
+          | | {int 64} {delete}
           | {trigger_target_action}
             | {name a_table_in_root_region}: a_table_in_root_region: { id: integer }
             | {trigger_action}
@@ -42087,15 +42087,15 @@ test/sem_test.sql:XXXX:1: error: in create_trigger_stmt : CQL0396: versioning at
   | {proc_params_stmts}
     | {stmt_list}: err
       | {create_trigger_stmt}: err
-        | {int 2}
+        | {int 2} {if_not_exists}
         | {trigger_body_vers}
           | {trigger_def}
           | | {name trigger2}
           | | {trigger_condition}
-          |   | {int 8}
+          |   | {int 8} {after}
           |   | {trigger_op_target}
           |     | {trigger_operation}
-          |     | | {int 128}
+          |     | | {int 128} {insert}
           |     | {trigger_target_action}
           |       | {name bar}
           |       | {trigger_action}
@@ -42862,15 +42862,15 @@ test/sem_test.sql:XXXX:1: error: in update_stmt : CQL0282: update statement requ
   | {proc_params_stmts}
     | {stmt_list}: err
       | {create_trigger_stmt}: err
-        | {int 1}
+        | {int 1} {temp}
         | {trigger_body_vers}
           | {trigger_def}
             | {name update_without_table_name_trigger}
             | {trigger_condition}
-              | {int 4}
+              | {int 4} {before}
               | {trigger_op_target}
                 | {trigger_operation}
-                | | {int 64}
+                | | {int 64} {delete}
                 | {trigger_target_action}
                   | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
                   | {trigger_action}
@@ -48678,15 +48678,15 @@ BEGIN
 END;
 
   {create_trigger_stmt}: ok alias
-  | {int 2}
+  | {int 2} {if_not_exists}
   | {trigger_body_vers}
     | {trigger_def}
       | {name trigger2}
       | {trigger_condition}
-        | {int 8}
+        | {int 8} {after}
         | {trigger_op_target}
           | {trigger_operation}
-          | | {int 128}
+          | | {int 128} {insert}
           | {trigger_target_action}
             | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
             | {trigger_action}
@@ -57344,10 +57344,10 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0162: cannot add a trigger to a vir
     | {trigger_def}
       | {name no_triggers_on_virtual}
       | {trigger_condition}
-        | {int 4}
+        | {int 4} {before}
         | {trigger_op_target}
           | {trigger_operation}
-          | | {int 64}
+          | | {int 64} {delete}
           | {trigger_target_action}
             | {name basic_virtual}
             | {trigger_action}
@@ -62835,10 +62835,10 @@ test/sem_test.sql:XXXX:1: error: in create_trigger_stmt : CQL0397: object is an 
     | {trigger_def}
     | | {name trigger_deleted}
     | | {trigger_condition}
-    |   | {int 4}
+    |   | {int 4} {before}
     |   | {trigger_op_target}
     |     | {trigger_operation}
-    |     | | {int 64}
+    |     | | {int 64} {delete}
     |     | {trigger_target_action}
     |       | {name this_table_is_deleted}
     |       | {trigger_action}
@@ -78643,10 +78643,10 @@ test/sem_test.sql:XXXX:1: error: in create_trigger_stmt : CQL0493: backed storag
     | {trigger_def}
       | {name bogus_backed_trigger}
       | {trigger_condition}
-        | {int 4}
+        | {int 4} {before}
         | {trigger_op_target}
           | {trigger_operation}
-          | | {int 64}
+          | | {int 64} {delete}
           | {trigger_target_action}
             | {name simple_backed_table}
             | {trigger_action}
@@ -83633,10 +83633,10 @@ test/sem_test.sql:XXXX:1: error: in create_trigger_stmt : CQL0458: the indicated
     | {trigger_def}
       | {name storage_trigger}
       | {trigger_condition}
-        | {int 4}
+        | {int 4} {before}
         | {trigger_op_target}
           | {trigger_operation}
-          | | {int 64}
+          | | {int 64} {delete}
           | {trigger_target_action}
             | {name structured_storage}
             | {trigger_action}
@@ -85438,10 +85438,10 @@ END;
     | {trigger_def}
       | {name trigger_uses_a_table}
       | {trigger_condition}
-        | {int 4}
+        | {int 4} {before}
         | {trigger_op_target}
           | {trigger_operation}
-          | | {int 64}
+          | | {int 64} {delete}
           | {trigger_target_action}
             | {name unrelated}: unrelated: { id: integer }
             | {trigger_action}
@@ -85483,10 +85483,10 @@ END @DELETE(5);
     | {trigger_def}
     | | {name trigger_uses_a_table_but_deleted}
     | | {trigger_condition}
-    |   | {int 4}
+    |   | {int 4} {before}
     |   | {trigger_op_target}
     |     | {trigger_operation}
-    |     | | {int 64}
+    |     | | {int 64} {delete}
     |     | {trigger_target_action}
     |       | {name unrelated}: unrelated: { id: integer }
     |       | {trigger_action}
@@ -85712,10 +85712,10 @@ END;
     | {trigger_def}
       | {name unsub_with_views_annoying_trigger}
       | {trigger_condition}
-        | {int 4}
+        | {int 4} {before}
         | {trigger_op_target}
           | {trigger_operation}
-          | | {int 64}
+          | | {int 64} {delete}
           | {trigger_target_action}
             | {name unsub_with_views_test_table}: unsub_with_views_test_table: { id: integer }
             | {trigger_action}

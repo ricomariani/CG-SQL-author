@@ -4648,10 +4648,10 @@ END;
     | {trigger_def}
       | {name will_not_be_processed_trigger}
       | {trigger_condition}
-        | {int 8}
+        | {int 8} {after}
         | {trigger_op_target}
           | {trigger_operation}
-          | | {int 128}
+          | | {int 128} {insert}
           | {trigger_target_action}
             | {name lol_table}
             | {trigger_action}

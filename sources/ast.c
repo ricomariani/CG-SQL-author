@@ -568,7 +568,7 @@ cql_noexport bool_t print_ast_value(struct ast_node *node) {
       CSTR out = NULL;
 
       decode_info join_flags[] = {
-        { 0, "join_none" }, // stub, indices start at 1
+        { -1, "join_none" }, // stub, indices start at 1, this will force error if 0 appears
         { JOIN_INNER, "join_inner" },
         { JOIN_CROSS, "join_cross" },
         { JOIN_LEFT_OUTER, "join_left_outer" },
@@ -646,55 +646,26 @@ cql_noexport bool_t print_ast_value(struct ast_node *node) {
     }
 
     if (parent_type == k_ast_enforce_normal_stmt || parent_type == k_ast_enforce_strict_stmt) {
-      switch (value) {
-        case ENFORCE_FK_ON_UPDATE:
-          cql_output(" {fk_on_update}");
-          break;
-        case ENFORCE_FK_ON_DELETE:
-          cql_output(" {fk_on_delete}");
-          break;
-        case ENFORCE_STRICT_JOIN:
-          cql_output(" {strict_join}");
-          break;
-        case ENFORCE_UPSERT_STMT:
-          cql_output(" {upsert_stmt}");
-          break;
-        case ENFORCE_WINDOW_FUNC:
-          cql_output(" {window_func}");
-          break;
-        case ENFORCE_CAST:
-          cql_output(" {enforce_cast}");
-          break;
-        case ENFORCE_WITHOUT_ROWID:
-          cql_output(" {without_rowid}");
-          break;
-        case ENFORCE_TRANSACTION:
-          cql_output(" {enforce_transaction}");
-          break;
-        case ENFORCE_SELECT_IF_NOTHING:
-          cql_output(" {select_if_nothing}");
-          break;
-        case ENFORCE_INSERT_SELECT:
-          cql_output(" {insert_select}");
-          break;
-        case ENFORCE_TABLE_FUNCTION:
-          cql_output(" {table_function}");
-          break;
-        case ENFORCE_SIGN_FUNCTION:
-          cql_output(" {sign_function}");
-          break;
-        case ENFORCE_IS_TRUE:
-          cql_output(" {is_true}");
-          break;
-        case ENFORCE_CURSOR_HAS_ROW:
-          cql_output(" {cursor_has_row}");
-          break;
-        case ENFORCE_UPDATE_FROM:
-          cql_output(" {update_from}");
-          break;
-        case ENFORCE_AND_OR_NOT_NULL_CHECK:
-          cql_output(" {and_or_not_null_check}"); break;
-      }
+      decode_info enforce_flags[] = {
+        { -1, "enforce_none" }, // stub, indices start at 1, this will force error if zero appears
+        { ENFORCE_FK_ON_UPDATE, "fk_on_update" },
+        { ENFORCE_FK_ON_DELETE, "fk_on_delete" },
+        { ENFORCE_STRICT_JOIN, "strict_join" },
+        { ENFORCE_UPSERT_STMT, "upsert_stmt" },
+        { ENFORCE_WINDOW_FUNC, "window_func" },
+        { ENFORCE_CAST, "enforce_cast" },
+        { ENFORCE_WITHOUT_ROWID, "without_rowid" },
+        { ENFORCE_TRANSACTION, "enforce_transaction" },
+        { ENFORCE_SELECT_IF_NOTHING, "select_if_nothing" },
+        { ENFORCE_INSERT_SELECT, "insert_select" },
+        { ENFORCE_TABLE_FUNCTION, "table_function" },
+        { ENFORCE_SIGN_FUNCTION, "sign_function" },
+        { ENFORCE_IS_TRUE, "is_true" },
+        { ENFORCE_CURSOR_HAS_ROW, "cursor_has_row" },
+        { ENFORCE_UPDATE_FROM, "update_from" },
+        { ENFORCE_AND_OR_NOT_NULL_CHECK, "and_or_not_null_check" },
+      };
+      print_value(value, enforce_flags, sizeof(enforce_flags) / sizeof(enforce_flags[0]));
     }
 
     if (parent_type == k_ast_indexed_columns_conflict_clause ||

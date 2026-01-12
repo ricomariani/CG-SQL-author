@@ -459,6 +459,32 @@ cql_noexport ast_node *new_ast_qstr_quoted(CSTR value) {
   return result;
 }
 
+typedef struct decode_info {
+    int32_t flag;
+    const char *name;
+} decode_info;
+
+static void print_flags(int32_t value, const decode_info *flags, size_t count) {
+  if (value == 0) {
+    cql_output(" {no_flags}");
+    return;
+  }
+
+  for (size_t i = 0; i < count; i++) {
+    if (value & flags[i].flag) {
+      cql_output(" {%s}", flags[i].name);
+    }
+  }
+}
+
+static void print_value(int32_t value, const decode_info *flags, size_t count) {
+  Contract(value >= 0);
+  Contract(value < count);
+  Contract(value == flags[value].flag);
+  cql_output(" {%s}", flags[value].name);
+}
+
+
 // for indenting, it just holds spaces.
 static char padbuffer[4096];
 
@@ -540,166 +566,133 @@ cql_noexport bool_t print_ast_value(struct ast_node *node) {
     // join types have their own special names, emit those
     if (parent_type == k_ast_join_target) {
       CSTR out = NULL;
-      switch (value) {
-        case JOIN_INNER:       out = "{join_inner}";       break;
-        case JOIN_CROSS:       out = "{join_cross}";       break;
-        case JOIN_LEFT_OUTER:  out = "{join_left_outer}";  break;
-        case JOIN_RIGHT_OUTER: out = "{join_right_outer}"; break;
-        case JOIN_LEFT:        out = "{join_left}";        break;
-        case JOIN_RIGHT:       out = "{join_right}";       break;
-      }
-      Contract(out); // if this fails there is a bogus join type in the AST
-      cql_output(" %s", out);
+
+      decode_info join_flags[] = {
+        { 0, "join_none" }, // stub, indices start at 1
+        { JOIN_INNER, "join_inner" },
+        { JOIN_CROSS, "join_cross" },
+        { JOIN_LEFT_OUTER, "join_left_outer" },
+        { JOIN_RIGHT_OUTER, "join_right_outer" },
+        { JOIN_LEFT, "join_left" },
+        { JOIN_RIGHT, "join_right" },
+      };
+
+      print_value(value, &join_flags[0], sizeof(join_flags) / sizeof(join_flags[0]));
     }
 
     // standard view and table flags
     if (parent_type == k_ast_create_view_stmt ||
         parent_type == k_ast_table_flags_attrs) {
-      if (value == 0) {
-        cql_output(" {no_flags}");
-      }
-      if (value & GENERIC_IF_NOT_EXISTS) {
-        cql_output(" {if_not_exists}");
-      }
-      if (value & GENERIC_IS_TEMP) {
-        cql_output(" {temp}");
-      }
-      if (value & TABLE_IS_NO_ROWID) {
-        cql_output(" {without_rowid}");
-      }
-      if (value & VTAB_IS_EPONYMOUS) {
-        cql_output(" {eponymous}");
-      }
+
+      decode_info table_flags[] = {
+          { GENERIC_IF_NOT_EXISTS, "if_not_exists" },
+          { GENERIC_IS_TEMP, "temp" },
+          { TABLE_IS_NO_ROWID, "without_rowid" },
+          { VTAB_IS_EPONYMOUS, "eponymous" },
+      };
+
+      print_flags(value, &table_flags[0], sizeof(table_flags) / sizeof(table_flags[0]));
     }
 
     // standard flag bits for frame clauses in window functions
     if (parent_type == k_ast_frame_boundary_start ||
       parent_type == k_ast_frame_boundary_end ||
       parent_type == k_ast_opt_frame_spec) {
-      if (value & FRAME_TYPE_RANGE)
-        cql_output(" {frame_type_range}");
-      if (value & FRAME_TYPE_ROWS)
-        cql_output(" {frame_type_rows}");
-      if (value & FRAME_TYPE_GROUPS)
-        cql_output(" {frame_type_groups}");
-      if (value & FRAME_BOUNDARY_UNBOUNDED)
-        cql_output(" {frame_boundary_unbounded}");
-      if (value & FRAME_BOUNDARY_PRECEDING)
-        cql_output(" {frame_boundary_preceding}");
-      if (value & FRAME_BOUNDARY_CURRENT_ROW)
-        cql_output(" {frame_boundary_current_row}");
-      if (value & FRAME_BOUNDARY_START_UNBOUNDED)
-        cql_output(" {frame_boundary_start_unbounded}");
-      if (value & FRAME_BOUNDARY_START_PRECEDING)
-        cql_output(" {frame_boundary_start_preceding}");
-      if (value & FRAME_BOUNDARY_START_CURRENT_ROW)
-        cql_output(" {frame_boundary_start_current_row}");
-      if (value & FRAME_BOUNDARY_START_FOLLOWING)
-        cql_output(" {frame_boundary_start_following}");
-      if (value & FRAME_BOUNDARY_END_PRECEDING)
-        cql_output(" {frame_boundary_end_preceding}");
-      if (value & FRAME_BOUNDARY_END_CURRENT_ROW)
-        cql_output(" {frame_boundary_end_current_row}");
-      if (value & FRAME_BOUNDARY_END_FOLLOWING)
-        cql_output(" {frame_boundary_end_following}");
-      if (value & FRAME_BOUNDARY_END_UNBOUNDED)
-        cql_output(" {frame_boundary_end_unbounded}");
-      if (value & FRAME_EXCLUDE_NO_OTHERS)
-        cql_output(" {frame_exclude_no_others}");
-      if (value & FRAME_EXCLUDE_CURRENT_ROW)
-        cql_output(" {frame_exclude_current_row}");
-      if (value & FRAME_EXCLUDE_GROUP)
-        cql_output(" {frame_exclude_group}");
-      if (value & FRAME_EXCLUDE_TIES)
-        cql_output(" {frame_exclude_ties}");
-      if (value & FRAME_EXCLUDE_NONE)
-        cql_output(" {frame_exclude_none}");
+
+      decode_info frame_flags[] = {
+        { FRAME_TYPE_RANGE, "frame_type_range" },
+        { FRAME_TYPE_ROWS, "frame_type_rows" },
+        { FRAME_TYPE_GROUPS, "frame_type_groups" },
+        { FRAME_BOUNDARY_UNBOUNDED, "frame_boundary_unbounded" },
+        { FRAME_BOUNDARY_PRECEDING, "frame_boundary_preceding" },
+        { FRAME_BOUNDARY_CURRENT_ROW, "frame_boundary_current_row" },
+        { FRAME_BOUNDARY_START_UNBOUNDED, "frame_boundary_start_unbounded" },
+        { FRAME_BOUNDARY_START_PRECEDING, "frame_boundary_start_preceding" },
+        { FRAME_BOUNDARY_START_CURRENT_ROW, "frame_boundary_start_current_row" },
+        { FRAME_BOUNDARY_START_FOLLOWING, "frame_boundary_start_following" },
+        { FRAME_BOUNDARY_END_PRECEDING, "frame_boundary_end_preceding" },
+        { FRAME_BOUNDARY_END_CURRENT_ROW, "frame_boundary_end_current_row" },
+        { FRAME_BOUNDARY_END_FOLLOWING, "frame_boundary_end_following" },
+        { FRAME_BOUNDARY_END_UNBOUNDED, "frame_boundary_end_unbounded" },
+        { FRAME_EXCLUDE_NO_OTHERS, "frame_exclude_no_others" },
+        { FRAME_EXCLUDE_CURRENT_ROW, "frame_exclude_current_row" },
+        { FRAME_EXCLUDE_GROUP, "frame_exclude_group" },
+        { FRAME_EXCLUDE_TIES, "frame_exclude_ties" },
+        { FRAME_EXCLUDE_NONE, "frame_exclude_none" },
+      };
+
+      print_flags(value, frame_flags, sizeof(frame_flags) / sizeof(frame_flags[0]));
     }
 
     if (parent_type == k_ast_trigger_operation ||
         parent_type == k_ast_trigger_condition ||
         parent_type == k_ast_trigger_action ||
         parent_type == k_ast_create_trigger_stmt) {
-      if (value == 0) {
-        cql_output(" {no_flags}");
-      }
-      if (value & TRIGGER_IS_TEMP) {
-        cql_output(" {temp}");
-      }
-      if (value & TRIGGER_IF_NOT_EXISTS) {
-        cql_output(" {if_not_exists}");
-      }
-      if (value & TRIGGER_BEFORE) {
-        cql_output(" {before}");
-      }
-      if (value & TRIGGER_AFTER) {
-        cql_output(" {after}");
-      }
-      if (value & TRIGGER_INSTEAD_OF) {
-        cql_output(" {instead_of}");
-      }
-      if (value & TRIGGER_UPDATE) {
-        cql_output(" {update}");
-      }
-      if (value & TRIGGER_DELETE) {
-        cql_output(" {delete}");
-      }
-      if (value & TRIGGER_INSERT) {
-        cql_output(" {insert}");
-      }
-      if (value & TRIGGER_FOR_EACH_ROW) {
-        cql_output(" {for_each_row}");
-      }
+
+      decode_info trigger_flags[] = {
+        { TRIGGER_IS_TEMP, "temp" },
+        { TRIGGER_IF_NOT_EXISTS, "if_not_exists" },
+        { TRIGGER_BEFORE, "before" },
+        { TRIGGER_AFTER, "after" },
+        { TRIGGER_INSTEAD_OF, "instead_of" },
+        { TRIGGER_UPDATE, "update" },
+        { TRIGGER_DELETE, "delete" },
+        { TRIGGER_INSERT, "insert" },
+        { TRIGGER_FOR_EACH_ROW, "for_each_row" },
+      };
+
+      print_flags(value, trigger_flags, sizeof(trigger_flags) / sizeof(trigger_flags[0]));
+
     }
 
     if (parent_type == k_ast_enforce_normal_stmt || parent_type == k_ast_enforce_strict_stmt) {
       switch (value) {
-        case ENFORCE_FK_ON_UPDATE:      
+        case ENFORCE_FK_ON_UPDATE:
           cql_output(" {fk_on_update}");
           break;
-        case ENFORCE_FK_ON_DELETE:      
+        case ENFORCE_FK_ON_DELETE:
           cql_output(" {fk_on_delete}");
           break;
-        case ENFORCE_STRICT_JOIN:        
+        case ENFORCE_STRICT_JOIN:
           cql_output(" {strict_join}");
           break;
-        case ENFORCE_UPSERT_STMT:       
+        case ENFORCE_UPSERT_STMT:
           cql_output(" {upsert_stmt}");
           break;
-        case ENFORCE_WINDOW_FUNC:       
+        case ENFORCE_WINDOW_FUNC:
           cql_output(" {window_func}");
           break;
-        case ENFORCE_CAST:              
+        case ENFORCE_CAST:
           cql_output(" {enforce_cast}");
           break;
-        case ENFORCE_WITHOUT_ROWID:     
+        case ENFORCE_WITHOUT_ROWID:
           cql_output(" {without_rowid}");
           break;
-        case ENFORCE_TRANSACTION:       
+        case ENFORCE_TRANSACTION:
           cql_output(" {enforce_transaction}");
           break;
-        case ENFORCE_SELECT_IF_NOTHING: 
+        case ENFORCE_SELECT_IF_NOTHING:
           cql_output(" {select_if_nothing}");
           break;
-        case ENFORCE_INSERT_SELECT:     
+        case ENFORCE_INSERT_SELECT:
           cql_output(" {insert_select}");
           break;
-        case ENFORCE_TABLE_FUNCTION:    
+        case ENFORCE_TABLE_FUNCTION:
           cql_output(" {table_function}");
           break;
-        case ENFORCE_SIGN_FUNCTION:     
+        case ENFORCE_SIGN_FUNCTION:
           cql_output(" {sign_function}");
           break;
-        case ENFORCE_IS_TRUE:           
+        case ENFORCE_IS_TRUE:
           cql_output(" {is_true}");
           break;
-        case ENFORCE_CURSOR_HAS_ROW:    
+        case ENFORCE_CURSOR_HAS_ROW:
           cql_output(" {cursor_has_row}");
           break;
-        case ENFORCE_UPDATE_FROM:       
+        case ENFORCE_UPDATE_FROM:
           cql_output(" {update_from}");
           break;
-        case ENFORCE_AND_OR_NOT_NULL_CHECK: 
+        case ENFORCE_AND_OR_NOT_NULL_CHECK:
           cql_output(" {and_or_not_null_check}"); break;
       }
     }
@@ -777,10 +770,10 @@ cql_noexport bool_t print_ast_value(struct ast_node *node) {
         case COMPOUND_OP_EXCEPT:
           cql_output(" {except}");
           break;
-      }     
+      }
     }
 
-    if (parent_type == k_ast_version_annotation || 
+    if (parent_type == k_ast_version_annotation ||
         parent_type == k_ast_delete_attr ||
         parent_type == k_ast_create_attr) {
       cql_output(" {version}");

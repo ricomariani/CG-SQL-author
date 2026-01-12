@@ -722,22 +722,22 @@ opt_delete_version_attr:
   ;
 
 drop_table_stmt:
-  DROP TABLE IF EXISTS sql_name  { $$ = new_ast_drop_table_stmt(new_ast_option(1), $sql_name);  }
+  DROP TABLE IF EXISTS sql_name  { $$ = new_ast_drop_table_stmt(new_ast_option(GENERIC_IF_EXISTS), $sql_name);  }
   | DROP TABLE sql_name  { $$ = new_ast_drop_table_stmt(NULL, $sql_name);  }
   ;
 
 drop_view_stmt:
-  DROP VIEW IF EXISTS sql_name  { $$ = new_ast_drop_view_stmt(new_ast_option(1), $sql_name);  }
+  DROP VIEW IF EXISTS sql_name  { $$ = new_ast_drop_view_stmt(new_ast_option(GENERIC_IF_EXISTS), $sql_name);  }
   | DROP VIEW sql_name  { $$ = new_ast_drop_view_stmt(NULL, $sql_name);  }
   ;
 
 drop_index_stmt:
-  DROP INDEX IF EXISTS sql_name  { $$ = new_ast_drop_index_stmt(new_ast_option(1), $sql_name);  }
+  DROP INDEX IF EXISTS sql_name  { $$ = new_ast_drop_index_stmt(new_ast_option(GENERIC_IF_EXISTS), $sql_name);  }
   | DROP INDEX sql_name  { $$ = new_ast_drop_index_stmt(NULL, $sql_name);  }
   ;
 
 drop_trigger_stmt:
-  DROP TRIGGER IF EXISTS sql_name  { $$ = new_ast_drop_trigger_stmt(new_ast_option(1), $sql_name);  }
+  DROP TRIGGER IF EXISTS sql_name  { $$ = new_ast_drop_trigger_stmt(new_ast_option(GENERIC_IF_EXISTS), $sql_name);  }
   | DROP TRIGGER sql_name  { $$ = new_ast_drop_trigger_stmt(NULL, $sql_name);  }
   ;
 
@@ -1000,8 +1000,8 @@ create_index_stmt:
     ast_node *create_index_on_list = new_ast_create_index_on_list($tbl_name, $idx_name);
     ast_node *index_names_and_attrs = new_ast_index_names_and_attrs($indexed_columns, $opt_where);
     ast_node *connector = new_ast_connector(index_names_and_attrs, $opt_delete_version_attr);
-    ast_node *flags_names_attrs = new_ast_flags_names_attrs(new_ast_option(flags), connector);
-    $$ = new_ast_create_index_stmt(create_index_on_list, flags_names_attrs);
+    ast_node *index_flags_names_attrs = new_ast_index_flags_names_attrs(new_ast_option(flags), connector);
+    $$ = new_ast_create_index_stmt(create_index_on_list, index_flags_names_attrs);
   }
   ;
 
@@ -2316,11 +2316,11 @@ switch_stmt:
   SWITCH expr switch_case switch_cases {
     ast_node *cases = new_ast_switch_case($switch_case, $switch_cases);
     ast_node *switch_body = new_ast_switch_body($expr, cases);
-    $$ = new_ast_switch_stmt(new_ast_option(0), switch_body);  }
+    $$ = new_ast_switch_stmt(new_ast_option(SWITCH_NORMAL), switch_body);  }
   | SWITCH expr ALL VALUES switch_case switch_cases {
     ast_node *cases = new_ast_switch_case($switch_case, $switch_cases);
     ast_node *switch_body = new_ast_switch_body($expr, cases);
-    $$ = new_ast_switch_stmt(new_ast_option(1), switch_body);  }
+    $$ = new_ast_switch_stmt(new_ast_option(SWITCH_ALL_VALUES), switch_body);  }
   ;
 
 switch_case:

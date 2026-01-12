@@ -4301,7 +4301,7 @@ CREATE TABLE foo(
   {create_table_stmt}: foo: { id: integer notnull, id2: integer, name: text, name_2: text } validated
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name foo}
   | {col_key_list}
     | {col_def}: id: integer notnull
@@ -4318,7 +4318,7 @@ CREATE TABLE foo(
       |   | | {type_long}: longint
       |   | {delete_attr}: ok
       |     | {version_annotation}
-      |       | {int 5}
+      |       | {int 5} {version}
       |       | {name deletor}
       | {col_key_list}
         | {col_def}: rate_2: longint deleted @delete(4)
@@ -4328,7 +4328,7 @@ CREATE TABLE foo(
         |   | | {type_long}: longint
         |   | {delete_attr}: ok
         |     | {version_annotation}
-        |       | {int 4}
+        |       | {int 4} {version}
         | {col_key_list}
           | {col_def}: id2: integer @create(4)
           | | {col_def_type_attrs}: ok
@@ -4337,7 +4337,7 @@ CREATE TABLE foo(
           |   | | {type_int}: integer
           |   | {create_attr}: ok
           |     | {version_annotation}
-          |       | {int 4}
+          |       | {int 4} {version}
           | {col_key_list}
             | {col_def}: name: text @create(5)
             | | {col_def_type_attrs}: ok
@@ -4346,7 +4346,7 @@ CREATE TABLE foo(
             |   | | {type_text}: text
             |   | {create_attr}: ok
             |     | {version_annotation}
-            |       | {int 5}
+            |       | {int 5} {version}
             | {col_key_list}
               | {col_def}: name_2: text @create(6)
                 | {col_def_type_attrs}: ok
@@ -4355,7 +4355,7 @@ CREATE TABLE foo(
                   | | {type_text}: text
                   | {create_attr}: ok
                     | {version_annotation}
-                      | {int 6}
+                      | {int 6} {version}
 
 The statement ending at line XXXX
 
@@ -4367,7 +4367,7 @@ CREATE TABLE column_deleted_in_this_table(
   {create_table_stmt}: column_deleted_in_this_table: { id: integer } validated
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name column_deleted_in_this_table}
   | {col_key_list}
     | {col_def}: id: integer
@@ -4383,7 +4383,7 @@ CREATE TABLE column_deleted_in_this_table(
           | | {type_text}: text
           | {delete_attr}: ok
             | {version_annotation}
-              | {int 6}
+              | {int 6} {version}
 
 The statement ending at line XXXX
 
@@ -4395,7 +4395,7 @@ CREATE TABLE column_undeleted_in_this_table(
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name column_undeleted_in_this_table}
   | {col_key_list}
     | {col_def}: id: integer
@@ -4420,7 +4420,7 @@ CREATE TABLE become_sensitive(
   {create_table_stmt}: become_sensitive: { id2: integer sensitive, name: text sensitive } validated
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name become_sensitive}
   | {col_key_list}
     | {col_def}: id2: integer sensitive
@@ -4446,10 +4446,10 @@ CREATE TABLE t_create_verison_changed(
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {create_attr}
   | |   | {version_annotation}
-  | |     | {int 1}
+  | |     | {int 1} {version}
   | | {name t_create_verison_changed}
   | {col_key_list}
     | {col_def}: id: integer
@@ -4467,10 +4467,10 @@ CREATE TABLE t_delete_verison_changed(
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {delete_attr}
   | |   | {version_annotation}
-  | |     | {int 1}
+  | |     | {int 1} {version}
   | | {name t_delete_verison_changed}
   | {col_key_list}
     | {col_def}: id: integer
@@ -4485,7 +4485,7 @@ CREATE VIEW t_became_a_view AS
   SELECT 1 AS id;
 
   {create_view_stmt}: err
-  | {int 0}
+  | {int 0} {no_flags}
   | {view_and_attrs}
     | {view_details_select}
       | {view_details}
@@ -4516,10 +4516,10 @@ CREATE TABLE t_created_in_wrong_version(
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {create_attr}
   | |   | {version_annotation}
-  | |     | {int 1}
+  | |     | {int 1} {version}
   | | {name t_created_in_wrong_version}
   | {col_key_list}
     | {col_def}: id: integer
@@ -4537,10 +4537,10 @@ CREATE TABLE t_was_correctly_deleted(
   {create_table_stmt}: t_was_correctly_deleted: { id: integer } deleted validated @delete(1)
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {delete_attr}
   | |   | {version_annotation}
-  | |     | {int 1}
+  | |     | {int 1} {version}
   | | {name t_was_correctly_deleted}
   | {col_key_list}
     | {col_def}: id: integer
@@ -4558,7 +4558,7 @@ CREATE TABLE t_column_name_changed(
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_column_name_changed}
   | {col_key_list}
     | {col_def}: id_: integer
@@ -4576,7 +4576,7 @@ CREATE TABLE t_column_type_changed(
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_column_type_changed}
   | {col_key_list}
     | {col_def}: id: real
@@ -4594,7 +4594,7 @@ CREATE TABLE t_column_attribute_changed(
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_column_attribute_changed}
   | {col_key_list}
     | {col_def}: id: integer notnull
@@ -4614,7 +4614,7 @@ CREATE TABLE t_column_delete_version_changed(
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_column_delete_version_changed}
   | {col_key_list}
     | {col_def}: id: integer
@@ -4630,7 +4630,7 @@ CREATE TABLE t_column_delete_version_changed(
           | | {type_int}: integer
           | {delete_attr}: ok
             | {version_annotation}
-              | {int 1}
+              | {int 1} {version}
 
 The statement ending at line XXXX
 
@@ -4642,7 +4642,7 @@ CREATE TABLE t_column_create_version_changed(
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_column_create_version_changed}
   | {col_key_list}
     | {col_def}: id: integer
@@ -4658,7 +4658,7 @@ CREATE TABLE t_column_create_version_changed(
           | | {type_int}: integer
           | {create_attr}: ok
             | {version_annotation}
-              | {int 1}
+              | {int 1} {version}
 
 The statement ending at line XXXX
 
@@ -4670,7 +4670,7 @@ CREATE TABLE t_column_default_value_changed(
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_column_default_value_changed}
   | {col_key_list}
     | {col_def}: id: integer
@@ -4698,7 +4698,7 @@ CREATE TABLE t_column_default_value_ok(
   {create_table_stmt}: t_column_default_value_ok: { id: integer, id2: integer notnull has_default } validated
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_column_default_value_ok}
   | {col_key_list}
     | {col_def}: id: integer
@@ -4727,7 +4727,7 @@ CREATE TABLE t_additional_attribute_present(
   {create_table_stmt}: t_additional_attribute_present: { a: integer notnull partial_pk, b: integer notnull partial_pk } validated
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_additional_attribute_present}
   | {col_key_list}
     | {col_def}: a: integer notnull
@@ -4763,7 +4763,7 @@ CREATE TABLE t_additional_attribute_mismatch(
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_additional_attribute_mismatch}
   | {col_key_list}
     | {col_def}: a: integer notnull
@@ -4795,7 +4795,7 @@ CREATE TABLE t_columns_removed(
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_columns_removed}
   | {col_key_list}
     | {col_def}: id: integer
@@ -4814,7 +4814,7 @@ CREATE TABLE t_attribute_added(
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_attribute_added}
   | {col_key_list}
     | {col_def}: a: integer notnull
@@ -4840,7 +4840,7 @@ CREATE TABLE t_additional_column(
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_additional_column}
   | {col_key_list}
     | {col_def}: a: integer notnull
@@ -4867,7 +4867,7 @@ CREATE TABLE t_additional_column_ok(
   {create_table_stmt}: t_additional_column_ok: { a: integer notnull, b: integer, c: integer } validated
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_additional_column_ok}
   | {col_key_list}
     | {col_def}: a: integer notnull
@@ -4884,7 +4884,7 @@ CREATE TABLE t_additional_column_ok(
       |   | | {type_int}: integer
       |   | {create_attr}: ok
       |     | {version_annotation}
-      |       | {int 2}
+      |       | {int 2} {version}
       | {col_key_list}
         | {col_def}: err
           | {col_def_type_attrs}: ok
@@ -4893,7 +4893,7 @@ CREATE TABLE t_additional_column_ok(
             | | {type_int}: integer
             | {create_attr}: ok
               | {version_annotation}
-                | {int 6}
+                | {int 6} {version}
 
 The statement ending at line XXXX
 
@@ -4931,10 +4931,10 @@ CREATE TABLE t_new_table_ok(
   {create_table_stmt}: t_new_table_ok: { a: integer notnull, b: integer } @create(26)
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {create_attr}
   | |   | {version_annotation}
-  | |     | {int 26}
+  | |     | {int 26} {version}
   | | {name t_new_table_ok}
   | {col_key_list}
     | {col_def}: a: integer notnull
@@ -4962,7 +4962,7 @@ test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0309: new table 
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_new_table_no_annotation}
   | {col_key_list}
     | {col_def}: a: integer notnull
@@ -4990,10 +4990,10 @@ test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0309: new table 
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {create_attr}
   | |   | {version_annotation}
-  | |     | {int 2}
+  | |     | {int 2} {version}
   | | {name t_new_table_stale_annotation}
   | {col_key_list}
     | {col_def}: a: integer notnull
@@ -5019,7 +5019,7 @@ CREATE TABLE t_new_table_create_and_delete(
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_new_table_create_and_delete}
   | {col_key_list}
     | {col_def}: a: integer notnull
@@ -5036,10 +5036,10 @@ CREATE TABLE t_new_table_create_and_delete(
           | | {type_int}: integer
           | {create_attr}: ok
             | {version_annotation}
-            | | {int 6}
+            | | {int 6} {version}
             | {delete_attr}
               | {version_annotation}
-                | {int 7}
+                | {int 7} {version}
 
 The statement ending at line XXXX
 
@@ -5051,7 +5051,7 @@ CREATE TABLE t_new_legit_column(
   {create_table_stmt}: t_new_legit_column: { a: integer notnull, b: integer } validated
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_new_legit_column}
   | {col_key_list}
     | {col_def}: a: integer notnull
@@ -5068,7 +5068,7 @@ CREATE TABLE t_new_legit_column(
           | | {type_int}: integer
           | {create_attr}: ok
             | {version_annotation}
-              | {int 6}
+              | {int 6} {version}
 
 The statement ending at line XXXX
 
@@ -5079,10 +5079,10 @@ CREATE TABLE with_create_migrator(
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {create_attr}
   | |   | {version_annotation}
-  | |     | {int 1}
+  | |     | {int 1} {version}
   | |     | {name ACreateMigrator}
   | | {name with_create_migrator}
   | {col_key_list}
@@ -5101,10 +5101,10 @@ CREATE TABLE with_delete_migrator(
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {delete_attr}
   | |   | {version_annotation}
-  | |     | {int 1}
+  | |     | {int 1} {version}
   | |     | {name ADeleteMigrator}
   | | {name with_delete_migrator}
   | {col_key_list}
@@ -5123,7 +5123,7 @@ CREATE TABLE view_becomes_a_table(
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name view_becomes_a_table}
   | {col_key_list}
     | {col_def}: id: integer
@@ -5138,7 +5138,7 @@ CREATE VIEW view_was_temp_but_now_it_is_not AS
   SELECT 1 AS X;
 
   {create_view_stmt}: view_was_temp_but_now_it_is_not: { X: integer notnull }
-  | {int 0}
+  | {int 0} {no_flags}
   | {view_and_attrs}
     | {view_details_select}
       | {view_details}
@@ -5166,7 +5166,7 @@ CREATE VIEW view_created_with_no_annotation AS
   SELECT 1 AS X;
 
   {create_view_stmt}: view_created_with_no_annotation: { X: integer notnull }
-  | {int 0}
+  | {int 0} {no_flags}
   | {view_and_attrs}
     | {view_details_select}
       | {view_details}
@@ -5196,8 +5196,8 @@ CREATE INDEX this_index_was_created_with_no_annotation ON foo (id);
   | {create_index_on_list}
   | | {name this_index_was_created_with_no_annotation}
   | | {name foo}
-  | {flags_names_attrs}
-    | {int 0}
+  | {index_flags_names_attrs}
+    | {int 0} {no_flags}
     | {connector}
       | {index_names_and_attrs}
         | {indexed_columns}
@@ -5214,7 +5214,7 @@ CREATE TABLE create_column_migrate_test(
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name create_column_migrate_test}
   | {col_key_list}
     | {col_def}: id: integer unique_key
@@ -5231,7 +5231,7 @@ CREATE TABLE create_column_migrate_test(
           | | {type_int}: integer
           | {create_attr}: ok
             | {version_annotation}
-              | {int 2}
+              | {int 2} {version}
               | {name ChangedColumnCreateMigrator}
 
 The statement ending at line XXXX
@@ -5244,7 +5244,7 @@ CREATE TABLE delete_column_migrate_test(
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name delete_column_migrate_test}
   | {col_key_list}
     | {col_def}: id: integer
@@ -5260,7 +5260,7 @@ CREATE TABLE delete_column_migrate_test(
           | | {type_int}: integer
           | {delete_attr}: ok
             | {version_annotation}
-              | {int 2}
+              | {int 2} {version}
               | {name ChangedColumnDeleteMigrator}
 
 The statement ending at line XXXX
@@ -5273,7 +5273,7 @@ CREATE TABLE fk_facet(
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name fk_facet}
   | {col_key_list}
     | {col_def}: id: integer
@@ -5302,7 +5302,7 @@ CREATE TABLE cannot_change_to_recreate(
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {recreate_attr}
   | | {name cannot_change_to_recreate}
   | {col_key_list}
@@ -5321,7 +5321,7 @@ CREATE TABLE ok_to_delete_recreate_table(
   {create_table_stmt}: ok_to_delete_recreate_table: { id: integer } deleted validated @delete(1) @recreate
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {recreate_attr}
   | |   | {delete_attr}
   | | {name ok_to_delete_recreate_table}
@@ -5341,10 +5341,10 @@ CREATE TABLE ok_to_create_recreate_table(
   {create_table_stmt}: ok_to_create_recreate_table: { id: integer } validated @create(26)
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {create_attr}
   | |   | {version_annotation}
-  | |     | {int 26}
+  | |     | {int 26} {version}
   | |     | {dot}: ok
   | |       | {name cql}
   | |       | {name from_recreate}
@@ -5365,10 +5365,10 @@ CREATE TABLE not_ok_to_create_recreate_table(
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {create_attr}
   | |   | {version_annotation}
-  | |     | {int 6}
+  | |     | {int 6} {version}
   | | {name not_ok_to_create_recreate_table}
   | {col_key_list}
     | {col_def}: id: integer
@@ -5386,7 +5386,7 @@ CREATE TABLE recreate_deleted_in_the_past(
   {create_table_stmt}: recreate_deleted_in_the_past: { id: integer } deleted validated @delete(1) @recreate
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {recreate_attr}
   | |   | {delete_attr}
   | | {name recreate_deleted_in_the_past}
@@ -5408,10 +5408,10 @@ test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0399: table must
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {create_attr}
   | |   | {version_annotation}
-  | |     | {int 2}
+  | |     | {int 2} {version}
   | |     | {dot}: ok
   | |       | {name cql}
   | |       | {name from_recreate}
@@ -5434,7 +5434,7 @@ CREATE TABLE recreate_feel_the_power(
   {create_table_stmt}: recreate_feel_the_power: { id: integer, payload: real, whatever: text } validated @recreate
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {recreate_attr}
   | | {name recreate_feel_the_power}
   | {col_key_list}
@@ -5465,7 +5465,7 @@ CREATE TABLE direct_to_recreate(
   {create_table_stmt}: direct_to_recreate: { id: integer } @recreate
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {recreate_attr}
   | | {name direct_to_recreate}
   | {col_key_list}
@@ -5484,7 +5484,7 @@ BEGIN
 END;
 
   {create_trigger_stmt}: ok
-  | {int 0}
+  | {int 0} {no_flags}
   | {trigger_body_vers}
     | {trigger_def}
       | {name trigger_added_no_problemo}
@@ -5496,7 +5496,7 @@ END;
           | {trigger_target_action}
             | {name foo}: foo: { id: integer notnull, id2: integer, name: text, name_2: text }
             | {trigger_action}
-              | {int 0}
+              | {int 0} {no_flags}
               | {trigger_when_stmts}
                 | {stmt_list}: ok
                   | {select_stmt}: _select_: { id: integer notnull }
@@ -5525,7 +5525,7 @@ BEGIN
 END @DELETE(2);
 
   {create_trigger_stmt}: ok deleted @delete(2)
-  | {int 0}
+  | {int 0} {no_flags}
   | {trigger_body_vers}
     | {trigger_def}
     | | {name trigger_will_be_deleted}
@@ -5537,7 +5537,7 @@ END @DELETE(2);
     |     | {trigger_target_action}
     |       | {name foo}: foo: { id: integer notnull, id2: integer, name: text, name_2: text }
     |       | {trigger_action}
-    |         | {int 0}
+    |         | {int 0} {no_flags}
     |         | {trigger_when_stmts}
     |           | {stmt_list}: ok
     |             | {select_stmt}: _select_: { id: integer notnull }
@@ -5558,7 +5558,7 @@ END @DELETE(2);
     |                   | {select_offset}
     | {delete_attr}
       | {version_annotation}
-        | {int 2}
+        | {int 2} {version}
 
 The statement ending at line XXXX
 
@@ -5569,7 +5569,7 @@ CREATE TABLE t_removed_facet(
   {create_table_stmt}: t_removed_facet: { id: integer notnull } validated
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_removed_facet}
   | {col_key_list}
     | {col_def}: id: integer notnull
@@ -5588,7 +5588,7 @@ CREATE TABLE t_subtle_column_change(
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_subtle_column_change}
   | {col_key_list}
     | {col_def}: id: integer foreign_key
@@ -5616,7 +5616,7 @@ CREATE TABLE t_several_columns_added_interleaved(
   {create_table_stmt}: t_several_columns_added_interleaved: { col1: integer notnull partial_pk, col2: integer, col3: integer } validated
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_several_columns_added_interleaved}
   | {col_key_list}
     | {col_def}: col1: integer
@@ -5632,7 +5632,7 @@ CREATE TABLE t_several_columns_added_interleaved(
       |   | | {type_int}: integer
       |   | {create_attr}: ok
       |     | {version_annotation}
-      |       | {int 2}
+      |       | {int 2} {version}
       | {col_key_list}
         | {col_def}: err
         | | {col_def_type_attrs}: ok
@@ -5641,7 +5641,7 @@ CREATE TABLE t_several_columns_added_interleaved(
         |   | | {type_int}: integer
         |   | {create_attr}: ok
         |     | {version_annotation}
-        |       | {int 2}
+        |       | {int 2} {version}
         | {col_key_list}
           | {pk_def}
             | {indexed_columns_conflict_clause}
@@ -5655,7 +5655,7 @@ The statement ending at line XXXX
 
   {schema_ad_hoc_migration_stmt}: err
   | {version_annotation}
-    | {int 2}
+    | {int 2} {version}
     | {name WhoopsItChanged}
 
 The statement ending at line XXXX
@@ -5664,7 +5664,7 @@ The statement ending at line XXXX
 
   {schema_ad_hoc_migration_stmt}: ok validated @create(3)
   | {version_annotation}
-    | {int 3}
+    | {int 3} {version}
     | {name MigrateGoodToGo}
 
 The statement ending at line XXXX
@@ -5675,7 +5675,7 @@ test/sem_test_prev.sql:XXXX:1: error: in schema_ad_hoc_migration_stmt : new ad h
 
   {schema_ad_hoc_migration_stmt}: err
   | {version_annotation}
-    | {int 3}
+    | {int 3} {version}
     | {name MigrateInThePast}
 
 The statement ending at line XXXX
@@ -5684,7 +5684,7 @@ The statement ending at line XXXX
 
   {schema_ad_hoc_migration_stmt}: ok @create(26)
   | {version_annotation}
-    | {int 26}
+    | {int 26} {version}
     | {name MigrateNewCurrent}
 
 The statement ending at line XXXX
@@ -5698,7 +5698,7 @@ test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0311: object's d
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name TChanging}
   | {col_key_list}
     | {col_def}: id: integer
@@ -5717,8 +5717,8 @@ test/sem_test_prev.sql:XXXX:1: error: in create_index_stmt : CQL0311: object's d
   | {create_index_on_list}
   | | {name IChanging}
   | | {name TChanging}
-  | {flags_names_attrs}
-    | {int 0}
+  | {index_flags_names_attrs}
+    | {int 0} {no_flags}
     | {connector}
       | {index_names_and_attrs}
         | {indexed_columns}
@@ -5734,7 +5734,7 @@ CREATE VIEW VChanging AS
 test/sem_test_prev.sql:XXXX:1: error: in create_view_stmt : CQL0311: object's deployment region changed from 'different_region' to 'base' 'VChanging'
 
   {create_view_stmt}: err
-  | {int 0}
+  | {int 0} {no_flags}
   | {view_and_attrs}
     | {view_details_select}
       | {view_details}
@@ -5770,7 +5770,7 @@ END;
 test/sem_test_prev.sql:XXXX:1: error: in create_trigger_stmt : CQL0311: object's deployment region changed from 'different_region' to 'base' 'TrigChanging'
 
   {create_trigger_stmt}: err
-  | {int 0}
+  | {int 0} {no_flags}
   | {trigger_body_vers}
     | {trigger_def}
       | {name TrigChanging}
@@ -5782,7 +5782,7 @@ test/sem_test_prev.sql:XXXX:1: error: in create_trigger_stmt : CQL0311: object's
           | {trigger_target_action}
             | {name foo}: foo: { id: integer notnull, id2: integer, name: text, name_2: text }
             | {trigger_action}
-              | {int 0}
+              | {int 0} {no_flags}
               | {trigger_when_stmts}
                 | {stmt_list}: ok
                   | {select_stmt}: _select_: { id: integer notnull }
@@ -5810,7 +5810,7 @@ test/sem_test_prev.sql:XXXX:1: error: in schema_ad_hoc_migration_stmt : CQL0311:
 
   {schema_ad_hoc_migration_stmt}: err
   | {version_annotation}
-    | {int 2}
+    | {int 2} {version}
     | {name AdHocChanging}
 
 The statement ending at line XXXX
@@ -5844,7 +5844,7 @@ test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0311: object's d
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name TableWithDeferredOwner}
   | {col_key_list}
     | {col_def}: id: integer
@@ -5893,7 +5893,7 @@ CREATE TABLE logical_moving_T1(
   {create_table_stmt}: logical_moving_T1: { id: integer notnull primary_key } validated
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name logical_moving_T1}
   | {col_key_list}
     | {col_def}: id: integer notnull primary_key
@@ -5914,7 +5914,7 @@ CREATE TABLE logical_moving_T2(
   {create_table_stmt}: logical_moving_T2: { id: integer foreign_key, name: text } validated
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name logical_moving_T2}
   | {col_key_list}
     | {col_def}: id: integer foreign_key
@@ -5965,10 +5965,10 @@ CREATE TABLE high_numbered_thing(
   {create_table_stmt}: high_numbered_thing: { id: integer } validated @create(9999)
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {create_attr}
   | |   | {version_annotation}
-  | |     | {int 9999}
+  | |     | {int 9999} {version}
   | | {name high_numbered_thing}
   | {col_key_list}
     | {col_def}: id: integer
@@ -5992,7 +5992,7 @@ CREATE TABLE table_staying(
   {create_table_stmt}: table_staying: { col1: integer notnull primary_key } validated @recreate(my_recreate_group)
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {recreate_attr}
   | |   | {name my_recreate_group}
   | | {name table_staying}
@@ -6017,7 +6017,7 @@ CREATE TABLE table_going(
   {create_table_stmt}: table_going: { col1: text, col2: integer foreign_key } deleted validated @delete(1) @recreate(my_recreate_group)
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {recreate_attr}
   | |   | {name my_recreate_group}
   | |   | {delete_attr}
@@ -6057,10 +6057,10 @@ CREATE TABLE adding_with_migrators_ok(
   {create_table_stmt}: adding_with_migrators_ok: { id: integer notnull primary_key, id3: integer } validated @create(2)
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {create_attr}
   | |   | {version_annotation}
-  | |     | {int 2}
+  | |     | {int 2} {version}
   | | {name adding_with_migrators_ok}
   | {col_key_list}
     | {col_def}: id: integer notnull primary_key
@@ -6078,7 +6078,7 @@ CREATE TABLE adding_with_migrators_ok(
       |   | | {type_int}: integer
       |   | {delete_attr}: ok
       |     | {version_annotation}
-      |       | {int 3}
+      |       | {int 3} {version}
       |       | {name delete_me}
       | {col_key_list}
         | {col_def}: err
@@ -6088,7 +6088,7 @@ CREATE TABLE adding_with_migrators_ok(
             | | {type_int}: integer
             | {create_attr}: ok
               | {version_annotation}
-                | {int 3}
+                | {int 3} {version}
                 | {name create_me}
 
 The statement ending at line XXXX
@@ -6120,7 +6120,7 @@ CREATE TABLE foo_with_check(
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name foo_with_check}
   | {col_key_list}
     | {col_def}: x: integer has_check
@@ -6147,7 +6147,7 @@ CREATE VIRTUAL TABLE unchanged_virtual USING my_virtual (goo) AS (
   | {create_table_stmt}: unchanged_virtual: { id: integer } validated virtual @recreate
     | {create_table_name_flags}
     | | {table_flags_attrs}
-    | | | {int 0}
+    | | | {int 0} {no_flags}
     | | | {recreate_attr}
     | | {name unchanged_virtual}
     | {col_key_list}
@@ -6171,10 +6171,10 @@ CREATE VIRTUAL TABLE deleted_virtual USING my_virtual (goo) AS (
   | {create_table_stmt}: deleted_virtual: { id: integer } deleted validated virtual @delete(3)
     | {create_table_name_flags}
     | | {table_flags_attrs}
-    | | | {int 0}
+    | | | {int 0} {no_flags}
     | | | {delete_attr}
     | |   | {version_annotation}
-    | |     | {int 3}
+    | |     | {int 3} {version}
     | |     | {dot}: ok
     | |       | {name cql}
     | |       | {name module_must_not_be_deleted_see_docs_for_CQL0392}
@@ -6200,7 +6200,7 @@ CREATE VIRTUAL TABLE undead_virtual USING my_virtual (goo) AS (
   | {create_table_stmt}: err
     | {create_table_name_flags}
     | | {table_flags_attrs}
-    | | | {int 0}
+    | | | {int 0} {no_flags}
     | | | {recreate_attr}
     | | {name undead_virtual}
     | {col_key_list}
@@ -6227,7 +6227,7 @@ CREATE VIRTUAL TABLE changing_virtual USING my_virtual (goo, goo) AS (
   | {create_table_stmt}: changing_virtual: { id: integer, t: text } validated virtual @recreate
     | {create_table_name_flags}
     | | {table_flags_attrs}
-    | | | {int 0}
+    | | | {int 0} {no_flags}
     | | | {recreate_attr}
     | | {name changing_virtual}
     | {col_key_list}
@@ -6257,10 +6257,10 @@ CREATE VIRTUAL TABLE delete_change_virtual USING my_virtual (goo) AS (
   | {create_table_stmt}: err
     | {create_table_name_flags}
     | | {table_flags_attrs}
-    | | | {int 0}
+    | | | {int 0} {no_flags}
     | | | {delete_attr}
     | |   | {version_annotation}
-    | |     | {int 1}
+    | |     | {int 1} {version}
     | |     | {dot}: ok
     | |       | {name cql}
     | |       | {name module_must_not_be_deleted_see_docs_for_CQL0392}
@@ -6281,7 +6281,7 @@ CREATE TABLE conflict_clause_t(
   {create_table_stmt}: conflict_clause_t: { id: integer notnull } validated
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name conflict_clause_t}
   | {col_key_list}
     | {col_def}: id: integer notnull
@@ -6290,7 +6290,7 @@ CREATE TABLE conflict_clause_t(
         | | {name id}
         | | {type_int}: integer
         | {col_attrs_not_null}: ok
-          | {int 2}
+          | {int 2} {on_conflict_fail}
 
 The statement ending at line XXXX
 
@@ -6302,7 +6302,7 @@ CREATE TABLE conflict_clause_pk(
   {create_table_stmt}: conflict_clause_pk: { id: integer notnull partial_pk } validated
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name conflict_clause_pk}
   | {col_key_list}
     | {col_def}: id: integer notnull
@@ -6318,7 +6318,7 @@ CREATE TABLE conflict_clause_pk(
           | {indexed_columns}
           | | {indexed_column}
           |   | {name id}: id: integer notnull
-          | {int 0}
+          | {int 0} {on_conflict_rollback}
 
 The statement ending at line XXXX
 
@@ -6330,10 +6330,10 @@ CREATE TABLE dropping_this(
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {delete_attr}
   | |   | {version_annotation}
-  | |     | {int 5}
+  | |     | {int 5} {version}
   | | {name dropping_this}
   | {col_key_list}
     | {col_def}: f1: integer
@@ -6357,7 +6357,7 @@ CREATE TABLE losing_group(
   {create_table_stmt}: losing_group: { id: integer } @recreate
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {recreate_attr}
   | | {name losing_group}
   | {col_key_list}
@@ -6376,7 +6376,7 @@ CREATE TABLE gaining_group(
   {create_table_stmt}: gaining_group: { id: integer } validated @recreate(new_group)
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {recreate_attr}
   | |   | {name new_group}
   | | {name gaining_group}
@@ -6396,7 +6396,7 @@ CREATE TABLE unsub_resub_trickery(
   {create_table_stmt}: unsub_resub_trickery: { id: integer } validated
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name unsub_resub_trickery}
   | {col_key_list}
     | {col_def}: id: integer
@@ -6411,7 +6411,7 @@ The statement ending at line XXXX
 
   {schema_unsub_stmt}: ok
   | {version_annotation}
-    | {int 1}
+    | {int 1} {version}
     | {name unsub_resub_trickery}
 
 The statement ending at line XXXX
@@ -6431,7 +6431,7 @@ CREATE TABLE backing(
   | {create_table_stmt}: backing: { k: blob notnull primary_key, v: blob } validated backing
     | {create_table_name_flags}
     | | {table_flags_attrs}
-    | | | {int 0}
+    | | | {int 0} {no_flags}
     | | {name backing}
     | {col_key_list}
       | {col_def}: k: blob notnull primary_key
@@ -6466,7 +6466,7 @@ CREATE TABLE backed(
   | {create_table_stmt}: backed: { id: integer notnull primary_key, val: text notnull } validated backed
     | {create_table_name_flags}
     | | {table_flags_attrs}
-    | | | {int 0}
+    | | | {int 0} {no_flags}
     | | {name backed}
     | {col_key_list}
       | {col_def}: id: integer notnull primary_key
@@ -6503,7 +6503,7 @@ CREATE TABLE new_backed_table(
   | {create_table_stmt}: new_backed_table: { id: integer notnull primary_key, val: text notnull } backed
     | {create_table_name_flags}
     | | {table_flags_attrs}
-    | | | {int 0}
+    | | | {int 0} {no_flags}
     | | {name new_backed_table}
     | {col_key_list}
       | {col_def}: id: integer notnull primary_key
@@ -6532,7 +6532,7 @@ CREATE TABLE transitioning_to_baseline(
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name transitioning_to_baseline}
   | {col_key_list}
     | {col_def}: x: integer
@@ -6556,7 +6556,7 @@ CREATE TABLE resubscribing(
   {create_table_stmt}: resubscribing: { id: integer } validated
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name resubscribing}
   | {col_key_list}
     | {col_def}: id: integer
@@ -6606,7 +6606,7 @@ CREATE TABLE foo(
   {create_table_stmt}: foo: { id: integer notnull, id2: integer, name: text, name_2: text }
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name foo}
   | {col_key_list}
     | {col_def}: id: integer notnull
@@ -6623,7 +6623,7 @@ CREATE TABLE foo(
       |   | | {type_long}: longint
       |   | {delete_attr}: ok
       |     | {version_annotation}
-      |       | {int 5}
+      |       | {int 5} {version}
       |       | {name deletor}
       | {col_key_list}
         | {col_def}: rate_2: longint deleted @delete(4)
@@ -6633,7 +6633,7 @@ CREATE TABLE foo(
         |   | | {type_long}: longint
         |   | {delete_attr}: ok
         |     | {version_annotation}
-        |       | {int 4}
+        |       | {int 4} {version}
         | {col_key_list}
           | {col_def}: id2: integer @create(4)
           | | {col_def_type_attrs}: ok
@@ -6642,7 +6642,7 @@ CREATE TABLE foo(
           |   | | {type_int}: integer
           |   | {create_attr}: ok
           |     | {version_annotation}
-          |       | {int 4}
+          |       | {int 4} {version}
           | {col_key_list}
             | {col_def}: name: text @create(5)
             | | {col_def_type_attrs}: ok
@@ -6651,7 +6651,7 @@ CREATE TABLE foo(
             |   | | {type_text}: text
             |   | {create_attr}: ok
             |     | {version_annotation}
-            |       | {int 5}
+            |       | {int 5} {version}
             | {col_key_list}
               | {col_def}: name_2: text @create(6)
                 | {col_def_type_attrs}: ok
@@ -6660,7 +6660,7 @@ CREATE TABLE foo(
                   | | {type_text}: text
                   | {create_attr}: ok
                     | {version_annotation}
-                      | {int 6}
+                      | {int 6} {version}
 
 The statement ending at line XXXX
 
@@ -6672,7 +6672,7 @@ CREATE TABLE column_deleted_in_this_table(
   {create_table_stmt}: column_deleted_in_this_table: { id: integer, being_deleted: text }
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name column_deleted_in_this_table}
   | {col_key_list}
     | {col_def}: id: integer
@@ -6699,7 +6699,7 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0122: column current delete ve
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name column_undeleted_in_this_table}
   | {col_key_list}
     | {col_def}: id: integer
@@ -6715,7 +6715,7 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0122: column current delete ve
           | | {type_text}: text
           | {delete_attr}: ok
             | {version_annotation}
-              | {int 6}
+              | {int 6} {version}
 
 The statement ending at line XXXX
 
@@ -6727,7 +6727,7 @@ CREATE TABLE become_sensitive(
   {create_table_stmt}: become_sensitive: { id2: integer, name: text }
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name become_sensitive}
   | {col_key_list}
     | {col_def}: id2: integer
@@ -6753,10 +6753,10 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0115: current create version n
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {create_attr}
   | |   | {version_annotation}
-  | |     | {int 2}
+  | |     | {int 2} {version}
   | | {name t_create_verison_changed}
   | {col_key_list}
     | {col_def}: id: integer
@@ -6776,10 +6776,10 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0116: current delete version n
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {delete_attr}
   | |   | {version_annotation}
-  | |     | {int 2}
+  | |     | {int 2} {version}
   | | {name t_delete_verison_changed}
   | {col_key_list}
     | {col_def}: id: integer
@@ -6799,7 +6799,7 @@ test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0126: table was 
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_not_present_in_new_schema}
   | {col_key_list}
     | {col_def}: id: integer
@@ -6819,7 +6819,7 @@ test/sem_test_prev.sql:XXXX:1: error: in create_view_stmt : CQL0127: object was 
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_became_a_view}
   | {col_key_list}
     | {col_def}: id: integer
@@ -6839,7 +6839,7 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0115: current create version n
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_created_in_wrong_version}
   | {col_key_list}
     | {col_def}: id: integer
@@ -6857,7 +6857,7 @@ CREATE TABLE t_was_correctly_deleted(
   {create_table_stmt}: t_was_correctly_deleted: { id: integer }
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_was_correctly_deleted}
   | {col_key_list}
     | {col_def}: id: integer
@@ -6877,7 +6877,7 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0119: column name is different
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_column_name_changed}
   | {col_key_list}
     | {col_def}: err
@@ -6897,7 +6897,7 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0120: column type is different
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_column_type_changed}
   | {col_key_list}
     | {col_def}: err
@@ -6917,7 +6917,7 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0120: column type is different
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_column_attribute_changed}
   | {col_key_list}
     | {col_def}: err
@@ -6938,7 +6938,7 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0122: column current delete ve
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_column_delete_version_changed}
   | {col_key_list}
     | {col_def}: id: integer
@@ -6954,7 +6954,7 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0122: column current delete ve
           | | {type_int}: integer
           | {delete_attr}: ok
             | {version_annotation}
-              | {int 2}
+              | {int 2} {version}
 
 The statement ending at line XXXX
 
@@ -6968,7 +6968,7 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0121: column current create ve
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_column_create_version_changed}
   | {col_key_list}
     | {col_def}: id: integer
@@ -6984,7 +6984,7 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0121: column current create ve
           | | {type_int}: integer
           | {create_attr}: ok
             | {version_annotation}
-              | {int 2}
+              | {int 2} {version}
 
 The statement ending at line XXXX
 
@@ -7002,7 +7002,7 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0125: column current default v
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_column_default_value_changed}
   | {col_key_list}
     | {col_def}: id: integer
@@ -7030,7 +7030,7 @@ CREATE TABLE t_column_default_value_ok(
   {create_table_stmt}: t_column_default_value_ok: { id: integer, id2: integer notnull has_default }
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_column_default_value_ok}
   | {col_key_list}
     | {col_def}: id: integer
@@ -7059,7 +7059,7 @@ CREATE TABLE t_additional_attribute_present(
   {create_table_stmt}: t_additional_attribute_present: { a: integer notnull partial_pk, b: integer notnull partial_pk }
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_additional_attribute_present}
   | {col_key_list}
     | {col_def}: a: integer notnull
@@ -7101,7 +7101,7 @@ test/sem_test_prev.sql:XXXX:1: error: in pk_def : CQL0132: table has a facet tha
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_additional_attribute_mismatch}
   | {col_key_list}
     | {col_def}: a: integer notnull
@@ -7139,7 +7139,7 @@ test/sem_test_prev.sql:XXXX:1: error: in col_key_list : CQL0129: a column was re
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_columns_removed}
   | {col_key_list}
     | {col_def}: id: integer
@@ -7165,7 +7165,7 @@ test/sem_test_prev.sql:XXXX:1: error: in col_key_list : CQL0134: table has a new
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_attribute_added}
   | {col_key_list}
     | {col_def}: a: integer notnull
@@ -7186,7 +7186,7 @@ test/sem_test_prev.sql:XXXX:1: error: in col_def : CQL0130: table has columns ad
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_additional_column}
   | {col_key_list}
     | {col_def}: a: integer notnull
@@ -7206,7 +7206,7 @@ CREATE TABLE t_additional_column_ok(
   {create_table_stmt}: t_additional_column_ok: { a: integer notnull, b: integer }
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_additional_column_ok}
   | {col_key_list}
     | {col_def}: a: integer notnull
@@ -7223,7 +7223,7 @@ CREATE TABLE t_additional_column_ok(
           | | {type_int}: integer
           | {create_attr}: ok
             | {version_annotation}
-              | {int 2}
+              | {int 2} {version}
 
 The statement ending at line XXXX
 
@@ -7237,7 +7237,7 @@ test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0135: table crea
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_becomes_temp_table}
   | {col_key_list}
     | {col_def}: a: integer notnull
@@ -7264,7 +7264,7 @@ test/sem_test_prev.sql:XXXX:1: error: in col_def : CQL0131: table has newly adde
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_new_table_create_and_delete}
   | {col_key_list}
     | {col_def}: a: integer notnull
@@ -7283,7 +7283,7 @@ CREATE TABLE t_new_legit_column(
   {create_table_stmt}: t_new_legit_column: { a: integer notnull }
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_new_legit_column}
   | {col_key_list}
     | {col_def}: a: integer notnull
@@ -7304,10 +7304,10 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0118: @create procedure change
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {create_attr}
   | |   | {version_annotation}
-  | |     | {int 1}
+  | |     | {int 1} {version}
   | | {name with_create_migrator}
   | {col_key_list}
     | {col_def}: id: integer
@@ -7327,10 +7327,10 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0118: @create procedure change
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {create_attr}
   | |   | {version_annotation}
-  | |     | {int 1}
+  | |     | {int 1} {version}
   | |     | {name ADifferentCreateMigrator}
   | | {name with_create_migrator}
   | {col_key_list}
@@ -7351,10 +7351,10 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0117: @delete procedure change
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {delete_attr}
   | |   | {version_annotation}
-  | |     | {int 1}
+  | |     | {int 1} {version}
   | | {name with_delete_migrator}
   | {col_key_list}
     | {col_def}: id: integer
@@ -7374,10 +7374,10 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0117: @delete procedure change
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {delete_attr}
   | |   | {version_annotation}
-  | |     | {int 1}
+  | |     | {int 1} {version}
   | |     | {name ADifferentDeleteMigrator}
   | | {name with_delete_migrator}
   | {col_key_list}
@@ -7395,7 +7395,7 @@ CREATE VIEW view_becomes_a_table AS
 test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0105: object was a view but is now a table 'view_becomes_a_table'
 
   {create_view_stmt}: err
-  | {int 0}
+  | {int 0} {no_flags}
   | {view_and_attrs}
     | {view_details_select}
       | {view_details}
@@ -7425,7 +7425,7 @@ CREATE VIEW view_was_zomg_deleted AS
 test/sem_test_prev.sql:XXXX:1: error: in create_view_stmt : CQL0104: view was present but now it does not exist (use @delete instead) 'view_was_zomg_deleted'
 
   {create_view_stmt}: err
-  | {int 0}
+  | {int 0} {no_flags}
   | {view_and_attrs}
     | {view_details_select}
       | {view_details}
@@ -7485,8 +7485,8 @@ test/sem_test_prev.sql:XXXX:1: error: in create_index_stmt : CQL0017: index was 
   | {create_index_on_list}
   | | {name this_index_was_deleted_with_no_annotation}
   | | {name foo}
-  | {flags_names_attrs}
-    | {int 0}
+  | {index_flags_names_attrs}
+    | {int 0} {no_flags}
     | {connector}
       | {index_names_and_attrs}
         | {indexed_columns}
@@ -7505,7 +7505,7 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0124: column @create procedure
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name create_column_migrate_test}
   | {col_key_list}
     | {col_def}: id: integer unique_key
@@ -7522,7 +7522,7 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0124: column @create procedure
           | | {type_int}: integer
           | {create_attr}: ok
             | {version_annotation}
-              | {int 2}
+              | {int 2} {version}
               | {name PreviousColumnCreateMigrator}
 
 The statement ending at line XXXX
@@ -7537,7 +7537,7 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0123: column @delete procedure
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name delete_column_migrate_test}
   | {col_key_list}
     | {col_def}: id: integer
@@ -7553,7 +7553,7 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0123: column @delete procedure
           | | {type_int}: integer
           | {delete_attr}: ok
             | {version_annotation}
-              | {int 2}
+              | {int 2} {version}
               | {name PreviousColumnDeleteMigrator}
 
 The statement ending at line XXXX
@@ -7572,7 +7572,7 @@ test/sem_test_prev.sql:XXXX:1: error: in fk_def : CQL0132: table has a facet tha
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name fk_facet}
   | {col_key_list}
     | {col_def}: id: integer
@@ -7603,10 +7603,10 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0114: current schema can't go 
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {create_attr}
   | |   | {version_annotation}
-  | |     | {int 1}
+  | |     | {int 1} {version}
   | | {name cannot_change_to_recreate}
   | {col_key_list}
     | {col_def}: id: integer
@@ -7624,7 +7624,7 @@ CREATE TABLE ok_to_delete_recreate_table(
   {create_table_stmt}: ok_to_delete_recreate_table: { id: integer } @recreate
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {recreate_attr}
   | | {name ok_to_delete_recreate_table}
   | {col_key_list}
@@ -7643,7 +7643,7 @@ CREATE TABLE ok_to_create_recreate_table(
   {create_table_stmt}: ok_to_create_recreate_table: { id: integer } @recreate
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {recreate_attr}
   | | {name ok_to_create_recreate_table}
   | {col_key_list}
@@ -7664,7 +7664,7 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0377: table transitioning from
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {recreate_attr}
   | | {name not_ok_to_create_recreate_table}
   | {col_key_list}
@@ -7683,7 +7683,7 @@ CREATE TABLE recreate_deleted_in_the_past(
   {create_table_stmt}: recreate_deleted_in_the_past: { id: integer } @recreate
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {recreate_attr}
   | | {name recreate_deleted_in_the_past}
   | {col_key_list}
@@ -7702,7 +7702,7 @@ CREATE TABLE recreate_created_in_the_past(
   {create_table_stmt}: recreate_created_in_the_past: { id: integer } @recreate
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {recreate_attr}
   | | {name recreate_created_in_the_past}
   | {col_key_list}
@@ -7723,7 +7723,7 @@ CREATE TABLE recreate_feel_the_power(
   {create_table_stmt}: recreate_feel_the_power: { id: text, payload: text, whatever: integer } @recreate
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {recreate_attr}
   | | {name recreate_feel_the_power}
   | {col_key_list}
@@ -7756,7 +7756,7 @@ test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0126: table was 
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {recreate_attr}
   | | {name disapparing_recreate}
   | {col_key_list}
@@ -7779,7 +7779,7 @@ END;
 test/sem_test_prev.sql:XXXX:1: error: in create_trigger_stmt : CQL0106: trigger was present but now it does not exist (use @delete instead) 'trigger_removed_with_no_annotation'
 
   {create_trigger_stmt}: err
-  | {int 0}
+  | {int 0} {no_flags}
   | {trigger_body_vers}
     | {trigger_def}
       | {name trigger_removed_with_no_annotation}
@@ -7825,7 +7825,7 @@ BEGIN
 END;
 
   {create_trigger_stmt}: ok
-  | {int 0}
+  | {int 0} {no_flags}
   | {trigger_body_vers}
     | {trigger_def}
       | {name trigger_will_be_deleted}
@@ -7837,7 +7837,7 @@ END;
           | {trigger_target_action}
             | {name foo}
             | {trigger_action}
-              | {int 0}
+              | {int 0} {no_flags}
               | {trigger_when_stmts}
                 | {stmt_list}
                   | {select_stmt}
@@ -7869,7 +7869,7 @@ test/sem_test_prev.sql:XXXX:1: error: in col_key_list : CQL0133: non-column face
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_removed_facet}
   | {col_key_list}
     | {col_def}: id: integer notnull
@@ -7901,7 +7901,7 @@ test/sem_test_prev.sql:XXXX:1: error: in col_def : CQL0128: table has a column t
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_subtle_column_change}
   | {col_key_list}
     | {col_def}: id: integer foreign_key
@@ -7927,7 +7927,7 @@ CREATE TABLE t_several_columns_added_interleaved(
   {create_table_stmt}: t_several_columns_added_interleaved: { col1: integer notnull partial_pk }
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name t_several_columns_added_interleaved}
   | {col_key_list}
     | {col_def}: col1: integer
@@ -7950,7 +7950,7 @@ test/sem_test_prev.sql:XXXX:1: error: in schema_ad_hoc_migration_stmt : CQL0286:
 
   {schema_ad_hoc_migration_stmt}: err
   | {version_annotation}
-    | {int 1}
+    | {int 1} {version}
     | {name WhoopsItsGone}
 
 The statement ending at line XXXX
@@ -7961,7 +7961,7 @@ test/sem_test_prev.sql:XXXX:1: error: in schema_ad_hoc_migration_stmt : CQL0285:
 
   {schema_ad_hoc_migration_stmt}: err
   | {version_annotation}
-    | {int 1}
+    | {int 1} {version}
     | {name WhoopsItChanged}
 
 The statement ending at line XXXX
@@ -7970,7 +7970,7 @@ The statement ending at line XXXX
 
   {schema_ad_hoc_migration_stmt}: ok @create(3)
   | {version_annotation}
-    | {int 3}
+    | {int 3} {version}
     | {name MigrateGoodToGo}
 
 The statement ending at line XXXX
@@ -7995,7 +7995,7 @@ CREATE TABLE TChanging(
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name TChanging}
   | {col_key_list}
     | {col_def}: id: integer
@@ -8012,8 +8012,8 @@ CREATE INDEX IChanging ON TChanging (id);
   | {create_index_on_list}
   | | {name IChanging}
   | | {name TChanging}
-  | {flags_names_attrs}
-    | {int 0}
+  | {index_flags_names_attrs}
+    | {int 0} {no_flags}
     | {connector}
       | {index_names_and_attrs}
         | {indexed_columns}
@@ -8027,7 +8027,7 @@ CREATE VIEW VChanging AS
     FROM TChanging;
 
   {create_view_stmt}: err
-  | {int 0}
+  | {int 0} {no_flags}
   | {view_and_attrs}
     | {view_details_select}
       | {view_details}
@@ -8058,7 +8058,7 @@ BEGIN
 END;
 
   {create_trigger_stmt}: err
-  | {int 0}
+  | {int 0} {no_flags}
   | {trigger_body_vers}
     | {trigger_def}
       | {name TrigChanging}
@@ -8070,7 +8070,7 @@ END;
           | {trigger_target_action}
             | {name foo}
             | {trigger_action}
-              | {int 0}
+              | {int 0} {no_flags}
               | {trigger_when_stmts}
                 | {stmt_list}
                   | {select_stmt}
@@ -8096,7 +8096,7 @@ The statement ending at line XXXX
 
   {schema_ad_hoc_migration_stmt}: err
   | {version_annotation}
-    | {int 2}
+    | {int 2} {version}
     | {name AdHocChanging}
 
 The statement ending at line XXXX
@@ -8128,7 +8128,7 @@ CREATE TABLE TableWithDeferredOwner(
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name TableWithDeferredOwner}
   | {col_key_list}
     | {col_def}: id: integer
@@ -8177,7 +8177,7 @@ CREATE TABLE logical_moving_T1(
   {create_table_stmt}: logical_moving_T1: { id: integer notnull primary_key }
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name logical_moving_T1}
   | {col_key_list}
     | {col_def}: id: integer notnull primary_key
@@ -8198,7 +8198,7 @@ CREATE TABLE logical_moving_T2(
   {create_table_stmt}: logical_moving_T2: { id: integer foreign_key, name: text }
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name logical_moving_T2}
   | {col_key_list}
     | {col_def}: id: integer foreign_key
@@ -8249,10 +8249,10 @@ CREATE TABLE high_numbered_thing(
   {create_table_stmt}: high_numbered_thing: { id: integer } @create(9999)
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {create_attr}
   | |   | {version_annotation}
-  | |     | {int 9999}
+  | |     | {int 9999} {version}
   | | {name high_numbered_thing}
   | {col_key_list}
     | {col_def}: id: integer
@@ -8269,8 +8269,8 @@ CREATE INDEX deleted_index ON t_was_correctly_deleted (id);
   | {create_index_on_list}
   | | {name deleted_index}
   | | {name t_was_correctly_deleted}
-  | {flags_names_attrs}
-    | {int 0}
+  | {index_flags_names_attrs}
+    | {int 0} {no_flags}
     | {connector}
       | {index_names_and_attrs}
         | {indexed_columns}
@@ -8286,7 +8286,7 @@ BEGIN
 END;
 
   {create_trigger_stmt}: ok
-  | {int 0}
+  | {int 0} {no_flags}
   | {trigger_body_vers}
     | {trigger_def}
       | {name trigger_deleted_no_problemo}
@@ -8298,7 +8298,7 @@ END;
           | {trigger_target_action}
             | {name t_was_correctly_deleted}
             | {trigger_action}
-              | {int 0}
+              | {int 0} {no_flags}
               | {trigger_when_stmts}
                 | {stmt_list}
                   | {select_stmt}
@@ -8333,7 +8333,7 @@ CREATE TABLE table_staying(
   {create_table_stmt}: table_staying: { col1: integer notnull primary_key } @recreate(my_recreate_group)
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {recreate_attr}
   | |   | {name my_recreate_group}
   | | {name table_staying}
@@ -8358,7 +8358,7 @@ CREATE TABLE table_going(
   {create_table_stmt}: table_going: { col1: text, col2: integer } @recreate(my_recreate_group)
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {recreate_attr}
   | |   | {name my_recreate_group}
   | | {name table_going}
@@ -8396,10 +8396,10 @@ CREATE TABLE adding_with_migrators_ok(
   {create_table_stmt}: adding_with_migrators_ok: { id: integer notnull primary_key, id2: integer } @create(2)
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {create_attr}
   | |   | {version_annotation}
-  | |     | {int 2}
+  | |     | {int 2} {version}
   | | {name adding_with_migrators_ok}
   | {col_key_list}
     | {col_def}: id: integer notnull primary_key
@@ -8451,7 +8451,7 @@ test/sem_test_prev.sql:XXXX:1: error: in col_def : CQL0128: table has a column t
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name foo_with_check}
   | {col_key_list}
     | {col_def}: x: integer has_check
@@ -8478,7 +8478,7 @@ CREATE VIRTUAL TABLE unchanged_virtual USING my_virtual (goo) AS (
   | {create_table_stmt}: unchanged_virtual: { id: integer } virtual @recreate
     | {create_table_name_flags}
     | | {table_flags_attrs}
-    | | | {int 0}
+    | | | {int 0} {no_flags}
     | | | {recreate_attr}
     | | {name unchanged_virtual}
     | {col_key_list}
@@ -8502,7 +8502,7 @@ CREATE VIRTUAL TABLE deleted_virtual USING my_virtual (goo) AS (
   | {create_table_stmt}: deleted_virtual: { id: integer } virtual @recreate
     | {create_table_name_flags}
     | | {table_flags_attrs}
-    | | | {int 0}
+    | | | {int 0} {no_flags}
     | | | {recreate_attr}
     | | {name deleted_virtual}
     | {col_key_list}
@@ -8528,10 +8528,10 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0114: current schema can't go 
   | {create_table_stmt}: err
     | {create_table_name_flags}
     | | {table_flags_attrs}
-    | | | {int 0}
+    | | | {int 0} {no_flags}
     | | | {delete_attr}
     | |   | {version_annotation}
-    | |     | {int 3}
+    | |     | {int 3} {version}
     | |     | {dot}: ok
     | |       | {name cql}
     | |       | {name module_must_not_be_deleted_see_docs_for_CQL0392}
@@ -8557,7 +8557,7 @@ CREATE VIRTUAL TABLE changing_virtual USING my_virtual (goo) AS (
   | {create_table_stmt}: changing_virtual: { id: integer } virtual @recreate
     | {create_table_name_flags}
     | | {table_flags_attrs}
-    | | | {int 0}
+    | | | {int 0} {no_flags}
     | | | {recreate_attr}
     | | {name changing_virtual}
     | {col_key_list}
@@ -8583,10 +8583,10 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0116: current delete version n
   | {create_table_stmt}: err
     | {create_table_name_flags}
     | | {table_flags_attrs}
-    | | | {int 0}
+    | | | {int 0} {no_flags}
     | | | {delete_attr}
     | |   | {version_annotation}
-    | |     | {int 3}
+    | |     | {int 3} {version}
     | |     | {dot}: ok
     | |       | {name cql}
     | |       | {name module_must_not_be_deleted_see_docs_for_CQL0392}
@@ -8665,7 +8665,7 @@ END;
           | {trigger_target_action}
             | {name foo}
             | {trigger_action}
-              | {int 0}
+              | {int 0} {no_flags}
               | {trigger_when_stmts}
                 | {stmt_list}
                   | {select_stmt}
@@ -8694,7 +8694,7 @@ CREATE TABLE conflict_clause_t(
   {create_table_stmt}: conflict_clause_t: { id: integer notnull }
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name conflict_clause_t}
   | {col_key_list}
     | {col_def}: id: integer notnull
@@ -8703,7 +8703,7 @@ CREATE TABLE conflict_clause_t(
         | | {name id}
         | | {type_int}: integer
         | {col_attrs_not_null}: ok
-          | {int 2}
+          | {int 2} {on_conflict_fail}
 
 The statement ending at line XXXX
 
@@ -8715,7 +8715,7 @@ CREATE TABLE conflict_clause_pk(
   {create_table_stmt}: conflict_clause_pk: { id: integer notnull partial_pk }
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name conflict_clause_pk}
   | {col_key_list}
     | {col_def}: id: integer notnull
@@ -8731,7 +8731,7 @@ CREATE TABLE conflict_clause_pk(
           | {indexed_columns}
           | | {indexed_column}
           |   | {name id}: id: integer notnull
-          | {int 0}
+          | {int 0} {on_conflict_rollback}
 
 The statement ending at line XXXX
 
@@ -8745,7 +8745,7 @@ test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0448: table was 
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {recreate_attr}
   | |   | {name foo}
   | | {name dropping_this}
@@ -8771,7 +8771,7 @@ CREATE TABLE gaining_group(
   {create_table_stmt}: gaining_group: { id: integer } @recreate
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {recreate_attr}
   | | {name gaining_group}
   | {col_key_list}
@@ -8790,7 +8790,7 @@ CREATE TABLE unsub_resub_trickery(
   {create_table_stmt}: unsub_resub_trickery: { id: integer }
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name unsub_resub_trickery}
   | {col_key_list}
     | {col_def}: id: integer
@@ -8805,7 +8805,7 @@ The statement ending at line XXXX
 
   {schema_unsub_stmt}: ok
   | {version_annotation}
-    | {int 1}
+    | {int 1} {version}
     | {name unsub_resub_trickery}
 
 The statement ending at line XXXX
@@ -8825,7 +8825,7 @@ CREATE TABLE backing(
   | {create_table_stmt}: backing: { k: blob notnull primary_key, v: blob } backing
     | {create_table_name_flags}
     | | {table_flags_attrs}
-    | | | {int 0}
+    | | | {int 0} {no_flags}
     | | {name backing}
     | {col_key_list}
       | {col_def}: k: blob notnull primary_key
@@ -8860,7 +8860,7 @@ CREATE TABLE backed(
   | {create_table_stmt}: backed: { guid: integer notnull primary_key, gal: text } backed
     | {create_table_name_flags}
     | | {table_flags_attrs}
-    | | | {int 0}
+    | | | {int 0} {no_flags}
     | | {name backed}
     | {col_key_list}
       | {col_def}: guid: integer notnull primary_key
@@ -8890,7 +8890,7 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0377: table transitioning from
   {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {recreate_attr}
   | |   | {name foo}
   | | {name transitioning_to_baseline}
@@ -8916,7 +8916,7 @@ CREATE TABLE resubscribing(
   {create_table_stmt}: resubscribing: { id: integer }
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name resubscribing}
   | {col_key_list}
     | {col_def}: id: integer
@@ -8931,6 +8931,6 @@ The statement ending at line XXXX
 
   {schema_unsub_stmt}: ok
   | {version_annotation}
-    | {int 1}
+    | {int 1} {version}
     | {name resubscribing}
 

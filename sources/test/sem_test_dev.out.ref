@@ -4274,7 +4274,7 @@ SELECT 1;
 test/sem_test_dev.sql:XXXX:1: error: in explain_stmt : CQL0292: explain statement is only available in `--dev` mode because its result set may vary between SQLite versions
 
   {explain_stmt}: err
-  | {int 1}
+  | {int 1} {explain_none}
   | {select_stmt}
     | {select_core_list}
     | | {select_core}
@@ -4301,7 +4301,7 @@ SELECT *
 test/sem_test_dev.sql:XXXX:1: error: in explain_stmt : CQL0292: explain statement is only available in `--dev` mode because its result set may vary between SQLite versions
 
   {explain_stmt}: err
-  | {int 2}
+  | {int 2} {explain_query_plan}
   | {select_stmt}
     | {select_core_list}
     | | {select_core}

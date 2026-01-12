@@ -1119,8 +1119,8 @@ static void cg_schema_manage_indices(charbuf *output, int32_t *drops, int32_t *c
 
     Contract(is_ast_create_index_stmt(ast));
     EXTRACT_NOTNULL(create_index_on_list, ast->left);
-    EXTRACT_NOTNULL(flags_names_attrs, ast->right);
-    EXTRACT_NOTNULL(connector, flags_names_attrs->right);
+    EXTRACT_NOTNULL(index_flags_names_attrs, ast->right);
+    EXTRACT_NOTNULL(connector, index_flags_names_attrs->right);
     EXTRACT_NOTNULL(index_names_and_attrs, connector->left);
     EXTRACT_NOTNULL(indexed_columns, index_names_and_attrs->left);
     EXTRACT(opt_where, index_names_and_attrs->right);

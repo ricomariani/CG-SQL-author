@@ -4287,7 +4287,7 @@ CREATE TABLE foo(
   {create_table_stmt}: foo: { id: integer notnull, rate: longint, id2: integer, name: text }
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name foo}
   | {col_key_list}
     | {col_def}: id: integer notnull
@@ -4304,7 +4304,7 @@ CREATE TABLE foo(
       |   | | {type_long}: longint
       |   | {delete_attr}: ok
       |     | {version_annotation}
-      |       | {int 5}
+      |       | {int 5} {version}
       |       | {name deletor}
       | {col_key_list}
         | {col_def}: rate_2: longint deleted @delete(4)
@@ -4314,7 +4314,7 @@ CREATE TABLE foo(
         |   | | {type_long}: longint
         |   | {delete_attr}: ok
         |     | {version_annotation}
-        |       | {int 4}
+        |       | {int 4} {version}
         | {col_key_list}
           | {col_def}: id2: integer @create(4)
           | | {col_def_type_attrs}: ok
@@ -4323,7 +4323,7 @@ CREATE TABLE foo(
           |   | | {type_int}: integer
           |   | {create_attr}: ok
           |     | {version_annotation}
-          |       | {int 4}
+          |       | {int 4} {version}
           | {col_key_list}
             | {col_def}: name: text @create(5)
             | | {col_def_type_attrs}: ok
@@ -4332,7 +4332,7 @@ CREATE TABLE foo(
             |   | | {type_text}: text
             |   | {create_attr}: ok
             |     | {version_annotation}
-            |       | {int 5}
+            |       | {int 5} {version}
             | {col_key_list}
               | {col_def}: name_2: text deleted @create(6)
                 | {col_def_type_attrs}: ok
@@ -4341,7 +4341,7 @@ CREATE TABLE foo(
                   | | {type_text}: text
                   | {create_attr}: ok
                     | {version_annotation}
-                      | {int 6}
+                      | {int 6} {version}
 
 The statement ending at line XXXX
 
@@ -4351,8 +4351,8 @@ CREATE INDEX recent_index ON foo (name_2);
   | {create_index_on_list}
   | | {name recent_index}
   | | {name foo}
-  | {flags_names_attrs}
-    | {int 0}
+  | {index_flags_names_attrs}
+    | {int 0} {no_flags}
     | {connector}
       | {index_names_and_attrs}
         | {indexed_columns}
@@ -4371,7 +4371,7 @@ CREATE TABLE fk_not_there_yet(
   {create_table_stmt}: fk_not_there_yet: { id: integer, text1: text foreign_key, text2: text }
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name fk_not_there_yet}
   | {col_key_list}
     | {col_def}: id: integer
@@ -4463,7 +4463,7 @@ CREATE TABLE bar(
   {create_table_stmt}: bar: { id: integer notnull, name: text }
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name bar}
   | {col_key_list}
     | {col_def}: id: integer notnull
@@ -4480,7 +4480,7 @@ CREATE TABLE bar(
           | | {type_text}: text
           | {create_attr}: ok
             | {version_annotation}
-              | {int 5}
+              | {int 5} {version}
               | {name name_creator}
 
 The statement ending at line XXXX
@@ -4527,10 +4527,10 @@ CREATE TABLE t1(
   {create_table_stmt}: t1: { id: integer } deleted @create(7)
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {create_attr}
   | |   | {version_annotation}
-  | |     | {int 7}
+  | |     | {int 7} {version}
   | | {name t1}
   | {col_key_list}
     | {col_def}: id: integer
@@ -4548,10 +4548,10 @@ CREATE TABLE t2(
   {create_table_stmt}: t2: { id: integer } @create(5)
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {create_attr}
   | |   | {version_annotation}
-  | |     | {int 5}
+  | |     | {int 5} {version}
   | | {name t2}
   | {col_key_list}
     | {col_def}: id: integer
@@ -4569,10 +4569,10 @@ CREATE TABLE t3(
   {create_table_stmt}: t3: { id: integer } deleted @delete(4)
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {delete_attr}
   | |   | {version_annotation}
-  | |     | {int 4}
+  | |     | {int 4} {version}
   | | {name t3}
   | {col_key_list}
     | {col_def}: id: integer
@@ -4590,10 +4590,10 @@ CREATE TABLE t4(
   {create_table_stmt}: t4: { id: integer } @delete(5)
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {delete_attr}
   | |   | {version_annotation}
-  | |     | {int 5}
+  | |     | {int 5} {version}
   | | {name t4}
   | {col_key_list}
     | {col_def}: id: integer
@@ -4643,7 +4643,7 @@ BEGIN
 END;
 
   {create_trigger_stmt}: ok
-  | {int 0}
+  | {int 0} {no_flags}
   | {trigger_body_vers}
     | {trigger_def}
       | {name will_not_be_processed_trigger}
@@ -4655,7 +4655,7 @@ END;
           | {trigger_target_action}
             | {name lol_table}
             | {trigger_action}
-              | {int 0}
+              | {int 0} {no_flags}
               | {trigger_when_stmts}
                 | {stmt_list}
                   | {delete_stmt}
@@ -4671,7 +4671,7 @@ The statement ending at line XXXX
 
   {schema_ad_hoc_migration_stmt}: ok @create(5)
   | {version_annotation}
-    | {int 5}
+    | {int 5} {version}
     | {name MyAdHocMigration}
 
 The statement ending at line XXXX

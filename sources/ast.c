@@ -555,6 +555,9 @@ cql_noexport bool_t print_ast_value(struct ast_node *node) {
     // standard view and table flags
     if (parent_type == k_ast_create_view_stmt ||
         parent_type == k_ast_table_flags_attrs) {
+      if (value == 0) {
+        cql_output(" {no_flags}");
+      }
       if (value & GENERIC_IF_NOT_EXISTS) {
         cql_output(" {if_not_exists}");
       }
@@ -617,6 +620,9 @@ cql_noexport bool_t print_ast_value(struct ast_node *node) {
         parent_type == k_ast_trigger_condition ||
         parent_type == k_ast_trigger_action ||
         parent_type == k_ast_create_trigger_stmt) {
+      if (value == 0) {
+        cql_output(" {no_flags}");
+      }
       if (value & TRIGGER_IS_TEMP) {
         cql_output(" {temp}");
       }
@@ -643,6 +649,150 @@ cql_noexport bool_t print_ast_value(struct ast_node *node) {
       }
       if (value & TRIGGER_FOR_EACH_ROW) {
         cql_output(" {for_each_row}");
+      }
+    }
+
+    if (parent_type == k_ast_enforce_normal_stmt || parent_type == k_ast_enforce_strict_stmt) {
+      switch (value) {
+        case ENFORCE_FK_ON_UPDATE:      
+          cql_output(" {fk_on_update}");
+          break;
+        case ENFORCE_FK_ON_DELETE:      
+          cql_output(" {fk_on_delete}");
+          break;
+        case ENFORCE_STRICT_JOIN:        
+          cql_output(" {strict_join}");
+          break;
+        case ENFORCE_UPSERT_STMT:       
+          cql_output(" {upsert_stmt}");
+          break;
+        case ENFORCE_WINDOW_FUNC:       
+          cql_output(" {window_func}");
+          break;
+        case ENFORCE_CAST:              
+          cql_output(" {enforce_cast}");
+          break;
+        case ENFORCE_WITHOUT_ROWID:     
+          cql_output(" {without_rowid}");
+          break;
+        case ENFORCE_TRANSACTION:       
+          cql_output(" {enforce_transaction}");
+          break;
+        case ENFORCE_SELECT_IF_NOTHING: 
+          cql_output(" {select_if_nothing}");
+          break;
+        case ENFORCE_INSERT_SELECT:     
+          cql_output(" {insert_select}");
+          break;
+        case ENFORCE_TABLE_FUNCTION:    
+          cql_output(" {table_function}");
+          break;
+        case ENFORCE_SIGN_FUNCTION:     
+          cql_output(" {sign_function}");
+          break;
+        case ENFORCE_IS_TRUE:           
+          cql_output(" {is_true}");
+          break;
+        case ENFORCE_CURSOR_HAS_ROW:    
+          cql_output(" {cursor_has_row}");
+          break;
+        case ENFORCE_UPDATE_FROM:       
+          cql_output(" {update_from}");
+          break;
+        case ENFORCE_AND_OR_NOT_NULL_CHECK: 
+          cql_output(" {and_or_not_null_check}"); break;
+      }
+    }
+
+    if (parent_type == k_ast_indexed_columns_conflict_clause ||
+        parent_type == k_ast_col_attrs_not_null) {
+      switch (value) {
+        case ON_CONFLICT_ROLLBACK:
+          cql_output(" {on_conflict_rollback}");
+          break;
+        case ON_CONFLICT_ABORT:
+          cql_output(" {on_conflict_abort}");
+          break;
+        case ON_CONFLICT_FAIL:
+          cql_output(" {on_conflict_fail}");
+          break;
+        case ON_CONFLICT_IGNORE:
+          cql_output(" {on_conflict_ignore}");
+          break;
+        case ON_CONFLICT_REPLACE:
+          cql_output(" {on_conflict_replace}");
+          break;
+      }
+    }
+
+    if (parent_type == k_ast_switch_stmt) {
+       switch (value) {
+         case SWITCH_NORMAL:
+           cql_output(" {switch_normal}");
+           break;
+
+         case SWITCH_ALL_VALUES:
+           cql_output(" {switch_all_values}");
+           break;
+       }
+    }
+
+    if (parent_type == k_ast_index_flags_names_attrs) {
+      if (value == 0) {
+        cql_output(" {no_flags}");
+      }
+//      if (value & INDEX_IS_TEMP) {   temp index isn't a thing yet
+//        cql_output(" {temp}");
+//      }
+      if (value & INDEX_IFNE) {
+        cql_output(" {if_not_exists}");
+      }
+      if (value & INDEX_UNIQUE) {
+        cql_output(" {unique}");
+      }
+    }
+
+    if (parent_type == k_ast_explain_stmt) {
+      switch (value) {
+        case EXPLAIN_NONE:
+          cql_output(" {explain_none}");
+          break;
+        case EXPLAIN_QUERY_PLAN:
+          cql_output(" {explain_query_plan}");
+          break;
+      }
+    }
+
+    if (parent_type == k_ast_select_core_compound) {
+      switch (value) {
+        case COMPOUND_OP_UNION:
+          cql_output(" {union}");
+          break;
+        case COMPOUND_OP_UNION_ALL:
+          cql_output(" {union_all}");
+          break;
+        case COMPOUND_OP_INTERSECT:
+          cql_output(" {intersect}");
+          break;
+        case COMPOUND_OP_EXCEPT:
+          cql_output(" {except}");
+          break;
+      }     
+    }
+
+    if (parent_type == k_ast_version_annotation || 
+        parent_type == k_ast_delete_attr ||
+        parent_type == k_ast_create_attr) {
+      cql_output(" {version}");
+    }
+
+    if (parent_type == k_ast_drop_table_stmt ||
+        parent_type == k_ast_drop_view_stmt ||
+        parent_type == k_ast_drop_index_stmt ||
+        parent_type == k_ast_drop_trigger_stmt) {
+      // note lack of flags is done with null in this case
+      if (value & GENERIC_IF_EXISTS) {
+        cql_output(" {if_exists}");
       }
     }
 

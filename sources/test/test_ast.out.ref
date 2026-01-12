@@ -3922,7 +3922,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name xx}
   | {col_key_list}
     | {col_def}
@@ -3937,7 +3937,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name yy}
   | {col_key_list}
     | {col_def}
@@ -4443,7 +4443,7 @@ The statement ending at line XXXX
     |       | {select_groupby}
     |         | {select_having}
     | {select_core_compound}
-      | {int 2}
+      | {int 2} {union_all}
       | {select_core_list}
         | {select_core}
           | {select_expr_list_con}
@@ -4473,7 +4473,7 @@ The statement ending at line XXXX
     | {select_core_macro_arg_ref}
     | | {name x}
     | {select_core_compound}
-      | {int 2}
+      | {int 2} {union_all}
       | {select_core_list}
         | {select_core_macro_arg_ref}
           | {name x}
@@ -5086,7 +5086,7 @@ The statement ending at line XXXX
         |   |       | {select_groupby}
         |   |         | {select_having}
         |   | {select_core_compound}
-        |     | {int 1}
+        |     | {int 1} {union}
         |     | {select_core_list}
         |       | {select_core}
         |         | {select_expr_list_con}
@@ -5279,7 +5279,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name foo}
   | {col_key_list}
     | {col_def}
@@ -5347,7 +5347,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name foo}
   | {col_key_list}
     | {col_def}
@@ -5361,7 +5361,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name foo}
   | {col_key_list}
     | {col_def}
@@ -5387,7 +5387,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name foo}
   | {col_key_list}
     | {col_def}
@@ -5414,7 +5414,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name foo}
   | {col_key_list}
     | {col_def}
@@ -5444,7 +5444,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name foo}
   | {col_key_list}
     | {col_def}
@@ -5473,7 +5473,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name foo}
   | {col_key_list}
     | {col_def}
@@ -5535,7 +5535,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name foo}
   | {col_key_list}
     | {col_def}
@@ -5549,7 +5549,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name foo}
   | {col_key_list}
     | {col_def}
@@ -5585,7 +5585,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name foo}
   | {col_key_list}
     | {col_def}
@@ -5622,7 +5622,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name foo}
   | {col_key_list}
     | {col_def}
@@ -5661,7 +5661,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name foo}
   | {col_key_list}
     | {col_def}
@@ -5712,7 +5712,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name foo}
   | {col_key_list}
     | {col_def}
@@ -5764,7 +5764,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name foo}
   | {col_key_list}
     | {col_def}
@@ -5789,7 +5789,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name T1}
   | {col_key_list}
     | {col_def}
@@ -5812,7 +5812,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name T2}
   | {col_key_list}
     | {col_def}
@@ -5847,7 +5847,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name T}
   | {col_key_list}
     | {col_def}
@@ -5875,8 +5875,8 @@ The statement ending at line XXXX
   | {create_index_on_list}
   | | {name thread_key_contact_id}
   | | {name participants}
-  | {flags_names_attrs}
-    | {int 0}
+  | {index_flags_names_attrs}
+    | {int 0} {no_flags}
     | {connector}
       | {index_names_and_attrs}
         | {indexed_columns}
@@ -5892,8 +5892,8 @@ The statement ending at line XXXX
   | {create_index_on_list}
   | | {name thread_key_contact_id}
   | | {name participants}
-  | {flags_names_attrs}
-    | {int 0}
+  | {index_flags_names_attrs}
+    | {int 0} {no_flags}
     | {connector}
       | {index_names_and_attrs}
         | {indexed_columns}
@@ -5913,8 +5913,8 @@ The statement ending at line XXXX
   | {create_index_on_list}
   | | {name thread_key_contact_id}
   | | {name participants}
-  | {flags_names_attrs}
-    | {int 0}
+  | {index_flags_names_attrs}
+    | {int 0} {no_flags}
     | {connector}
       | {index_names_and_attrs}
         | {indexed_columns}
@@ -5938,8 +5938,8 @@ The statement ending at line XXXX
   | {create_index_on_list}
   | | {name thread_key_contact_id}
   | | {name participants}
-  | {flags_names_attrs}
-    | {int 0}
+  | {index_flags_names_attrs}
+    | {int 0} {no_flags}
     | {connector}
       | {index_names_and_attrs}
         | {indexed_columns}
@@ -6883,7 +6883,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
   {create_view_stmt}
-  | {int 0}
+  | {int 0} {no_flags}
   | {view_and_attrs}
     | {view_details_select}
       | {view_details}
@@ -6909,7 +6909,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
   {create_view_stmt}
-  | {int 0}
+  | {int 0} {no_flags}
   | {view_and_attrs}
     | {view_details_select}
       | {view_details}
@@ -6963,7 +6963,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
   {create_view_stmt}
-  | {int 0}
+  | {int 0} {no_flags}
   | {view_and_attrs}
     | {view_details_select}
       | {view_details}
@@ -7146,7 +7146,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
   {create_view_stmt}
-  | {int 0}
+  | {int 0} {no_flags}
   | {view_and_attrs}
     | {view_details_select}
       | {view_details}
@@ -7233,7 +7233,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
   {create_view_stmt}
-  | {int 0}
+  | {int 0} {no_flags}
   | {view_and_attrs}
     | {view_details_select}
       | {view_details}
@@ -7477,7 +7477,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
   {create_view_stmt}
-  | {int 0}
+  | {int 0} {no_flags}
   | {view_and_attrs}
     | {view_details_select}
       | {view_details}
@@ -7573,7 +7573,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name pending_tasks}
   | {col_key_list}
     | {col_def}
@@ -7664,7 +7664,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name pending_query_changes}
   | {col_key_list}
     | {col_def}
@@ -10783,7 +10783,7 @@ The statement ending at line XXXX
   | |       | {select_groupby}
   | |         | {select_having}
   | | {select_core_compound}
-  |   | {int 1}
+  |   | {int 1} {union}
   |   | {select_core_list}
   |     | {select_core}
   |       | {select_expr_list_con}
@@ -10824,7 +10824,7 @@ The statement ending at line XXXX
   | |       | {select_groupby}
   | |         | {select_having}
   | | {select_core_compound}
-  |   | {int 2}
+  |   | {int 2} {union_all}
   |   | {select_core_list}
   |     | {select_core}
   |       | {select_expr_list_con}
@@ -10865,7 +10865,7 @@ The statement ending at line XXXX
   | |       | {select_groupby}
   | |         | {select_having}
   | | {select_core_compound}
-  |   | {int 2}
+  |   | {int 2} {union_all}
   |   | {select_core_list}
   |     | {select_core}
   |     | | {select_expr_list_con}
@@ -10883,7 +10883,7 @@ The statement ending at line XXXX
   |     |       | {select_groupby}
   |     |         | {select_having}
   |     | {select_core_compound}
-  |       | {int 2}
+  |       | {int 2} {union_all}
   |       | {select_core_list}
   |         | {select_core}
   |           | {select_expr_list_con}
@@ -10926,7 +10926,7 @@ The statement ending at line XXXX
   | |       | {select_groupby}
   | |         | {select_having}
   | | {select_core_compound}
-  |   | {int 1}
+  |   | {int 1} {union}
   |   | {select_core_list}
   |     | {select_core}
   |     | | {select_expr_list_con}
@@ -10946,7 +10946,7 @@ The statement ending at line XXXX
   |     |       | {select_groupby}
   |     |         | {select_having}
   |     | {select_core_compound}
-  |       | {int 1}
+  |       | {int 1} {union}
   |       | {select_core_list}
   |         | {select_core}
   |           | {select_expr_list_con}
@@ -11268,7 +11268,7 @@ The statement ending at line XXXX
   |       | |       | {select_groupby}
   |       | |         | {select_having}
   |       | | {select_core_compound}
-  |       |   | {int 2}
+  |       |   | {int 2} {union_all}
   |       |   | {select_core_list}
   |       |     | {select_core}
   |       |       | {select_expr_list_con}
@@ -11545,7 +11545,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name foo}
   | {col_key_list}
     | {col_def}
@@ -11555,7 +11555,7 @@ The statement ending at line XXXX
         | | {type_int}
         | {create_attr}
           | {version_annotation}
-            | {int 1}
+            | {int 1} {version}
             | {name Foo}
 
 The statement ending at line XXXX
@@ -11563,7 +11563,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name foo}
   | {col_key_list}
     | {col_def}
@@ -11573,7 +11573,7 @@ The statement ending at line XXXX
         | | {type_int}
         | {create_attr}
           | {version_annotation}
-            | {int 1}
+            | {int 1} {version}
             | {dot}
               | {name cql}
               | {name from_recreate}
@@ -11583,7 +11583,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name foo}
   | {col_key_list}
     | {col_def}
@@ -11593,7 +11593,7 @@ The statement ending at line XXXX
         | | {type_int}
         | {delete_attr}
           | {version_annotation}
-            | {int 2}
+            | {int 2} {version}
             | {name Bar}
 
 The statement ending at line XXXX
@@ -11601,7 +11601,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name foo}
   | {col_key_list}
     | {col_def}
@@ -11611,11 +11611,11 @@ The statement ending at line XXXX
         | | {type_int}
         | {create_attr}
           | {version_annotation}
-          | | {int 1}
+          | | {int 1} {version}
           | | {name Foo}
           | {delete_attr}
             | {version_annotation}
-              | {int 2}
+              | {int 2} {version}
               | {name Bar}
 
 The statement ending at line XXXX
@@ -11623,7 +11623,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name foo}
   | {col_key_list}
     | {col_def}
@@ -11633,24 +11633,24 @@ The statement ending at line XXXX
         | | {type_int}
         | {create_attr}
           | {version_annotation}
-          | | {int 1}
+          | | {int 1} {version}
           | {delete_attr}
             | {version_annotation}
-              | {int 2}
+              | {int 2} {version}
 
 The statement ending at line XXXX
 
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {create_attr}
   | |   | {version_annotation}
-  | |   | | {int 1}
+  | |   | | {int 1} {version}
   | |   | | {name foo}
   | |   | {delete_attr}
   | |     | {version_annotation}
-  | |       | {int 2}
+  | |       | {int 2} {version}
   | |       | {name bar}
   | | {name foo}
   | {col_key_list}
@@ -11668,7 +11668,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
   {drop_table_stmt}
-  | {int 1}
+  | {int 1} {if_exists}
   | {name foo}
 
 The statement ending at line XXXX
@@ -11702,7 +11702,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
   {create_view_stmt}
-  | {int 0}
+  | {int 0} {no_flags}
   | {view_and_attrs}
     | {view_details_select}
     | | {view_details}
@@ -11726,7 +11726,7 @@ The statement ending at line XXXX
     |       | {select_offset}
     | {delete_attr}
       | {version_annotation}
-        | {int 2}
+        | {int 2} {version}
 
 The statement ending at line XXXX
 
@@ -11756,8 +11756,8 @@ The statement ending at line XXXX
   | {create_index_on_list}
   | | {name foo}
   | | {name bazzle}
-  | {flags_names_attrs}
-    | {int 0}
+  | {index_flags_names_attrs}
+    | {int 0} {no_flags}
     | {connector}
       | {index_names_and_attrs}
       | | {indexed_columns}
@@ -11765,7 +11765,7 @@ The statement ending at line XXXX
       |     | {name goo}
       | {delete_attr}
         | {version_annotation}
-          | {int 7}
+          | {int 7} {version}
 
 The statement ending at line XXXX
 
@@ -12036,7 +12036,7 @@ The statement ending at line XXXX
   | {create_table_stmt}
     | {create_table_name_flags}
     | | {table_flags_attrs}
-    | | | {int 0}
+    | | | {int 0} {no_flags}
     | | {name bar}
     | {col_key_list}
       | {col_def}
@@ -12069,8 +12069,8 @@ The statement ending at line XXXX
   | {create_index_on_list}
   | | {name my_unique_index}
   | | {name foo}
-  | {flags_names_attrs}
-    | {int 3}
+  | {index_flags_names_attrs}
+    | {int 6} {if_not_exists} {unique}
     | {connector}
       | {index_names_and_attrs}
         | {indexed_columns}
@@ -12090,7 +12090,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name foo}
   | {col_key_list}
     | {col_def}
@@ -12163,7 +12163,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name foo}
   | {col_key_list}
     | {col_def}
@@ -12184,7 +12184,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name lots_o_defaults}
   | {col_key_list}
     | {col_def}
@@ -12233,7 +12233,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {recreate_attr}
   | | {name foo}
   | {col_key_list}
@@ -12248,7 +12248,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {recreate_attr}
   | |   | {delete_attr}
   | | {name foo2}
@@ -12264,7 +12264,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | | {recreate_attr}
   | |   | {name foo3_group}
   | |   | {delete_attr}
@@ -12905,7 +12905,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
   {create_trigger_stmt}
-  | {int 0}
+  | {int 0} {no_flags}
   | {trigger_body_vers}
     | {trigger_def}
       | {name trigger2}
@@ -12917,7 +12917,7 @@ The statement ending at line XXXX
           | {trigger_target_action}
             | {name target_table2}
             | {trigger_action}
-              | {int 0}
+              | {int 0} {no_flags}
               | {trigger_when_stmts}
                 | {stmt_list}
                   | {delete_stmt}
@@ -12930,7 +12930,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
   {create_trigger_stmt}
-  | {int 0}
+  | {int 0} {no_flags}
   | {trigger_body_vers}
     | {trigger_def}
       | {name trigger3}
@@ -12942,7 +12942,7 @@ The statement ending at line XXXX
           | {trigger_target_action}
             | {name target_table3}
             | {trigger_action}
-              | {int 0}
+              | {int 0} {no_flags}
               | {trigger_when_stmts}
                 | {stmt_list}
                   | {update_stmt}
@@ -12978,7 +12978,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
   {create_trigger_stmt}
-  | {int 0}
+  | {int 0} {no_flags}
   | {trigger_body_vers}
     | {trigger_def}
       | {name trigger4}
@@ -12996,7 +12996,7 @@ The statement ending at line XXXX
           | {trigger_target_action}
             | {name target_table4}
             | {trigger_action}
-              | {int 0}
+              | {int 0} {no_flags}
               | {trigger_when_stmts}
                 | {stmt_list}
                   | {select_stmt}
@@ -13022,7 +13022,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
   {drop_trigger_stmt}
-  | {int 1}
+  | {int 1} {if_exists}
   | {name foo}
 
 The statement ending at line XXXX
@@ -13186,7 +13186,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name with_sensitive}
   | {col_key_list}
     | {col_def}
@@ -13319,62 +13319,62 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
   {enforce_strict_stmt}
-  | {int 1}
+  | {int 1} {fk_on_update}
 
 The statement ending at line XXXX
 
   {enforce_normal_stmt}
-  | {int 2}
+  | {int 2} {fk_on_delete}
 
 The statement ending at line XXXX
 
   {enforce_strict_stmt}
-  | {int 3}
+  | {int 3} {strict_join}
 
 The statement ending at line XXXX
 
   {enforce_normal_stmt}
-  | {int 3}
+  | {int 3} {strict_join}
 
 The statement ending at line XXXX
 
   {enforce_strict_stmt}
-  | {int 6}
+  | {int 6} {enforce_cast}
 
 The statement ending at line XXXX
 
   {enforce_normal_stmt}
-  | {int 6}
+  | {int 6} {enforce_cast}
 
 The statement ending at line XXXX
 
   {enforce_strict_stmt}
-  | {int 4}
+  | {int 4} {upsert_stmt}
 
 The statement ending at line XXXX
 
   {enforce_normal_stmt}
-  | {int 4}
+  | {int 4} {upsert_stmt}
 
 The statement ending at line XXXX
 
   {enforce_strict_stmt}
-  | {int 8}
+  | {int 8} {enforce_transaction}
 
 The statement ending at line XXXX
 
   {enforce_normal_stmt}
-  | {int 8}
+  | {int 8} {enforce_transaction}
 
 The statement ending at line XXXX
 
   {enforce_strict_stmt}
-  | {int 9}
+  | {int 9} {select_if_nothing}
 
 The statement ending at line XXXX
 
   {enforce_normal_stmt}
-  | {int 9}
+  | {int 9} {select_if_nothing}
 
 The statement ending at line XXXX
 
@@ -13521,7 +13521,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
   {create_trigger_stmt}
-  | {int 0}
+  | {int 0} {no_flags}
   | {trigger_body_vers}
     | {trigger_def}
     | | {name deleted_trigger}
@@ -13533,7 +13533,7 @@ The statement ending at line XXXX
     |     | {trigger_target_action}
     |       | {name target_table2}
     |       | {trigger_action}
-    |         | {int 0}
+    |         | {int 0} {no_flags}
     |         | {trigger_when_stmts}
     |           | {stmt_list}
     |             | {delete_stmt}
@@ -13544,7 +13544,7 @@ The statement ending at line XXXX
     |                   | {int 1}
     | {delete_attr}
       | {version_annotation}
-        | {int 100}
+        | {int 100} {version}
 
 The statement ending at line XXXX
 
@@ -13677,7 +13677,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
   {explain_stmt}
-  | {int 2}
+  | {int 2} {explain_query_plan}
   | {select_stmt}
     | {select_core_list}
     | | {select_core}
@@ -13698,7 +13698,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
   {explain_stmt}
-  | {int 1}
+  | {int 1} {explain_none}
   | {select_stmt}
     | {select_core_list}
     | | {select_core}
@@ -13719,7 +13719,7 @@ The statement ending at line XXXX
   {declare_cursor}
   | {name E}
   | {explain_stmt}
-    | {int 1}
+    | {int 1} {explain_none}
     | {select_stmt}
       | {select_core_list}
       | | {select_core}
@@ -13739,7 +13739,7 @@ The statement ending at line XXXX
 
   {schema_ad_hoc_migration_stmt}
   | {version_annotation}
-    | {int 11}
+    | {int 11} {version}
     | {name YourProcHere}
 
 The statement ending at line XXXX
@@ -13858,7 +13858,7 @@ The statement ending at line XXXX
           | |       | {select_groupby}
           | |         | {select_having}
           | | {select_core_compound}
-          |   | {int 1}
+          |   | {int 1} {union}
           |   | {select_core_list}
           |     | {select_core}
           |       | {select_expr_list_con}
@@ -14417,7 +14417,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name foo}
   | {col_key_list}
     | {col_def}
@@ -15319,7 +15319,7 @@ The statement ending at line XXXX
   | {create_table_stmt}
     | {create_table_name_flags}
     | | {table_flags_attrs}
-    | | | {int 0}
+    | | | {int 0} {no_flags}
     | | | {recreate_attr}
     | | {name foo}
     | {col_key_list}
@@ -15433,7 +15433,7 @@ The statement ending at line XXXX
   | {create_table_stmt}
     | {create_table_name_flags}
     | | {table_flags_attrs}
-    | | | {int 0}
+    | | | {int 0} {no_flags}
     | | | {recreate_attr}
     | | {name foo}
     | {col_key_list}
@@ -15458,7 +15458,7 @@ The statement ending at line XXXX
   | {create_table_stmt}
     | {create_table_name_flags}
     | | {table_flags_attrs}
-    | | | {int 0}
+    | | | {int 0} {no_flags}
     | | | {recreate_attr}
     | | {name foo}
     | {col_key_list}
@@ -15483,10 +15483,10 @@ The statement ending at line XXXX
   | {create_table_stmt}
     | {create_table_name_flags}
     | | {table_flags_attrs}
-    | | | {int 0}
+    | | | {int 0} {no_flags}
     | | | {delete_attr}
     | |   | {version_annotation}
-    | |     | {int 5}
+    | |     | {int 5} {version}
     | | {name foo}
     | {col_key_list}
       | {col_def}
@@ -15506,7 +15506,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name foo}
   | {col_key_list}
     | {col_def}
@@ -15637,7 +15637,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name special}
   | {col_key_list}
     | {col_def}
@@ -15727,7 +15727,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name foo}
   | {col_key_list}
     | {col_def}
@@ -15898,7 +15898,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
   {switch_stmt}
-  | {int 0}
+  | {int 0} {switch_normal}
   | {switch_body}
     | {name x}
     | {switch_case}
@@ -15947,7 +15947,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
   {switch_stmt}
-  | {int 1}
+  | {int 1} {switch_all_values}
   | {switch_body}
     | {name x}
     | {switch_case}
@@ -16036,7 +16036,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name foo}
   | {col_key_list}
     | {col_def}
@@ -16055,14 +16055,14 @@ The statement ending at line XXXX
           | | {indexed_columns}
           |   | {indexed_column}
           |     | {name name}
-          | {int 0}
+          | {int 0} {on_conflict_rollback}
 
 The statement ending at line XXXX
 
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name foo}
   | {col_key_list}
     | {col_def}
@@ -16081,14 +16081,14 @@ The statement ending at line XXXX
           | | {indexed_columns}
           |   | {indexed_column}
           |     | {name name}
-          | {int 2}
+          | {int 2} {on_conflict_fail}
 
 The statement ending at line XXXX
 
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name foo}
   | {col_key_list}
     | {col_def}
@@ -16107,14 +16107,14 @@ The statement ending at line XXXX
           | | {indexed_columns}
           |   | {indexed_column}
           |     | {name name}
-          | {int 3}
+          | {int 3} {on_conflict_ignore}
 
 The statement ending at line XXXX
 
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name foo}
   | {col_key_list}
     | {col_def}
@@ -16133,14 +16133,14 @@ The statement ending at line XXXX
           | | {indexed_columns}
           |   | {indexed_column}
           |     | {name name}
-          | {int 4}
+          | {int 4} {on_conflict_replace}
 
 The statement ending at line XXXX
 
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name foo}
   | {col_key_list}
     | {col_def}
@@ -16159,14 +16159,14 @@ The statement ending at line XXXX
           | | {indexed_columns}
           |   | {indexed_column}
           |     | {name name}
-          | {int 1}
+          | {int 1} {on_conflict_abort}
 
 The statement ending at line XXXX
 
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name foo}
   | {col_key_list}
     | {col_def}
@@ -16187,14 +16187,14 @@ The statement ending at line XXXX
           | | {indexed_columns}
           |   | {indexed_column}
           |     | {name name}
-          | {int 1}
+          | {int 1} {on_conflict_abort}
 
 The statement ending at line XXXX
 
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name foo}
   | {col_key_list}
     | {col_def}
@@ -16210,7 +16210,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name foo}
   | {col_key_list}
     | {col_def}
@@ -16227,7 +16227,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name foo}
   | {col_key_list}
     | {col_def}
@@ -16245,7 +16245,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name foo}
   | {col_key_list}
     | {col_def}
@@ -16254,7 +16254,7 @@ The statement ending at line XXXX
         | | {name id}
         | | {type_int}
         | {col_attrs_not_null}
-          | {int 2}
+          | {int 2} {on_conflict_fail}
 
 The statement ending at line XXXX
 
@@ -16997,7 +16997,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
   {enforce_strict_stmt}
-  | {int 13}
+  | {int 13} {is_true}
 
 The statement ending at line XXXX
 
@@ -17338,7 +17338,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name T}
   | {col_key_list}
     | {col_def}
@@ -17358,7 +17358,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name U}
   | {col_key_list}
     | {col_def}
@@ -17378,7 +17378,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name V}
   | {col_key_list}
     | {col_def}
@@ -17605,14 +17605,14 @@ The statement ending at line XXXX
 
   {schema_unsub_stmt}
   | {version_annotation}
-    | {int 1}
+    | {int 1} {version}
     | {name foo}
 
 The statement ending at line XXXX
 
   {schema_unsub_stmt}
   | {version_annotation}
-    | {int 1}
+    | {int 1} {version}
     | {name foo}
 
 The statement ending at line XXXX
@@ -17773,7 +17773,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name unary_plus_default_value}
   | {col_key_list}
     | {col_def}
@@ -17829,7 +17829,7 @@ The statement ending at line XXXX
   | {create_table_stmt}
     | {create_table_name_flags}
     | | {table_flags_attrs}
-    | | | {int 0}
+    | | | {int 0} {no_flags}
     | | {name backing}
     | {col_key_list}
       | {col_def}
@@ -17850,7 +17850,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
   {enforce_strict_stmt}
-  | {int 15}
+  | {int 15} {update_from}
 
 The statement ending at line XXXX
 
@@ -18377,7 +18377,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
   {enforce_strict_stmt}
-  | {int 16}
+  | {int 16} {and_or_not_null_check}
 
 The statement ending at line XXXX
 
@@ -18889,7 +18889,7 @@ The statement ending at line XXXX
                 | |       | {select_groupby}
                 | |         | {select_having}
                 | | {select_core_compound}
-                |   | {int 2}
+                |   | {int 2} {union_all}
                 |   | {select_core_list}
                 |     | {select_core_macro_arg_ref}
                 |       | {name c}
@@ -18933,7 +18933,7 @@ The statement ending at line XXXX
         |   |       | {select_groupby}
         |   |         | {select_having}
         |   | {select_core_compound}
-        |     | {int 1}
+        |     | {int 1} {union}
         |     | {select_core_list}
         |       | {select_core}
         |         | {select_expr_list_con}
@@ -19647,7 +19647,7 @@ The statement ending at line XXXX
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {int 0} {no_flags}
   | | {name `a table`}
   | {col_key_list}
     | {col_def}

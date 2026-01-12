@@ -6490,7 +6490,7 @@ insert into bar(id) values ('x');
 -- TEST: create a temporary view
 -- + {create_view_stmt}: temp_view: { A: integer notnull, B: integer notnull }
 -- this is the temp flag
--- + {int 1}
+-- + {int 1} {temp}
 -- + {view_details_select}
 -- + {view_details}
 -- + {name temp_view}
@@ -6654,12 +6654,12 @@ create table migrate_annotions_delete_out_of_order(
 
 -- TEST: create a table with versioning
 -- + {create_table_stmt}: versioned_table: { id: integer } deleted @create(1) @delete(3)
--- + {int 0}
+-- + {int 0} {no_flags}
 -- + {create_attr}
--- + {int 1}
+-- + {int 1} {version}
 -- + {name table_create_proc}
 -- + {delete_attr}
--- + {int 3}
+-- + {int 3} {version}
 -- + {name table_delete_proc}
 -- - error:
 create table versioned_table(
@@ -6820,7 +6820,7 @@ create table t_col_delete_notnull (
 -- + {col_def}: id: integer notnull has_default
 -- + {col_attrs_default}
 -- + {uminus}
--- + {int 1}
+-- + {int 1}: integer notnull
 -- - error:
 create table neg_default (
   id int! default -1 @create(2)
@@ -8962,7 +8962,7 @@ drop trigger this_trigger_does_not_exist;
 
 -- TEST: try to drop a trigger (bogus)
 -- + {drop_trigger_stmt}: ok
--- + {int 1}
+-- + {int 1} {if_exists}
 -- - error:
 drop trigger if exists trigger1;
 
@@ -9025,7 +9025,7 @@ end @delete(1, MigrateProcFoo);
 -- + error: % if multiple selects, all must have the same column count
 -- + {select_core_list}: err
 -- + {select_core_compound}
--- +2 {int 2}
+-- +1 {int 2} {union_all}
 -- diagnostics also present
 -- +4 error:
 select 1 as A, 2 as B, 3 as C
@@ -9036,7 +9036,7 @@ select 3 as A, 4 as B;
 -- + error: % required 'INT' not compatible with found 'TEXT' context 'A'
 -- + {select_core_list}: err
 -- + {select_core_compound}
--- +2 {int 2}
+-- +1 {int 2} {union_all}
 -- +1 error:
 select 1 as A, 2 as B
 union all
@@ -9046,7 +9046,7 @@ select 'x' as A, 4 as B;
 -- + {select_core_list}: union_all: { A: integer, B: integer }
 -- + {select_core}: _select_: { A: integer notnull, B: integer }
 -- + {select_core_compound}
--- + {int 2}
+-- + {int 2} {union_all}
 -- + {select_core}: _select_: { A: null, B: integer notnull }
 -- - error:
 select 1 as A, nullable(2) as B
@@ -9056,7 +9056,7 @@ select NULL as A, 4 as B;
 -- TEST: try to select union multiple times
 -- + {select_stmt}: union_all: { A: integer notnull, B: integer notnull }
 -- + {select_core_compound}
--- +7 {int 2}
+-- +3 {int 2} {union_all}
 -- +3 {select_core_list}: union_all: { A: integer notnull, B: integer notnull }
 -- +4 {select_core}: _select_: { A: integer notnull, B: integer notnull }
 -- - error:
@@ -9782,7 +9782,7 @@ end;
 -- TEST: dummy_test info with int value for a negative long column
 -- + {misc_attrs}: ok
 -- + {uminus}
--- + {int 1}
+-- + {int 1}: ok
 -- + {create_proc_stmt}: autotest_dummy_test_neg_long_col_with_int_value: { id: integer notnull, name: text, rate: longint } dml_proc
 -- - error:
 [[autotest=((dummy_test, (bar, (rate), (-1))))]]
@@ -10231,25 +10231,25 @@ create table reference_not_referenceable_column(
 -- TEST: validate enforcement parse and analysis (fk on update)
 -- + @ENFORCE_STRICT FOREIGN KEY ON UPDATE
 -- + {enforce_strict_stmt}: ok
--- + {int 1}
+-- + {int 1} {fk_on_update}
 @enforce_strict foreign key on update;
 
 -- TEST: validate enforcement parse and analysis (fk on delete)
 -- + @ENFORCE_STRICT FOREIGN KEY ON DELETE;
 -- + {enforce_strict_stmt}: ok
--- + {int 2}
+-- + {int 2} {fk_on_delete}
 @enforce_strict foreign key on delete;
 
 -- TEST: validate enforcement parse and analysis (fk on update)
 -- + @ENFORCE_NORMAL FOREIGN KEY ON UPDATE
 -- + {enforce_normal_stmt}: ok
--- + {int 1}
+-- + {int 1} {fk_on_update}
 @enforce_normal foreign key on update;
 
 -- TEST: validate enforcement parse and analysis (fk on delete)
 -- + @ENFORCE_NORMAL FOREIGN KEY ON DELETE;
 -- + {enforce_normal_stmt}: ok
--- + {int 2}
+-- + {int 2} {fk_on_delete}
 @enforce_normal foreign key on delete;
 
 -- switch back to strict mode for the validation tests
@@ -10983,7 +10983,7 @@ end;
 
 -- TEST: enable strict join mode
 -- + {enforce_strict_stmt}: ok
--- + {int 3}
+-- + {int 3} {strict_join}
 -- - error:
 @enforce_strict join;
 
@@ -11191,7 +11191,7 @@ end;
 -- TEST: enforce strict upsert statement
 -- + @ENFORCE_STRICT UPSERT STATEMENT;
 -- + {enforce_strict_stmt}: ok
--- + {int 4}
+-- + {int 4} {upsert_stmt}
 -- - error:
 @enforce_strict upsert statement;
 
@@ -11204,7 +11204,7 @@ insert into bar(id) values (1) on conflict do nothing;
 -- TEST: enforcement normal upsert statement
 -- + @ENFORCE_NORMAL UPSERT STATEMENT;
 -- + {enforce_normal_stmt}: ok
--- + {int 4}
+-- + {int 4} {upsert_stmt}
 @enforce_normal upsert statement;
 
 -- TEST: upsert statement succeed validation in normal mode
@@ -11215,7 +11215,7 @@ insert into bar(id) values (1) on conflict do nothing;
 -- TEST: enforce strict window function
 -- + @ENFORCE_STRICT WINDOW FUNCTION;
 -- + {enforce_strict_stmt}: ok
--- + {int 5}
+-- + {int 5} {window_func}
 -- - error:
 @enforce_strict window function;
 
@@ -11228,7 +11228,7 @@ select id, rank() over () from foo;
 -- TEST: enforcement normal window function
 -- + @ENFORCE_NORMAL WINDOW FUNCTION;
 -- + {enforce_normal_stmt}: ok
--- + {int 5}
+-- + {int 5} {window_func}
 @enforce_normal window function;
 
 -- TEST: window function invocation succeed validation in normal mode
@@ -11498,7 +11498,7 @@ select replace('a', 'b', sensitive('c'));
 -- TEST: create ad hoc version migration -- success
 -- + {schema_ad_hoc_migration_stmt}: ok
 -- + {version_annotation}
--- + {int 5}
+-- + {int 5} {version}
 -- + {name MyAdHocMigration}
 -- - error:
 @schema_ad_hoc_migration(5, MyAdHocMigration);
@@ -11676,7 +11676,7 @@ end;
 -- + {name x}: x: integer variable
 -- + {select_stmt}: _anon: integer notnull
 -- + {select_core_compound}
--- + {int 1}
+-- + {int 1} {union}
 -- - error:
 proc compound_select_expr()
 begin
@@ -11761,20 +11761,20 @@ create table client_region_table_2(id integer primary key references containing_
 -- TEST: explain not supported
 -- + error: % Only [EXPLAIN QUERY PLAN ...] statement is supported
 -- + {explain_stmt}: err
--- + {int 1}
+-- + {int 1} {explain_none}
 -- +1 error:
 explain select 1;
 
 -- TEST: explain query plan with select
 -- + {explain_stmt}: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull }
--- + {int 2}
+-- + {int 2} {explain_query_plan}
 -- + {select_stmt}: _select_: { id: integer notnull, id: integer notnull, name: text, rate: longint }
 -- - error:
 explain query plan select * from foo inner join bar where foo.id = 1;
 
 -- TEST: explain query plan with update
 -- + {explain_stmt}: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull }
--- + {int 2}
+-- + {int 2} {explain_query_plan}
 -- + {update_stmt}: bar: { id: integer notnull, name: text, rate: longint }
 -- - error:
 explain query plan update bar set id = 1 where name = 'Stella';
@@ -11782,7 +11782,7 @@ explain query plan update bar set id = 1 where name = 'Stella';
 -- TEST: explain query plan with incorrect select stmt
 -- + error: % name not found 'bogus'
 -- + {explain_stmt}: err
--- + {int 2}
+-- + {int 2} {explain_query_plan}
 -- + {select_stmt}: err
 -- +1 error:
 explain query plan select bogus;
@@ -11791,7 +11791,7 @@ explain query plan select bogus;
 -- + {create_proc_stmt}: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } dml_proc
 -- + {name explain_query}: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull }
 -- + {explain_stmt}: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull }
--- + {int 2}
+-- + {int 2} {explain_query_plan}
 -- - error:
 proc explain_query()
 begin
@@ -11802,7 +11802,7 @@ end;
 -- + {declare_cursor}: c: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } variable
 -- + {name c}: c: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } variable
 -- + {explain_stmt}: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull }
--- + {int 2}
+-- + {int 2} {explain_query_plan}
 -- - error:
 cursor c for explain query plan select * from foo inner join bar;
 
@@ -11812,7 +11812,7 @@ cursor c for explain query plan select * from foo inner join bar;
 -- + {declare_cursor}: c: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } variable dml_proc
 -- + {name c}: c: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } variable dml_proc shape_storage
 -- + {explain_stmt}: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull }
--- + {int 2}
+-- + {int 2} {explain_query_plan}
 -- - error:
 proc explain_query_with_cursor()
 begin
@@ -12083,11 +12083,11 @@ select id, row_number() over (order by bogus asc) from foo;
 -- + {select_expr}: avg: real
 -- + {window_func_inv}: real
 -- + {opt_frame_spec}: ok
--- + {int 131084}
+-- + {int 131084} {frame_type_groups} {frame_boundary_unbounded} {frame_exclude_ties}
 -- + {expr_list}
 -- + {window_func_inv}: integer notnull
 -- + {opt_frame_spec}: ok
--- + {int 36994}
+-- + {int 36994} {frame_type_rows} {frame_boundary_start_preceding} {frame_boundary_end_following} {frame_exclude_current_row}
 -- - error:
 select id,
        avg(id) filter (where id > 0) over (groups unbounded preceding exclude ties) as avg,
@@ -12747,7 +12747,7 @@ select (not 'x') collate nocase;
 -- TEST: verify that duplicate table with different "IF NOT EXISTS" is still ok
 -- + {create_table_stmt}: foo: { id: integer notnull primary_key autoinc }
 -- + {table_flags_attrs}
--- + {int 2}
+-- + {int 2} {if_not_exists}
 -- - error:
 create table if not exists foo(
   id integer PRIMARY KEY AUTOINCREMENT
@@ -12755,13 +12755,13 @@ create table if not exists foo(
 
 -- TEST: verify that duplicate view with different "IF NOT EXISTS" is still ok
 -- + {create_view_stmt}: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull } alias
--- + {int 2}
+-- + {int 2} {if_not_exists}
 -- - error:
 create view if not exists MyView as select 1 as f1, 2 as f2, 3 as f3;
 
 -- TEST: verify that duplicate trigger  with different "IF NOT EXISTS" is still ok
 -- + {create_trigger_stmt}: ok alias
--- + {int 2}
+-- + {int 2} {if_not_exists}
 -- - error:
 create trigger if not exists trigger2
   after insert on bar
@@ -12771,7 +12771,7 @@ end;
 
 -- TEST: verify that duplicate index  with different "IF NOT EXISTS" is still ok
 -- + {create_index_stmt}: ok alias
--- + {int 2}
+-- + {int 2} {if_not_exists}
 -- - error:
 create index if not exists index_1 on foo(id);
 
@@ -13430,7 +13430,7 @@ insert into values_table(name, id) values ("ok", null);
 -- TEST: enforce strict without rowid
 -- + @ENFORCE_STRICT WITHOUT ROWID;
 -- + {enforce_strict_stmt}: ok
--- + {int 7}
+-- + {int 7} {without_rowid}
 -- - error:
 @enforce_strict without rowid;
 
@@ -13445,7 +13445,7 @@ create table table_with_invalid_without_rowid_mode(
 -- TEST: enforcement normal without rowid
 -- + @ENFORCE_NORMAL WITHOUT ROWID;
 -- + {enforce_normal_stmt}: ok
--- + {int 7}
+-- + {int 7} {without_rowid}
 @enforce_normal without rowid;
 
 -- TEST: without rowid succeed validation in normal mode
@@ -16392,7 +16392,7 @@ LET z := 1;
 -- TEST: switch statement with bogus expression
 -- + error: % string operand not allowed in 'NOT'
 -- + {switch_stmt}: err
--- + {int 0}
+-- + {int 0} {switch_normal}
 -- + {switch_body}
 -- +1 error:
 switch not 'x'
@@ -16402,7 +16402,7 @@ end;
 -- TEST: switch statement with bogus switch expression
 -- + error: % case expression must be a not-null integral type
 -- + {switch_stmt}: err
--- + {int 0}
+-- + {int 0} {switch_normal}
 -- + {switch_body}
 -- +1 error:
 switch 1.5
@@ -16412,7 +16412,7 @@ end;
 -- TEST: switch statement with when expression of the wrong type
 -- + error: % type of a WHEN expression is bigger than the type of the SWITCH expression
 -- + {switch_stmt}: err
--- + {int 0}
+-- + {int 0} {switch_normal}
 -- + {switch_body}
 -- +1 error:
 switch z
@@ -16422,7 +16422,7 @@ end;
 -- TEST: switch statement with not constant when expression
 -- + error: % WHEN expression cannot be evaluated to a constant
 -- + {switch_stmt}: err
--- + {int 0}
+-- + {int 0} {switch_normal}
 -- + {switch_body}
 -- +1 error:
 switch z
@@ -16432,7 +16432,7 @@ end;
 -- TEST: switch statement with bogus when expression
 -- + error: % string operand not allowed in 'NOT'
 -- + {switch_stmt}: err
--- + {int 0}
+-- + {int 0} {switch_normal}
 -- + {switch_body}
 -- +1 error:
 switch z
@@ -16442,7 +16442,7 @@ end;
 -- TEST: switch statement with bogus statement list
 -- + error: % string operand not allowed in 'NOT'
 -- + {switch_stmt}: err
--- + {int 0}
+-- + {int 0} {switch_normal}
 -- + {switch_body}
 -- + {stmt_list}: err
 -- +1 error:
@@ -16454,7 +16454,7 @@ end;
 -- TEST: switch statement with no actual code in it
 -- + error: % switch statement did not have any actual statements in it
 -- + {switch_stmt}: err
--- + {int 0}
+-- + {int 0} {switch_normal}
 -- + {switch_body}
 -- + {switch_case}: err
 -- +1 error:
@@ -16468,7 +16468,7 @@ let thing := integer_things.pen;
 -- TEST: switch statement combining ALL VALUES and ELSE is a joke
 -- + error: % switch ... ALL VALUES is useless with an ELSE clause
 -- + {switch_stmt}: err
--- + {int 1}
+-- + {int 1} {switch_all_values}
 -- + {switch_body}
 -- - {expr_list}: err
 -- 2 {expr_list}: ok
@@ -16487,7 +16487,9 @@ end;
 -- TEST: switch statement with duplicate values
 -- + error: % WHEN clauses contain duplicate values '2'
 -- + {switch_stmt}: err
--- + {int 1}
+-- + {int 1}: integer notnull
+-- + {int 2}: integer notnull
+-- + {int 2}: integer notnull
 -- +1 error:
 switch z
   when 1, 2 then
@@ -16501,7 +16503,7 @@ end;
 -- TEST: switch statement with nullable switch expr
 -- + error: % case expression must be a not-null integral type
 -- + {switch_stmt}: err
--- + {int 0}
+-- + {int 0} {switch_normal}
 -- + {switch_body}
 -- +1 error:
 switch x
@@ -16808,14 +16810,14 @@ SET pr2 := proc_as_func("t");
 -- TEST: test create table with not null column on conflict clause abort
 -- + {create_table_stmt}: conflict_clause_t: { id: integer notnull }
 -- + {col_attrs_not_null}: ok
--- + {int 2}
+-- + {int 2} {on_conflict_fail}
 -- - error:
 create table conflict_clause_t(id int! on conflict fail);
 
 -- TEST: test create table with pk column on conflict clause rollback
 -- + {create_table_stmt}: conflict_clause_pk: { id: integer notnull partial_pk }
 -- + {indexed_columns_conflict_clause}
--- + {int 0}
+-- + {int 0} {on_conflict_rollback}
 -- - error:
 create table conflict_clause_pk(
   id int!,
@@ -20513,7 +20515,7 @@ end;
 -- TEST: disallow use of sign in SQL
 -- + @ENFORCE_STRICT SIGN FUNCTION;
 -- + {enforce_strict_stmt}: ok
--- + {int 12}
+-- + {int 12} {sign_function}
 -- - error:
 @enforce_strict sign function;
 
@@ -20531,7 +20533,7 @@ let sign_of_some_value := sign(-42);
 -- TEST: allow use of sign in SQL once again
 -- + @ENFORCE_NORMAL SIGN FUNCTION;
 -- + {enforce_normal_stmt}: ok
--- + {int 12}
+-- + {int 12} {sign_function}
 -- - error:
 @enforce_normal sign function;
 

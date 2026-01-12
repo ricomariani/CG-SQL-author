@@ -908,7 +908,7 @@ id integer);
 -- + {create_index_stmt}: ok
 -- + {name my_unique_index}
 -- + {name bar}
--- + {flags_names_attrs}
+-- + {index_flags_names_attrs}
 -- + {int 3}
 -- + {name id}: id: integer notnull
 -- + {asc}

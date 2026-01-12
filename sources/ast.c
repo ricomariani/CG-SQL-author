@@ -466,7 +466,7 @@ typedef struct decode_info {
 
 // This formats the value as a set of named flags
 // The value can be zero meaning no flags are set
-static void print_flags(int32_t value, const decode_info *flags, size_t count) {
+static void print_flags(llint_t value, const decode_info *flags, size_t count) {
   if (value == 0) {
     cql_output(" {no_flags}");
     return;
@@ -482,7 +482,7 @@ static void print_flags(int32_t value, const decode_info *flags, size_t count) {
 // This formats the value as a single named value and asserts that it is valid
 // The encoding is highly mistake resistant because the value must be an index
 // into the flags array and must match the flag at that index.
-static void print_value(int32_t value, const decode_info *flags, size_t count) {
+static void print_value(llint_t value, const decode_info *flags, size_t count) {
   Contract(value >= 0);
   Contract(value < count);
   Contract(value == flags[value].flag);
@@ -569,8 +569,6 @@ cql_noexport bool_t print_ast_value(struct ast_node *node) {
 
     // join types have their own special names, emit those
     if (parent_type == k_ast_join_target) {
-      CSTR out = NULL;
-
       decode_info join_option[] = {
         { -1, "join_none" }, // stub, indices start at 1, this will force error if 0 appears
         { JOIN_INNER, "join_inner" },

@@ -11761,20 +11761,20 @@ create table client_region_table_2(id integer primary key references containing_
 -- TEST: explain not supported
 -- + error: % Only [EXPLAIN QUERY PLAN ...] statement is supported
 -- + {explain_stmt}: err
--- + {int 1} {explain_none}
+-- + {int 0} {explain_none}
 -- +1 error:
 explain select 1;
 
 -- TEST: explain query plan with select
 -- + {explain_stmt}: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull }
--- + {int 2} {explain_query_plan}
+-- + {int 1} {explain_query_plan}
 -- + {select_stmt}: _select_: { id: integer notnull, id: integer notnull, name: text, rate: longint }
 -- - error:
 explain query plan select * from foo inner join bar where foo.id = 1;
 
 -- TEST: explain query plan with update
 -- + {explain_stmt}: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull }
--- + {int 2} {explain_query_plan}
+-- + {int 1} {explain_query_plan}
 -- + {update_stmt}: bar: { id: integer notnull, name: text, rate: longint }
 -- - error:
 explain query plan update bar set id = 1 where name = 'Stella';
@@ -11782,7 +11782,7 @@ explain query plan update bar set id = 1 where name = 'Stella';
 -- TEST: explain query plan with incorrect select stmt
 -- + error: % name not found 'bogus'
 -- + {explain_stmt}: err
--- + {int 2} {explain_query_plan}
+-- + {int 1} {explain_query_plan}
 -- + {select_stmt}: err
 -- +1 error:
 explain query plan select bogus;
@@ -11791,7 +11791,7 @@ explain query plan select bogus;
 -- + {create_proc_stmt}: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } dml_proc
 -- + {name explain_query}: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull }
 -- + {explain_stmt}: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull }
--- + {int 2} {explain_query_plan}
+-- + {int 1} {explain_query_plan}
 -- - error:
 proc explain_query()
 begin
@@ -11802,7 +11802,7 @@ end;
 -- + {declare_cursor}: c: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } variable
 -- + {name c}: c: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } variable
 -- + {explain_stmt}: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull }
--- + {int 2} {explain_query_plan}
+-- + {int 1} {explain_query_plan}
 -- - error:
 cursor c for explain query plan select * from foo inner join bar;
 
@@ -11812,7 +11812,7 @@ cursor c for explain query plan select * from foo inner join bar;
 -- + {declare_cursor}: c: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } variable dml_proc
 -- + {name c}: c: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } variable dml_proc shape_storage
 -- + {explain_stmt}: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull }
--- + {int 2} {explain_query_plan}
+-- + {int 1} {explain_query_plan}
 -- - error:
 proc explain_query_with_cursor()
 begin

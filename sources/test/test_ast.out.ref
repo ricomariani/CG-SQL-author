@@ -13677,7 +13677,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
   {explain_stmt}
-  | {int 2} {explain_query_plan}
+  | {int 1} {explain_query_plan}
   | {select_stmt}
     | {select_core_list}
     | | {select_core}
@@ -13698,7 +13698,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
   {explain_stmt}
-  | {int 1} {explain_none}
+  | {int 0} {explain_none}
   | {select_stmt}
     | {select_core_list}
     | | {select_core}
@@ -13719,7 +13719,7 @@ The statement ending at line XXXX
   {declare_cursor}
   | {name E}
   | {explain_stmt}
-    | {int 1} {explain_none}
+    | {int 0} {explain_none}
     | {select_stmt}
       | {select_core_list}
       | | {select_core}

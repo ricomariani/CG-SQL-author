@@ -104,8 +104,8 @@
 #define PUBLIC_REGION 0
 #define PRIVATE_REGION 1
 
-#define EXPLAIN_NONE 1
-#define EXPLAIN_QUERY_PLAN 2
+#define EXPLAIN_NONE 0
+#define EXPLAIN_QUERY_PLAN 1
 
 #define FRAME_TYPE_RANGE                 0x00001
 #define FRAME_TYPE_ROWS                  0x00002

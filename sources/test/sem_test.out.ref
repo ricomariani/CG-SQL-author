@@ -44883,7 +44883,7 @@ SELECT 1;
 test/sem_test.sql:XXXX:1: error: in explain_stmt : CQL0293: only [EXPLAIN QUERY PLAN ...] statement is supported
 
   {explain_stmt}: err
-  | {int 1} {explain_none}
+  | {int 0} {explain_none}
   | {select_stmt}
     | {select_core_list}
     | | {select_core}
@@ -44912,7 +44912,7 @@ SELECT
   WHERE foo.id = 1;
 
   {explain_stmt}: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull }
-  | {int 2} {explain_query_plan}
+  | {int 1} {explain_query_plan}
   | {select_stmt}: _select_: { id: integer notnull, id: integer notnull, name: text, rate: longint }
     | {select_core_list}: _select_: { id: integer notnull, id: integer notnull, name: text, rate: longint }
     | | {select_core}: _select_: { id: integer notnull, id: integer notnull, name: text, rate: longint }
@@ -44968,7 +44968,7 @@ UPDATE bar
   WHERE name = 'Stella';
 
   {explain_stmt}: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull }
-  | {int 2} {explain_query_plan}
+  | {int 1} {explain_query_plan}
   | {update_stmt}: bar: { id: integer notnull, name: text, rate: longint }
     | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
     | {update_set}
@@ -44992,7 +44992,7 @@ SELECT bogus;
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'bogus'
 
   {explain_stmt}: err
-  | {int 2} {explain_query_plan}
+  | {int 1} {explain_query_plan}
   | {select_stmt}: err
     | {select_core_list}: err
     | | {select_core}: err
@@ -45021,7 +45021,7 @@ END;
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {explain_stmt}: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull }
-        | {int 2} {explain_query_plan}
+        | {int 1} {explain_query_plan}
         | {select_stmt}: _select_: { _anon: integer notnull }
           | {select_core_list}: _select_: { _anon: integer notnull }
           | | {select_core}: _select_: { _anon: integer notnull }
@@ -45052,7 +45052,7 @@ CURSOR c FOR
   {declare_cursor}: c: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } variable dml_proc
   | {name c}: c: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } variable dml_proc
   | {explain_stmt}: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull }
-    | {int 2} {explain_query_plan}
+    | {int 1} {explain_query_plan}
     | {select_stmt}: _select_: { id: integer notnull, id: integer notnull, name: text, rate: longint }
       | {select_core_list}: _select_: { id: integer notnull, id: integer notnull, name: text, rate: longint }
       | | {select_core}: _select_: { id: integer notnull, id: integer notnull, name: text, rate: longint }
@@ -45111,7 +45111,7 @@ END;
       | {declare_cursor}: c: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } variable dml_proc
       | | {name c}: c: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } variable dml_proc shape_storage
       | | {explain_stmt}: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull }
-      |   | {int 2} {explain_query_plan}
+      |   | {int 1} {explain_query_plan}
       |   | {select_stmt}: _select_: { _anon: integer notnull }
       |     | {select_core_list}: _select_: { _anon: integer notnull }
       |     | | {select_core}: _select_: { _anon: integer notnull }

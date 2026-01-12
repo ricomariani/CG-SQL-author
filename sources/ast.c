@@ -464,6 +464,8 @@ typedef struct decode_info {
     const char *name;
 } decode_info;
 
+// This formats the value as a set of named flags
+// The value can be zero meaning no flags are set
 static void print_flags(int32_t value, const decode_info *flags, size_t count) {
   if (value == 0) {
     cql_output(" {no_flags}");
@@ -477,13 +479,15 @@ static void print_flags(int32_t value, const decode_info *flags, size_t count) {
   }
 }
 
+// This formats the value as a single named value and asserts that it is valid
+// The encoding is highly mistake resistant because the value must be an index
+// into the flags array and must match the flag at that index.
 static void print_value(int32_t value, const decode_info *flags, size_t count) {
   Contract(value >= 0);
   Contract(value < count);
   Contract(value == flags[value].flag);
   cql_output(" {%s}", flags[value].name);
 }
-
 
 // for indenting, it just holds spaces.
 static char padbuffer[4096];
@@ -567,7 +571,7 @@ cql_noexport bool_t print_ast_value(struct ast_node *node) {
     if (parent_type == k_ast_join_target) {
       CSTR out = NULL;
 
-      decode_info join_flags[] = {
+      decode_info join_option[] = {
         { -1, "join_none" }, // stub, indices start at 1, this will force error if 0 appears
         { JOIN_INNER, "join_inner" },
         { JOIN_CROSS, "join_cross" },
@@ -577,7 +581,7 @@ cql_noexport bool_t print_ast_value(struct ast_node *node) {
         { JOIN_RIGHT, "join_right" },
       };
 
-      print_value(value, &join_flags[0], sizeof(join_flags) / sizeof(join_flags[0]));
+      print_value(value, &join_option[0], sizeof(join_option) / sizeof(join_option[0]));
     }
 
     // standard view and table flags
@@ -646,7 +650,7 @@ cql_noexport bool_t print_ast_value(struct ast_node *node) {
     }
 
     if (parent_type == k_ast_enforce_normal_stmt || parent_type == k_ast_enforce_strict_stmt) {
-      decode_info enforce_flags[] = {
+      decode_info enforce_option[] = {
         { -1, "enforce_none" }, // stub, indices start at 1, this will force error if zero appears
         { ENFORCE_FK_ON_UPDATE, "fk_on_update" },
         { ENFORCE_FK_ON_DELETE, "fk_on_delete" },
@@ -665,83 +669,54 @@ cql_noexport bool_t print_ast_value(struct ast_node *node) {
         { ENFORCE_UPDATE_FROM, "update_from" },
         { ENFORCE_AND_OR_NOT_NULL_CHECK, "and_or_not_null_check" },
       };
-      print_value(value, enforce_flags, sizeof(enforce_flags) / sizeof(enforce_flags[0]));
+      print_value(value, enforce_option, sizeof(enforce_option) / sizeof(enforce_option[0]));
     }
 
     if (parent_type == k_ast_indexed_columns_conflict_clause ||
         parent_type == k_ast_col_attrs_not_null) {
-      switch (value) {
-        case ON_CONFLICT_ROLLBACK:
-          cql_output(" {on_conflict_rollback}");
-          break;
-        case ON_CONFLICT_ABORT:
-          cql_output(" {on_conflict_abort}");
-          break;
-        case ON_CONFLICT_FAIL:
-          cql_output(" {on_conflict_fail}");
-          break;
-        case ON_CONFLICT_IGNORE:
-          cql_output(" {on_conflict_ignore}");
-          break;
-        case ON_CONFLICT_REPLACE:
-          cql_output(" {on_conflict_replace}");
-          break;
-      }
+      decode_info conflict_option[] = {
+        { ON_CONFLICT_ROLLBACK, "on_conflict_rollback" },
+        { ON_CONFLICT_ABORT, "on_conflict_abort" },
+        { ON_CONFLICT_FAIL, "on_conflict_fail" },
+        { ON_CONFLICT_IGNORE, "on_conflict_ignore" },
+        { ON_CONFLICT_REPLACE, "on_conflict_replace" },
+      };
+      print_value(value, conflict_option, sizeof(conflict_option) / sizeof(conflict_option[0]));
     }
 
     if (parent_type == k_ast_switch_stmt) {
-       switch (value) {
-         case SWITCH_NORMAL:
-           cql_output(" {switch_normal}");
-           break;
-
-         case SWITCH_ALL_VALUES:
-           cql_output(" {switch_all_values}");
-           break;
-       }
+       decode_info switch_option[] = {
+         { SWITCH_NORMAL, "switch_normal" },
+         { SWITCH_ALL_VALUES, "switch_all_values" },
+       };
+       print_value(value, switch_option, sizeof(switch_option) / sizeof(switch_option[0]));
     }
 
     if (parent_type == k_ast_index_flags_names_attrs) {
-      if (value == 0) {
-        cql_output(" {no_flags}");
-      }
-//      if (value & INDEX_IS_TEMP) {   temp index isn't a thing yet
-//        cql_output(" {temp}");
-//      }
-      if (value & INDEX_IFNE) {
-        cql_output(" {if_not_exists}");
-      }
-      if (value & INDEX_UNIQUE) {
-        cql_output(" {unique}");
-      }
+      decode_info index_flags[] = {
+        { INDEX_IFNE, "if_not_exists" },
+        { INDEX_UNIQUE, "unique" },
+      };
+      print_flags(value, index_flags, sizeof(index_flags) / sizeof(index_flags[0]));
     }
 
     if (parent_type == k_ast_explain_stmt) {
-      switch (value) {
-        case EXPLAIN_NONE:
-          cql_output(" {explain_none}");
-          break;
-        case EXPLAIN_QUERY_PLAN:
-          cql_output(" {explain_query_plan}");
-          break;
-      }
+      decode_info explain_flags[] = {
+        { EXPLAIN_NONE, "explain_none" },
+        { EXPLAIN_QUERY_PLAN, "explain_query_plan" },
+      };
+      print_value(value, explain_flags, sizeof(explain_flags) / sizeof(explain_flags[0]));
     }
 
     if (parent_type == k_ast_select_core_compound) {
-      switch (value) {
-        case COMPOUND_OP_UNION:
-          cql_output(" {union}");
-          break;
-        case COMPOUND_OP_UNION_ALL:
-          cql_output(" {union_all}");
-          break;
-        case COMPOUND_OP_INTERSECT:
-          cql_output(" {intersect}");
-          break;
-        case COMPOUND_OP_EXCEPT:
-          cql_output(" {except}");
-          break;
-      }
+      decode_info compound_ops[] = {
+        { -1, "no_compound_op" }, // the origin is 1 and we want to force error if 0 appears
+        { COMPOUND_OP_UNION, "union" },
+        { COMPOUND_OP_UNION_ALL, "union_all" },
+        { COMPOUND_OP_INTERSECT, "intersect" },
+        { COMPOUND_OP_EXCEPT, "except" },
+      };
+      print_value(value, compound_ops, sizeof(compound_ops) / sizeof(compound_ops[0]));
     }
 
     if (parent_type == k_ast_version_annotation ||
@@ -754,10 +729,10 @@ cql_noexport bool_t print_ast_value(struct ast_node *node) {
         parent_type == k_ast_drop_view_stmt ||
         parent_type == k_ast_drop_index_stmt ||
         parent_type == k_ast_drop_trigger_stmt) {
-      // note lack of flags is done with null in this case
-      if (value & GENERIC_IF_EXISTS) {
-        cql_output(" {if_exists}");
-      }
+      decode_info drop_flags[] = {
+        { GENERIC_IF_EXISTS, "if_exists" },
+      };
+      print_flags(value, drop_flags, sizeof(drop_flags) / sizeof(drop_flags[0]));
     }
 
     ret = true;

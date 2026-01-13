@@ -51,8 +51,8 @@ static void cg_schema_manage_recreate_tables(charbuf *output, charbuf *decls, re
 // We emit for SQLite in this mode
 #define SCHEMA_FOR_SQLITE 8
 
-// Supress virtual table output if this bit is set
-#define SCHEMA_SUPRESS_VIRTUAL_TABLES 16
+// Suppress virtual table output if this bit is set
+#define SCHEMA_SUPPRESS_VIRTUAL_TABLES 16
 
 // Rather than burning a new flag bit for tables for this one purpose
 // we can steal a bit that is useless on tables, tables can't be "notnull"
@@ -516,7 +516,7 @@ static void cg_generate_schema_by_mode(charbuf *output, int32_t mode) {
   bool_t schema_declare = !!(mode & SCHEMA_TO_DECLARE);
   bool_t schema_upgrade = !!(mode & SCHEMA_TO_UPGRADE);
   bool_t schema_sqlite = !!(mode & SCHEMA_FOR_SQLITE);
-  bool_t suppress_virtual_tables = !!(mode & SCHEMA_SUPRESS_VIRTUAL_TABLES);
+  bool_t suppress_virtual_tables = !!(mode & SCHEMA_SUPPRESS_VIRTUAL_TABLES);
 
   gen_sql_callbacks *use_callbacks = NULL;
 
@@ -1702,7 +1702,7 @@ static llint_t cg_schema_compute_crc(
   // compute the non virtual CRC
   if (schema_crc_non_virtual != NULL) {
     CHARBUF_OPEN(all_schema_no_virtual_tables);
-    cg_generate_schema_by_mode(&all_schema_no_virtual_tables, SCHEMA_TO_UPGRADE | SCHEMA_SUPRESS_VIRTUAL_TABLES);
+    cg_generate_schema_by_mode(&all_schema_no_virtual_tables, SCHEMA_TO_UPGRADE | SCHEMA_SUPPRESS_VIRTUAL_TABLES);
     *schema_crc_non_virtual = (llint_t) crc_charbuf(&all_schema_no_virtual_tables);
     CHARBUF_CLOSE(all_schema_no_virtual_tables);
   }

@@ -334,7 +334,6 @@ the job.
   }
 
   bool_t has_temp_schema = cg_schema_emit_temp_schema_proc(&preamble);
-  bool_t one_time_drop_needed = false;
 ```
 
 These are the last of the worker methods:
@@ -380,18 +379,18 @@ so we'll include this one in full.
 ```c
   // code to read the facets into the hash table
 
-  bprintf(&preamble, "@attribute(cql:private)\n");
+  bprintf(&preamble, "[[private]]\n");
   bprintf(&preamble, "PROC %s_setup_facets()\n", global_proc_name);
   bprintf(&preamble, "BEGIN\n");
   bprintf(&preamble, "  TRY\n");
-  bprintf(&preamble, "    SET %s_facets := cql_facets_new();\n", global_proc_name);
+  bprintf(&preamble, "    SET %s_facets := cql_facets_create();\n", global_proc_name);
   bprintf(&preamble, "    CURSOR C FOR SELECT * from %s_cql_schema_facets;\n", global_proc_name);
   bprintf(&preamble, "    LOOP FETCH C\n");
   bprintf(&preamble, "    BEGIN\n");
   bprintf(&preamble, "      LET added := cql_facet_add(%s_facets, C.facet, C.version);\n", global_proc_name);
   bprintf(&preamble, "    END;\n");
   bprintf(&preamble, "  CATCH\n");
-  bprintf(&preamble, "   -- if table doesn't exist we just have empty facets, that's ok\n");
+  bprintf(&preamble, "    -- if table doesn't exist we just have empty facets, that's ok\n");
   bprintf(&preamble, "  END;\n");
   bprintf(&preamble, "END;\n\n");
 ```
@@ -407,7 +406,7 @@ We'll go over this section by section.
 ```c
   // the main upgrade worker
 
-  bprintf(&main, "\n@attribute(cql:private)\n");
+  bprintf(&main, "\n[[private]]\n");
   bprintf(&main, "PROC %s_perform_upgrade_steps()\n", global_proc_name);
   bprintf(&main, "BEGIN\n");
   bprintf(&main, "  VAR schema_version LONG!;\n");

@@ -79,10 +79,19 @@ static void print_flags(llint_t value, const decode_info *flags, size_t count) {
   }
 
   for (size_t i = 0; i < count; i++) {
-    if (value & flags[i].flag) {
+    int32_t flag = flags[i].flag;
+    if (value & flag) {
       cql_output(" {%s}", flags[i].name);
+
+      // strip this flag so we can detect unknown flags later
+      value &= ~flag;
     }
   }
+
+  // If there are any bits left over they are unknown, time to scream.
+  // If you hit this contract it means you added a new flag type but did not add
+  // it to the decoder table for that type
+  Contract(value == 0);   // unknown flags present, add it to the right table
 }
 
 // This formats the value as a single named value and asserts that it is valid

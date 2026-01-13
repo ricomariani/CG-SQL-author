@@ -862,15 +862,17 @@ static void cg_while_stmt(ast_node *ast) {
 
   CG_PUSH_EVAL(expr, C_EXPR_PRI_ROOT);
 
+  CG_PUSH_MAIN_INDENT(loop, 2);
   if (is_nullable(sem_type)) {
     bprintf(cg_main_output, "if (!cql_is_nullable_true(%s, %s)) break;\n", expr_is_null.ptr, expr_value.ptr);
   }
   else {
     bprintf(cg_main_output, "if (!(%s)) break;\n", expr_value.ptr);
   }
+  CG_POP_MAIN_INDENT(loop);
 
-  bool_t loop_saved = cg_in_loop;
-  cg_in_loop = true;
+  int32_t loop_saved = cg_in_loop;
+  cg_in_loop = LOOP_ANY;
 
   CG_POP_EVAL(expr);
 

@@ -11782,7 +11782,7 @@ The statement ending at line XXXX
   |   | | {mul}
   |   |   | {int 2}
   |   |   | {int 3}
-  |   | {int 3} {dummy_value}
+  |   | {int 3} {dummy_defaults} {dummy_nullables}
   | {name_columns_values}
     | {name foo}
     | {columns_values}
@@ -11914,7 +11914,7 @@ The statement ending at line XXXX
   | | | {mul}
   | |   | {int 2}
   | |   | {int 3}
-  | | {int 3} {dummy_value}
+  | | {int 3} {dummy_defaults} {dummy_nullables}
   | {name_columns_values}
     | {name C}
     | {columns_values}
@@ -11937,7 +11937,7 @@ The statement ending at line XXXX
   | | | {mul}
   | |   | {int 2}
   | |   | {int 3}
-  | | {int 3} {dummy_value}
+  | | {int 3} {dummy_defaults} {dummy_nullables}
   | {name_columns_values}
     | {name C}
     | {expr_names}
@@ -12511,7 +12511,7 @@ The statement ending at line XXXX
   {fetch_values_stmt}
   | {insert_dummy_spec}
   | | {int 7}
-  | | {int 1} {dummy_value}
+  | | {int 1} {dummy_defaults}
   | {name_columns_values}
     | {name a_cursor}
     | {columns_values}
@@ -13988,7 +13988,7 @@ The statement ending at line XXXX
         | {insert_normal}
         | | {insert_dummy_spec}
         |   | {int 1}
-        |   | {int 2} {dummy_value}
+        |   | {int 2} {dummy_nullables}
         | {name_columns_values}
           | {name bar}
           | {columns_values}
@@ -14108,7 +14108,7 @@ The statement ending at line XXXX
   {fetch_values_stmt}
   | {insert_dummy_spec}
   | | {int 1}
-  | | {int 0} {dummy_value}
+  | | {int 0} {no_flags}
   | {name_columns_values}
     | {name x}
     | {columns_values}

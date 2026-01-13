@@ -20,7 +20,6 @@
 // for drop statements
 #define GENERIC_IF_EXISTS     0x1
 
-
 #define TABLE_IS_TEMP         GENERIC_IS_TEMP
 #define TABLE_IF_NOT_EXISTS   GENERIC_IF_NOT_EXISTS
 #define TABLE_IS_NO_ROWID     0x0004
@@ -38,6 +37,9 @@
 #define TRIGGER_DELETE        0x0040
 #define TRIGGER_INSERT        0x0080
 #define TRIGGER_FOR_EACH_ROW  0x0100
+
+#define INSERT_DUMMY_DEFAULTS  0x001
+#define INSERT_DUMMY_NULLABLES 0x002
 
 #define PROC_FLAG_BASIC          0
 #define PROC_FLAG_STRUCT_TYPE    1
@@ -312,9 +314,6 @@ cql_noexport ast_node *_Nullable ast_clone_tree(ast_node *_Nullable ast);
 cql_noexport CSTR _Nonnull convert_cstrlit(CSTR _Nonnull cstr);
 
 cql_noexport CSTR _Nonnull get_compound_operator_name(int32_t compound_operator);
-
-#define INSERT_DUMMY_DEFAULTS 1
-#define INSERT_DUMMY_NULLABLES 2
 
 /*
   SQLite understands the following binary operators, in order from LOWEST to HIGHEST precedence:

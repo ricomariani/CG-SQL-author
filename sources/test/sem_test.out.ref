@@ -26989,7 +26989,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0156: seed expression must be a non
   | {insert_normal}
   | | {insert_dummy_spec}: err
   |   | {strlit 'x'}: text notnull
-  |   | {int 0} {dummy_value}
+  |   | {int 0} {no_flags}
   | {name_columns_values}
     | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
     | {columns_values}: ok
@@ -27018,7 +27018,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
   | | {insert_dummy_spec}: err
   |   | {not}: err
   |   | | {strlit 'x'}: text notnull
-  |   | {int 0} {dummy_value}
+  |   | {int 0} {no_flags}
   | {name_columns_values}
     | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
     | {columns_values}: ok
@@ -28798,7 +28798,7 @@ END;
       | {fetch_values_stmt}: ok
         | {insert_dummy_spec}: integer notnull
         | | {int 123}: integer notnull
-        | | {int 2} {dummy_value}
+        | | {int 2} {dummy_nullables}
         | {name_columns_values}
           | {name C}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
           | {columns_values}: ok
@@ -29004,7 +29004,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
         | {insert_dummy_spec}: err
         | | {not}: err
         | | | {strlit 'x'}: text notnull
-        | | {int 0} {dummy_value}
+        | | {int 0} {no_flags}
         | {name_columns_values}
           | {name C}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
           | {columns_values}: ok
@@ -29105,7 +29105,7 @@ END;
       | {fetch_values_stmt}: ok
         | {insert_dummy_spec}: integer notnull
         | | {int 123}: integer notnull
-        | | {int 2} {dummy_value}
+        | | {int 2} {dummy_nullables}
         | {name_columns_values}
           | {name C}: C: blob_out: { B: blob } variable dml_proc shape_storage value_cursor
           | {columns_values}: ok
@@ -29234,7 +29234,7 @@ END;
       | {fetch_values_stmt}: ok
         | {insert_dummy_spec}: integer notnull
         | | {int 123}: integer notnull
-        | | {int 0} {dummy_value}
+        | | {int 0} {no_flags}
         | {name_columns_values}
           | {name C}: C: blob_out: { B: blob } variable dml_proc shape_storage value_cursor
           | {columns_values}: ok
@@ -29901,7 +29901,7 @@ END;
       | {fetch_values_stmt}: ok
       | | {insert_dummy_spec}: integer notnull
       | | | {int 123}: integer notnull
-      | | | {int 0} {dummy_value}
+      | | | {int 0} {no_flags}
       | | {name_columns_values}
       |   | {name C}: C: _select_: { A: integer notnull, B: real notnull, C: text notnull } variable shape_storage value_cursor
       |   | {columns_values}: ok
@@ -32066,7 +32066,7 @@ test/sem_test.sql:XXXX:1: error: in from_shape : CQL0297: FROM [shape] is redund
         | {insert_normal}
         | | {insert_dummy_spec}
         |   | {int 1}
-        |   | {int 0} {dummy_value}
+        |   | {int 0} {no_flags}
         | {name_columns_values}
           | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
           | {columns_values}: ok
@@ -47327,7 +47327,7 @@ END;
       | {fetch_values_stmt}: ok
         | {insert_dummy_spec}: integer notnull
         | | {int 1}: integer notnull
-        | | {int 2} {dummy_value}
+        | | {int 2} {dummy_nullables}
         | {name_columns_values}
           | {name C}: C: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint } variable shape_storage value_cursor
           | {columns_values}: ok
@@ -50712,7 +50712,7 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0334: @dummy_seed @dummy_nu
   | {insert_normal}
   | | {insert_dummy_spec}
   |   | {int 1}
-  |   | {int 0} {dummy_value}
+  |   | {int 0} {no_flags}
   | {name_columns_values}
     | {name foo}: foo: { id: integer notnull primary_key autoinc }
     | {columns_values}: err
@@ -50757,7 +50757,7 @@ test/sem_test.sql:XXXX:1: error: in with_select_stmt : CQL0334: @dummy_seed @dum
   | {insert_normal}
   | | {insert_dummy_spec}
   |   | {int 1}
-  |   | {int 0} {dummy_value}
+  |   | {int 0} {no_flags}
   | {name_columns_values}
     | {name foo}: foo: { id: integer notnull primary_key autoinc }
     | {columns_values}: err
@@ -50881,7 +50881,7 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0334: @dummy_seed @dummy_nu
   | {insert_normal}
   | | {insert_dummy_spec}
   |   | {int 1}
-  |   | {int 0} {dummy_value}
+  |   | {int 0} {no_flags}
   | {name_columns_values}
     | {name foo}: foo: { id: integer notnull primary_key autoinc }
     | {columns_values}: err
@@ -50916,7 +50916,7 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0334: @dummy_seed @dummy_nu
   | {insert_normal}
   | | {insert_dummy_spec}
   |   | {int 1}
-  |   | {int 0} {dummy_value}
+  |   | {int 0} {no_flags}
   | {name_columns_values}
     | {name foo}: foo: { id: integer notnull primary_key autoinc }
     | {columns_values}: err
@@ -51065,7 +51065,7 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0334: @dummy_seed @dummy_nu
   | {insert_normal}
   | | {insert_dummy_spec}
   |   | {int 1}
-  |   | {int 0} {dummy_value}
+  |   | {int 0} {no_flags}
   | {name_columns_values}
     | {name foo}: foo: { id: integer notnull primary_key autoinc }
     | {columns_values}: err
@@ -54903,7 +54903,7 @@ END;
       | {fetch_values_stmt}: ok
         | {insert_dummy_spec}: integer notnull
         | | {int 9}: integer notnull
-        | | {int 3} {dummy_value}
+        | | {int 3} {dummy_defaults} {dummy_nullables}
         | {name_columns_values}
           | {name C}: C: bar: { id: integer notnull, name: text, rate: longint } variable shape_storage value_cursor
           | {columns_values}: ok
@@ -78067,7 +78067,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_cursor'
       | {fetch_values_stmt}: ok
       | | {insert_dummy_spec}: integer notnull
       | | | {int 1}: integer notnull
-      | | | {int 0} {dummy_value}
+      | | | {int 0} {no_flags}
       | | {name_columns_values}
       |   | {name R}: R: Shape_uvxy: { x: integer, y: integer, u: text, v: text } variable shape_storage value_cursor
       |   | {columns_values}: ok

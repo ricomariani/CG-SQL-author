@@ -353,7 +353,7 @@ void decode_fk_flags(CSTR parent_type, llint_t value) {
   cql_output(" on_update:");
   print_value((value & FK_ON_UPDATE) >> 4, &fk_action[0], sizeof(fk_action) / sizeof(fk_action[0]));
   cql_output(",");
-  
+
   cql_output(" on_delete:");
   print_value((value & FK_ON_DELETE), &fk_action[0], sizeof(fk_action) / sizeof(fk_action[0]));
   cql_output(",");
@@ -381,11 +381,19 @@ void decode_transaction_mode(CSTR parent_type, llint_t value) {
 }
 
 // insert dummy spec: it's an int literal but we just want to mark it specially
-void decode_insert_dummy_spec(CSTR parent_type, llint_t value) {
-  Contract(
-    parent_type == k_ast_insert_dummy_spec ||
-    parent_type == k_ast_seed_stub); 
+void decode_insert_dummy_stub(CSTR parent_type, llint_t value) {
+  Contract(parent_type == k_ast_seed_stub);
   cql_output(" {dummy_value}");
+}
+
+// dummy flags
+void decode_insert_dummy_spec(CSTR parent_type, llint_t value) {
+  Contract(parent_type == k_ast_insert_dummy_spec);
+  static const decode_info insert_dummy_specs[] = {
+    { INSERT_DUMMY_DEFAULTS, "dummy_defaults" },
+    { INSERT_DUMMY_NULLABLES, "dummy_nullables" },
+  };
+  print_flags(value, insert_dummy_specs, sizeof(insert_dummy_specs) / sizeof(insert_dummy_specs[0]));
 }
 
 // raise options
@@ -476,7 +484,7 @@ cql_noexport void ast_init() {
   DECODER_INIT(fk_target_options, decode_fk_flags);
   DECODER_INIT(begin_trans_stmt, decode_transaction_mode);
   DECODER_INIT(insert_dummy_spec, decode_insert_dummy_spec);
-  DECODER_INIT(seed_stub, decode_insert_dummy_spec);
+  DECODER_INIT(seed_stub, decode_insert_dummy_stub);
   DECODER_INIT(raise, decode_raise_options);
   DECODER_INIT(region_spec, decode_region_spec);
 

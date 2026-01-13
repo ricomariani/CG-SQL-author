@@ -91,10 +91,10 @@ shown below:
 ```c
 // value types
 typedef unsigned char cql_bool;
-#define cql_true (cql_bool)1
-#define cql_false (cql_bool)0
+#define cql_true ((cql_bool)1)
+#define cql_false ((cql_bool)0)
 
-typedef unsigned long cql_hash_code;
+typedef uint64_t cql_hash_code;
 typedef int32_t cql_int32;
 typedef uint32_t cql_uint32;
 typedef uint16_t cql_uint16;
@@ -117,8 +117,7 @@ calculus.
 #define CQL_C_TYPE_STRING 0
 #define CQL_C_TYPE_BLOB 1
 #define CQL_C_TYPE_RESULTS 2
-#define CQL_C_TYPE_BOXED_STMT 3
-#define CQL_C_TYPE_OBJECT 4
+#define CQL_C_TYPE_OBJECT 3
 ```
 
 All reference types are reference counted. Therefore, they require a basic "base
@@ -167,7 +166,8 @@ cursor.
 typedef struct cql_object *cql_object_ref;
 typedef struct cql_object {
   cql_type base;
-  const void *_Nonnull ptr;
+  void *_Nonnull ptr;
+  void (*_Nonnull finalize)(void *_Nonnull ptr);
 } cql_object;
 
 #define cql_object_retain(object) cql_retain((cql_type_ref)object);
@@ -195,11 +195,11 @@ typedef struct cql_blob *cql_blob_ref;
 typedef struct cql_blob {
   cql_type base;
   const void *_Nonnull ptr;
-  cql_uint32 size;
+  cql_int32 size;
 } cql_blob;
 #define cql_blob_retain(object) cql_retain((cql_type_ref)object);
 #define cql_blob_release(object) cql_release((cql_type_ref)object);
-cql_blob_ref _Nonnull cql_blob_ref_new(const void *_Nonnull data, cql_uint32 size);
+cql_blob_ref _Nonnull cql_blob_ref_new(const void *_Nonnull data, cql_int32 size);
 #define cql_get_blob_bytes(data) (data->ptr)
 #define cql_get_blob_size(data) (data->size)
 cql_hash_code cql_blob_hash(cql_blob_ref _Nullable str);
@@ -226,7 +226,7 @@ literal. You determine the implementation of these literals right here.
 
 ```c
 #define cql_string_literal(name, text) \
-  cql_string name##_ = { \
+  static cql_string name##_ = { \
     .base = { \
       .type = CQL_C_TYPE_STRING, \
       .ref_count = 1, \
@@ -234,7 +234,7 @@ literal. You determine the implementation of these literals right here.
     }, \
     .ptr = text, \
   }; \
-  cql_string_ref name = &name##_
+  static cql_string_ref name = &name##_
 ```
 
 Strings have various comparison and hashing functions. It's worth noting that
@@ -344,7 +344,7 @@ provided intentionally.
 By setting an attribute on any procedure that produces a result set you can
 have the selected sensitive values encoded.  If this happens CQL first asks
 for the encoder and then calls the encode methods passing in the encoder.
-These aren't meant to be cryptograhically secure but rather to provide some
+These aren't meant to be cryptographically secure but rather to provide some
 ability to prevent mistakes.  If you opt in, sensitive values have to be deliberately
 decoded and that provides an audit trail.
 
@@ -374,7 +374,7 @@ cql_blob_ref _Nonnull cql_decode_blob_ref_new(...);
 The standard APIs all build on the above, so they should be included last.
 
 Now in some cases the signature of the things you provide in `cqlrt.h` is basically fixed,
-so it seems like it would be easier to move the prototpyes into `cqlrt_common.h`.
+so it seems like it would be easier to move the prototypes into `cqlrt_common.h`.
 However, in many cases additional things are needed like `declspec` or `export` or
 other system specific things.  The result is that `cqlrt.h` is maybe a bit more
 verbose that it strictly needs to be.  Also some versions of cqlrt.h choose to
@@ -419,7 +419,7 @@ contracts that it can freely convert to types like `NSString *` which results in
 seamless integration with the rest of an Objective-C application.
 
 Of course the downside of all this is that the `cqlrt_cf` runtime is less portable.  It can only go
-where `CF` exists.  Still, it is an interesting demonstration of the flexablity of the system.
+where `CF` exists.  Still, it is an interesting demonstration of the flexibility of the system.
 
 The system could be further improved by creating a custom result type (e.g. `--rt c_cf`) and using
 some of the result type options for the C code generation. For instance, the compiler could do these things:

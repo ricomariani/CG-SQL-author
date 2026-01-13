@@ -3504,7 +3504,7 @@ DECLARE PROC cql_throw (code INT!) USING TRANSACTION;
   | {declare_proc_stmt}: ok dml_proc
     | {proc_name_type}
     | | {name cql_throw}: ok dml_proc
-    | | {int 2}
+    | | {int 2} {uses_dml}
     | {proc_params_stmts}
       | {params}: ok
         | {param}: code: integer notnull variable in
@@ -3732,7 +3732,7 @@ DECLARE PROC cql_cursor_to_blob (C CURSOR, OUT result BLOB!) USING TRANSACTION;
   | {declare_proc_stmt}: ok dml_proc
     | {proc_name_type}
     | | {name cql_cursor_to_blob}: ok dml_proc
-    | | {int 2}
+    | | {int 2} {uses_dml}
     | {proc_params_stmts}
       | {params}: ok
         | {param}: C: cursor variable in
@@ -3780,7 +3780,7 @@ DECLARE PROC cql_cursor_from_blob (C CURSOR, b BLOB) USING TRANSACTION;
   | {declare_proc_stmt}: ok dml_proc
     | {proc_name_type}
     | | {name cql_cursor_from_blob}: ok dml_proc
-    | | {int 2}
+    | | {int 2} {uses_dml}
     | {proc_params_stmts}
       | {params}: ok
         | {param}: C: cursor variable in
@@ -4224,7 +4224,7 @@ DECLARE PROC cql_cursor_from_blob_stream (C CURSOR, b BLOB, i INT!) USING TRANSA
   | {declare_proc_stmt}: ok dml_proc
     | {proc_name_type}
     | | {name cql_cursor_from_blob_stream}: ok dml_proc
-    | | {int 2}
+    | | {int 2} {uses_dml}
     | {proc_params_stmts}
       | {params}: ok
         | {param}: C: cursor variable in

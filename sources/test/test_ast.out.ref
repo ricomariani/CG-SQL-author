@@ -3143,7 +3143,7 @@ The statement ending at line XXXX
   | {declare_proc_stmt}
     | {proc_name_type}
     | | {name cql_throw}
-    | | {int 2}
+    | | {int 2} {uses_dml}
     | {proc_params_stmts}
       | {params}
         | {param}
@@ -3355,7 +3355,7 @@ The statement ending at line XXXX
   | {declare_proc_stmt}
     | {proc_name_type}
     | | {name cql_cursor_to_blob}
-    | | {int 2}
+    | | {int 2} {uses_dml}
     | {proc_params_stmts}
       | {params}
         | {param}
@@ -3399,7 +3399,7 @@ The statement ending at line XXXX
   | {declare_proc_stmt}
     | {proc_name_type}
     | | {name cql_cursor_from_blob}
-    | | {int 2}
+    | | {int 2} {uses_dml}
     | {proc_params_stmts}
       | {params}
         | {param}
@@ -3802,7 +3802,7 @@ The statement ending at line XXXX
   | {declare_proc_stmt}
     | {proc_name_type}
     | | {name cql_cursor_from_blob_stream}
-    | | {int 2}
+    | | {int 2} {uses_dml}
     | {proc_params_stmts}
       | {params}
         | {param}
@@ -3845,7 +3845,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
   {schema_upgrade_version_stmt}
-  | {int 112}
+  | {int 112} {version}
 
 The statement ending at line XXXX
 
@@ -5705,7 +5705,7 @@ The statement ending at line XXXX
                   |   | {name id}
                   |   | {name_list}
                   |     | {name name2}
-                  | {int 0}
+                  | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -5757,7 +5757,7 @@ The statement ending at line XXXX
                   |   | {name id}
                   |   | {name_list}
                   |     | {name name2}
-                  | {int 0}
+                  | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -5782,7 +5782,7 @@ The statement ending at line XXXX
             | | {name baz}
             | | {name_list}
             |   | {name name2}
-            | {int 48}
+            | {int 48} on_update: {cascade}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -10215,42 +10215,42 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
   {begin_trans_stmt}
-  | {int 1}
+  | {int 1} {deferred}
 
 The statement ending at line XXXX
 
   {begin_trans_stmt}
-  | {int 1}
+  | {int 1} {deferred}
 
 The statement ending at line XXXX
 
   {begin_trans_stmt}
-  | {int 2}
+  | {int 2} {immediate}
 
 The statement ending at line XXXX
 
   {begin_trans_stmt}
-  | {int 3}
+  | {int 3} {exclusive}
 
 The statement ending at line XXXX
 
   {begin_trans_stmt}
-  | {int 1}
+  | {int 1} {deferred}
 
 The statement ending at line XXXX
 
   {begin_trans_stmt}
-  | {int 2}
+  | {int 2} {immediate}
 
 The statement ending at line XXXX
 
   {begin_trans_stmt}
-  | {int 3}
+  | {int 3} {exclusive}
 
 The statement ending at line XXXX
 
   {begin_trans_stmt}
-  | {int 1}
+  | {int 1} {deferred}
 
 The statement ending at line XXXX
 
@@ -10624,7 +10624,7 @@ The statement ending at line XXXX
   {declare_proc_stmt}
   | {proc_name_type}
   | | {name decl1}
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}
       | {param}
@@ -10637,7 +10637,7 @@ The statement ending at line XXXX
   {declare_proc_stmt}
   | {proc_name_type}
   | | {name decl2}
-  | | {int 2}
+  | | {int 2} {uses_dml}
   | {proc_params_stmts}
     | {params}
       | {param}
@@ -10650,7 +10650,7 @@ The statement ending at line XXXX
   {declare_proc_stmt}
   | {proc_name_type}
   | | {name decl3}
-  | | {int 3}
+  | | {int 3} {struct_type} {uses_dml}
   | {proc_params_stmts}
     | {params}
     | | {param}
@@ -10672,7 +10672,7 @@ The statement ending at line XXXX
   {declare_proc_stmt}
   | {proc_name_type}
   | | {name decl3}
-  | | {int 5}
+  | | {int 5} {struct_type} {uses_out}
   | {proc_params_stmts}
     | {params}
     | | {param}
@@ -10694,7 +10694,7 @@ The statement ending at line XXXX
   {declare_proc_stmt}
   | {proc_name_type}
   | | {name decl4}
-  | | {int 7}
+  | | {int 7} {struct_type} {uses_dml} {uses_out}
   | {proc_params_stmts}
     | {params}
     | | {param}
@@ -11782,7 +11782,7 @@ The statement ending at line XXXX
   |   | | {mul}
   |   |   | {int 2}
   |   |   | {int 3}
-  |   | {int 3}
+  |   | {int 3} {dummy_value}
   | {name_columns_values}
     | {name foo}
     | {columns_values}
@@ -11914,7 +11914,7 @@ The statement ending at line XXXX
   | | | {mul}
   | |   | {int 2}
   | |   | {int 3}
-  | | {int 3}
+  | | {int 3} {dummy_value}
   | {name_columns_values}
     | {name C}
     | {columns_values}
@@ -11937,7 +11937,7 @@ The statement ending at line XXXX
   | | | {mul}
   | |   | {int 2}
   | |   | {int 3}
-  | | {int 3}
+  | | {int 3} {dummy_value}
   | {name_columns_values}
     | {name C}
     | {expr_names}
@@ -12134,7 +12134,7 @@ The statement ending at line XXXX
             |     |   | {name id}
             |     |   | {name_list}
             |     |     | {name name2}
-            |     | {int 2613}
+            |     | {int 2613} on_update: {cascade}, on_delete: {no_action}, deferrability: {not_deferrable} {initially_deferred}
             | {col_key_list}
               | {fk_def}
               | | {fk_info}
@@ -12145,7 +12145,7 @@ The statement ending at line XXXX
               |     | | {name rater}
               |     | | {name_list}
               |     |   | {name r}
-              |     | {int 1346}
+              |     | {int 1346} on_update: {restrict}, on_delete: {set_default}, deferrability: {deferrable} {initially_immediate}
               | {col_key_list}
                 | {fk_def}
                   | {fk_info}
@@ -12156,7 +12156,7 @@ The statement ending at line XXXX
                       | | {name name_thing}
                       | | {name_list}
                       |   | {name n}
-                      | {int 1298}
+                      | {int 1298} on_update: {set_null}, on_delete: {set_default}, deferrability: {deferrable} {initially_immediate}
 
 The statement ending at line XXXX
 
@@ -12177,7 +12177,7 @@ The statement ending at line XXXX
             | | {name goo}
             | | {name_list}
             |   | {name another_id}
-            | {int 49}
+            | {int 49} on_update: {cascade}, on_delete: {set_null}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -12511,7 +12511,7 @@ The statement ending at line XXXX
   {fetch_values_stmt}
   | {insert_dummy_spec}
   | | {int 7}
-  | | {int 1}
+  | | {int 1} {dummy_value}
   | {name_columns_values}
     | {name a_cursor}
     | {columns_values}
@@ -13034,7 +13034,7 @@ The statement ending at line XXXX
   |     | {select_expr_list}
   |     | | {select_expr}
   |     |   | {raise}
-  |     |     | {int 0}
+  |     |     | {int 0} {ignore}
   |     | {select_from_etc}
   |       | {select_where}
   |         | {select_groupby}
@@ -13052,7 +13052,7 @@ The statement ending at line XXXX
   |     | {select_expr_list}
   |     | | {select_expr}
   |     |   | {raise}
-  |     |     | {int 3}
+  |     |     | {int 3} {fail}
   |     |     | {strlit 'fail it'}
   |     | {select_from_etc}
   |       | {select_where}
@@ -13071,7 +13071,7 @@ The statement ending at line XXXX
   |     | {select_expr_list}
   |     | | {select_expr}
   |     |   | {raise}
-  |     |     | {int 2}
+  |     |     | {int 2} {abort}
   |     |     | {strlit 'abort it'}
   |     | {select_from_etc}
   |       | {select_where}
@@ -13090,7 +13090,7 @@ The statement ending at line XXXX
   |     | {select_expr_list}
   |     | | {select_expr}
   |     |   | {raise}
-  |     |     | {int 1}
+  |     |     | {int 1} {rollback}
   |     |     | {strlit 'roll it back'}
   |     | {select_from_etc}
   |       | {select_where}
@@ -13398,7 +13398,7 @@ The statement ending at line XXXX
   | {region_list}
     | {region_spec}
       | {name foo}
-      | {int 0}
+      | {int 0} {public_region}
 
 The statement ending at line XXXX
 
@@ -13407,11 +13407,11 @@ The statement ending at line XXXX
   | {region_list}
     | {region_spec}
     | | {name foo}
-    | | {int 0}
+    | | {int 0} {public_region}
     | {region_list}
       | {region_spec}
         | {name bar}
-        | {int 0}
+        | {int 0} {public_region}
 
 The statement ending at line XXXX
 
@@ -13420,15 +13420,15 @@ The statement ending at line XXXX
   | {region_list}
     | {region_spec}
     | | {name foo}
-    | | {int 0}
+    | | {int 0} {public_region}
     | {region_list}
       | {region_spec}
       | | {name bar}
-      | | {int 0}
+      | | {int 0} {public_region}
       | {region_list}
         | {region_spec}
           | {name baz}
-          | {int 1}
+          | {int 1} {private_region}
 
 The statement ending at line XXXX
 
@@ -13442,11 +13442,11 @@ The statement ending at line XXXX
   | {region_list}
     | {region_spec}
     | | {name foo}
-    | | {int 0}
+    | | {int 0} {public_region}
     | {region_list}
       | {region_spec}
         | {name bar}
-        | {int 0}
+        | {int 0} {public_region}
 
 The statement ending at line XXXX
 
@@ -13988,7 +13988,7 @@ The statement ending at line XXXX
         | {insert_normal}
         | | {insert_dummy_spec}
         |   | {int 1}
-        |   | {int 2}
+        |   | {int 2} {dummy_value}
         | {name_columns_values}
           | {name bar}
           | {columns_values}
@@ -14108,7 +14108,7 @@ The statement ending at line XXXX
   {fetch_values_stmt}
   | {insert_dummy_spec}
   | | {int 1}
-  | | {int 0}
+  | | {int 0} {dummy_value}
   | {name_columns_values}
     | {name x}
     | {columns_values}
@@ -14244,7 +14244,7 @@ The statement ending at line XXXX
   {declare_proc_stmt}
   | {proc_name_type}
   | | {name p}
-  | | {int 3}
+  | | {int 3} {struct_type} {uses_dml}
   | {proc_params_stmts}
     | {params}
     | | {param}
@@ -15591,7 +15591,7 @@ The statement ending at line XXXX
   {declare_proc_stmt}
   | {proc_name_type}
   | | {name p}
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}
       | {param}
@@ -15619,7 +15619,7 @@ The statement ending at line XXXX
   {declare_proc_stmt}
   | {proc_name_type}
   | | {name p2}
-  | | {int 3}
+  | | {int 3} {struct_type} {uses_dml}
   | {proc_params_stmts}
     | {typed_names}
       | {typed_name}
@@ -16203,7 +16203,7 @@ The statement ending at line XXXX
         | | {name id}
         | | {type_int}
         | {col_attrs_unique}
-          | {int 0}
+          | {int 0} {on_conflict_rollback}
 
 The statement ending at line XXXX
 
@@ -16220,7 +16220,7 @@ The statement ending at line XXXX
         | | {type_int}
         | {col_attrs_pk}
           | {autoinc_and_conflict_clause}
-            | {int 2}
+            | {int 2} {on_conflict_fail}
 
 The statement ending at line XXXX
 
@@ -16238,7 +16238,7 @@ The statement ending at line XXXX
         | {col_attrs_pk}
           | {autoinc_and_conflict_clause}
             | {col_attrs_autoinc}
-            | {int 2}
+            | {int 2} {on_conflict_fail}
 
 The statement ending at line XXXX
 
@@ -17789,7 +17789,7 @@ The statement ending at line XXXX
   {declare_proc_stmt}
   | {proc_name_type}
   | | {name foo}
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}
       | {param}

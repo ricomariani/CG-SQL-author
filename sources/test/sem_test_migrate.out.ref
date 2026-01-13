@@ -3504,7 +3504,7 @@ DECLARE PROC cql_throw (code INT!) USING TRANSACTION;
   | {declare_proc_stmt}: ok dml_proc
     | {proc_name_type}
     | | {name cql_throw}: ok dml_proc
-    | | {int 2}
+    | | {int 2} {uses_dml}
     | {proc_params_stmts}
       | {params}: ok
         | {param}: code: integer notnull variable in
@@ -3732,7 +3732,7 @@ DECLARE PROC cql_cursor_to_blob (C CURSOR, OUT result BLOB!) USING TRANSACTION;
   | {declare_proc_stmt}: ok dml_proc
     | {proc_name_type}
     | | {name cql_cursor_to_blob}: ok dml_proc
-    | | {int 2}
+    | | {int 2} {uses_dml}
     | {proc_params_stmts}
       | {params}: ok
         | {param}: C: cursor variable in
@@ -3780,7 +3780,7 @@ DECLARE PROC cql_cursor_from_blob (C CURSOR, b BLOB) USING TRANSACTION;
   | {declare_proc_stmt}: ok dml_proc
     | {proc_name_type}
     | | {name cql_cursor_from_blob}: ok dml_proc
-    | | {int 2}
+    | | {int 2} {uses_dml}
     | {proc_params_stmts}
       | {params}: ok
         | {param}: C: cursor variable in
@@ -4224,7 +4224,7 @@ DECLARE PROC cql_cursor_from_blob_stream (C CURSOR, b BLOB, i INT!) USING TRANSA
   | {declare_proc_stmt}: ok dml_proc
     | {proc_name_type}
     | | {name cql_cursor_from_blob_stream}: ok dml_proc
-    | | {int 2}
+    | | {int 2} {uses_dml}
     | {proc_params_stmts}
       | {params}: ok
         | {param}: C: cursor variable in
@@ -4271,7 +4271,7 @@ The statement ending at line XXXX
 @SCHEMA_UPGRADE_VERSION (5);
 
   {schema_upgrade_version_stmt}: ok
-  | {int 5}
+  | {int 5} {version}
 
 The statement ending at line XXXX
 
@@ -4391,7 +4391,7 @@ CREATE TABLE fk_not_there_yet(
       |       | | {name foo}
       |       | | {name_list}
       |       |   | {name name_2}
-      |       | {int 0}
+      |       | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
       | {col_key_list}
         | {col_def}: text2: text
         | | {col_def_type_attrs}: ok
@@ -4408,7 +4408,7 @@ CREATE TABLE fk_not_there_yet(
                 | | {name foo}
                 | | {name_list}
                 |   | {name name_2}
-                | {int 0}
+                | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 

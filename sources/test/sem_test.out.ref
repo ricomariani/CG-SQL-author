@@ -7,7 +7,7 @@ The statement ending at line XXXX
 test/sem_test.sql:XXXX:1: error: in schema_upgrade_version_stmt : CQL0228: schema upgrade version must be a positive integer
 
   {schema_upgrade_version_stmt}: err
-  | {int 0}
+  | {int 0} {version}
 
 The statement ending at line XXXX
 
@@ -34,7 +34,7 @@ The statement ending at line XXXX
 test/sem_test.sql:XXXX:1: error: in schema_upgrade_version_stmt : CQL0231: schema upgrade version declaration must come before any tables are declared
 
   {schema_upgrade_version_stmt}: err
-  | {int 11}
+  | {int 11} {version}
 
 The statement ending at line XXXX
 
@@ -52,7 +52,7 @@ test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : CQL0404: procedure canno
   {declare_proc_stmt}: err
   | {proc_name_type}
   | | {name printf}
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
 
 The statement ending at line XXXX
@@ -6018,7 +6018,7 @@ CREATE TABLE fk_table(
             | | {name foo}
             | | {name_list}
             |   | {name id}: id: integer notnull
-            | {int 0}
+            | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -6052,7 +6052,7 @@ test/sem_test.sql:XXXX:1: error: in fk_def : CQL0020: duplicate constraint name 
       |     | | {name foo}
       |     | | {name_list}
       |     |   | {name id}: id: integer notnull
-      |     | {int 0}
+      |     | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
       | {col_key_list}
         | {fk_def}
           | {name x}
@@ -6064,7 +6064,7 @@ test/sem_test.sql:XXXX:1: error: in fk_def : CQL0020: duplicate constraint name 
               | | {name foo}
               | | {name_list}
               |   | {name id}
-              | {int 0}
+              | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -6096,7 +6096,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0171: name not found 'bogus'
             | | {name foo}
             | | {name_list}
             |   | {name id}
-            | {int 0}
+            | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -6128,7 +6128,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0171: name not found 'bogus'
             | | {name foo}
             | | {name_list}: err
             |   | {name bogus}: err
-            | {int 0}
+            | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -6160,7 +6160,7 @@ test/sem_test.sql:XXXX:1: error: in fk_def : CQL0021: foreign key refers to non-
             | | {name bogus}
             | | {name_list}
             |   | {name id}
-            | {int 0}
+            | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -6932,7 +6932,7 @@ test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant fail
   | {declare_proc_stmt}: err
     | {proc_name_type}
     | | {name bad_constants_proc}
-    | | {int 0}
+    | | {int 0} {no_flags}
     | {proc_params_stmts}
 
 The statement ending at line XXXX
@@ -6958,7 +6958,7 @@ test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant fail
   | {declare_proc_stmt}: err
     | {proc_name_type}
     | | {name bad_constants_nested_proc}
-    | | {int 0}
+    | | {int 0} {no_flags}
     | {proc_params_stmts}
 
 The statement ending at line XXXX
@@ -8719,7 +8719,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0172: name list has duplicate name 
             | | {name foo}
             | | {name_list}
             |   | {name id}
-            | {int 0}
+            | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -8787,7 +8787,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0172: name list has duplicate name 
               |   | {name ref_id1}: ref_id1: integer
               |   | {name_list}
               |     | {name ref_id1}: err
-              | {int 0}
+              | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -13410,7 +13410,7 @@ test/sem_test.sql:XXXX:1: error: in fk_def : CQL0023: number of columns on both 
               | | {name foo}
               | | {name_list}
               |   | {name id}: id: integer notnull
-              | {int 0}
+              | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -13442,7 +13442,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0022: exact type of both sides of a
             | | {name foo}
             | | {name_list}
             |   | {name id}: id: integer notnull
-            | {int 0}
+            | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -15741,7 +15741,7 @@ DECLARE PROC decl1 (id INT);
   {declare_proc_stmt}: ok
   | {proc_name_type}
   | | {name decl1}: ok
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}: ok
       | {param}: id: integer variable in
@@ -15765,7 +15765,7 @@ DECLARE PROC decl2 (id INT) USING TRANSACTION;
   {declare_proc_stmt}: ok dml_proc
   | {proc_name_type}
   | | {name decl2}: ok dml_proc
-  | | {int 2}
+  | | {int 2} {uses_dml}
   | {proc_params_stmts}
     | {params}: ok
       | {param}: id: integer variable in
@@ -15780,7 +15780,7 @@ DECLARE PROC decl3 (id INT) (A INT!, B BOOL);
   {declare_proc_stmt}: decl3: { A: integer notnull, B: bool } dml_proc
   | {proc_name_type}
   | | {name decl3}: decl3: { A: integer notnull, B: bool } dml_proc
-  | | {int 3}
+  | | {int 3} {struct_type} {uses_dml}
   | {proc_params_stmts}
     | {params}: ok
     | | {param}: id: integer variable in
@@ -15804,7 +15804,7 @@ DECLARE PROC decl4 (x_A INT!, x_B BOOL);
   {declare_proc_stmt}: ok
   | {proc_name_type}
   | | {name decl4}: ok
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}: ok
       | {param}: x_A: integer notnull variable in
@@ -15834,7 +15834,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0194: declared procedures must be t
       | {declare_proc_stmt}: err
         | {proc_name_type}
         | | {name yy}
-        | | {int 0}
+        | | {int 0} {no_flags}
         | {proc_params_stmts}
 
 The statement ending at line XXXX
@@ -15844,7 +15844,7 @@ DECLARE PROC decl1 (id INT);
   {declare_proc_stmt}: ok alias
   | {proc_name_type}
   | | {name decl1}: ok
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}: ok
       | {param}: id: integer variable in
@@ -15865,7 +15865,7 @@ test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : CQL0196: procedure decla
   {declare_proc_stmt}: err
   | {proc_name_type}
   | | {name decl1}: ok
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}: ok
       | {param}: id: integer notnull variable in
@@ -15883,7 +15883,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0175: duplicate parameter name 'id'
   {declare_proc_stmt}: err
   | {proc_name_type}
   | | {name bogus_duplicate_params}
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}: err
       | {param}: id: integer variable in
@@ -15905,7 +15905,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0190: duplicate column name 'id'
   {declare_proc_stmt}: err
   | {proc_name_type}
   | | {name bogus_select_list}
-  | | {int 3}
+  | | {int 3} {struct_type} {uses_dml}
   | {proc_params_stmts}
     | {params}: ok
     | | {param}: id: integer variable in
@@ -21316,7 +21316,7 @@ DECLARE PROC frag_type () (id INT<job>, name TEXT);
   {declare_proc_stmt}: frag_type: { id: integer<job>, name: text } dml_proc
   | {proc_name_type}
   | | {name frag_type}: frag_type: { id: integer<job>, name: text } dml_proc
-  | | {int 3}
+  | | {int 3} {struct_type} {uses_dml}
   | {proc_params_stmts}
     | {typed_names}: frag_type: { id: integer<job>, name: text }
       | {typed_name}: id: integer<job>
@@ -24045,7 +24045,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0195: proc name conflicts with func
   {declare_proc_stmt}: err
   | {proc_name_type}
   | | {name simple_func}
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}
       | {param}
@@ -26011,7 +26011,7 @@ test/sem_test.sql:XXXX:1: error: in fk_def : CQL0021: foreign key refers to non-
             | | {name versioned_table}
             | | {name_list}
             |   | {name id}
-            | {int 0}
+            | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -26989,7 +26989,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0156: seed expression must be a non
   | {insert_normal}
   | | {insert_dummy_spec}: err
   |   | {strlit 'x'}: text notnull
-  |   | {int 0}
+  |   | {int 0} {dummy_value}
   | {name_columns_values}
     | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
     | {columns_values}: ok
@@ -27018,7 +27018,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
   | | {insert_dummy_spec}: err
   |   | {not}: err
   |   | | {strlit 'x'}: text notnull
-  |   | {int 0}
+  |   | {int 0} {dummy_value}
   | {name_columns_values}
     | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
     | {columns_values}: ok
@@ -27046,7 +27046,7 @@ INSERT INTO bar(id, name, rate) VALUES (_seed_, printf('name_%d', _seed_), _seed
   |   | {add}: integer notnull
   |   | | {int 1}: integer notnull
   |   | | {int 2}: integer notnull
-  |   | {int 3}
+  |   | {int 3} {dummy_value}
   | {name_columns_values}
     | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
     | {columns_values}: ok
@@ -27655,7 +27655,7 @@ INSERT INTO blob_table_test(b) VALUES (CAST(printf('b_%d', _seed_) AS BLOB)) @DU
   | {insert_normal}
   | | {seed_stub}
   |   | {int 1}: integer notnull
-  |   | {int 2}
+  |   | {int 2} {dummy_value}
   | {name_columns_values}
     | {name blob_table_test}: blob_table_test: { b: blob }
     | {columns_values}: ok
@@ -28444,7 +28444,7 @@ DECLARE PROC declared_proc (id INT) OUT (t TEXT);
   {declare_proc_stmt}: declared_proc: { t: text } uses_out
   | {proc_name_type}
   | | {name declared_proc}: declared_proc: { t: text } uses_out
-  | | {int 5}
+  | | {int 5} {struct_type} {uses_out}
   | {proc_params_stmts}
     | {params}: ok
     | | {param}: id: integer variable in
@@ -28798,7 +28798,7 @@ END;
       | {fetch_values_stmt}: ok
         | {insert_dummy_spec}: integer notnull
         | | {int 123}: integer notnull
-        | | {int 2}
+        | | {int 2} {dummy_value}
         | {name_columns_values}
           | {name C}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
           | {columns_values}: ok
@@ -29004,7 +29004,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
         | {insert_dummy_spec}: err
         | | {not}: err
         | | | {strlit 'x'}: text notnull
-        | | {int 0}
+        | | {int 0} {dummy_value}
         | {name_columns_values}
           | {name C}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
           | {columns_values}: ok
@@ -29105,7 +29105,7 @@ END;
       | {fetch_values_stmt}: ok
         | {insert_dummy_spec}: integer notnull
         | | {int 123}: integer notnull
-        | | {int 2}
+        | | {int 2} {dummy_value}
         | {name_columns_values}
           | {name C}: C: blob_out: { B: blob } variable dml_proc shape_storage value_cursor
           | {columns_values}: ok
@@ -29234,7 +29234,7 @@ END;
       | {fetch_values_stmt}: ok
         | {insert_dummy_spec}: integer notnull
         | | {int 123}: integer notnull
-        | | {int 0}
+        | | {int 0} {dummy_value}
         | {name_columns_values}
           | {name C}: C: blob_out: { B: blob } variable dml_proc shape_storage value_cursor
           | {columns_values}: ok
@@ -29901,7 +29901,7 @@ END;
       | {fetch_values_stmt}: ok
       | | {insert_dummy_spec}: integer notnull
       | | | {int 123}: integer notnull
-      | | | {int 0}
+      | | | {int 0} {dummy_value}
       | | {name_columns_values}
       |   | {name C}: C: _select_: { A: integer notnull, B: real notnull, C: text notnull } variable shape_storage value_cursor
       |   | {columns_values}: ok
@@ -30230,7 +30230,7 @@ test/sem_test.sql:XXXX:1: error: in name_list : CQL0272: columns referenced in t
               | | {name bar}
               | | {name_list}
               |   | {name id}: id: integer notnull
-              | {int 0}
+              | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -30273,7 +30273,7 @@ CREATE TABLE fk_on_col(
             | | {name foo}
             | | {name_list}
             |   | {name id}: id: integer notnull
-            | {int 49}
+            | {int 49} on_update: {cascade}, on_delete: {set_null}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -30302,7 +30302,7 @@ test/sem_test.sql:XXXX:1: error: in col_def : CQL0028: FK reference must be exac
             |   | {name id}: id: integer notnull
             |   | {name_list}
             |     | {name name}: name: text
-            | {int 49}
+            | {int 49} on_update: {cascade}, on_delete: {set_null}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -30329,7 +30329,7 @@ test/sem_test.sql:XXXX:1: error: in col_def : CQL0028: FK reference must be exac
             | | {name bar}
             | | {name_list}
             |   | {name name}: name: text
-            | {int 0}
+            | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -30356,7 +30356,7 @@ test/sem_test.sql:XXXX:1: error: in col_def : CQL0021: foreign key refers to non
             | | {name no_such_table}
             | | {name_list}
             |   | {name name}
-            | {int 0}
+            | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -30383,7 +30383,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0171: name not found 'no_such_colum
             | | {name bar}
             | | {name_list}: err
             |   | {name no_such_column}: err
-            | {int 0}
+            | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -32066,7 +32066,7 @@ test/sem_test.sql:XXXX:1: error: in from_shape : CQL0297: FROM [shape] is redund
         | {insert_normal}
         | | {insert_dummy_spec}
         |   | {int 1}
-        |   | {int 0}
+        |   | {int 0} {dummy_value}
         | {name_columns_values}
           | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
           | {columns_values}: ok
@@ -32245,7 +32245,7 @@ CREATE TABLE args2(
     |       | | {name args1}
     |       | | {name_list}
     |       |   | {name id}: id: integer notnull
-    |       | {int 0}
+    |       | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
     | {col_key_list}
       | {col_def}: name2: text
       | | {col_def_type_attrs}: ok
@@ -34099,7 +34099,7 @@ END;
                     |     | {select_expr_list}: _select_: { _anon: null }
                     |     | | {select_expr}: null
                     |     |   | {raise}: null
-                    |     |     | {int 1}
+                    |     |     | {int 1} {rollback}
                     |     |     | {strlit 'omg roll it back!'}: text notnull
                     |     | {select_from_etc}: ok
                     |       | {select_where}
@@ -34122,7 +34122,7 @@ test/sem_test.sql:XXXX:1: error: in raise : CQL0092: RAISE may only be used in a
   |     | {select_expr_list}: err
   |     | | {select_expr}: err
   |     |   | {raise}: err
-  |     |     | {int 0}
+  |     |     | {int 0} {ignore}
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -34164,7 +34164,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0093: RAISE 2nd argument must be a 
                     |     | {select_expr_list}: err
                     |     | | {select_expr}: err
                     |     |   | {raise}: err
-                    |     |     | {int 1}
+                    |     |     | {int 1} {rollback}
                     |     |     | {int 0}: integer notnull
                     |     | {select_from_etc}: ok
                     |       | {select_where}
@@ -34207,7 +34207,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
                     |     | {select_expr_list}: err
                     |     | | {select_expr}: err
                     |     |   | {raise}: err
-                    |     |     | {int 1}
+                    |     |     | {int 1} {rollback}
                     |     |     | {not}: err
                     |     |       | {strlit 'x'}: text notnull
                     |     | {select_from_etc}: ok
@@ -36268,7 +36268,7 @@ DECLARE PROC sens_proc (OUT foo INT @SENSITIVE);
   {declare_proc_stmt}: ok
   | {proc_name_type}
   | | {name sens_proc}: ok
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}: ok
       | {param}: foo: integer variable out sensitive
@@ -36285,7 +36285,7 @@ DECLARE PROC non_sens_proc (OUT foo INT);
   {declare_proc_stmt}: ok
   | {proc_name_type}
   | | {name non_sens_proc}: ok
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}: ok
       | {param}: foo: integer variable out
@@ -36301,7 +36301,7 @@ DECLARE PROC non_sens_proc_nonnull (OUT foo INT!);
   {declare_proc_stmt}: ok
   | {proc_name_type}
   | | {name non_sens_proc_nonnull}: ok
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}: ok
       | {param}: foo: integer notnull variable out
@@ -36363,7 +36363,7 @@ DECLARE PROC ref_out_proc (OUT x TEXT!);
   {declare_proc_stmt}: ok
   | {proc_name_type}
   | | {name ref_out_proc}: ok
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}: ok
       | {param}: x: text notnull variable init_required out
@@ -37061,7 +37061,7 @@ DECLARE PROC out_cursor_proc () OUT (A INT!, B INT!) USING TRANSACTION;
   {declare_proc_stmt}: out_cursor_proc: { A: integer notnull, B: integer notnull } dml_proc uses_out alias
   | {proc_name_type}
   | | {name out_cursor_proc}: out_cursor_proc: { A: integer notnull, B: integer notnull } dml_proc uses_out
-  | | {int 7}
+  | | {int 7} {struct_type} {uses_dml} {uses_out}
   | {proc_params_stmts}
     | {typed_names}: out_cursor_proc: { A: integer notnull, B: integer notnull }
       | {typed_name}: A: integer notnull
@@ -39125,7 +39125,7 @@ CREATE TABLE reference_pk(
             | | {name referenceable}
             | | {name_list}
             |   | {name a}: a: integer notnull
-            | {int 0}
+            | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -39166,7 +39166,7 @@ CREATE TABLE reference_2_pk(
               |   | {name a}: a: integer notnull partial_pk
               |   | {name_list}
               |     | {name b}: b: real notnull partial_pk
-              | {int 0}
+              | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -39207,7 +39207,7 @@ CREATE TABLE reference_2_wrong_order_pk(
               |   | {name b}: b: real notnull partial_pk
               |   | {name_list}
               |     | {name a}: a: integer notnull partial_pk
-              | {int 0}
+              | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -39237,7 +39237,7 @@ CREATE TABLE reference_uk(
             | | {name referenceable}
             | | {name_list}
             |   | {name b}: b: real
-            | {int 0}
+            | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -39280,7 +39280,7 @@ test/sem_test.sql:XXXX:1: error: in name_list : CQL0272: columns referenced in t
               |   | {name a}: a: integer notnull
               |   | {name_list}
               |     | {name b}: b: real
-              | {int 0}
+              | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -39321,7 +39321,7 @@ CREATE TABLE referenceable_unique_index(
               |   | {name c}: c: text
               |   | {name_list}
               |     | {name d}: d: text
-              | {int 0}
+              | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -39364,7 +39364,7 @@ test/sem_test.sql:XXXX:1: error: in name_list : CQL0272: columns referenced in t
               |   | {name a}: a: integer notnull
               |   | {name_list}
               |     | {name c}: c: text
-              | {int 0}
+              | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -39418,7 +39418,7 @@ test/sem_test.sql:XXXX:1: error: in name_list : CQL0272: columns referenced in t
                 |     | {name c}: c: text
                 |     | {name_list}
                 |       | {name d}: d: text
-                | {int 0}
+                | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -39452,7 +39452,7 @@ test/sem_test.sql:XXXX:1: error: in name_list : CQL0272: columns referenced in t
             | | {name referenceable}
             | | {name_list}
             |   | {name e}: e: longint
-            | {int 0}
+            | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -39508,7 +39508,7 @@ test/sem_test.sql:XXXX:1: error: in name_list : CQL0272: columns referenced in t
                 |     | {name d}: d: text
                 |     | {name_list}
                 |       | {name e}: e: longint
-                | {int 0}
+                | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -39540,7 +39540,7 @@ test/sem_test.sql:XXXX:1: error: in name_list : CQL0272: columns referenced in t
             | | {name referenceable}
             | | {name_list}
             |   | {name c}: c: text
-            | {int 0}
+            | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -39607,7 +39607,7 @@ CREATE TABLE fk_strict_ok(
             | | {name foo}
             | | {name_list}
             |   | {name id}: id: integer notnull
-            | {int 51}
+            | {int 51} on_update: {cascade}, on_delete: {cascade}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -39634,7 +39634,7 @@ test/sem_test.sql:XXXX:1: error: in col_attrs_fk : CQL0237: strict FK validation
             | | {name foo}
             | | {name_list}
             |   | {name id}: id: integer notnull
-            | {int 0}
+            | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -39661,7 +39661,7 @@ test/sem_test.sql:XXXX:1: error: in col_attrs_fk : CQL0238: strict FK validation
             | | {name foo}
             | | {name_list}
             |   | {name id}: id: integer notnull
-            | {int 80}
+            | {int 80} on_update: {no_action}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -39693,7 +39693,7 @@ test/sem_test.sql:XXXX:1: error: in fk_def : CQL0238: strict FK validation requi
             | | {name foo}
             | | {name_list}
             |   | {name id}: id: integer notnull
-            | {int 80}
+            | {int 80} on_update: {no_action}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -39725,7 +39725,7 @@ test/sem_test.sql:XXXX:1: error: in fk_def : CQL0237: strict FK validation requi
             | | {name foo}
             | | {name_list}
             |   | {name id}: id: integer notnull
-            | {int 0}
+            | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -39755,7 +39755,7 @@ CREATE TABLE fk_strict_success_loose(
             | | {name foo}
             | | {name_list}
             |   | {name id}: id: integer notnull
-            | {int 53}
+            | {int 53} on_update: {cascade}, on_delete: {no_action}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -39853,7 +39853,7 @@ The statement ending at line XXXX
   | {region_list}
     | {region_spec}
       | {name root_region}
-      | {int 0}
+      | {int 0} {public_region}
 
 The statement ending at line XXXX
 
@@ -39875,7 +39875,7 @@ test/sem_test.sql:XXXX:1: error: in region_list : CQL0244: unknown schema region
   | {region_list}
     | {region_spec}
       | {name unknown_region}
-      | {int 0}
+      | {int 0} {public_region}
 
 The statement ending at line XXXX
 
@@ -39888,11 +39888,11 @@ test/sem_test.sql:XXXX:1: error: in region_spec : CQL0206: duplicate name in lis
   | {region_list}
     | {region_spec}
     | | {name root_region}
-    | | {int 0}
+    | | {int 0} {public_region}
     | {region_list}
       | {region_spec}
         | {name root_region}
-        | {int 0}
+        | {int 0} {public_region}
 
 The statement ending at line XXXX
 
@@ -39925,7 +39925,7 @@ The statement ending at line XXXX
   | {region_list}
     | {region_spec}
       | {name root_region}
-      | {int 0}
+      | {int 0} {public_region}
 
 The statement ending at line XXXX
 
@@ -39936,11 +39936,11 @@ The statement ending at line XXXX
   | {region_list}
     | {region_spec}
     | | {name dep_region}
-    | | {int 0}
+    | | {int 0} {public_region}
     | {region_list}
       | {region_spec}
         | {name dep2_region}
-        | {int 0}
+        | {int 0} {public_region}
 
 The statement ending at line XXXX
 
@@ -41632,7 +41632,7 @@ test/sem_test.sql:XXXX:1: error: in col_def : CQL0060: referenced table can be i
     |         | | {name recreatable}
     |         | | {name_list}
     |         |   | {name id}
-    |         | {int 0}
+    |         | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
     | {col_key_list}
       | {col_def}
         | {col_def_type_attrs}
@@ -41667,7 +41667,7 @@ CREATE TABLE recreatable_reference_2(
     |         | | {name recreatable}
     |         | | {name_list}
     |         |   | {name id}: id: integer notnull
-    |         | {int 51}
+    |         | {int 51} on_update: {cascade}, on_delete: {cascade}, deferrability: {no_flags}
     | {col_key_list}
       | {col_def}: name: text
         | {col_def_type_attrs}: ok
@@ -41731,7 +41731,7 @@ CREATE TABLE recreatable_reference_3(
     |         | | {name in_group_test}
     |         | | {name_list}
     |         |   | {name id}: id: integer notnull
-    |         | {int 51}
+    |         | {int 51} on_update: {cascade}, on_delete: {cascade}, deferrability: {no_flags}
     | {col_key_list}
       | {col_def}: name: text
         | {col_def_type_attrs}: ok
@@ -41768,7 +41768,7 @@ CREATE TABLE recreatable_reference_4(
     |         | | {name in_group_test}
     |         | | {name_list}
     |         |   | {name id}: id: integer notnull
-    |         | {int 51}
+    |         | {int 51} on_update: {cascade}, on_delete: {cascade}, deferrability: {no_flags}
     | {col_key_list}
       | {col_def}: id2: integer foreign_key
       | | {col_def_type_attrs}: ok
@@ -41781,7 +41781,7 @@ CREATE TABLE recreatable_reference_4(
       |       | | {name recreatable_reference_3}
       |       | | {name_list}
       |       |   | {name id}: id: integer notnull
-      |       | {int 51}
+      |       | {int 51} on_update: {cascade}, on_delete: {cascade}, deferrability: {no_flags}
       | {col_key_list}
         | {col_def}: name: text
           | {col_def_type_attrs}: ok
@@ -41817,7 +41817,7 @@ CREATE TABLE recreatable_reference_5(
     |         | | {name in_group_test}
     |         | | {name_list}
     |         |   | {name id}: id: integer notnull
-    |         | {int 51}
+    |         | {int 51} on_update: {cascade}, on_delete: {cascade}, deferrability: {no_flags}
     | {col_key_list}
       | {col_def}: name: text
         | {col_def_type_attrs}: ok
@@ -41855,7 +41855,7 @@ test/sem_test.sql:XXXX:1: error: in col_def : CQL0060: referenced table can be i
     |         | | {name recreatable_reference_4}
     |         | | {name_list}
     |         |   | {name id}
-    |         | {int 51}
+    |         | {int 51} on_update: {cascade}, on_delete: {cascade}, deferrability: {no_flags}
     | {col_key_list}
       | {col_def}
         | {col_def_type_attrs}
@@ -41904,7 +41904,7 @@ test/sem_test.sql:XXXX:1: error: in fk_def : CQL0021: foreign key refers to non-
         |     | | {name table_not_found}
         |     | | {name_list}
         |     |   | {name q}
-        |     | {int 0}
+        |     | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
         | {col_key_list}
           | {pk_def}
             | {indexed_columns_conflict_clause}
@@ -44251,7 +44251,7 @@ test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : CQL0196: procedure decla
   {declare_proc_stmt}: err
   | {proc_name_type}
   | | {name MyAdHocMigration}: ok
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}: ok
       | {param}: x: integer variable in
@@ -44266,7 +44266,7 @@ DECLARE PROC InvalidAdHocMigration (y INT);
   {declare_proc_stmt}: ok
   | {proc_name_type}
   | | {name InvalidAdHocMigration}: ok
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}: ok
       | {param}: y: integer variable in
@@ -44465,7 +44465,7 @@ DECLARE PROC val_fetch (seed INT!) OUT (id TEXT);
   {declare_proc_stmt}: val_fetch: { id: text } uses_out
   | {proc_name_type}
   | | {name val_fetch}: val_fetch: { id: text } uses_out
-  | | {int 5}
+  | | {int 5} {struct_type} {uses_out}
   | {proc_params_stmts}
     | {params}: ok
     | | {param}: seed: integer notnull variable in
@@ -44485,7 +44485,7 @@ DECLARE PROC val_fetch_dml (seed INT!) OUT (id TEXT) USING TRANSACTION;
   {declare_proc_stmt}: val_fetch_dml: { id: text } dml_proc uses_out
   | {proc_name_type}
   | | {name val_fetch_dml}: val_fetch_dml: { id: text } dml_proc uses_out
-  | | {int 7}
+  | | {int 7} {struct_type} {uses_dml} {uses_out}
   | {proc_params_stmts}
     | {params}: ok
     | | {param}: seed: integer notnull variable in
@@ -44544,7 +44544,7 @@ The statement ending at line XXXX
   | {region_list}
     | {region_spec}
       | {name leaf3}
-      | {int 0}
+      | {int 0} {public_region}
 
 The statement ending at line XXXX
 
@@ -44557,7 +44557,7 @@ test/sem_test.sql:XXXX:1: error: in declare_schema_region_stmt : CQL0291: region
   | {region_list}
     | {region_spec}
       | {name leaf3}
-      | {int 0}
+      | {int 0} {public_region}
 
 The statement ending at line XXXX
 
@@ -44568,11 +44568,11 @@ The statement ending at line XXXX
   | {region_list}
     | {region_spec}
     | | {name leaf1}
-    | | {int 0}
+    | | {int 0} {public_region}
     | {region_list}
       | {region_spec}
         | {name leaf2}
-        | {int 0}
+        | {int 0} {public_region}
 
 The statement ending at line XXXX
 
@@ -44585,7 +44585,7 @@ test/sem_test.sql:XXXX:1: error: in declare_schema_region_stmt : CQL0291: region
   | {region_list}
     | {region_spec}
       | {name leaf1}
-      | {int 0}
+      | {int 0} {public_region}
 
 The statement ending at line XXXX
 
@@ -44677,7 +44677,7 @@ The statement ending at line XXXX
   | {region_list}
     | {region_spec}
       | {name depl1}
-      | {int 1}
+      | {int 1} {private_region}
 
 The statement ending at line XXXX
 
@@ -44688,7 +44688,7 @@ The statement ending at line XXXX
   | {region_list}
     | {region_spec}
       | {name depl1}
-      | {int 0}
+      | {int 0} {public_region}
 
 The statement ending at line XXXX
 
@@ -44720,7 +44720,7 @@ The statement ending at line XXXX
   | {region_list}
     | {region_spec}
       | {name private_region}
-      | {int 1}
+      | {int 1} {private_region}
 
 The statement ending at line XXXX
 
@@ -44731,7 +44731,7 @@ The statement ending at line XXXX
   | {region_list}
     | {region_spec}
       | {name containing_region}
-      | {int 0}
+      | {int 0} {public_region}
 
 The statement ending at line XXXX
 
@@ -44798,7 +44798,7 @@ CREATE TABLE containing_region_table(
               | | {name private_region_table}
               | | {name_list}
               |   | {name id}: id: integer notnull
-              | {int 0}
+              | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -44840,7 +44840,7 @@ test/sem_test.sql:XXXX:1: error: in col_def : CQL0021: foreign key refers to non
               | | {name private_region_table}
               | | {name_list}
               |   | {name id}
-              | {int 0}
+              | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -44867,7 +44867,7 @@ CREATE TABLE client_region_table_2(
               | | {name containing_region_table}
               | | {name_list}
               |   | {name id}: id: integer notnull
-              | {int 0}
+              | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -47251,7 +47251,7 @@ END;
         | {insert_normal}
         | | {seed_stub}
         |   | {int 1}: integer notnull
-        |   | {int 2}
+        |   | {int 2} {dummy_value}
         | {name_columns_values}
           | {name referenceable}: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint }
           | {columns_values}: ok
@@ -47327,7 +47327,7 @@ END;
       | {fetch_values_stmt}: ok
         | {insert_dummy_spec}: integer notnull
         | | {int 1}: integer notnull
-        | | {int 2}
+        | | {int 2} {dummy_value}
         | {name_columns_values}
           | {name C}: C: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint } variable shape_storage value_cursor
           | {columns_values}: ok
@@ -48372,7 +48372,7 @@ DECLARE PROC out_union_user (x INT) OUT UNION (id INT, x TEXT);
   {declare_proc_stmt}: out_union_user: { id: integer, x: text } uses_out_union
   | {proc_name_type}
   | | {name out_union_user}: out_union_user: { id: integer, x: text } uses_out_union
-  | | {int 9}
+  | | {int 9} {struct_type} {uses_out_union}
   | {proc_params_stmts}
     | {params}: ok
     | | {param}: x: integer variable in
@@ -48426,7 +48426,7 @@ DECLARE PROC sens_result_proc () (t TEXT @SENSITIVE);
   {declare_proc_stmt}: sens_result_proc: { t: text sensitive } dml_proc
   | {proc_name_type}
   | | {name sens_result_proc}: sens_result_proc: { t: text sensitive } dml_proc
-  | | {int 3}
+  | | {int 3} {struct_type} {uses_dml}
   | {proc_params_stmts}
     | {typed_names}: sens_result_proc: { t: text sensitive }
       | {typed_name}: t: text sensitive
@@ -48482,7 +48482,7 @@ DECLARE PROC incompatible_result_proc () (t TEXT);
   {declare_proc_stmt}: incompatible_result_proc: { t: text } dml_proc
   | {proc_name_type}
   | | {name incompatible_result_proc}: incompatible_result_proc: { t: text } dml_proc
-  | | {int 3}
+  | | {int 3} {struct_type} {uses_dml}
   | {proc_params_stmts}
     | {typed_names}: incompatible_result_proc: { t: text }
       | {typed_name}: t: text
@@ -49531,7 +49531,7 @@ test/sem_test.sql:XXXX:1: error: in fk_def : CQL0021: foreign key refers to non-
               | | {name this_table_does_not_exist}
               | | {name_list}
               |   | {name col1}
-              | {int 51}
+              | {int 51} on_update: {cascade}, on_delete: {cascade}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -49618,7 +49618,7 @@ DECLARE PROC _stuff () (id INT, name TEXT);
   {declare_proc_stmt}: _stuff: { id: integer, name: text } dml_proc
   | {proc_name_type}
   | | {name _stuff}: _stuff: { id: integer, name: text } dml_proc
-  | | {int 3}
+  | | {int 3} {struct_type} {uses_dml}
   | {proc_params_stmts}
     | {typed_names}: _stuff: { id: integer, name: text }
       | {typed_name}: id: integer
@@ -49636,7 +49636,7 @@ DECLARE PROC _stuff1 () (id INT, name TEXT);
   {declare_proc_stmt}: _stuff1: { id: integer, name: text } dml_proc
   | {proc_name_type}
   | | {name _stuff1}: _stuff1: { id: integer, name: text } dml_proc
-  | | {int 3}
+  | | {int 3} {struct_type} {uses_dml}
   | {proc_params_stmts}
     | {typed_names}: _stuff1: { id: integer, name: text }
       | {typed_name}: id: integer
@@ -49654,7 +49654,7 @@ DECLARE PROC _stuff2 () (h1 INT, id INT, name TEXT, t1 INT);
   {declare_proc_stmt}: _stuff2: { h1: integer, id: integer, name: text, t1: integer } dml_proc
   | {proc_name_type}
   | | {name _stuff2}: _stuff2: { h1: integer, id: integer, name: text, t1: integer } dml_proc
-  | | {int 3}
+  | | {int 3} {struct_type} {uses_dml}
   | {proc_params_stmts}
     | {typed_names}: _stuff2: { h1: integer, id: integer, name: text, t1: integer }
       | {typed_name}: h1: integer
@@ -49680,7 +49680,7 @@ DECLARE PROC _stuff3 () (h2 INT, h1 INT, id INT, name TEXT, t1 INT, t2 INT);
   {declare_proc_stmt}: _stuff3: { h2: integer, h1: integer, id: integer, name: text, t1: integer, t2: integer } dml_proc
   | {proc_name_type}
   | | {name _stuff3}: _stuff3: { h2: integer, h1: integer, id: integer, name: text, t1: integer, t2: integer } dml_proc
-  | | {int 3}
+  | | {int 3} {struct_type} {uses_dml}
   | {proc_params_stmts}
     | {typed_names}: _stuff3: { h2: integer, h1: integer, id: integer, name: text, t1: integer, t2: integer }
       | {typed_name}: h2: integer
@@ -49716,7 +49716,7 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
   {declare_proc_stmt}: err
   | {proc_name_type}
   | | {name _stuff4}
-  | | {int 3}
+  | | {int 3} {struct_type} {uses_dml}
   | {proc_params_stmts}
     | {typed_names}: err
       | {typed_name}: err
@@ -49731,7 +49731,7 @@ DECLARE PROC _stuff5 () (id INT, name TEXT);
   {declare_proc_stmt}: _stuff5: { id: integer, name: text } dml_proc
   | {proc_name_type}
   | | {name _stuff5}: _stuff5: { id: integer, name: text } dml_proc
-  | | {int 3}
+  | | {int 3} {struct_type} {uses_dml}
   | {proc_params_stmts}
     | {typed_names}: _stuff5: { id: integer, name: text }
       | {typed_name}: id: integer
@@ -49749,7 +49749,7 @@ DECLARE PROC _stuff6 () (x_id INT, x_name TEXT, y_id INT, y_name TEXT);
   {declare_proc_stmt}: _stuff6: { x_id: integer, x_name: text, y_id: integer, y_name: text } dml_proc
   | {proc_name_type}
   | | {name _stuff6}: _stuff6: { x_id: integer, x_name: text, y_id: integer, y_name: text } dml_proc
-  | | {int 3}
+  | | {int 3} {struct_type} {uses_dml}
   | {proc_params_stmts}
     | {typed_names}: _stuff6: { x_id: integer, x_name: text, y_id: integer, y_name: text }
       | {typed_name}: x_id: integer
@@ -49930,7 +49930,7 @@ test/sem_test.sql:XXXX:1: error: in fk_def : CQL0324: referenced table was creat
             | | {name from_the_future}
             | | {name_list}
             |   | {name col1}
-            | {int 0}
+            | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -49963,7 +49963,7 @@ CREATE TABLE in_the_future(
             | | {name from_the_future}
             | | {name_list}
             |   | {name col1}: col1: text notnull
-            | {int 0}
+            | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -49972,7 +49972,7 @@ DECLARE PROC basic_source () OUT UNION (id INT, name TEXT);
   {declare_proc_stmt}: basic_source: { id: integer, name: text } uses_out_union
   | {proc_name_type}
   | | {name basic_source}: basic_source: { id: integer, name: text } uses_out_union
-  | | {int 9}
+  | | {int 9} {struct_type} {uses_out_union}
   | {proc_params_stmts}
     | {typed_names}: basic_source: { id: integer, name: text }
       | {typed_name}: id: integer
@@ -50061,7 +50061,7 @@ CREATE TABLE self_ref1(
               | | {name self_ref1}
               | | {name_list}
               |   | {name id}: id: integer notnull
-              | {int 0}
+              | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -50100,7 +50100,7 @@ CREATE TABLE self_ref2(
               | | {name self_ref2}
               | | {name_list}
               |   | {name id}: id: integer notnull
-              | {int 0}
+              | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -50136,7 +50136,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0171: name not found 'idx'
               | | {name self_ref3}
               | | {name_list}: err
               |   | {name idx}: err
-              | {int 0}
+              | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -50177,7 +50177,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0171: name not found 'idx'
               | | {name self_ref4}
               | | {name_list}: err
               |   | {name idx}: err
-              | {int 0}
+              | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -50218,7 +50218,7 @@ test/sem_test.sql:XXXX:1: error: in name_list : CQL0272: columns referenced in t
               | | {name self_ref5}
               | | {name_list}
               |   | {name id2}: id2: integer
-              | {int 0}
+              | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -50245,7 +50245,7 @@ test/sem_test.sql:XXXX:1: error: in name_list : CQL0272: columns referenced in t
             | | {name self_ref2}
             | | {name_list}
             |   | {name id2}: id2: integer foreign_key
-            | {int 0}
+            | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -50712,7 +50712,7 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0334: @dummy_seed @dummy_nu
   | {insert_normal}
   | | {insert_dummy_spec}
   |   | {int 1}
-  |   | {int 0}
+  |   | {int 0} {dummy_value}
   | {name_columns_values}
     | {name foo}: foo: { id: integer notnull primary_key autoinc }
     | {columns_values}: err
@@ -50757,7 +50757,7 @@ test/sem_test.sql:XXXX:1: error: in with_select_stmt : CQL0334: @dummy_seed @dum
   | {insert_normal}
   | | {insert_dummy_spec}
   |   | {int 1}
-  |   | {int 0}
+  |   | {int 0} {dummy_value}
   | {name_columns_values}
     | {name foo}: foo: { id: integer notnull primary_key autoinc }
     | {columns_values}: err
@@ -50881,7 +50881,7 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0334: @dummy_seed @dummy_nu
   | {insert_normal}
   | | {insert_dummy_spec}
   |   | {int 1}
-  |   | {int 0}
+  |   | {int 0} {dummy_value}
   | {name_columns_values}
     | {name foo}: foo: { id: integer notnull primary_key autoinc }
     | {columns_values}: err
@@ -50916,7 +50916,7 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0334: @dummy_seed @dummy_nu
   | {insert_normal}
   | | {insert_dummy_spec}
   |   | {int 1}
-  |   | {int 0}
+  |   | {int 0} {dummy_value}
   | {name_columns_values}
     | {name foo}: foo: { id: integer notnull primary_key autoinc }
     | {columns_values}: err
@@ -50947,7 +50947,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'bogus'
   | {insert_normal}
   | | {seed_stub}
   |   | {int 1}: integer notnull
-  |   | {int 0}
+  |   | {int 0} {dummy_value}
   | {name_columns_values}
     | {name foo}: foo: { id: integer notnull primary_key autoinc }
     | {columns_values}: ok
@@ -50965,7 +50965,7 @@ INSERT INTO foo(id) VALUES (NULL) @DUMMY_SEED(1);
   | {insert_normal}
   | | {seed_stub}
   |   | {int 1}: integer notnull
-  |   | {int 0}
+  |   | {int 0} {dummy_value}
   | {name_columns_values}
     | {name foo}: foo: { id: integer notnull primary_key autoinc }
     | {columns_values}: ok
@@ -50985,7 +50985,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'INT' not compatible
   | {insert_normal}
   | | {seed_stub}
   |   | {int 1}: integer notnull
-  |   | {int 0}
+  |   | {int 0} {dummy_value}
   | {name_columns_values}
     | {name foo}: foo: { id: integer notnull primary_key autoinc }
     | {columns_values}: ok
@@ -51065,7 +51065,7 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0334: @dummy_seed @dummy_nu
   | {insert_normal}
   | | {insert_dummy_spec}
   |   | {int 1}
-  |   | {int 0}
+  |   | {int 0} {dummy_value}
   | {name_columns_values}
     | {name foo}: foo: { id: integer notnull primary_key autoinc }
     | {columns_values}: err
@@ -51371,7 +51371,7 @@ DECLARE PROC shape () (x INT!, y TEXT!);
   {declare_proc_stmt}: shape: { x: integer notnull, y: text notnull } dml_proc
   | {proc_name_type}
   | | {name shape}: shape: { x: integer notnull, y: text notnull } dml_proc
-  | | {int 3}
+  | | {int 3} {struct_type} {uses_dml}
   | {proc_params_stmts}
     | {typed_names}: shape: { x: integer notnull, y: text notnull }
       | {typed_name}: x: integer notnull
@@ -51391,7 +51391,7 @@ DECLARE PROC small_shape () (y TEXT!);
   {declare_proc_stmt}: small_shape: { y: text notnull } dml_proc
   | {proc_name_type}
   | | {name small_shape}: small_shape: { y: text notnull } dml_proc
-  | | {int 3}
+  | | {int 3} {struct_type} {uses_dml}
   | {proc_params_stmts}
     | {typed_names}: small_shape: { y: text notnull }
       | {typed_name}: y: text notnull
@@ -51406,7 +51406,7 @@ DECLARE PROC shape_consumer (x_ INT!, y_ TEXT!);
   {declare_proc_stmt}: ok
   | {proc_name_type}
   | | {name shape_consumer}: ok
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}: ok
       | {param}: x_: integer notnull variable in
@@ -51539,7 +51539,7 @@ DECLARE PROC shape_y_only (y_ TEXT!);
   {declare_proc_stmt}: ok
   | {proc_name_type}
   | | {name shape_y_only}: ok
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}: ok
       | {param}: y_: text notnull variable in
@@ -51635,7 +51635,7 @@ DECLARE PROC lotsa_ints (a INT!, b INT!, c INT!, d INT!);
   {declare_proc_stmt}: ok
   | {proc_name_type}
   | | {name lotsa_ints}: ok
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}: ok
       | {param}: a: integer notnull variable in
@@ -52248,7 +52248,7 @@ DECLARE PROC funclike (x_ INT!, y_ TEXT!, OUT z INT!);
   {declare_proc_stmt}: ok
   | {proc_name_type}
   | | {name funclike}: ok
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}: ok
       | {param}: x_: integer notnull variable in
@@ -54572,7 +54572,7 @@ DECLARE PROC some_proc (id INT, t TEXT, t1 TEXT!, b BLOB, OUT x INT!);
   {declare_proc_stmt}: ok
   | {proc_name_type}
   | | {name some_proc}: ok
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}: ok
       | {param}: id: integer variable in
@@ -54683,7 +54683,7 @@ DECLARE PROC some_proc2 (INOUT id INT, t TEXT, t1 TEXT!, b BLOB, OUT x INT!);
   {declare_proc_stmt}: ok
   | {proc_name_type}
   | | {name some_proc2}: ok
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}: ok
       | {param}: id: integer variable in out
@@ -54903,7 +54903,7 @@ END;
       | {fetch_values_stmt}: ok
         | {insert_dummy_spec}: integer notnull
         | | {int 9}: integer notnull
-        | | {int 3}
+        | | {int 3} {dummy_value}
         | {name_columns_values}
           | {name C}: C: bar: { id: integer notnull, name: text, rate: longint } variable shape_storage value_cursor
           | {columns_values}: ok
@@ -55140,7 +55140,7 @@ END;
         | {insert_normal}
         | | {seed_stub}
         |   | {int 9}: integer notnull
-        |   | {int 3}
+        |   | {int 3} {dummy_value}
         | {name_columns_values}
           | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
           | {columns_values}: ok
@@ -55633,7 +55633,7 @@ DECLARE PROC test_shape () (x INT<integer_things>!);
   {declare_proc_stmt}: test_shape: { x: integer<integer_things> notnull } dml_proc
   | {proc_name_type}
   | | {name test_shape}: test_shape: { x: integer<integer_things> notnull } dml_proc
-  | | {int 3}
+  | | {int 3} {struct_type} {uses_dml}
   | {proc_params_stmts}
     | {typed_names}: test_shape: { x: integer<integer_things> notnull }
       | {typed_name}: x: integer<integer_things> notnull
@@ -55682,7 +55682,7 @@ DECLARE PROC enum_users_out (i INT<integer_things>!) OUT (x INT<integer_things>!
   {declare_proc_stmt}: enum_users_out: { x: integer<integer_things> notnull } uses_out
   | {proc_name_type}
   | | {name enum_users_out}: enum_users_out: { x: integer<integer_things> notnull } uses_out
-  | | {int 5}
+  | | {int 5} {struct_type} {uses_out}
   | {proc_params_stmts}
     | {params}: ok
     | | {param}: i: integer<integer_things> notnull variable in
@@ -55770,7 +55770,7 @@ DECLARE PROC shape_result_test () (x INT<integer_things>!);
   {declare_proc_stmt}: shape_result_test: { x: integer<integer_things> notnull } dml_proc
   | {proc_name_type}
   | | {name shape_result_test}: shape_result_test: { x: integer<integer_things> notnull } dml_proc
-  | | {int 3}
+  | | {int 3} {struct_type} {uses_dml}
   | {proc_params_stmts}
     | {typed_names}: shape_result_test: { x: integer<integer_things> notnull }
       | {typed_name}: x: integer<integer_things> notnull
@@ -56426,7 +56426,7 @@ DECLARE PROC use_c () (c INT);
   {declare_proc_stmt}: use_c: { c: integer } dml_proc
   | {proc_name_type}
   | | {name use_c}: use_c: { c: integer } dml_proc
-  | | {int 3}
+  | | {int 3} {struct_type} {uses_dml}
   | {proc_params_stmts}
     | {typed_names}: use_c: { c: integer }
       | {typed_name}: c: integer
@@ -58252,7 +58252,7 @@ DECLARE PROC some_proc_with_an_arg_of_a_named_type (x TEXT @SENSITIVE);
   {declare_proc_stmt}: ok
   | {proc_name_type}
   | | {name some_proc_with_an_arg_of_a_named_type}: ok
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}: ok
       | {param}: x: text variable in sensitive
@@ -58268,7 +58268,7 @@ DECLARE PROC some_proc_with_an_arg_of_a_named_type (x TEXT @SENSITIVE);
   {declare_proc_stmt}: ok alias
   | {proc_name_type}
   | | {name some_proc_with_an_arg_of_a_named_type}: ok
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}: ok
       | {param}: x: text variable in sensitive
@@ -58651,7 +58651,7 @@ DECLARE PROC uses_complex_table_attrs (f1_ INT, f2_ INT!, f3_ INT! @SENSITIVE, f
   {declare_proc_stmt}: ok alias
   | {proc_name_type}
   | | {name uses_complex_table_attrs}: ok
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}: ok
       | {param}: f1_: integer variable in
@@ -59972,7 +59972,7 @@ CREATE TABLE fk_strict_err_0(
             | | {name foo}
             | | {name_list}
             |   | {name id}: id: integer notnull
-            | {int 0}
+            | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -60012,7 +60012,7 @@ test/sem_test.sql:XXXX:1: error: in col_attrs_fk : CQL0237: strict FK validation
             | | {name foo}
             | | {name_list}
             |   | {name id}: id: integer notnull
-            | {int 0}
+            | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -60043,7 +60043,7 @@ CREATE TABLE fk_strict_err_2(
             | | {name foo}
             | | {name_list}
             |   | {name id}: id: integer notnull
-            | {int 0}
+            | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -60073,7 +60073,7 @@ BEGIN;
 test/sem_test.sql:XXXX:1: error: in begin_trans_stmt : CQL0366: transaction operations disallowed while STRICT TRANSACTION enforcement is on.
 
   {begin_trans_stmt}: err
-  | {int 1}
+  | {int 1} {deferred}
 
 The statement ending at line XXXX
 
@@ -60087,7 +60087,7 @@ The statement ending at line XXXX
 BEGIN;
 
   {begin_trans_stmt}: ok
-  | {int 1}
+  | {int 1} {deferred}
 
 The statement ending at line XXXX
 
@@ -62630,7 +62630,7 @@ DECLARE PROC out2_proc (x INT, OUT y INT!, OUT z INT!);
   {declare_proc_stmt}: ok
   | {proc_name_type}
   | | {name out2_proc}: ok
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}: ok
       | {param}: x: integer variable in
@@ -63209,7 +63209,7 @@ DECLARE PROC proc_as_func (IN transport_key_ TEXT, OUT code_ TEXT! @SENSITIVE) U
   {declare_proc_stmt}: ok dml_proc
   | {proc_name_type}
   | | {name proc_as_func}: ok dml_proc
-  | | {int 2}
+  | | {int 2} {uses_dml}
   | {proc_params_stmts}
     | {params}: ok
       | {param}: transport_key_: text variable in
@@ -68476,7 +68476,7 @@ DECLARE PROC requires_int_notnull (a INT!);
   {declare_proc_stmt}: ok
   | {proc_name_type}
   | | {name requires_int_notnull}: ok
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}: ok
       | {param}: a: integer notnull variable in
@@ -69690,7 +69690,7 @@ DECLARE PROC requires_inout_text_notnull (INOUT t TEXT!);
   {declare_proc_stmt}: ok
   | {proc_name_type}
   | | {name requires_inout_text_notnull}: ok
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}: ok
       | {param}: t: text notnull variable in out
@@ -69707,7 +69707,7 @@ DECLARE PROC requires_inout_blob_notnull (INOUT t BLOB!);
   {declare_proc_stmt}: ok
   | {proc_name_type}
   | | {name requires_inout_blob_notnull}: ok
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}: ok
       | {param}: t: blob notnull variable in out
@@ -69724,7 +69724,7 @@ DECLARE PROC requires_inout_object_notnull (INOUT t OBJECT!);
   {declare_proc_stmt}: ok
   | {proc_name_type}
   | | {name requires_inout_object_notnull}: ok
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}: ok
       | {param}: t: object notnull variable in out
@@ -69928,7 +69928,7 @@ DECLARE PROC requires_out_text_notnull (OUT t TEXT!);
   {declare_proc_stmt}: ok
   | {proc_name_type}
   | | {name requires_out_text_notnull}: ok
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}: ok
       | {param}: t: text notnull variable init_required out
@@ -70676,7 +70676,7 @@ DECLARE PROC requires_out_text_notnull_and_int (OUT a TEXT!, b INT);
   {declare_proc_stmt}: ok
   | {proc_name_type}
   | | {name requires_out_text_notnull_and_int}: ok
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}: ok
       | {param}: a: text notnull variable init_required out
@@ -70698,7 +70698,7 @@ DECLARE PROC requires_text_notnull (a TEXT!);
   {declare_proc_stmt}: ok
   | {proc_name_type}
   | | {name requires_text_notnull}: ok
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}: ok
       | {param}: a: text notnull variable in
@@ -76326,7 +76326,7 @@ DECLARE PROC arg_shape (xyzzy INT);
   {declare_proc_stmt}: ok
   | {proc_name_type}
   | | {name arg_shape}: ok
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}: ok
       | {param}: xyzzy: integer variable in
@@ -76971,7 +76971,7 @@ DECLARE PROC declared_shared_fragment () (x INT);
   | {declare_proc_stmt}: declared_shared_fragment: { x: integer } dml_proc
     | {proc_name_type}
     | | {name declared_shared_fragment}: declared_shared_fragment: { x: integer } dml_proc
-    | | {int 3}
+    | | {int 3} {struct_type} {uses_dml}
     | {proc_params_stmts}
       | {typed_names}: declared_shared_fragment: { x: integer }
         | {typed_name}: x: integer
@@ -78067,7 +78067,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_cursor'
       | {fetch_values_stmt}: ok
       | | {insert_dummy_spec}: integer notnull
       | | | {int 1}: integer notnull
-      | | | {int 0}
+      | | | {int 0} {dummy_value}
       | | {name_columns_values}
       |   | {name R}: R: Shape_uvxy: { x: integer, y: integer, u: text, v: text } variable shape_storage value_cursor
       |   | {columns_values}: ok
@@ -79141,7 +79141,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not su
       |       | | {name foo}
       |       | | {name_list}
       |       |   | {name id}: id: integer notnull
-      |       | {int 0}
+      |       | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
       | {col_key_list}
         | {col_def}: t: text
           | {col_def_type_attrs}: ok
@@ -79287,7 +79287,7 @@ CREATE TABLE conflict_clause_col_backing(
       |   | | {type_blob}: blob
       |   | {col_attrs_pk}: ok
       |     | {autoinc_and_conflict_clause}
-      |       | {int 1}
+      |       | {int 1} {on_conflict_abort}
       | {col_key_list}
         | {col_def}: v: blob notnull
           | {col_def_type_attrs}: ok
@@ -79891,7 +79891,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not su
       |       | | {name foo}
       |       | | {name_list}
       |       |   | {name id}: id: integer notnull
-      |       | {int 0}
+      |       | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
       | {col_key_list}
         | {col_def}: t: text
           | {col_def_type_attrs}: ok
@@ -80037,7 +80037,7 @@ CREATE TABLE conflict_clause_col_backed(
       |   | | {type_int}: integer
       |   | {col_attrs_pk}: ok
       |     | {autoinc_and_conflict_clause}
-      |       | {int 1}
+      |       | {int 1} {on_conflict_abort}
       | {col_key_list}
         | {col_def}: t: text
           | {col_def_type_attrs}: ok
@@ -83907,7 +83907,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0459: table is not su
       |       | | {name foo}
       |       | | {name_list}
       |       |   | {name id}: id: integer notnull
-      |       | {int 0}
+      |       | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
       | {col_key_list}
         | {col_def}: t: text
           | {col_def_type_attrs}: ok
@@ -85189,7 +85189,7 @@ test/sem_test.sql:XXXX:1: error: in col_def : CQL0021: foreign key refers to non
             | | {name unsub_test_table}
             | | {name_list}
             |   | {name id}
-            | {int 0}
+            | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -85234,7 +85234,7 @@ CREATE TABLE sub_test_dependency2(
             | | {name unsub_test_table2}
             | | {name_list}
             |   | {name id}: id: integer notnull
-            | {int 0}
+            | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -86142,7 +86142,7 @@ CREATE TABLE child_subs_table(
               | | {name parent_subs_table}
               | | {name_list}
               |   | {name id}: id: integer notnull
-              | {int 0}
+              | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -86179,7 +86179,7 @@ CREATE TABLE self_ref_table(
               | | {name self_ref_table}
               | | {name_list}
               |   | {name id}: id: integer notnull
-              | {int 0}
+              | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -86199,7 +86199,7 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0069: name not found 'does_not_exi
   {declare_proc_stmt}: err
   | {proc_name_type}
   | | {name broken_thing}
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}: err
       | {param}: err
@@ -86218,7 +86218,7 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0069: name not found (proc had err
   {declare_proc_stmt}: err
   | {proc_name_type}
   | | {name uses_broken_thing}
-  | | {int 3}
+  | | {int 3} {struct_type} {uses_dml}
   | {proc_params_stmts}
     | {typed_names}: err
       | {typed_name}: err
@@ -86279,7 +86279,7 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0069: name not found (proc had err
   {declare_proc_stmt}: err
   | {proc_name_type}
   | | {name uses_broken_thing}
-  | | {int 3}
+  | | {int 3} {struct_type} {uses_dml}
   | {proc_params_stmts}
     | {typed_names}: err
       | {typed_name}: err
@@ -86765,7 +86765,7 @@ test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : CQL0481: proc name confl
   {declare_proc_stmt}: err
   | {proc_name_type}
   | | {name interface1}
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}
       | {param}
@@ -89387,7 +89387,7 @@ DECLARE PROC an_alias_proc (x INT!);
   | {declare_proc_stmt}: ok
     | {proc_name_type}
     | | {name an_alias_proc}: ok
-    | | {int 0}
+    | | {int 0} {no_flags}
     | {proc_params_stmts}
       | {params}: ok
         | {param}: x: integer notnull variable in
@@ -90025,7 +90025,7 @@ DECLARE PROC expr_proc_b (x INT);
   {declare_proc_stmt}: ok
   | {proc_name_type}
   | | {name expr_proc_b}: ok
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}: ok
       | {param}: x: integer variable in
@@ -90779,7 +90779,7 @@ DECLARE PROC set_object_dot_storage_id (self OBJECT<dot_storage>, value INT);
   {declare_proc_stmt}: ok
   | {proc_name_type}
   | | {name set_object_dot_storage_id}: ok
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}: ok
       | {param}: self: object<dot_storage> variable in
@@ -91049,7 +91049,7 @@ DECLARE PROC a_target_proc (x INT, y INT);
   {declare_proc_stmt}: ok
   | {proc_name_type}
   | | {name a_target_proc}: ok
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}: ok
       | {param}: x: integer variable in
@@ -91132,7 +91132,7 @@ DECLARE PROC another_target_proc (x INT, y INT, OUT result INT);
   {declare_proc_stmt}: ok
   | {proc_name_type}
   | | {name another_target_proc}: ok
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}: ok
       | {param}: x: integer variable in
@@ -91203,7 +91203,7 @@ DECLARE PROC get_object_event_invitees (event_ OBJECT<event>, OUT value OBJECT<e
   {declare_proc_stmt}: ok
   | {proc_name_type}
   | | {name get_object_event_invitees}: ok
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}: ok
       | {param}: event_: object<event> variable in
@@ -91227,7 +91227,7 @@ DECLARE PROC event_invitees_get (invitees OBJECT<event_invitees>, field TEXT!, O
   {declare_proc_stmt}: ok
   | {proc_name_type}
   | | {name event_invitees_get}: ok
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}: ok
       | {param}: invitees: object<event_invitees> variable in
@@ -91836,7 +91836,7 @@ CREATE TABLE qid_ref_1(
               | | {name `xyz``abc`}
               | | {name_list}
               |   | {name `a b`}: `a b`: integer notnull qid
-              | {int 0}
+              | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -91868,7 +91868,7 @@ CREATE TABLE qid_ref_2(
             | | {name `xyz``abc`}
             | | {name_list}
             |   | {name `a b`}: `a b`: integer notnull qid
-            | {int 0}
+            | {int 0} on_update: {not_specified}, on_delete: {not_specified}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -91995,7 +91995,7 @@ INSERT INTO `xyz``abc`(x, `a b`) VALUES (2, _seed_) @DUMMY_SEED(500);
   | {insert_normal}
   | | {seed_stub}
   |   | {int 500}: integer notnull
-  |   | {int 0}
+  |   | {int 0} {dummy_value}
   | {name_columns_values}
     | {name `xyz``abc`}: `xyz``abc`: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
     | {columns_values}: ok
@@ -92017,7 +92017,7 @@ INSERT INTO `xyz``abc`(x, `a b`) VALUES (2, _seed_) @DUMMY_SEED(500);
   | {insert_normal}
   | | {seed_stub}
   |   | {int 500}: integer notnull
-  |   | {int 0}
+  |   | {int 0} {dummy_value}
   | {name_columns_values}
     | {name `xyz``abc`}: `xyz``abc`: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
     | {columns_values}: ok
@@ -96174,7 +96174,7 @@ DECLARE PROC dump_null (x INT);
   {declare_proc_stmt}: ok
   | {proc_name_type}
   | | {name dump_null}: ok
-  | | {int 0}
+  | | {int 0} {no_flags}
   | {proc_params_stmts}
     | {params}: ok
       | {param}: x: integer variable in

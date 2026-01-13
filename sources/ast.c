@@ -225,6 +225,9 @@ void decode_enforce_options(CSTR parent_type, llint_t value) {
 void decode_conflict_options(CSTR parent_type, llint_t value) {
   Contract(
     parent_type == k_ast_indexed_columns_conflict_clause ||
+    parent_type == k_ast_autoinc_and_conflict_clause ||
+    parent_type == k_ast_col_attrs_unique ||
+    parent_type == k_ast_col_attrs_pk ||
     parent_type == k_ast_col_attrs_not_null);
 
   static const decode_info conflict_option[] = {
@@ -290,6 +293,7 @@ void decode_compound_ops(CSTR parent_type, llint_t value) {
 // version annotation decoding (this just shows that the int is a version)
 void decode_version_annotation(CSTR parent_type, llint_t value) {
   Contract(
+    parent_type == k_ast_schema_upgrade_version_stmt ||
     parent_type == k_ast_version_annotation ||
     parent_type == k_ast_delete_attr ||
     parent_type == k_ast_create_attr);
@@ -311,6 +315,104 @@ void decode_drop_flags(CSTR parent_type, llint_t value) {
   print_flags(value, drop_flags, sizeof(drop_flags) / sizeof(drop_flags[0]));
 }
 
+// proc flags
+void decode_proc_flags(CSTR parent_type, llint_t value) {
+  Contract(parent_type == k_ast_proc_name_type);
+
+  static const decode_info proc_flags[] = {
+    { PROC_FLAG_STRUCT_TYPE, "struct_type" },
+    { PROC_FLAG_USES_DML, "uses_dml" },
+    { PROC_FLAG_USES_OUT, "uses_out" },
+    { PROC_FLAG_USES_OUT_UNION, "uses_out_union" },
+  };
+
+  print_flags(value, proc_flags, sizeof(proc_flags) / sizeof(proc_flags[0]));
+}
+
+// foreign key flags: there are two copies of the action flags so we have to
+// handle those specially with a mask and shift, otherwisee it's normal stuff.
+void decode_fk_flags(CSTR parent_type, llint_t value) {
+  Contract(parent_type ==  k_ast_fk_target_options);
+
+  static const decode_info fk_action[] = {
+    { 0, "not_specified" },
+    { FK_SET_NULL, "set_null" },
+    { FK_SET_DEFAULT, "set_default" },
+    { FK_CASCADE, "cascade" },
+    { FK_RESTRICT, "restrict" },
+    { FK_NO_ACTION, "no_action" },
+  };
+
+  static const decode_info fk_flags[] = {
+    { FK_NOT_DEFERRABLE, "not_deferrable" },
+    { FK_DEFERRABLE, "deferrable" },
+    { FK_INITIALLY_DEFERRED, "initially_deferred" },
+    { FK_INITIALLY_IMMEDIATE, "initially_immediate" },
+  };
+
+  cql_output(" on_update:");
+  print_value((value & FK_ON_UPDATE) >> 4, &fk_action[0], sizeof(fk_action) / sizeof(fk_action[0]));
+  cql_output(",");
+  
+  cql_output(" on_delete:");
+  print_value((value & FK_ON_DELETE), &fk_action[0], sizeof(fk_action) / sizeof(fk_action[0]));
+  cql_output(",");
+
+  // clear out the action bits so we only print the other flags and correctly
+  // can detect any unknown bits
+  value &= ~(FK_ON_UPDATE | FK_ON_DELETE);
+
+  cql_output(" deferrability:");
+  print_flags(value, fk_flags, sizeof(fk_flags) / sizeof(fk_flags[0]));
+}
+
+// transaction modes
+void decode_transaction_mode(CSTR parent_type, llint_t value) {
+  Contract(parent_type == k_ast_begin_trans_stmt);
+
+  static const decode_info transaction_modes[] = {
+    { -1, "invalid" }, // stub, indices start at 1, this will force error if 0 appears
+    { TRANS_DEFERRED, "deferred" },
+    { TRANS_IMMEDIATE, "immediate" },
+    { TRANS_EXCLUSIVE, "exclusive" },
+  };
+
+  print_value(value, transaction_modes, sizeof(transaction_modes) / sizeof(transaction_modes[0]));
+}
+
+// insert dummy spec: it's an int literal but we just want to mark it specially
+void decode_insert_dummy_spec(CSTR parent_type, llint_t value) {
+  Contract(
+    parent_type == k_ast_insert_dummy_spec ||
+    parent_type == k_ast_seed_stub); 
+  cql_output(" {dummy_value}");
+}
+
+// raise options
+void decode_raise_options(CSTR parent_type, llint_t value) {
+  Contract(parent_type == k_ast_raise);
+
+  static const decode_info raise_options[] = {
+    { RAISE_IGNORE, "ignore" },
+    { RAISE_ROLLBACK, "rollback" },
+    { RAISE_ABORT, "abort" },
+    { RAISE_FAIL, "fail" },
+  };
+
+  print_value(value, raise_options, sizeof(raise_options) / sizeof(raise_options[0]));
+}
+
+// region specs
+void decode_region_spec(CSTR parent_type, llint_t value) {
+  Contract(parent_type == k_ast_region_spec);
+
+  static const decode_info region_specs[] = {
+    { PUBLIC_REGION, "public_region" },
+    { PRIVATE_REGION, "private_region" },
+  };
+
+  print_value(value, region_specs, sizeof(region_specs) / sizeof(region_specs[0]));
+}
 
 #undef MACRO_INIT
 #define MACRO_INIT(x) \
@@ -355,10 +457,14 @@ cql_noexport void ast_init() {
   DECODER_INIT(enforce_strict_stmt, decode_enforce_options);
   DECODER_INIT(indexed_columns_conflict_clause, decode_conflict_options);
   DECODER_INIT(col_attrs_not_null, decode_conflict_options);
+  DECODER_INIT(col_attrs_pk, decode_conflict_options);
+  DECODER_INIT(col_attrs_unique, decode_conflict_options);
+  DECODER_INIT(autoinc_and_conflict_clause, decode_conflict_options);
   DECODER_INIT(switch_stmt, decode_switch_options);
   DECODER_INIT(index_flags_names_attrs, decode_index_flags);
   DECODER_INIT(explain_stmt, decode_explain_options);
   DECODER_INIT(select_core_compound, decode_compound_ops);
+  DECODER_INIT(schema_upgrade_version_stmt, decode_version_annotation);
   DECODER_INIT(version_annotation, decode_version_annotation);
   DECODER_INIT(delete_attr, decode_version_annotation);
   DECODER_INIT(create_attr, decode_version_annotation);
@@ -366,6 +472,13 @@ cql_noexport void ast_init() {
   DECODER_INIT(drop_view_stmt, decode_drop_flags);
   DECODER_INIT(drop_index_stmt, decode_drop_flags);
   DECODER_INIT(drop_trigger_stmt, decode_drop_flags);
+  DECODER_INIT(proc_name_type, decode_proc_flags);
+  DECODER_INIT(fk_target_options, decode_fk_flags);
+  DECODER_INIT(begin_trans_stmt, decode_transaction_mode);
+  DECODER_INIT(insert_dummy_spec, decode_insert_dummy_spec);
+  DECODER_INIT(seed_stub, decode_insert_dummy_spec);
+  DECODER_INIT(raise, decode_raise_options);
+  DECODER_INIT(region_spec, decode_region_spec);
 
   macro_state.line = -1;
   macro_state.file = "<Unknown>";
@@ -821,11 +934,14 @@ cql_noexport bool_t print_ast_value(struct ast_node *node) {
 
     symtab_entry *entry = symtab_find(decode_helpers, parent_type);
 
-    if (entry) {
-      typedef void (*decode_helper_fn)(CSTR, llint_t);
-      decode_helper_fn decoder = (decode_helper_fn)entry->val;
-      decoder(parent_type, value);
-    }
+    // all interior option nodes must have a decoder!
+    // if this hits you added an new_ast_option with no decoder, use
+    // the parent type to decode it!
+    Contract(entry);
+
+    typedef void (*decode_helper_fn)(CSTR, llint_t);
+    decode_helper_fn decoder = (decode_helper_fn)entry->val;
+    decoder(parent_type, value);
 
     ret = true;
   }

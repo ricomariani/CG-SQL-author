@@ -46,6 +46,8 @@ cql_noexport void cg_encode_string_literal(CSTR str, charbuf *output) {
   bputc(output, quote);
 }
 
+// Keep hex emission deterministic and lowercase; the contract guards against
+// out-of-range nibble input so callers can rely on exact two-digit escapes.
 static void emit_hex_digit(uint32_t ch, charbuf *output) {
   Contract(ch >= 0 && ch <= 15);
   if (ch < 10) {
@@ -244,6 +246,12 @@ static uint32_t hex_to_int(char c) {
   return ch - 'A' + 10;
 }
 
+
+// Accept only well-formed \xNN escapes and ignore malformed input so the caller
+// can continue scanning safely; embedded nulls are rejected to avoid truncating
+// the surrounding C string.
+//
+// For example, given a pointer to "x41", this will emit 'A' and advance
 static void decode_hex_escape(CSTR *pstr, charbuf *output) {
   Contract(pstr);
   Contract(**pstr == 'x' || **pstr == 'X');
@@ -267,6 +275,12 @@ static void decode_hex_escape(CSTR *pstr, charbuf *output) {
   }
 }
 
+// Decodes only canonical C string escapes under strict contracts: callers must
+// pass a properly quoted literal, unknown escapes round-trip verbatim, and hex
+// escapes reuse decode_hex_escape to avoid creating embedded nulls.
+//
+// For example, "\"Hello\\tWorld\\x21\"" produces the string: "Hello\tWorld!"
+// That is the \t escape becomes an actual tab character and the \x21 becomes '!'
 cql_noexport void cg_decode_c_string_literal(CSTR str, charbuf *output) {
   // don't call me with strings that are not properly "" delimited
   const char quote = '"';
@@ -423,6 +437,11 @@ cql_noexport void cg_pretty_quote_compressed_text(CSTR _Nonnull str, charbuf *_N
   CHARBUF_CLOSE(temp_output);
 }
 
+// Preserve back-quoted identifiers while making them SQL-safe: allowed chars
+// pass through, disallowed bytes become Xhh, and we synthesize the X_ prefix
+// in-place to keep already-emitted text contiguous without extra buffers.
+//
+// For instance "X_helloX20worldX21" becomes "`hello world!`"
 cql_noexport void cg_encode_qstr(charbuf *_Nonnull output, CSTR _Nonnull qstr) {
   Contract(qstr);
   Contract(qstr[0] == '`');
@@ -470,6 +489,12 @@ cql_noexport void cg_encode_qstr(charbuf *_Nonnull output, CSTR _Nonnull qstr) {
   }
 }
 
+
+// Rehydrates identifiers produced by cg_encode_qstr: if no X_ prefix is present
+// we simply rewrap, otherwise we decode hex escapes and reinsert back ticks so
+// previously escaped back-quote runs are preserved.
+//
+// For example, "X_helloX20worldX21" becomes "`hello world!`"
 cql_noexport void cg_decode_qstr(charbuf *_Nonnull output, CSTR _Nonnull qstr) {
   Contract(qstr);
 
@@ -495,10 +520,14 @@ cql_noexport void cg_decode_qstr(charbuf *_Nonnull output, CSTR _Nonnull qstr) {
   bputc(output, '`');
 }
 
+// Returns the bare identifier without back-quote wrappers and with hex escapes decoded.
+//
+// For example, "X_helloX20worldX21" becomes "hello world!
 cql_noexport void cg_unquote_encoded_qstr(charbuf *_Nonnull output, CSTR _Nonnull qstr) {
   Contract(qstr);
 
-  // The string was quoted but didn't require escapes, just put the original back-quotes back
+  // The string was quoted but didn't require escapes, just put the original
+  // back-quotes back
   if (qstr[0] != 'X' || qstr[1] != '_') {
     bprintf(output, "%s", qstr);
     return;

@@ -389,10 +389,12 @@ void decode_insert_dummy_stub(CSTR parent_type, llint_t value) {
 // dummy flags
 void decode_insert_dummy_spec(CSTR parent_type, llint_t value) {
   Contract(parent_type == k_ast_insert_dummy_spec);
+
   static const decode_info insert_dummy_specs[] = {
     { INSERT_DUMMY_DEFAULTS, "dummy_defaults" },
     { INSERT_DUMMY_NULLABLES, "dummy_nullables" },
   };
+
   print_flags(value, insert_dummy_specs, sizeof(insert_dummy_specs) / sizeof(insert_dummy_specs[0]));
 }
 

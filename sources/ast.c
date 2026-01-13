@@ -380,15 +380,16 @@ void decode_transaction_mode(CSTR parent_type, llint_t value) {
   print_value(value, transaction_modes, sizeof(transaction_modes) / sizeof(transaction_modes[0]));
 }
 
-// insert dummy spec: it's an int literal but we just want to mark it specially
-void decode_insert_dummy_stub(CSTR parent_type, llint_t value) {
-  Contract(parent_type == k_ast_seed_stub);
-  cql_output(" {dummy_value}");
-}
-
 // dummy flags
 void decode_insert_dummy_spec(CSTR parent_type, llint_t value) {
-  Contract(parent_type == k_ast_insert_dummy_spec);
+  Contract(parent_type == k_ast_insert_dummy_spec || parent_type == k_ast_seed_stub);
+
+  // `seed_stub` has the same structure as `insert_dummy_spec` (it's created by
+  // copying the left/right children) so this decoder just needs to print the seed
+  // flags, which are the same for both node types.  `seed_stub` exists so
+  // that we do not re-process the k_ast_insert_dummy_spec more than once during
+  // semantic analysis.  The dummy rewrite should happen exactly once.  The node
+  // is otherwise the same. A quick search will show you this in action.
 
   static const decode_info insert_dummy_specs[] = {
     { INSERT_DUMMY_DEFAULTS, "dummy_defaults" },
@@ -486,7 +487,7 @@ cql_noexport void ast_init() {
   DECODER_INIT(fk_target_options, decode_fk_flags);
   DECODER_INIT(begin_trans_stmt, decode_transaction_mode);
   DECODER_INIT(insert_dummy_spec, decode_insert_dummy_spec);
-  DECODER_INIT(seed_stub, decode_insert_dummy_stub);
+  DECODER_INIT(seed_stub, decode_insert_dummy_spec);
   DECODER_INIT(raise, decode_raise_options);
   DECODER_INIT(region_spec, decode_region_spec);
 

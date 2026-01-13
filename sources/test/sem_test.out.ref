@@ -27046,7 +27046,7 @@ INSERT INTO bar(id, name, rate) VALUES (_seed_, printf('name_%d', _seed_), _seed
   |   | {add}: integer notnull
   |   | | {int 1}: integer notnull
   |   | | {int 2}: integer notnull
-  |   | {int 3} {dummy_value}
+  |   | {int 3} {dummy_defaults} {dummy_nullables}
   | {name_columns_values}
     | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
     | {columns_values}: ok
@@ -27655,7 +27655,7 @@ INSERT INTO blob_table_test(b) VALUES (CAST(printf('b_%d', _seed_) AS BLOB)) @DU
   | {insert_normal}
   | | {seed_stub}
   |   | {int 1}: integer notnull
-  |   | {int 2} {dummy_value}
+  |   | {int 2} {dummy_nullables}
   | {name_columns_values}
     | {name blob_table_test}: blob_table_test: { b: blob }
     | {columns_values}: ok
@@ -47251,7 +47251,7 @@ END;
         | {insert_normal}
         | | {seed_stub}
         |   | {int 1}: integer notnull
-        |   | {int 2} {dummy_value}
+        |   | {int 2} {dummy_nullables}
         | {name_columns_values}
           | {name referenceable}: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint }
           | {columns_values}: ok
@@ -50947,7 +50947,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'bogus'
   | {insert_normal}
   | | {seed_stub}
   |   | {int 1}: integer notnull
-  |   | {int 0} {dummy_value}
+  |   | {int 0} {no_flags}
   | {name_columns_values}
     | {name foo}: foo: { id: integer notnull primary_key autoinc }
     | {columns_values}: ok
@@ -50965,7 +50965,7 @@ INSERT INTO foo(id) VALUES (NULL) @DUMMY_SEED(1);
   | {insert_normal}
   | | {seed_stub}
   |   | {int 1}: integer notnull
-  |   | {int 0} {dummy_value}
+  |   | {int 0} {no_flags}
   | {name_columns_values}
     | {name foo}: foo: { id: integer notnull primary_key autoinc }
     | {columns_values}: ok
@@ -50985,7 +50985,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'INT' not compatible
   | {insert_normal}
   | | {seed_stub}
   |   | {int 1}: integer notnull
-  |   | {int 0} {dummy_value}
+  |   | {int 0} {no_flags}
   | {name_columns_values}
     | {name foo}: foo: { id: integer notnull primary_key autoinc }
     | {columns_values}: ok
@@ -55140,7 +55140,7 @@ END;
         | {insert_normal}
         | | {seed_stub}
         |   | {int 9}: integer notnull
-        |   | {int 3} {dummy_value}
+        |   | {int 3} {dummy_defaults} {dummy_nullables}
         | {name_columns_values}
           | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
           | {columns_values}: ok
@@ -91995,7 +91995,7 @@ INSERT INTO `xyz``abc`(x, `a b`) VALUES (2, _seed_) @DUMMY_SEED(500);
   | {insert_normal}
   | | {seed_stub}
   |   | {int 500}: integer notnull
-  |   | {int 0} {dummy_value}
+  |   | {int 0} {no_flags}
   | {name_columns_values}
     | {name `xyz``abc`}: `xyz``abc`: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
     | {columns_values}: ok
@@ -92017,7 +92017,7 @@ INSERT INTO `xyz``abc`(x, `a b`) VALUES (2, _seed_) @DUMMY_SEED(500);
   | {insert_normal}
   | | {seed_stub}
   |   | {int 500}: integer notnull
-  |   | {int 0} {dummy_value}
+  |   | {int 0} {no_flags}
   | {name_columns_values}
     | {name `xyz``abc`}: `xyz``abc`: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
     | {columns_values}: ok

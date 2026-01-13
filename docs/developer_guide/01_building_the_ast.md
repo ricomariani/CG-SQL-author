@@ -527,21 +527,56 @@ typedef struct gen_sql_callbacks {
   gen_sql_callback _Nullable col_def_callback;
   void *_Nullable col_def_context;
 
-  // This callback is used to explain the * in select * or select T.*
-  gen_sql_callback _Nullable star_callback;
-  void *_Nullable star_context;
-
   // This callback is used to force the "IF NOT EXISTS" form of DDL statements when generating
   // schema upgrade steps.  e.g. a "CREATE TABLE Foo declarations get "IF NOT EXISTS" added
   // to them in upgrade steps.
   gen_sql_callback _Nullable if_not_exists_callback;
   void *_Nullable if_not_exists_context;
 
+  // This callback is used to allow the caller to rename some table references to other names
+  // Normally this is used to make replacements in shared fragments
+  gen_sql_callback _Nullable table_rename_callback;
+  void *_Nullable table_rename_context;
+
+  // This callback is used to expand CALL sequences inside of a CTE expression inline
+  // the normal response will be to recursively generate the SQL for the procedure
+  // and emit it to the output stream
+  gen_sql_callback _Nullable cte_proc_callback;
+  void *_Nullable cte_proc_context;
+
+  // This callback is used to expand inline function call sequences inside of a SQL expression
+  // the normal response will be to recursively generate the SQL for the function fragment
+  // and emit it to the output stream.  This is for the fragment case.
+  gen_sql_callback _Nullable func_callback;
+  void *_Nullable func_context;
+
+  gen_sql_callback _Nullable call_expr_callback;
+  void *_Nullable call_expr_context;
+
+  // This callback is used to suppress any particular CTE that we might need to omit from a select statement
+  // normally this causes us to check the name of the CTE against a blocklist
+  gen_sql_callback _Nullable cte_suppress_callback;
+  void *_Nullable cte_suppress_context;
+
+  // This callback is used to override entire if/else statements
+  gen_sql_callback _Nullable if_stmt_callback;
+  void *_Nullable if_stmt_context;
+
+  // This callback allows named types to be resolved when comparing ASTs during
+  // semantic analysis.
+  gen_sql_callback _Nullable named_type_callback;
+  void *_Nullable named_type_context;
+
+  // This callback allows embedded <X SET> types to be recursively walked
+  // during emission of exports
+  gen_sql_callback _Nullable set_kind_callback;
+  void *_Nullable set_kind_context;
+
   // If true, hex literals are converted to decimal.  This is for JSON which does not support hex literals.
   bool_t convert_hex;
 
   // If true casts like "CAST(NULL as TEXT)" are reduced to just NULL.  The type information is not needed
-  // by SQLite so it just wasts space.
+  // by SQLite so it just wastes space.
   bool_t minify_casts;
 
   // If true then unused aliases in select statements are elided to save space.  This is safe because
@@ -584,6 +619,14 @@ typedef struct gen_sql_callbacks {
   // extra documentation and special handling is probably worth the extra
   // boolean storage.
   bool_t long_to_int_conv;
+
+  // bool_t escape attributes for Lua [[builtin]] looks like it ends a lua comment
+  bool_t escape_attributes_for_lua;
+
+  // Each time a table value function is encountered in the AST, this callback is invoked
+  // this is to allow the table value function reference to be noted and replaced with table name in the generated SQL
+  gen_sql_callback _Nullable table_function_callback;
+  void *_Nullable table_function_context;
 } gen_sql_callbacks;
 ```
 
@@ -647,7 +690,7 @@ cql_noexport void init_gen_sql_callbacks(gen_sql_callbacks *_Nullable callbacks)
 ```
 
 Use `init_gen_sql_callbacks` to fill in your callback structure with the normal
-defaults.  This give you normal echo for SQL by default. To get a full echo, a
+defaults.  This gives you normal echo for SQL by default. To get a full echo, a
 `NULL` callback may be used.  And of course other options are possible.
 
 Finally,
@@ -692,6 +735,12 @@ to these:
 cql_noexport void gen_init() {
   gen_stmts = symtab_new();
   gen_exprs = symtab_new();
+  gen_macros = symtab_new();
+
+  MACRO_INIT(expr);
+  MACRO_INIT(stmt_list);
+  MACRO_INIT(query_parts);
+  ...
 
   STMT_INIT(if_stmt);
   ...
@@ -723,7 +772,7 @@ static void gen_binary(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   // * we need parens because the tree specifies that the + happens before the *
   //
   // Also, grouping of equal operators is left to right
-  // so for so if our right child is the same precedence as us
+  // so if our right child is the same precedence as us
   // that means there were parens there in the original expression
   // e.g.  3+(4-7);
   // effectively it's like we're one binding strength higher for our right child
@@ -780,6 +829,10 @@ static void gen_if_stmt(ast_node *ast) {
   EXTRACT(elseif, if_alt->left);
   EXTRACT_NAMED(elsenode, else, if_alt->right);
 
+  if (eval_if_stmt_callback(ast)) {
+    return;
+  }
+
   gen_printf("IF ");
   gen_cond_action(cond_action);
 
@@ -793,7 +846,7 @@ static void gen_if_stmt(ast_node *ast) {
     gen_stmt_list(stmt_list);
   }
 
-  gen_printf("END IF");
+  gen_printf("END");
 }
 ```
 

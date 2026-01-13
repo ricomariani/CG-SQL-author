@@ -963,7 +963,7 @@ static void gen_binary(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   // Also, grouping of equal operators is left to right
   // so for so if our right child is the same precedence as us
   // that means there were parens there in the original expression
-  // e.g.  3+(4+7);
+  // e.g.  3+(4-7);
   // effectively it's like we're one binding strength higher for our right child
   // so we call it with pri_new + 1.  If it's equal to us it must emit parens
 

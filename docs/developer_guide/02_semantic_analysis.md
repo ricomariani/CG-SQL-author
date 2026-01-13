@@ -190,7 +190,7 @@ The full list as of this writing is as follows:
 #define SEM_TYPE_SELECT_FUNC          _64(0x20000) // set for a sqlite UDF function declaration
 #define SEM_TYPE_DELETED              _64(0x40000) // set for columns that are not visible in the current schema version
 #define SEM_TYPE_VALIDATED            _64(0x80000) // set if item has already been validated against previous schema
-#define SEM_TYPE_USES_OUT            _64(0x100000) // set if proc has a one rowresult using the OUT statement
+#define SEM_TYPE_USES_OUT            _64(0x100000) // set if proc has a one row result using the OUT statement
 #define SEM_TYPE_USES_OUT_UNION      _64(0x200000) // set if proc uses the OUT UNION form for multi row result
 #define SEM_TYPE_PK                  _64(0x400000) // set if column is a primary key
 #define SEM_TYPE_FK                  _64(0x800000) // set if column is a foreign key
@@ -231,19 +231,21 @@ Note that `CSTR` is simply an alias for `const char *`.  `CSTR` is used extensiv
 ```c
 typedef struct sem_node {
   sem_t sem_type;                   // core type plus flags
-  CSTR name;                        // for named expressions in select expression, etc.
+  CSTR name;                        // for named expressions in select columns etc.
   CSTR kind;                        // the Foo in object<Foo>, not a variable or column name
   CSTR error;                       // error text for test output, not used otherwise
+  CSTR backed_table;                // if this is a column in a backed table, the name of that table
   struct sem_struct *sptr;          // encoded struct if any
   struct sem_join *jptr;            // encoded join if any
   int32_t create_version;           // create version if any (really only for tables and columns)
   int32_t delete_version;           // delete version if any (really only for tables and columns)
+  bool_t unsubscribed;              // true if unsubscribed (applies only to tables or views)
   bool_t recreate;                  // for tables only, true if marked @recreate
   CSTR recreate_group_name;         // for tables only, the name of the recreate group if they are in one
   CSTR region;                      // the schema region, if applicable; null means unscoped (default)
   symtab *used_symbols;             // for select statements, we need to know which of the ids in the select list was used, if any
-  list_item *index_list;            // for tables we need the list of indices that use this table (so we can recreate them together if needed)
   struct eval_node *value;          // for enum values we have to store the evaluated constant value of each member of the enum
+  table_node *table_info;           // extra info unique to tables (above)
 } sem_node;
 ```
 
@@ -272,6 +274,7 @@ typedef struct sem_struct {
   CSTR *names;                    // field names
   CSTR *kinds;                    // the "kind" text of each column, if any, e.g. integer<foo> foo is the kind
   sem_t *semtypes;                // typecode for each field
+  bool_t is_backed;               // original backed table source
 } sem_struct;
 ```
 
@@ -986,7 +989,7 @@ static void sem_while_stmt(ast_node *ast) {
   if (stmt_list) {
     loop_depth++;
 
-    sem_stmt_list(stmt_list);
+    sem_stmt_list_within_loop(stmt_list, expr);
 
     loop_depth--;
 
@@ -1002,12 +1005,12 @@ static void sem_while_stmt(ast_node *ast) {
 
 * `EXTRACT*` : pulls out the tree parts we need
 * `sem_numeric_expr` : verifies the loop expression is numeric
-* `sem_stmt_list` : recursively validates the body of the loop
+* `sem_stmt_list_within_loop` : recursively validates the body of the loop (with special handling for loops)
 
 >NOTE: the while expression is one of the loop constructs which means that `LEAVE` and `CONTINUE` are legal inside it.
 >The `loop_depth` global tracks the fact that we are in a loop so that analysis for `LEAVE` and `CONTINUE` can report errors if we are not.
 
-It's not hard to imagine that `sem_stmt_list` will basically walk the AST, pulling out statements and dispatching them using the `STMT_INIT` tables previously discussed.
+It's not hard to imagine that `sem_stmt_list_within_loop` will basically walk the AST, pulling out statements and dispatching them using the `STMT_INIT` tables previously discussed.
 You might land right back in `sem_while_stmt` for a nested `WHILE` -- it's turtles all the way down.
 
 If `SEM_EXPR_CONTEXT_NONE` is a mystery, don't worry, it's covered in the next section.
@@ -1924,6 +1927,7 @@ typedef struct sem_struct {
   CSTR *names;                    // field names
   CSTR *kinds;                    // the "kind" text of each column, if any, e.g. integer<foo> foo is the kind
   sem_t *semtypes;                // typecode for each field
+  bool_t is_backed;               // original backed table source
 } sem_struct;
 ```
 

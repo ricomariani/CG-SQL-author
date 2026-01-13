@@ -162,7 +162,7 @@ typedef struct schema_annotation {
 #define SEM_TYPE_SELECT_FUNC          _64(0x20000) // set for a sqlite UDF function declaration
 #define SEM_TYPE_DELETED              _64(0x40000) // set for columns that are not visible in the current schema version
 #define SEM_TYPE_VALIDATED            _64(0x80000) // set if item has already been validated against previous schema
-#define SEM_TYPE_USES_OUT            _64(0x100000) // set if proc has a one rowresult using the OUT statement
+#define SEM_TYPE_USES_OUT            _64(0x100000) // set if proc has a one row result using the OUT statement
 #define SEM_TYPE_USES_OUT_UNION      _64(0x200000) // set if proc uses the OUT UNION form for multi row result
 #define SEM_TYPE_PK                  _64(0x400000) // set if column is a primary key
 #define SEM_TYPE_FK                  _64(0x800000) // set if column is a foreign key

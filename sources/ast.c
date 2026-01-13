@@ -36,6 +36,7 @@ cql_data_defn( bool_t macro_expansion_errors );
 static symtab *macro_table;
 static symtab *macro_arg_table;
 static symtab *macro_arg_type_from_ast_type;
+static symtab *decode_helpers;
 
 typedef struct macro_state_t {
   CSTR name;
@@ -62,10 +63,253 @@ typedef struct misc_attrs_type {
   uint32_t count;
 } misc_attrs_type;
 
+// Generic structure to hold int decoding info for table driven int decoding
+// this is just the friendly name of a flag or value
+typedef struct decode_info {
+    int32_t flag;
+    const char *name;
+} decode_info;
+
+// This formats the value as a set of named flags
+// The value can be zero meaning no flags are set
+static void print_flags(llint_t value, const decode_info *flags, size_t count) {
+  if (value == 0) {
+    cql_output(" {no_flags}");
+    return;
+  }
+
+  for (size_t i = 0; i < count; i++) {
+    if (value & flags[i].flag) {
+      cql_output(" {%s}", flags[i].name);
+    }
+  }
+}
+
+// This formats the value as a single named value and asserts that it is valid
+// The encoding is highly mistake resistant because the value must be an index
+// into the flags array and must match the flag at that index.
+static void print_value(llint_t value, const decode_info *flags, size_t count) {
+  Contract(value >= 0);
+  Contract(value < count);
+  Contract(value == flags[value].flag);
+  cql_output(" {%s}", flags[value].name);
+}
+
+// join types have their own special names, emit those
+void decode_join_targets(CSTR parent_type, llint_t value) {
+  Contract(parent_type == k_ast_join_target);
+
+  static const decode_info join_option[] = {
+    { -1, "join_none" }, // stub, indices start at 1, this will force error if 0 appears
+    { JOIN_INNER, "join_inner" },
+    { JOIN_CROSS, "join_cross" },
+    { JOIN_LEFT_OUTER, "join_left_outer" },
+    { JOIN_RIGHT_OUTER, "join_right_outer" },
+    { JOIN_LEFT, "join_left" },
+    { JOIN_RIGHT, "join_right" },
+  };
+
+  print_value(value, &join_option[0], sizeof(join_option) / sizeof(join_option[0]));
+}
+
+// standard view and table flags
+void decode_table_flags(CSTR parent_type, llint_t value) {
+  Contract(
+    parent_type == k_ast_create_view_stmt ||
+    parent_type == k_ast_table_flags_attrs);
+
+  static const decode_info table_flags[] = {
+      { GENERIC_IF_NOT_EXISTS, "if_not_exists" },
+      { GENERIC_IS_TEMP, "temp" },
+      { TABLE_IS_NO_ROWID, "without_rowid" },
+      { VTAB_IS_EPONYMOUS, "eponymous" },
+  };
+
+  print_flags(value, &table_flags[0], sizeof(table_flags) / sizeof(table_flags[0]));
+}
+
+// standard flag bits for frame clauses in window functions
+void decode_frame_flags(CSTR parent_type, llint_t value) {
+  Contract(
+    parent_type == k_ast_frame_boundary_start ||
+    parent_type == k_ast_frame_boundary_end ||
+    parent_type == k_ast_opt_frame_spec);
+
+  static const decode_info frame_flags[] = {
+    { FRAME_TYPE_RANGE, "frame_type_range" },
+    { FRAME_TYPE_ROWS, "frame_type_rows" },
+    { FRAME_TYPE_GROUPS, "frame_type_groups" },
+    { FRAME_BOUNDARY_UNBOUNDED, "frame_boundary_unbounded" },
+    { FRAME_BOUNDARY_PRECEDING, "frame_boundary_preceding" },
+    { FRAME_BOUNDARY_CURRENT_ROW, "frame_boundary_current_row" },
+    { FRAME_BOUNDARY_START_UNBOUNDED, "frame_boundary_start_unbounded" },
+    { FRAME_BOUNDARY_START_PRECEDING, "frame_boundary_start_preceding" },
+    { FRAME_BOUNDARY_START_CURRENT_ROW, "frame_boundary_start_current_row" },
+    { FRAME_BOUNDARY_START_FOLLOWING, "frame_boundary_start_following" },
+    { FRAME_BOUNDARY_END_PRECEDING, "frame_boundary_end_preceding" },
+    { FRAME_BOUNDARY_END_CURRENT_ROW, "frame_boundary_end_current_row" },
+    { FRAME_BOUNDARY_END_FOLLOWING, "frame_boundary_end_following" },
+    { FRAME_BOUNDARY_END_UNBOUNDED, "frame_boundary_end_unbounded" },
+    { FRAME_EXCLUDE_NO_OTHERS, "frame_exclude_no_others" },
+    { FRAME_EXCLUDE_CURRENT_ROW, "frame_exclude_current_row" },
+    { FRAME_EXCLUDE_GROUP, "frame_exclude_group" },
+    { FRAME_EXCLUDE_TIES, "frame_exclude_ties" },
+    { FRAME_EXCLUDE_NONE, "frame_exclude_none" },
+  };
+
+  print_flags(value, frame_flags, sizeof(frame_flags) / sizeof(frame_flags[0]));
+}
+
+// standard trigger flags
+void decode_trigger_flags(CSTR parent_type, llint_t value) {
+  Contract(
+    parent_type == k_ast_trigger_operation ||
+    parent_type == k_ast_trigger_condition ||
+    parent_type == k_ast_trigger_action ||
+    parent_type == k_ast_create_trigger_stmt);
+
+  static const decode_info trigger_flags[] = {
+    { TRIGGER_IS_TEMP, "temp" },
+    { TRIGGER_IF_NOT_EXISTS, "if_not_exists" },
+    { TRIGGER_BEFORE, "before" },
+    { TRIGGER_AFTER, "after" },
+    { TRIGGER_INSTEAD_OF, "instead_of" },
+    { TRIGGER_UPDATE, "update" },
+    { TRIGGER_DELETE, "delete" },
+    { TRIGGER_INSERT, "insert" },
+    { TRIGGER_FOR_EACH_ROW, "for_each_row" },
+  };
+
+  print_flags(value, trigger_flags, sizeof(trigger_flags) / sizeof(trigger_flags[0]));
+}
+
+// standard enforce options
+void decode_enforce_options(CSTR parent_type, llint_t value) {
+  Contract(
+    parent_type == k_ast_enforce_normal_stmt ||
+    parent_type == k_ast_enforce_strict_stmt);
+
+  static const decode_info enforce_option[] = {
+    { -1, "enforce_none" }, // stub, indices start at 1, this will force error if zero appears
+    { ENFORCE_FK_ON_UPDATE, "fk_on_update" },
+    { ENFORCE_FK_ON_DELETE, "fk_on_delete" },
+    { ENFORCE_STRICT_JOIN, "strict_join" },
+    { ENFORCE_UPSERT_STMT, "upsert_stmt" },
+    { ENFORCE_WINDOW_FUNC, "window_func" },
+    { ENFORCE_CAST, "enforce_cast" },
+    { ENFORCE_WITHOUT_ROWID, "without_rowid" },
+    { ENFORCE_TRANSACTION, "enforce_transaction" },
+    { ENFORCE_SELECT_IF_NOTHING, "select_if_nothing" },
+    { ENFORCE_INSERT_SELECT, "insert_select" },
+    { ENFORCE_TABLE_FUNCTION, "table_function" },
+    { ENFORCE_SIGN_FUNCTION, "sign_function" },
+    { ENFORCE_IS_TRUE, "is_true" },
+    { ENFORCE_CURSOR_HAS_ROW, "cursor_has_row" },
+    { ENFORCE_UPDATE_FROM, "update_from" },
+    { ENFORCE_AND_OR_NOT_NULL_CHECK, "and_or_not_null_check" },
+  };
+
+  print_value(value, enforce_option, sizeof(enforce_option) / sizeof(enforce_option[0]));
+}
+
+// standard conflict options
+void decode_conflict_options(CSTR parent_type, llint_t value) {
+  Contract(
+    parent_type == k_ast_indexed_columns_conflict_clause ||
+    parent_type == k_ast_col_attrs_not_null);
+
+  static const decode_info conflict_option[] = {
+    { ON_CONFLICT_ROLLBACK, "on_conflict_rollback" },
+    { ON_CONFLICT_ABORT, "on_conflict_abort" },
+    { ON_CONFLICT_FAIL, "on_conflict_fail" },
+    { ON_CONFLICT_IGNORE, "on_conflict_ignore" },
+    { ON_CONFLICT_REPLACE, "on_conflict_replace" },
+  };
+
+  print_value(value, conflict_option, sizeof(conflict_option) / sizeof(conflict_option[0]));
+}
+
+// switch options
+void decode_switch_options(CSTR parent_type, llint_t value) {
+  Contract(parent_type == k_ast_switch_stmt);
+
+  static const decode_info switch_option[] = {
+    { SWITCH_NORMAL, "switch_normal" },
+    { SWITCH_ALL_VALUES, "switch_all_values" },
+  };
+
+  print_value(value, switch_option, sizeof(switch_option) / sizeof(switch_option[0]));
+}
+
+// index flags
+void decode_index_flags(CSTR parent_type, llint_t value) {
+  Contract(parent_type == k_ast_index_flags_names_attrs);
+
+  static const decode_info index_flags[] = {
+    { INDEX_IFNE, "if_not_exists" },
+    { INDEX_UNIQUE, "unique" },
+  };
+  print_flags(value, index_flags, sizeof(index_flags) / sizeof(index_flags[0]));
+}
+
+// explain options
+void decode_explain_options(CSTR parent_type, llint_t value) {
+  Contract(parent_type == k_ast_explain_stmt);
+
+  static const decode_info explain_flags[] = {
+    { EXPLAIN_NONE, "explain_none" },
+    { EXPLAIN_QUERY_PLAN, "explain_query_plan" },
+  };
+  print_value(value, explain_flags, sizeof(explain_flags) / sizeof(explain_flags[0]));
+}
+
+// select compound operators
+void decode_compound_ops(CSTR parent_type, llint_t value) {
+  Contract(parent_type == k_ast_select_core_compound);
+
+  static const decode_info compound_ops[] = {
+    { -1, "none" }, // stub, indices start at 1, this will force error if 0 appears
+    { COMPOUND_OP_UNION, "union" },
+    { COMPOUND_OP_UNION_ALL, "union_all" },
+    { COMPOUND_OP_INTERSECT, "intersect" },
+    { COMPOUND_OP_EXCEPT, "except" },
+  };
+
+  print_value(value, compound_ops, sizeof(compound_ops) / sizeof(compound_ops[0]));
+}
+
+// version annotation decoding (this just shows that the int is a version)
+void decode_version_annotation(CSTR parent_type, llint_t value) {
+  Contract(
+    parent_type == k_ast_version_annotation ||
+    parent_type == k_ast_delete_attr ||
+    parent_type == k_ast_create_attr);
+
+  cql_output(" {version}");
+}
+
+// drop flags
+void decode_drop_flags(CSTR parent_type, llint_t value) {
+  Contract(
+    parent_type == k_ast_drop_table_stmt ||
+    parent_type == k_ast_drop_view_stmt ||
+    parent_type == k_ast_drop_index_stmt ||
+    parent_type == k_ast_drop_trigger_stmt);
+
+  static const decode_info drop_flags[] = {
+    { GENERIC_IF_EXISTS, "if_exists" },
+  };
+  print_flags(value, drop_flags, sizeof(drop_flags) / sizeof(drop_flags[0]));
+}
+
+
 #undef MACRO_INIT
 #define MACRO_INIT(x) \
   symtab_add(macro_arg_type_from_ast_type, k_ast_ ## x ## _macro_ref, (void*)k_ast_ ## x ## _macro_arg); \
   symtab_add(macro_arg_type_from_ast_type, k_ast_ ## x ## _macro_arg_ref, (void*)k_ast_ ## x ## _macro_arg);
+
+#undef DECODER_INIT
+#define DECODER_INIT(x,y) symtab_add(decode_helpers, k_ast_ ## x, (void *)y)
 
 // initialization for the ast and macro expansion pass
 cql_noexport void ast_init() {
@@ -73,6 +317,7 @@ cql_noexport void ast_init() {
   minipool_open(&str_pool);
   macro_table = symtab_new();
   macro_arg_type_from_ast_type = symtab_new();
+  decode_helpers = symtab_new();
   delete_macro_formals();
   macro_expansion_errors = false;
 
@@ -85,6 +330,33 @@ cql_noexport void ast_init() {
   MACRO_INIT(select_core);
   MACRO_INIT(select_expr);
   MACRO_INIT(unknown);
+
+  // this makes the table that tells us how to decode various int nodes
+  DECODER_INIT(join_target, decode_join_targets);
+  DECODER_INIT(create_view_stmt, decode_table_flags);
+  DECODER_INIT(table_flags_attrs, decode_table_flags);
+  DECODER_INIT(frame_boundary_start, decode_frame_flags);
+  DECODER_INIT(frame_boundary_end, decode_frame_flags);
+  DECODER_INIT(opt_frame_spec, decode_frame_flags);
+  DECODER_INIT(trigger_operation, decode_trigger_flags);
+  DECODER_INIT(trigger_condition, decode_trigger_flags);
+  DECODER_INIT(trigger_action, decode_trigger_flags);
+  DECODER_INIT(create_trigger_stmt, decode_trigger_flags);
+  DECODER_INIT(enforce_normal_stmt, decode_enforce_options);
+  DECODER_INIT(enforce_strict_stmt, decode_enforce_options);
+  DECODER_INIT(indexed_columns_conflict_clause, decode_conflict_options);
+  DECODER_INIT(col_attrs_not_null, decode_conflict_options);
+  DECODER_INIT(switch_stmt, decode_switch_options);
+  DECODER_INIT(index_flags_names_attrs, decode_index_flags);
+  DECODER_INIT(explain_stmt, decode_explain_options);
+  DECODER_INIT(select_core_compound, decode_compound_ops);
+  DECODER_INIT(version_annotation, decode_version_annotation);
+  DECODER_INIT(delete_attr, decode_version_annotation);
+  DECODER_INIT(create_attr, decode_version_annotation);
+  DECODER_INIT(drop_table_stmt, decode_drop_flags);
+  DECODER_INIT(drop_view_stmt, decode_drop_flags);
+  DECODER_INIT(drop_index_stmt, decode_drop_flags);
+  DECODER_INIT(drop_trigger_stmt, decode_drop_flags);
 
   macro_state.line = -1;
   macro_state.file = "<Unknown>";
@@ -100,6 +372,7 @@ cql_noexport void ast_cleanup() {
   delete_macro_formals();
   SYMTAB_CLEANUP(macro_table);
   SYMTAB_CLEANUP(macro_arg_type_from_ast_type);
+  SYMTAB_CLEANUP(decode_helpers);
   minipool_close(&ast_pool);
   minipool_close(&str_pool);
   run_lazy_frees();
@@ -459,36 +732,6 @@ cql_noexport ast_node *new_ast_qstr_quoted(CSTR value) {
   return result;
 }
 
-typedef struct decode_info {
-    int32_t flag;
-    const char *name;
-} decode_info;
-
-// This formats the value as a set of named flags
-// The value can be zero meaning no flags are set
-static void print_flags(llint_t value, const decode_info *flags, size_t count) {
-  if (value == 0) {
-    cql_output(" {no_flags}");
-    return;
-  }
-
-  for (size_t i = 0; i < count; i++) {
-    if (value & flags[i].flag) {
-      cql_output(" {%s}", flags[i].name);
-    }
-  }
-}
-
-// This formats the value as a single named value and asserts that it is valid
-// The encoding is highly mistake resistant because the value must be an index
-// into the flags array and must match the flag at that index.
-static void print_value(llint_t value, const decode_info *flags, size_t count) {
-  Contract(value >= 0);
-  Contract(value < count);
-  Contract(value == flags[value].flag);
-  cql_output(" {%s}", flags[value].name);
-}
-
 // for indenting, it just holds spaces.
 static char padbuffer[4096];
 
@@ -567,170 +810,12 @@ cql_noexport bool_t print_ast_value(struct ast_node *node) {
 
     cql_output("{int %lld}", value);
 
-    // join types have their own special names, emit those
-    if (parent_type == k_ast_join_target) {
-      decode_info join_option[] = {
-        { -1, "join_none" }, // stub, indices start at 1, this will force error if 0 appears
-        { JOIN_INNER, "join_inner" },
-        { JOIN_CROSS, "join_cross" },
-        { JOIN_LEFT_OUTER, "join_left_outer" },
-        { JOIN_RIGHT_OUTER, "join_right_outer" },
-        { JOIN_LEFT, "join_left" },
-        { JOIN_RIGHT, "join_right" },
-      };
+    symtab_entry *entry = symtab_find(decode_helpers, parent_type);
 
-      print_value(value, &join_option[0], sizeof(join_option) / sizeof(join_option[0]));
-    }
-
-    // standard view and table flags
-    if (parent_type == k_ast_create_view_stmt ||
-        parent_type == k_ast_table_flags_attrs) {
-
-      decode_info table_flags[] = {
-          { GENERIC_IF_NOT_EXISTS, "if_not_exists" },
-          { GENERIC_IS_TEMP, "temp" },
-          { TABLE_IS_NO_ROWID, "without_rowid" },
-          { VTAB_IS_EPONYMOUS, "eponymous" },
-      };
-
-      print_flags(value, &table_flags[0], sizeof(table_flags) / sizeof(table_flags[0]));
-    }
-
-    // standard flag bits for frame clauses in window functions
-    if (parent_type == k_ast_frame_boundary_start ||
-      parent_type == k_ast_frame_boundary_end ||
-      parent_type == k_ast_opt_frame_spec) {
-
-      decode_info frame_flags[] = {
-        { FRAME_TYPE_RANGE, "frame_type_range" },
-        { FRAME_TYPE_ROWS, "frame_type_rows" },
-        { FRAME_TYPE_GROUPS, "frame_type_groups" },
-        { FRAME_BOUNDARY_UNBOUNDED, "frame_boundary_unbounded" },
-        { FRAME_BOUNDARY_PRECEDING, "frame_boundary_preceding" },
-        { FRAME_BOUNDARY_CURRENT_ROW, "frame_boundary_current_row" },
-        { FRAME_BOUNDARY_START_UNBOUNDED, "frame_boundary_start_unbounded" },
-        { FRAME_BOUNDARY_START_PRECEDING, "frame_boundary_start_preceding" },
-        { FRAME_BOUNDARY_START_CURRENT_ROW, "frame_boundary_start_current_row" },
-        { FRAME_BOUNDARY_START_FOLLOWING, "frame_boundary_start_following" },
-        { FRAME_BOUNDARY_END_PRECEDING, "frame_boundary_end_preceding" },
-        { FRAME_BOUNDARY_END_CURRENT_ROW, "frame_boundary_end_current_row" },
-        { FRAME_BOUNDARY_END_FOLLOWING, "frame_boundary_end_following" },
-        { FRAME_BOUNDARY_END_UNBOUNDED, "frame_boundary_end_unbounded" },
-        { FRAME_EXCLUDE_NO_OTHERS, "frame_exclude_no_others" },
-        { FRAME_EXCLUDE_CURRENT_ROW, "frame_exclude_current_row" },
-        { FRAME_EXCLUDE_GROUP, "frame_exclude_group" },
-        { FRAME_EXCLUDE_TIES, "frame_exclude_ties" },
-        { FRAME_EXCLUDE_NONE, "frame_exclude_none" },
-      };
-
-      print_flags(value, frame_flags, sizeof(frame_flags) / sizeof(frame_flags[0]));
-    }
-
-    if (parent_type == k_ast_trigger_operation ||
-        parent_type == k_ast_trigger_condition ||
-        parent_type == k_ast_trigger_action ||
-        parent_type == k_ast_create_trigger_stmt) {
-
-      decode_info trigger_flags[] = {
-        { TRIGGER_IS_TEMP, "temp" },
-        { TRIGGER_IF_NOT_EXISTS, "if_not_exists" },
-        { TRIGGER_BEFORE, "before" },
-        { TRIGGER_AFTER, "after" },
-        { TRIGGER_INSTEAD_OF, "instead_of" },
-        { TRIGGER_UPDATE, "update" },
-        { TRIGGER_DELETE, "delete" },
-        { TRIGGER_INSERT, "insert" },
-        { TRIGGER_FOR_EACH_ROW, "for_each_row" },
-      };
-
-      print_flags(value, trigger_flags, sizeof(trigger_flags) / sizeof(trigger_flags[0]));
-
-    }
-
-    if (parent_type == k_ast_enforce_normal_stmt || parent_type == k_ast_enforce_strict_stmt) {
-      decode_info enforce_option[] = {
-        { -1, "enforce_none" }, // stub, indices start at 1, this will force error if zero appears
-        { ENFORCE_FK_ON_UPDATE, "fk_on_update" },
-        { ENFORCE_FK_ON_DELETE, "fk_on_delete" },
-        { ENFORCE_STRICT_JOIN, "strict_join" },
-        { ENFORCE_UPSERT_STMT, "upsert_stmt" },
-        { ENFORCE_WINDOW_FUNC, "window_func" },
-        { ENFORCE_CAST, "enforce_cast" },
-        { ENFORCE_WITHOUT_ROWID, "without_rowid" },
-        { ENFORCE_TRANSACTION, "enforce_transaction" },
-        { ENFORCE_SELECT_IF_NOTHING, "select_if_nothing" },
-        { ENFORCE_INSERT_SELECT, "insert_select" },
-        { ENFORCE_TABLE_FUNCTION, "table_function" },
-        { ENFORCE_SIGN_FUNCTION, "sign_function" },
-        { ENFORCE_IS_TRUE, "is_true" },
-        { ENFORCE_CURSOR_HAS_ROW, "cursor_has_row" },
-        { ENFORCE_UPDATE_FROM, "update_from" },
-        { ENFORCE_AND_OR_NOT_NULL_CHECK, "and_or_not_null_check" },
-      };
-      print_value(value, enforce_option, sizeof(enforce_option) / sizeof(enforce_option[0]));
-    }
-
-    if (parent_type == k_ast_indexed_columns_conflict_clause ||
-        parent_type == k_ast_col_attrs_not_null) {
-      decode_info conflict_option[] = {
-        { ON_CONFLICT_ROLLBACK, "on_conflict_rollback" },
-        { ON_CONFLICT_ABORT, "on_conflict_abort" },
-        { ON_CONFLICT_FAIL, "on_conflict_fail" },
-        { ON_CONFLICT_IGNORE, "on_conflict_ignore" },
-        { ON_CONFLICT_REPLACE, "on_conflict_replace" },
-      };
-      print_value(value, conflict_option, sizeof(conflict_option) / sizeof(conflict_option[0]));
-    }
-
-    if (parent_type == k_ast_switch_stmt) {
-       decode_info switch_option[] = {
-         { SWITCH_NORMAL, "switch_normal" },
-         { SWITCH_ALL_VALUES, "switch_all_values" },
-       };
-       print_value(value, switch_option, sizeof(switch_option) / sizeof(switch_option[0]));
-    }
-
-    if (parent_type == k_ast_index_flags_names_attrs) {
-      decode_info index_flags[] = {
-        { INDEX_IFNE, "if_not_exists" },
-        { INDEX_UNIQUE, "unique" },
-      };
-      print_flags(value, index_flags, sizeof(index_flags) / sizeof(index_flags[0]));
-    }
-
-    if (parent_type == k_ast_explain_stmt) {
-      decode_info explain_flags[] = {
-        { EXPLAIN_NONE, "explain_none" },
-        { EXPLAIN_QUERY_PLAN, "explain_query_plan" },
-      };
-      print_value(value, explain_flags, sizeof(explain_flags) / sizeof(explain_flags[0]));
-    }
-
-    if (parent_type == k_ast_select_core_compound) {
-      decode_info compound_ops[] = {
-        { -1, "no_compound_op" }, // the origin is 1 and we want to force error if 0 appears
-        { COMPOUND_OP_UNION, "union" },
-        { COMPOUND_OP_UNION_ALL, "union_all" },
-        { COMPOUND_OP_INTERSECT, "intersect" },
-        { COMPOUND_OP_EXCEPT, "except" },
-      };
-      print_value(value, compound_ops, sizeof(compound_ops) / sizeof(compound_ops[0]));
-    }
-
-    if (parent_type == k_ast_version_annotation ||
-        parent_type == k_ast_delete_attr ||
-        parent_type == k_ast_create_attr) {
-      cql_output(" {version}");
-    }
-
-    if (parent_type == k_ast_drop_table_stmt ||
-        parent_type == k_ast_drop_view_stmt ||
-        parent_type == k_ast_drop_index_stmt ||
-        parent_type == k_ast_drop_trigger_stmt) {
-      decode_info drop_flags[] = {
-        { GENERIC_IF_EXISTS, "if_exists" },
-      };
-      print_flags(value, drop_flags, sizeof(drop_flags) / sizeof(drop_flags[0]));
+    if (entry) {
+      typedef void (*decode_helper_fn)(CSTR, llint_t);
+      decode_helper_fn decoder = (decode_helper_fn)entry->val;
+      decoder(parent_type, value);
     }
 
     ret = true;

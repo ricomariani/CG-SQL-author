@@ -258,7 +258,7 @@ cql_noexport void ast_cleanup(void);
 
 cql_noexport ast_node *_Nonnull new_ast(const char *_Nonnull type, ast_node *_Nullable l, ast_node *_Nullable r);
 cql_noexport ast_node *_Nonnull new_ast_num(int32_t type, const char *_Nonnull value);
-cql_noexport ast_node *_Nonnull new_ast_option(int32_t value);
+cql_noexport ast_node *_Nonnull new_ast_detail(int32_t value);
 cql_noexport ast_node *_Nonnull new_ast_str(CSTR _Nonnull value);
 cql_noexport ast_node *_Nonnull new_ast_cstr(CSTR _Nonnull value);
 cql_noexport ast_node *_Nonnull new_ast_qstr_escaped(CSTR _Nonnull value);
@@ -459,7 +459,7 @@ cql_noexport CSTR _Nonnull get_compound_operator_name(int32_t compound_operator)
   CSTR val = ((num_ast_node *)(node))->value; \
   Contract(val);
 
-#define EXTRACT_OPTION(name, node) \
+#define EXTRACT_DETAIL(name, node) \
   Contract(is_ast_int(node)); \
   int32_t name = (int32_t)((int_ast_node *)(node))->value;
 

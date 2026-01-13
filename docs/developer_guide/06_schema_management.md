@@ -471,7 +471,7 @@ does the flush.
     Contract(type >= SCHEMA_ANNOTATION_FIRST && type <= SCHEMA_ANNOTATION_LAST);
 
     Contract(is_ast_version_annotation(version_annotation));
-    EXTRACT_OPTION(vers, version_annotation->left);
+    EXTRACT_DETAIL(vers, version_annotation->left);
 
     Invariant(note->version == vers);
     Invariant(vers > 0);

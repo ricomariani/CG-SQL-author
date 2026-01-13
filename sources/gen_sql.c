@@ -488,7 +488,7 @@ static void gen_create_index_stmt(ast_node *ast) {
   EXTRACT_NOTNULL(index_flags_names_attrs, ast->right);
   EXTRACT_NOTNULL(connector, index_flags_names_attrs->right);
   EXTRACT_NOTNULL(index_names_and_attrs, connector->left);
-  EXTRACT_OPTION(flags, index_flags_names_attrs->left);
+  EXTRACT_DETAIL(flags, index_flags_names_attrs->left);
   EXTRACT_NOTNULL(indexed_columns, index_names_and_attrs->left);
   EXTRACT(opt_where, index_names_and_attrs->right);
   EXTRACT_ANY(attrs, connector->right);
@@ -612,7 +612,7 @@ static void gen_fk_flags(int32_t flags) {
 static void gen_fk_target_options(ast_node *ast) {
   Contract(is_ast_fk_target_options(ast));
   EXTRACT_NOTNULL(fk_target, ast->left);
-  EXTRACT_OPTION(flags, ast->right);
+  EXTRACT_DETAIL(flags, ast->right);
   EXTRACT_NAME_AST(table_name_ast, fk_target->left);
   EXTRACT_NAMED_NOTNULL(ref_list, name_list, fk_target->right);
 
@@ -642,7 +642,7 @@ static void gen_fk_def(ast_node *def) {
 
 static void gen_conflict_clause(ast_node *ast) {
   Contract(is_ast_int(ast));
-  EXTRACT_OPTION(conflict_clause_opt, ast);
+  EXTRACT_DETAIL(conflict_clause_opt, ast);
 
   gen_printf(" ON CONFLICT ");
   switch (conflict_clause_opt) {
@@ -685,7 +685,7 @@ static void gen_pk_def(ast_node *def) {
 static void gen_version_and_proc(ast_node *ast)
 {
   Contract(is_ast_version_annotation(ast));
-  EXTRACT_OPTION(vers, ast->left);
+  EXTRACT_DETAIL(vers, ast->left);
   gen_printf("%d", vers);
   if (ast->right) {
     if (is_ast_dot(ast->right)) {
@@ -2124,7 +2124,7 @@ static void gen_frame_boundary_end(ast_node *ast, int32_t flags) {
 
 static void gen_opt_frame_spec(ast_node *ast) {
   Contract(is_ast_opt_frame_spec(ast));
-  EXTRACT_OPTION(flags, ast->left);
+  EXTRACT_DETAIL(flags, ast->left);
   EXTRACT_NOTNULL(expr_list, ast->right);
 
   int32_t frame_type_flags = flags & FRAME_TYPE_FLAGS;
@@ -2204,7 +2204,7 @@ static void gen_expr_window_func_inv(ast_node *ast, CSTR op, int32_t pri, int32_
 
 static void gen_expr_raise(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_raise(ast));
-  EXTRACT_OPTION(flags, ast->left);
+  EXTRACT_DETAIL(flags, ast->left);
   EXTRACT_ANY(expr, ast->right);
 
   Contract(flags >= RAISE_IGNORE && flags <= RAISE_FAIL);
@@ -2630,7 +2630,7 @@ static void gen_join_cond(ast_node *ast) {
 
 static void gen_join_target(ast_node *ast) {
   Contract(is_ast_join_target(ast));
-  EXTRACT_OPTION(join_type, ast->left);
+  EXTRACT_DETAIL(join_type, ast->left);
 
   switch (join_type) {
     case JOIN_INNER: gen_printf("\nINNER JOIN "); break;
@@ -3181,7 +3181,7 @@ static void gen_select_core_list(ast_node *ast) {
   if (!select_core_compound) {
     return;
   }
-  EXTRACT_OPTION(compound_operator, select_core_compound->left);
+  EXTRACT_DETAIL(compound_operator, select_core_compound->left);
   EXTRACT_NOTNULL(select_core_list, select_core_compound->right);
 
   gen_printf("\n%s\n", get_compound_operator_name(compound_operator));
@@ -3276,7 +3276,7 @@ static void gen_eponymous(ast_node *ast, bool_t is_eponymous) {
 
 static void gen_create_view_stmt(ast_node *ast) {
   Contract(is_ast_create_view_stmt(ast));
-  EXTRACT_OPTION(flags, ast->left);
+  EXTRACT_DETAIL(flags, ast->left);
   EXTRACT(view_and_attrs, ast->right);
   EXTRACT_NOTNULL(view_details_select, view_and_attrs->left);
   EXTRACT_NOTNULL(view_details, view_details_select->left);
@@ -3309,23 +3309,23 @@ static void gen_create_view_stmt(ast_node *ast) {
 static void gen_create_trigger_stmt(ast_node *ast) {
   Contract(is_ast_create_trigger_stmt(ast));
 
-  EXTRACT_OPTION(flags, ast->left);
+  EXTRACT_DETAIL(flags, ast->left);
   EXTRACT_NOTNULL(trigger_body_vers, ast->right);
   EXTRACT_ANY(trigger_attrs, trigger_body_vers->right);
   EXTRACT_NOTNULL(trigger_def, trigger_body_vers->left);
   EXTRACT_NAME_AST(trigger_name_ast, trigger_def->left);
   EXTRACT_NOTNULL(trigger_condition, trigger_def->right);
-  EXTRACT_OPTION(cond_flags, trigger_condition->left);
+  EXTRACT_DETAIL(cond_flags, trigger_condition->left);
   flags |= cond_flags;
   EXTRACT_NOTNULL(trigger_op_target, trigger_condition->right);
   EXTRACT_NOTNULL(trigger_operation, trigger_op_target->left);
-  EXTRACT_OPTION(op_flags,  trigger_operation->left);
+  EXTRACT_DETAIL(op_flags,  trigger_operation->left);
   EXTRACT(name_list, trigger_operation->right);
   flags |= op_flags;
   EXTRACT_NOTNULL(trigger_target_action, trigger_op_target->right);
   EXTRACT_NAME_AST(table_name_ast, trigger_target_action->left);
   EXTRACT_NOTNULL(trigger_action, trigger_target_action->right);
-  EXTRACT_OPTION(action_flags, trigger_action->left);
+  EXTRACT_DETAIL(action_flags, trigger_action->left);
   flags |= action_flags;
   EXTRACT_NOTNULL(trigger_when_stmts, trigger_action->right);
   EXTRACT_ANY(when_expr, trigger_when_stmts->left);
@@ -3387,7 +3387,7 @@ static void gen_create_table_stmt(ast_node *ast) {
   Contract(is_ast_create_table_stmt(ast));
   EXTRACT_NOTNULL(create_table_name_flags, ast->left);
   EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
-  EXTRACT_OPTION(flags, table_flags_attrs->left);
+  EXTRACT_DETAIL(flags, table_flags_attrs->left);
   EXTRACT_ANY(table_attrs, table_flags_attrs->right);
   EXTRACT_NAME_AST(table_name_ast, create_table_name_flags->right);
   EXTRACT_NOTNULL(col_key_list, ast->right);
@@ -3420,7 +3420,7 @@ static void gen_create_virtual_table_stmt(ast_node *ast) {
   EXTRACT_NOTNULL(create_table_stmt, ast->right);
   EXTRACT_NOTNULL(create_table_name_flags, create_table_stmt->left);
   EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
-  EXTRACT_OPTION(flags, table_flags_attrs->left);
+  EXTRACT_DETAIL(flags, table_flags_attrs->left);
   EXTRACT_ANY(table_attrs, table_flags_attrs->right);
   EXTRACT_STRING(name, create_table_name_flags->right);
   EXTRACT_NOTNULL(col_key_list, create_table_stmt->right);
@@ -3888,7 +3888,7 @@ cql_noexport void gen_insert_type(ast_node *ast) {
 static void gen_insert_dummy_spec(ast_node *ast) {
   Contract(is_ast_insert_dummy_spec(ast) || is_ast_seed_stub(ast));
   EXTRACT_ANY_NOTNULL(seed_expr, ast->left);
-  EXTRACT_OPTION(flags, ast->right);
+  EXTRACT_DETAIL(flags, ast->right);
 
   if (suppress_attributes()) {
     return;
@@ -4413,7 +4413,7 @@ static void gen_declare_proc_stmt(ast_node *ast) {
   Contract(is_ast_declare_proc_stmt(ast));
   EXTRACT_NOTNULL(proc_name_type, ast->left);
   EXTRACT_STRING(name, proc_name_type->left);
-  EXTRACT_OPTION(type, proc_name_type->right);
+  EXTRACT_DETAIL(type, proc_name_type->right);
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
   EXTRACT(params, proc_params_stmts->left);
   EXTRACT(typed_names, proc_params_stmts->right);
@@ -4773,7 +4773,7 @@ static void gen_switch_cases(ast_node *ast) {
 
 static void gen_switch_stmt(ast_node *ast) {
   Contract(is_ast_switch_stmt(ast));
-  EXTRACT_OPTION(all_values, ast->left);
+  EXTRACT_DETAIL(all_values, ast->left);
   EXTRACT_NOTNULL(switch_body, ast->right);
   EXTRACT_ANY_NOTNULL(expr, switch_body->left);
   EXTRACT_NOTNULL(switch_case, switch_body->right);
@@ -4917,7 +4917,7 @@ static void gen_throw_stmt(ast_node *ast) {
 
 static void gen_begin_trans_stmt(ast_node *ast) {
   Contract(is_ast_begin_trans_stmt(ast));
-  EXTRACT_OPTION(mode, ast->left);
+  EXTRACT_DETAIL(mode, ast->left);
 
   gen_printf("BEGIN");
 
@@ -5076,7 +5076,7 @@ static void gen_schema_upgrade_script_stmt(ast_node *ast) {
 
 static void gen_schema_upgrade_version_stmt(ast_node *ast) {
   Contract(is_ast_schema_upgrade_version_stmt(ast));
-  EXTRACT_OPTION(vers, ast->left);
+  EXTRACT_DETAIL(vers, ast->left);
 
   gen_printf("@SCHEMA_UPGRADE_VERSION (%d)", vers);
 }
@@ -5088,7 +5088,7 @@ static void gen_previous_schema_stmt(ast_node *ast) {
 }
 
 static void gen_enforcement_options(ast_node *ast) {
-  EXTRACT_OPTION(option, ast);
+  EXTRACT_DETAIL(option, ast);
 
   switch (option) {
     case ENFORCE_CAST:
@@ -5188,7 +5188,7 @@ static void gen_enforce_pop_stmt(ast_node *ast) {
 
 static void gen_region_spec(ast_node *ast) {
   Contract(is_ast_region_spec(ast));
-  EXTRACT_OPTION(type, ast->right);
+  EXTRACT_DETAIL(type, ast->right);
   bool_t is_private = (type == PRIVATE_REGION);
 
   gen_name(ast->left);
@@ -5372,7 +5372,7 @@ static void gen_keep_table_name_in_aliases_stmt(ast_node *ast) {
 
 static void gen_explain_stmt(ast_node *ast) {
   Contract(is_ast_explain_stmt(ast));
-  EXTRACT_OPTION(query_plan, ast->left);
+  EXTRACT_DETAIL(query_plan, ast->left);
   EXTRACT_ANY_NOTNULL(stmt_target, ast->right);
 
   gen_printf("EXPLAIN");

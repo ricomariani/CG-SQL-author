@@ -302,7 +302,7 @@ create table t_several_columns_added_interleaved(
 -- this item is not present in the previous schema, but it's ok because newer than any of the old items
 -- + {schema_ad_hoc_migration_stmt}: ok @create(26)
 -- + {version_annotation}
--- + {int 26}
+-- + {detail 26} {version}
 -- + {name MigrateNewCurrent}
 @schema_ad_hoc_migration(26, MigrateNewCurrent);
 
@@ -1064,14 +1064,14 @@ end;
 -- TEST: test create table with not null column on conflict clause abort
 -- + {create_table_stmt}: conflict_clause_t: { id: integer notnull }
 -- + {col_attrs_not_null}: ok
--- + {int 2}
+-- + {detail 2} {on_conflict_fail}
 -- - error:
 create table conflict_clause_t(id int not null on conflict fail);
 
 -- TEST: test create table with pk column on conflict clause rollback
 -- + {create_table_stmt}: conflict_clause_pk: { id: integer notnull partial_pk }
 -- + {indexed_columns_conflict_clause}
--- + {int 0}
+-- + {detail 0} {on_conflict_rollback}
 -- - error:
 create table conflict_clause_pk(
   id int not null,

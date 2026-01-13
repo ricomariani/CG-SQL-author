@@ -193,7 +193,7 @@ a part of the AST will look like this:
 | | | {name a}
 | | {join_target_list}
 |   | {join_target}
-|     | {int 3}
+|     | {detail 3} {left_outer}
 |     | {table_join}
 |       | {table_or_subquery}
 |         | {name b}
@@ -359,7 +359,7 @@ LIMIT 3;
   |       | | | {name foo}
   |       | | {join_target_list}
   |       |   | {join_target}
-  |       |     | {int 1}
+  |       |     | {detail 1} {inner_join}
   |       |     | {table_join}
   |       |       | {table_or_subquery}
   |       |         | {name bar}

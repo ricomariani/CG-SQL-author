@@ -714,8 +714,8 @@ cql_noexport ast_node *new_ast(
 }
 
 // Reflecting the fact that this is information about a fact in the AST and not
-// a number it's called new_ast_option for option.
-cql_noexport ast_node *new_ast_option(int32_t value) {
+// a number like in an expression it's called new_ast_detail 
+cql_noexport ast_node *new_ast_detail(int32_t value) {
   Contract(current_file && yylineno > 0);
   int_ast_node *iast = _ast_pool_new(int_ast_node);
   iast->type = k_ast_int;
@@ -941,12 +941,12 @@ cql_noexport bool_t print_ast_value(struct ast_node *node) {
     llint_t value = (llint_t)inode->value;
     CSTR parent_type = node->parent->type;
 
-    cql_output("{int %lld}", value);
+    cql_output("{detail %lld}", value);
 
     symtab_entry *entry = symtab_find(decode_helpers, parent_type);
 
     // all interior option nodes must have a decoder!
-    // if this hits you added an new_ast_option with no decoder, use
+    // if this hits you added an new_ast_detail with no decoder, use
     // the parent type to decode it!
     Contract(entry);
 

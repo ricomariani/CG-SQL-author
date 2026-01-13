@@ -208,7 +208,7 @@ CREATE TABLE first_table(
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0} {no_flags}
+  | | | {detail 0} {no_flags}
   | | {name first_table}
   | {col_key_list}
     | {col_def}
@@ -227,7 +227,7 @@ CREATE TABLE second_table(
   {create_table_stmt}
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0} {no_flags}
+  | | | {detail 0} {no_flags}
   | | {name second_table}
   | {col_key_list}
     | {col_def}
@@ -255,7 +255,7 @@ END;
     |   | {name T1}
     | {join_target_list}
       | {join_target}
-        | {int 1} {join_inner}
+        | {detail 1} {join_inner}
         | {table_join}
           | {table_or_subquery}
           | | {name second_table}
@@ -295,7 +295,7 @@ SELECT *
   |       | |   |   | {name T1}
   |       | |   | {join_target_list}
   |       | |     | {join_target}
-  |       | |       | {int 1} {join_inner}
+  |       | |       | {detail 1} {join_inner}
   |       | |       | {table_join}
   |       | |         | {table_or_subquery}
   |       | |         | | {name second_table}
@@ -312,7 +312,7 @@ SELECT *
   |       | |               | {name y}
   |       | | {join_target_list}
   |       |   | {join_target}
-  |       |     | {int 1} {join_inner}
+  |       |     | {detail 1} {join_inner}
   |       |     | {table_join}
   |       |       | {table_or_subquery}
   |       |         | {name second_table}
@@ -346,7 +346,7 @@ SELECT *
   |       |   | |   | {name T1}
   |       |   | | {join_target_list}
   |       |   |   | {join_target}
-  |       |   |     | {int 1} {join_inner}
+  |       |   |     | {detail 1} {join_inner}
   |       |   |     | {table_join}
   |       |   |       | {table_or_subquery}
   |       |   |       | | {name second_table}
@@ -436,7 +436,7 @@ SELECT x
   |       |   | |   | {name T1}
   |       |   | | {join_target_list}
   |       |   |   | {join_target}
-  |       |   |     | {int 1} {join_inner}
+  |       |   |     | {detail 1} {join_inner}
   |       |   |     | {table_join}
   |       |   |       | {table_or_subquery}
   |       |   |       | | {name second_table}
@@ -484,7 +484,7 @@ SELECT x
   |       |   | |   | {name T1}
   |       |   | | {join_target_list}
   |       |   |   | {join_target}
-  |       |   |     | {int 1} {join_inner}
+  |       |   |     | {detail 1} {join_inner}
   |       |   |     | {table_join}
   |       |   |       | {table_or_subquery}
   |       |   |       | | {name second_table}
@@ -1150,7 +1150,7 @@ END;
     |       | {select_groupby}
     |         | {select_having}
     | {select_core_compound}
-      | {int 2} {union_all}
+      | {detail 2} {union_all}
       | {select_core_list}
         | {select_core}
           | {select_expr_list_con}
@@ -1191,7 +1191,7 @@ END;
     | {select_core_macro_arg_ref}
     | | {name x}
     | {select_core_compound}
-      | {int 2} {union_all}
+      | {detail 2} {union_all}
       | {select_core_list}
         | {select_core_macro_arg_ref}
           | {name y}
@@ -1222,7 +1222,7 @@ SELECT 50 + 2 AS x;
   | |       | {select_groupby}
   | |         | {select_having}
   | | {select_core_compound}
-  |   | {int 2} {union_all}
+  |   | {detail 2} {union_all}
   |   | {select_core_list}
   |     | {select_core}
   |     | | {select_expr_list_con}
@@ -1238,7 +1238,7 @@ SELECT 50 + 2 AS x;
   |     |       | {select_groupby}
   |     |         | {select_having}
   |     | {select_core_compound}
-  |       | {int 2} {union_all}
+  |       | {detail 2} {union_all}
   |       | {select_core_list}
   |         | {select_core}
   |         | | {select_expr_list_con}
@@ -1254,7 +1254,7 @@ SELECT 50 + 2 AS x;
   |         |       | {select_groupby}
   |         |         | {select_having}
   |         | {select_core_compound}
-  |           | {int 2} {union_all}
+  |           | {detail 2} {union_all}
   |           | {select_core_list}
   |             | {select_core}
   |               | {select_expr_list_con}

@@ -1660,7 +1660,7 @@ static void init_version_attrs_info(
     vers_info->is_virtual_table =  ast->parent && is_ast_create_virtual_table_stmt(ast->parent);
     EXTRACT_NOTNULL(create_table_name_flags, ast->left);
     EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
-    EXTRACT_OPTION(flags, table_flags_attrs->left);
+    EXTRACT_DETAIL(flags, table_flags_attrs->left);
     vers_info->is_temp = !!(flags & TABLE_IS_TEMP);
   }
   else if (is_ast_create_index_stmt(ast)) {
@@ -1670,7 +1670,7 @@ static void init_version_attrs_info(
   else if (is_ast_create_trigger_stmt(ast)) {
     vers_info->create_code = SCHEMA_ANNOTATION_INVALID;
     vers_info->delete_code = SCHEMA_ANNOTATION_DELETE_TRIGGER;
-    EXTRACT_OPTION(flags, ast->left);
+    EXTRACT_DETAIL(flags, ast->left);
     vers_info->is_temp = !! (flags & TRIGGER_IS_TEMP);
   }
   else {
@@ -1679,7 +1679,7 @@ static void init_version_attrs_info(
     vers_info->create_code = SCHEMA_ANNOTATION_INVALID;
     vers_info->delete_code = SCHEMA_ANNOTATION_DELETE_VIEW;
 
-    EXTRACT_OPTION(flags, ast->left);
+    EXTRACT_DETAIL(flags, ast->left);
     vers_info->is_temp = !! (flags & VIEW_IS_TEMP);
   }
 }
@@ -3874,7 +3874,7 @@ static bool_t find_referenceable_columns(
       EXTRACT_NOTNULL(index_flags_names_attrs, index_ast->right);
       EXTRACT_NOTNULL(connector, index_flags_names_attrs->right);
       EXTRACT_NOTNULL(index_names_and_attrs, connector->left);
-      EXTRACT_OPTION(flags, index_flags_names_attrs->left);
+      EXTRACT_DETAIL(flags, index_flags_names_attrs->left);
       EXTRACT_NOTNULL(indexed_columns, index_names_and_attrs->left);
       EXTRACT(opt_where, index_names_and_attrs->right);
       EXTRACT_NAME_AST(index_name_ast, create_index_on_list->left);
@@ -4076,7 +4076,7 @@ static void sem_fk_def(
   EXTRACT_NAMED_NOTNULL(src_list, name_list, fk_info->left);
   EXTRACT_NOTNULL(fk_target_options, fk_info->right);
   EXTRACT_NOTNULL(fk_target, fk_target_options->left);
-  EXTRACT_OPTION(flags, fk_target_options->right);
+  EXTRACT_DETAIL(flags, fk_target_options->right);
   EXTRACT_STRING(ref_table_name, fk_target->left);
   EXTRACT_NAMED_NOTNULL(ref_list, name_list, fk_target->right);
 
@@ -4256,7 +4256,7 @@ static void sem_validate_builtin_migration_proc(ast_node *ast, uint32_t code, CS
 static bool_t sem_validate_version(uint32_t code, ast_node *ast, int32_t *version, CSTR *out_proc) {
   Contract(version);
   EXTRACT(version_annotation, ast->left);
-  EXTRACT_OPTION(vers, version_annotation->left);
+  EXTRACT_DETAIL(vers, version_annotation->left);
 
   *out_proc = NULL;
 
@@ -4488,7 +4488,7 @@ void sem_validate_fk_attr(pending_table_validation *pending) {
 
   EXTRACT_NOTNULL(fk_target_options, fk->left);
   EXTRACT_NOTNULL(fk_target, fk_target_options->left);
-  EXTRACT_OPTION(flags, fk_target_options->right);
+  EXTRACT_DETAIL(flags, fk_target_options->right);
   EXTRACT_NAMED_NOTNULL(ref_list, name_list, fk_target->right);
 
   if (!sem_validate_name_list(ref_list, ref_table_ast->sem->jptr)) {
@@ -10594,7 +10594,7 @@ static void sem_proc_as_func(ast_node *ast, ast_node *proc) {
 // it has the correct args.
 static void sem_expr_raise(ast_node *ast, CSTR cstr) {
   Contract(is_ast_raise(ast));
-  EXTRACT_OPTION(flags, ast->left);
+  EXTRACT_DETAIL(flags, ast->left);
   EXTRACT_ANY(expr, ast->right);
 
   Contract(flags >= RAISE_IGNORE && flags <= RAISE_FAIL);
@@ -10933,7 +10933,7 @@ static void sem_opt_partition_by(ast_node *ast) {
 // are in We evaluate the expressions if they are present.
 static void sem_opt_frame_spec(ast_node *ast) {
   Contract(is_ast_opt_frame_spec(ast));
-  EXTRACT_OPTION(flags, ast->left);
+  EXTRACT_DETAIL(flags, ast->left);
   EXTRACT_NOTNULL(expr_list, ast->right);
   EXTRACT_ANY(left_expr, expr_list->left);
   EXTRACT_ANY(right_expr, expr_list->right);
@@ -11576,7 +11576,7 @@ static void sem_join_target(ast_node *ast) {
   // left table is a table_or_subquery node otherwise is a join_target node.
   Contract(is_ast_table_or_subquery(table_ref) || is_ast_join_target(table_ref));
 
-  EXTRACT_OPTION(join_type, ast->left);
+  EXTRACT_DETAIL(join_type, ast->left);
   EXTRACT_NOTNULL(table_join, ast->right);
   EXTRACT_NOTNULL(table_or_subquery, table_join->left);
   sem_table_or_subquery(table_or_subquery);
@@ -12543,7 +12543,7 @@ static void sem_select_core_list(ast_node *ast) {
 
   ast->sem = new_sem(SEM_TYPE_STRUCT);
   ast->sem->sptr = sptr;
-  EXTRACT_OPTION(compound_operator, select_core_compound->left);
+  EXTRACT_DETAIL(compound_operator, select_core_compound->left);
   ast->sem->sptr->struct_name = get_compound_operator_name(compound_operator);
 
   // We have no used symbols yet, but it's still important to set
@@ -12667,7 +12667,7 @@ static void sem_select_stmt(ast_node *stmt) {
 // e.g: declare c cursor for explain query plan ...
 static void sem_explain(ast_node *stmt) {
   Contract(is_ast_explain_stmt(stmt) && current_explain_stmt == NULL);
-  EXTRACT_OPTION(query_plan, stmt->left);
+  EXTRACT_DETAIL(query_plan, stmt->left);
   EXTRACT_ANY_NOTNULL(sql_stmt, stmt->right);
 
   current_explain_stmt = stmt;
@@ -12971,7 +12971,7 @@ static bool sem_create_migration_proc_prototype(ast_node *origin, CSTR name)
   AST_REWRITE_INFO_SET(origin->lineno, origin->filename);
 
   ast_node *ast_name = new_ast_str(name);
-  ast_node *proc_name_flags = new_ast_proc_name_type(ast_name, new_ast_option(PROC_FLAG_USES_DML));
+  ast_node *proc_name_flags = new_ast_proc_name_type(ast_name, new_ast_detail(PROC_FLAG_USES_DML));
   ast_node *declare_proc_stmt = new_ast_declare_proc_stmt(proc_name_flags, new_ast_proc_params_stmts(NULL, NULL));
 
   AST_REWRITE_INFO_RESET();
@@ -13746,7 +13746,7 @@ static void sem_validate_previous_view(ast_node *prev_view) {
   Contract(!current_joinscope);
 
   Contract(is_ast_create_view_stmt(prev_view));
-  EXTRACT_OPTION(prev_flags, prev_view->left);
+  EXTRACT_DETAIL(prev_flags, prev_view->left);
   EXTRACT_NAMED(prev_view_and_attrs, view_and_attrs, prev_view->right);
   EXTRACT_NAMED(prev_view_details_select, view_details_select, prev_view_and_attrs->left);
   EXTRACT_NAMED(prev_view_details, view_details, prev_view_details_select->left);
@@ -13790,7 +13790,7 @@ static void sem_validate_previous_trigger(ast_node *prev_trigger) {
   Contract(!current_joinscope);
   Contract(is_ast_create_trigger_stmt(prev_trigger));
 
-  EXTRACT_OPTION(prev_flags, prev_trigger->left);
+  EXTRACT_DETAIL(prev_flags, prev_trigger->left);
   EXTRACT_NAMED_NOTNULL(prev_trigger_body_vers, trigger_body_vers, prev_trigger->right);
   EXTRACT_NAMED_NOTNULL(prev_trigger_def, trigger_def, prev_trigger_body_vers->left);
   EXTRACT_NAME_AST(prev_trigger_name_ast, prev_trigger_def->left);
@@ -14045,7 +14045,7 @@ static bool_t sem_validate_version_attrs(version_attrs_info *vers_info) {
       // cons up a fake v1 delete annotation for the vers_info
       if (ast->right) {
         AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
-        ast_node *version_annotation = new_ast_version_annotation(new_ast_option(1), NULL);
+        ast_node *version_annotation = new_ast_version_annotation(new_ast_detail(1), NULL);
         AST_REWRITE_INFO_RESET();
 
         vers_info->delete_version_ast = version_annotation;
@@ -14611,7 +14611,7 @@ static void sem_validate_previous_table(ast_node *prev_table) {
   Contract(is_ast_create_table_stmt(prev_table));
   EXTRACT_NAMED_NOTNULL(prev_create_table_name_flags, create_table_name_flags, prev_table->left);
   EXTRACT_NAMED_NOTNULL(prev_table_flags_attrs, table_flags_attrs, prev_create_table_name_flags->left);
-  EXTRACT_OPTION(prev_flags, prev_table_flags_attrs->left);
+  EXTRACT_DETAIL(prev_flags, prev_table_flags_attrs->left);
   EXTRACT_ANY(prev_table_attrs, prev_table_flags_attrs->right);
   EXTRACT_NAME_AST(prev_name_ast, prev_create_table_name_flags->right);
   EXTRACT_STRING(name, prev_name_ast);
@@ -14644,7 +14644,7 @@ static void sem_validate_previous_table(ast_node *prev_table) {
 
   EXTRACT_NOTNULL(create_table_name_flags, ast->left);
   EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
-  EXTRACT_OPTION(flags, table_flags_attrs->left);
+  EXTRACT_DETAIL(flags, table_flags_attrs->left);
   EXTRACT_ANY(table_attrs, table_flags_attrs->right);
   EXTRACT_NAME_AST(name_ast, create_table_name_flags->right);
   EXTRACT_ANY_NOTNULL(col_key_list, ast->right);
@@ -14948,25 +14948,25 @@ static void sem_record_trigger_dependencies(ast_node *ast) {
 static void sem_create_trigger_stmt(ast_node *ast) {
   Contract(is_ast_create_trigger_stmt(ast));
 
-  EXTRACT_OPTION(flags, ast->left);
+  EXTRACT_DETAIL(flags, ast->left);
   EXTRACT_NOTNULL(trigger_body_vers, ast->right);
   EXTRACT_ANY(trigger_attrs, trigger_body_vers->right);
   EXTRACT_NOTNULL(trigger_def, trigger_body_vers->left);
   EXTRACT_NAME_AST(trigger_name_ast, trigger_def->left);
   EXTRACT_STRING(trigger_name, trigger_name_ast);
   EXTRACT_NOTNULL(trigger_condition, trigger_def->right);
-  EXTRACT_OPTION(cond_flags, trigger_condition->left);
+  EXTRACT_DETAIL(cond_flags, trigger_condition->left);
   flags |= cond_flags;
   EXTRACT_NOTNULL(trigger_op_target, trigger_condition->right);
   EXTRACT_NOTNULL(trigger_operation, trigger_op_target->left);
-  EXTRACT_OPTION(op_flags, trigger_operation->left);
+  EXTRACT_DETAIL(op_flags, trigger_operation->left);
   EXTRACT(name_list, trigger_operation->right);
   flags |= op_flags;
   EXTRACT_NOTNULL(trigger_target_action, trigger_op_target->right);
   EXTRACT_NAME_AST(table_name_ast, trigger_target_action->left);
   EXTRACT_STRING(table_name, table_name_ast);
   EXTRACT_NOTNULL(trigger_action, trigger_target_action->right);
-  EXTRACT_OPTION(action_flags, trigger_action->left);
+  EXTRACT_DETAIL(action_flags, trigger_action->left);
   flags |= action_flags;
   EXTRACT_NOTNULL(trigger_when_stmts, trigger_action->right);
   EXTRACT_ANY(when_expr, trigger_when_stmts->left);
@@ -15284,7 +15284,7 @@ static void sem_validate_table_for_blob_storage(ast_node *ast) {
   EXTRACT_NOTNULL(create_table_name_flags, ast->left);
   EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
   EXTRACT_ANY(table_attrs, table_flags_attrs->right);
-  EXTRACT_OPTION(flags, table_flags_attrs->left);
+  EXTRACT_DETAIL(flags, table_flags_attrs->left);
   EXTRACT_NAME_AST(name_ast, create_table_name_flags->right);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(col_key_list, ast->right);
@@ -15434,7 +15434,7 @@ static void sem_validate_table_for_backing(ast_node *ast) {
   Contract(is_ast_create_table_stmt(ast));
   EXTRACT_NOTNULL(create_table_name_flags, ast->left);
   EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
-  EXTRACT_OPTION(flags, table_flags_attrs->left);
+  EXTRACT_DETAIL(flags, table_flags_attrs->left);
   EXTRACT_NAME_AST(name_ast, create_table_name_flags->right);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(col_key_list, ast->right);
@@ -15603,7 +15603,7 @@ static void sem_validate_table_for_backed(ast_node *ast) {
   Contract(is_ast_create_table_stmt(ast));
   EXTRACT_NOTNULL(create_table_name_flags, ast->left);
   EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
-  EXTRACT_OPTION(flags, table_flags_attrs->left);
+  EXTRACT_DETAIL(flags, table_flags_attrs->left);
   EXTRACT_NAME_AST(name_ast, create_table_name_flags->right);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(col_key_list, ast->right);
@@ -15897,7 +15897,7 @@ static void sem_create_table_stmt(ast_node *ast) {
   Contract(is_ast_create_table_stmt(ast));
   EXTRACT_NOTNULL(create_table_name_flags, ast->left);
   EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
-  EXTRACT_OPTION(flags, table_flags_attrs->left);
+  EXTRACT_DETAIL(flags, table_flags_attrs->left);
   EXTRACT_ANY(table_attrs, table_flags_attrs->right);
   EXTRACT_NAME_AST(name_ast, create_table_name_flags->right);
   EXTRACT_STRING(name, name_ast);
@@ -16213,7 +16213,7 @@ static void sem_create_virtual_table_stmt(ast_node *ast) {
   EXTRACT_NOTNULL(create_table_stmt, ast->right);
   EXTRACT_NOTNULL(create_table_name_flags, create_table_stmt->left);
   EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
-  EXTRACT_OPTION(flags, table_flags_attrs->left);
+  EXTRACT_DETAIL(flags, table_flags_attrs->left);
   EXTRACT_STRING(name, create_table_name_flags->right);
   EXTRACT_STRING(module_name, module_info->left);
 
@@ -17662,7 +17662,7 @@ static void sem_update_cursor_stmt(ast_node *ast) {
 
 static int32_t sem_insert_dummy_spec(ast_node *ast) {
   EXTRACT_ANY_NOTNULL(seed_expr, ast->left);
-  EXTRACT_OPTION(flags, ast->right);
+  EXTRACT_DETAIL(flags, ast->right);
 
   sem_root_expr(seed_expr, SEM_EXPR_CONTEXT_NONE);
   if (is_error(seed_expr)) {
@@ -20045,7 +20045,7 @@ static void sem_one_autodrop(CSTR name, ast_node *misc_attr_value, void *context
 
   EXTRACT_NOTNULL(create_table_name_flags, temp_table->left);
   EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
-  EXTRACT_OPTION(flags, table_flags_attrs->left);
+  EXTRACT_DETAIL(flags, table_flags_attrs->left);
 
   int32_t temp = flags & TABLE_IS_TEMP;
 
@@ -20808,7 +20808,7 @@ static void sem_create_proc_stmt(ast_node *ast) {
               is_ast_schema_ad_hoc_migration_stmt(schema_attr));
 
     EXTRACT(version_annotation, schema_attr->left);
-    EXTRACT_OPTION(vers, version_annotation->left);
+    EXTRACT_DETAIL(vers, version_annotation->left);
 
     if (vers != schema_upgrade_version) {
       CSTR msg = dup_printf("CQL0187: @schema_upgrade_version not declared or doesn't match upgrade version %d for proc", vers);
@@ -21612,7 +21612,7 @@ static void sem_declare_proc_stmt(ast_node *ast) {
   EXTRACT_NOTNULL(proc_name_type, ast->left);
   EXTRACT_NAME_AST(name_ast, proc_name_type->left);
   EXTRACT_STRING(name, name_ast);
-  EXTRACT_OPTION(type, proc_name_type->right);
+  EXTRACT_DETAIL(type, proc_name_type->right);
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
   EXTRACT(params, proc_params_stmts->left);
 
@@ -22729,7 +22729,7 @@ cleanup:
 //  * if all_values was specified you can't use else or it's a joke
 static void sem_switch_stmt(ast_node *ast) {
   Contract(is_ast_switch_stmt(ast));
-  EXTRACT_OPTION(all_values, ast->left);
+  EXTRACT_DETAIL(all_values, ast->left);
   EXTRACT_NOTNULL(switch_body, ast->right);
   EXTRACT_ANY_NOTNULL(expr, switch_body->left);
   EXTRACT_NOTNULL(switch_case, switch_body->right);
@@ -24460,7 +24460,7 @@ static void sem_schema_upgrade_version_stmt(ast_node *ast) {
   // to come after the include block
   Contract(!current_proc);
 
-  EXTRACT_OPTION(vers, ast->left);
+  EXTRACT_DETAIL(vers, ast->left);
 
   if (vers <= 0) {
     report_error(ast, "CQL0228: schema upgrade version must be a positive integer", NULL);
@@ -25537,7 +25537,7 @@ static void sem_validate_all_columns_not_in_previous(ast_node *root) {
 // Based on the AST encoding, we set or clear the right flag in the enforcement
 // options.
 static void sem_enforcement_options(ast_node *ast, bool_t strict) {
-  EXTRACT_OPTION(option, ast);
+  EXTRACT_DETAIL(option, ast);
 
   switch (option) {
     case ENFORCE_STRICT_JOIN:
@@ -25907,7 +25907,7 @@ static void sem_walk_regions(region_walk *acc, CSTR name) {
     Contract(is_ast_region_list(item));
     EXTRACT_NOTNULL(region_spec, item->left);
     EXTRACT_STRING(item_name, region_spec->left);
-    EXTRACT_OPTION(type, region_spec->right);
+    EXTRACT_DETAIL(type, region_spec->right);
     bool_t is_private = (type == PRIVATE_REGION);
 
     // Notes here:
@@ -26077,7 +26077,7 @@ static void sem_validate_previous_ad_hoc(ast_node *prev, CSTR name, int32_t vers
 
   EXTRACT_NOTNULL(schema_ad_hoc_migration_stmt, ast);
   EXTRACT_NAMED_NOTNULL(vers_annotation, version_annotation, schema_ad_hoc_migration_stmt->left);
-  EXTRACT_OPTION(vers, vers_annotation->left);
+  EXTRACT_DETAIL(vers, vers_annotation->left);
 
   if (vers != version) {
     report_error(ast, "CQL0285: ad hoc schema migration directive version number changed", name);

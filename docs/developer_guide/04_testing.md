@@ -270,7 +270,7 @@ CREATE TABLE with_kind(
   {create_table_stmt}: with_kind: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> }
   | {create_table_name_flags}
   | | {table_flags_attrs}
-  | | | {int 0}
+  | | | {detail 0} {no_flags}
   | | {name with_kind}
   | {col_key_list}
     | {col_def}: id: integer<some_key>

@@ -8,7 +8,7 @@
 -- TEST : set up for schema upgrade
 -- + @SCHEMA_UPGRADE_VERSION (2);
 -- + {schema_upgrade_version_stmt}: ok
--- + {int 2}
+-- + {detail 2} {version}
 -- - error:
 @schema_upgrade_version(2);
 

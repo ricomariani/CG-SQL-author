@@ -402,7 +402,7 @@ static void cg_json_ad_hoc_migration_procs(charbuf* output) {
     Invariant(is_ast_schema_ad_hoc_migration_stmt(ast));
 
     EXTRACT(version_annotation, ast->left);
-    EXTRACT_OPTION(version, version_annotation->left);
+    EXTRACT_DETAIL(version, version_annotation->left);
     EXTRACT_STRING(name, version_annotation->right);
 
     ast_node *misc_attrs = NULL;
@@ -644,7 +644,7 @@ static void cg_json_subscriptions(charbuf* output) {
     Invariant(is_ast_schema_unsub_stmt(ast));
 
     EXTRACT_NOTNULL(version_annotation, ast->left);
-    EXTRACT_OPTION(vers, version_annotation->left);
+    EXTRACT_DETAIL(vers, version_annotation->left);
     EXTRACT_STRING(name, version_annotation->right);
     CSTR region = ast->sem->region;
 
@@ -1002,7 +1002,7 @@ static void cg_json_fk_target_options(charbuf *output, ast_node *ast) {
   Contract(is_ast_fk_target_options(ast));
 
   EXTRACT_NOTNULL(fk_target, ast->left);
-  EXTRACT_OPTION(flags, ast->right);
+  EXTRACT_DETAIL(flags, ast->right);
   EXTRACT_STRING(table_name, fk_target->left);
   EXTRACT_NAMED_NOTNULL(ref_list, name_list, fk_target->right);
 
@@ -1231,7 +1231,7 @@ static void cg_json_indices(charbuf *output) {
     EXTRACT_NOTNULL(index_flags_names_attrs, ast->right);
     EXTRACT_NOTNULL(connector, index_flags_names_attrs->right);
     EXTRACT_NOTNULL(index_names_and_attrs, connector->left);
-    EXTRACT_OPTION(flags, index_flags_names_attrs->left);
+    EXTRACT_DETAIL(flags, index_flags_names_attrs->left);
     EXTRACT_NOTNULL(indexed_columns, index_names_and_attrs->left);
     EXTRACT(opt_where, index_names_and_attrs->right);
     EXTRACT_NAME_AST(index_name_ast, create_index_on_list->left);
@@ -1319,22 +1319,22 @@ static void cg_json_triggers(charbuf *output) {
     ast_node *ast = item->ast;
     Invariant(is_ast_create_trigger_stmt(ast));
 
-    EXTRACT_OPTION(flags, ast->left);
+    EXTRACT_DETAIL(flags, ast->left);
     EXTRACT_NOTNULL(trigger_body_vers, ast->right);
     EXTRACT_NOTNULL(trigger_def, trigger_body_vers->left);
     EXTRACT_NAME_AST(trigger_name_ast, trigger_def->left);
     EXTRACT_NOTNULL(trigger_condition, trigger_def->right);
-    EXTRACT_OPTION(cond_flags, trigger_condition->left);
+    EXTRACT_DETAIL(cond_flags, trigger_condition->left);
     flags |= cond_flags;
     EXTRACT_NOTNULL(trigger_op_target, trigger_condition->right);
     EXTRACT_NOTNULL(trigger_operation, trigger_op_target->left);
-    EXTRACT_OPTION(op_flags,  trigger_operation->left);
+    EXTRACT_DETAIL(op_flags,  trigger_operation->left);
     EXTRACT(name_list, trigger_operation->right);
     flags |= op_flags;
     EXTRACT_NOTNULL(trigger_target_action, trigger_op_target->right);
     EXTRACT_STRING(table_name, trigger_target_action->left);
     EXTRACT_NOTNULL(trigger_action, trigger_target_action->right);
-    EXTRACT_OPTION(action_flags, trigger_action->left);
+    EXTRACT_DETAIL(action_flags, trigger_action->left);
     flags |= action_flags;
     EXTRACT_NOTNULL(trigger_when_stmts, trigger_action->right);
     EXTRACT_ANY(when_expr, trigger_when_stmts->left);
@@ -1440,7 +1440,7 @@ static void cg_json_region_deps(charbuf *output, CSTR sym) {
   for (ast_node *item = region_list; item; item = item->right) {
     Contract(is_ast_region_list(item));
     EXTRACT_NOTNULL(region_spec, item->left);
-    EXTRACT_OPTION(type, region_spec->right);
+    EXTRACT_DETAIL(type, region_spec->right);
     bprintf(output, "%d", type == PRIVATE_REGION);
     if (item->right) {
       bprintf(output, ", ");
@@ -1560,7 +1560,7 @@ static void cg_json_views(charbuf *output) {
 
     cg_json_test_details(output, ast, misc_attrs);
 
-    EXTRACT_OPTION(flags, ast->left);
+    EXTRACT_DETAIL(flags, ast->left);
     EXTRACT_NOTNULL(view_and_attrs, ast->right);
     EXTRACT_NOTNULL(view_details_select, view_and_attrs->left);
     EXTRACT_NOTNULL(view_details, view_details_select->left);
@@ -1640,7 +1640,7 @@ static void cg_json_table(charbuf *output, ast_node *ast) {
 
   EXTRACT_NOTNULL(create_table_name_flags, ast->left);
   EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
-  EXTRACT_OPTION(flags, table_flags_attrs->left);
+  EXTRACT_DETAIL(flags, table_flags_attrs->left);
   EXTRACT_NAME_AST(name_ast, create_table_name_flags->right);
   EXTRACT_ANY_NOTNULL(col_key_list, ast->right);
 

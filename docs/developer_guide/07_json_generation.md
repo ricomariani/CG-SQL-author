@@ -153,7 +153,7 @@ static void cg_json_views(charbuf *output) {
 
     cg_json_test_details(output, ast, misc_attrs);
 
-    EXTRACT_OPTION(flags, ast->left);
+    EXTRACT_DETAIL(flags, ast->left);
     EXTRACT(view_and_attrs, ast->right);
     EXTRACT(name_and_select, view_and_attrs->left);
     EXTRACT_ANY_NOTNULL(select_stmt, name_and_select->right);
@@ -241,7 +241,7 @@ the test output:
 
     cg_json_test_details(output, ast, misc_attrs);
 
-    EXTRACT_OPTION(flags, ast->left);
+    EXTRACT_DETAIL(flags, ast->left);
     EXTRACT(view_and_attrs, ast->right);
     EXTRACT(name_and_select, view_and_attrs->left);
     EXTRACT_ANY_NOTNULL(select_stmt, name_and_select->right);

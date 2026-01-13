@@ -64,7 +64,9 @@ Where `x` is an empty file, you'll get the following skeletal JSON, lightly refo
   "general" : [  ],
   "regions" : [  ],
   "adHocMigrationProcs" : [  ],
-  "enums" : [  ]
+  "enums" : [  ],
+  "constantGroups" : [  ],
+  "subscriptions" : [  ]
 }
 ```
 
@@ -104,6 +106,10 @@ cql_noexport void cg_json_schema_main(ast_node *head) {
   cg_json_ad_hoc_migration_procs(output);
   bprintf(output, ",\n");
   cg_json_enums(output);
+  bprintf(output, ",\n");
+  cg_json_constant_groups( output);
+  bprintf(output, ",\n");
+  cg_json_subscriptions( output);
 
   if (options.test) {
     bprintf(output, ",\n");
@@ -350,7 +356,7 @@ The next fragment emits two optional pieces that are present in many types of ob
     }
 ```
 
-* if there is a region assocatied with this view, we emit it here
+* if there is a region associated with this view, we emit it here
   * `cg_json_emit_region_info` emits two things:
     * the view's region
     * the "deployment region" of that region if any (regions are contained in deployable groups)
@@ -448,7 +454,7 @@ From `charbuf.h`:
 The rest of the helpers  manage the commas in the (nested) lists:
 
 ```c
-// These little helpers are for handling comma seperated lists where you may or may
+// These little helpers are for handling comma separated lists where you may or may
 // not need a comma in various places.  The local tracks if there is an item already
 // present and you either get ",\n"  or just "\n" as needed.
 #define BEGIN_LIST bool_t list_start = 1

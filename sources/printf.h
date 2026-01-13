@@ -20,7 +20,7 @@
 //   3. Call `printf_iterator_next` to get the type of each substitution until
 //      either `SEM_TYPE_OK` (indicating success and no more substitutions) or
 //      `SEM_TYPE_ERROR` (indicating a problem with the format string).
-//   4. Make no futher calls to `printf_iterator_next`.
+//   4. Make no further calls to `printf_iterator_next`.
 //
 // Attempts have been made to capture the vast majority of possible errors that
 // can exist in a SQLite format string, including many "harmless" cases that

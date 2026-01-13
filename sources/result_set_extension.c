@@ -9,18 +9,18 @@
 
 // Clarifying the original comments regarding the pedigree of this code:
 //
-// This code is a combination of code that is original to CG/SQL and public domain
-// code copied from SQLite examples from the SQLite docs.
+// This code is a combination of code that is original to CG/SQL and public
+// domain code copied from SQLite examples from the SQLite docs.
 //
 // There are no license issues.
 
 #include "cqlrt.h"
 #include "run_test.h"
 
-// Read the indicated row and column from the result set, if either are out of range
-// then we will produce null.  Otherwise we use the type of the column to create
-// a suitable result variable.  Note that we only support integral values which is
-// good enough for the test code.
+// Read the indicated row and column from the result set, if either are out of
+// range then we will produce null.  Otherwise we use the type of the column to
+// create a suitable result variable.  Note that we only support integral values
+// which is good enough for the test code.
 static void rs_col(sqlite3_context *context, int32_t argc, sqlite3_value **argv) {
   cql_result_set_ref rs = (cql_result_set_ref)sqlite3_value_int64(argv[0]);
   int32_t row = sqlite3_value_int(argv[1]);
@@ -65,53 +65,74 @@ static void rs_count(sqlite3_context *context, int32_t argc, sqlite3_value **arg
   sqlite3_result_int64(context, rs->count);
 }
 
-// Register the indicated UDFs.  Note, this will be called directly from run_test.sql as a proc
+// Register the indicated UDFs.  Note, this will be called directly from
+// run_test.sql as a proc
 cql_code _cql_init_extensions(sqlite3 *db) {
+  // rscount: returns the row count stored in the result-set handle; used by
+  // tests to assert size.
   cql_code rc = sqlite3_create_function_v2(db, "rscount", 1, SQLITE_UTF8, 0, rs_count, NULL, NULL, NULL);
   if (rc != SQLITE_OK) {
     return rc;
   }
 
+  // rscol: fetches a specific column from a specific row of a result-set
+  // handle, nulling on OOB/unsupported type.
   rc = sqlite3_create_function_v2(db, "rscol", 3, SQLITE_UTF8, 0, rs_col, NULL, NULL, NULL);
   if (rc != SQLITE_OK) {
     return rc;
   }
 
+  // bgetval_type: reports the sqlite type code for the value stored at a blob
+  // row/column payload.
   rc = sqlite3_create_function_v2(db, "bgetval_type", 1, SQLITE_UTF8, 0, bgetval_type, NULL, NULL, NULL);
   if (rc != SQLITE_OK) {
     return rc;
   }
 
+  // bgetkey_type: reports the sqlite type code for the key stored at a blob
+  // row/column payload.
   rc = sqlite3_create_function_v2(db, "bgetkey_type", 1, SQLITE_UTF8, 0, bgetkey_type, NULL, NULL, NULL);
   if (rc != SQLITE_OK) {
     return rc;
   }
 
+  // bgetval: extracts a value field from a serialized blob row given column
+  // index.
   rc = sqlite3_create_function_v2(db, "bgetval", 2, SQLITE_UTF8, 0, bgetval, NULL, NULL, NULL);
   if (rc != SQLITE_OK) {
     return rc;
   }
 
+  // bgetkey: extracts a key field from a serialized blob row given column
+  // index.
   rc = sqlite3_create_function_v2(db, "bgetkey", 2, SQLITE_UTF8, 0, bgetkey, NULL, NULL, NULL);
   if (rc != SQLITE_OK) {
     return rc;
   }
 
+  // bcreateval: builds a blob row value payload from variadic args to simulate
+  // result-set rows in tests.
   rc = sqlite3_create_function_v2(db, "bcreateval", -1, SQLITE_UTF8, 0, bcreateval, NULL, NULL, NULL);
   if (rc != SQLITE_OK) {
     return rc;
   }
 
+  // bcreatekey: builds a blob row key payload from variadic args for keyed
+  // lookup scenarios.
   rc = sqlite3_create_function_v2(db, "bcreatekey", -1, SQLITE_UTF8, 0, bcreatekey, NULL, NULL, NULL);
   if (rc != SQLITE_OK) {
     return rc;
   }
 
+  // bupdateval: overwrites a value field inside an existing blob row using
+  // variadic inputs.
   rc = sqlite3_create_function_v2(db, "bupdateval", -1, SQLITE_UTF8, 0, bupdateval, NULL, NULL, NULL);
   if (rc != SQLITE_OK) {
     return rc;
   }
 
+  // bupdatekey: overwrites a key field inside an existing blob row using
+  // variadic inputs.
   rc = sqlite3_create_function_v2(db, "bupdatekey", -1, SQLITE_UTF8, 0, bupdatekey, NULL, NULL, NULL);
   if (rc != SQLITE_OK) {
     return rc;

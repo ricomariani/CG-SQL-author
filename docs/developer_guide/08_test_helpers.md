@@ -213,13 +213,13 @@ but let's look at the code for the first one.  This is "dummy table".
 // Emit a close proc which drops the temp table
 static void cg_test_helpers_dummy_table(CSTR name) {
   bprintf(cg_th_procs, "\n");
-  bprintf(cg_th_procs, "CREATE PROC open_%s()\n", name);
+  bprintf(cg_th_procs, "PROC open_%s()\n", name);
   bprintf(cg_th_procs, "BEGIN\n");
   bprintf(cg_th_procs, "  CREATE TEMP TABLE test_%s(LIKE %s);\n", name, name);
   bprintf(cg_th_procs, "END;\n");
 
   bprintf(cg_th_procs, "\n");
-  bprintf(cg_th_procs, "CREATE PROC close_%s()\n", name);
+  bprintf(cg_th_procs, "PROC close_%s()\n", name);
   bprintf(cg_th_procs, "BEGIN\n");
   bprintf(cg_th_procs, "  DROP TABLE test_%s;\n", name);
   bprintf(cg_th_procs, "END;\n");
@@ -309,7 +309,7 @@ general purpose reverse mapping is created.  We'll look at the triggers version.
 The indices version is nearly identical.
 
 ```c
-// Walk through all triggers and create a dictionnary of triggers per tables.
+// Walk through all triggers and create a dictionary of triggers per tables.
 static void init_all_trigger_per_table() {
   Contract(all_tables_with_triggers == NULL);
   all_tables_with_triggers = symtab_new();
@@ -535,7 +535,7 @@ population process
 #### Gathering Ad Hoc Data To Be Inserted
 
 Before we get into the mechanics of the population code, we have to visit one
-more area.  It's possible to include data in the the `dummy_test` annotaiton
+more area.  It's possible to include data in the the `dummy_test` annotation
 itself.  This is data that you want to have populated.  This data will be
 included in the overall data populator. If there is enough of it (at least 2
 rows per candidate table) then it might be all the data you get.  Now the data
@@ -683,7 +683,7 @@ The general algorithm here goes like this:
   value_seed starts at 123 and goes up 1 for every row generated
   * dummy_seed will create values for any missing columns using the seed so any
     combination of included columns is ok, we'll always get a complete insert
-* foreign key columns use a provided intializer from the parent table if there
+* foreign key columns use a provided initializer from the parent table if there
   is one, or else they use 1, 2, 3 etc.
   * likewise if a column is referenceable by some other table it uses the known
     sequence 1, 2, 3 etc. for its value rather than the varying seed

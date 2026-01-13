@@ -64,12 +64,12 @@ as of this writing.  Broadly these are in these few categories:
 
 Test coverage is maintained at 100% line coverage (sometimes there are a few
 hours when it drops to 99.9% or something like that but this never lasts).
-Branch coverage is not especially targetted but is nonethless quite high. To
+Branch coverage is not especially targeted but is nonetheless quite high. To
 see the true branch coverage you have to build the compiler with the asserts
 (Contract and Invariant) off.  Last time it was measured, it was well over 80%.
 
-To start the tests you should run `test.sh`, this launches `common/test_common.sh` to do the work.
-This structure allows anyone to make their own harness that launches the common test passes and adds
+To start the tests you should run `test.sh`, which sources `common/test_helpers.sh` for helper functions.
+This structure allows anyone to make their own harness that uses the common helper functions and adds
 their own extra tests, or passes in additional flags.  `test.sh` itself uses `make` to
 build the compiler.
 
@@ -82,7 +82,7 @@ and then assembles the coverage report using `gcovr`.
 
 ### Parse Tests
 
-Looking at `test/test_common.sh` we find the source for the most basic test.  This is entirely
+Looking at `test.sh` we find the source for the most basic test.  This is entirely
 unremarkable stuff.
 
 ```bash
@@ -122,7 +122,7 @@ basic_test() {
 * if there are any differences between `test.out` and `test.out.ref` the test fails
 * there are additional test cases involving macro expansion and include files structured similarly
 
-### Sematic Tests
+### Semantic Tests
 
 The semantic tests are not much different but this is where the pattern matching comes in.
 
@@ -347,7 +347,7 @@ limit 'y';
 * `+1 error:` : this indicates that there must be *exactly* 1 match for the pattern "error:" (i.e. exactly one error)
   * note that there are several problems with the test statement but error processing is supposed to stop after the first
   * most test cases verify precise errors and error counts
-* `-- + {select_stmt}: err` : verifies that the error correctly propogated up to the top level statement
+* `-- + {select_stmt}: err` : verifies that the error correctly propagated up to the top level statement
 * `-- + {on}: err` : verifies that the ON clause was marked as being in error
 
 As we'll see this simple pattern is used in many other tests.  All that is required for it work is output with
@@ -359,7 +359,7 @@ as an exercise to the reader.  There are many such files in the test suite.
 ### Code Generation Tests
 
 The test logic for the "codegen" family of tests (`cg_test*.sql`) is virtually identical to the semantic
-test family. The same testing utililty is used, and it works the same way, looking for the same marker.
+test family. The same testing utility is used, and it works the same way, looking for the same marker.
 The only difference in this stage is that the test output is generated code, not an AST. The codegen tests
 are a great way to lock down important code fragments in the output.  Note that the codegen tests do not actually
 execute any generated code.  That's the next category.
@@ -423,35 +423,23 @@ As we can see, the test has picked out the bits that it wanted to verify. The `c
 function is verified elsewhere -- in this test we're making sure that this pattern doesn't cause
 extra temporaries.
 
-Let's take a quick look at the part of `test_common.sh` that runs this:
+Let's take a quick look at the part of `test.sh` that runs this:
 
 ```bash
 code_gen_c_test() {
   echo '--------------------------------- STAGE 5 -- C CODE GEN TEST'
-  echo running codegen test
-  if ! ${CQL} --test --cg "$O/cg_test_c.h" "$O/cg_test_c.c" \
-    "$O/cg_test_exports.out" --in "$T/cg_test.sql" \
-    --global_proc cql_startup --generate_exports 2>"$O/cg_test_c.err"
-  then
-    echo "ERROR:"
-    cat "$O/cg_test_c.err"
-    failed
-  fi
+  TEST_NAME="cg_test_c"
+  TEST_DESC="Running codegen test"
+  TEST_CMD="${CQL} --dev --test --cg \"$O/cg_test_c.h\" \"$O/cg_test_c.c\" \"$O/cg_test_exports.out\" --in \"$T/cg_test.sql\" --global_proc cql_startup --generate_exports"
+  run_test_expect_success
 
-  echo validating codegen
-  if ! "$O/cql-verify" "$T/cg_test.sql" "$O/cg_test_c.c"
-  then
-    echo "ERROR: failed verification"
-    failed
-  fi
+  echo Validating codegen
+  cql_verify "$T/cg_test.sql" "$O/cg_test_c.c"
 
-  echo testing for successful compilation of generated C
   rm -f out/cg_test_c.o
-  if ! do_make out/cg_test_c.o
-  then
-    echo "ERROR: failed to compile the C code from the code gen test"
-    failed
-  fi
+  TEST_DESC="Testing for successful compilation of generated C"
+  TEST_CMD="do_make out/cg_test_c.o"
+  run_test_expect_success
 
   ...
 
@@ -465,9 +453,9 @@ code_gen_c_test() {
 
 Briefly reviewing this, we see the following important steps:
 
-* `{CQL} --test --cg etc.` : run the compiler on the test input
-  * the test fails if there are any errors
-* `cql-verify` : performs the pattern matching
+* `run_test_expect_success` : runs the CQL command specified in TEST_CMD and fails if there are any errors
+  * this helper function from `common/test_helpers.sh` simplifies test execution and error handling
+* `cql_verify` : performs the pattern matching
   * the output has the same statement markers as in the semantic case
 * `do_make` : use `make` to build the generated code ensuring it compiles cleanly
   * if the C compiler returns any failure, the test fails
@@ -480,7 +468,7 @@ are tested in the same way.
 ### Run Tests
 
 The last category of tests actually does execution.  The main "run test" happens
-at "stage 13", because there are *many* codegen tests for the various
+at "stage 11", because there are *many* codegen tests for the various
 output formats and these all pass before before we try to execute anything.
 This is not so bad because the tests are quite quick with a full test pass taking
 less than 90s on my laptop.

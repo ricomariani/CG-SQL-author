@@ -2713,7 +2713,7 @@ static void cg_lua_declare_simple_var(sem_t sem_type, CSTR name) {
 
 // Emit a bunch of variable declarations for normal variables.
 // cg_lua_var_decl does exactly this job for us.  Add any global variables to
-// the header file output.
+// the declarations output.
 static void cg_lua_declare_vars_type(ast_node *declare_vars_type) {
   Contract(is_ast_declare_vars_type(declare_vars_type));
   EXTRACT_NOTNULL(name_list, declare_vars_type->left);
@@ -3397,7 +3397,7 @@ static void cg_lua_classify_fragments(ast_node *stmt) {
 }
 
 // This is the most important function for sqlite access;  it does the heavy
-// lifting of generating the C code to prepare and bind a SQL statement.
+// lifting of generating the Lua code to prepare and bind a SQL statement.
 // If cg_lua_exec is true (CG_EXEC) then the statement is executed immediately
 // and finalized.  No results are expected.  To accomplish this we do the following:
 //   * figure out the name of the statement, either it's given to us
@@ -5077,7 +5077,7 @@ static void cg_lua_emit_group_stmt(ast_node *ast) {
   Contract(is_ast_emit_group_stmt(ast));
   EXTRACT(name_list, ast->left);
 
-  // Put a line marker in the header file in case we want a test suite that verifies that.
+  // Put a line marker in the declarations output in case we want a test suite that verifies that.
   // Note we have to do this only because this only generates declarations so the
   // normal logic for emitting these doesn't kick in.
   if (options.test) {
@@ -5312,7 +5312,7 @@ static void cg_lua_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
     // code we will not force the global proc to exist because of the stupid comment...
     skip_comment |= (out == cg_main_output && tmp_main.used == 1);
 
-    // put a line marker in the header file in case we want a test suite that verifies that
+    // put a line marker in the output in case we want a test suite that verifies that
     if (options.test) {
       bprintf(cg_header_output, "\n-- The statement ending at line %d\n", stmt->lineno);
     }
@@ -5436,7 +5436,7 @@ static void cg_lua_emit_autodrops(charbuf *output, ast_node *misc_attrs) {
 //    * the remaining functions use cql_result_set_get_data and _get_count to get the data back out
 //  * for each named column emit a function "foo_get_[column-name]" which
 //    gets that column out of the rowset for the indicated row number.
-//  * prototypes for the above go into the main output header file
+//  * the above functions are emitted into the main output
 static void cg_lua_proc_result_set(ast_node *ast) {
   Contract(is_ast_create_proc_stmt(ast));
   Contract(is_struct(ast->sem->sem_type));

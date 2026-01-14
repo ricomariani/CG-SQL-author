@@ -410,23 +410,23 @@ Generates:
 
 ### Procedures
 
-The next several sections:
+The next several sections provide information about various types of procedures:
 
-* Queries
-* Inserts
-* General Inserts
-* Updates
-* Deletes
-* General
+* **Queries**: Procedures consisting of a single SELECT statement with no fragments. These return result sets and include the SELECT statement text and parameter bindings, making it easy to generate query wrappers.
 
-All provide information about various types of procedures.  Some "simple"
-procedures that consist only of the type of statement correspond to
-their section (and some other rules) present additional information
-about their contents.  This can sometimes be useful.  All the sections
-define certain common things about procedures so that basic information
-is available about all procedures.  This is is basically the contents
-of the "general" section which deals with procedures that have a complex
-body of which little can be said.
+* **Inserts**: Procedures with a single INSERT statement that inserts exactly one row using a simple VALUES clause. These include both the statement and the individual inserted values, enabling detailed code generation for insert operations.
+
+* **General Inserts**: Procedures with a single INSERT statement that uses more complex insert forms (multiple value rows, INSERT...SELECT, WITH clauses, or UPSERT). These include the statement but not individual values since the insert structure is too complex to decompose simply.
+
+* **Updates**: Procedures consisting of a single UPDATE statement with no fragments. These include the UPDATE statement text and parameter bindings for straightforward update operation wrappers.
+
+* **Deletes**: Procedures consisting of a single DELETE statement with no fragments. These include the DELETE statement text and parameter bindings for delete operation wrappers.
+
+* **General**: All other procedures that don't fit the simple single-statement categories. This includes procedures with OUT parameters, multiple statements, complex control flow, shared fragments, or no database operations at all. Limited structural information is available for these since their bodies are too complex to analyze in a simple way.
+
+These categories are historical breakouts designed to identify very simple procedures that perform exactly one DML statement. When generating language bindings or other tooling, the simple categories provide richer metadata that can drive more detailed code generation, while the "general" category provides basic information common to all procedures.
+
+Importantly, if you are only invoking the procedures all the categories are equivalent.  They have basic information about how to call them and what they return.
 
 
 #### Queries

@@ -24,12 +24,14 @@ The JSON schema is the **stable contract** between the CQL compiler and external
 The JSON schema contains several top-level arrays and objects:
 
 **Procedure Categories:**
-* `queries` - SELECT procedures that return result sets
-* `inserts` - INSERT procedures
-* `updates` - UPDATE procedures
-* `deletes` - DELETE procedures
-* `general` - Other procedures (including those with out parameters)
-* `generalInserts` - INSERT...RETURNING procedures
+* `queries` - SELECT procedures that return result sets (single SELECT statement, no OUT params, no fragments)
+* `inserts` - Simple INSERT procedures (single-row VALUES clause, no OUT params, no fragments)
+* `generalInserts` - Complex INSERT procedures (multi-row VALUES, INSERT...SELECT, WITH, UPSERT, no OUT params, no fragments)
+* `updates` - UPDATE procedures (single UPDATE statement, no OUT params, no fragments)
+* `deletes` - DELETE procedures (single DELETE statement, no OUT params, no fragments)
+* `general` - All other procedures (OUT parameters, multiple statements, shared fragments, or complex logic)
+
+These categories are determined by the compiler's analysis of procedure simplicity. A procedure must have no OUT/INOUT parameters, contain exactly one statement, and not use shared fragments to qualify for the specific categories. The categorization enables richer metadata for simple cases while providing basic information for complex procedures. See the [JSON Output chapter](../user_guide/13_json_output.md#procedures) in the user guide for detailed information about procedure categorization rules and the specific fields available in each category.
 
 **Schema Elements:**
 * `tables` - All table definitions

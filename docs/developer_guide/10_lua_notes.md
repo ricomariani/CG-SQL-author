@@ -12,8 +12,8 @@ weight: 10
 ### Preface
 
 Part 10 discusses the Lua code generator and compares it with the C code generator.
-The CQL compiler can target multiple backends: primarily C (via [cg_c.c](../../sources/cg_c.c))
-and Lua (via [cg_lua.c](../../sources/cg_lua.c)). While both generators share significant
+The CQL compiler can target multiple backends: primarily C (via `cg_c.c`)
+and Lua (via cg_lua.c). While both generators share significant
 infrastructure and conceptual patterns, they differ substantially in their approach to type
 handling, memory management, and runtime integration. Understanding these differences is
 essential for anyone working on either backend or considering adding a new target language.
@@ -134,7 +134,7 @@ set to 1. Reference types start as NULL.
 ### Lua Variable Declaration
 
 Lua variables don't need type declarations, but they do need initialization in certain contexts.
-The `cg_lua_var_decl` function from [cg_lua.c](../../sources/cg_lua.c#L410):
+The `cg_lua_var_decl` function from cg_lua.c:
 
 ```c
 static void cg_lua_var_decl(charbuf *output, sem_t sem_type, CSTR name) {
@@ -214,7 +214,7 @@ END IF;
 
 ### The Solution: Explicit Conversion Functions
 
-The Lua code generator solves this by using explicit conversion functions from [cqlrt.lua](../../sources/cqlrt.lua#L438):
+The Lua code generator solves this by using explicit conversion functions from cqlrt.lua:
 
 ```lua
 function cql_to_bool(num)
@@ -240,8 +240,7 @@ These functions bridge the gap between CQL's C-style semantics and Lua's native 
 
 ### When Conversions Are Applied
 
-The code generator from [cg_lua.c](../../sources/cg_lua.c#L260-L327) carefully applies
-conversions at type boundaries:
+The code generator carefully applies conversions at type boundaries:
 
 **Boolean to numeric context** (`cg_lua_to_num`):
 ```lua
@@ -268,8 +267,7 @@ if cql_to_bool(x) then ... end
 
 ### Optimization for Literals
 
-The generator optimizes common cases to avoid unnecessary function calls
-([cg_lua.c](../../sources/cg_lua.c#L241-L326)):
+The generator optimizes common cases to avoid unnecessary function calls:
 
 ```c
 // From cg_lua_emit_to_bool:
@@ -315,34 +313,19 @@ This ensures:
 2. Short-circuit behavior is preserved (Lua's `and`/`or` short-circuit)
 3. NULL propagation works correctly (nil values are handled)
 
-However, there's a subtlety for equality comparisons. From [cg_lua.c](../../sources/cg_lua.c#L905-L906):
-
-```c
-// When comparing booleans for equality, we must NOT convert them
-// NOPE, don't even: cg_lua_to_bool(sem_type_left, &l_value);
-// NOPE, don't even: cg_lua_to_bool(sem_type_right, &r_value);
-```
-
-Why not? Because `true == 1` should be `true` in CQL (both are truthy), but if we converted,
-we'd get `true == cql_to_bool(1)` → `true == true` → `true`. That's correct. But without
-conversion we get `true == 1` which is `false` in Lua! So actually... this is more subtle.
-The comment is saying DON'T convert when we're using `==` on booleans, we want identity,
-not truthiness.
-
 ### Why This Matters
 
 Without these conversions, CQL code would have different semantics in Lua than in C:
 
 ```sql
 -- This loop would be infinite in naive Lua (zero is truthy)
--- but correctly terminates in both C and properly-generated Lua:
-DECLARE i INTEGER NOT NULL;
-SET i := 10;
-WHILE i > 5
+-- but correctly terminates in both C and CQL-generated Lua:
+LET i := 5;
+WHILE i
 BEGIN
-  SET i := i - 1;
+  i -= 1;
 END;
--- When i reaches 5, the loop exits in both C and Lua
+-- When i reaches 0, the loop exits in both C and Lua
 ```
 
 The moral: **Lua's code generator can't be naive.** Every place where a numeric expression
@@ -391,7 +374,7 @@ This creates problems for CQL because:
 ### The Lua Code Generator's Solution
 
 The Lua generator must handle multiple cases depending on whether the operands can be
-evaluated inline or require statement sequences ([cg_lua.c](../../sources/cg_lua.c#L856-L950)):
+evaluated inline or require statement sequences.
 
 #### Simple Case: Direct Operators
 
@@ -421,7 +404,7 @@ wraps it in a function to defer evaluation:
 result = cql_shortcircuit_and(x, function() return <select expression> end)
 ```
 
-From [cqlrt.lua](../../sources/cqlrt.lua#L244-L250):
+From cqlrt.lua:
 
 ```lua
 function cql_shortcircuit_and(x, y)
@@ -460,8 +443,6 @@ repeat
 until true
 ```
 
-From [cg_lua.c](../../sources/cg_lua.c#L909-L930):
-
 ```c
 // we need a scratch for the left to avoid evaluating it twice
 CG_LUA_PUSH_TEMP(temp, SEM_TYPE_BOOL);
@@ -499,7 +480,7 @@ OR:   NULL OR TRUE  = TRUE (short-circuit!)
       FALSE OR NULL = NULL
 ```
 
-The runtime helpers implement these correctly ([cqlrt.lua](../../sources/cqlrt.lua#L224-L242)):
+The runtime helpers implement these correctly:
 
 ```lua
 function cql_logical_and(x, y)
@@ -525,7 +506,7 @@ end
 
 ### C Code Generator Comparison
 
-The C generator has similar complexity but different mechanics. From [cg_c.c](../../sources/cg_c.c#L1668):
+The C generator has similar complexity but different mechanics. From `cg_c.c`:
 
 **Simple case** uses C's native `&&`:
 ```c
@@ -602,7 +583,7 @@ generator to simulate switch behavior using if-then chains.
 
 ### C Switch Generation
 
-C code generation is straightforward. From [cg_c.c](../../sources/cg_c.c#L6354-L6410):
+C code generation is straightforward. From `cg_c.c`:
 
 ```c
 // CQL source:
@@ -656,8 +637,7 @@ This emits native C switch statements with optimal jump table performance.
 ### Lua Switch Generation: Emulated with If-Then-Else
 
 Since Lua has no switch statement, the generator must create an equivalent structure
-using if-then-else chains wrapped in a `repeat...until true` loop
-([cg_lua.c](../../sources/cg_lua.c#L4046-L4118)):
+using if-then-else chains wrapped in a `repeat...until true` loop:
 
 ```lua
 -- Same CQL source generates:
@@ -705,8 +685,6 @@ This Lua idiom creates a scope that can be exited with `break`, mimicking C's sw
 behavior. It's equivalent to C's `do { ... } while(0)` pattern but more idiomatic in Lua.
 
 **3. Multiple values with OR chains:**
-
-From [cg_lua_switch_expr_list](../../sources/cg_lua.c#L4012-L4044):
 
 ```c
 static void cg_lua_switch_expr_list(ast_node *ast, sem_t sem_type_switch_expr, CSTR val) {
@@ -835,8 +813,6 @@ SWITCH x
   WHEN 2 THEN do_two();
 END;
 ```
-
-From [cg_lua_switch_stmt](../../sources/cg_lua.c#L4084-L4088):
 
 ```c
 // no stmt list corresponds to WHEN ... THEN NOTHING
@@ -979,7 +955,7 @@ Error handling is explicit via checking `_rc_`.
 
 ### Lua SQLite Calls
 
-Lua code goes through a binding layer (from [cqlrt.lua](../../sources/cqlrt.lua)):
+Lua code goes through a binding layer cqlrt.lua:
 
 ```lua
 -- Preparing (via cql_prepare):
@@ -1172,7 +1148,7 @@ But since Lua is dynamically typed, these are really just naming conventions. Th
 `_tmp_text_0` variable could hold any type at runtime; the name is for human readers
 and to maintain parallel structure with the C output.
 
-The comment in [cg_lua.c](../../sources/cg_lua.c#L466) explains:
+The comment in `cg_lua.c` explains:
 
 ```c
 // This depth + type keying mirrors the C generator so diffs across
@@ -1186,11 +1162,11 @@ Despite their differences, both generators share significant infrastructure:
 
 ### Common Code Generation Framework
 
-Both use the same AST walking infrastructure from [cg_common.c](../../sources/cg_common.c):
+Both use the same AST walking infrastructure from `cg_common.c`, plus:
 * Statement dispatch tables (`cg_stmts` / `cg_lua_stmts`)
 * Expression dispatch tables (`cg_exprs` / `cg_lua_exprs`)
 * Function dispatch tables (`cg_funcs` / `cg_lua_funcs`)
-* SQL generation via [gen_sql.c](../../sources/gen_sql.c)
+* SQL generation via `gen_sql.c`
 
 ### Shared Patterns
 
@@ -1242,10 +1218,10 @@ is often easier to read than the C output.
 
 When adding a new feature to CQL:
 
-1. **Semantic analysis** happens once, in [sem.c](../../sources/sem.c)
-2. **SQL generation** happens once, in [gen_sql.c](../../sources/gen_sql.c) (if applicable)
-3. **C code generation** must be implemented in [cg_c.c](../../sources/cg_c.c)
-4. **Lua code generation** must be implemented in [cg_lua.c](../../sources/cg_lua.c)
+1. **Semantic analysis** happens once, in `sem.c`
+2. **SQL generation** happens once, in `gen_sql.c` (if applicable)`
+3. **C code generation** must be implemented in `cg_c.c`
+4. **Lua code generation** must be implemented in `cg_lua.c`
 
 The two generators should produce equivalent behavior, but the code will look different
 due to language differences.

@@ -73,6 +73,16 @@ static int32_t cg_lua_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_
 
 // These globals represent the major state of the code-generator
 
+// Centralized generator state
+// The code generator is intentionally stateful; most emission helpers are tiny and frequently
+// dispatched during deep AST walks. Passing an ever-growing context struct through every
+// helper would (a) explode parameter lists and (b) obscure which pieces of state are truly
+// cross‑cutting. Instead we surface only the handful of dimensions that influence control
+// flow or naming (loop depth, fragment classification, current error label, etc.). This is a
+// pragmatic trade‑off: globals make reentrancy impossible but we never attempt parallel
+// generation for the same compilation unit. If that ever changes these globals form the
+// minimal set to encapsulate into a per-compilation object.
+
 // True if we are presently emitting a stored proc
 static bool_t lua_in_proc = 0;
 
@@ -474,13 +484,25 @@ static void cg_lua_scratch_var(ast_node *ast, sem_t sem_type, charbuf *var, char
     bprintf(var, "%s", name);
   }
   else {
+    // Scratch temps are keyed by (core type, nullability, stack_level) and
+    // emitted at most once per stack slot using 64-bit bitsets.  This gives us
+    // O(1) allocation with zero dynamic data structures, keeps codegen
+    // deterministic, and aggressively reuses temporaries across sibling
+    // subtrees which shrinks stack usage.  Stack level intentionally reflects
+    // evaluation depth (not statement nesting) so that commutative reordering
+    // during later refactors does not silently change temp naming patterns
+    // (stability aids diff-based testing).  The 64 level chunk is a practical
+    // ceiling: deeply nested expressions beyond that are already pathological
+    // for readability/performance; extending would just require bumping
+    // CQL_MAX_STACK.
+
     // Generate a scratch variable name of the correct type.  We don't generate
     // the declaration of any given scratch variable more than once.  We use the
-    // current stack level to make the name.  This means that have to burn a stack level
-    // if you want more than one scratch.  Stacklevel is normally increased by
-    // the CG_LUA_PUSH_EVAL macro which does the recursion but it can also be manually
-    // increased if temporaries are needed for some other reason.  Any level of
-    // recursion is expected to fix all that.
+    // current stack level to make the name.  This means that have to burn a
+    // stack level if you want more than one scratch. Stacklevel is normally
+    // increased by the CG_LUA_PUSH_EVAL macro which does the recursion but it can
+    // also be manually increased if temporaries are needed for some other
+    // reason.  Any level of recursion is expected to fix all that.
 
     // This depth + type keying mirrors the C generator so diffs across
     // backends remain comparable and stable. Deterministic naming helps
@@ -3209,16 +3231,15 @@ static bool_t cg_lua_call_in_cte(ast_node *cte_body, void *context, charbuf *buf
     cg_lua_store(cg_main_output, alias_name, sem_type_var, sem_type_expr, expr_value.ptr);
     CG_LUA_POP_EVAL(expr);
 
-    lua_cur_variable_count = cur_variable_count_saved;
-    lua_prev_variable_count = prev_variable_count_saved;
+    gen_set_state(&state);
+    memcpy(&lua_shared_fragment_strings, &sfs_saved, sizeof(bytebuf));
     lua_cur_fragment_predicate = cur_fragment_predicate_saved;
     lua_max_fragment_predicate = max_fragment_predicate_saved;
+    lua_prev_variable_count = prev_variable_count_saved;
+    lua_cur_variable_count = cur_variable_count_saved;
     lua_has_conditional_fragments = has_conditional_fragments_saved;
     lua_has_shared_fragments = has_shared_fragments_saved;
     lua_has_variables = has_variables_saved;
-
-    gen_set_state(&state);
-    memcpy(&lua_shared_fragment_strings, &sfs_saved, sizeof(bytebuf));
 
     // guaranteed to stay in lock step
     params = params->right;

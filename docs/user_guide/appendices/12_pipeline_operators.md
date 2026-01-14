@@ -1,5 +1,5 @@
 ---
-title: "Appendix 12: Pipeline Overloads"
+title: "Appendix 12: Builtin Pipeline Operators"
 weight: 12
 ---
 <!---
@@ -12,6 +12,8 @@ weight: 12
 ## Overview
 
 Pipeline operators provide syntactic shortcuts that make CQL code more concise and readable by transforming special syntax into standard function calls. These operators support multiple syntactic forms (`:`, `.`, `->`, `[]`, etc.) that transform in a left-to-right flow, similar to method chaining in object-oriented languages.
+
+This appendix includes a short primer on the use of `@op` to do these transforms and the builtin operators (defined in `cql.y`).
 
 ### Syntax Variations
 
@@ -168,7 +170,7 @@ primitive type. The extracted value is nullable; use `:ifnull_throw` or
 **Purpose:** The `:type` operator returns the runtime type code of the boxed
 value, enabling type checking at runtime.
 
-**Details:
+**Details:**
 ```
 @op object<cql_box> : call to_bool as cql_unbox_bool;
 @op object<cql_box> : call to_int as cql_unbox_int;
@@ -229,7 +231,7 @@ cursor data to be stored or transmitted as binary data.
 
 **Purpose:** These operations enable cursor data persistence, inter-process communication, or network transmission.
 
-**Details:
+**Details:**
 ```
 @op cursor : call to_blob as cql_cursor_to_blob;
 @op cursor : call from_blob as cql_cursor_from_blob;
@@ -249,7 +251,7 @@ values show their length rather than content (e.g., `blob[128]`).
 
 **Purpose:** Debugging and logging cursor contents without manually accessing each field.
 
-**Details:
+**Details:**
 ```
 @op cursor : call format as cql_cursor_format;
 ```

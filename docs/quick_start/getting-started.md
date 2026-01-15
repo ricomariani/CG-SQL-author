@@ -109,7 +109,7 @@ to try to be more interoperable with gcc.
 * If you add `SQLITE_PATH` to your environment the `Makefile` will try to compile `sqlite3-all.c` from that path
 and it will link that in instead of using `-lsqlite3`.
 
-## Amalhistgam Build
+## Amalgam Build
 
 The amalgam is created by `./make_amalgam.sh` and the result is in `out/cql_amalgam.c`
 

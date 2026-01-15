@@ -217,7 +217,7 @@ validation rules.  On the other hand, formats that will be used only
 transiently in memory can be changed at whim from version to version.
 As mentioned above, the design specifically considers cases where a new
 client discovers an old-format blob (with fewer columns) and, the reverse,
-cases where an old client recieves a datagram from a new client with
+cases where an old client receives a datagram from a new client with
 too many columns.  Any customizations should consider these same cases.
 
 #### Blob Storage Example

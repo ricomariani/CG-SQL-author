@@ -1141,7 +1141,7 @@ Included regions:
 
 Excluded regions:
 
-* must be valid region names and indicate parts of schema that are upgraded elsewhere, perhaps with a seperate CQL run, a different automatic upgrade, or even a manual mechanism
+* must be valid region names and indicate parts of schema that are upgraded elsewhere, perhaps with a separate CQL run, a different automatic upgrade, or even a manual mechanism
 * upgrade code will be generated for all the included schema, but not for the excluded regions and their contents
 
 Example: Referring to the regions above you might do something like this

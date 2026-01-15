@@ -391,6 +391,10 @@ cql_noexport CSTR _Nonnull get_compound_operator_name(int32_t compound_operator)
 #define SWITCH_NORMAL 0
 #define SWITCH_ALL_VALUES 1
 
+// Extracts a statement and its optional misc_attrs from a stmt_list node.
+// If the statement has attributes (wrapped in stmt_and_attr), extracts both;
+// otherwise misc_attrs is set to NULL.
+// Usage: EXTRACT_STMT_AND_MISC_ATTRS(stmt, misc_attrs, stmt_list)
 #define EXTRACT_STMT_AND_MISC_ATTRS(stmt, misc_attrs, stmt_list) \
   Contract(is_ast_stmt_list(stmt_list)); \
   ast_node *stmt = stmt_list->left; \
@@ -401,6 +405,9 @@ cql_noexport CSTR _Nonnull get_compound_operator_name(int32_t compound_operator)
     Contract(is_ast_misc_attrs(misc_attrs)); \
   }
 
+// Extracts just the statement from a stmt_list node, skipping any attributes.
+// If the statement has attributes (wrapped in stmt_and_attr), unwraps it.
+// Usage: EXTRACT_STMT(stmt, stmt_list)
 #define EXTRACT_STMT(stmt, stmt_list) \
   Contract(is_ast_stmt_list(stmt_list)); \
   ast_node *stmt = stmt_list->left; \
@@ -417,52 +424,90 @@ cql_noexport CSTR _Nonnull get_compound_operator_name(int32_t compound_operator)
     Contract(is_ast_misc_attrs(misc_attrs)); \
   }
 
+// Extracts a child node into a variable without any type checking.
+// The node may be NULL.
+// Usage: EXTRACT_ANY(child, parent->left)
 #define EXTRACT_ANY(name, node) \
   ast_node *name = node;
 
+// Extracts a child node that must not be NULL, without type checking.
+// Asserts if the node is NULL.
+// Usage: EXTRACT_ANY_NOTNULL(child, parent->left)
 #define EXTRACT_ANY_NOTNULL(name, node) \
   ast_node *name = node; \
   Contract(node);
 
+// Extracts a child node with a custom variable name and verifies its type.
+// The node may be NULL; if not NULL, it must be of the specified type.
+// Usage: EXTRACT_NAMED(my_var, select_stmt, parent->left)
 #define EXTRACT_NAMED(name, type, node) \
   ast_node *name = node; \
   Contract(!name || is_ast_##type(name));
 
+// Extracts a child node with a custom variable name that must not be NULL
+// and verifies its type.
+// Usage: EXTRACT_NAMED_NOTNULL(my_var, select_stmt, parent->left)
 #define EXTRACT_NAMED_NOTNULL(name, type, node) \
   ast_node *name = node; \
   Contract(name && is_ast_##type(name));
 
+// Extracts a child node using the type name as the variable name.
+// The node may be NULL; if not NULL, it must be of the specified type.
+// Usage: EXTRACT(select_stmt, parent->left)  -- creates 'select_stmt' variable
 #define EXTRACT(type, node) EXTRACT_NAMED(type, type, node)
 
+// Extracts a child node using the type name as the variable name.
+// The node must not be NULL and must be of the specified type.
+// Usage: EXTRACT_NOTNULL(select_stmt, parent->left)
 #define EXTRACT_NOTNULL(type, node) EXTRACT_NAMED_NOTNULL(type, type, node)
 
+// Extracts the string value from a str_ast_node (identifiers, string literals).
+// The node must be a str node and the value must not be NULL.
+// Usage: EXTRACT_STRING(table_name, name_ast)
 #define EXTRACT_STRING(name, node) \
   Contract(is_ast_str(node)); \
   const char *name = ((str_ast_node *)(node))->value; \
   Contract(name);
 
+// Extracts an identifier or @id node, keeping the full AST node.
+// Useful when you need both the name and the node for error reporting.
+// Usage: EXTRACT_NAME_AST(name_ast, parent->left)
 #define EXTRACT_NAME_AST(name_ast, node) \
   Contract(is_id(node) || is_ast_at_id(node)); \
   ast_node *name_ast = (node);
 
+// Extracts the text value from a blob literal node.
+// The node must be a blob node and the value must not be NULL.
+// Usage: EXTRACT_BLOBTEXT(blob_text, blob_node)
 #define EXTRACT_BLOBTEXT(name, node) \
   Contract(is_ast_blob(node)); \
   const char *name = ((str_ast_node *)(node))->value; \
   Contract(name);
 
+// Extracts the numeric type (NUM_INT, NUM_LONG, NUM_REAL, NUM_BOOL) from a num node.
+// Usage: EXTRACT_NUM_TYPE(num_type, num_node)
 #define EXTRACT_NUM_TYPE(num_type, node) \
   Contract(is_ast_num(node)); \
   int32_t num_type = ((num_ast_node *)(node))->num_type;
 
+// Extracts the string representation of a numeric value from a num node.
+// Usage: EXTRACT_NUM_VALUE(value_str, num_node)
 #define EXTRACT_NUM_VALUE(val, node) \
   Contract(is_ast_num(node)); \
   CSTR val = ((num_ast_node *)(node))->value; \
   Contract(val);
 
+// Extracts an integer value from a detail node (int_ast_node).
+// Detail nodes store flags, options, and other integer metadata in the AST.
+// Usage: EXTRACT_DETAIL(flags, parent->left)
 #define EXTRACT_DETAIL(name, node) \
   Contract(is_ast_detail(node)); \
   int32_t name = (int32_t)((int_ast_node *)(node))->value;
 
+// Extracts a potentially scoped name (e.g., "schema.table" or just "table").
+// For a dot node, extracts both scope (left) and name (right).
+// For a simple id, scope is set to NULL.
+// Usage: EXTRACT_NAMED_NAME_AND_SCOPE(tbl_name, schema_name, node)
 #define EXTRACT_NAMED_NAME_AND_SCOPE(name, scope, node) \
   Contract(is_id_or_dot(node)); \
   CSTR name, scope; \
@@ -475,6 +520,8 @@ cql_noexport CSTR _Nonnull get_compound_operator_name(int32_t compound_operator)
     scope = ((str_ast_node *)(node->left))->value; \
   }
 
+// Shorthand for EXTRACT_NAMED_NAME_AND_SCOPE using 'name' and 'scope' as variable names.
+// Usage: EXTRACT_NAME_AND_SCOPE(node)  -- creates 'name' and 'scope' variables
 #define EXTRACT_NAME_AND_SCOPE(node) \
   EXTRACT_NAMED_NAME_AND_SCOPE(name, scope, node)
 

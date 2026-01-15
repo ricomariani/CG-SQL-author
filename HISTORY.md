@@ -167,7 +167,7 @@ A chronological record of CG/SQL's evolution from inception to present.
 - JSON dependency analysis for shared fragments
 - Error handling for bad window definitions
 - Leak fixes in fragment analysis
-- Meta copyright transition (Facebook → Meta Platforms)
+- Meta copyright transition (Facebook â†’ Meta Platforms)
 
 ### December 2021
 **Major code reuse features**
@@ -305,6 +305,9 @@ A chronological record of CG/SQL's evolution from inception to present.
 
 ## 2023
 
+**CG/SQL Author's Cut established** 
+- Following Meta's November 2022 layoffs and decision to stop publishing OSS updates, Rico Mariani established the "Author's Cut" fork to continue maintaining CG/SQL. The Meta internal version diverged significantly (adopting C-like brace syntax), leaving the OSS project without a maintainer.
+
 ### January 2023
 **Internal refactoring**
 - Facet diff logic refactoring
@@ -330,6 +333,8 @@ A chronological record of CG/SQL's evolution from inception to present.
 *No commits this month*
 
 ### May 2023
+- **Repository created May 10, 2023** 
+- CG-SQL-author repository established on GitHub
 **JNI support**
 - General purpose Java/JNI adapter
 - Automatic `.java` and `.c` file generation
@@ -405,7 +410,7 @@ A chronological record of CG/SQL's evolution from inception to present.
 **Syntax modernization**
 - Preferred `PROC` over `CREATE PROC`
 - `!` abbreviation for `NOT NULL` in echo output
-- `INTEGER` → `INT`, `LONG_INT` → `LONG` in echoed output
+- `INTEGER` â†’ `INT`, `LONG_INT` â†’ `LONG` in echoed output
 - `DECLARE CURSOR` and `DECLARE TYPE` short form echoing
 - BETWEEN expression echo improvements (round-trip parsing)
 - Try/catch syntax removal from test suite
@@ -414,10 +419,10 @@ A chronological record of CG/SQL's evolution from inception to present.
 - Modern syntax adoption in run_test
 
 ### February 2024
-**v1.0.0 - First Official Release**
-- First numbered version release
-- Stable API commitment
-- Production-ready milestone
+**First Official Release**
+- Syntax modernization continued from January
+- **v1.0.0 released (February 25, 2024)** 
+- First numbered version release with stable API commitment and production-ready milestone
 
 ### March 2024
 **Hugo actions and documentation**
@@ -522,11 +527,10 @@ A chronological record of CG/SQL's evolution from inception to present.
 - CAST from null to any type without SQL
 
 ### November 2024
-**v1.1.0**
-- Enhanced JSON support
-- Pipeline operator customization
-- General purpose boxing/unboxing
-- .NET support added
+**v1.1.0 Release**
+- JSON and operator overloading work from September-October matured
+- **v1.1.0 released (November 10, 2024)**
+- Enhanced JSON support, pipeline operator customization, general purpose boxing/unboxing, and .NET support
 
 ### December 2024
 **RETURNING clause and backing improvements**
@@ -559,10 +563,10 @@ A chronological record of CG/SQL's evolution from inception to present.
 ## 2025
 
 ### January 2025
-**v1.2.0**
-- Additional JSON methods support
-- `->>` operator with type hints
-- `@op` pipeline operator customization
+**v1.2.0 Release**
+- RETURNING clause support from December 2024
+- **v1.2.0 released (January 7, 2025)**
+- Additional JSON methods support, `->>` operator with type hints, `@op` pipeline operator customization
 
 ### February 2025
 **Grammar and documentation refinements**
@@ -575,10 +579,11 @@ A chronological record of CG/SQL's evolution from inception to present.
 - Beta release snapshot
 
 ### March 2025
-**v1.3.0 & v1.3.1**
-- MacOS build improvements
-- Syntax shortcuts: PROC, FUNC keywords
-- Bug fixes and stability improvements
+**v1.3.0 & v1.3.1 Releases**
+- **v1.3.0 released (March 23, 2025)** 
+- Syntax shortcuts (PROC, FUNC keywords), SQLite extension improvements
+- **v1.3.1 released (March 24, 2025)**
+- MacOS build fixes, cosmetic syntax updates
 
 ### April 2025
 **Code organization and validation**
@@ -615,11 +620,10 @@ A chronological record of CG/SQL's evolution from inception to present.
 *No material changes this month*
 
 ### October 2025
-**v1.3.2**
-- UTF-8 support in JSON strings
-- `@strict` control directives
-- Attribute support for enums and const groups
-- Enhanced type safety features
+**v1.3.2 Release**
+- Code organization and validation work from April-September
+- **v1.3.2 released (October 4, 2025)**
+- UTF-8 support in JSON strings, `@strict` control directives, attribute support for enums and const groups
 
 ### November 2025
 **Documentation improvements**
@@ -645,6 +649,8 @@ A chronological record of CG/SQL's evolution from inception to present.
 - Python JSON utilities documentation
 - FAQ documentation (USER_FAQ.md, DEVELOPER_FAQ.md)
 - HISTORY.md comprehensive version history
+- **v1.3.3 released (January 14, 2026)**
+- Documentation and infrastructure release with comprehensive developer guides, improved AST debugging, and security reporting
 
 ---
 

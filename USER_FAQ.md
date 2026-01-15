@@ -1,8 +1,3 @@
----
-title: User FAQ
-weight: 5
----
-
 # CG/SQL User FAQ
 
 Frequently asked questions for CG/SQL users. For developer/contributor questions, see the [Developer FAQ](DEVELOPER_FAQ.md).
@@ -75,18 +70,18 @@ All types can be marked `NOT NULL` (or `!` shorthand).
 
 **Example:**
 ```sql
-declare x integer not null;  -- or: declare x int!
-declare name text;           -- nullable by default
+declare x integer not null;  -- or: more briefly var x int!
+var name text;               -- nullable by default
 let count := 0;              -- type inferred as int!
 ```
 
 ### How do I declare and use variables?
 
-Variables must be declared before use. Use `DECLARE` with explicit types or `LET` for type inference:
+Variables must be declared before use. Use `VAR` with explicit types or `LET` for type inference:
 
 ```sql
 -- Explicit declaration
-declare temperature integer not null;
+var temperature int!;
 set temperature := 72;
 
 -- Type inference with LET
@@ -112,18 +107,18 @@ Define schema with standard SQL DDL, then query with CQL procedures:
 -- Define schema
 create table users(
   id integer primary key,
-  name text not null,
+  name text not null,  -- ! works here too
   age integer
 );
 
 -- Insert data
-create proc add_user(id_ integer not null, name_ text not null, age_ integer)
+proc add_user(id_ int!, name_ text!, age_ int)
 begin
   insert into users(id, name, age) values(id_, name_, age_);
 end;
 
 -- Query data
-create proc get_users()
+proc get_users()
 begin
   select * from users order by name;
 end;
@@ -146,7 +141,7 @@ end;
 
 create proc process_users()
 begin
-  declare C cursor for call get_active_users();
+  cursor C for call get_active_users();
   loop fetch C
   begin
     call printf("User: %s\n", C.name);
@@ -364,25 +359,6 @@ Yes! CG/SQL generates JSON output that can be used to create bindings:
 **Learn more:**
 - [JSON Output](docs/user_guide/13_json_output.md)
 - [Lua Code Generation](docs/developer_guide/10_lua_notes.md)
-
-### How do I work with BLOBs?
-
-CG/SQL provides encoding/decoding for structured blobs:
-
-```sql
-@attribute(cql:blob_storage)
-create proc store_user_prefs(
-  user_id integer not null,
-  theme text,
-  font_size integer
-)
-begin
-  -- Automatic serialization
-end;
-```
-
-**Documentation:**
-- [Advanced Blob Features](docs/user_guide/16_advanced_blob_features.md)
 
 ### How do I generate query plans?
 

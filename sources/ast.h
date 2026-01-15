@@ -13,9 +13,12 @@
 #include "minipool.h"
 #include "symtab.h"
 
+// for create statements
 #define GENERIC_IS_TEMP       0x1
 #define GENERIC_IF_NOT_EXISTS 0x2
 
+// for drop statements
+#define GENERIC_IF_EXISTS     0x1
 
 #define TABLE_IS_TEMP         GENERIC_IS_TEMP
 #define TABLE_IF_NOT_EXISTS   GENERIC_IF_NOT_EXISTS
@@ -35,14 +38,18 @@
 #define TRIGGER_INSERT        0x0080
 #define TRIGGER_FOR_EACH_ROW  0x0100
 
+#define INSERT_DUMMY_DEFAULTS  0x001
+#define INSERT_DUMMY_NULLABLES 0x002
+
 #define PROC_FLAG_BASIC          0
 #define PROC_FLAG_STRUCT_TYPE    1
 #define PROC_FLAG_USES_DML       2
 #define PROC_FLAG_USES_OUT       4
 #define PROC_FLAG_USES_OUT_UNION 8
 
-#define INDEX_UNIQUE        1
-#define INDEX_IFNE          2
+#define INDEX_IS_TEMP       GENERIC_IS_TEMP     // not supported yet
+#define INDEX_IFNE          GENERIC_IF_NOT_EXISTS
+#define INDEX_UNIQUE        0x0004
 
 #define RAISE_IGNORE        0
 #define RAISE_ROLLBACK      1
@@ -99,8 +106,8 @@
 #define PUBLIC_REGION 0
 #define PRIVATE_REGION 1
 
-#define EXPLAIN_NONE 1
-#define EXPLAIN_QUERY_PLAN 2
+#define EXPLAIN_NONE 0
+#define EXPLAIN_QUERY_PLAN 1
 
 #define FRAME_TYPE_RANGE                 0x00001
 #define FRAME_TYPE_ROWS                  0x00002
@@ -251,7 +258,7 @@ cql_noexport void ast_cleanup(void);
 
 cql_noexport ast_node *_Nonnull new_ast(const char *_Nonnull type, ast_node *_Nullable l, ast_node *_Nullable r);
 cql_noexport ast_node *_Nonnull new_ast_num(int32_t type, const char *_Nonnull value);
-cql_noexport ast_node *_Nonnull new_ast_option(int32_t value);
+cql_noexport ast_node *_Nonnull new_ast_detail(int32_t value);
 cql_noexport ast_node *_Nonnull new_ast_str(CSTR _Nonnull value);
 cql_noexport ast_node *_Nonnull new_ast_cstr(CSTR _Nonnull value);
 cql_noexport ast_node *_Nonnull new_ast_qstr_escaped(CSTR _Nonnull value);
@@ -307,9 +314,6 @@ cql_noexport ast_node *_Nullable ast_clone_tree(ast_node *_Nullable ast);
 cql_noexport CSTR _Nonnull convert_cstrlit(CSTR _Nonnull cstr);
 
 cql_noexport CSTR _Nonnull get_compound_operator_name(int32_t compound_operator);
-
-#define INSERT_DUMMY_DEFAULTS 1
-#define INSERT_DUMMY_NULLABLES 2
 
 /*
   SQLite understands the following binary operators, in order from LOWEST to HIGHEST precedence:
@@ -455,7 +459,7 @@ cql_noexport CSTR _Nonnull get_compound_operator_name(int32_t compound_operator)
   CSTR val = ((num_ast_node *)(node))->value; \
   Contract(val);
 
-#define EXTRACT_OPTION(name, node) \
+#define EXTRACT_DETAIL(name, node) \
   Contract(is_ast_int(node)); \
   int32_t name = (int32_t)((int_ast_node *)(node))->value;
 
@@ -749,7 +753,7 @@ AST(fk_def)
 AST(fk_info)
 AST(fk_target)
 AST(fk_target_options)
-AST(flags_names_attrs)
+AST(index_flags_names_attrs)
 AST(for_stmt)
 AST(for_info)
 AST(frame_boundary)

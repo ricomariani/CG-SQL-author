@@ -3000,7 +3000,7 @@ cql_blob_ref _Nonnull cql_make_blob_stream(cql_object_ref _Nonnull blob_list)
     cql_blob_ref blob = cql_blob_list_get_at(blob_list, i);
     cql_uint32 size = (cql_uint32)cql_get_blob_size(blob);
     const uint8_t *bytes = (const uint8_t *)cql_get_blob_bytes(blob);
-   
+
     cql_bytebuf_append(&b, bytes, size);
   }
 

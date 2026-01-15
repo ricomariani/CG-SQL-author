@@ -21,6 +21,8 @@ and system.
 ### Essential Documentation
 
 - [Introduction](https://ricomariani.github.io/CG-SQL-author/docs/quick_start/introduction/)
+- [User FAQ](USER_FAQ.md) - **Quick answers to common questions**
+- [Developer FAQ](DEVELOPER_FAQ.md) - **For contributors**
 - [CG/SQL User Guide](https://ricomariani.github.io/CG-SQL-author/docs/user_guide/) [(HTML version)](https://ricomariani.github.io/CG-SQL-author/user_guide.html)
 - [CG/SQL Developer Guide](https://ricomariani.github.io/CG-SQL-author/docs/developer_guide/) [(HTML version)](https://ricomariani.github.io/CG-SQL-author/developer_guide.html)
 - [Getting Started with CG/SQL](https://ricomariani.github.io/CG-SQL-author/docs/quick_start/getting-started/)

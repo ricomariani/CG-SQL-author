@@ -538,7 +538,7 @@ cql_noexport bool_t is_ast_num(ast_node *node) {
 // require us to faithfully parse all the hard cases and since we're just going
 // to re-emit them anyway it seems silly to avoid lossless encode and decode
 // when we can just store the string. Hence this is not for numerics.
-cql_noexport bool_t is_ast_int(ast_node *node) {
+cql_noexport bool_t is_ast_detail(ast_node *node) {
   return node && (node->type == k_ast_int);
 }
 
@@ -584,7 +584,7 @@ cql_noexport bool_t is_id_or_dot(ast_node *node) {
 
 // Any of the leaf types
 cql_noexport bool_t is_primitive(ast_node *node) {
-  return is_ast_num(node) || is_ast_str(node) || is_ast_blob(node) || is_ast_int(node);
+  return is_ast_num(node) || is_ast_str(node) || is_ast_blob(node) || is_ast_detail(node);
 }
 
 // Any of the procedure types (create or declare)
@@ -931,7 +931,7 @@ cql_noexport bool_t print_ast_value(struct ast_node *node) {
     ret = true;
   }
 
-  if (is_ast_int(node)) {
+  if (is_ast_detail(node)) {
 #ifdef AST_EMIT_HEX
     cql_output("%llx: ", (long long)node);
 #endif
@@ -1716,7 +1716,7 @@ cql_noexport ast_node *ast_clone_tree(ast_node *_Nullable ast) {
     *sast = *(str_ast_node *)ast;
     return (ast_node*)sast;
   }
-  else if (is_ast_int(ast)) {
+  else if (is_ast_detail(ast)) {
     int_ast_node *iast = _ast_pool_new(int_ast_node);
     *iast = *(int_ast_node *)ast;
     return (ast_node*)iast;

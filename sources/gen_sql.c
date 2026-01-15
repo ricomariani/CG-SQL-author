@@ -733,7 +733,7 @@ static void gen_fk_def(ast_node *def) {
 
 //   | {detail conflict_clause_opt}  -- ON CONFLICT ROLLBACK/ABORT/FAIL/IGNORE/REPLACE
 static void gen_conflict_clause(ast_node *ast) {
-  Contract(is_ast_int(ast));
+  Contract(is_ast_detail(ast));
   EXTRACT_DETAIL(conflict_clause_opt, ast);
 
   gen_printf(" ON CONFLICT ");

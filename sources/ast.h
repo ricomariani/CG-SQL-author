@@ -265,7 +265,7 @@ cql_noexport ast_node *_Nonnull new_ast_qstr_escaped(CSTR _Nonnull value);
 cql_noexport ast_node *_Nonnull new_ast_qstr_quoted(CSTR _Nonnull value);
 cql_noexport ast_node *_Nonnull new_ast_blob(CSTR _Nonnull value);
 
-cql_noexport bool_t is_ast_int(ast_node *_Nullable node);
+cql_noexport bool_t is_ast_detail(ast_node *_Nullable node);
 cql_noexport bool_t is_ast_str(ast_node *_Nullable node);
 cql_noexport bool_t is_ast_num(ast_node *_Nullable node);
 cql_noexport bool_t is_ast_blob(ast_node *_Nullable node);
@@ -460,7 +460,7 @@ cql_noexport CSTR _Nonnull get_compound_operator_name(int32_t compound_operator)
   Contract(val);
 
 #define EXTRACT_DETAIL(name, node) \
-  Contract(is_ast_int(node)); \
+  Contract(is_ast_detail(node)); \
   int32_t name = (int32_t)((int_ast_node *)(node))->value;
 
 #define EXTRACT_NAMED_NAME_AND_SCOPE(name, scope, node) \

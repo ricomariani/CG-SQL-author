@@ -43,10 +43,9 @@ Variations below add database usage and result types.
 declare proc foo(id int, out name text!) USING TRANSACTION;
 ```
 
-Most procedures use SQLite—e.g., a `SELECT`.
-The `USING TRANSACTION` annotation indicates the procedure uses the database,
-so the generated code includes a database connection argument and returns a
-SQLite error code.
+Most procedures use SQLite—e.g., a `SELECT`. The `USING TRANSACTION` annotation
+indicates the procedure uses the database, so the generated code includes a
+database connection argument and returns a SQLite error code.
 
 ### Procedures that Create a Result Set
 
@@ -54,11 +53,8 @@ If the procedure in question is going to use `select` or `call` to create a resu
 the type of that result set has to be declared.  An example might look like this:
 
 ```sql
-declare proc with_result_set () (id int!,
-                                 name text,
-                                 rate long,
-                                 type int,
-                                 size real);
+declare proc with_result_set ()
+  (id int!,  name text, rate long, type int, size real);
 ```
 
 This declares a procedure with no arguments (other than the implicit database
@@ -71,40 +67,33 @@ If the procedure emits a cursor with the `OUT` statement to produce a single
 row then it can be declared as follows:
 
 ```sql
-declare proc with_result_set () OUT (id int!,
-                                     name text,
-                                     rate long,
-                                     type int,
-                                     size real);
+declare proc with_result_set ()
+  OUT (id int!, name text, rate long, type int, size real);
 ```
 
-This form may include `USING TRANSACTION`, but it is not required—it's possible
+This form may or may not include `USING TRANSACTION`; it's possible
 to emit a row with a value cursor without using the database. See the previous
 chapter for details on the `OUT` statement.
 
 ### Procedures that Return a Full Result Set
 
-If the procedure emits many rows with the `OUT UNION` statement to produce a full result set
-then it can be declared as follows:
+If the procedure emits many rows with the `OUT UNION` statement to produce a
+full result set then it can be declared as follows:
 
 ```sql
-declare proc with_result_set () OUT UNION (id int!,
-                                     name text,
-                                     rate long,
-                                     type int,
-                                     size real);
+declare proc with_result_set ()
+  OUT UNION (id int!, name text, rate long, type int, size real);
 ```
 
-This form may include `USING TRANSACTION`, but it is not required—it's possible
+This form may or may not include `USING TRANSACTION`; it's possible
 to emit rows with a value cursor without using the database. See the previous
 chapter for details on the `OUT UNION` statement.
 
 ### Exporting Declarations Automatically
 
 To avoid errors, the declarations for any given file can be automatically
-created by adding something like `--generate_exports` to the command
-line. This will require an additional file name to be passed in the `--cg`
-portion to capture the exports.
+created by adding `--generate_exports` to the command line. This will require an
+additional file name to be passed in the `--cg` portion to capture the exports.
 
 Reference that file with `@include` to add the declarations to the input
 stream. These can be combined into useful units so that you

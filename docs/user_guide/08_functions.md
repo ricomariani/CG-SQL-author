@@ -10,38 +10,41 @@ weight: 8
 -->
 
 CQL stored procedures have a very simple contract, so it is easy to declare
-procedures and then implement them in regular C; the C functions just
-have to conform to the contract. However, CQL procedures have their own
-calling conventions and this makes it very inconvenient to use external
-code that is not doing database things and wants to return values.
-Even a random number generator or something would be difficult to
-use because it could not be called in the context of an expression.
-To allow this, CQL adds declared functions.
+procedures and then implement them in regular C; the C functions just have to
+conform to the contract. However, CQL procedures have their own calling
+conventions and this makes it very inconvenient to use external code that is not
+doing database things and wants to return values. Even a random number generator
+or something would be difficult to use because it could not be called in the
+context of an expression. To allow this, CQL adds declared functions.
 
-In another example of the two-headed nature of CQL, there are two ways to use functions. As we have already
-seen you can make function-like procedures and call them like functions
-simply by making a procedure with an `out` parameter. However, there
-are also cases where it is reasonable to make function calls to external
-functions of other kinds.  There are three major types of functions you
+In another example of the two-headed nature of CQL, there are two ways to use
+functions. As we have already seen you can make function-like procedures and
+call them like functions simply by making a procedure with an `out` parameter.
+However, there are also cases where it is reasonable to make function calls to
+external functions of other kinds.  There are three major types of functions you
 might wish to call.
 
 ### Function Types
 
 #### Ordinary Scalar Functions
 
-These functions are written in regular C and provide for the ability to do operations on in-memory objects.  For instance,
-you could create functions that allow you to read and write from a dictionary.  You can declare these functions like so:
+These functions are written in regular C and provide for the ability to do
+operations on in-memory objects.  For instance, you could create functions that
+allow you to read and write from a dictionary.  You can declare these functions
+like so:
 
 ```sql
 func dict_get_value(dict object, key_ text!) text;
 ```
 
-Such a function is not known to SQLite and therefore cannot appear in SQL statements.  CQL will enforce this.
+Such a function is not known to SQLite and therefore cannot appear in SQL
+statements.  CQL will enforce this.
 
-The above function returns a text reference, and, importantly, this is a borrowed reference.  The dictionary
-is presumably holding on to the reference and as long as it is not mutated the reference is valid.  CQL will
-retain this reference as soon as it is stored and release it automatically when it is out of scope.  So, in
-this case, the dictionary continues to own the object.
+The above function returns a text reference, and, importantly, this is a
+borrowed reference.  The dictionary is presumably holding on to the reference
+and as long as it is not mutated the reference is valid.  CQL will retain this
+reference as soon as it is stored and release it automatically when it is out of
+scope.  So, in this case, the dictionary continues to own the object.
 
 It is also possible to declare functions that create objects.  Such as this example:
 
@@ -49,9 +52,10 @@ It is also possible to declare functions that create objects.  Such as this exam
 func dict_create() create object;
 ```
 
-This declaration tells CQL that the function will create a new object for our use.  CQL does not retain the
-provided object, rather assuming ownership of the presumably one reference count the object already has.
-When the object goes out of scope it is released as usual.
+This declaration tells CQL that the function will create a new object for our
+use.  CQL does not retain the provided object, rather assuming ownership of the
+presumably one reference count the object already has. When the object goes out
+of scope it is released as usual.
 
 If we also declare this procedure:
 
@@ -76,23 +80,25 @@ begin
 end;
 ```
 
->NOTE: Ordinary scalar functions may not use the database in any way. When they are invoked they will not
->be provided with the database pointer and so they will be unable to do any database operations.  To do
->database operations, use regular procedures.  You can create a function-like-procedure using the `out` convention
->discussed previously.
+>NOTE: Ordinary scalar functions may not use the database in any way. When they
+>are invoked they will not be provided with the database pointer and so they
+>will be unable to do any database operations.  To do database operations, use
+>regular procedures.  You can create a function-like-procedure using the `out`
+>convention discussed previously.
 
 #### SQL Scalar Functions
 
-SQLite includes the ability to add new functions to its expressions using `sqlite3_create_function`.  In
-order to use this function in CQL, you must also provide its prototype definition to the compiler.  You
-can do so following this example:
+SQLite includes the ability to add new functions to its expressions using
+`sqlite3_create_function`.  In order to use this function in CQL, you must also
+provide its prototype definition to the compiler.  You can do so following this
+example:
 
 ```sql
 select function strencode(t text!) text!;
 ```
 
-This introduces the function `strencode` to the compiler for use in SQL constructs. With this done you
-could write a procedure something like this:
+This introduces the function `strencode` to the compiler for use in SQL
+constructs. With this done you could write a procedure something like this:
 
 ```sql
 create table foo(id int, t text);
@@ -156,16 +162,17 @@ begin
 end;
 ```
 
-This construct is very general, but the runtime setup for it is much more complicated than scalar functions
-and only more modern versions of SQLite even support it.
+This construct is very general, but the runtime setup for it is much more
+complicated than scalar functions and only more modern versions of SQLite even
+support it.
 
 ### SQL Functions with Unchecked Parameter Types
 
 Certain SQL functions like
 [`json_extract`](https://www.sqlite.org/json1.html#jex) are variadic (they
-accept variable number of arguments). To use such functions within CQL,
-you can declare a SQL function to have untyped parameters by including
-the `NO CHECK` clause instead of parameter types.
+accept variable number of arguments). To use such functions within CQL, you can
+declare a SQL function to have untyped parameters by including the `NO CHECK`
+clause instead of parameter types.
 
 For example:
 ```sql
@@ -183,10 +190,10 @@ select function table_valued_function no check (t text, i int);
 
 ### Notes on Builtin Functions
 
-Some of the SQLite builtin functions are hard-coded; these are the
-functions that have semantics that are not readily captured with a
-simple prototype.  Other SQLite functions can be declared with `declare
-select function ...` and then used.
+Some of the SQLite builtin functions are hard-coded; these are the functions
+that have semantics that are not readily captured with a simple prototype.
+Other SQLite functions can be declared with `declare select function ...` and
+then used.
 
 CQL's hard-coded builtin list includes:
 
@@ -292,12 +299,14 @@ CQL's hard-coded builtin list includes:
  * `json_valid`
  * `json_quote`
 
-`json_extract` and `jsonb_extract` are peculiar because they do not always return the same type.
-Since CQL has to assume something it assumes that `json_extract` will return `TEXT` and `jsonb_extract`
-will return a `BLOB`.  Importantly, CQL does not add any casting operations into the SQL unless
-they are explicitly added which means in some sense SQLite does not "know" that CQL has made a
-bad assumption, or any assumption.  In many cases, even most cases, a specific type is expected,
-this is a great time to use the pipeline cast notation to "force" the conversion.
+`json_extract` and `jsonb_extract` are peculiar because they do not always
+return the same type. Since CQL has to assume something it assumes that
+`json_extract` will return `TEXT` and `jsonb_extract` will return a `BLOB`.
+Importantly, CQL does not add any casting operations into the SQL unless they
+are explicitly added which means in some sense SQLite does not "know" that CQL
+has made a bad assumption, or any assumption.  In many cases, even most cases, a
+specific type is expected, this is a great time to use the pipeline cast
+notation to "force" the conversion.
 
 ```sql
   select json_extract('{ "x" : 0 }', '$.x') ~int~ as X;
@@ -330,14 +339,14 @@ SELECT FUNC json_tree NO CHECK
       parent INT, fullkey TEXT, path TEXT);
 ```
 
-> NOTE: key, value, and atom can be any type and will require a cast operation similar to
-> `json_extract`, see the notes above.
+> NOTE: key, value, and atom can be any type and will require a cast operation
+> similar to `json_extract`, see the notes above.
 
 ##### Boxing and Unboxing
 
-These can be used to create an `object<cql_box>` from the various primitives.  This can
-then be stored generically in something that holds objects. The unbox methods can be used
-to extract the original value.
+These can be used to create an `object<cql_box>` from the various primitives.
+This can then be stored generically in something that holds objects. The unbox
+methods can be used to extract the original value.
 
 * `cql_box_blob`
 * `cql_box_bool`
@@ -393,9 +402,9 @@ The `add` functions return `true` if an object was added, `false` if it was repl
 * `cql_long_dictionary_add` -- add a `long`
 * `cql_real_dictionary_add` -- add a `real`
 
-The `find` functions return `null` if there is no such value or else the stored value.
-Each function requires the dictionary and the key to find.  The key is always a string
-(i.e. `text`).
+The `find` functions return `null` if there is no such value or else the stored
+value. Each function requires the dictionary and the key to find.  The key is
+always a string (i.e. `text`).
 
 * `cql_string_dictionary_find`
 * `cql_blob_dictionary_find`
@@ -403,10 +412,10 @@ Each function requires the dictionary and the key to find.  The key is always a 
 * `cql_long_dictionary_find` -- returns nullable long
 * `cql_real_dictionary_find` -- returns nullable real
 
-The pipeline syntax `dict:add(key, value)` works for all of the above.  Similarly,
-`dict:find(key)` works.  Array forms `dict[key] := value` and `x := dict[value]`
-also work and result in the same calls.  The long form name is really only needed
-to create a dictionary.
+The pipeline syntax `dict:add(key, value)` works for all of the above.
+Similarly, `dict:find(key)` works.  Array forms `dict[key] := value` and `x :=
+dict[value]` also work and result in the same calls.  The long form name is
+really only needed to create a dictionary.
 
 ##### Lists
 

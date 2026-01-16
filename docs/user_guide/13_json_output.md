@@ -9,15 +9,14 @@ weight: 13
 -- LICENSE file in the root directory of this source tree.
 -->
 
-To help facilitate additional tools that might want to depend on CQL
-input files further down the toolchain, CQL includes a JSON output format
-for SQL DDL as well as stored procedure information, including special
-information for a single-statement DML.  "Single-statement DML" refers
-to those stored procedures that consist of a single `insert`, `select`,
-`update`, or `delete`.   Even though such procedures comprise just one
-statement, good argument binding can create very powerful DML fragments
-that are re-usable.  Many CQL stored procedures are of this form (in
-practice maybe 95% are just one statement.)
+To help facilitate additional tools that might want to depend on CQL input files
+further down the toolchain, CQL includes a JSON output format for SQL DDL as
+well as stored procedure information, including special information for a
+single-statement DML.  "Single-statement DML" refers to those stored procedures
+that consist of a single `insert`, `select`, `update`, or `delete`.   Even
+though such procedures comprise just one statement, good argument binding can
+create very powerful DML fragments that are re-usable.  Many CQL stored
+procedures are of this form (in practice maybe 95% are just one statement.)
 
 To use CQL in this fashion, run a command like the following.
 See [Appendix 1](./appendices/01_command_lines_options.md) for command-line details.
@@ -335,36 +334,43 @@ Generates:
 
 ### Projections
 
-A projection defines the output shape of something that can return a
-table-like value such as a view or a procedure.
+A projection defines the output shape of something that can return a table-like
+value such as a view or a procedure.
 
-The projection consists of a list of one or more _projected columns_,
-each of which is:
+The projection consists of a list of one or more _projected columns_, each of
+which is:
 
-* **name** : the name of the result column  (e.g. in select 2 as foo) the name is "foo"
+* **name** : the name of the result column  (e.g. in select 2 as foo) the name
+  is "foo"
 * **type** : the type of the column (e.g. text, real, etc.)
-* **kind** : optional, the discriminator of the type if it has one (e.g. if the result is an `int<job_id>` the kind is "job_id")
-* **isSensitive** : optional, true if the result is sensitive (e.g. PII or something like that)
+* **kind** : optional, the discriminator of the type if it has one (e.g. if the
+  result is an `int<job_id>` the kind is "job_id")
+* **isSensitive** : optional, true if the result is sensitive (e.g. PII or
+  something like that)
 * **isNotNull** : true if the result is known to be not null
 
 ### Dependencies
 
-The dependencies section appears in many entities. It indicates what the object used and how.
-Most fields are optional; some are impossible in certain contexts (e.g., inserts
-do not happen inside views).
+The dependencies section appears in many entities. It indicates what the object
+used and how. Most fields are optional; some are impossible in certain contexts
+(e.g., inserts do not happen inside views).
 
 * **insertTables** : optional, a list of tables into which values were inserted
 * **updateTables** : optional, a list of tables whose values were updated
 * **deleteTables** : optional, a list of tables which had rows deleted
-* **fromTables** : optional, a list of tables that appeared in a FROM clause (maybe indirectly inside a VIEW or CTE)
-* **usesProcedures** : optional, a list of procedures that were accessed via CALL (not shared fragments, those are inlined)
-* **usesViews** : optional, a list of views which were accessed (these are recursively visited to get to tables)
-* **usesTables** : the list of tables that were used in any way at all by the current entity (i.e. the union of the previous table sections)
+* **fromTables** : optional, a list of tables that appeared in a FROM clause
+  (maybe indirectly inside a VIEW or CTE)
+* **usesProcedures** : optional, a list of procedures that were accessed via
+  CALL (not shared fragments, those are inlined)
+* **usesViews** : optional, a list of views which were accessed (these are
+  recursively visited to get to tables)
+* **usesTables** : the list of tables that were used in any way at all by the
+  current entity (i.e. the union of the previous table sections)
 
 ### Indices
 
-The indices section contains all indices in the schema.
-It has zero or more index entries of this form:
+The indices section contains all indices in the schema. It has zero or more
+index entries of this form:
 
 * **name** : the index name
 * **crc** : the schema CRC for the entire index definition
@@ -372,10 +378,13 @@ It has zero or more index entries of this form:
 * **isUnique** : true if this is a unique index
 * **ifNotExists** : true if this index was created with IF NOT EXISTS
 * **isDeleted** : true if the view was marked with @delete
-  * **deletedVersion** : optional, the schema version number in the @delete directive
+  * **deletedVersion** : optional, the schema version number in the @delete
+    directive
 * **_region information_** : optional, see the section on Region Info
-* **where** : optional, if this is partial index then this has the partial index where expression
-* **_attributes_** : optional, see the section on attributes, they appear in many places
+* **where** : optional, if this is partial index then this has the partial index
+  where expression
+* **_attributes_** : optional, see the section on attributes, they appear in
+  many places
 * **columns** : the list of column names in the index
 * **sortOrders** : the list of corresponding sort orders
 
@@ -405,21 +414,42 @@ Generates:
 
 The next several sections provide information about procedure categories:
 
-* **Queries**: Procedures consisting of a single SELECT statement with no fragments. These return result sets and include the SELECT statement text and parameter bindings, making it easy to generate query wrappers.
+* **Queries**: Procedures consisting of a single SELECT statement with no
+  fragments. These return result sets and include the SELECT statement text and
+  parameter bindings, making it easy to generate query wrappers.
 
-* **Inserts**: Procedures with a single INSERT statement that inserts exactly one row using a simple VALUES clause. These include both the statement and the individual inserted values, enabling detailed code generation for insert operations.
+* **Inserts**: Procedures with a single INSERT statement that inserts exactly
+  one row using a simple VALUES clause. These include both the statement and the
+  individual inserted values, enabling detailed code generation for insert
+  operations.
 
-* **General Inserts**: Procedures with a single INSERT statement that uses more complex insert forms (multiple value rows, INSERT...SELECT, WITH clauses, or UPSERT). These include the statement but not individual values since the insert structure is too complex to decompose simply.
+* **General Inserts**: Procedures with a single INSERT statement that uses more
+  complex insert forms (multiple value rows, INSERT...SELECT, WITH clauses, or
+  UPSERT). These include the statement but not individual values since the
+  insert structure is too complex to decompose simply.
 
-* **Updates**: Procedures consisting of a single UPDATE statement with no fragments. These include the UPDATE statement text and parameter bindings for straightforward update operation wrappers.
+* **Updates**: Procedures consisting of a single UPDATE statement with no
+  fragments. These include the UPDATE statement text and parameter bindings for
+  straightforward update operation wrappers.
 
-* **Deletes**: Procedures consisting of a single DELETE statement with no fragments. These include the DELETE statement text and parameter bindings for delete operation wrappers.
+* **Deletes**: Procedures consisting of a single DELETE statement with no
+  fragments. These include the DELETE statement text and parameter bindings for
+  delete operation wrappers.
 
-* **General**: All other procedures that don't fit the simple single-statement categories. This includes procedures with OUT parameters, multiple statements, complex control flow, shared fragments, or no database operations at all. Limited structural information is available for these since their bodies are too complex to analyze in a simple way.
+* **General**: All other procedures that don't fit the simple single-statement
+  categories. This includes procedures with OUT parameters, multiple statements,
+  complex control flow, shared fragments, or no database operations at all.
+  Limited structural information is available for these since their bodies are
+  too complex to analyze in a simple way.
 
-These categories are historical breakouts that identify very simple procedures performing exactly one DML statement. When generating language bindings or other tooling, the simple categories provide richer metadata that drives more detailed code generation, while the "general" category provides information common to all procedures.
+These categories are historical breakouts that identify very simple procedures
+performing exactly one DML statement. When generating language bindings or other
+tooling, the simple categories provide richer metadata that drives more detailed
+code generation, while the "general" category provides information common to all
+procedures.
 
-Importantly, if you are only invoking procedures, all categories are equivalent: they have basic information about how to call them and what they return.
+Importantly, if you are only invoking procedures, all categories are equivalent:
+they have basic information about how to call them and what they return.
 
 
 #### Queries
@@ -430,15 +460,22 @@ single SELECT statement with no fragments.
 The fields of a query record are:
 
 * **name** : the name of the procedure
-* **definedInFile** : the file that contains the procedure (the path is as it was specified to CQL so it might be relative or absolute)
-* **definedOnLine** : the line number of the file where the procedure is declared
+* **definedInFile** : the file that contains the procedure (the path is as it
+  was specified to CQL so it might be relative or absolute)
+* **definedOnLine** : the line number of the file where the procedure is
+  declared
 * **args** : _procedure arguments_ see the relevant section
-* **_dependencies_** : several lists of tables and how they are used in the view, see the section on dependencies
+* **_dependencies_** : several lists of tables and how they are used in the
+  view, see the section on dependencies
 * **_region information_** : optional, see the section on Region Info
-* **_attributes_** : optional, see the section on attributes, they appear in many places
-* **_projection_** : an array of projected columns from the procedure, the view if you will, see [the section on projections](#projections)
-* **statement** : the text of the select statement that is the body of the procedure
-* **statementArgs** : a list of procedure arguments (possibly empty) that should be used to replace the corresponding "?" parameters in the statement
+* **_attributes_** : optional, see the section on attributes, they appear in
+  many places
+* **_projection_** : an array of projected columns from the procedure, the view
+  if you will, see [the section on projections](#projections)
+* **statement** : the text of the select statement that is the body of the
+  procedure
+* **statementArgs** : a list of procedure arguments (possibly empty) that should
+  be used to replace the corresponding "?" parameters in the statement
 
 Example:
 

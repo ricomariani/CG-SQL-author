@@ -132,7 +132,7 @@ there are a variety of sources for shapes including:
 * the columns of a cursor use `like my_cursor`
 * the result type of a procedure with a result set `like my_proc`
 * the arguments of a procedure  `like my_proc ARGUMENTS`
-* the columns of an interface
+* the columns of an interface `like my_interface`
 
 The interface statement directly declares a named shape. e.g.,
 

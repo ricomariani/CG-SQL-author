@@ -110,16 +110,16 @@ Let's talk about the final missing bit.
 
 ### Declaring Schema
 
-In CQL, a standalone piece of Data Definition Language (henceforth DDL) does not
-actually create or drop anything. In most CQL programs, the normal situation is
-that "something" has already created the database and put some data in it.  You
-need to tell the CQL compiler about the schema so that it knows what the tables
-are and what to expect to find in those tables.  This is because typically
-you're reconnecting to some sort of existing database. So, in CQL, loose DDL
-simply *declares* schema, it does not create it.  To create schema you have to
-put the DDL into a procedure you can run.  If you do that, then the DDL still
-serves a declaration, but also the schema will be created when the procedure is
-executed.
+In CQL, a piece of Data Definition Language (DDL) that is not inside a procedure
+does not actually create or drop anything. In most CQL programs, the normal
+situation is that "something" has already created the database and put some data
+in it.  You need to tell the CQL compiler about the schema so that it knows what
+the tables are and what to expect to find in those tables.  This is because
+typically you're reconnecting to some sort of existing database. So, in CQL,
+loose DDL simply *declares* schema, it does not create it.  To create schema you
+have to put the DDL into a procedure you can run.  If you do that, then the DDL
+still serves a declaration, but also the schema will be created when the
+procedure is executed.
 
 We need to change our program a tiny bit.
 
@@ -188,8 +188,7 @@ This will add a single row to the table.  Note that we have again used double
 quotes, meaning that this is a C string literal.  This is highly convenient
 given the escape sequences.  Normally SQLite text has the newlines directly
 embedded in it; that practice isn't very compiler friendly, hence the
-compiler-friendly,
-alternative.
+compiler-friendly, alternative.
 
 Next, we declare a local variable to hold our data:
 
@@ -245,9 +244,9 @@ This is a somewhat silly example, but it illustrates some important things:
   single quote variety by the time SQLite sees them
 * the `||` operator has lots of complex formatting conversions (such as
   converting real values to strings)
-* in fact, the conversions are so subtle as
-  to be impossible to emulate in loose C code with any economy, so, like a few
-  other operators, `||` is only supported in the SQLite context
+* in fact, the conversions are so subtle as to be impossible to emulate in loose
+  C code with any economy, so, like a few other operators, `||` is only
+  supported in the SQLite context
 
 Returning now to our code as written, we see something very familiar:
 

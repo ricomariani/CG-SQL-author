@@ -17,11 +17,10 @@ CQL has a variety of command line (CLI) options, but many of them are only inter
 ### --in file
 
 * reads the given file for the input instead of stdin
-* the input should probably have already been run through the C preprocessor as above
 * returns non-zero if the file fails to parse
 
 Example:
-```
+```bash
 cql --in test.sql
 ```
 
@@ -30,7 +29,7 @@ cql --in test.sql
 * the return code is zero if there are no errors
 
 Example:
-```
+```bash
 cql --in sem_test.sql --sem
 ```
 
@@ -38,7 +37,7 @@ cql --in sem_test.sql --sem
 * walks the AST and prints it to stdout in human readable text form
 * may be combined with --sem (semantic info will be included)
 Example:
-```
+```bash
 cql --in sem_test.sql --sem --ast >sem_ast.out
 ```
 
@@ -60,7 +59,7 @@ cql --in test.sql --echo >test.out  # test.out is "equivalent" to test.sql
 * this is really only interesting for small graphs for discussion as it rapidly gets insane
 
 Example:
-```
+```bash
 cql --dot --in dottest.sql
 ```
 ### --cg output1 output2 ...
@@ -71,7 +70,7 @@ cql --dot --in dottest.sql
 
 Example:
 
-```
+```bash
 cql --in foo.sql --cg foo.h foo.c
 ```
 
@@ -81,7 +80,7 @@ cql --in foo.sql --cg foo.h foo.c
 
 Example:
 
-```
+```bash
 cql --in test.sql --nolines --cg foo.h foo.c
 ```
 

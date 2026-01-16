@@ -9,10 +9,12 @@ weight: 7
 -- LICENSE file in the root directory of this source tree.
 -->
 
-Most of this tutorial is about the CQL language itself but here we must diverge a bit.  The purpose of the
-result set feature of CQL is to create a C interface to SQLite data.  Because of this
-there are a lot of essential details that require looking carefully at the generated C code.  Appendix 2
-covers this code in even more detail but here it makes sense to at least talk about the interface.
+Most of this tutorial is about the CQL language itself but here we must diverge
+a bit.  The purpose of the result set feature of CQL is to create a C interface
+to SQLite data.  Because of this there are a lot of essential details that
+require looking carefully at the generated C code.  Appendix 2 covers this code
+in even more detail but here it makes sense to at least talk about the
+interface.
 
 Let's say we have this simple stored procedure:
 
@@ -62,13 +64,16 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1)) \
 ```
 
 Let's consider some of these individually now
+
 ```c
 cql_result_set_type_decl(
   read_foo_result_set,
   read_foo_result_set_ref);
 ```
-This declares the data type for `read_foo_result_set` and the associated object reference `read_foo_result_set_ref`.
-As it turns out, the underlying data type for all result sets is the same, and only the shape of the data varies.
+
+This declares the data type for `read_foo_result_set` and the associated object
+reference `read_foo_result_set_ref`. As it turns out, the underlying data type
+for all result sets is the same, and only the shape of the data varies.
 
 
 ```c
@@ -76,6 +81,7 @@ extern cql_code read_foo_fetch_results(sqlite3 *_Nonnull _db_,
   read_foo_result_set_ref _Nullable *_Nonnull result_set,
   cql_int32 id_);
 ```
+
 The result set fetcher method gives you a `read_foo_result_set_ref` if
 it succeeds.  It accepts the `id_` argument which it will internally pass
 along to `read_foo(...)`.  The latter function provides a `sqlite3_stmt*`
@@ -88,6 +94,7 @@ Once you have a result set, you can read values out of it.
 extern cql_int32 read_foo_result_count(read_foo_result_set_ref
   _Nonnull result_set);
 ```
+
 That function tells you how many rows are in the result set.
 
 For each row you can use any of the row readers:
@@ -104,13 +111,15 @@ extern cql_string_ref _Nullable read_foo_get_t(
    cql_int32 row);
 ```
 
-These let you read the `id` of a particular row, and get a `cql_int32` or you can read the nullable boolean,
-using the `read_foo_get_b_is_null` function first to see if the boolean is null and then `read_foo_get_b_value`
-to get the value.  Finally the string can be accessed with `read_foo_get_t`.  As you can see, there is a
-simple naming convention for each of the field readers.
+These let you read the `id` of a particular row, and get a `cql_int32` or you
+can read the nullable boolean, using the `read_foo_get_b_is_null` function first
+to see if the boolean is null and then `read_foo_get_b_value` to get the value.
+Finally the string can be accessed with `read_foo_get_t`.  As you can see, there
+is a simple naming convention for each of the field readers.
 
->NOTE: The compiler has runtime arrays that control naming conventions as well as using CamelCasing.
->Additional customizations may be created by adding new runtime arrays into the CQL compiler.
+>NOTE: The compiler has runtime arrays that control naming conventions as well
+>as using CamelCasing. Additional customizations may be created by adding new
+>runtime arrays into the CQL compiler.
 
 Finally, also part of the public interface, are these macros:
 
@@ -119,18 +128,18 @@ Finally, also part of the public interface, are these macros:
 #define read_foo_row_equal(rs1, row1, rs2, row2)
 ```
 
-These use the CQL runtime to hash a row or compare two rows from identical result
-set types.  Metadata included in the result set allows general purpose code to work for
-every result set.  Based on configuration, result set copying methods can also
-be generated.   When you're done with a result set you can use the `cql_release(...)`
-method to free the memory.
+These use the CQL runtime to hash a row or compare two rows from identical
+result set types.  Metadata included in the result set allows general purpose
+code to work for every result set.  Based on configuration, result set copying
+methods can also be generated.   When you're done with a result set you can use
+the `cql_release(...)` method to free the memory.
 
-Importantly, all of the rows from the query in the stored procedure are materialized
-immediately and become part of the result set.  Potentially large amounts of memory can
-be used if a lot of rows are generated.
+Importantly, all of the rows from the query in the stored procedure are
+materialized immediately and become part of the result set.  Potentially large
+amounts of memory can be used if a lot of rows are generated.
 
-The code that actually creates the result set starting from the prepared statement is always the same.
-The essential parts are:
+The code that actually creates the result set starting from the prepared
+statement is always the same. The essential parts are:
 
 
 First, a constant array that holds the data types for each column.
@@ -143,15 +152,16 @@ uint8_t read_foo_data_types[read_foo_data_types_count] = {
 };
 ```
 
-All references are stored together at the end of the row, so we only need the count
-of references and the offset of the first one to do operations like `cql_retain` or `cql_release`
-on the row.
+All references are stored together at the end of the row, so we only need the
+count of references and the offset of the first one to do operations like
+`cql_retain` or `cql_release` on the row.
 
 ```
 #define read_foo_refs_offset cql_offsetof(read_foo_row, t) // count = 1
 ```
 
-Lastly we need metadata to tell us count of columns and the offset of each column within the row.
+Lastly we need metadata to tell us count of columns and the offset of each
+column within the row.
 
 ```c
 static cql_uint16 read_foo_col_offsets[] = { 3,
@@ -223,14 +233,18 @@ begin
 end;
 ```
 
-In this example the entire result set is made up out of thin air.
-Of course any combination of this computation or data-access is possible,
-so you can ultimately make any rows you want in any order using SQLite
-to help you as much or as little as you need.
+In this example the entire result set is made up out of thin air. Of course any
+combination of this computation or data-access is possible, so you can
+ultimately make any rows you want in any order using SQLite to help you as much
+or as little as you need.
 
-Virtually all the code pieces to do this already exist for normal
-result sets.  The important parts of the output code look like this in
-your generated C.
+Virtually all the code pieces to do this already exist for normal result sets.
+The important parts of the output code look like this in your generated C.
+
+>NOTE: Here we're reviewing the output code to help understand what's happening
+>under the hood, typically you don't need to look at this at all.  It's useful
+>to see that creation of result sets is not very mysterious, it's basically
+>a growable memory block with fixed size records.
 
 We need a buffer to hold the rows we will accumulate. We use
 `cql_bytebuf`, just like the normal fetcher above.
@@ -242,9 +256,10 @@ cql_bytebuf _rows_;
 cql_bytebuf_open(&_rows_);
 ```
 
-We need to be able to copy the cursor into the buffer and retain any internal references
+We need to be able to copy the cursor into the buffer and retain any internal
+references
 
-```
+```c
 // This bit is what you get when you "out union" a cursor "C"
 // first we +1 any references in the cursor then we copy its bits
 cql_retain_row(C_);   // a no-op if there is no row in the cursor
@@ -257,27 +272,26 @@ buffer is released.  The global `some_integers_info` has constants that
 describe the shape produced by this procedure just like the other cases
 that produce a result set.
 
-```
+```c
 cql_results_from_data(_rc_,
                       &_rows_,
                       &some_integers_info,
                       (cql_result_set_ref *)_result_set_);
 ```
 The operations here are basically the same as inside the standard helper
-`cql_fetch_all_results`; the difference is that you write the loop manually
-and therefore have full control of the rows as they go into the result set.
+`cql_fetch_all_results`; the difference is that you write the loop manually and
+therefore have full control of the rows as they go into the result set.
 
-In short, the overhead is pretty low.  What you’re left with is pretty
-much the base cost of your algorithm.  The cost here is very similar to
-what it would be for any other thing that makes rows.
+In short, the overhead is pretty low.  What you’re left with is pretty much the
+base cost of your algorithm.  The cost here is very similar to what it would be
+for any other thing that makes rows.
 
-Of course, if you make a million rows, well, that would burn a lot
-of memory.
+Of course, if you make a million rows, well, that would burn a lot of memory.
 
 ### A Working Example
 
-Here's a fairly simple example illustrating some of these concepts
-including the reading of rowsets.
+Here's a fairly simple example illustrating some of these concepts including the
+reading of rowsets.
 
 ```sql
 -- hello.sql:
@@ -350,13 +364,15 @@ Additional demo code is available in [Appendix 10](./appendices/10_working_examp
 
 ### Nested Result Sets (Parent/Child)
 
-There are many cases where you might want to nest one result set inside of another one.  In order to
-do this economically you must be able to run a parent query and a child query and
-then link the child rows to the parent rows.  One way to do this is of course to run one query for
-each "child" but then you end up with `O(n)` child queries and if there are sub-children it would be
-`O(n*m)` and so forth. What you really want to do here is something more like a join, only without
-the cross-product part of the join.  Many systems have such features, sometimes they are called
-"chaptered rowsets" but in any case there is a general need for such a thing.
+There are many cases where you might want to nest one result set inside of
+another one.  In order to do this economically you must be able to run a parent
+query and a child query and then link the child rows to the parent rows.  One
+way to do this is of course to run one query for each "child" but then you end
+up with `O(n)` child queries and if there are sub-children it would be `O(n*m)`
+and so forth. What you really want to do here is something more like a join,
+only without the cross-product part of the join.  Many systems have such
+features, sometimes they are called "chaptered rowsets" but in any case there is
+a general need for such a thing.
 
 To reasonably support nested results sets the CQL language has to be extended a variety of ways,
 as discussed below.
@@ -365,44 +381,52 @@ Here are some things that happened along the way that are interesting.
 
 #### Cursor Types and Result Types
 
-One of the first problems we run into thinking about how a CQL program might express pieces of a rowset
-and turn them into child results is that a program must be able to hash a row, append row data, and
-extract a result set from a key.  These are the essential operations required. In order to do anything
-at all with a child rowset, a program must be able to describe its type. Result sets must appear
-in the type system as well as in the runtime.
+One of the first problems we run into thinking about how a CQL program might
+express pieces of a rowset and turn them into child results is that a program
+must be able to hash a row, append row data, and extract a result set from a
+key.  These are the essential operations required. In order to do anything at
+all with a child rowset, a program must be able to describe its type. Result
+sets must appear in the type system as well as in the runtime.
 
-To address this we use an object type with a special "kind", similar to how boxed statements are handled.
-A result set has a type that looks like this: `object <proc_name set>`.  Here `proc_name` must the the name of a
-procedure that returns a result set and the object will represent a result set with the corresponding columns in it.
+To address this we use an object type with a special "kind", similar to how
+boxed statements are handled. A result set has a type that looks like this:
+`object <proc_name set>`.  Here `proc_name` must the the name of a procedure
+that returns a result set and the object will represent a result set with the
+corresponding columns in it.
 
 #### Creating New Cursor Types From Existing Cursor Types
 
-In addition to creating result set types, the language must be able to express cursors that capture the necessary
-parent/child column. These are rows with all of the parent columns plus additional columns for the child rows
-(note that you can have more than one child result set per parent).  So for instance you might have a list of
-people, and one child result might be the details of the schools they attended and another could be the details
-of the jobs they worked.
+In addition to creating result set types, the language must be able to express
+cursors that capture the necessary parent/child column. These are rows with all
+of the parent columns plus additional columns for the child rows (note that you
+can have more than one child result set per parent).  So for instance you might
+have a list of people, and one child result might be the details of the schools
+they attended and another could be the details of the jobs they worked.
 
-To accomplish this kind of shape, the language must be able to describe a new output row that is the
-same as the parent but includes columns for the the child results, too. This is done using a cursor
-declaration that comes from a typed name list.  An example might be:
+To accomplish this kind of shape, the language must be able to describe a new
+output row that is the same as the parent but includes columns for the the child
+results, too. This is done using a cursor declaration that comes from a typed
+name list.  An example might be:
 
 ```sql
 cursor C like (id int, name text);
 ```
 
-Importantly, such constructs include the ability to reference existing shapes by name. So we might create
-a cursor we need like so:
+Importantly, such constructs include the ability to reference existing shapes by
+name. So we might create a cursor we need like so:
 
 ```sql
 cursor result like (like parent_proc, child_result object<child_proc set>);
 ```
 
-Where the above indicates all the parent columns plus a child result set.  Or more than one child result set if needed.
+Where the above indicates all the parent columns plus a child result set.  Or
+more than one child result set if needed.
 
-In addition, the language needs a way to conveniently cursor a that is only some of the columns of an existing cursor.
-In particular, nested result sets require us to extract the columns that link the parent and child result sets.  The columns
-we will "join" on.  To accomplish this the language extends the familiar notion:
+In addition, the language needs a way to conveniently cursor a that is only some
+of the columns of an existing cursor. In particular, nested result sets require
+us to extract the columns that link the parent and child result sets.  The
+columns we will "join" on.  To accomplish this the language extends the familiar
+notion:
 
 ```sql
 cursor D like C;
@@ -414,38 +438,46 @@ To the more general form:
 cursor pks like C(pk1, pk2);
 ```
 
-Which chooses just the named fields from `C` and makes a cursor with only those. In this case
-this primary key fields, `pk1` and `pk2`.  Additionally, for completeness, we add this form:
+Which chooses just the named fields from `C` and makes a cursor with only those.
+In this case this primary key fields, `pk1` and `pk2`.  Additionally, for
+completeness, we add this form:
 
 ```sql
 cursor vals like C(-pk1, -pk2);
 ```
 
-To mean the cursor vals should have all the columns of `C` except `pk1` and `pk2` i.e. all the "values".
+To mean the cursor vals should have all the columns of `C` except `pk1` and
+`pk2` i.e. all the "values".
 
-Using any number of intermediate construction steps, and maybe some `type X ...` statements,
-any type can be formed from existing shapes by adding and removing columns.
+Using any number of intermediate construction steps, and maybe some `type X ...`
+statements, any type can be formed from existing shapes by adding and removing
+columns.
 
-Having done the above we can load a cursor that has just the primary keys with the usual form
+Having done the above we can load a cursor that has just the primary keys with
+the usual form
 
 ```sql
 fetch pks from C(like pks);
 ```
 
-Which says we want to load `pks` from the fields of `C`, but using only the columns of `pks`.  That operation
-is of course going to be an exact type match by construction.
+Which says we want to load `pks` from the fields of `C`, but using only the
+columns of `pks`.  That operation is of course going to be an exact type match
+by construction.
 
 #### Cursor Arguments
 
-In order to express the requisite parent/child join, the language must be able to express operations like
-"hash a cursor" (any cursor) or "store this row into the appropriate partition". The language provides no way
-to write functions that can take any cursor and dynamically do things to it based on type information, but:
+In order to express the requisite parent/child join, the language must be able
+to express operations like "hash a cursor" (any cursor) or "store this row into
+the appropriate partition". The language provides no way to write functions that
+can take any cursor and dynamically do things to it based on type information,
+but:
 
 * we don't need very many of them,
 * it's pretty easy to do that job in C (or lua if lua codegen is being used)
 
-The minimum requirement is that the language must be able to declare a functions that takes a generic cursor argument
-and to call such functions a generic cursor construct that has the necessary shape info.  This form does the job:
+The minimum requirement is that the language must be able to declare a functions
+that takes a generic cursor argument and to call such functions a generic cursor
+construct that has the necessary shape info.  This form does the job:
 
 ```sql
 func cursor_hash(C cursor) long!;
@@ -457,17 +489,20 @@ And it can be used like so:
 let hash := cursor_hash(C); -- C is any cursor
 ```
 
-When such a call is made the C function `cursor_hash` is passed a so-called "dynamic cursor" pointer which includes:
+When such a call is made the C function `cursor_hash` is passed a so-called
+"dynamic cursor" pointer which includes:
 
 * a pointer to the data for the cursor
 * the count of fields
 * the names of the fields
 * the type/offset of every field in the cursor
 
-With this information you can (e.g.) generically do the hash by applying a hash to each field and then combining
-all of those hashes. This kind of function works on any cursor and all the extra data about the shape that's needed
-to make the call is static, so really the cost of the call stays modest.  Details of the dynamic cursor type are in
-`cqlrt_common.h` and there are many example functions now in the `cqlrt_common.c` file.
+With this information you can (e.g.) generically do the hash by applying a hash
+to each field and then combining all of those hashes. This kind of function
+works on any cursor and all the extra data about the shape that's needed to make
+the call is static, so really the cost of the call stays modest.  Details of the
+dynamic cursor type are in `cqlrt_common.h` and there are many example functions
+now in the `cqlrt_common.c` file.
 
 #### The Specific Parent/Child Functions
 
@@ -491,22 +526,25 @@ DECLARE FUNC cql_extract_partition (
 
 The first function makes a new partitioning.
 
-The second function hashes the key columns of a cursor (specified by the key argument) and appends
-the values provided in the second argument into a bucket for that key.  By making a pass over the
-child rows a procedure can easily create a partitioning with each unique key combo having a buffer of all
-the matching rows.
+The second function hashes the key columns of a cursor (specified by the key
+argument) and appends the values provided in the second argument into a bucket
+for that key.  By making a pass over the child rows a procedure can easily
+create a partitioning with each unique key combo having a buffer of all the
+matching rows.
 
-The third function is used once the partitioning is done.  Given a key again, this time from the parent rows,
-a procedure can get the buffer it had accumulated and then make a result set out of it and return that.
+The third function is used once the partitioning is done.  Given a key again,
+this time from the parent rows, a procedure can get the buffer it had
+accumulated and then make a result set out of it and return that.
 
-Note that the third function returns a vanilla object type because it could be returning a result set of
-any shape so a cast is required for correctness.
+Note that the third function returns a vanilla object type because it could be
+returning a result set of any shape so a cast is required for correctness.
 
 #### Result Set Sugar
 
-Using the features mentioned above a developer could now join together any kind of complex parent and
-child combo as needed, but the result would be a lot of error-prone code, To avoid this CQL adds
-language sugar to do such partitionings automatically and type-safely, like so:
+Using the features mentioned above a developer could now join together any kind
+of complex parent and child combo as needed, but the result would be a lot of
+error-prone code, To avoid this CQL adds language sugar to do such partitionings
+automatically and type-safely, like so:
 
 
 ```sql
@@ -572,15 +610,16 @@ BEGIN
 END;
 ```
 
-This code iterates the child once and the parent once and only has two database calls,
-one for the child and one for the parent.  And this is enough to create parent/child result
-sets for the most common examples.
+This code iterates the child once and the parent once and only has two database
+calls, one for the child and one for the parent.  And this is enough to create
+parent/child result sets for the most common examples.
 
 #### Result Set Values
 
-While the above is probably the most common case,  a developer might also want to make a procedure call
-for each parent row to compute the child.  And, more generally, to work with result sets from procedure calls
-other than iterating them with a cursor.
+While the above is probably the most common case,  a developer might also want
+to make a procedure call for each parent row to compute the child.  And, more
+generally, to work with result sets from procedure calls other than iterating
+them with a cursor.
 
 The iteration pattern:
 
@@ -588,12 +627,14 @@ The iteration pattern:
 cursor C for call foo(args);
 ```
 
-is very good if the data is coming from (e.g.) a select statement and we don't want to materialize all
-of the results if we can stream instead.  However, when working with result sets the whole point is to
-create materialized results for use elsewhere.
+is very good if the data is coming from (e.g.) a select statement and we don't
+want to materialize all of the results if we can stream instead.  However, when
+working with result sets the whole point is to create materialized results for
+use elsewhere.
 
-Since we can express a result set type with `object<proc_name set>` the language also includes the ability
-to call a procedure that returns a result set and capture that result.  This yields these forms:
+Since we can express a result set type with `object<proc_name set>` the language
+also includes the ability to call a procedure that returns a result set and
+capture that result.  This yields these forms:
 
 ```sql
 declare child_result object<child set>;
@@ -649,9 +690,10 @@ END;
 ```
 
 Note the `LIKE` and `FROM` forms are make it a lot easier to express this notion
-of just adding one more column to the result. The code for emitting the `parent_child`
-result doesn't need to specify the columns of the parent or the columns of the child,
-only that the parent has at least the `id` column. Even that could have been removed.
+of just adding one more column to the result. The code for emitting the
+`parent_child` result doesn't need to specify the columns of the parent or the
+columns of the child, only that the parent has at least the `id` column. Even
+that could have been removed.
 
 This call could have been used instead:
 
@@ -659,14 +701,15 @@ This call could have been used instead:
 fetch result from values(from P, child(from P like child arguments));
 ```
 
-That syntax would result in using the columns of P that match the arguments of `child` -- just
-`P.id` in this case.  But if there were many such columns the sugar would be easier to understand
-and much less error prone.
+That syntax would result in using the columns of P that match the arguments of
+`child` -- just `P.id` in this case.  But if there were many such columns the
+sugar would be easier to understand and much less error prone.
 
 #### Generated Code Details
 
-Normally all result sets that have an object type in them use a generic object `cql_object_ref`
-as their C data type. This isn't wrong exactly but it would mean that a cast would be required
-in every use case on the native side, and it's easy to get the cast wrong.  So the result type
-of column getters is adjusted to be a `child_result_set_ref` instead of just `cql_object_ref`
-where `child` is the name of the child procedure.
+Normally all result sets that have an object type in them use a generic object
+`cql_object_ref` as their C data type. This isn't wrong exactly but it would
+mean that a cast would be required in every use case on the native side, and
+it's easy to get the cast wrong.  So the result type of column getters is
+adjusted to be a `child_result_set_ref` instead of just `cql_object_ref` where
+`child` is the name of the child procedure.

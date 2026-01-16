@@ -1,67 +1,49 @@
 ---
 title: "Chapter 18: Pre-processing"
 weight: 18
-Pre-processing features are a recent addition to the CQL language;
+---
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
-To address these problems, CQL introduces pre-processing features including
-structured macros. That is, macros that describe the sort of thing they intend
+--
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
 
-Define conditional compilation switches using `--defines x y z`
-on the command line. Additionally, if `--rt foo` is specified then
+### Introduction
 
 Pre-processing features are a recent introduction to the CQL language;
 previously any pre-processing functionality was provided by running the C
->NOTE: If `--cg` is specified but no `--rt` is specified, then
+preprocessor over the input file before processing. The practice of using
 `cc -E` or the equivalent was deprecated because:
->the default is `--rt c`, so `__rt__c` will be
 
  * It creates an unnatural dependence in the compile chain
  * The lexical rules for CQL and C are not fully compatible so `cc -E` often
-To avoid disruptive macro patterns with `@ifdef` embedded in SQL or expressions,
-`@ifdef` is itself a _statement_ in the grammar. To create conditional
-expression pieces or other internal fragments, use one of the macro types and
-define it in two or more ways. These design choices avoid the token pasting that
-inevitably results if pre-processing is allowed everywhere. Conditional
-`cte_tables`, `select_core`, and `expr` are highly flexible and give clear
-composition with no awkward syntax.
+   gives specious warnings
  * It is not possible to create automatic code formatting tools with text based
    macro replacement
  * Macros are easily abused, creating statement fragments in weird places that
    are hard to understand
-Like the `@ifdef` forms, `@include` can only appear at the statement level; it
-cannot be used for token pasting as with `#include`. Place `@include` directives
-at the top of files. Once normal statements begin, further includes are not
-possible. Each file has an include section and a statements section. Note that
-`@ifdef` and `@include` do not compose. If you need conditionals, the included
-file should conditionally produce declarations and macros. This keeps file
-dependencies consistent regardless of conditionals.
+ * The usual problems with text replacement and order of operations means that
+   macro arguments frequently have to be wrapped to avoid non-obvious errors
  * Debugging problems in the macros is very difficult with line information
    being unhelpful and pre-processed output being nearly unreadable
-Errors are reported at the macro definition, not where the macro is used.
+
 To address these problems CQL introduced pre-processing features including
 structured macros. That is, macros that describe the sort of thing they intend
-A select expression macro can codify certain common columns and aliases
-that you might want to select, such as:
-syntax and type checking and much better error reporting.  To this we also
-add `@include` to import code and `@ifdef`/`@ifndef` for conditionals.
-Order of operations is not a problem with CQL macros; no extra parentheses are
+to produce and the kinds of things they consume.  This allows for reasonable
+syntax and type checking and much better error reporting.  To this we also add
+`@include` to import code and `@ifdef`/`@ifndef` for conditionals.
 
 ### Conditional Compilation
 
-To avoid language ambiguity and allow macro fragments like a `cte_table` in
-unusual locations, the code must specify the macro argument type. Expressions
-are the default type; the others use a function-like syntax.
+Users can "define" conditional compilation switches using `--defines x y z`
+on the command line.  Additionally, if `--rt foo` is specified then
 `__rt__foo` will be defined.
 
-With these forms, the macro argument type is unambiguous and
 >NOTE: that if `-cg` is specified but no `--rt` is specified then
 >the default is `--rt c` and so `__rt__c` will be
 >defined.
-An example using all of the types:
+
 The syntax for conditional compilation is the familiar:
 
 ```
@@ -88,11 +70,11 @@ Note that in CQL even the code that is conditionally compiled out must at least
 _parse_ correctly.  Semantic analysis does not run, and indeed often there would
 be conflicts if it did, but the code must at least be correct enough to parse.
 
-Conditionally choosing one of several macro implementations for use later in
-the code is a very powerful way to get conditionality throughout your code
-cleanly.  `@ifdef` can only appear inside of statement list (`stmt_list`) macros
-because `@ifdef` is a statement so it can't appear in expressions and query
-fragments.   Hence the most powerful pattern is:
+Conditionally choosing one of several macro implementations for use later in the
+code is a very powerful way to get conditionality throughout your code cleanly.
+`@ifdef` can only appear inside of statement list (`stmt_list`) macros because
+`@ifdef` is a statement so it can't appear in expressions and query fragments.
+Hence the most powerful pattern is:
 
 ```sql
 @ifdef something

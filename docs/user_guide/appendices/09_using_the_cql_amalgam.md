@@ -31,7 +31,7 @@ There are many other uses of the amalgam:
   * Getting the full build working on Windows is more involved.
 * The amalgam is readily consumed by [Emscripten](https://en.wikipedia.org/wiki/Emscripten) to create WASM.
   * Together with Lua and SQLite in WASM, this enabled [a fully online playground](https://mingodad.github.io/CG-SQL-Lua-playground/).
-  * Meta provides a VS Code extension that hosts the compiler in WASM for error checking.
+  * Meta created an internal VS Code extension that hosts the compiler in WASM for error checking.
   * You can build tools that consume the AST or generated outputs.
   * You can invoke the CQL compiler without launching a new process.
 

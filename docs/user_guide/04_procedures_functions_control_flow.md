@@ -425,6 +425,65 @@ end;
 
 If control flow reaches the normal end of the procedure it will return `SQLITE_OK`.
 
+### Advanced: The `cql:try_is_proc_body` Attribute
+
+When writing procedures with `OUT` parameters, CQL enforces that all nonnull
+`OUT` parameters must be initialized before the procedure returns. This is
+normally checked at the end of the procedure. However, this can create a problem
+when wrapping an entire procedure in a `TRY`/`CATCH` block for custom error
+handling or logging.
+
+Consider a common pattern where you want to add error logging to all procedures
+using a macro that wraps the procedure body:
+
+```sql
+@macro(stmt_list) LOGGING_PROC!(body! stmt_list)
+begin
+  let error_in_try := false;
+  [[cql:try_is_proc_body]]
+  try
+    body!;
+  catch
+    error_in_try := true;
+  end;
+  if error_in_try then
+    call log_error_and_rethrow(@MACRO_FILE, @MACRO_LINE);
+  end if;
+end;
+
+create proc some_proc(out x text not null)
+begin
+  LOGGING_PROC!(
+  begin
+    if some_condition then
+      set x := some_value;
+    else
+      set x := get_another_value_or_throw();
+    end if;
+  end);
+end;
+```
+
+Without the `[[cql:try_is_proc_body]]` attribute, this would fail CQL's
+initialization checking. Even though `x` is always initialized in the `TRY`
+block (or an exception is thrown), the flow analysis sees that the `CATCH` block
+doesn't initialize `x`, so it appears uninitialized at the end of the procedure.
+
+The `[[cql:try_is_proc_body]]` attribute solves this by telling CQL to:
+1. Check that all `OUT` parameters are initialized by the end of the annotated
+   `TRY` block (treating it as the conceptual body of the procedure)
+2. Skip the normal initialization check at the end of the procedure
+
+This allows the error-handling wrapper pattern to work correctly: if the `TRY`
+block completes normally, all parameters are guaranteed initialized; if an
+exception occurs, the `CATCH` block handles it (in this example by logging and
+rethrowing).
+
+**Important:** This attribute should only be used when you have a specific
+error-handling pattern that ensures exceptions are properly handled. Misuse of
+`[[cql:try_is_proc_body]]` can disable useful initialization checking.  The
+rethrow is essential.
+
 ### Procedures as Functions: Motivation and Example
 
 The calling convention for CQL stored procedures often requires that the

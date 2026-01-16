@@ -23881,34 +23881,36 @@ static void sem_proc_savepoint_stmt(ast_node *ast)
 // TRY will be unset at the end of the procedure.
 //
 // A somewhat contrived example use case for this is as follows:
-/*
-//   #define LOGGING_PROC_BEGIN \
-//     BEGIN \
-//       LET error_in_try := FALSE; \
-//       [[try_is_proc_body]] \
-//       TRY
 //
-//   #define LOGGING_PROC_END \
-//       CATCH \
-//         SET error_in_try := TRUE; \
-//       END; \
-//       IF error_in_try THEN \
-//         CALL some_proc_that_logs_and_rethrows(__FILE__, __LINE__); \
-//       END IF; \
-//     END
+//   @macro(stmt_list) LOGGING_PROC!(body! stmt_list)
+//   begin
+//     let error_in_try := false;
+//     [[try_is_proc_body]]
+//     try
+//       body!;
+//     catch
+//       error_in_try := true;
+//     end;
+//     if error_in_try then
+//       call log_error_and_rethrow(@MACRO_FILE, @MACRO_LINE);
+//     end if;
+//   end;
 //
-//   CREATE PROC some_proc(OUT x TEXT NOT NULL)
-//   LOGGING_PROC_BEGIN
-//     IF some_condition THEN
-//       SET x := some_value;
-//     ELSE
-//       SET x := get_another_value_or_throw()
-//     END IF;
-//   LOGGING_PROC_END;
-*/
+//   create proc some_proc(out x text not null)
+//   begin
+//     LOGGING_PROC!(
+//     begin
+//       if some_condition then
+//         set x := some_value;
+//       else
+//         set x := get_another_value_or_throw();
+//       end if;
+//     end);
+//   end;
+//
 // As can be seen above, the main part of the procedure does, in fact, always
 // initialize x unless an exception occurs -- and, if it does, the handling
-// within LOGGING_PROC_END will take care of it. Our normal analyses cannot
+// within LOGGING_PROC! will take care of it. Our normal analyses cannot
 // understand that though. By giving programmers a way to explicitly indicate
 // that this pattern is in effect, we can know to ensure that x is initialized
 // within what is, conceptually, the main body of the procedure (i.e., the TRY)

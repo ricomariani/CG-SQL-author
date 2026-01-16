@@ -3,7 +3,7 @@ title: "Appendix 1: AST Structure Reference"
 weight: 1
 ---
 <!---
--- Copyright (c) Meta Platforms, Inc. and affiliates.
+-- Copyright (c) Rico Mariani
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -11,8 +11,9 @@ weight: 1
 
 ### Preface
 
-This appendix provides a comprehensive reference to the Abstract Syntax Tree (AST) node structures
-used in the CQL compiler. Each diagram shows the tree structure with child nodes and their relationships.
+This appendix provides a comprehensive reference to the Abstract Syntax Tree
+(AST) node structures used in the CQL compiler. Each diagram shows the tree
+structure with child nodes and their relationships.
 
 The AST is the internal data structure that represents a CQL program after
 parsing but before semantic analysis and code generation. Understanding the AST
@@ -258,7 +259,8 @@ In the diagrams below:
 
 #### Insert Type Flags
 
-The `{detail insert_type}` field contains one of these zero-child nodes indicating the insert variant:
+The `{detail insert_type}` field contains one of these zero-child nodes
+indicating the insert variant:
 
 ```
 {insert_normal}              -- INSERT
@@ -272,9 +274,9 @@ The `{detail insert_type}` field contains one of these zero-child nodes indicati
 
 #### Dummy Data Generation
 
-CQL supports automatic generation of test data for INSERT and FETCH statements using `@DUMMY_SEED`.
-This is particularly useful for testing when you want to provide some values explicitly while having
-the system generate the rest.
+CQL supports automatic generation of test data for INSERT and FETCH statements
+using `@DUMMY_SEED`. This is particularly useful for testing when you want to
+provide some values explicitly while having the system generate the rest.
 
 ```
 {insert_dummy_spec}          -- @DUMMY_SEED(...) [options]
@@ -462,7 +464,8 @@ the system generate the rest.
 
 #### Window Frame Boundary Nodes
 
-These internal nodes represent different parts of window frame specifications (ROWS/RANGE/GROUPS BETWEEN...):
+These internal nodes represent different parts of window frame specifications
+(ROWS/RANGE/GROUPS BETWEEN...):
 
 ```
 {frame_boundary}             -- single boundary (expr PRECEDING/FOLLOWING/etc.)
@@ -497,13 +500,15 @@ These internal nodes represent different parts of window frame specifications (R
 
 ## Query Rewrite Operations
 
-These internal AST nodes are created during the rewrite phase, which occurs before semantic analysis.
-They represent transformations of the original SQL syntax into optimized or expanded forms.
+These internal AST nodes are created during the rewrite phase, which occurs
+before semantic analysis. They represent transformations of the original SQL
+syntax into optimized or expanded forms.
 
 ### Column Calculation (@COLUMNS expansion)
 
-The `column_calculation` node represents the `@COLUMNS(...)` directive, which is expanded during AST
-rewriting to generate explicit column lists. This is a pre-semantic-analysis transformation.
+The `column_calculation` node represents the `@COLUMNS(...)` directive, which is
+expanded during AST rewriting to generate explicit column lists. This is a
+pre-semantic-analysis transformation.
 
 ```
 {column_calculation}
@@ -524,14 +529,15 @@ SELECT @COLUMNS(T1), @COLUMNS(T2) FROM T1 JOIN T2;
 SELECT T1.col1, T1.col2, T2.col1, T2.col2 FROM T1 JOIN T2;
 ```
 
-The node is completely replaced during the rewriting phase, so it never reaches semantic analysis.
-This allows compile-time generation of column lists based on table/cursor shapes.
+The node is completely replaced during the rewriting phase, so it never reaches
+semantic analysis. This allows compile-time generation of column lists based on
+table/cursor shapes.
 
 ### USING Expression Syntax (expr_names)
 
-The `expr_names` and `expr_name` nodes represent the sugar syntax for USING clauses in INSERT,
-FETCH, and UPDATE statements. This syntax is rewritten during semantic analysis into the standard
-`columns_values` structure.
+The `expr_names` and `expr_name` nodes represent the sugar syntax for USING
+clauses in INSERT, FETCH, and UPDATE statements. This syntax is rewritten during
+semantic analysis into the standard `columns_values` structure.
 
 ```
 {expr_names}
@@ -563,13 +569,14 @@ The rewrite process:
 4. Transforms the original `expr_names` node into a `columns_values` node
 5. The result uses standard SQL syntax for the rest of semantic analysis
 
-This allows users to write more concise code while maintaining compatibility with standard SQL semantics.
+This allows users to write more concise code while maintaining compatibility
+with standard SQL semantics.
 
 ### String Chain Concatenation (str_chain)
 
-The `str_chain` node represents intermediate parsing of adjacent string literals that are
-automatically concatenated during parsing. This is a temporary AST structure that gets
-reduced to a single string literal.
+The `str_chain` node represents intermediate parsing of adjacent string literals
+that are automatically concatenated during parsing. This is a temporary AST
+structure that gets reduced to a single string literal.
 
 ```
 {str_chain}
@@ -591,14 +598,14 @@ The parser processes adjacent string literals by:
 3. Replacing the chain with a single `str` node containing the merged content
 4. The result behaves exactly like a single string literal
 
-This enables convenient string literal concatenation at parse time without runtime overhead,
-similar to C string literal concatenation.
+This enables convenient string literal concatenation at parse time without
+runtime overhead, similar to C string literal concatenation.
 
 ### BETWEEN Rewrite
 
-The `between_rewrite` node is an internal optimization created during semantic analysis. It represents
-the canonical form of BETWEEN expressions for code generation, while preserving the original syntax
-for output.
+The `between_rewrite` node is an internal optimization created during semantic
+analysis. It represents the canonical form of BETWEEN expressions for code
+generation, while preserving the original syntax for output.
 
 ```
 {between_rewrite}
@@ -613,8 +620,9 @@ When the user writes `expr BETWEEN low AND high`, the semantic analyzer:
 2. Transforms it to equivalent comparison: `expr >= low AND expr <= high`
 3. Uses `gen_sql.c` to echo back the original BETWEEN syntax in generated output
 
-This allows optimization and analysis on the canonical form while maintaining readable output.
-The NOT BETWEEN variant follows the same pattern with inverted logic.
+This allows optimization and analysis on the canonical form while maintaining
+readable output. The NOT BETWEEN variant follows the same pattern with inverted
+logic.
 
 ---
 
@@ -1107,7 +1115,7 @@ Statements for generating and controlling query plan output.
 
 {keep_table_name_in_aliases_stmt}  -- @KEEP_TABLE_NAME_IN_ALIASES (no children)
                                    -- preserves table names in column aliases
-
+```
 ---
 
 ## Macro Processing
@@ -1701,8 +1709,4 @@ The `expr_stmt` node wraps an expression for use as a standalone statement.
 - Most lists use the pattern: `{item} | {list}?` where right child is the rest of the list
 - The `{detail flags}` field stores bit flags for various options
 - Semantic information is stored in parallel `sem_node` structures (not shown here)
-- The actual implementation is in [sources/ast.h](../../sources/ast.h) and [sources/ast.c](../../sources/ast.c)
-
-
-
-
+- The actual implementation is in `sources/ast.h` and `sources/ast.c`

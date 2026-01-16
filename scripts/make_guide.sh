@@ -14,7 +14,7 @@ guide_type=$1
 
 if [ "$guide_type" == "all" ]; then
     $SCRIPT_DIR_RELATIVE/make_guide.sh "user_guide" "CQL User's Guide" $SCRIPT_DIR_RELATIVE/../docs/user_guide/[0-9]*.md $SCRIPT_DIR_RELATIVE/../docs/user_guide/**/[0-9]*.md
-    $SCRIPT_DIR_RELATIVE/make_guide.sh "developer_guide" "CQL Developer's Guide" $SCRIPT_DIR_RELATIVE/../docs/developer_guide/[0-9]*.md
+    $SCRIPT_DIR_RELATIVE/make_guide.sh "developer_guide" "CQL Developer's Guide" $SCRIPT_DIR_RELATIVE/../docs/developer_guide/[0-9]*.md $SCRIPT_DIR_RELATIVE/../docs/developer_guide/**/[0-9]*.md
     exit 0
 fi
 

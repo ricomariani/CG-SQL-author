@@ -153,4 +153,4 @@ SELECT 20 b;
 Setting `cql:query_plan_branch=1` selects the second branch. Providing
 `cql:query_plan_branch=2` instead would yield the `ELSE` clause `SELECT 30 b`.
 `cql:query_plan_branch=0` would yield `SELECT 10 b`, which is
-the same as the default behaviour.
+the same as the default behavior.

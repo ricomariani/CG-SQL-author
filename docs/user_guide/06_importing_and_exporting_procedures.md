@@ -28,7 +28,7 @@ Stored procedures defined in another file can be declared to CQL in various
 ways for each major type of stored procedure.  These are covered in
 the sections below.
 
-### Simple Procedures (database free):
+### Simple Procedures (database-free):
 
 ```sql
 declare proc foo(id int, out name text!);
@@ -97,7 +97,7 @@ declare proc with_result_set () OUT UNION (id int!,
 ```
 
 This form can have `USING TRANSACTION`  or not, since it is possible
-to emit a rows with a value cursor and never use the database.  See the
+to emit rows with a value cursor and never use the database.  See the
 previous chapter for details on the `OUT UNION` statement.
 
 ### Exporting Declared Symbols Automatically
@@ -175,7 +175,7 @@ DECLARE PROC insert_values (
   USING TRANSACTION;
 ```
 
-So far we've avoided discussing the generated C code in any details but here
+So far we've avoided discussing the generated C code in any detail but here
 it seems helpful to show exactly what these declarations correspond to in the
 generated C to demystify all this.  There is a very straightforward conversion.
 
@@ -228,7 +228,7 @@ yourself in straight C, simply by conforming to the contract.
 Importantly, SQLite does not know anything about CQL stored procedures, or anything at all about CQL
 really so CQL stored procedure names cannot be used in any way in SQL statements.  CQL
 control flow like the `call` statement can be used to invoke other procedures and
-results can be captured by combing the `OUT` statement and a `DECLARE CURSOR` construct
+results can be captured by combining the `OUT` statement and a `DECLARE CURSOR` construct
 but SQLite is not involved in those things.  This is another place where the inherent
 two-headed nature of CQL leaks out.
 

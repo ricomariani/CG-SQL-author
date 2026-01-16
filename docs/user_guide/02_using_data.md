@@ -292,10 +292,10 @@ features.
 ```sql
 declare procedure printf no check;
 
--- for previty the `create` in `create proc` can be elided
+-- for brevity the `create` in `create proc` can be elided
 proc hello()
 begin
-  -- this time we use the ! short hand for not null
+  -- this time we use the ! shorthand for not null
   create table my_data(
     pos int! primary key,
     txt text!

@@ -55,7 +55,7 @@ declare proc printf no check;
 call printf("x:%d y:%d\n", ifnull(x, 0), ifnull(y,0));
 ```
 
-More generally, attemping to fetch values may or may not actually get a row,
+More generally, attempting to fetch values may or may not actually get a row,
 there may be none left.  The cursor variable `C` can be used by itself as a
 boolean to indicate if the fetch succeeded.  So a more complete example might be:
 

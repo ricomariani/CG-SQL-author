@@ -41,17 +41,17 @@ split_text(tok) AS (
 
 This text might appear in dozens of places where a comma separated list needs to
 be split into pieces and there is no good way to share the code between these
-locations.  CQL can also do creeate something very much like fragments usihg the
+locations.  CQL can also do create something very much like fragments using the
 macro features (see below) but this loses some benefits, so there is a trade off
-to be had. For instance, if use `@macro` to build fragments:
+to be had. For instance, if you use `@macro` to build fragments:
 
 * any semantic errors in the macro do not appear until the macro is used
-* the expansion is very general and therefore it cannot be split into sharable
+* the expansion is very general and therefore it cannot be split into shareable
   pieces that can be re-used
 * if you try to compose such macros the above only gets worse; it's more code
   duplication and harder error cases
 
-Macros therefore present problems as a primary API to shared functionality bu
+Macros therefore present problems as a primary API to shared functionality but
 the need to create re-usable helpers is very real both for correctness and for
 performance.
 

@@ -274,7 +274,7 @@ bundles of arguments or columns of cursors to be easily updated.  Consider this 
 The usual shape forms are supported, so `C` could be `ARGUMENTS` or `LOCALS` etc.
 
 As with all the other sugared syntax forms, the statement is automatically converted to the normal
-form.  SQLite will never see the sugar, nor indeed to later stages of the compiler.
+form.  SQLite will never see the sugar, nor indeed will later stages of the compiler.
 
 #### The `INSERT` Statement
 
@@ -284,11 +284,11 @@ Verifications:
 
 * The target table must exist.
 * The column list specifies the columns we will provide; they must exist and be unique.
-* The columns values specified must be type compatible with the corresponding columns.
+* The column values specified must be type compatible with the corresponding columns.
 * Auto-increment columns may be specified as NULL even though the column is not nullable.
 * If no columns are specified, that is the same as if all columns had been specified, in table order.
 * If the specified columns do not include a value for all not null columns with no default value then
-  * if present, `@dummy_seed` is be used to generate missing column values, (Chapter 12 covers this in greater detail)
+  * if present, `@dummy_seed` is used to generate missing column values (Chapter 12 covers this in greater detail)
   * an error is generated for the first missing value
 
 

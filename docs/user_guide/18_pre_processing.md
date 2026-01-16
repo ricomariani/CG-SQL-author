@@ -73,7 +73,7 @@ be conflicts if it did, but the code must at least be correct enough to parse.
 Conditionally choosing one of several macro implementations for use later in
 the code is a very powerful way to get conditionality throughout your code
 cleanly.  `@ifdef` can only appear inside of statement list (`stmt_list`) macros
-becasue `@ifdef` is a statement so it can't appear in expressions and query
+because `@ifdef` is a statement so it can't appear in expressions and query
 fragments.   Hence the most powerful pattern is:
 
 ```sql
@@ -103,7 +103,7 @@ it cannot be used to do exotic token pasting like often happens with `#include`.
 Furthermore, it must appear at the *top* of files, so it's a lot more like the
 import features of other languages than it is like the C pre-Processor token
 stream.  Once normal statements begin further includes are not possible, each
-file, gets an include section and a statements section.  Note that `@ifdef` and
+file gets an include section and a statements section.  Note that `@ifdef` and
 include _do not_ compose.  Again, `@include` is more like an import.  If you
 need conditionals the included item should conditionally produce declarations
 and possibly macros.  This means that file dependencies are consistent

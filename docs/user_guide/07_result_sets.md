@@ -270,7 +270,7 @@ the rows as they go in to the result set.
 
 In short, the overhead is pretty low.  What you’re left with is pretty
 much the base cost of your algorithm.  The cost here is very similar to
-what it would be for any other thing that make rows.
+what it would be for any other thing that makes rows.
 
 Of course, if you make a million rows, well, that would burn a lot
 of memory.
@@ -352,7 +352,7 @@ Additional demo code is available in [Appendix 10](./appendices/10_working_examp
 ### Nested Result Sets (Parent/Child)
 
 There are many cases where you might want to nest one result set inside of another one.  In order to
-do this ecomomically you must be able to run a parent query and a child query and
+do this economically you must be able to run a parent query and a child query and
 then link the child rows to the parent rows.  One way to do this is of course to run one query for
 each "child" but then you end up with `O(n)` child queries and if there are sub-children it would be
 `O(n*m)` and so forth. What you really want to do here is something more like a join, only without
@@ -384,7 +384,7 @@ parent/child column. These are rows with all of the parent columns plus addition
 people, and one child result might be the details of the schools they attended and another could be the details
 of the jobs they worked.
 
-To accomplish this kind of shape, the language must be able to describe a new output row is that is the
+To accomplish this kind of shape, the language must be able to describe a new output row that is the
 same as the parent but includes columns for the the child results, too. This is done using a cursor
 declaration that comes from a typed name list.  An example might be:
 

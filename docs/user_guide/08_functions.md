@@ -16,9 +16,9 @@ calling conventions and this makes it very inconvenient to use external
 code that is not doing database things and wants to return values.
 Even a random number generator or something would be difficult to
 use because it could not be called in the context of an expression.
-To allow for this CQL adds declared functions
+To allow for this CQL adds declared functions.
 
-In another example of the two-headed nature of CQL, there are two ways to functions.  As we have already
+In another example of the two-headed nature of CQL, there are two ways to use functions.  As we have already
 seen you can make function-like procedures and call them like functions
 simply by making a procedure with an `out` parameter. However, there
 are also cases where it is reasonable to make function calls to external
@@ -43,7 +43,7 @@ is presumably holding on to the reference and as long as it is not mutated the r
 retain this reference as soon as it is stored and release it automatically when it is out of scope.  So, in
 this case, the dictionary continues to own the object.
 
-It is also possible to functions that create objects.  Such as this example:
+It is also possible to declare functions that create objects.  Such as this example:
 
 ```sql
 func dict_create() create object;
@@ -70,7 +70,7 @@ begin
   set dict := dict_create();
   call dict_add(dict, "k1", "v1");
   call dict_add(dict, "k2", "v2");
-  if (dict_get_value(dict, "k1") == dict__get_value(dict, "k2")) then
+   if (dict_get_value(dict, "k1") == dict_get_value(dict, "k2")) then
     call printf("insanity has ensued\n");
   end if;
 end;

@@ -33,7 +33,7 @@ operations are allowed on which data. Strict type checking is much more
 reasonable given CQL's compiled programming model.
 
 > NOTE: CQL was created to help solve problems in the building of Meta
-> Platforms's Messenger application, but this content is free from references to
+> Platforms' Messenger application, but this content is free from references to
 > Messenger. The CQL code generation here is done in the simplest mode with the
 > fewest runtime dependencies allowed for illustration.
 

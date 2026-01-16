@@ -136,7 +136,7 @@ optional elements:
 
 ### Attributes
 
-Miscellaneous attributes can be present on virtual every kind of entity.
+Miscellaneous attributes can be present on virtually every kind of entity.
 They are optional.  The root node introduces the attributes:
 
 * **attributes** : a list at least one attribute

@@ -27,11 +27,11 @@ use make an amalgam at that version and then check in the output
 `cql_amalgam.c`.  Just like with SQLite and its amalgam.
 
 There are many other uses of the amalgam:
-* It's possible to tweak the amalgam with a little pre-processing to make a windows binary, last time I attempted this it took about 10 minutes
+* It's possible to tweak the amalgam with a little pre-processing to make a Windows binary; last time I attempted this it took about 10 minutes
   * trying to get the whole build to work on Windows is a lot harder
-* The amalgam is readily consumed by [emscripten](https://en.wikipedia.org/wiki/Emscripten) to create WASM
+* The amalgam is readily consumed by [Emscripten](https://en.wikipedia.org/wiki/Emscripten) to create WASM
   * This along with Lua and SQLite in WASM resulted in [a fully online playground](https://mingodad.github.io/CG-SQL-Lua-playground/)
-  * Meta builds a VSCode extension that hosts the actual compiler in WASM in VSCode for error checking
+  * Meta builds a VS Code extension that hosts the actual compiler in WASM in VS Code for error checking
   * You can make any kind of tool of your own that wants to consume the AST or the output parts
   * You can invoke the CQL compiler without launching a new process from inside your environment
 
@@ -52,7 +52,7 @@ make
 The result goes in `out/cql_amalgam.c`.  It can then be built using `cc` with
 whatever flags you might desire.  With a few `-D` directives it can readily be
 compiled with Microsoft C and it also works with Emscripten (`emcc`) basically
-unchanged.  Clang and Gcc of course also work.
+unchanged.  Clang and GCC of course also work.
 
 The standard test script `test.sh` builds the amalgam and attempts to compile it
 as well, which ensures that the amalgam can at least compile at all times.

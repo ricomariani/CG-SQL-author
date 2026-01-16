@@ -537,7 +537,7 @@ First observe CQL is a two-headed language
 
 ```
 rr := 1+1;           -- this is evaluated in generated C or Lua code
-rr := (select 1+1);  -- this expresion goes to SQLite; SQLite does the addition
+rr := (select 1+1);  -- this expression goes to SQLite; SQLite does the addition
 ```
 
 CQL tries to do most things the same as SQLite in the C context

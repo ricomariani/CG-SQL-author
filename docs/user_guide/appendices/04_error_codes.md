@@ -428,7 +428,7 @@ CREATE TABLE foo(
 
 The SQLite ALTER TABLE ADD COLUMN statement is used to add new columns to the
 schema.  This statement puts the columns at the end of the table. In order to
-make the CQL schema align as closely as possible to the actual sqlite schema you
+make the CQL schema align as closely as possible to the actual SQLite schema you
 will get you are required to add columns where SQLite will put them.  This will
 help a lot if you ever connect to such a database and start doing `select * from
 <somewhere with creates>`
@@ -619,7 +619,7 @@ SELECT * FROM foo WHERE 'abc' LIKE 123;  -- Error: right side must be string
 
 ### CQL0044: operator may only appear in the context of a SQL statement 'MATCH'
 
-The MATCH operator is a complex sqlite primitive.  It can only appear within SQL
+The MATCH operator is a complex SQLite primitive.  It can only appear within SQL
 expressions. See the CQL documentation about it being a two-headed-beast when it
 comes to expression evaluation.
 
@@ -1319,7 +1319,7 @@ LET result := @my_macro!(5);  -- Error: macro expects 2 arguments, got 1
 ### CQL0088: user function may not appear in the context of a SQL statement 'function_name'
 
 External C functions declared with `function ...` are not for use in
-sqlite.  They may not appear inside statements.
+SQLite.  They may not appear inside statements.
 
 Example:
 ```sql
@@ -1331,11 +1331,11 @@ SELECT my_c_func(id) FROM foo;  -- Error: C function can't be used in SQL
 
 ### CQL0089: user function may only appear in the context of a SQL statement 'function_name'
 
-SQLite user defined functions (or builtins) declared with  `declare select
-function` may only appear inside of sql statements.  In the case of user defined
-functions they must be added to sqlite by the appropriate C APIs before they can
-be used in CQL stored procs (or any other context really).   See the sqlite
-documentation on how to add user defined functions. [Create Or Redefine SQL
+SQLite user-defined functions (or built-ins) declared with `declare select
+function` may only appear inside of SQL statements. In the case of user-defined
+functions, they must be added to SQLite by the appropriate C APIs before they can
+be used in CQL stored procs (or any other context really). See the SQLite
+documentation on how to add user-defined functions: [Create Or Redefine SQL
 Functions](http://www.sqlite.org/c3ref/create_function.html)
 
 Example:
@@ -1421,7 +1421,7 @@ END;
 
 The indicated function is not implemented in CQL.  Possibly you intended to
 declare it with `function` as an external function or `select function` as a
-sqlite builtin.  Note not all sqlite builtins are automatically declared.
+SQLite built-in. Note not all SQLite built-ins are automatically declared.
 
 Example:
 ```sql
@@ -4940,7 +4940,7 @@ SELECT count(*) FILTER (WHERE id > 10) FROM foo;  -- OK
 There are basically two checks here both of which have to do with the "nesting
 level" at which the `return` occurs.
 
-A loose `return` statement (not in a procedure) is meaningless so that produce
+A loose `return` statement (not in a procedure) is meaningless, so it produces
 an error.  There is nothing to return from.
 
 If the return statement is not inside of an "if" or something like that then it

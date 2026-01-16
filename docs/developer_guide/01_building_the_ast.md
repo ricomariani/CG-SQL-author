@@ -930,3 +930,11 @@ samples and look at the `gen_` function and quickly see exactly what the options
 are authoritatively.  As a result it's very normal to paste the extraction code
 from a `gen_` function into a new/needed semantic analysis or code-generation
 function.
+
+## AST Structure Reference
+
+For a comprehensive reference to all AST node types and their structures, see 
+[Appendix 1: AST Structure Reference](../appendices/01_ast_reference.md). This appendix 
+provides detailed tree diagrams for every node type used by the CQL compiler, organized 
+by functional category, and serves as an essential reference for developers working with 
+the AST.

@@ -244,7 +244,7 @@ SQLite reference: https://sqlite.org/lang_update.html
   * the evaluation proceeds as though the target table had an unrestricted join to the `FROM` clause
   * it's normal to include a `WHERE` clause so as to not get a cross product
 
-The example in the SQLite documentation makes the `FROM` semenatics clear:
+The example in the SQLite documentation makes the `FROM` semantics clear:
 
 ```SQL
 UPDATE inventory
@@ -261,11 +261,10 @@ The following sugared version of the `UPDATE` statement is also supported:
 UPDATE some_table SET (a,b,c) = (1, 2, "xx") WHERE ...;
 ```
 
-This form at first appears to be less good than the usual form in that the clarity of which column
-is getting which value is gone however it creates symmetry with the `INSERT` statement and like
-the `INSERT` statement the column names or values may be generated from `LIKE` and `FROM` forms as
-described in [Chapter 5](./05_cursors.md#reshaping-data-cursor-like-forms).  These forms allow for
-bundles of arguments or columns of cursors to be easily updated.  Consider this example:
+At first glance, this form appears less clear than naming each column; however, it creates symmetry
+with the `INSERT` statement. As with `INSERT`, column names or values may be generated from `LIKE`
+and `FROM` forms as described in [Chapter 5](./05_cursors.md#reshaping-data-cursor-like-forms).
+These forms let you update bundles of arguments or cursor columns easily. Consider this example:
 
  ```SQL
  UPDATE something(LIKE C) = (FROM C) WHERE id = 12;
@@ -273,8 +272,8 @@ bundles of arguments or columns of cursors to be easily updated.  Consider this 
 
 The usual shape forms are supported, so `C` could be `ARGUMENTS` or `LOCALS` etc.
 
-As with all the other sugared syntax forms, the statement is automatically converted to the normal
-form.  SQLite will never see the sugar, nor indeed will later stages of the compiler.
+As with other sugared syntax, the statement is automatically converted to the normal form.
+SQLite never sees the sugar, nor do later stages of the compiler.
 
 #### The `INSERT` Statement
 

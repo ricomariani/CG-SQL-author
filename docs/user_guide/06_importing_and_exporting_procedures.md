@@ -10,45 +10,45 @@ weight: 6
 -->
 
 CQL generally doesn't see the whole world in one compilation.
-In this way it's a lot more like, say, the C compiler than it is like, say, Java
-or C# or something like that.  This means several things:
+In this way it's more like the C compiler than Java or C#.
+This has some useful consequences:
 
-* You don't have to tell CQL about all your schema in all your files,
-so particular stored procs can be more encapsulated
-* You can have different databases mounted in different places and CQL
-won't care; you provide the database connection to the stored procedures when you call them, and that database is assumed to have the tables declared in this translation unit
-* Several different schema can be maintained by CQL,
-even in the same database, and they won't know about each other
+* You don't have to tell CQL about all schema across all files;
+  particular stored procedures can be encapsulated.
+* You can mount different databases in different places; you provide the
+  database connection when calling stored procedures, and that database is
+  assumed to have the tables declared in this translation unit.
+* Multiple independent schema can be maintained by CQL—even in the same
+  database—and they won't need to know about each other.
 
 To make this possible there are a few interesting features
 
-### Declaring Procedures Defined Elsewhere
+### Importing Procedures (Declaring Procedures Defined Elsewhere)
 
-Stored procedures defined in another file can be declared to CQL in various
-ways for each major type of stored procedure.  These are covered in
-the sections below.
+Declare stored procedures defined in another file so you can call them.
+Use forms appropriate to the procedure's behavior.
 
-### Simple Procedures (database-free):
+### Simple Procedures (Database-free)
 
 ```sql
 declare proc foo(id int, out name text!);
 ```
 
 This introduces the symbol name without providing the body.
-This has important variations.
+Variations below add database usage and result types.
 
-### Procedures that use the database
+### Procedures that Use the Database
 
 ```sql
 declare proc foo(id int, out name text!) USING TRANSACTION;
 ```
 
-Most procedures you write will use SQLite in some fashion,
-maybe a `select` or something.  The `USING TRANSACTION` annotation indicates that
-the proc in question uses the database and therefore the generated code
-will need a database connection in-argument and it will return a SQLite error code.
+Most procedures use SQLite—e.g., a `SELECT`.
+The `USING TRANSACTION` annotation indicates the procedure uses the database,
+so the generated code includes a database connection argument and returns a
+SQLite error code.
 
-### Procedures that create a result set
+### Procedures that Create a Result Set
 
 If the procedure in question is going to use `select` or `call` to create a result set,
 the type of that result set has to be declared.  An example might look like this:
@@ -61,12 +61,11 @@ declare proc with_result_set () (id int!,
                                  size real);
 ```
 
-This says that the procedure takes no arguments (other than the implicit database
-connection) and it has an implicit out-argument that can be read to get a result
-set with the indicated columns: id, name, rate, type, and size.
-This form implies `USING TRANSACTION`.
+This declares a procedure with no arguments (other than the implicit database
+connection) that produces a result set with the indicated columns: `id`, `name`,
+`rate`, `type`, and `size`. This form implies `USING TRANSACTION`.
 
-### Procedures that return a single row with a value cursor
+### Procedures that Return a Single Row (Value Cursor)
 
 If the procedure emits a cursor with the `OUT` statement to produce a single
 row then it can be declared as follows:
@@ -79,11 +78,11 @@ declare proc with_result_set () OUT (id int!,
                                      size real);
 ```
 
-This form can have `USING TRANSACTION`  or not, since it is possible
-to emit a row with a value cursor and never use the database.  See the
-previous chapter for details on the `OUT` statement.
+This form may include `USING TRANSACTION`, but it is not required—it's possible
+to emit a row with a value cursor without using the database. See the previous
+chapter for details on the `OUT` statement.
 
-### Procedures that return a full result set
+### Procedures that Return a Full Result Set
 
 If the procedure emits many rows with the `OUT UNION` statement to produce a full result set
 then it can be declared as follows:
@@ -96,36 +95,33 @@ declare proc with_result_set () OUT UNION (id int!,
                                      size real);
 ```
 
-This form can have `USING TRANSACTION`  or not, since it is possible
-to emit rows with a value cursor and never use the database.  See the
-previous chapter for details on the `OUT UNION` statement.
+This form may include `USING TRANSACTION`, but it is not required—it's possible
+to emit rows with a value cursor without using the database. See the previous
+chapter for details on the `OUT UNION` statement.
 
-### Exporting Declared Symbols Automatically
+### Exporting Declarations Automatically
 
 To avoid errors, the declarations for any given file can be automatically
 created by adding something like `--generate_exports` to the command
 line. This will require an additional file name to be passed in the `--cg`
 portion to capture the exports.
 
-That file can then be referenced `@include` to add the declarations to the input
-stream. And of course these could be combined into useful units so that you
+Reference that file with `@include` to add the declarations to the input
+stream. These can be combined into useful units so that you
 don't have to name each include file individually every time.  Note that any
 given `@include` is processed exactly once, a second attempt to include the same
 file is disregarded.
 
-Nomenclature is perhaps a bit weird here.  You use `--generate_exports` to export
-the stored procedure declarations from a translation unit.  Of course those
-exported symbols are what you then import in some other module.  Sometimes this
-output file is called `foo_imports.sql` because those exports are of course exactly
-what you need to import `foo`.  You can use whatever convention you like of course,
-CQL doesn't care.  The full command line might look something like this:
+Naming hint: You use `--generate_exports` to export stored procedure declarations
+from a translation unit. Those exported symbols are what you import elsewhere.
+Some teams name the output file `foo_imports.sql` (exports for importing `foo`).
+Use any convention you prefer. Example:
 
 ```
 cql --in foo.sql --cg foo.h foo.c foo_imports.sql --generate_exports
 ```
 
-Using the pre-processor you can get declarations from elsewhere with
-a directive like this:
+Use the pre-processor to include declarations from elsewhere:
 
 ```
 @include "foo_imports.sql"
@@ -175,9 +171,8 @@ DECLARE PROC insert_values (
   USING TRANSACTION;
 ```
 
-So far we've avoided discussing the generated C code in any detail but here
-it seems helpful to show exactly what these declarations correspond to in the
-generated C to demystify all this.  There is a very straightforward conversion.
+Mapping to generated C: these declarations correspond directly to C signatures.
+Conversion is straightforward.
 
 ```c
 void test(cql_int32 i);
@@ -221,19 +216,16 @@ cql_code insert_values(
   cql_nullable_int32 type_);
 ```
 
-As you can see, these declarations use exactly the normal SQLite
-types and so it is very easy to declare a procedure in CQL and then implement it
-yourself in straight C, simply by conforming to the contract.
+These declarations use normal SQLite types, so it is easy to declare a procedure
+in CQL and implement it in C by conforming to the contract.
 
-Importantly, SQLite does not know anything about CQL stored procedures, or anything at all about CQL
-really so CQL stored procedure names cannot be used in any way in SQL statements.  CQL
-control flow like the `call` statement can be used to invoke other procedures and
-results can be captured by combining the `OUT` statement and a `DECLARE CURSOR` construct
-but SQLite is not involved in those things.  This is another place where the inherent
-two-headed nature of CQL leaks out.
+Important: SQLite does not know anything about CQL stored procedures, so stored
+procedure names cannot be used in SQL statements. CQL control flow (e.g., `call`)
+invokes procedures; results can be captured with `OUT` plus `DECLARE CURSOR`.
+SQLite is not involved in these operations.
 
-Finally, this is a good place to reinforce that procedures with any of the structured
-result types (`select`, `out`, `out union`) can be used with a suitable cursor.
+Procedures with structured result types (`SELECT`, `OUT`, `OUT UNION`) can be
+used with a suitable cursor.
 
 ```sql
 proc get_stuff()
@@ -242,7 +234,7 @@ begin
 end;
 ```
 
-Can be used in two interesting ways:
+Two usage patterns:
 
 ```sql
 proc meta_stuff(meta bool)
@@ -254,11 +246,10 @@ begin
   end if;
 end;
 ```
-Assuming that `get_stuff` and `get_other_stuff` have the same shape, then
-this procedure simply passes on one or the other's result set unmodified
-as its own return value.
+If `get_stuff` and `get_other_stuff` have the same shape, this procedure
+passes one or the other's result set through as its own return value.
 
-But you could do more than simply pass on the result.
+Or process results directly:
 
 ```sql
 proc meta_stuff(meta bool)
@@ -272,11 +263,9 @@ begin
 end;
 ```
 
-Here we can see that we used the procedure to get the results and then
-process them directly somehow.
+This procedure fetches rows and processes them directly.
 
-And of course the result of an `OUT` can similarly be processed using
-a value cursor, as previously seen.
+Likewise, the result of an `OUT` can be processed using a value cursor.
 
-These combinations allow for pretty general composition of stored procedures
-so long as they are not recombined with SQLite statements.
+These combinations allow general composition of stored procedures, independent
+of SQLite statements.

@@ -9,7 +9,7 @@ weight: 1
 -- LICENSE file in the root directory of this source tree.
 -->
 
-CQL was designed as a compiler for the SQLite runtime system. SQLite lacks
+CQL is a compiler for the SQLite runtime system. SQLite lacks
 stored procedures but has a rich C runtime interface that allows you to create
 any kind of control flow mixed with any SQL operations that you might need.
 However, SQLite's programming interface is both verbose and error-prone in that
@@ -23,8 +23,8 @@ the stored procedure forms that are available in client/server SQL solutions and
 lowering that language to "The C you could have written to do that job using the
 normal SQLite interfaces."
 
-As a result, the C generated is generally very approachable but now the source
-language does not suffer from brittleness due to query or table changes, and CQL
+As a result, the generated C is generally approachable while the source
+language avoids brittleness due to query or table changes, and CQL
 always generates correct column indices, nullability checks, error checks, and
 the other miscellany needed to use SQLite correctly.
 
@@ -37,10 +37,16 @@ reasonable given CQL's compiled programming model.
 > Messenger. The CQL code generation here is done in the simplest mode with the
 > fewest runtime dependencies allowed for illustration.
 
+### Audience and Scope
+
+This guide is for developers who want to write robust, maintainable SQL and
+compile it to predictable C that uses SQLite correctly. It focuses on core
+language features, composition patterns, and runtime basics.
+
 ### Getting Started
 
-Before starting this tutorial, make sure you have built the `cql`
-executable first in [Building CG/SQL](../quick_start/getting-started.md)
+Before starting, build the `cql` executable as described in
+[Getting Started](../quick_start/getting-started.md).
 
 The "Hello World" program rendered in CQL looks like this:
 
@@ -54,9 +60,9 @@ begin
 end;
 ```
 
-This very nearly works exactly as written but we'll need a little bit of glue to wire it all up.
+This nearly works as written, but we need a little glue to wire it up.
 
-First, assuming you have [built](../quick_start/getting-started.md#building) `cql`, you should have the power to do this:
+First, assuming you have [built](../quick_start/getting-started.md#building) `cql`, do:
 
 ```bash
 $ cql --in hello.sql --cg hello.h hello.c
@@ -64,7 +70,7 @@ $ cql --in hello.sql --cg hello.h hello.c
 
 This will produce the C output files `hello.c` and `hello.h` which can be readily compiled.
 
-However, hello.c will not have a `main` -- rather it will have a function like this:
+However, `hello.c` will not have a `main`; rather it will have a function like this:
 
 ```c
 ...
@@ -98,7 +104,7 @@ int main(int argc, char **argv)
 }
 ```
 
-Now we should be able to do the following:
+Now compile and run:
 
 ```bash
 $ cc -o hello main.c hello.c
@@ -106,15 +112,15 @@ $ ./hello
 Hello, world
 ```
 
-Congratulations, you've printed `"Hello, world"` with CG/SQL!
+Congratulations—you've printed `"Hello, world"` with CG/SQL!
 
 ### Why did this work?
 
-A number of things are going on even in this simple program that are worth discussing:
+A few noteworthy details in this simple program:
 
 * the procedure `hello` had no arguments, and did not use the database
-  * therefore its type signature when compiled will be simply `void hello(void);` so we know how to call it
-  * you can see the declaration for yourself by examining the `hello.c` or `hello.h`
+  * therefore its type signature when compiled will be `void hello(void);` so we know how to call it
+  * see the declaration by examining `hello.c` or `hello.h`
 * since nobody used a database, we didn't need to initialize one
 * since there are no actual uses of SQLite, we didn't need to provide that library
 * for the same reason, we didn't need to include a reference to the CQL runtime
@@ -129,9 +135,9 @@ newline.
 
 ### Variables and Arithmetic
 
-Borrowing once again from examples in "The C Programming Language",
-it's possible to do significant control flow in CQL without reference
-to databases.  The following program illustrates a variety of concepts:
+Borrowing from examples in "The C Programming Language",
+it's possible to do significant control flow in CQL without referencing
+databases. The following program illustrates a variety of concepts:
 
 ```sql
 -- needed to allow vararg calls to C functions
@@ -164,8 +170,7 @@ begin
 end;
 ```
 
-You may notice that both the SQL style `--` line prefix comments and the C style `/* */` forms
-are acceptable comment forms.
+Both SQL-style `--` line comments and C-style `/* */` block comments are acceptable.
 
 Like C, in CQL all variables must be declared before they are used.  They remain in scope until the end of the
 procedure in which they are declared, or they are global scoped if they are declared outside of any procedure.  The
@@ -192,15 +197,14 @@ The most basic types are the scalar or "unitary" types (as they are referred to 
 
 There will be more notes on these types later, but importantly, all keywords and
 names in CQL are case insensitive just like in the underlying SQL language.
-Additionally all of the above may be combined with `not null` to indicate that a
+Additionally, all of the above may be combined with `not null` to indicate that a
 `null` value may not be stored in that variable (as in the example).  When
 generating the C code, the case used in the declaration becomes the canonical
 case of the variable and all other cases are converted to that in the emitted
 code.  As a result, the C remains case sensitively correct.
 
-The size of the reference types is machine dependent, whatever the local pointer
-size is.  The non-reference types use machine independent declarations like
-`int32_t` to get exactly the desired sizes in a portable fashion.
+Reference type sizes are machine dependent (pointer-sized). Non-reference types
+use machine-independent declarations like `int32_t` to get desired sizes.
 
 All variables of a reference type are set to `NULL` when they are declared,
 including those that are declared `NOT NULL`. For this reason, all nonnull
@@ -209,7 +213,7 @@ is allowed to read from them. This is not the case for nonnull variables of a
 non-reference type, however: They are automatically assigned an initial value of
 0, and thus may be read from at any point.
 
-The programs execution begins with three assignments:
+The program's execution begins with three assignments:
 
 ```sql
 let lower := 0;
@@ -217,9 +221,9 @@ let upper := 300;
 let step := 20;
 ```
 
-This initializes the variables just like in the isomorphic C code.  Statements
-are separated by semicolons, just like in C.  In the above, the data type of the
-variable was inferred because the `let` keyword was used.
+This initializes the variables just like in the isomorphic C code. Statements
+are separated by semicolons, as in C. In the above, the variable type was
+inferred because `let` was used.
 
 The table is then printed using a `while` loop.
 
@@ -230,11 +234,9 @@ begin
 end;
 ```
 
-The above has the usual meaning, with the statements in the `begin/end` block
-being executed repeatedly until the condition becomes false.
+This repeats the `begin`/`end` block until the condition becomes false.
 
-The body of a `begin`/`end` block such as the one in the `while` statement can
-contain one or more statements.
+The body of a `begin`/`end` block can contain one or more statements.
 
 The typical computation of Celsius temperature ensues with this code:
 
@@ -244,17 +246,13 @@ call printf("%d\t%d\n", fahr, celsius);
 fahr += step;
 ```
 
-This computes the Celsius temperature and then prints it out, moving on to the
-next entry in the table. Note that we have started using some shorthand. `SET`
-can be omitted. And the `+=` assignment operators are also supported.  Top-level
-procedure calls can also be made without the `call` keyword; that, too, could
-have been omitted.
+This computes the Celsius temperature and prints it, then moves to the next
+entry. Note the shorthand: `SET` can be omitted; `+=` assignment operators are
+supported. Top-level procedure calls can be made without `call`.
 
-Importantly, the CQL compiler uses the normal SQLite order of operations, which
-is NOT the same as the C order of operations. As a result, the compiler may need
-to add parentheses in the C output to get the correct order; or it may remove
-some parentheses because they are not needed in the C order even though they
-were in the SQL order.
+The CQL compiler uses the SQLite order of operations, which is not the same as
+C. As a result, the compiler may add parentheses in the C output to preserve the
+correct order, or remove ones that are unnecessary in C.
 
 The `printf` call operates as before, with the `fahr` and `celsius` variables
 being passed on to the C runtime library for formatting, unchanged.
@@ -281,9 +279,8 @@ they might be applied when performing a `+` operation.
 
 ### Preprocessing Features
 
-CQL includes its own pre-processor, it is described in [Chapter 18](./18_pre_processing/).  While it is
-still possible to use the C pre-processor in front of CQL as was once necessary this practice is now
-deprecated.  The usual pre-processor features are supported:
+CQL includes its own pre-processor (see [Chapter 18](./18_pre_processing/)).
+Using the C pre-processor in front of CQL is deprecated. Supported features:
 
   * macros (`@macro`)
   * including files (`@include`)

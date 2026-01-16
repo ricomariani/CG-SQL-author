@@ -9,16 +9,16 @@ weight: 8
 -- LICENSE file in the root directory of this source tree.
 -->
 
-CQL stored procs have a very simple contract so it is easy to declare
+CQL stored procedures have a very simple contract, so it is easy to declare
 procedures and then implement them in regular C; the C functions just
-have to conform to the contract.  However, CQL procedures have their own
+have to conform to the contract. However, CQL procedures have their own
 calling conventions and this makes it very inconvenient to use external
 code that is not doing database things and wants to return values.
 Even a random number generator or something would be difficult to
 use because it could not be called in the context of an expression.
-To allow for this CQL adds declared functions.
+To allow this, CQL adds declared functions.
 
-In another example of the two-headed nature of CQL, there are two ways to use functions.  As we have already
+In another example of the two-headed nature of CQL, there are two ways to use functions. As we have already
 seen you can make function-like procedures and call them like functions
 simply by making a procedure with an `out` parameter. However, there
 are also cases where it is reasonable to make function calls to external
@@ -91,7 +91,7 @@ can do so following this example:
 select function strencode(t text!) text!;
 ```
 
-This introduces the function `strencode` to the compiler for use in SQL constructs.  With this done you
+This introduces the function `strencode` to the compiler for use in SQL constructs. With this done you
 could write a procedure something like this:
 
 ```sql
@@ -156,7 +156,7 @@ begin
 end;
 ```
 
-This construct is very general indeed but the runtime set up for it is much more complicated than scalar functions
+This construct is very general, but the runtime setup for it is much more complicated than scalar functions
 and only more modern versions of SQLite even support it.
 
 ### SQL Functions with Unchecked Parameter Types
@@ -358,25 +358,25 @@ to extract the original value.
 These functions have pipeline aliases  `:box`, `:type` and `:to_int`,
 `:to_bool`,  etc.
 
-*Dyanmic Cursor Functions*
+*Dynamic Cursor Functions*
 
-These functions all work with an unspecified cursor format.  These accept a
+These functions work with an unspecified cursor format. They accept a
 so-called *dynamic* cursor.
 
 * `cql_cursor_format` returns a string with the names and values of every field
   in the cursor, useful for debugging
-* `cql_cursor_column_count` return the number of columns in the cursor
+* `cql_cursor_column_count` returns the number of columns in the cursor
 * `cql_cursor_column_type` returns the type of the column using
   `CQL_DATA_TYPE_*` constants
 * `cql_cursor_get_*` returns a column of the indicated type at the indicated
   index, the type can be bool, int, long, real, text, blob, or object
 
-Pipeline syntax is availabe for these, you can use `C:format`, `C:count`,
+Pipeline syntax is available for these: use `C:format`, `C:count`,
 `C:type(i)`, `C:to_bool(i)`, `C:to_int(i)` etc.
 
 ##### Dictionaries
 
-Each of the following returns an `object<cql_TYPE_dictionary` where `TYPE` is
+Each of the following returns an `object<cql_TYPE_dictionary>` where `TYPE` is
 the indicated type.
 
 * `cql_string_dictionary_create`  -- values are strings (`text`)

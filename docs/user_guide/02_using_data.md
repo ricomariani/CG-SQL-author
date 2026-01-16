@@ -40,7 +40,7 @@ end;
 The above is an interesting little baby program, and it appears as though it
 would once again print that most famous of salutations, "Hello, world".
 
-Well, it doesn't.  At least, not yet.  Let's walk through the various things
+It doesn't — yet. Let's walk through the various things
 that are going to go wrong as this will teach us everything we need to know
 about activating CQL from some environment of your choice.
 
@@ -67,7 +67,7 @@ int main(int argc, char **argv)
   sqlite3 *db;
   int rc = sqlite3_open(":memory:", &db);
   if (rc != SQLITE_OK) {
-    exit(1); /* not exactly world class error handling but that isn't the point */
+    exit(1); /* not exactly world-class error handling but that isn't the point */
   }
   rc = hello(db);
   if (rc != SQLITE_OK) {
@@ -110,7 +110,7 @@ Let's talk about the final missing bit.
 
 ### Declaring Schema
 
-In CQL, a loose piece of Data Definition Language (henceforth DDL) does not
+In CQL, a standalone piece of Data Definition Language (henceforth DDL) does not
 actually create or drop anything. In most CQL programs, the normal situation is
 that "something" has already created the database and put some data in it.  You
 need to tell the CQL compiler about the schema so that it knows what the tables
@@ -141,7 +141,7 @@ end;
 
 If we rebuild the program, it will now behave as expected.
 
-### Explaining The New Hello World
+### Explaining the New Hello World
 
 Let's go over every important line of the new program, starting from main:
 
@@ -149,9 +149,9 @@ Let's go over every important line of the new program, starting from main:
 int rc = sqlite3_open(":memory:", &db);
 ```
 
-This statement gives us an empty, private, in-memory only database to work with.
-This is the simplest case and it's still very useful.  The `sqlite_open` and
-`sqlite_open_v2` functions can be used to create a variety of databases per the
+This statement gives us an empty, private, in-memory-only database to work with.
+This is the simplest case and it's still very useful.  The `sqlite3_open` and
+`sqlite3_open_v2` functions can be used to create a variety of databases per the
 SQLite documentation.
 
 We'll need such a database to use our procedure, and we use it in the call here:
@@ -188,6 +188,7 @@ This will add a single row to the table.  Note that we have again used double
 quotes, meaning that this is a C string literal.  This is highly convenient
 given the escape sequences.  Normally SQLite text has the newlines directly
 embedded in it; that practice isn't very compiler friendly, hence the
+compiler-friendly,
 alternative.
 
 Next, we declare a local variable to hold our data:
@@ -234,7 +235,7 @@ this clearer let's change the example a little bit before we move on.
 set t := (select "__"||t||' '||1.234 from my_data);
 ```
 
-This is a somewhat silly example but it illustrates some important things:
+This is a somewhat silly example, but it illustrates some important things:
 
 * even though SQLite doesn't use double quotes for string literals, that's no
   problem because CQL will convert the string into a single quoted version with
@@ -243,7 +244,8 @@ This is a somewhat silly example but it illustrates some important things:
 * you can mix and match both kinds of string literals, they will all be the
   single quote variety by the time SQLite sees them
 * the `||` operator has lots of complex formatting conversions (such as
-  converting real values to strings) * in fact the conversions are so subtle as
+  converting real values to strings)
+* in fact, the conversions are so subtle as
   to be impossible to emulate in loose C code with any economy, so, like a few
   other operators, `||` is only supported in the SQLite context
 
@@ -281,7 +283,7 @@ the rest of the code. Any temporary memory allocations will be freed and any
 pending SQLite statements will be finalized. More on that later when we discuss
 error handling.
 
-With that we have a much more complicated program that prints "Hello, world"
+With that, we have a much more complicated program that prints "Hello, world".
 
 ### Introducing Cursors
 

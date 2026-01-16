@@ -62,7 +62,7 @@ end;
 
 int main(int argc, char **argv)
 {
-  /* Note: not exactly world class error handling but that isn't the point */
+  /* Note: not exactly world-class error handling but that isn't the point */
 
   // create a db
   sqlite3 *db;
@@ -85,7 +85,7 @@ int main(int argc, char **argv)
   };
 
   for (int i = 0; i < 3; i++) {
-    // note we make a string reference from a c string here
+    // note we make a string reference from a C string here
     cql_string_ref dtask = cql_string_ref_new(default_tasks[i]);
     rc = todo_add(db, dtask);
     cql_string_release(dtask); // and then dispose of the reference
@@ -125,7 +125,7 @@ int main(int argc, char **argv)
     cql_bool done = todo_tasks_get_done(result_set, row);
     cql_int32 rowid = todo_tasks_get_rowid(result_set, row);
 
-    // convert to c string format
+    // convert to C string format
     cql_alloc_cstr(ctext, text);
     printf("%d: rowid:%d %s (%s)\n",
       row, rowid, ctext, done ? "done" : "not done");
@@ -145,7 +145,7 @@ int main(int argc, char **argv)
 ```sh
 # ${cgsql} refers to the root of the CG/SQL repo
 % cql --in todo.sql --cg todo.h todo.c
-% cc -o todo -I${cqsql}/sources main.c todo.c ${cgsql}/sources/cqlrt.c -lsqlite3
+% cc -o todo -I${cgsql}/sources main.c todo.c ${cgsql}/sources/cqlrt.c -lsqlite3
 ```
 
 ### Results

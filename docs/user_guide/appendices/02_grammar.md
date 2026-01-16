@@ -9,7 +9,7 @@ weight: 2
 -- LICENSE file in the root directory of this source tree.
 -->
 
-This content is computed by a github workflow.
+This content is computed by a GitHub workflow.
 
 This file is only a placeholder, the contents of the file make no difference at all.
 

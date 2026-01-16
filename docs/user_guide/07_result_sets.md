@@ -28,7 +28,7 @@ end;
 We've created a simple data reader: this CQL code will cause the compiler to
 generate helper functions to read the data and materialize a result set.
 
-Let's look at the public interface of that result set now considering the most essential pieces.
+Let's look at the essential parts of its public interface.
 
 ```c
 /* this is almost everything in the generated header file */
@@ -135,7 +135,7 @@ The essential parts are:
 
 First, a constant array that holds the data types for each column.
 
-```C
+```c
 uint8_t read_foo_data_types[read_foo_data_types_count] = {
   CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
   CQL_DATA_TYPE_BOOL, // b
@@ -153,7 +153,7 @@ on the row.
 
 Lastly we need metadata to tell us count of columns and the offset of each column within the row.
 
-```C
+```c
 static cql_uint16 read_foo_col_offsets[] = { 3,
   cql_offsetof(read_foo_row, id),
   cql_offsetof(read_foo_row, b),
@@ -194,7 +194,7 @@ read_foo_fetch_results(
 }
 ```
 
-### Results Sets From `OUT UNION`
+### Result Sets from `OUT UNION`
 
 The `out` keyword was added for writing procedures that produce a
 single row result set.  With that, it became possible to make any single
@@ -232,8 +232,8 @@ Virtually all the code pieces to do this already exist for normal
 result sets.  The important parts of the output code look like this in
 your generated C.
 
-We need a buffer to hold the rows we are going to accumulate;  We use
-`cql_bytebuf` just like the normal fetcher above.
+We need a buffer to hold the rows we will accumulate. We use
+`cql_bytebuf`, just like the normal fetcher above.
 
 ```c
 // This bit creates a growable buffer to hold the rows
@@ -251,7 +251,7 @@ cql_retain_row(C_);   // a no-op if there is no row in the cursor
 if (C_._has_row_) cql_bytebuf_append(&_rows_, (const void *)&C_, sizeof(C_));
 ```
 
-Finally, we make the rowset when the procedure exits. If the procedure
+Finally, we make the result set when the procedure exits. If the procedure
 is returning with no errors the result set is created, otherwise the
 buffer is released.  The global `some_integers_info` has constants that
 describe the shape produced by this procedure just like the other cases
@@ -263,10 +263,9 @@ cql_results_from_data(_rc_,
                       &some_integers_info,
                       (cql_result_set_ref *)_result_set_);
 ```
-The operations here are basically the same ones that will happen inside of
-the standard helper `cql_fetch_all_results`, the difference, of course,
-is that you write the loop manually and therefore have full control of
-the rows as they go in to the result set.
+The operations here are basically the same as inside the standard helper
+`cql_fetch_all_results`; the difference is that you write the loop manually
+and therefore have full control of the rows as they go into the result set.
 
 In short, the overhead is pretty low.  What you’re left with is pretty
 much the base cost of your algorithm.  The cost here is very similar to

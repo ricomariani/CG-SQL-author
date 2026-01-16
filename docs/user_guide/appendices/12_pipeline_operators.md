@@ -1,5 +1,5 @@
 ---
-title: "Appendix 12: Builtin Pipeline Operators"
+title: "Appendix 12: Built-in Pipeline Operators"
 weight: 12
 ---
 <!---
@@ -13,7 +13,7 @@ weight: 12
 
 Pipeline operators provide syntactic shortcuts that make CQL code more concise and readable by transforming special syntax into standard function calls. These operators support multiple syntactic forms (`:`, `.`, `->`, `[]`, etc.) that transform in a left-to-right flow, similar to method chaining in object-oriented languages.
 
-This appendix includes a short primer on the use of `@op` to do these transforms and the builtin operators (defined in `cql.y`).
+This appendix includes a short primer on the use of `@op` to do these transforms and the built-in operators (defined in `cql.y`).
 
 ### Syntax Variations
 

@@ -373,7 +373,7 @@ variables, handling functions, etc.). Then it does some complex string encoding:
   // Now that we have the JSON string we need all of that in a C string, including the
   // quotes. So we use the single character helper to build a buffer with new quotes.  Note
   // that C string encoding is slightly different than JSON, there are small escape differences.
-  // So we're going to be quote careful to C encode the JSON encoding.  It's double encoded.
+  // So we're going to be quite careful to C-encode the JSON encoding.  It's double-encoded.
   bprintf(&c_str, "\"");
   for (uint32_t i = 1; i < json_str.used - 2; i++) {
     // json_str can have no control characters, but it might have quotes and backslashes

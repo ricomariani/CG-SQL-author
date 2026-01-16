@@ -604,7 +604,7 @@ The test assets for upgrade tests are found in the `upgrade` directory and consi
 * `SchemaPersistentV1.sql` : v1 of the test schema
 * `SchemaPersistentV2.sql` : v2 of the test schema
 * `SchemaPersistentV3.sql` : v3 of the test schema
-* `downgrade_test.c` : a test that simulates attemping to go backwards in schema versions
+* `downgrade_test.c` : a test that simulates attempting to go backwards in schema versions
 * `upgrade_test.c` : the C harness that launches the upgraders and fires the tests
 * `upgrade_test.sh` : the shell script that makes all this happen
 * `upgrade_validate.sql` : some simple code that sanity checks the recorded schema version against tables in it
@@ -624,7 +624,7 @@ In addition to these assets, we also have reference files:
 
 This file has a single procedure `validate_transition` which does the two jobs:
 * emits the canonicalized version of `sqlite_master` to the output
-  * this is needed because `sqlite_master` text can vary between Sqlite versions
+  * this is needed because `sqlite_master` text can vary between SQLite versions
 * checks for basic things that should be present in a given version
 
 The output of the validator looks like this:

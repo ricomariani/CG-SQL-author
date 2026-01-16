@@ -702,7 +702,7 @@ insert statements will have the parent tables first so the foreign keys of later
 tables will be correct.
 
 This can go wrong if the manual initializations use keys that conflict with the
-default generation or if the manual intializations have PK conflicts or other
+default generation or if the manual initializations have PK conflicts or other
 such things.  No attempt is made to sort that out.  The run time errors should
 be clear and these are, after all, only test helpers.  It's very easy to avoid
 these hazards and you get a pretty clear error message if you don't so that

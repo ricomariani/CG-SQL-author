@@ -231,7 +231,7 @@ will see a literal it understands.  However, if the origin of the string was the
 C string form (i.e. like `"foo"` rather than `'bar'`) then the str_type will be
 `STRING_TYPE_C`.  When echoing the program back as plain text, the C string will
 be converted back to the C form for display to a user. But when providing the
-string to Sqlite, it's in SQL format.
+string to SQLite, it's in SQL format.
 
 A quoted identifier uses backquotes to make a name that would otherwise be illegal.
 For instance:

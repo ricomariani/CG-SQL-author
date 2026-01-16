@@ -13,7 +13,7 @@ weight: 18
 
 Pre-processing features are a recent introduction to the CQL language;
 previously any pre-processing functionality was provided by running the C
-Pre-Processor over the input file before processing. The practice of using
+preprocessor over the input file before processing. The practice of using
 `cc -E` or the equivalent was deprecated because:
 
  * It creates an unnatural dependence in the compile chain
@@ -101,7 +101,7 @@ y z` will be checked.
 Like the `@ifdef` forms, `@include` can only appear at the statement level, so
 it cannot be used to do exotic token pasting like often happens with `#include`.
 Furthermore, it must appear at the *top* of files, so it's a lot more like the
-import features of other languages than it is like the C pre-Processor token
+import features of other languages than it is like the C preprocessor token
 stream.  Once normal statements begin further includes are not possible, each
 file gets an include section and a statements section.  Note that `@ifdef` and
 include _do not_ compose.  Again, `@include` is more like an import.  If you

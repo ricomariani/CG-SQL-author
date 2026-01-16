@@ -961,10 +961,10 @@ Using the enum -- simply use dot notation
 let impl := implement.pen;  -- value 2
 ```
 
-You can emit an emum into the current .h file we are going to generate (or .lua).
+You can emit an enum into the current .h file we are going to generate (or .lua).
 Do not put this directive in an include file, you want it to go to one place.
 Instead, pick one compiland that will "own" the emission of the enum.
-C code can then #include the one .h file.  Lua code gets to use the constansts
+C code can then #include the one .h file.  Lua code gets to use the constants
 to initialize a dictionary.
 
 ```

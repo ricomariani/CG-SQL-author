@@ -218,7 +218,7 @@ def codegen_utils(cmd_args):
         if not indentation_state['pending_line']:
             indentation_state["value"] = max(0, indentation_state["value"] - indentation)
 
-    def indetented_print(*args, **kwargs):
+    def indented_print(*args, **kwargs):
         """Print with current indentation level. Handles multi-line strings."""
         text = kwargs.get("sep", " ").join(map(str, args))
         lines = text.split("\n")
@@ -232,10 +232,10 @@ def codegen_utils(cmd_args):
         indentation_state['pending_line'] = kwargs.get("end", "\n") != "\n" and not text.endswith("\n")
 
     noop = lambda *args, **kwargs: None
-    code = lambda *args, **kwargs: indetented_print(*args, **kwargs)
-    v = lambda *args, **kwargs: indetented_print(*args, **kwargs) if verbosity >= 1 else noop(*args, **kwargs)
-    vv = lambda *args, **kwargs: indetented_print(*args, **kwargs) if verbosity >= 2 else noop(*args, **kwargs)
-    vvv = lambda *args, **kwargs: indetented_print(*args, **kwargs) if verbosity >= 3 else noop(*args, **kwargs)
+    code = lambda *args, **kwargs: indented_print(*args, **kwargs)
+    v = lambda *args, **kwargs: indented_print(*args, **kwargs) if verbosity >= 1 else noop(*args, **kwargs)
+    vv = lambda *args, **kwargs: indented_print(*args, **kwargs) if verbosity >= 2 else noop(*args, **kwargs)
+    vvv = lambda *args, **kwargs: indented_print(*args, **kwargs) if verbosity >= 3 else noop(*args, **kwargs)
 
     return code, v, vv, vvv, indent, dedent
 

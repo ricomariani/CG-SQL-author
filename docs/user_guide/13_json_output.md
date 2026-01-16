@@ -9,36 +9,31 @@ weight: 13
 -- LICENSE file in the root directory of this source tree.
 -->
 
-To help facilitate additional tools that might want to depend on CQL
-input files further down the toolchain, CQL includes a JSON output format
-for SQL DDL as well as stored procedure information, including special
-information for a single-statement DML.  "Single-statement DML" refers
-to those stored procedures that consist of a single `insert`, `select`,
-`update`, or `delete`.   Even though such procedures comprise just one
-statement, good argument binding can create very powerful DML fragments
-that are re-usable.  Many CQL stored procedures are of this form (in
-practice maybe 95% are just one statement.)
+To help facilitate additional tools that might want to depend on CQL input files
+further down the toolchain, CQL includes a JSON output format for SQL DDL as
+well as stored procedure information, including special information for a
+single-statement DML.  "Single-statement DML" refers to those stored procedures
+that consist of a single `insert`, `select`, `update`, or `delete`.   Even
+though such procedures comprise just one statement, good argument binding can
+create very powerful DML fragments that are re-usable.  Many CQL stored
+procedures are of this form (in practice maybe 95% are just one statement.)
 
-To use CQL in this fashion, the sequence will be something like the
-below.  See [Appendix 1](./appendices/01_command_lines_options.md) for command
-line details.
+To use CQL in this fashion, run a command like the following.
+See [Appendix 1](./appendices/01_command_lines_options.md) for command-line details.
 
 ```bash
 cql --in input.sql --rt json_schema --cg out.json
 ```
 
-The output contains many different sections for the various
-types of entities that CQL can process.  There is a full
-description of the possible outputs available in [diagram
-form](https://ricomariani.github.io/CG-SQL-author/json_grammar.railroad.html)
+The output includes sections for the various entity types that CQL can process.
+A full description of the outputs is available in [diagram form](https://ricomariani.github.io/CG-SQL-author/json_grammar.railroad.html).
 
-In the balance of this chapter we'll deal with the contents of the
-sections and their meaning rather than the specifics of the format,
-which are better described with the grammar above.
+The rest of this chapter covers the contents of each section and their meaning,
+rather than low-level format details, which are best described by the grammar.
 
 ### Tables
 
-The "tables" section has zero or more tables, each table is comprised of these fields:
+The "tables" section contains zero or more tables, each with these fields:
 
 * **name** : the table name
 * **crc** : the schema CRC for the entire table definition, including columns and constraints
@@ -128,7 +123,7 @@ generates:
 
 ### Region Information
 
-Region Information can appear on many entities, it consists of two
+Region Information can appear on many entities. It consists of two
 optional elements:
 
 * **region** : optional, the name of the region in which the entity was defined
@@ -137,14 +132,14 @@ optional elements:
 ### Attributes
 
 Miscellaneous attributes can be present on virtually every kind of entity.
-They are optional.  The root node introduces the attributes:
+They are optional. The root node introduces the attributes:
 
 * **attributes** : a list at least one attribute
 
-Each attribute is a name and value pair:
+Each attribute is a name–value pair:
 
 * **name** : any string
-  * attribute names are often compound like "cql:shared_fragment"
+  * attribute names are often compound, like "cql:shared_fragment"
   * they are otherwise simple identifiers
   * if the ``[[attribute]]`` form is used, it is expanded into the normal `cql:attribute` form in the output
 * **value** : any _attribute value_
@@ -154,12 +149,12 @@ Each _attribute value_ can be:
 * any literal
 * an array of _attribute values_
 
-Since the _attribute values_ can nest it's possible to represent
+Since _attribute values_ can nest, it's possible to represent
 arbitrarily complex data types in an attribute.
 
 ### Global attributes
 
-While the most common use case for attributes is to be attached to
+While the most common use case for attributes is to attach them to
 other entities (e.g., tables, columns), CQL also lets you define
 "global" attributes, which are included in the top level `attributes`
 section of the JSON output. To specify global attributes you declare a
@@ -168,8 +163,8 @@ attributes to it. CQL will merge together all the attributes from all
 the variables ending with `database` and place them in the `attributes`
 section of the JSON output.
 
-Global attributes give you a way to add global configuration information
-into the CQL JSON output. You can, for instance, include these attributes
+Global attributes let you add configuration information to the CQL JSON output.
+You can, for instance, include these attributes
 in some root file that you `@include` in the rest of your CQL code,
 and by doing this, these attributes will be visible in any generated
 JSON for those files.
@@ -208,7 +203,7 @@ Generates:
 
 ### Foreign Keys
 
-Foreign keys appear only in tables, the list of keys contains zero or
+Foreign keys appear only in tables. The list contains zero or
 more entries of this form:
 
 * **name** : optional, the name of the foreign key if specified
@@ -221,7 +216,7 @@ more entries of this form:
 
 ### Unique Keys
 
-Unique keys appear only in tables, the list of keys contains zero or
+Unique keys appear only in tables. The list contains zero or
 more entries of this form:
 
 * **name**: optional, the name of the unique key if specified
@@ -231,24 +226,22 @@ more entries of this form:
 
 ### Check Expressions
 
-Check Expressions appear only in tables, the list of keys contains zero
+Check expressions appear only in tables. The list contains zero
 or more entries of this form:
 
 * **name** : optional, the name of the unique key if specified
 * **checkExpr** : the check expression in plain text
 * **checkExprArgs**: an array of zero or more local variables that should be bound to the `?` items in the check expression
 
-The checkExprArgs will almost certainly be the empty list `[]`.  In the exceedingly rare situation that the table
-in question was defined in a procedure and some of parts of the check expression were arguments to that procedure
-then the check expression is not fully known until that procedure runs and some of its literals will be decided
-at run time.  This is an extraordinary choice but technically possible.
+`checkExprArgs` will almost always be the empty list `[]`. In the exceedingly rare case where the table
+was defined in a procedure and parts of the check expression are procedure arguments,
+the check expression is not fully known until runtime. This is unusual but possible.
 
 
 ### Columns
 
-Columns are themselves rather complex, there are 1 or more of them in
-each table.  The table will have
-a list of records of this form:
+Columns are themselves complex; there are one or more per table.
+Each table has a list of records of this form:
 
 * **name** : the name of the columns
 * **_attributes_** : optional, see the [section on attributes](#attributes), they appear in many places
@@ -270,7 +263,7 @@ a list of records of this form:
 
 ### Virtual Tables
 
-The "virtualTables" section is very similar to the "tables" section with
+The "virtualTables" section is very similar to the "tables" section, with
 zero or more virtual table entries.
 
 Virtual table entries are the same as table entries with the following additions:
@@ -286,8 +279,8 @@ extra tests of the isVirtual field.
 
 ### Views
 
-The views section contains the list of all views in the schema, it is
-zero or more view entires of this form.
+The views section contains all views in the schema.
+It has zero or more view entries of this form:
 
 * **name** : the view name
 * **crc** : the schema CRC for the entire view definition
@@ -341,37 +334,43 @@ Generates:
 
 ### Projections
 
-A projection defines the output shape of something that can return a
-table-like value such as a view or a procedure.
+A projection defines the output shape of something that can return a table-like
+value such as a view or a procedure.
 
-The projection consists of a list of one or more _projected columns_,
-each of which is:
+The projection consists of a list of one or more _projected columns_, each of
+which is:
 
-* **name** : the name of the result column  (e.g. in select 2 as foo) the name is "foo"
+* **name** : the name of the result column  (e.g. in select 2 as foo) the name
+  is "foo"
 * **type** : the type of the column (e.g. text, real, etc.)
-* **kind** : optional, the discriminator of the type if it has one (e.g. if the result is an `int<job_id>` the kind is "job_id")
-* **isSensitive** : optional, true if the result is sensitive (e.g. PII or something like that)
+* **kind** : optional, the discriminator of the type if it has one (e.g. if the
+  result is an `int<job_id>` the kind is "job_id")
+* **isSensitive** : optional, true if the result is sensitive (e.g. PII or
+  something like that)
 * **isNotNull** : true if the result is known to be not null
 
 ### Dependencies
 
-The dependencies section appears in many entities, it indicates things
-that were used by the object and how they were used.  Most of the fields
-are optional, some fields are impossible in some contexts (e.g. inserts
-can happen inside of views).
+The dependencies section appears in many entities. It indicates what the object
+used and how. Most fields are optional; some are impossible in certain contexts
+(e.g., inserts do not happen inside views).
 
 * **insertTables** : optional, a list of tables into which values were inserted
 * **updateTables** : optional, a list of tables whose values were updated
 * **deleteTables** : optional, a list of tables which had rows deleted
-* **fromTables** : optional, a list of tables that appeared in a FROM clause (maybe indirectly inside a VIEW or CTE)
-* **usesProcedures** : optional, a list of procedures that were accessed via CALL (not shared fragments, those are inlined)
-* **usesViews** : optional, a list of views which were accessed (these are recursively visited to get to tables)
-* **usesTables** : the list of tables that were used in any way at all by the current entity (i.e. the union of the previous table sections)
+* **fromTables** : optional, a list of tables that appeared in a FROM clause
+  (maybe indirectly inside a VIEW or CTE)
+* **usesProcedures** : optional, a list of procedures that were accessed via
+  CALL (not shared fragments, those are inlined)
+* **usesViews** : optional, a list of views which were accessed (these are
+  recursively visited to get to tables)
+* **usesTables** : the list of tables that were used in any way at all by the
+  current entity (i.e. the union of the previous table sections)
 
 ### Indices
 
-The indices section contains the list of all indices in the schema,
-it is zero or more view entires of this form:
+The indices section contains all indices in the schema. It has zero or more
+index entries of this form:
 
 * **name** : the index name
 * **crc** : the schema CRC for the entire index definition
@@ -379,10 +378,13 @@ it is zero or more view entires of this form:
 * **isUnique** : true if this is a unique index
 * **ifNotExists** : true if this index was created with IF NOT EXISTS
 * **isDeleted** : true if the view was marked with @delete
-  * **deletedVersion** : optional, the schema version number in the @delete directive
+  * **deletedVersion** : optional, the schema version number in the @delete
+    directive
 * **_region information_** : optional, see the section on Region Info
-* **where** : optional, if this is partial index then this has the partial index where expression
-* **_attributes_** : optional, see the section on attributes, they appear in many places
+* **where** : optional, if this is partial index then this has the partial index
+  where expression
+* **_attributes_** : optional, see the section on attributes, they appear in
+  many places
 * **columns** : the list of column names in the index
 * **sortOrders** : the list of corresponding sort orders
 
@@ -410,23 +412,44 @@ Generates:
 
 ### Procedures
 
-The next several sections provide information about various types of procedures:
+The next several sections provide information about procedure categories:
 
-* **Queries**: Procedures consisting of a single SELECT statement with no fragments. These return result sets and include the SELECT statement text and parameter bindings, making it easy to generate query wrappers.
+* **Queries**: Procedures consisting of a single SELECT statement with no
+  fragments. These return result sets and include the SELECT statement text and
+  parameter bindings, making it easy to generate query wrappers.
 
-* **Inserts**: Procedures with a single INSERT statement that inserts exactly one row using a simple VALUES clause. These include both the statement and the individual inserted values, enabling detailed code generation for insert operations.
+* **Inserts**: Procedures with a single INSERT statement that inserts exactly
+  one row using a simple VALUES clause. These include both the statement and the
+  individual inserted values, enabling detailed code generation for insert
+  operations.
 
-* **General Inserts**: Procedures with a single INSERT statement that uses more complex insert forms (multiple value rows, INSERT...SELECT, WITH clauses, or UPSERT). These include the statement but not individual values since the insert structure is too complex to decompose simply.
+* **General Inserts**: Procedures with a single INSERT statement that uses more
+  complex insert forms (multiple value rows, INSERT...SELECT, WITH clauses, or
+  UPSERT). These include the statement but not individual values since the
+  insert structure is too complex to decompose simply.
 
-* **Updates**: Procedures consisting of a single UPDATE statement with no fragments. These include the UPDATE statement text and parameter bindings for straightforward update operation wrappers.
+* **Updates**: Procedures consisting of a single UPDATE statement with no
+  fragments. These include the UPDATE statement text and parameter bindings for
+  straightforward update operation wrappers.
 
-* **Deletes**: Procedures consisting of a single DELETE statement with no fragments. These include the DELETE statement text and parameter bindings for delete operation wrappers.
+* **Deletes**: Procedures consisting of a single DELETE statement with no
+  fragments. These include the DELETE statement text and parameter bindings for
+  delete operation wrappers.
 
-* **General**: All other procedures that don't fit the simple single-statement categories. This includes procedures with OUT parameters, multiple statements, complex control flow, shared fragments, or no database operations at all. Limited structural information is available for these since their bodies are too complex to analyze in a simple way.
+* **General**: All other procedures that don't fit the simple single-statement
+  categories. This includes procedures with OUT parameters, multiple statements,
+  complex control flow, shared fragments, or no database operations at all.
+  Limited structural information is available for these since their bodies are
+  too complex to analyze in a simple way.
 
-These categories are historical breakouts designed to identify very simple procedures that perform exactly one DML statement. When generating language bindings or other tooling, the simple categories provide richer metadata that can drive more detailed code generation, while the "general" category provides basic information common to all procedures.
+These categories are historical breakouts that identify very simple procedures
+performing exactly one DML statement. When generating language bindings or other
+tooling, the simple categories provide richer metadata that drives more detailed
+code generation, while the "general" category provides information common to all
+procedures.
 
-Importantly, if you are only invoking the procedures all the categories are equivalent.  They have basic information about how to call them and what they return.
+Importantly, if you are only invoking procedures, all categories are equivalent:
+they have basic information about how to call them and what they return.
 
 
 #### Queries
@@ -437,15 +460,22 @@ single SELECT statement with no fragments.
 The fields of a query record are:
 
 * **name** : the name of the procedure
-* **definedInFile** : the file that contains the procedure (the path is as it was specified to CQL so it might be relative or absolute)
-* **definedOnLine** : the line number of the file where the procedure is declared
+* **definedInFile** : the file that contains the procedure (the path is as it
+  was specified to CQL so it might be relative or absolute)
+* **definedOnLine** : the line number of the file where the procedure is
+  declared
 * **args** : _procedure arguments_ see the relevant section
-* **_dependencies_** : several lists of tables and how they are used in the view, see the section on dependencies
+* **_dependencies_** : several lists of tables and how they are used in the
+  view, see the section on dependencies
 * **_region information_** : optional, see the section on Region Info
-* **_attributes_** : optional, see the section on attributes, they appear in many places
-* **_projection_** : an array of projected columns from the procedure, the view if you will, see [the section on projections](#projections)
-* **statement** : the text of the select statement that is the body of the procedure
-* **statementArgs** : a list of procedure arguments (possibly empty) that should be used to replace the corresponding "?" parameters in the statement
+* **_attributes_** : optional, see the section on attributes, they appear in
+  many places
+* **_projection_** : an array of projected columns from the procedure, the view
+  if you will, see [the section on projections](#projections)
+* **statement** : the text of the select statement that is the body of the
+  procedure
+* **statementArgs** : a list of procedure arguments (possibly empty) that should
+  be used to replace the corresponding "?" parameters in the statement
 
 Example:
 

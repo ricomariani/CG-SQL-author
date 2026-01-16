@@ -9,17 +9,15 @@ weight: 14
 -- LICENSE file in the root directory of this source tree.
 -->
 
-Shared fragments allow you to reuse and compose SQL queries in a safe
-(type checked) and efficient manner. They are based on [Common Table
-Expressions (CTEs)](https://www.sqlite.org/lang_with.html), so some
-basic knowledge of CTEs is recommended before using Shared Fragments.
+Shared fragments let you reuse and compose SQL queries in a safe
+(type-checked) and efficient manner. They are based on [Common Table
+Expressions (CTEs)](https://www.sqlite.org/lang_with.html); some
+basic knowledge of CTEs is recommended before using shared fragments.
 
-You can think of shared fragments as being somewhat like a parameterized
-view, but the parameters are both value parameters and type parameters. In
-Java or C#, a shared fragments might have had an invocation that looked
-something like this:  `my_fragment(1,2)<table1, table2>`.
+Shared fragments are like parameterized views, with both value and type parameters.
+In Java or C#, an invocation might look like: `my_fragment(1,2)<table1, table2>`.
 
-It's helpful to consider a real example:
+Example:
 
 ```sql
 split_text(tok) AS (
@@ -39,7 +37,7 @@ split_text(tok) AS (
 )
 ```
 
-This text might appear in dozens of places where a comma separated list needs to
+This text might appear in dozens of places where a comma-separated list needs to
 be split into pieces and there is no good way to share the code between these
 locations.  CQL can also do create something very much like fragments using the
 macro features (see below) but this loses some benefits, so there is a trade off
@@ -55,10 +53,9 @@ Macros therefore present problems as a primary API to shared functionality but
 the need to create re-usable helpers is very real both for correctness and for
 performance.
 
-To make these things possible, we introduce the notion of shared fragments.  We
-need to give them parameters and the natural way to create a select statement
-that is bindable in CQL is the procedure. So the shape we choose looks like
-this:
+To make this possible, we introduce shared fragments. We
+give them parameters, and the natural way to create a bindable SELECT statement
+in CQL is with a procedure. So the shape looks like this:
 
 ```sql
 [[shared_fragment]]
@@ -80,10 +77,9 @@ BEGIN
 END;
 ```
 
-The introductory attribute `[[shared_fragment]]` indicates that the procedure is
-to produce no code, but rather will be inlined as a CTE in other locations. To
-use it, we introduce the ability to call a procedure as part of a CTE
-declaration.  Like so:
+The attribute `[[shared_fragment]]` indicates that the procedure produces no code
+and will be inlined as a CTE elsewhere. To use it, you can call a procedure as
+part of a CTE declaration:
 
 ```sql
 WITH
@@ -91,8 +87,7 @@ WITH
   select * from result;
 ```
 
-Once the fragment has been defined, the statement above could appear
-anywhere, and of course the text `'x,y,z'` need not be constant.
+Once defined, the statement above can appear anywhere, and `'x,y,z'` need not be constant.
 For instance:
 
 ```sql
@@ -110,7 +105,7 @@ BEGIN
 END;
 ```
 
-Fragments are also composable, so for instance, we might also want some
+Fragments are composable; for instance, we might also want some
 shared code that extracts comma separated numbers.  We could do this:
 
 ```sql
@@ -123,7 +118,7 @@ BEGIN
 END;
 ```
 
-Now we could write:
+Now we can write:
 
 ```sql
 PROC print_ids(value TEXT)
@@ -141,7 +136,7 @@ BEGIN
 END;
 ```
 
-Of course these are very simple examples but in principle you can use the
+These are simple examples, but in principle you can use the
 generated tables in whatever way is necessary.  For instance, here's a silly but
 illustrative example:
 
@@ -165,12 +160,12 @@ BEGIN
 END;
 ```
 
-With a small amount of dynamism in the generation of the SQL for the
+With a small amount of dynamism in generating the SQL for the
 above, it's possible to share the body of v1 and v2.  SQL will of course
 see the full expansion but your program only needs one copy no matter
 how many times you use the fragment anywhere in the code.
 
-So far we have illustrated the "parameter" part of the flexibility.
+So far we illustrated the "parameter" part of the flexibility.
 Now let's look at the "generics" part; even though it's overkill for
 this example, it should still be illustrative.  You could imagine that
 the procedure we wrote above `ids_from_string` might do something more
@@ -179,7 +174,7 @@ that don't match some pattern, whatever the case might be.  You might
 want these features in a variety of contexts, maybe not just starting
 from a string to split.
 
-We can rewrite the fragment in a "generic" way like so:
+We can rewrite the fragment in a "generic" way:
 
 ```sql
 [[shared_fragment]]
@@ -191,14 +186,14 @@ BEGIN
 END;
 ```
 
-Note the new construct for a CTE definition: inside a fragment we can
-use "LIKE" to define a plug-able CTE.  In this case we used a `select`
+Note the new construct for a CTE definition: inside a fragment, use
+"LIKE" to define a pluggable CTE. In this case we used a `select`
 statement to describe the shape the fragment requires.  We could also
 have used a name `source(*) LIKE shape_name` just like we use shape
 names when describing cursors.  The name can be any existing view, table,
 a procedure with a result, etc.  Any name that describes a shape.
 
-Now when the fragment is invoked, you provide the actual data source
+When invoking the fragment, provide the actual data source
 (some table, view, or CTE) and that parameter takes the role of "values".
 Here's a full example:
 
@@ -218,7 +213,7 @@ BEGIN
 END;
 ```
 
-We could actually rewrite the previous simple id fragment as follows:
+We can rewrite the previous simple id fragment as follows:
 
 ```sql
 [[shared_fragment]]
@@ -231,8 +226,7 @@ BEGIN
 END;
 ```
 
-And actually we have a convenient name we could use for the shape we need
-so we could have used the shape syntax to define `ids_from_string_table`.
+We also have a convenient shape name, so we could have used the shape syntax to define `ids_from_string_table`.
 
 ```sql
 [[shared_fragment]]
@@ -244,7 +238,7 @@ BEGIN
 END;
 ```
 
-These examples have made very little use of the database but of course normally
+These examples use the database lightly, but normally
 the data you need for your use-case is readily available, so shared fragments
 can make a great way to provide access to complex data with shareable, correct
 code. For instance, you could write a fragment that provides the ids of all open
@@ -261,20 +255,19 @@ what you could do with a `VIEW` plus a `WHERE` clause but:
 * code generation can be more economical because the compiler is aware of what
   is being shared
 
-In short, shared fragments can help with the composition of any complicated
-kinds of queries. If you're producing an SDK to access a data set, they are
-indispensible.
+In short, shared fragments help with the composition of complicated queries.
+If you're producing an SDK to access a dataset, they are indispensable.
 
 #### Creating and Using Valid Shared Fragments
 
 When creating a fragment the following rules are enforced:
 
-* the fragment many not have any out arguments
+* the fragment may not have any out arguments
 * it must consist of exactly one valid select statement (but see future forms below)
 * it may use the LIKE construct in CTE definitions to create placeholder shapes
   * this form is illegal outside of shared fragments (otherwise how would you bind it)
 * the LIKE form may only appear in top level CTE expressions in the fragment
-* the fragment is free to use other fragments, but it may not call itself
+* the fragment is free to use other fragments but may not call itself
   * calling itself would result in infinite inlining
 
 Usage of a fragment is always introduced by a "call" to the fragment name in a CTE body.
@@ -283,7 +276,7 @@ When using a fragment the following rules are enforced.
 * the provided parameters must create a valid procedure call just like normal
   procedure calls
   * i.e. the correct number and type of arguments
-* the provided parameters may not use nested `(SELECT ...)` expressions
+* the provided parameters must not use nested `(SELECT ...)` expressions
   * this could easily create fragment building within fragment building which
     seems not worth the complexity
   * if database access is required in the parameters simply wrap it in a helper
@@ -303,7 +296,7 @@ When using a fragment the following rules are enforced.
   * these are the same rules used for procedure calls, for instance, where the
     call is kind of like assigning the actual parameter values to the formal
     parameter variables
-* the provided table values must not conflict with top level CTEs in the shared
+* the provided table values must not conflict with top-level CTEs in the shared
   fragment
   * exception: the top level CTEs that were parameters do not create conflicts
   * e.g. it's common to do `values(*) as (CALL something() using source as
@@ -318,14 +311,14 @@ When using a fragment the following rules are enforced.
       forwarded and `_source` is not likely to conflict with real table or view
       names
 
-Note that when shared fragments are used, the generated SQL has the text split
+Note: When shared fragments are used, the generated SQL has the text split
 into parts, with each fragment and its surroundings separated, therefore the
 text of shared fragments is shared(!) between usages if normal linker
 optimizations for text folding are enabled (common in production code.)
 
 ### Shared Fragments with Conditionals
 
-Shared fragments use dynamic assembly of the text to do the sharing but it is
+Shared fragments use dynamic assembly of the text to do the sharing, but it is
 also possible to create alternative texts.  There are many instances where it is
 desirable to not just replace parameters but use, for instance, an entirely
 different join sequence.  Without shared fragments, the only way to accomplish
@@ -368,7 +361,7 @@ your test environment, or anything like that.
 
 #### Conditionals without ELSE clauses
 
-When a condiitional is specified without an else clause, the fragment would
+When a conditional is specified without an else clause, the fragment would
 return a result with no rows if none of the specified conditionals are truthy.
 
 For example:
@@ -396,7 +389,7 @@ BEGIN
 END;
 ```
 
-The `SELECT NOTHING` expands to the a query that returns no rows, like this:
+The `SELECT NOTHING` expands to a query that returns no rows, like this:
 
 ```sql
 SELECT 0,0,0 WHERE 0; -- number of columns match the query returned by the main conditional.
@@ -414,8 +407,8 @@ The generalization is simply this:
   * otherwise it would be impossible to provide a single actual table for those
     table parameters
 
-With this additional flexibility a wide variety of SQL statements can be
-constructed economically and maintainability.  Importantly, consumers of the
+With this additional flexibility, a wide variety of SQL statements can be
+constructed economically and maintainably. Importantly, consumers of the
 fragments need not deal with all these various alternate possibilities but they
 can readily create their own useful combinations out of building blocks.
 
@@ -477,7 +470,7 @@ The consequence of the above is that the body of `max_func` is inlined
 into the generated SQL.  However, like the other shared fragments, this is
 done in such a way that the text can be shared between instances so you
 only pay for the cost of the text of the SQL in your program one time,
-no matter how many time you use it.
+no matter how many times you use it.
 
 In particular, for the above, the compiler will generate the following SQL:
 
@@ -594,7 +587,7 @@ table-value with one column, the original shared fragments solution
 already do exactly that.  Expression fragments give you a solution for
 sharing code in, say, the `WHERE` clause of a larger select statement.
 
-Commpared to something like
+Compared to something like
 
 ```sql
 @macro(expr) max_func!(x! expr, y! expr)

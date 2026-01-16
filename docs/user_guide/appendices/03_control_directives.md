@@ -49,18 +49,18 @@ The complete list (as of this writing) is:
 
 `@SCHEMA_AD_HOC_MIGRATION`
 
- * Allows for the creation of a ad hoc migration step at a given schema version, (See Chapter 10)
+ * Allows for the creation of an ad hoc migration step at a given schema version (See Chapter 10)
 
 `@ECHO`
 
- * Emits text into the C output stream, useful for emiting things like function prototypes or preprocessor directives
- * e.g. `echo C, '#define foo bar'
+ * Emits text into the C output stream, useful for emitting things like function prototypes or preprocessor directives
+ * e.g., `echo C, '#define foo bar'`
 
 `@RECREATE`
 `@CREATE`
 `@DELETE`
 
-  * used to mark the schema version where an object is created or deleted, or alternatively indicate the the object is always dropped and recreated when it changes (See Chapter 10)
+  * used to mark the schema version where an object is created or deleted, or alternatively indicate that the object is always dropped and recreated when it changes (See Chapter 10)
 
 `@SCHEMA_UPGRADE_VERSION`
 
@@ -92,17 +92,17 @@ The complete list (as of this writing) is:
 `@ATTRIBUTE`
 
   * the main purpose of `@attribute` is to appear in the JSON output so that it can control later codegen stages in whatever way you deem appropriate
-  * the nested nature of attribute values is sufficiently flexible than you could encode an arbitrary LISP program in an attribute, so really anything you might need to express is possible
+  * the nested nature of attribute values is sufficiently flexible that you could encode an arbitrary LISP program in an attribute, so really anything you might need to express is possible
   * there are a number of attributes known to the compiler which are listed below (complete as of this writing)
 
   * `cql:autodrop=(table1, table2, ...)` when present the indicated tables, which must be temp tables, are dropped when the results of the procedure have been fetched into a rowset
   * `cql:identity=(column1, column2, ...)` the indicated columns are used to create a row comparator for the rowset corresponding to the procedure, this appears in a C macro of the form `procedure_name_row_same(rowset1, row1, rowset2, row2)`
   * `cql:suppress_getters` the annotated procedure should not emit its related column getter functions.
-    * Useful if you only indend to call the procedure from CQL.
+    * Useful if you only intend to call the procedure from CQL.
     * Saves code generation and removes the possibility of C code using the getters.
   * `cql:emit_setters` the annotated procedure should  emit setter functions so that result set columns can be mutated, this can be quite useful for business logic but it is more costly
   * `cql:suppress_result_set` the annotated procedure should not emit its related "fetch results" function.
-    * Useful if you only indend to call the procedure from CQL.
+    * Useful if you only intend to call the procedure from CQL.
     * Saves code generation and removes the possibility of C code using the result set or getters.
     * Implies `cql:suppress_getters`; since there is no result set, getters would be redundant.
     * an `OUT UNION` procedure cannot have a suppressed result set since all such a procedure does is produce a result set. This attribute is ignored for out union procedures.

@@ -170,7 +170,7 @@ SET normal_data := sensitive_data;  -- Error: leaking sensitive data
 ### CQL0015: expected numeric expression 'context'
 
 Many SQL clauses require a numeric expression such as WHERE/HAVING/LIMIT/OFFSET.
-This expression indicates the expression in the given context is not a numeric.
+This indicates the expression in the given context is not numeric.
 
 Example:
 ```sql
@@ -197,7 +197,7 @@ SELECT T1.id AS parent_id, T2.id AS child_id
 ### CQL0017: index was present but now it does not exist (use `@delete` instead) 'index'
 
 The named index is in the previous schema but it is not in the current schema.
-All entities need some kind of tombstone in the  schema so that they can be
+All entities need some kind of tombstone in the schema so that they can be
 correctly deleted if they are still present.
 
 Example:
@@ -248,7 +248,7 @@ CREATE TABLE foo(
 
 ------
 
-### CQL0021: foreign key refers to non-existent table 'table_name'
+### CQL0021: foreign key refers to nonexistent table 'table_name'
 
 The table in a foreign key REFERENCES clause is not a valid table.
 
@@ -265,7 +265,7 @@ CREATE TABLE foo(
 ### CQL0022: exact type of both sides of a foreign key must match (expected expected_type; found actual_type) 'key_name'
 
 The indicated foreign key has at least one column with a different type than
-corresponding column in the table it references. This usually means that you
+the corresponding column in the table it references. This usually means that you
 have picked the wrong table or column in the foreign key declaration.
 
 Example:
@@ -281,7 +281,7 @@ CREATE TABLE child(
 
 ### CQL0023: number of columns on both sides of a foreign key must match
 
-The number of column in the foreign key must be the same as the number of
+The number of columns in the foreign key must be the same as the number of
 columns specified in the foreign table. This usually means a column is missing
 in the REFERENCES part of the declaration.
 
@@ -364,7 +364,7 @@ CREATE TABLE bar(id INTEGER) @create(2, migrate_proc);  -- Error: migrate_proc u
 
 ### CQL0028: FK reference must be exactly one column with the correct type 'column_name'
 
-When a foreign key is specified in the column definition it is the entire
+When a foreign key is specified in the column definition, it is the entire
 foreign key.  That means the references part of the declaration can only be for
 that one column. If you need more columns, you have to declare the foreign key
 independently.
@@ -379,13 +379,13 @@ CREATE TABLE child(
 
 -----
 
-### CQL0029: autoincrement column must be [LONG_]INTEGER PRIMARY KEY 'column name'
+### CQL0029: AUTOINCREMENT column must be [LONG_]INTEGER PRIMARY KEY 'column name'
 
-SQLite is very fussy about autoincrement columns.  The column in question must
+SQLite is very fussy about AUTOINCREMENT columns.  The column in question must
 be either a LONG INTEGER or an INTEGER and it must be PRIMARY KEY. In fact, CQL
 will rewrite LONG INTEGER into INTEGER because only that exact form is
 supported, but SQLite INTEGERs can hold LONG values so that's ok. Any other
-autoincrement form results in this error.
+AUTOINCREMENT form results in this error.
 
 Example:
 ```sql
@@ -424,7 +424,7 @@ CREATE TABLE foo(
 
 -----
 
-### CQL0032: created columns must be at the end and must be in version order", 'column'
+### CQL0032: created columns must be at the end and must be in version order 'column'
 
 The SQLite ALTER TABLE ADD COLUMN statement is used to add new columns to the
 schema.  This statement puts the columns at the end of the table. In order to
@@ -444,7 +444,7 @@ CREATE TABLE foo(
 
 -----
 
-### CQL0033: columns in a table marked @recreate cannot have @create or `@delete`, 'column'
+### CQL0033: columns in a table marked `@recreate` cannot have `@create` or `@delete` 'column'
 
 If the table is using the `@recreate` plan then you can add and remove columns
 (and other things freely)  you don't need to mark columns with `@create` or
@@ -487,7 +487,7 @@ CREATE TABLE foo(
 
 -----
 
-### CQL0035: column delete version can't be <= column create version", 'column'
+### CQL0035: column delete version can't be <= column create version 'column'
 
 You can't `@delete` a column in a version before it was even created.  Probably
 there is a typo in one or both of the versions.
@@ -1070,7 +1070,7 @@ END IF;
 
 The CAST function does highly complex and subtle conversions, including
 date/time functions and other things.  It's not possible to emulate this
-accurately and there is no Sqlite helper to do the job directly from a C call.
+accurately and there is no SQLite helper to do the job directly from a C call.
 Consequently, complex forms are supported only in the SQL contexts like `SELECT`.
 
 CAST is allowed in some non-SQL contexts: you can cast between numeric types,
@@ -1145,7 +1145,7 @@ SELECT COALESCE(1, x, y) FROM foo;  -- Error: 1 is NOT NULL, so x and y are usel
 
 The (select...) option for `IN` or `NOT IN` only makes sense in certain
 expression contexts.    Other uses are most likely errors.  It cannot appear in
-a loose expression because it fundamentally requires sqlite to process it.
+a loose expression because it fundamentally requires SQLite to process it.
 
 Example:
 ```sql
@@ -1421,7 +1421,7 @@ END;
 
 The indicated function is not implemented in CQL.  Possibly you intended to
 declare it with `function` as an external function or `select function` as a
-SQLite built-in. Note not all SQLite built-ins are automatically declared.
+SQLite built-in. Note: not all SQLite built-ins are automatically declared.
 
 Example:
 ```sql
@@ -2575,7 +2575,7 @@ ALTER TABLE vt ADD COLUMN extra TEXT;  -- Error: can't alter virtual table
 
 -----
 
-### CQL0165: fetch values is only for value cursors, not for sqlite cursors 'cursor_name'
+### CQL0165: fetch values is only for value cursors, not for SQLite cursors 'cursor_name'
 
 Cursors come in two flavors.  There are "statement cursors" which are built from
 something like this:
@@ -3963,7 +3963,7 @@ SET X := 'foo' || 'bar';   -- Error: CONCAT only works in SQL context
 SET X := (SELECT 'foo' || 'bar');  -- OK: evaluated by SQLite
 ```
 
-If concatenation is required in some non-sql context, use the `(select ..)` expression form to let SQLite do the evaluation.
+If concatenation is required in some non-SQL context, use the `(select ..)` expression form to let SQLite do the evaluation.
 
 -----
 
@@ -4413,7 +4413,7 @@ END;
 
 -----
 
-### CQL0274: autotest attribute 'dummy_test' has non existent table
+### CQL0274: autotest attribute 'dummy_test' has nonexistent table
 
 In a `cql:autotest` annotation, the given table name for **dummy_test**
 attribute does not exist.
@@ -4429,7 +4429,7 @@ END;
 
 -----
 
-### CQL0275: autotest attribute 'dummy_test' has non existent column
+### CQL0275: autotest attribute 'dummy_test' has nonexistent column
 
 In a `cql:autotest` annotation, the given column name for **dummy_test**
 attribute does not exist.
@@ -4664,10 +4664,10 @@ Example:
 
 ### CQL0289: upsert statement are forbidden if strict upsert statement mode is enabled
 
-`@enforce_strict` has been use to enable strict upsert statement enforcement.
-When enabled all sql statement should not use the upsert statement. This is
-because sqlite version running in some iOS and Android version is old. Upsert
-statement was added to sqlite in the version **3.24.0 (2018-06-04)**.
+`@enforce_strict` has been used to enable strict upsert statement enforcement.
+When enabled, no SQL statements should use the upsert statement. This is
+because the SQLite version running on some iOS and Android versions is old. The upsert
+statement was added to SQLite in version **3.24.0 (2018-06-04)**.
 
 Example:
 ```sql
@@ -4729,11 +4729,11 @@ Example:
 
 -----
 
-### CQL0292: explain statement is only available in `--dev` mode because its result set may vary between sqlite versions
+### CQL0292: explain statement is only available in `--dev` mode because its result set may vary between SQLite versions
 
 The EXPLAIN statement is intended for debugging and analysis only. It helps
-engineer understand how Sqlite will execute their query and the cost attached to
-it. SQLite can and does change the shape of the results of the explain statement and
+engineers understand how SQLite will execute their query and the cost attached to
+it. SQLite can and does change the shape of the results of the EXPLAIN statement and
 so it should not be used in production code. This is why this statement is only available
 in `--dev` mode in CQL indicating "not for production" output.
 
@@ -4759,7 +4759,7 @@ EXPLAIN QUERY PLAN SELECT * FROM foo;  -- OK (in --dev mode)
 
 ### CQL0294: window function invocations can only appear in the select list of a select statement
 
-Not all SQLite builtin function can be used as a window function.
+Not all SQLite built-in functions can be used as window functions.
 
 Example:
 ```sql
@@ -5042,10 +5042,10 @@ CREATE TABLE foo(id INTEGER);  -- Error: table moved from region1 to region2
 
 ### CQL0312: window function invocation are forbidden if strict window function mode is enabled
 
-`@enforce_strict` has been use to enable strict window function enforcement.
-When enabled all sql statement should not invoke window function. This is
-because sqlite version running in some iOS version is old. Window function was
-added to SQLite in the version **3.25.0 (2018-09-15)**.
+`@enforce_strict` has been used to enable strict window function enforcement.
+When enabled, no SQL statements should invoke window functions. This is
+because the SQLite version running on some iOS versions is old. Window functions were
+added to SQLite in version **3.25.0 (2018-09-15)**.
 
 Example:
 ```sql
@@ -5075,10 +5075,10 @@ SELECT * FROM foo WHERE data = x'1234';  -- OK
 
 ------
 
-### CQL0314: select function does not require a declaration, it is a CQL built-in
+### CQL0314: select function does not require a declaration; it is a CQL built-in
 
-CQL built-in function does not require a select function declaration. You can
-used it directly in your SQL statement.
+A CQL built-in function does not require a select function declaration. You can
+use it directly in your SQL statement.
 
 Example:
 ```sql
@@ -5375,7 +5375,7 @@ END;
 
 ### CQL0343: all arguments must be blob 'cql_get_blob_size'
 
-The argument for the CQL builtin function cql_get_blob_size should always be of
+The argument for the CQL built-in function cql_get_blob_size should always be of
 type blob
 
 Example:
@@ -5805,8 +5805,8 @@ bad:
 ```
 
 Basically if you are already in a SQL context, the form isn't usable because
-SQLite simply doesn't understand if nothing at all. This error makes it so that
-you'll get a build time failure from CQL rather than a run time failure from
+SQLite simply doesn't understand "if nothing" at all. This error makes it so that
+you'll get a build time failure from CQL rather than a runtime failure from
 SQLite.
 
 ----
@@ -6384,7 +6384,7 @@ number in this error message
 ### CQL0403: operator may not be used because it is not supported on old versions of SQLite, 'operator'
 
 The indicated operator has been suppressed with `@enforce_strict is true`
-because it is not available on older versions of sqlite.
+because it is not available on older versions of SQLite.
 
 Example:
 ```sql

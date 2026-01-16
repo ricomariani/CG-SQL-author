@@ -244,7 +244,7 @@ SQLite reference: https://sqlite.org/lang_update.html
   * the evaluation proceeds as though the target table had an unrestricted join to the `FROM` clause
   * it's normal to include a `WHERE` clause so as to not get a cross product
 
-The example in the SQLite documentation makes the `FROM` semenatics clear:
+The example in the SQLite documentation makes the `FROM` semantics clear:
 
 ```SQL
 UPDATE inventory
@@ -261,20 +261,21 @@ The following sugared version of the `UPDATE` statement is also supported:
 UPDATE some_table SET (a,b,c) = (1, 2, "xx") WHERE ...;
 ```
 
-This form at first appears to be less good than the usual form in that the clarity of which column
-is getting which value is gone however it creates symmetry with the `INSERT` statement and like
-the `INSERT` statement the column names or values may be generated from `LIKE` and `FROM` forms as
-described in [Chapter 5](./05_cursors.md#reshaping-data-cursor-like-forms).  These forms allow for
-bundles of arguments or columns of cursors to be easily updated.  Consider this example:
+At first glance, this form appears less clear than naming each column; however,
+it creates symmetry with the `INSERT` statement. As with `INSERT`, column names
+or values may be generated from `LIKE` and `FROM` forms as described in [Chapter
+5](./05_cursors.md#reshaping-data-cursor-like-forms). These forms let you update
+bundles of arguments or cursor columns easily. Consider this example:
 
  ```SQL
  UPDATE something(LIKE C) = (FROM C) WHERE id = 12;
  ```
 
-The usual shape forms are supported, so `C` could be `ARGUMENTS` or `LOCALS` etc.
+The usual shape forms are supported, so `C` could be `ARGUMENTS` or `LOCALS`
+etc.
 
-As with all the other sugared syntax forms, the statement is automatically converted to the normal
-form.  SQLite will never see the sugar, nor indeed will later stages of the compiler.
+As with other sugared syntax, the statement is automatically converted to the
+normal form. SQLite never sees the sugar, nor do later stages of the compiler.
 
 #### The `INSERT` Statement
 
@@ -283,14 +284,19 @@ SQLite reference: https://sqlite.org/lang_insert.html
 Verifications:
 
 * The target table must exist.
-* The column list specifies the columns we will provide; they must exist and be unique.
-* The column values specified must be type compatible with the corresponding columns.
-* Auto-increment columns may be specified as NULL even though the column is not nullable.
-* If no columns are specified, that is the same as if all columns had been specified, in table order.
-* If the specified columns do not include a value for all not null columns with no default value then
-  * if present, `@dummy_seed` is used to generate missing column values (Chapter 12 covers this in greater detail)
+* The column list specifies the columns we will provide; they must exist and be
+  unique.
+* The column values specified must be type compatible with the corresponding
+  columns.
+* Auto-increment columns may be specified as NULL even though the column is not
+  nullable.
+* If no columns are specified, that is the same as if all columns had been
+  specified, in table order.
+* If the specified columns do not include a value for all not null columns with
+  no default value then
+  * if present, `@dummy_seed` is used to generate missing column values (Chapter
+    12 covers this in greater detail)
   * an error is generated for the first missing value
-
 
 Note that the column names or values may be generated from `LIKE` and `FROM` forms as described in
 [Chapter 5](./05_cursors.md#reshaping-data-cursor-like-forms).  These forms allow for bundles
@@ -305,7 +311,10 @@ INSERT INTO somewhere USING
   "xx" baz;
 ```
 
-This form is much less error prone than the equivalent (below) because the correspondence between columns is readily visible.
+The above form is much less error prone than the equivalent below when the values
+are provided explicitly because the correspondence between columns is readily
+visible. If the columns and values are coming from shapes and cursors, the
+clarity isn't a problem.
 
 ```sql
 INSERT INTO somewhere(foo, bar, baz) VALUES(1,2,"xx");
@@ -334,30 +343,30 @@ SQLite reference: https://www.sqlite.org/lang_transaction.html
 
 SQLite reference: https://www.sqlite.org/lang_transaction.html
 
-`Rollback transaction` can appear in any statement context, but if you're
-using the format where you rollback to a particular save point, then the compiler
-verifies that it has seen the save point name in a previous `Savepoint` statement.
+`Rollback transaction` can appear in any statement context, but if you're using
+the format where you rollback to a particular save point, then the compiler
+verifies that it has seen the save point name in a previous `Savepoint`
+statement.
 
 #### The `SAVEPOINT` Statement
 
 SQLite reference: https://www.sqlite.org/lang_savepoint.html
 
-The `Savepoint` an appear in any statement context.  The save point name
-is recorded, so that the compiler can verify it in a `rollback`.  This
-is statement is like a weak declaration of the save point name.
+The `Savepoint` an appear in any statement context.  The save point name is
+recorded, so that the compiler can verify it in a `rollback`.  This is statement
+is like a weak declaration of the save point name.
 
 #### The `RELEASE SAVEPOINT` Statement
 
 SQLite reference: https://www.sqlite.org/lang_savepoint.html
 
-`Release Savepoint` can appear in any statement context. The compiler
-verifies that it has seen the save point name in a previous `Savepoint` statement.
+`Release Savepoint` can appear in any statement context. The compiler verifies
+that it has seen the save point name in a previous `Savepoint` statement.
 
 #### The `PROCEDURE SAVEPOINT` Statement
 
-A common pattern is to have a save point associated with a particular
-procedure. The save point's scope is the same as the procedure's scope.
-More precisely
+A common pattern is to have a save point associated with a particular procedure.
+The save point's scope is the same as the procedure's scope. More precisely
 
 ```sql
 proc foo()

@@ -20,7 +20,7 @@ things you should think about improving or customizing for your production envir
 
 The reference counting solution in the stock `CQLRT` implementation is single threaded.  This might be ok,
 in many environments only one thread is doing all the data access.  But if you plan to share objects
-between threads this is something you'll want to address.  `CQLRT` is designed to be replacable.  In fact
+between threads this is something you'll want to address.  `CQLRT` is designed to be replaceable.  In fact
 there is another version included in the distribution `cqlrt_cf` that is more friendly to iOS and CoreFoundation.
 This alternate version is an excellent demonstration of what is possible.  There are more details
 in [Internals Part 5: CQL Runtime](../../developer_guide/05_cql_runtime.md)
@@ -30,7 +30,7 @@ in [Internals Part 5: CQL Runtime](../../developer_guide/05_cql_runtime.md)
 SQLite statement management includes the ability to reset and re-prepare statements.  This is an
 important performance optimization but the stock `CQLRT` does not take advantage of this.  This is
 for two reasons:  first, simplicity, and secondly (though more importantly), any kind of statement cache would require
-a caching policy and this simple `CQLRT` cannot possibly know what might consitute a good policy
+a caching policy and this simple `CQLRT` cannot possibly know what might constitute a good policy
 for your application.
 
 The following three macros can be defined in your `cqlrt.h` and they can be directed at a version that
@@ -104,7 +104,7 @@ Presently the log format is very simple.  The invocation looks like this:
 The logging facility is expected to send the message to wherever is appropriate for your environment.
 Additionally it will typically get the failing result code and error message from SQLite, however
 these are likely to be stale. Failed queries usually still require cleanup and so the SQLite error
-codes be lost because (e.g.) a `finalize` has happened, clearing the code. You can do better if,
+codes may be lost because (e.g.) a `finalize` has happened, clearing the code. You can do better if,
 for instance, your runtime caches the results of recent failed `prepare` calls. In any case,
 what you log and where you log it is entirely up to you.
 
@@ -147,5 +147,5 @@ for `cqlrt.h`.  If this is important to you you might want to customize for that
 Helper functions for additional data types can be added, and they can be
 unique to your runtime.
 
-There are tracing macros to help with debugability.  Providing some
+There are tracing macros to help with debuggability.  Providing some
 useful versions of those can be of great help in production environments.

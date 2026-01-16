@@ -116,23 +116,23 @@ variables do not match the select statement.
 ### Shapes
 
 In the following discussion the notion of "shapes" will make its first major
-appearance. Shapes are in some sense one of the magic CQL features that allow
-you to use work with dozens of columns without having to type their names all
-the time and without creating a maintenance disaster.  They first made their
+appearance. Shapes are one of the key CQL features that allow
+you to work with dozens of columns without having to type their names all
+the time or create a maintenance disaster. They first made their
 appearance in cursor features but soon found their way throughout the language,
 as we will see below, we consume shapes with `LIKE` when the shape is used for
 type information and `FROM` when it is being expanded into values.
 
 SQL doesn't have the notion of structure types, but structures actually appear
 pretty directly in many places.  Generally we call these things "shapes" and
-there are a variety of source for shapes including:
+there are a variety of sources for shapes including:
 
 * the columns of a table, `like my_table`
 * the projection of a sample `SELECT` statement `like select 1 x, 2 y`
 * the columns of a cursor use `like my_cursor`
 * the result type of a procedure with a result set `like my_proc`
 * the arguments of a procedure  `like my_proc ARGUMENTS`
-* the columns from an `like interface`
+* the columns of an interface `like my_interface`
 
 The interface statement directly declares a named shape. e.g.,
 
@@ -266,12 +266,12 @@ begin
 end;
 ```
 
-After the loop, `D` is either empty because there were no rows (thus `if D`
-would fail) or else it has the row with the maximum value of `something`,
-whatever that is.  Note that you don't have to copy each field separately
-or nor change the code should new fields be added.
+After the loop, `D` is either empty because there were no rows (so `if D`
+fails) or it has the row with the maximum value of `something`,
+whatever that is. Note that you don't have to copy each field separately
+nor change the code if new fields are added.
 
-Value cursors are always have their own storage, so you could say all value
+Value cursors always have their own storage, so you could say all value
 cursors are "automatic".
 
 And as we saw above, value cursors may or may not be holding a row.
@@ -291,7 +291,7 @@ we'll go on to those statements next.  As it happens, we are recapitulating the
 history of cursor features in the CQL language by exploring the system in this
 way.
 
-#### Benefits of using named typed to cursor a
+#### Benefits of typed name lists for cursor shapes
 
 This form allows any kind of declaration, for instance:
 

@@ -31,8 +31,8 @@ preprocessor over the input file before processing. The practice of using
 To address these problems CQL introduced pre-processing features including
 structured macros. That is, macros that describe the sort of thing they intend
 to produce and the kinds of things they consume.  This allows for reasonable
-syntax and type checking and much better error reporting.  To this we also
-add `@include` to import code and `@ifdef`/`@ifndef` for conditionals.
+syntax and type checking and much better error reporting.  To this we also add
+`@include` to import code and `@ifdef`/`@ifndef` for conditionals.
 
 ### Conditional Compilation
 
@@ -70,11 +70,11 @@ Note that in CQL even the code that is conditionally compiled out must at least
 _parse_ correctly.  Semantic analysis does not run, and indeed often there would
 be conflicts if it did, but the code must at least be correct enough to parse.
 
-Conditionally choosing one of several macro implementations for use later in
-the code is a very powerful way to get conditionality throughout your code
-cleanly.  `@ifdef` can only appear inside of statement list (`stmt_list`) macros
-because `@ifdef` is a statement so it can't appear in expressions and query
-fragments.   Hence the most powerful pattern is:
+Conditionally choosing one of several macro implementations for use later in the
+code is a very powerful way to get conditionality throughout your code cleanly.
+`@ifdef` can only appear inside of statement list (`stmt_list`) macros because
+`@ifdef` is a statement so it can't appear in expressions and query fragments.
+Hence the most powerful pattern is:
 
 ```sql
 @ifdef something

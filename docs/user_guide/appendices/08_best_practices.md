@@ -13,7 +13,7 @@ This is a brief discussion of every statement type and some general best
 practices for that statement. The statements are in mostly alphabetical order
 except related statements were moved up in the order to make logical groups.
 
-Refer also to Appendix 7: Anti-patterns.
+Refer also to Appendix 7: Antipatterns.
 
 ### Data Definition Language (DDL)
 
@@ -71,10 +71,9 @@ generally, don't use these statements.
 * `COMMIT RETURN`
 * `ROLLBACK RETURN`
 
-back if needed.  You can use ad hoc savepoints, just give your save point and
-Savepoints are the preferred tool for having interim state that can be rolled
-name then use `RELEASE SAVEPOINT` to commit it, or else `ROLLBACK TO SAVEPOINT`
-followed by a `RELEASE` to abort it.  Note that you always `RELEASE` savepoints
+Savepoints are the preferred tool for having interim state that can be rolled back if needed.
+You can use ad hoc savepoints: give your savepoint a name, then use `RELEASE SAVEPOINT` to commit it,
+or `ROLLBACK TO SAVEPOINT` followed by `RELEASE` to abort it. Note that you always `RELEASE` savepoints
 in both the rollback and the commit case.
 
 Managing savepoints can be tricky, especially given the various error cases.

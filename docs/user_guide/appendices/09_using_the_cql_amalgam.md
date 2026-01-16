@@ -9,38 +9,44 @@ weight: 9
 -- LICENSE file in the root directory of this source tree.
 -->
 
-This is a brief discussion of the CQL Amalgam and its normal usage patterns.
+This is a brief discussion of the CQL amalgam and its normal usage patterns.
 
 ### What is an Amalgam?  What is it for?
 
-The amalgam is not much more than a concatenation of all of the `.h` files and
-the `.c` files into one big `cql_amalgam.c` file. With that files you can
-trivially make the compiler with a single `cc cql_amalgam.c` command.
+The amalgam is a concatenation of all the `.h` files and
+the `.c` files into one `cql_amalgam.c` file. With that file you can
+build the compiler with a single `cc cql_amalgam.c` command.
 
 Because of this simplicity, the amalgam gives you a convenient way to consume
 the compiler in a different/unique build environment and, if desired, strip it
 down to just the parts you want while controlling its inputs more precisely than
 you can with just a command line tool.
 
-If you want to snapshot a particular CQL compiler the easiest way to do so is to
-use make an amalgam at that version and then check in the output
-`cql_amalgam.c`.  Just like with SQLite and its amalgam.
+To snapshot a particular CQL compiler version, create an amalgam at that
+version and check in the output `cql_amalgam.c`, as is commonly done with
+SQLite.
 
 There are many other uses of the amalgam:
-* It's possible to tweak the amalgam with a little pre-processing to make a Windows binary; last time I attempted this it took about 10 minutes
-  * trying to get the whole build to work on Windows is a lot harder
-* The amalgam is readily consumed by [Emscripten](https://en.wikipedia.org/wiki/Emscripten) to create WASM
-  * This along with Lua and SQLite in WASM resulted in [a fully online playground](https://mingodad.github.io/CG-SQL-Lua-playground/)
-  * Meta builds a VS Code extension that hosts the actual compiler in WASM in VS Code for error checking
-  * You can make any kind of tool of your own that wants to consume the AST or the output parts
-  * You can invoke the CQL compiler without launching a new process from inside your environment
+* It is possible to tweak the amalgam with a little pre-processing to make a Windows binary; this typically takes about 10 minutes.
+  * Getting the full build working on Windows is more involved.
+* The amalgam is readily consumed by [Emscripten](https://en.wikipedia.org/wiki/Emscripten) to create WASM.
+  * Together with Lua and SQLite in WASM, this enabled [a fully online playground](https://mingodad.github.io/CG-SQL-Lua-playground/).
+  * Meta created an internal VS Code extension that hosts the compiler in WASM for error checking.
+  * You can build tools that consume the AST or generated outputs.
+  * You can invoke the CQL compiler without launching a new process.
 
-Generally the amalgam makes it easier for you to host the CQL compiler in some
+Generally, the amalgam makes it easier to host the CQL compiler in a
 new environment.
+
+### Prerequisites
+
+- A C toolchain (Clang or GCC) or MSVC on Windows.
+- A normal CQL build to generate Bison/Flex outputs.
+- Optional: Emscripten (`emcc`) for WebAssembly builds.
 
 ### Creating the Amalgam
 
-The amalgam has to include the results of bison and flex, so a normal build must
+The amalgam requires the outputs of Bison and Flex, so a normal build must
 run first.  The simplest way to build it starting from the `sources` directory
 is:
 
@@ -49,13 +55,28 @@ make
 ./make_amalgam.sh
 ```
 
-The result goes in `out/cql_amalgam.c`.  It can then be built using `cc` with
-whatever flags you might desire.  With a few `-D` directives it can readily be
-compiled with Microsoft C and it also works with Emscripten (`emcc`) basically
-unchanged.  Clang and GCC of course also work.
+The result goes in `out/cql_amalgam.c`.
+
+Build with a native compiler:
+
+```bash
+cc out/cql_amalgam.c -o cql_amalgam
+```
+
+Build with MSVC:
+
+```powershell
+cl /TC out\cql_amalgam.c /Fe:cql_amalgam.exe
+```
+
+Build with Emscripten:
+
+```bash
+emcc out/cql_amalgam.c -o cql_amalgam.js
+```
 
 The standard test script `test.sh` builds the amalgam and attempts to compile it
-as well, which ensures that the amalgam can at least compile at all times.
+as well, ensuring that the amalgam compiles at all times.
 
 ### Testing the Amalgam
 
@@ -67,8 +88,7 @@ script `test.sh` can test the amalgam build like so:
 test.sh --use_amalgam
 ```
 
-This runs all the normal tests using the binary built from the amalgam rather
-than the normal binary.
+This runs all the normal tests using the amalgam-built binary.
 
 Normal CQL development practices result in this happening pretty often so the
 amalgam tends to stay in good shape. The code largely works in either form with
@@ -82,9 +102,8 @@ To use the amalgam you'll want to do something like this:
 ```c
 #define CQL_IS_NOT_MAIN 1
 
-// Suppresses a bunch of warnings because the code
-// is in an #include context
-// PR's to remove these are welcome :D
+// Suppresses warnings because the code is in an #include context.
+// Pull requests to remove these are welcome.
 #pragma clang diagnostic ignored "-Wnullability-completeness"
 
 #include "cql_amalgam.c"
@@ -106,26 +125,23 @@ void go_for_it(const char *your_buffer) {
 }
 ```
 
-So the general pattern is:
+General pattern:
 
-* predefine the options you want to use (see below)
-* include the amalgam
-* add any functions you want that will call the amalgam
+- Predefine the options you want to use (see below).
+- Include the amalgam.
+- Add functions that call `cql_main` or other allowed entry points.
 
-Most amalgam functions are `static` to avoid name conflicts. You will want to
-create your own public functions such as `go_for_it` above that use the amalgam
-in all the ways you desire.
+Most functions in the amalgam are `static` to avoid name conflicts. Create your
+own public functions (e.g., `go_for_it`) that call the amalgam as needed.
 
-You'll want to avoid calling any internal functions other than `cql_main`
-because they are liable to change.
+Avoid calling internal functions other than `cql_main`; they may change.
 
->NOTE: The amalgam is C code not C++ code.  Do not attempt to use it inside of
->an `extern "C"` block in a C++ file.  It won't build.  If you want a C++ API,
->expose the C functions you need and write a wrapper class.
+>NOTE: The amalgam is C, not C++. Do not include it inside a C++ `extern "C"`
+>block. If you want a C++ API, expose the C functions you need and wrap them.
 
 ### CQL Amalgam Options
 
-The amalgam includes the following useful `#ifdef` options to allow you to customize it.
+The amalgam provides the following configuration symbols to customize behavior:
 
 * CQL_IS_NOT_MAIN
 * CQL_NO_SYSTEM_HEADERS
@@ -153,11 +169,11 @@ As the comments in the source say:
 #endif
 ```
 
-Set this symbol so that you own main and cql_main is called at your pleasure.
+Define this symbol to keep control of `main`; call `cql_main` directly.
 
 #### CQL_NO_SYSTEM_HEADERS
 
-The amalgam includes the normal `#include` directives needed to make it compile,
+The amalgam includes the normal `#include` directives needed to compile,
 things like stdio and such. In your situation these headers may not be
 appropriate.  If `CQL_NO_SYSTEM_HEADERS` is defined then the amalgam will not
 include anything; you can then add whatever headers you need before you include
@@ -217,7 +233,7 @@ include the amalgam and then define your_error_function elsewhere in that file
 
 #### cql_emit_output
 
-The amalgam uses `cql_emit_output` to write its messages to stdout.  The
+The amalgam uses `cql_emit_output` to write its messages to stdout. The
 documentation is included in the code which is attached here.  If you want the
 standard output to go somewhere else, define `cql_emit_output` as the name of
 your output handling function.  It should accept a `const char *` and record
@@ -233,7 +249,7 @@ that string however you deem appropriate.
 // "#define cql_emit_output your_method" and then your method will
 // get the data instead. This will be whatever output the
 // compiler would have emitted to stdout.  This is usually
-// reformated CQL or semantic trees and such -- not the normal
+// reformatted CQL or semantic trees and such -- not the normal
 // compiler output.
 //
 // You must copy the memory if you intend to keep it. "data" will
@@ -251,7 +267,7 @@ void cql_emit_output(const char *msg) {
 ```
 
 Typically you would `#define cql_emit_output your_output_function` before you
-include the amalgam and then define your_error_function elsewhere in that file
+include the amalgam and then define your_output_function elsewhere in that file
 (before or after the amalgam is included are both fine).
 
 #### cql_open_file_for_write
@@ -331,18 +347,18 @@ Typically you would `#define cql_write_file your_write_function` before you
 include the amalgam and then define your_write_function elsewhere in that file
 (before or after the amalgam is included are both fine).
 
-### Amalgam LEAN choices
+### Amalgam LEAN Choices
 
-When you include the amalgam, you get everything by default. You may, however,
-only want some limited subset of the compiler's functions in your build.
+Including the amalgam gives you everything by default. You may, however,
+only want a limited subset of the compiler's functions in your build.
 
-To customize the amalgam, there are a set of configuration pre-processor
+To customize the amalgam, there are a set of configuration preprocessor
 options.  To opt-in to configuration, first define `CQL_AMALGAM_LEAN`. You then
 have to opt-in to the various pieces you might want. The system is useless
 without the parser, so you can't remove that; but you can choose from the list
 below.
 
-The options are:
+Options:
 
 * `CQL_AMALGAM_LEAN` : enable lean mode; this must be set or you get everything
 * `CQL_AMALGAM_GEN_SQL` : the echoing features  (required)
@@ -357,23 +373,21 @@ The options are:
 * `CQL_AMALGAM_TEST_HELPERS` : test helper output
 * `CQL_AMALGAM_UNIT_TESTS` : some internal unit tests, which are pretty much needed by nobody
 
-Note that `-DCQL_AMALGAM_LEAN -DCQL_AMALGAM_GEN_SQL -DCQL_AMALGAM_SEM -DCQL_AMALGAM_CG_COMMON`
+Note: `-DCQL_AMALGAM_LEAN -DCQL_AMALGAM_GEN_SQL -DCQL_AMALGAM_SEM -DCQL_AMALGAM_CG_COMMON`
 is the minimal set of slices.  See the `/release/test_amalgam.sh` script to find
 the other valid options.  But basically you can add anything to the minimum set.
 If you don't add `-DCQL_AMALGAM_LEAN` you get everything.
 
 ### Other Notes
 
-The amalgam will use malloc/calloc for its allocations and it is designed to
-release all memory it has allocated when cql_main returns control to you, even
-in the face of error.
+The amalgam uses `malloc`/`calloc` for its allocations and is designed to
+release all memory when `cql_main` returns control to you, even on errors.
 
-Internal compilation errors result in an `assert` failure leading to an abort.
+Internal compilation errors result in an assertion failure that aborts.
 This is not supposed to ever happen but there can always be bugs.  Normal errors
 just prevent later phases of the compiler from running so you might not see file
 output, but rather just error output.  In all cases things should be cleaned up.
 
-The compiler can be called repeatedly with no troubles; it re-initializes on
-each use. The compiler is not multi-threaded so if there is threading you should
-use some mutex arrangement to keep it safe. A thread-safe version would require
-extensive modifications.
+You can call the compiler repeatedly; it re-initializes on each use. The
+compiler is not multi-threaded, so if there is threading you should use a mutex
+to keep it safe. A thread-safe version would require extensive modifications.

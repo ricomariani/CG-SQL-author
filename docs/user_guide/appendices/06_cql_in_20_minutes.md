@@ -56,9 +56,9 @@ And with no further delay, CQL in 20 minutes...
 1 + 3 * 2    --> 7
 (1 + 3) * 2  --> 8
 
--- Use true and false for bools, nullable bool is possible
-true    --> how to true
-false   --> how to false
+-- Use true and false for bools; nullable bool is possible
+true    --> true
+false   --> false
 null    --> null means "unknown" in CQL like SQLite
 
 -- Negate with not
@@ -908,7 +908,7 @@ begin
   cursor C for call out_union_example();
   loop fetch C
   begin
-    -- use builtin cql_cursor_format to make the cursor into a string
+    -- use built-in cql_cursor_format to make the cursor into a string
     printf("%s\n", cql_cursor_format(C)); --> prints every column and value
   end;
 end;
@@ -1214,7 +1214,7 @@ this is common to allow overloaded names.
 x:dist -- becomes  metric_distance(x) if x is of type real<meters>
 ```
 
-This notation can be quite useful, for instance the builtin `fmt` is defined for
+This notation can be quite useful; for instance, the built-in `fmt` is defined for
 all types such that `x:fmt` renders x into some debug string regardless of what `x`
 is by calling a suitable format function (different functions for different types).
 `@op` may be used to redefine/override the expansion as many times as desired.
@@ -1325,7 +1325,7 @@ useful but come up less often.
 Property syntax and array syntax can be converted to function calls using the `@op`
 directive.
 
-For instance, these directives are builtin:
+For instance, these directives are built-in:
 
 ```
 @op cql_long_list : array set as cql_long_list_set_at;

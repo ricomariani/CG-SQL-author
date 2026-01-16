@@ -59,7 +59,7 @@ LET v := 1.0; -- use scientific notation or add .0 to make a real literal
 ### Casts
 
 Redundant casts fatten the code and don't really add anything to readability.
-Sometimems it's necessary to cast NULL to a particular type so that you can be
+Sometimes it's necessary to cast NULL to a particular type so that you can be
 sure that generated result set has the right data type, but most of the casts
 below are not necessary.
 
@@ -94,8 +94,7 @@ UNION ALL
   FROM bar
 ```
 
-Alternatively the suffix casting syntax obviates is much less verbose and
-generates the same SQL.
+Alternatively, suffix casting is much less verbose and generates the same SQL.
 
 ```sql
   SELECT
@@ -157,7 +156,7 @@ would have served you better.
 
 ### CASE and CAST and NULL
 
-Somtimes there's clamping or filtering going on in a case statement
+Sometimes there's clamping or filtering going on in a case statement
 
 ```sql
 CAST(CASE WHEN foo.name > 'm' THEN foo.name ELSE NULL END AS TEXT)
@@ -213,7 +212,7 @@ SELECT
 ```
 
 So now we've made several mistakes.  We could have used the usual `FALSE`
-defintion to avoid the cast. But even that would have left us with an IFNULL
+definition to avoid the cast. But even that would have left us with an IFNULL
 that's harder to read.  Here's a much simpler formulation:
 
 ```sql

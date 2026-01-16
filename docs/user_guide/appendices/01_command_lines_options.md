@@ -9,7 +9,7 @@ weight: 1
 -- LICENSE file in the root directory of this source tree.
 -->
 
-CQL has a variety of command line (CLI) options but many of them are only interesting for cql development.  Nonetheless this is a comprehensive list:
+CQL has a variety of command line (CLI) options, but many of them are only interesting for CQL development. Nonetheless this is a comprehensive list:
 
 ### With No Options
 * emits a usage message
@@ -17,11 +17,10 @@ CQL has a variety of command line (CLI) options but many of them are only intere
 ### --in file
 
 * reads the given file for the input instead of stdin
-* the input should probably have already been run through the C pre-processor as above
 * returns non-zero if the file fails to parse
 
 Example:
-```
+```bash
 cql --in test.sql
 ```
 
@@ -30,15 +29,15 @@ cql --in test.sql
 * the return code is zero if there are no errors
 
 Example:
-```
+```bash
 cql --in sem_test.sql --sem
 ```
 
 ### --ast
 * walks the AST and prints it to stdout in human readable text form
 * may be combined with --sem (semantic info will be included)
-Example
-```
+Example:
+```bash
 cql --in sem_test.sql --sem --ast >sem_ast.out
 ```
 
@@ -50,7 +49,7 @@ cql --in sem_test.sql --sem --ast >sem_ast.out
 * may be combined with --sem (in which case you see the source after any rewrites for sugar)
 * this also validates that the input can be parsed
 
-Example
+Example:
 ```
 cql --in test.sql --echo >test.out  # test.out is "equivalent" to test.sql
 ```
@@ -60,7 +59,7 @@ cql --in test.sql --echo >test.out  # test.out is "equivalent" to test.sql
 * this is really only interesting for small graphs for discussion as it rapidly gets insane
 
 Example:
-```
+```bash
 cql --dot --in dottest.sql
 ```
 ### --cg output1 output2 ...
@@ -71,7 +70,7 @@ cql --dot --in dottest.sql
 
 Example:
 
-```
+```bash
 cql --in foo.sql --cg foo.h foo.c
 ```
 
@@ -81,13 +80,13 @@ cql --in foo.sql --cg foo.h foo.c
 
 Example:
 
-```
+```bash
 cql --in test.sql --nolines --cg foo.h foo.c
 ```
 
 ### --global_proc name
 * any loose SQL statements not in a stored proc are gathered and put into a procedure of the given name
-* when generating a schema migrate script the global proc name is used as a prefix on all of the artifacts so that there can be several independent migrations linked into a single executable
+* when generating a schema migration script the global proc name is used as a prefix on all of the artifacts so that there can be several independent migrations linked into a single executable
 
 ### --compress
 * for use with the C result type, (or any similar types added to the runtime array in your compiler)
@@ -103,8 +102,8 @@ cql --in test.sql --nolines --cg foo.h foo.c
 * the test output often makes the outputs badly formed so this is generally good for humans only
 
 ### --dev
-* some codegen features only make sense during development, this enables dev mode to turn those one
-** example: [explain query plan](../15_query_plan_generation.md)
+* some codegen features only make sense during development; this enables dev mode to turn those on
+* example: [Explain query plan](../15_query_plan_generation.md)
 
 ### --exp
 * runs macro expansion without semantic analysis
@@ -113,12 +112,12 @@ cql --in test.sql --nolines --cg foo.h foo.c
 
 ### --c_include_namespace
 * for the C codegen runtimes, it determines the header namespace (as in #include "namespace/file.h") that goes into the output C file
-* if this option is used, it is prefixed to the first argment to --cg to form the include path in the C file
+* if this option is used, it is prefixed to the first argument to --cg to form the include path in the C file
 * if absent there is no "namespace/" prefix
 
 ### --c_include_path
 * for the C codegen runtimes, it determines the full header path (as in #include "your_arg") that goes into the output C file
-* if this option is used, the first argment to --cg controls only the output path and does not appear in include path at all
+* if this option is used, the first argument to --cg controls only the output path and does not appear in include path at all
 * this form overrides --c_include_namespace if both are specified
 
 ### Result Types (--rt *)
@@ -133,12 +132,12 @@ These are the various outputs the compiler can produce.
 * emits `#include "foo.h"` into the C output instead of `#include "cqlrt.h"`
 
 ##### --generate_type_getters
-* changes C output for CQL result sets so that the field readers used shared functions to get fields of a certain type
+* changes C output for CQL result sets so that the field readers use shared functions to get fields of a certain type
 * this style of codegen makes result-sets more interoperable with each other if they have similar shape so it can be useful
 
 ##### --generate_exports
 * adds an additional output file
- * example:  `--in foo.sql --generate_exports --rt c --cg foo.h foo.c foo_exports.sql
+ * example:  `--in foo.sql --generate_exports --rt c --cg foo.h foo.c foo_exports.sql`
 * the output file `foo_exports.sql` includes procedure declarations for the contents of `foo.sql`
 * basically automatically generates the CQL header file you need to access the procedures in the input from some other file
  * if it were C it would be like auto-generating `foo.h` from `foo.c`
@@ -162,7 +161,7 @@ These are the various outputs the compiler can produce.
 ##### --include_regions a b c
 * the indicated regions will be declared
 * used with `--rt schema_upgrade` or `--rt schema`
-* in the upgrade case excluded regions will not be themselves upgraded, but may be referred, to by things that are being upgraded
+* in the upgrade case, excluded regions will not be themselves upgraded, but may be referred to by things that are being upgraded
 
 ##### --exclude_regions x y z
 * the indicated regions will still be declared but the upgrade code will be suppressed, the presumption being that a different script already upgrades x y z
@@ -185,5 +184,5 @@ These are the various outputs the compiler can produce.
 * see [Chapter 15](../15_query_plan_generation.md)
 
 #### --rt stats
-* produces  a simple .csv file with node count information for AST nodes per procedure in the input
+* produces a simple .csv file with node count information for AST nodes per procedure in the input
 * requires one output file (foo.csv)

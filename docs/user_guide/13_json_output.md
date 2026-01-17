@@ -18,15 +18,16 @@ though such procedures comprise just one statement, good argument binding can
 create very powerful DML fragments that are re-usable.  Many CQL stored
 procedures are of this form (in practice maybe 95% are just one statement.)
 
-To use CQL in this fashion, run a command like the following.
-See [Appendix 1](./appendices/01_command_lines_options.md) for command-line details.
+To use CQL in this fashion, run a command like the following. See [Appendix
+1](./appendices/01_command_lines_options.md) for command-line details.
 
 ```bash
 cql --in input.sql --rt json_schema --cg out.json
 ```
 
 The output includes sections for the various entity types that CQL can process.
-A full description of the outputs is available in [diagram form](https://ricomariani.github.io/CG-SQL-author/json_grammar.railroad.html).
+A full description of the outputs is available in [diagram
+form](https://ricomariani.github.io/CG-SQL-author/json_grammar.railroad.html).
 
 The rest of this chapter covers the contents of each section and their meaning,
 rather than low-level format details, which are best described by the grammar.
@@ -36,28 +37,41 @@ rather than low-level format details, which are best described by the grammar.
 The "tables" section contains zero or more tables, each with these fields:
 
 * **name** : the table name
-* **crc** : the schema CRC for the entire table definition, including columns and constraints
+* **crc** : the schema CRC for the entire table definition, including columns
+  and constraints
 * **isTemp** : true if this is a temporary table
 * **ifNotExists** : true if the table was created with "if not exists"
 * **withoutRowid** : true if the table was created using "without rowid"
 * **isAdded** : true if the table has an @create directive
-  * **addedVersion** : optional, the schema version number in the @create directive
-* **isDeleted** : true if the table was marked with @delete or is currently _unsubscribed_
-  * **deletedVersion** : optional, the schema version number in the @delete directive
+  * **addedVersion** : optional, the schema version number in the @create
+    directive
+* **isDeleted** : true if the table was marked with @delete or is currently
+  _unsubscribed_
+  * **deletedVersion** : optional, the schema version number in the @delete
+    directive
 * **isRecreated** : true if the table is marked with @recreate
-  * **recreateGroupName** : optional, if the @recreate attribute specifies a group name, it is present here
-* **unsubscribedVersion** : optional, if the table was last unsubscribed, the version number when this happened
-* **resubscribedVersion** : optional, if the table was last resubscribed, the version number when this happened
+  * **recreateGroupName** : optional, if the @recreate attribute specifies a
+    group name, it is present here
+* **unsubscribedVersion** : optional, if the table was last unsubscribed, the
+  version number when this happened
+* **resubscribedVersion** : optional, if the table was last resubscribed, the
+  version number when this happened
 * **_region information_** : optional, see the section on Region Info
-* **indices** : optional, a list of the names of the indices on this table, see the [indices section](#indices)
-* **_attributes_** : optional, see the section on attributes, they appear in many places
+* **indices** : optional, a list of the names of the indices on this table, see
+  the [indices section](#indices)
+* **_attributes_** : optional, see the section on attributes, they appear in
+  many places
 * **_columns_** : an array of column definitions, see the section on columns
 * **primaryKey** : a list of column names, possibly empty if no primary key
-* **primaryKeySortOrders** : a list of corresponding sort orders, possibly empty, for each column of the primary key if specified
+* **primaryKeySortOrders** : a list of corresponding sort orders, possibly
+  empty, for each column of the primary key if specified
 * **primaryKeyName** : optional, the name of the primary key, if it has one
-* **_foreignKeys_** : a list of foreign keys for this table, possibly empty, see the [foreign keys section](#foreign-keys)
-* **_uniqueKeys_** : a list of unique keys for this table, possibly empty, see the [unique keys section](#unique-keys)
-* **_checkExpressions_** : a list of check expressions for this table, possibly empty, see the [check expression section](#check-expressions)
+* **_foreignKeys_** : a list of foreign keys for this table, possibly empty, see
+  the [foreign keys section](#foreign-keys)
+* **_uniqueKeys_** : a list of unique keys for this table, possibly empty, see
+  the [unique keys section](#unique-keys)
+* **_checkExpressions_** : a list of check expressions for this table, possibly
+  empty, see the [check expression section](#check-expressions)
 
 Example:
 
@@ -123,16 +137,17 @@ generates:
 
 ### Region Information
 
-Region Information can appear on many entities. It consists of two
-optional elements:
+Region Information can appear on many entities. It consists of two optional
+elements:
 
 * **region** : optional, the name of the region in which the entity was defined
-* **deployedInRegion** : optional, the deployment region in which that region is located
+* **deployedInRegion** : optional, the deployment region in which that region is
+  located
 
 ### Attributes
 
-Miscellaneous attributes can be present on virtually every kind of entity.
-They are optional. The root node introduces the attributes:
+Miscellaneous attributes can be present on virtually every kind of entity. They
+are optional. The root node introduces the attributes:
 
 * **attributes** : a list at least one attribute
 
@@ -141,7 +156,8 @@ Each attribute is a name–value pair:
 * **name** : any string
   * attribute names are often compound, like "cql:shared_fragment"
   * they are otherwise simple identifiers
-  * if the ``[[attribute]]`` form is used, it is expanded into the normal `cql:attribute` form in the output
+  * if the ``[[attribute]]`` form is used, it is expanded into the normal
+    `cql:attribute` form in the output
 * **value** : any _attribute value_
 
 Each _attribute value_ can be:
@@ -149,25 +165,23 @@ Each _attribute value_ can be:
 * any literal
 * an array of _attribute values_
 
-Since _attribute values_ can nest, it's possible to represent
-arbitrarily complex data types in an attribute.
+Since _attribute values_ can nest, it's possible to represent arbitrarily
+complex data types in an attribute.
 
 ### Global attributes
 
-While the most common use case for attributes is to attach them to
-other entities (e.g., tables, columns), CQL also lets you define
-"global" attributes, which are included in the top level `attributes`
-section of the JSON output. To specify global attributes you declare a
-variable of type `object` ending with the suffix `database` and attach
-attributes to it. CQL will merge together all the attributes from all
-the variables ending with `database` and place them in the `attributes`
-section of the JSON output.
+While the most common use case for attributes is to attach them to other
+entities (e.g., tables, columns), CQL also lets you define "global" attributes,
+which are included in the top level `attributes` section of the JSON output. To
+specify global attributes you declare a variable of type `object` ending with
+the suffix `database` and attach attributes to it. CQL will merge together all
+the attributes from all the variables ending with `database` and place them in
+the `attributes` section of the JSON output.
 
 Global attributes let you add configuration information to the CQL JSON output.
-You can, for instance, include these attributes
-in some root file that you `@include` in the rest of your CQL code,
-and by doing this, these attributes will be visible in any generated
-JSON for those files.
+You can, for instance, include these attributes in some root file that you
+`@include` in the rest of your CQL code, and by doing this, these attributes
+will be visible in any generated JSON for those files.
 
 Example:
 
@@ -203,21 +217,24 @@ Generates:
 
 ### Foreign Keys
 
-Foreign keys appear only in tables. The list contains zero or
-more entries of this form:
+Foreign keys appear only in tables. The list contains zero or more entries of
+this form:
 
 * **name** : optional, the name of the foreign key if specified
-* **columns** : the names of the constrained columns in the current table (the "child" table)
-* **referenceTable** : the name of the table that came after REFERENCES in the foreign key
+* **columns** : the names of the constrained columns in the current table (the
+  "child" table)
+* **referenceTable** : the name of the table that came after REFERENCES in the
+  foreign key
 * **referenceColumns** : the constraining columns in the referenced table
 * **onUpdate** : the ON UPDATE action (e.g. "CASCADE", "NO ACTION", etc.)
 * **onDelete** : the ON DELETE action (e.g. "CASCADE", "NO ACTION", etc.)
-* **isDeferred** : boolean, indicating the deferred or not deferred setting for this foreign key
+* **isDeferred** : boolean, indicating the deferred or not deferred setting for
+  this foreign key
 
 ### Unique Keys
 
-Unique keys appear only in tables. The list contains zero or
-more entries of this form:
+Unique keys appear only in tables. The list contains zero or more entries of
+this form:
 
 * **name**: optional, the name of the unique key if specified
 * **columns**: a list of 1 or more constrained column names
@@ -226,36 +243,45 @@ more entries of this form:
 
 ### Check Expressions
 
-Check expressions appear only in tables. The list contains zero
-or more entries of this form:
+Check expressions appear only in tables. The list contains zero or more entries
+of this form:
 
 * **name** : optional, the name of the unique key if specified
 * **checkExpr** : the check expression in plain text
-* **checkExprArgs**: an array of zero or more local variables that should be bound to the `?` items in the check expression
+* **checkExprArgs**: an array of zero or more local variables that should be
+  bound to the `?` items in the check expression
 
-`checkExprArgs` will almost always be the empty list `[]`. In the exceedingly rare case where the table
-was defined in a procedure and parts of the check expression are procedure arguments,
-the check expression is not fully known until runtime. This is unusual but possible.
+`checkExprArgs` will almost always be the empty list `[]`. In the exceedingly
+rare case where the table was defined in a procedure and parts of the check
+expression are procedure arguments, the check expression is not fully known
+until runtime. This is unusual but possible.
 
 
 ### Columns
 
-Columns are themselves complex; there are one or more per table.
-Each table has a list of records of this form:
+Columns are themselves complex; there are one or more per table. Each table has
+a list of records of this form:
 
 * **name** : the name of the columns
-* **_attributes_** : optional, see the [section on attributes](#attributes), they appear in many places
+* **_attributes_** : optional, see the [section on attributes](#attributes),
+  they appear in many places
 * **type** : the column type (e.g. bool, real, text, etc.)
-* **kind** : optional, if the type is qualified by a discriminator such as int<task_id> it appears here
-* **isSensitive** : optional, indicates a column that holds sensitive information such as PII
+* **kind** : optional, if the type is qualified by a discriminator such as
+  int<task_id> it appears here
+* **isSensitive** : optional, indicates a column that holds sensitive
+  information such as PII
 * **isNotNull** : true if the column is not null
 * **isAdded** : true if the column has an @create directive
-  * **addedVersion** : optional, the schema version number in the @create directive
+  * **addedVersion** : optional, the schema version number in the @create
+    directive
 * **isDeleted** : true if the column was marked with @delete
-  * **deletedVersion** : optional, the schema version number in the @delete directive
-* **defaultValue** : optional, can be any literal, the default value of the column
+  * **deletedVersion** : optional, the schema version number in the @delete
+    directive
+* **defaultValue** : optional, can be any literal, the default value of the
+  column
 * **collate** : optional, the collation string (e.g. nocase)
-* **checkExpr** : optional, the _check expression_ for this column (see the related section)
+* **checkExpr** : optional, the _check expression_ for this column (see the
+  related section)
 * **isPrimaryKey** : true if the column was marked with PRIMARY KEY
 * **isUniqueKey** : true if the column was marked with UNIQUE
 * **isAutoIncrement** : true if the column was marked with AUTOINCREMENT
@@ -263,39 +289,45 @@ Each table has a list of records of this form:
 
 ### Virtual Tables
 
-The "virtualTables" section is very similar to the "tables" section, with
-zero or more virtual table entries.
+The "virtualTables" section is very similar to the "tables" section, with zero
+or more virtual table entries.
 
-Virtual table entries are the same as table entries with the following additions:
+Virtual table entries are the same as table entries with the following
+additions:
 
 * **module** : the name of the module that manages this virtual table
 * **isEponymous** : true if the virtual table was declared eponymous
 * **isVirtual** : always true for virtual tables
 
-The JSON schema for these items was designed to be as similar as possible
-so that typically the same code can handle both with possibly a few
-extra tests of the isVirtual field.
+The JSON schema for these items was designed to be as similar as possible so
+that typically the same code can handle both with possibly a few extra tests of
+the isVirtual field.
 
 
 ### Views
 
-The views section contains all views in the schema.
-It has zero or more view entries of this form:
+The views section contains all views in the schema. It has zero or more view
+entries of this form:
 
 * **name** : the view name
 * **crc** : the schema CRC for the entire view definition
 * **isTemp** : true if this is a temporary view
 * **isDeleted** : true if the view was marked with @delete
-  * **deletedVersion** : optional, the schema version number in the @delete directive
+  * **deletedVersion** : optional, the schema version number in the @delete
+    directive
 * **_region information_** : optional, see the section on Region Info
-* **_attributes_** : optional, see the section on attributes, they appear in many places
-* **_projection_** : an array of projected columns from the view, the view result if you will, see the section on projections
+* **_attributes_** : optional, see the section on attributes, they appear in
+  many places
+* **_projection_** : an array of projected columns from the view, the view
+  result if you will, see the section on projections
 * **select** : the text of the select statement that defined the view
-* **selectArgs** : the names of arguments any unbound expressions ("?") in the view
-* **_dependencies_** : several lists of tables and how they are used in the view, see the [section on dependencies](#dependencies)
+* **selectArgs** : the names of arguments any unbound expressions ("?") in the
+  view
+* **_dependencies_** : several lists of tables and how they are used in the
+  view, see the [section on dependencies](#dependencies)
 
->NOTE: The use of unbound expressions in a view would be truly extraordinary
->so selectArgs is essentially always going to be an empty list.
+>NOTE: The use of unbound expressions in a view would be truly extraordinary so
+>selectArgs is essentially always going to be an empty list.
 
 Example:
 
@@ -454,8 +486,8 @@ they have basic information about how to call them and what they return.
 
 #### Queries
 
-The queries section corresponds to the stored procedures that are a
-single SELECT statement with no fragments.
+The queries section corresponds to the stored procedures that are a single
+SELECT statement with no fragments.
 
 The fields of a query record are:
 
@@ -522,20 +554,23 @@ Generates:
 
 #### Procedure Arguments
 
-Procedure arguments have several generalities that don't come up very
-often but are important to describe.  The argument list of a procedure
-is 0 or more arguments of the form:
+Procedure arguments have several generalities that don't come up very often but
+are important to describe.  The argument list of a procedure is 0 or more
+arguments of the form:
 
 * **name** : the argument name, any valid identifier
-* **argOrigin** : either the name repeated if it's just a name or a 3 part string if it came from a bundle, see below
+* **argOrigin** : either the name repeated if it's just a name or a 3 part
+  string if it came from a bundle, see below
 * **type** : the type of the argument (e.g. text, real, etc.)
-* **kind** : optional, the discriminated type if any e.g. in `int<job_id>` it's "job_id"
-* **isSensitive** : optional, true if the argument is marked with @sensitive (e.g. it has PII etc.)
+* **kind** : optional, the discriminated type if any e.g. in `int<job_id>` it's
+  "job_id"
+* **isSensitive** : optional, true if the argument is marked with @sensitive
+  (e.g. it has PII etc.)
 * **isNotNull** : true if the argument is declared not null
 
-An example of a simple argument was shown above, if we change the example
-a little bit to use the argument bundle syntax (even though it's overkill)
-we can see the general form of argOrigin.
+An example of a simple argument was shown above, if we change the example a
+little bit to use the argument bundle syntax (even though it's overkill) we can
+see the general form of argOrigin.
 
 Example:
 
@@ -598,31 +633,41 @@ something other normal arguments in your code.
 
 #### General Inserts
 
-The general insert section corresponds to the stored procedures that are a single INSERT statement with no fragments.
-The fields of a general insert record are:
+The general insert section corresponds to the stored procedures that are a
+single INSERT statement with no fragments. The fields of a general insert record
+are:
 
 * **name** : the name of the procedure
-* **definedInFile** : the file that contains the procedure (the path is as it was specified to CQL so it might be relative or absolute)
-* **definedOnLine** : the line number of the file where the procedure is declared
-* **args** : _procedure arguments_ see [the relevant section](#procedure-arguments)
-* **_dependencies_** : several lists of tables and how they are used in the view, see the [section on dependencies](#dependencies)
-* **_region information_** : optional, see the [section on Region Info](#region-information)
-* **_attributes_** : optional, see the [section on attributes](#attributes), they appear in many places
+* **definedInFile** : the file that contains the procedure (the path is as it
+  was specified to CQL so it might be relative or absolute)
+* **definedOnLine** : the line number of the file where the procedure is
+  declared
+* **args** : _procedure arguments_ see [the relevant
+  section](#procedure-arguments)
+* **_dependencies_** : several lists of tables and how they are used in the
+  view, see the [section on dependencies](#dependencies)
+* **_region information_** : optional, see the [section on Region
+  Info](#region-information)
+* **_attributes_** : optional, see the [section on attributes](#attributes),
+  they appear in many places
 * **table** : the name of the table the procedure inserts into
-* **statement** : the text of the select statement that is the body of the procedure
-* **statementArgs** : a list of procedure arguments (possibly empty) that should be used to replace the corresponding "?" parameters in the statement
-* **statementType** : there are several insert forms such as "INSERT", "INSERT OR REPLACE", "REPLACE", etc. the type is encoded here
+* **statement** : the text of the select statement that is the body of the
+  procedure
+* **statementArgs** : a list of procedure arguments (possibly empty) that should
+  be used to replace the corresponding "?" parameters in the statement
+* **statementType** : there are several insert forms such as "INSERT", "INSERT
+  OR REPLACE", "REPLACE", etc. the type is encoded here
 
-General inserts does not include the inserted values because they are
-not directly extractable in general.  This form is used if one of these
-is true:
+General inserts does not include the inserted values because they are not
+directly extractable in general.  This form is used if one of these is true:
 
  * insert from multiple value rows
  * insert from a select statement
  * insert using a `WITH` clause
  * insert using the upsert clause
 
-If fragments are in use then even "generalInsert" cannot capture everything and "general" must be used (see below).
+If fragments are in use then even "generalInsert" cannot capture everything and
+"general" must be used (see below).
 
 Example:
 
@@ -653,18 +698,17 @@ Generates:
 
 #### Simple Inserts
 
-The vanilla inserts section can be used for procedures that just
-insert a single row.  This is a very common case and if the JSON is
-being used to drive custom code generation it is useful to provide the
-extra information.  The data in this section is exactly the same as
-the General Inserts section except that includes the inserted values.
-The "values" property has this extra information.
+The vanilla inserts section can be used for procedures that just insert a single
+row.  This is a very common case and if the JSON is being used to drive custom
+code generation it is useful to provide the extra information.  The data in this
+section is exactly the same as the General Inserts section except that includes
+the inserted values. The "values" property has this extra information.
 
-Each value in the values list corresponds 1:1 with a column and has
-this form:
+Each value in the values list corresponds 1:1 with a column and has this form:
 
 * **value** : the expression for this value
-* **valueArgs**: the array of procedure arguments that should replace the "?" entries in the value
+* **valueArgs**: the array of procedure arguments that should replace the "?"
+  entries in the value
 
 Example:
 
@@ -718,20 +762,27 @@ Generates:
 
 #### Updates
 
-The updates section corresponds to the stored procedures that are a
-single UPDATE statement with no fragments. The
-fields of an update record are:
+The updates section corresponds to the stored procedures that are a single
+UPDATE statement with no fragments. The fields of an update record are:
 
 * **name** : the name of the procedure
-* **definedInFile** : the file that contains the procedure (the path is as it was specified to CQL so it might be relative or absolute)
-* **definedOnLine** : the line number of the file where the procedure is declared
-* **args** : _procedure arguments_ see [the relevant section](#procedure-arguments)
-* **_dependencies_** : several lists of tables and how they are used in the view, see the section on dependencies
-* **_region information_** : optional, see [the section on Region Info](#region-information)
-* **_attributes_** : optional, see [the section on attributes](#attributes), they appear in many places
+* **definedInFile** : the file that contains the procedure (the path is as it
+  was specified to CQL so it might be relative or absolute)
+* **definedOnLine** : the line number of the file where the procedure is
+  declared
+* **args** : _procedure arguments_ see [the relevant
+  section](#procedure-arguments)
+* **_dependencies_** : several lists of tables and how they are used in the
+  view, see the section on dependencies
+* **_region information_** : optional, see [the section on Region
+  Info](#region-information)
+* **_attributes_** : optional, see [the section on attributes](#attributes),
+  they appear in many places
 * **table** : the name of the table the procedure inserts into
-* **statement** : the text of the update statement that is the body of the procedure
-* **statementArgs** : a list of procedure arguments (possibly empty) that should be used to replace the corresponding "?" parameters in the statement
+* **statement** : the text of the update statement that is the body of the
+  procedure
+* **statementArgs** : a list of procedure arguments (possibly empty) that should
+  be used to replace the corresponding "?" parameters in the statement
 
 
 Example:
@@ -823,28 +874,38 @@ for being in this category are:
 * the procedure has no projection (no result of any type)
 * the procedure uses shared fragments and hence has complex argument binding
 
-The fields of a general procedure are something like a union of update
-and delete and query but with no statement info.  The are as follows:
+The fields of a general procedure are something like a union of update and
+delete and query but with no statement info.  The are as follows:
 
 * **name** : the name of the procedure
-* **definedInFile** : the file that contains the procedure (the path is as it was specified to CQL so it might be relative or absolute)
-* **definedOnLine** : the line number of the file where the procedure is declared
+* **definedInFile** : the file that contains the procedure (the path is as it
+  was specified to CQL so it might be relative or absolute)
+* **definedOnLine** : the line number of the file where the procedure is
+  declared
 * **args** : _complex procedure arguments_ see the relevant section
-* **_dependencies_** : several lists of tables and how they are used in the view, see the section on dependencies
+* **_dependencies_** : several lists of tables and how they are used in the
+  view, see the section on dependencies
 * **_region information_** : optional, see the section on Region Info
-* **_attributes_** : optional, see the section on attributes, they appear in many places
-* **_projection_** : optional, an array of projected columns from the procedure, the view if you will, see the section on projections
+* **_attributes_** : optional, see the section on attributes, they appear in
+  many places
+* **_projection_** : optional, an array of projected columns from the procedure,
+  the view if you will, see the section on projections
 * **_result_contract_** : optional,
 * **table** : the name of the table the procedure inserts into
-* **statement** : the text of the update statement that is the body of the procedure
-* **statementArgs** : a list of procedure arguments (possibly empty) that should be used to replace the corresponding "?" parameters in the statement
-* **usesDatabase** : true if the procedure requires you to pass in a sqlite connection to call it
+* **statement** : the text of the update statement that is the body of the
+  procedure
+* **statementArgs** : a list of procedure arguments (possibly empty) that should
+  be used to replace the corresponding "?" parameters in the statement
+* **usesDatabase** : true if the procedure requires you to pass in a sqlite
+  connection to call it
 
 The result contract is at most one of these:
 
-* **hasSelectResult** : true if the procedure generates its projection using SELECT
+* **hasSelectResult** : true if the procedure generates its projection using
+  SELECT
 * **hasOutResult**: true if the procedure generates its projection using OUT
-* **hasOutUnionResult**: true if the procedure generates its projection using OUT UNION
+* **hasOutUnionResult**: true if the procedure generates its projection using
+  OUT UNION
 
 A procedure that does not produce a result set in any way will set none
 of these and have no projection entry.
@@ -900,10 +961,14 @@ Note that atypical binding forces procedures into the "general" section.
 ### Interfaces
 
 * **name** : the name of the procedure
-* **definedInFile** : the file that contains the procedure (the path is as it was specified to CQL so it might be relative or absolute)
-* **definedOnLine** : the line number of the file where the procedure is declared
-* **attributes** : optional, see the section on attributes, they appear in many places
-* **projection**: An array of projections. See [the section on projections](#projections)
+* **definedInFile** : the file that contains the procedure (the path is as it
+  was specified to CQL so it might be relative or absolute)
+* **definedOnLine** : the line number of the file where the procedure is
+  declared
+* **attributes** : optional, see the section on attributes, they appear in many
+  places
+* **projection**: An array of projections. See [the section on
+  projections](#projections)
 
 Example
 
@@ -929,14 +994,17 @@ Generates:
 
 ### Procedure Declarations
 
-The `declareProcs` section contains a list of procedure
-declarations. Each declaration is of the form:
+The `declareProcs` section contains a list of procedure declarations. Each
+declaration is of the form:
 
 * **name** : the name of the procedure
 * **args** : _procedure arguments_ see the relevant section
-* **attributes** : optional, see the section on attributes, they appear in many places
-* **projection** : An array of projections. See [the section on projections](#projections)
-* **usesDatabase** : true if the procedure requires you to pass in a sqlite connection to call it
+* **attributes** : optional, see the section on attributes, they appear in many
+  places
+* **projection** : An array of projections. See [the section on
+  projections](#projections)
+* **usesDatabase** : true if the procedure requires you to pass in a sqlite
+  connection to call it
 
 The `declareNoCheckProcs` describes procedures declared like so:
 
@@ -947,67 +1015,87 @@ DECLARE PROC Foo NO CHECK
 Such procedures carry on the name and attributes
 
 * **name** : the name of the procedure
-* **attributes** : optional, see the section on attributes, they appear in many places
+* **attributes** : optional, see the section on attributes, they appear in many
+  places
 
 ### Function Declarations
 
-The `declareFuncs` section contains a list of function declarations, Each declaration is of the form:
+The `declareFuncs` section contains a list of function declarations, Each
+declaration is of the form:
 
 * **name** : the name of the function
 * **args** : see [the relevant section](#procedure-arguments)
-* **attributes** : optional, see the section on attributes, they appear in many places
+* **attributes** : optional, see the section on attributes, they appear in many
+  places
 * **returnType** : see the relevant section below.
-* **createsObject** : true if the function will create a new object (e.g. `function dict_create() create object;`)
+* **createsObject** : true if the function will create a new object (e.g.
+  `function dict_create() create object;`)
 
-There are also sections for `declareNoCheckFuncs`, `declareSelectFuncs`, and `declareNoCheckSelectFuncs`.
+There are also sections for `declareNoCheckFuncs`, `declareSelectFuncs`, and
+`declareNoCheckSelectFuncs`.
 
 * No check function do not have the `args` tag
-* Select functions do not have the `createsObject` tag (they can't create objects)
-* Select functions may have a `projection` instead of a `returnType` if they are table-valued
+* Select functions do not have the `createsObject` tag (they can't create
+  objects)
+* Select functions may have a `projection` instead of a `returnType` if they are
+  table-valued
 
 ### Return Type
 
 * **type** : base type of the return value (e.g. INT, LONG)
-* **kind** : optional, if the type is qualified by a discriminator such as int<task_id> it appears here
+* **kind** : optional, if the type is qualified by a discriminator such as
+  int<task_id> it appears here
 * **isSensitive** : optional, true if the result is sensitive (e.g. PII)
 * **isNotNull** : true if the result is known to be not null
 
 ### Regions
 
-The regions section contains a list of all the region definitions.  Each region is of the form:
+The regions section contains a list of all the region definitions.  Each region
+is of the form:
 
 * **name** : the name of the region
-* **isDeployableRoot** : is this region itself a deployment region (declared with @declare_deployable_region)
-* **deployedInRegion** : name, the deployment region that contains this region or "(orphan)" if none
+* **isDeployableRoot** : is this region itself a deployment region (declared
+  with @declare_deployable_region)
+* **deployedInRegion** : name, the deployment region that contains this region
+  or "(orphan)" if none
    * note that deploymentRegions form a forest
 * **using** : a list of zero or more parent regions
-* **usingPrivately**: a list of zero more more booleans, one corresponding to each region
-  * the boolean is true if the inheritance is private, meaning that sub-regions cannot see the contents of the inherited region
+* **usingPrivately**: a list of zero more more booleans, one corresponding to
+  each region
+  * the boolean is true if the inheritance is private, meaning that sub-regions
+    cannot see the contents of the inherited region
 
 There are more details on regions and the meaning of these terms in Chapter 10.
 
 ### Ad Hoc Migrations
 
-This section lists all of the declared ad hoc migrations.  Each entry is of the form:
+This section lists all of the declared ad hoc migrations.  Each entry is of the
+form:
 
 * **name** : the name of the procedure to be called for the migration step
 * **crc** : the CRC of this migration step, a hash of the call
-* **_attributes_** : optional, see the section on attributes, they appear in many places
+* **_attributes_** : optional, see the section on attributes, they appear in
+  many places
 
 Exactly one of:
 
-* **version**: optional, any positive integer, the version at which the migration runs, OR
-* **onRecreateOf**: optional, if present indicates that the migration runs when the indicated group is recreated
+* **version**: optional, any positive integer, the version at which the
+  migration runs, OR
+* **onRecreateOf**: optional, if present indicates that the migration runs when
+  the indicated group is recreated
 
 There are more details on ad hoc migrations in Chapter 10.
 
 ### Enums
 
-This section list all the enumeration types and values.  Each entry is of the form:
+This section list all the enumeration types and values.  Each entry is of the
+form:
 
 * **name** : the name of the enumeration
 * **type** : the base type of the enumeration (e.g. INT, LONG)
-* **isNotNull**: always true, all enum values are not null (here for symmetry with other uses of "type")
+* **isNotNull**: always true, all enum values are not null (here for symmetry
+  with other uses of "type")
+* **isEmitted** : true if this enum was marked for emission with `@emit_enums`
 * **values**: a list of legal enumeration values
 
 Each enumeration value is of the form:
@@ -1047,14 +1135,18 @@ This section list all the constant groups and values.  Each entry is of
 the form:
 
 * **name** : the name of the constant group
+* **isEmitted** : true if this constant group was marked for emission with
+  `@emit_constants`
 * **values**: a list of declared constant values, this can be of mixed type
 
 Each constant value is of the form:
 
 * **name** : the name of the constant
 * **type** : the base type of the constant (e.g. LONG, REAL, etc.)
-* **kind** : optional, the type kind of the constant (this can be set with a CAST on a literal, e.g. CAST(1 as int<job_id>))
-* **isNotNull** : true if the constant type is not null (which is anything but the NULL literal)
+* **kind** : optional, the type kind of the constant (this can be set with a
+  CAST on a literal, e.g. CAST(1 as int<job_id>))
+* **isNotNull** : true if the constant type is not null (which is anything but
+  the NULL literal)
 * **value** : the numeric or string literal value of the constant
 
 
@@ -1097,6 +1189,59 @@ Generates:
     }
 ```
 
+### Variable Groups
+
+This section lists all the variable groups declared in the schema. Variable
+groups are collections of related variables that can be used for code generation
+purposes. Each entry is of the form:
+
+* **name** : the name of the variable group
+* **isEmitted** : true if this variable group was marked for emission with
+  `@emit_group`
+* **_attributes_** : optional, see the [section on attributes](#attributes)
+* **variables** : a list of variable declarations in the group
+
+Each variable in the variables list is of the form:
+
+* **name** : the name of the variable
+* **type** : the base type of the variable (e.g. INTEGER, TEXT, etc.)
+* **kind** : optional, if the type is qualified by a discriminator such as
+  int<task_id> it appears here
+* **isSensitive** : optional, true if the variable holds sensitive information
+* **isNotNull** : true if the variable is declared as not null
+
+Example:
+
+```sql
+declare group user_data begin
+  declare user_id integer!;
+  declare user_name text;
+end;
+
+@emit_group user_data;
+```
+
+Generates:
+
+```json
+    {
+      "name" : "user_data",
+      "isEmitted" : 1,
+      "variables" : [
+        {
+          "name" : "user_id",
+          "type" : "integer",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "user_name",
+          "type" : "text",
+          "isNotNull" : 0
+        }
+      ]
+    }
+```
+
 ### Subscriptions
 
 This section list all the schema subscriptions in order of appearance.
@@ -1125,6 +1270,36 @@ Generates:
       "version" : 1
     }
 ```
+
+### Emit Directives
+
+CQL provides directives to mark specific enums, constant groups, and variable groups
+for emission in code generation. These directives set the `isEmitted` flag to true
+for the marked items:
+
+* **`@emit_enums [name]`** : marks a specific enum (or all enums if no name is
+  provided) for emission
+* **`@emit_constants [name]`** : marks a specific constant group (or all
+  constant groups if no name is provided) for emission
+* **`@emit_group name`** : marks a specific variable group for emission (note:
+  unlike enums and constants, the name is required)
+
+Example:
+
+```sql
+-- Define some enums and constants
+declare enum color integer (red = 1, green = 2, blue = 3);
+declare enum status integer (pending = 1, active = 2, complete = 3);
+declare const group limits (max_users = 1000, max_items = 500);
+
+-- Mark specific items for emission
+@emit_enums color;        -- Emit only the color enum
+@emit_constants limits;   -- Emit the limits constant group
+@emit_enums;              -- Emit all enums (both color and status)
+```
+
+In the generated JSON, items marked for emission will have `"isEmitted" : 1`,
+while unmarked items will have `"isEmitted" : 0`.
 
 ### Summary
 

@@ -8774,6 +8774,7 @@
           "value" : 1
         }
       ],
+      "isEmitted" : 1,
       "values" : [
         {
           "name" : "one",
@@ -8801,6 +8802,7 @@
       "name" : "some_longs",
       "type" : "long",
       "isNotNull" : 1,
+      "isEmitted" : 1,
       "values" : [
         {
           "name" : "neg",
@@ -8812,9 +8814,113 @@
         }
       ]
     }
+    The statement ending at line XXXX
+
+    ENUM test_enum INT (
+      val1 = 1,
+      val2 = 2,
+      val3 = 3
+    )
+
+    ,
+    {
+      "name" : "test_enum",
+      "type" : "integer",
+      "isNotNull" : 1,
+      "isEmitted" : 1,
+      "values" : [
+        {
+          "name" : "val1",
+          "value" : 1
+        },
+        {
+          "name" : "val2",
+          "value" : 2
+        },
+        {
+          "name" : "val3",
+          "value" : 3
+        }
+      ]
+    }
+    The statement ending at line XXXX
+
+    ENUM another_enum INT (
+      x = 10,
+      y = 20
+    )
+
+    ,
+    {
+      "name" : "another_enum",
+      "type" : "integer",
+      "isNotNull" : 1,
+      "isEmitted" : 1,
+      "values" : [
+        {
+          "name" : "x",
+          "value" : 10
+        },
+        {
+          "name" : "y",
+          "value" : 20
+        }
+      ]
+    }
   ],
   "constantGroups" : [
 
+    The statement ending at line XXXX
+
+    CONST GROUP more_constants (
+      foo = "hello",
+      bar = "world"
+    )
+
+    {
+      "name" : "more_constants",
+      "isEmitted" : 1,
+      "values" : [
+        {
+          "name" : "foo",
+          "type" : "text",
+          "isNotNull" : 1,
+          "value" : "hello"
+        },
+        {
+          "name" : "bar",
+          "type" : "text",
+          "isNotNull" : 1,
+          "value" : "world"
+        }
+      ]
+    }
+    The statement ending at line XXXX
+
+    CONST GROUP test_constants (
+      const1 = 100,
+      const2 = 200
+    )
+
+    ,
+    {
+      "name" : "test_constants",
+      "isEmitted" : 1,
+      "values" : [
+        {
+          "name" : "const1",
+          "type" : "integer",
+          "isNotNull" : 1,
+          "value" : 100
+        },
+        {
+          "name" : "const2",
+          "type" : "integer",
+          "isNotNull" : 1,
+          "value" : 200
+        }
+      ]
+    }
     The statement ending at line XXXX
 
     CONST GROUP const_group (
@@ -8823,8 +8929,10 @@
       global_enum_alias = 1.000000e+00
     )
 
+    ,
     {
       "name" : "const_group",
+      "isEmitted" : 0,
       "values" : [
         {
           "name" : "global_numeric",
@@ -8873,6 +8981,7 @@
           "value" : 1
         }
       ],
+      "isEmitted" : 0,
       "values" : [
         {
           "name" : "CQL_DATA_TYPE_NULL",
@@ -8939,6 +9048,58 @@
           "type" : "integer",
           "isNotNull" : 1,
           "value" : 128
+        }
+      ]
+    }
+  ],
+  "variableGroups" : [
+
+    The statement ending at line XXXX
+
+    GROUP another_group
+    BEGIN
+      DECLARE x INT;
+    END
+
+    {
+      "name" : "another_group",
+      "isEmitted" : 1,
+      "variables" : [
+        {
+          "name" : "x",
+          "type" : "integer",
+          "isNotNull" : 0
+        }
+      ]
+    }
+    The statement ending at line XXXX
+
+    GROUP test_group
+    BEGIN
+      DECLARE test_id INT;
+      DECLARE test_name TEXT;
+    END
+
+    ,
+    {
+      "name" : "test_group",
+      "attributes" : [
+        {
+          "name" : "test_group_attr",
+          "value" : 1
+        }
+      ],
+      "isEmitted" : 1,
+      "variables" : [
+        {
+          "name" : "test_id",
+          "type" : "integer",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "test_name",
+          "type" : "text",
+          "isNotNull" : 0
         }
       ]
     }

@@ -192,7 +192,8 @@ typedef struct schema_annotation {
 #define SEM_TYPE_PARTIAL_PK    _64(0x800000000000) // set if column is a primary key
 #define SEM_TYPE_QID          _64(0x1000000000000) // set if column has a `quoted` name
 #define SEM_TYPE_CONSTANT     _64(0x2000000000000) // set for variables marked immutable and cannot be reassigned
-#define SEM_TYPE_FLAGS        _64(0x3FFFFFFFFFF00) // all the flag bits we have so far
+#define SEM_TYPE_EMITTED      _64(0x4000000000000) // set for enums, constants, and variable groups that are emitted
+#define SEM_TYPE_FLAGS        _64(0x7FFFFFFFFFF00) // all the flag bits we have so far
 
 // All `sem_try_resolve_*` functions return either `SEM_RESOLVE_CONTINUE` to
 // indicate that another resolver should be tried, or `SEM_RESOLVE_STOP` to
@@ -359,6 +360,7 @@ cql_data_decl( struct list_item *all_ad_hoc_list );
 cql_data_decl( struct list_item *all_select_functions_list );
 cql_data_decl( struct list_item *all_enums_list );
 cql_data_decl( struct list_item *all_constant_groups_list );
+cql_data_decl( struct list_item *all_variable_groups_list );
 cql_data_decl( symtab *schema_regions );
 cql_data_decl( ast_node *current_proc );
 cql_data_decl( charbuf *error_capture );

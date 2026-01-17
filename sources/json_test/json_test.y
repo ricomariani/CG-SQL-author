@@ -62,9 +62,10 @@ void yyset_lineno(int);
 %token USES_DATABASE HAS_SELECT_RESULT HAS_OUT_UNION_RESULT HAS_OUT_RESULT REGIONS GENERAL INTERFACES
 %token USING USING_PRIVATELY IS_DEPLOYABLE_ROOT AD_HOC_MIGRATION_PROCS VERSION
 %token BINDING_INOUT BINDING_OUT COLLATE CHECK_EXPR CHECK_EXPR_ARGS CHECK_EXPRESSIONS
-%token ENUMS CONSTANT_GROUPS CREATES_OBJECT RETURN_TYPE
+%token ENUMS CONSTANT_GROUPS CREATES_OBJECT RETURN_TYPE VARIABLE_GROUPS VARIABLES IS_EMITTED
 %token DECLARE_FUNCS DECLARE_NO_CHECK_FUNCS DECLARE_SELECT_FUNCS DECLARE_NO_CHECK_SELECT_FUNCS
 %token DECLARE_PROCS DECLARE_NO_CHECK_PROCS
+%token TABLE_USERS
 
 %start json_schema
 
@@ -94,7 +95,9 @@ json_schema: '{'
          AD_HOC_MIGRATION_PROCS '[' opt_ad_hoc_migrations ']' ','
          ENUMS  '[' opt_enums ']' ','
          CONSTANT_GROUPS  '[' opt_const_groups ']' ','
+         VARIABLE_GROUPS '[' opt_variable_groups ']' ','
          SUBSCRIPTIONS  '[' opt_subscriptions ']'
+         opt_table_users
          '}'
   ;
 
@@ -687,6 +690,7 @@ enum: '{'
       TYPE STRING_LITERAL ','
       IS_NOT_NULL '1' ','
       opt_attributes
+      IS_EMITTED BOOL_LITERAL ','
       VALUES '[' enum_values ']'
       '}'
   ;
@@ -812,6 +816,50 @@ subscription: '{'
      '}'
   ;
 
+opt_variable_groups: | variable_groups
+  ;
+
+variable_groups: variable_group | variable_group ',' variable_groups
+  ;
+
+variable_group: '{'
+      NAME STRING_LITERAL ','
+      opt_attributes
+      IS_EMITTED BOOL_LITERAL ','
+      VARIABLES '[' variable_group_vars ']'
+      '}'
+  ;
+
+variable_group_vars: variable_group_var | variable_group_var ',' variable_group_vars
+  ;
+
+variable_group_var: '{'
+      NAME STRING_LITERAL ','
+      TYPE STRING_LITERAL ','
+      opt_kind
+      opt_is_sensitive
+      IS_NOT_NULL BOOL_LITERAL
+      '}'
+  ;
+
+opt_table_users: | ',' TABLE_USERS '{' opt_table_user_list '}'
+  ;
+
+opt_table_user_list: | table_user_list
+  ;
+
+table_user_list: table_user | table_user ',' table_user_list
+  ;
+
+table_user: STRING_LITERAL ':' '[' opt_string_list ']'
+  ;
+
+opt_string_list: | string_list
+  ;
+
+string_list: STRING_LITERAL | STRING_LITERAL ',' string_list
+  ;
+
 opt_const_groups: | const_groups
   ;
 
@@ -821,6 +869,7 @@ const_groups: const_group | const_group ',' const_groups
 const_group: '{'
       NAME STRING_LITERAL ','
       opt_attributes
+      IS_EMITTED BOOL_LITERAL ','
       VALUES '[' const_values ']'
       '}'
   ;

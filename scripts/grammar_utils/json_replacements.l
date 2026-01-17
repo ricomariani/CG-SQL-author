@@ -90,6 +90,7 @@ IS_PRIMARY_KEY                        { printTag("isPrimaryKey"); }
 IS_RECREATED                          { printTag("isRecreated"); }
 IS_SENSITIVE                          { printTag("isSensitive"); }
 IS_TEMP                               { printTag("isTemp"); }
+IS_EMITTED                            { printTag("isEmitted"); }
 IS_UNIQUE                             { printTag("isUnique"); }
 IS_UNIQUE_KEY                         { printTag("isUniqueKey"); }
 IS_UPDATE_TRIGGER                     { printTag("isUpdateTrigger"); }
@@ -124,6 +125,7 @@ STATEMENT_TYPE                        { printTag("statementType"); }
 SUBSCRIPTIONS                         { printTag("subscriptions"); }
 TABLE                                 { printTag("table"); }
 TABLES                                { printTag("tables"); }
+TABLE_USERS                           { printTag("tableUsers"); }
 TARGET                                { printTag("target"); }
 TRIGGERS                              { printTag("triggers"); }
 TYPE                                  { printTag("type"); }
@@ -141,6 +143,8 @@ USING_PRIVATELY                       { printTag("usingPrivately"); }
 VALUE                                 { printTag("value"); }
 VALUES                                { printTag("values"); }
 VALUE_ARGS                            { printTag("valueArgs"); }
+VARIABLES                             { printTag("variables"); }
+VARIABLE_GROUPS                       { printTag("variableGroups"); }
 VERSION                               { printTag("version"); }
 VIEWS                                 { printTag("views"); }
 VIRTUAL_TABLES                        { printTag("virtualTables"); }

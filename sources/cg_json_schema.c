@@ -535,6 +535,9 @@ static void cg_json_enums(charbuf* output) {
       bprintf(output, ",\n");
     }
 
+    bool_t emitted = !!(ast->sem->sem_type & SEM_TYPE_EMITTED);
+    bprintf(output, "\"isEmitted\" : %d,\n", emitted);
+
     cg_json_enum_values(enum_values, output);
 
     END_INDENT(t);
@@ -622,6 +625,9 @@ static void cg_json_constant_groups(charbuf* output) {
       bprintf(output, ",\n");
     }
 
+    bool_t emitted = !!(ast->sem->sem_type & SEM_TYPE_EMITTED);
+    bprintf(output, "\"isEmitted\" : %d,\n", emitted);
+
     cg_json_const_values(const_values, output);
 
     END_INDENT(t);
@@ -659,6 +665,89 @@ static void cg_json_subscriptions(charbuf* output) {
       cg_json_emit_region_info(output, ast);
     }
     bprintf(output, ",\n\"version\" : %d\n", vers);
+    END_INDENT(t);
+    bprintf(output, "}");
+  }
+
+  END_LIST;
+  END_INDENT(list);
+  bprintf(output, "]");
+}
+
+// Helper to emit variable declarations in a group
+static void cg_json_variable_group_vars(ast_node *stmt_list, charbuf *output) {
+  bprintf(output, "\"variables\" : [\n");
+  BEGIN_INDENT(list, 2);
+  BEGIN_LIST;
+
+  while (stmt_list) {
+    EXTRACT_ANY_NOTNULL(stmt, stmt_list->left);
+
+    if (is_ast_declare_vars_type(stmt)) {
+      EXTRACT_NOTNULL(name_list, stmt->left);
+      EXTRACT_ANY_NOTNULL(data_type, stmt->right);
+
+      while (name_list) {
+        EXTRACT_NAME_AST(name_ast, name_list->left);
+        EXTRACT_STRING(name, name_ast);
+
+        COMMA;
+        bprintf(output, "{\n");
+        BEGIN_INDENT(var, 2);
+        bprintf(output, "\"name\" : \"%s\",\n", name);
+        cg_json_data_type(output, data_type->sem->sem_type, data_type->sem->kind);
+        bprintf(output, "\n");
+        END_INDENT(var);
+        bprintf(output, "}");
+
+        name_list = name_list->right;
+      }
+    }
+
+    stmt_list = stmt_list->right;
+  }
+
+  END_LIST;
+  END_INDENT(list);
+  bprintf(output, "]\n");
+}
+
+// Emit all variable groups
+static void cg_json_variable_groups(charbuf* output) {
+  bprintf(output, "\"variableGroups\" : [\n");
+  BEGIN_INDENT(list, 2);
+  BEGIN_LIST;
+
+  for (list_item *item = all_variable_groups_list; item; item = item->next) {
+    ast_node *ast = item->ast;
+    Invariant(is_ast_declare_group_stmt(ast));
+    EXTRACT_NAME_AST(name_ast, ast->left);
+    EXTRACT_STRING(name, name_ast);
+    EXTRACT_NOTNULL(stmt_list, ast->right);
+
+    ast_node *misc_attrs = NULL;
+    if (is_ast_stmt_and_attr(ast->parent)) {
+      EXTRACT_STMT_AND_MISC_ATTRS(stmt, misc, ast->parent->parent);
+      misc_attrs = misc;
+    }
+
+    cg_json_test_details(output, ast, NULL);
+
+    COMMA;
+    bprintf(output, "{\n");
+    BEGIN_INDENT(t, 2);
+    bprintf(output, "\"name\" : \"%s\",\n", name);
+
+    if (misc_attrs) {
+      cg_json_misc_attrs(output, misc_attrs);
+      bprintf(output, ",\n");
+    }
+
+    bool_t emitted = !!(ast->sem->sem_type & SEM_TYPE_EMITTED);
+    bprintf(output, "\"isEmitted\" : %d,\n", emitted);
+
+    cg_json_variable_group_vars(stmt_list, output);
+
     END_INDENT(t);
     bprintf(output, "}");
   }
@@ -2834,12 +2923,15 @@ cql_noexport void cg_json_schema_main(ast_node *head) {
   bprintf(output, ",\n");
   cg_json_constant_groups( output);
   bprintf(output, ",\n");
+  cg_json_variable_groups( output);
+  bprintf(output, ",\n");
   cg_json_subscriptions( output);
 
   if (options.test) {
     bprintf(output, ",\n");
     cg_json_table_users(output);
   }
+
 
   END_INDENT(defs);
   bprintf(output, "\n}\n");

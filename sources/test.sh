@@ -18,6 +18,8 @@ ERROR_DOC="../docs/user_guide/appendices/04_error_codes.md"
 # shellcheck disable=SC1091
 source common/test_helpers.sh || exit 1
 
+SPECIFIC_TEST=""
+
 while [ "$1" != "" ]; do
   if [ "$1" == "--use_asan" ]; then
     CGSQL_ASAN=1
@@ -42,6 +44,9 @@ while [ "$1" != "" ]; do
     # shellcheck disable=SC2034
     NON_INTERACTIVE=1
     shift 1
+  elif [ "$1" == "--test" ]; then
+    SPECIFIC_TEST="$2"
+    shift 2
   else
     echo "Usage: test.sh"
     echo "  --use_asan"
@@ -50,6 +55,7 @@ while [ "$1" != "" ]; do
     echo "  --coverage"
     echo "  --use_amalgam"
     echo "  --non_interactive"
+    echo "  --test <test_name>"
     exit 1
   fi
 done
@@ -1143,26 +1149,58 @@ if ! building; then
 fi
 
 # each of these will exit if anything goes wrong
-basic_test
-unit_tests
-macro_test
-semantic_test
-code_gen_c_test
-assorted_errors_test
-schema_migration_test
-misc_cases
-json_schema_test
-test_helpers_test
-run_test
-upgrade_test
-query_plan_test
-line_number_test
-stats_test
-amalgam_test
-signatures_test
-code_gen_lua_test
-dot_test
-cqlrt_diag
+if [ -n "$SPECIFIC_TEST" ]; then
+  # Run only the specified test
+  if declare -f "$SPECIFIC_TEST" > /dev/null; then
+    "$SPECIFIC_TEST"
+  else
+    echo "ERROR: Test function '$SPECIFIC_TEST' not found"
+    echo "Available tests:"
+    echo "  basic_test"
+    echo "  unit_tests"
+    echo "  macro_test"
+    echo "  semantic_test"
+    echo "  code_gen_c_test"
+    echo "  assorted_errors_test"
+    echo "  schema_migration_test"
+    echo "  misc_cases"
+    echo "  json_schema_test"
+    echo "  test_helpers_test"
+    echo "  run_test"
+    echo "  upgrade_test"
+    echo "  query_plan_test"
+    echo "  line_number_test"
+    echo "  stats_test"
+    echo "  amalgam_test"
+    echo "  signatures_test"
+    echo "  code_gen_lua_test"
+    echo "  dot_test"
+    echo "  cqlrt_diag"
+    exit 1
+  fi
+else
+  # Run all tests
+  basic_test
+  unit_tests
+  macro_test
+  semantic_test
+  code_gen_c_test
+  assorted_errors_test
+  schema_migration_test
+  misc_cases
+  json_schema_test
+  test_helpers_test
+  run_test
+  upgrade_test
+  query_plan_test
+  line_number_test
+  stats_test
+  amalgam_test
+  signatures_test
+  code_gen_lua_test
+  dot_test
+  cqlrt_diag
+fi
 
 echo '---------------------------------'
 make_clean_msg

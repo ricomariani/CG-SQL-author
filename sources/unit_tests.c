@@ -261,7 +261,7 @@ static bool test_badly_formed_utf8() {
   bclear(&temp);
   cg_encode_json_string_literal(" \xe2\x80\xa2\xa2 ", &temp);
   result &= !strcmp(temp.ptr, "\" \\u00e2\\u0080\\u00a2\\u00a2 \"");
- 
+
   // case 3: truncated sequence
   bclear(&temp);
   cg_encode_json_string_literal(" \xe2\x80 ", &temp);

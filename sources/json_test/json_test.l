@@ -113,6 +113,10 @@ int fileno(FILE *);
 \"updates\"[ \t]*:               { return UPDATES; }
 \"enums\"[ \t]*:                 { return ENUMS; }
 \"constantGroups\"[ \t]*:        { return CONSTANT_GROUPS; }
+\"variableGroups\"[ \t]*:        { return VARIABLE_GROUPS; }
+\"variables\"[ \t]*:             { return VARIABLES; }
+\"isEmitted\"[ \t]*:             { return IS_EMITTED; }
+\"tableUsers\"[ \t]*:            { return TABLE_USERS; }
 \"args\"[ \t]*:                  { return ARGS; }
 \"definedInFile\"[ \t]*:         { return DEFINED_IN_FILE; }
 \"definedOnLine\"[ \t]*:         { return DEFINED_ON_LINE; }

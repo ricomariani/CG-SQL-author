@@ -21414,6 +21414,7 @@ static void sem_declare_group_stmt(ast_node *ast) {
   }
 
   symtab_add(variable_groups, name, ast);
+  add_item_to_list(&all_variable_groups_list, ast);
 
   while (stmt_list) {
      EXTRACT_ANY_NOTNULL(stmt, stmt_list->left);
@@ -21441,12 +21442,14 @@ static void sem_emit_group_stmt(ast_node *ast) {
     EXTRACT_NAME_AST(name_ast, name_list->left);
     EXTRACT_STRING(name, name_ast);
 
-    if (!find_variable_group(name)) {
+    ast_node *group_ast = find_variable_group(name);
+    if (!group_ast) {
       report_error(name_ast, "CQL0464: group not found", name);
       record_error(ast);
       return;
     }
 
+    sem_add_flags(group_ast, SEM_TYPE_EMITTED);
     name_list = name_list->right;
   }
 
@@ -26334,17 +26337,28 @@ static void sem_emit_enums_stmt(ast_node *ast) {
   Contract(is_ast_emit_enums_stmt(ast));
   EXTRACT(name_list, ast->left);
 
-  while (name_list) {
-    EXTRACT_NAME_AST(name_ast, name_list->left);
-    EXTRACT_STRING(name, name_ast);
+  // If name_list is NULL, all enums are emitted
+  if (name_list) {
+    while (name_list) {
+      EXTRACT_NAME_AST(name_ast, name_list->left);
+      EXTRACT_STRING(name, name_ast);
 
-    if (!find_enum(name)) {
-      report_error(name_ast, "CQL0169: enum not found", name);
-      record_error(ast);
-      return;
+      ast_node *enum_ast = find_enum(name);
+      if (!enum_ast) {
+        report_error(name_ast, "CQL0169: enum not found", name);
+        record_error(ast);
+        return;
+      }
+
+      sem_add_flags(enum_ast, SEM_TYPE_EMITTED);
+      name_list = name_list->right;
     }
-
-    name_list = name_list->right;
+  }
+  else {
+    // Mark all enums as emitted
+    for (list_item *item = all_enums_list; item; item = item->next) {
+      sem_add_flags(item->ast, SEM_TYPE_EMITTED);
+    }
   }
 
   record_ok(ast);
@@ -26358,12 +26372,14 @@ static void sem_emit_constants_stmt(ast_node *ast) {
     EXTRACT_NAME_AST(name_ast, name_list->left);
     EXTRACT_STRING(name, name_ast);
 
-    if (!find_constant_group(name)) {
+    ast_node *const_group_ast = find_constant_group(name);
+    if (!const_group_ast) {
       report_error(name_ast, "CQL0169: constant group not found", name);
       record_error(ast);
       return;
     }
 
+    sem_add_flags(const_group_ast, SEM_TYPE_EMITTED);
     name_list = name_list->right;
   }
 
@@ -27289,6 +27305,7 @@ cql_data_defn( list_item *all_ad_hoc_list );
 cql_data_defn( list_item *all_select_functions_list );
 cql_data_defn( list_item *all_enums_list );
 cql_data_defn( list_item *all_constant_groups_list );
+cql_data_defn( list_item *all_variable_groups_list );
 cql_data_defn( cte_state *cte_cur );
 cql_data_defn( symtab *ref_sources_for_target_table );
 cql_data_defn( symtab *ref_targets_for_source_table );

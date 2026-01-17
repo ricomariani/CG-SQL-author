@@ -2075,3 +2075,110 @@ create temp trigger if not exists `compound trigger`
 begin
   delete from `abc def` where `a b` = 2;
 end;
+
+-- TEST: declare some enums to emit
+declare enum test_enum integer (
+  val1 = 1,
+  val2 = 2,
+  val3 = 3
+);
+
+declare enum another_enum integer (
+  x = 10,
+  y = 20
+);
+
+-- TEST: declare some constant groups to emit
+-- + {
+-- +   "name" : "test_constants",
+-- +   "isEmitted" : 1,
+-- +   "values" : [
+-- +     {
+-- +       "name" : "const1",
+-- +       "type" : "integer",
+-- +       "isNotNull" : 1,
+-- +       "value" : 100
+-- +     },
+-- +     {
+-- +       "name" : "const2",
+-- +       "type" : "integer",
+-- +       "isNotNull" : 1,
+-- +       "value" : 200
+-- +     }
+-- +   ]
+-- + }
+declare const group test_constants (
+  const1 = 100,
+  const2 = 200
+);
+
+declare const group more_constants (
+  foo = "hello",
+  bar = "world"
+);
+
+-- TEST: declare a variable group to emit
+-- + {
+-- +   "name" : "test_group",
+-- +   "attributes" : [
+-- +     {
+-- +       "name" : "test_group_attr",
+-- +       "value" : 1
+-- +     }
+-- +   ],
+-- +   "isEmitted" : 1,
+-- +   "variables" : [
+-- +     {
+-- +       "name" : "test_id",
+-- +       "type" : "integer",
+-- +       "isNotNull" : 0
+-- +     },
+-- +     {
+-- +       "name" : "test_name",
+-- +       "type" : "text",
+-- +       "isNotNull" : 0
+-- +     }
+-- +   ]
+-- + }
+@attribute(test_group_attr)
+declare group test_group
+begin
+  declare test_id integer;
+  declare test_name text;
+end;
+
+-- TEST: declare another variable group to emit
+-- + {
+-- +  "name" : "another_group",
+-- +  "isEmitted" : 1,
+-- +  "variables" : [
+-- +    {
+-- +      "name" : "x",
+-- +      "type" : "integer",
+-- +      "isNotNull" : 0
+-- +    }
+-- +  ]
+-- +}
+declare group another_group
+begin
+  declare x integer;
+end;
+
+-- TEST: emit specific enum
+@emit_enums test_enum;
+
+-- TEST: emit specific constant group
+@emit_constants test_constants;
+
+-- TEST: emit specific variable group
+@emit_group test_group;
+
+-- TEST: emit another enum and constant
+@emit_enums another_enum;
+@emit_constants more_constants;
+
+-- TEST: emit all enums (will include test_enum and another_enum)
+@emit_enums;
+
+-- TEST: emit another_group explicitly (since @emit_group with no names doesn't emit all)
+@emit_group another_group;

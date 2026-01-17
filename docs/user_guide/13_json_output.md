@@ -32,6 +32,43 @@ form](https://ricomariani.github.io/CG-SQL-author/json_grammar.railroad.html).
 The rest of this chapter covers the contents of each section and their meaning,
 rather than low-level format details, which are best described by the grammar.
 
+### JSON Output Structure
+
+The JSON output has the following top-level structure:
+
+```json
+{
+  "tables": [...],
+  "virtualTables": [...],
+  "views": [...],
+  "indices": [...],
+  "triggers": [...],
+  "attributes": [...],
+  "queries": [...],
+  "inserts": [...],
+  "generalInserts": [...],
+  "updates": [...],
+  "deletes": [...],
+  "general": [...],
+  "declareProcs": [...],
+  "declareNoCheckProcs": [...],
+  "declareFuncs": [...],
+  "declareNoCheckFuncs": [...],
+  "declareSelectFuncs": [...],
+  "declareNoCheckSelectFuncs": [...],
+  "interfaces": [...],
+  "regions": [...],
+  "adHocMigrationProcs": [...],
+  "enums": [...],
+  "constantGroups": [...],
+  "variableGroups": [...],
+  "subscriptions": [...],
+  "tableUsers": {...}
+}
+```
+
+Each section is an array containing zero or more items of the corresponding type (except `tableUsers`, which is an optional).
+
 ### Tables
 
 The "tables" section contains zero or more tables, each with these fields:

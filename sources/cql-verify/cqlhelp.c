@@ -44,6 +44,8 @@ static FILE *_Nullable cql_file_get(cql_object_ref _Nonnull file_ref) {
  * Returns NULL if the file cannot be opened.
  */
 cql_object_ref cql_fopen(cql_string_ref _Nonnull name, cql_string_ref mode) {
+  cql_contract(name);
+  cql_contract(mode);
 
   // we need c strings to use fopen
   cql_alloc_cstr(n, name);
@@ -68,7 +70,9 @@ cql_object_ref cql_fopen(cql_string_ref _Nonnull name, cql_string_ref mode) {
  * of the file is reached.
  */
 cql_string_ref readline_object_file(cql_object_ref file_ref) {
+  cql_contract(file_ref);
   FILE *f = cql_file_get(file_ref);
+  cql_invariant(f);
 
   // this is not very robust... it's ok for 4k lines or less...
   char buf[4096];
@@ -76,7 +80,9 @@ cql_string_ref readline_object_file(cql_object_ref file_ref) {
      size_t len = strlen(buf);
 
      // clobber the newline if we got one
-     if (len) buf[len-1] = 0;
+     if (len > 0 && buf[len-1] == '\n') {
+       buf[len-1] = 0;
+     }
      return cql_string_ref_new(buf);
   }
   else {
@@ -90,12 +96,15 @@ cql_string_ref readline_object_file(cql_object_ref file_ref) {
  * the given index.
  */
 cql_string_ref after_text(cql_string_ref text, cql_int32 index) {
-  cql_string_ref result = NULL;
-  if (text) {
-    cql_alloc_cstr(t, text);
-    result = cql_string_ref_new(t + index);
-    cql_free_cstr(t, text);
-  }
+  cql_contract(text);
+  cql_contract(index >= 0);
+
+  cql_alloc_cstr(t, text);
+  size_t len = strlen(t);
+  cql_contract((size_t)index <= len);
+
+  cql_string_ref result = cql_string_ref_new(t + index);
+  cql_free_cstr(t, text);
 
   return result;
 }
@@ -125,12 +134,15 @@ cql_object_ref create_arglist(int argc, char **argv) {
  * value.
  */
 cql_int32 atoi_at_text(cql_string_ref text, cql_int32 index) {
-  cql_int32 result = 0;
-  if (text) {
-    cql_alloc_cstr(t, text);
-    result = atoi(t + index);
-    cql_free_cstr(t, text);
-  }
+  cql_contract(text);
+  cql_contract(index >= 0);
+
+  cql_alloc_cstr(t, text);
+  size_t len = strlen(t);
+  cql_contract((size_t)index <= len);
+
+  cql_int32 result = atoi(t + index);
+  cql_free_cstr(t, text);
   return result;
 }
 
@@ -139,12 +151,11 @@ cql_int32 atoi_at_text(cql_string_ref text, cql_int32 index) {
  * characters in the string.
  */
 cql_int32 len_text(cql_string_ref text) {
-  cql_int32 result = 0;
-  if (text) {
-    cql_alloc_cstr(t, text);
-    result = (cql_int32)strlen(t);
-    cql_free_cstr(t, text);
-  }
+  cql_contract(text);
+
+  cql_alloc_cstr(t, text);
+  cql_int32 result = (cql_int32)strlen(t);
+  cql_free_cstr(t, text);
   return result;
 }
 
@@ -153,12 +164,15 @@ cql_int32 len_text(cql_string_ref text) {
  * returns the ASCII value of the character at the given position in the string.
  */
 cql_int32 octet_text(cql_string_ref text, cql_int32 index) {
-  cql_int32 result = 0;
-  if (text) {
-    cql_alloc_cstr(t, text);
-    result = t[index];
-    cql_free_cstr(t, text);
-  }
+  cql_contract(text);
+  cql_contract(index >= 0);
+
+  cql_alloc_cstr(t, text);
+  size_t len = strlen(t);
+  cql_contract((size_t)index < len);
+
+  cql_int32 result = (unsigned char)t[index];
+  cql_free_cstr(t, text);
   return result;
 }
 
@@ -171,6 +185,9 @@ cql_bool starts_with_text(
   cql_string_ref _Nonnull haystack,
   cql_string_ref _Nonnull needle)
 {
+  cql_contract(haystack);
+  cql_contract(needle);
+
   cql_alloc_cstr(h, haystack);
   cql_alloc_cstr(n, needle);
 
@@ -192,6 +209,9 @@ cql_int32 index_of_text(
   cql_string_ref _Nonnull haystack,
   cql_string_ref _Nonnull needle)
 {
+  cql_contract(haystack);
+  cql_contract(needle);
+
   cql_int32 result = -1;
 
   cql_alloc_cstr(h, haystack);
@@ -219,11 +239,19 @@ cql_bool contains_at_text(
   cql_string_ref _Nonnull needle,
   cql_int32 index)
 {
+  cql_contract(haystack);
+  cql_contract(needle);
+  cql_contract(index >= 0);
+
   cql_alloc_cstr(h, haystack);
   cql_alloc_cstr(n, needle);
 
-  size_t len = strlen(n);
-  cql_bool result = strncmp(h + index, n, len) == 0;
+  size_t h_len = strlen(h);
+  size_t n_len = strlen(n);
+  cql_contract((size_t)index <= h_len);
+  cql_contract((size_t)index + n_len <= h_len);
+
+  cql_bool result = strncmp(h + index, n, n_len) == 0;
 
   cql_free_cstr(n, needle);
   cql_free_cstr(h, haystack);
@@ -234,26 +262,25 @@ cql_bool contains_at_text(
 /*
  * Extracts a substring from the input string starting at a specific index and
  * with a given length. This function returns a new string reference containing
- * the specified portion of the input string. If the start index is beyond the
- * input length, an empty string is returned.
+ * the specified portion of the input string.
  */
 cql_string_ref str_mid(cql_string_ref in, int startIndex, int length) {
+  cql_contract(in);
+  cql_contract(startIndex >= 0);
+  cql_contract(length >= 0);
+
   cql_alloc_cstr(inStr, in);
   size_t inputLength = strlen(inStr);
-  if (startIndex >= inputLength) {
-    return cql_string_ref_new("");
-  }
+  cql_contract((size_t)startIndex <= inputLength);
 
-  size_t endIndex = (size_t)(startIndex + length);
-  if (endIndex > inputLength) {
-    endIndex = inputLength;
-  }
+  // Calculate output length safely without overflow
+  size_t remaining = inputLength - (size_t)startIndex;
+  size_t outputLength = ((size_t)length < remaining) ? (size_t)length : remaining;
 
-  size_t outputLength = (size_t)(endIndex - (size_t)startIndex);
-  char *temp = alloca(outputLength + 1); // +1 for null terminator
+  char *temp = alloca(outputLength + 1);
 
   strncpy(temp, inStr + startIndex, outputLength);
-  temp[outputLength] = '\0'; // Null-terminate the output string
+  temp[outputLength] = '\0';
 
   cql_free_cstr(inStr, in);
   return cql_string_ref_new(temp);
@@ -262,22 +289,21 @@ cql_string_ref str_mid(cql_string_ref in, int startIndex, int length) {
 /*
  * Extracts the leftmost portion of the input string with the specified length.
  * This function returns a new string reference containing the first 'length'
- * characters of the input string. If the length is less than or equal to zero,
- * an empty string is returned.
+ * characters of the input string.
  */
 cql_string_ref str_left(cql_string_ref in, int length_) {
+  cql_contract(in);
+  cql_contract(length_ >= 0);
+
   cql_alloc_cstr(inStr, in);
   size_t inputLength = strlen(inStr);
-  if (length_ <= 0) {
-    return cql_string_ref_new("");
-  }
   size_t length = (size_t)length_;
 
   size_t outputLength = (length < inputLength) ? length : inputLength;
-  char *temp = alloca(outputLength + 1); // +1 for null terminator
+  char *temp = alloca(outputLength + 1);
 
   strncpy(temp, inStr, outputLength);
-  temp[outputLength] = '\0'; // Null-terminate the output string
+  temp[outputLength] = '\0';
 
   cql_free_cstr(inStr, in);
   return cql_string_ref_new(temp);
@@ -286,24 +312,22 @@ cql_string_ref str_left(cql_string_ref in, int length_) {
 /*
  * Extracts the rightmost portion of the input string with the specified length.
  * This function returns a new string reference containing the last 'length'
- * characters of the input string. If the length is less than or equal to zero,
- * an empty string is returned.
+ * characters of the input string.
  */
 cql_string_ref str_right(cql_string_ref in, int length_) {
+  cql_contract(in);
+  cql_contract(length_ >= 0);
+
   cql_alloc_cstr(inStr, in);
   size_t inputLength = strlen(inStr);
-  if (length_ <= 0) {
-    return cql_string_ref_new("");
-  }
-
   size_t length = (size_t)length_;
 
   size_t startIndex = (inputLength > length) ? inputLength - length : 0;
   size_t outputLength = (startIndex < inputLength) ? inputLength - startIndex : 0;
-  char *temp = alloca(outputLength + 1); // +1 for null terminator
+  char *temp = alloca(outputLength + 1);
 
   strncpy(temp, inStr + startIndex, outputLength);
-  temp[outputLength] = '\0'; // Null-terminate the output string
+  temp[outputLength] = '\0';
 
   cql_free_cstr(inStr, in);
   return cql_string_ref_new(temp);

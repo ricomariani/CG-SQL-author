@@ -2137,7 +2137,7 @@ static void cql_autodrop_tables(
   STACK_BYTES_ALLOC(sql, drop_len + max_len + 2);
 
   // this part will be constant for all the iterations
-  strcpy(sql, drop_table);
+  memcpy(sql, drop_table, drop_len + 1);
 
   p = tables;
   for (;;) {
@@ -2148,8 +2148,8 @@ static void cql_autodrop_tables(
     }
 
     // form the drop command from the fragments
-    strcpy(sql + drop_len, p);
-    strcpy(sql + drop_len + len, ";");
+    memcpy(sql + drop_len, p, len + 1);
+    memcpy(sql + drop_len + len, ";", 2);
 
     // Try to drop the table, if it fails we disregard the failure code
     // there's nothing we could do to recover anyway.

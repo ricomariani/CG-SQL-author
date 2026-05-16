@@ -5607,7 +5607,7 @@ void bcreatekey(
     sqlite3_value *field_value_arg = argv[index];
     sqlite3_value *field_type_arg = argv[index + 1];
 
-    int64_t blob_column_type = sqlite3_value_int64(field_type_arg);
+    int8_t blob_column_type = (int8_t)sqlite3_value_int64(field_type_arg);
     b[type_codes_offset++] = (uint8_t)blob_column_type;
 
     switch (blob_column_type) {
@@ -5708,11 +5708,11 @@ void bgetkey(
     goto cql_error;
   }
 
-  // we know enough to make the shape and get the offsets the variable size is
-  // not computed but that is of no import since we are not yet validating all
-  // the internal offsets (blobs are assumed to be well formed for now)
   cql_key_blob_shape shape;
   cql_compute_key_blob_shape(&shape, header.column_count, 0);
+  if (shape.variable_offset > original_bytes) {
+    goto cql_error;
+  }
   uint64_t type_code_offset = shape.type_codes_offset + icol;
   uint64_t storage_offset = shape.storage_offset + icol * sizeof(int64_t);
 
@@ -5753,6 +5753,7 @@ void bgetkey(
       uint64_t val = cql_read_big_endian_u64(b + storage_offset);
       uint32_t len = val & 0xffffffff;
       uint32_t offset = val >> 32;
+      if ((uint64_t)offset + len > original_bytes) goto cql_error;
       const char *text = (const char *)b + offset;
       sqlite3_result_text(context, text, (int)len, SQLITE_TRANSIENT);
       return;
@@ -5765,6 +5766,7 @@ void bgetkey(
       uint64_t val = cql_read_big_endian_u64(b + storage_offset);
       uint32_t len = val & 0xffffffff;
       uint32_t offset = val >> 32;
+      if ((uint64_t)offset + len > original_bytes) goto cql_error;
       const uint8_t *data = b + offset;
       sqlite3_result_blob(context, data, (int)len, SQLITE_TRANSIENT);
       return;
@@ -5844,10 +5846,13 @@ void bupdatekey(
     goto cql_error;
   }
 
-  // compute the incoming blob shape using the column count variable size not
-  // known yet, not needed really.
+  // compute the incoming blob shape using the column count; variable size is
+  // not needed here since we are updating in place.
   cql_key_blob_shape shape;
   cql_compute_key_blob_shape(&shape, header.column_count, 0);
+  if (shape.variable_offset > original_bytes) {
+    goto cql_error;
+  }
 
   // We need to track how much variable space we need to add or remove we'll do
   // it here.
@@ -6416,12 +6421,11 @@ void bgetval(
     goto cql_error;
   }
 
-  // we know enough to make the shape and get the offsets
-  // the variable size is not computed but that is of no import
-  // since we are not yet validating all the internal offsets
-  // (blobs are assumed to be well formed for now)
   cql_val_blob_shape shape;
   cql_compute_val_blob_shape(&shape, header.column_count, 0);
+  if (shape.variable_offset > original_bytes) {
+    goto cql_error;
+  }
 
   // we have to find the column using the field id
   cql_uint32 icol;
@@ -6478,6 +6482,7 @@ void bgetval(
       uint64_t val = cql_read_big_endian_u64(b + storage_offset);
       uint32_t len = val & 0xffffffff;
       uint32_t offset = val >> 32;
+      if ((uint64_t)offset + len > original_bytes) goto cql_error;
       const char *text = (const char *)b + offset;
       sqlite3_result_text(context, text, (int)len, SQLITE_TRANSIENT);
       return;
@@ -6490,6 +6495,7 @@ void bgetval(
       uint64_t val = cql_read_big_endian_u64(b + storage_offset);
       uint32_t len = val & 0xffffffff;
       uint32_t offset = val >> 32;
+      if ((uint64_t)offset + len > original_bytes) goto cql_error;
       const uint8_t *data = b + offset;
       sqlite3_result_blob(context, data, (int)len, SQLITE_TRANSIENT);
       return;
@@ -6575,6 +6581,9 @@ void bupdateval(
 
   cql_val_blob_shape original_shape;
   cql_compute_val_blob_shape(&original_shape, header.column_count, 0);
+  if (original_shape.variable_offset > original_bytes) {
+    goto cql_error;
+  }
   original_shape.total_bytes = original_bytes;
   original_shape.variable_size = original_bytes - original_shape.variable_offset;
 

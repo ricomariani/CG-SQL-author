@@ -6568,6 +6568,9 @@ begin
 
   -- the blob isn't a real encoded blob
   EXPECT_EQ!((select bgetkey_type(x'0000000000000000000000000000')), null);
+
+  -- valid magic but column_count=1 makes variable_offset exceed blob length
+  EXPECT_EQ!((select bgetkey(x'0000000000000000524d303000000001', 0)), null);
 end);
 
 TEST!(blob_updatekey_func_errors,
@@ -6612,6 +6615,9 @@ begin
 
   -- can't update the same field twice (setting bool to false twice)
   EXPECT_EQ!((select bupdatekey(b, 0, 0, 0, 0)), null);
+
+  -- valid magic but column_count=1 makes variable_offset exceed blob length
+  EXPECT_EQ!((select bupdatekey(x'0000000000000000524d303000000001', 0, 99)), null);
 end);
 
 @op blob : call val as bgetval;
@@ -6859,6 +6865,9 @@ begin
 
   -- the blob isn't a real encoded blob
   EXPECT_EQ!((select bgetval_type(x'0000000000000000000000000000')), null);
+
+  -- valid magic but column_count=1 makes variable_offset exceed blob length
+  EXPECT_EQ!((select bgetval(x'0000000000000000524d303000000001', 99)), null);
 end);
 
 TEST!(blob_updateval_func_errors,
@@ -6907,6 +6916,9 @@ begin
 
   -- the first arg should be a blob in the standard format
   EXPECT_EQ!((select bupdateval(x'0000000000000000000000000000', k1, 0, CQL_BLOB_TYPE_BOOL)), null);
+
+  -- valid magic but column_count=1 makes variable_offset exceed blob length
+  EXPECT_EQ!((select bupdateval(x'0000000000000000524d303000000001', 99, 0, CQL_BLOB_TYPE_BOOL)), null);
 end);
 
 TEST!(backed_tables,

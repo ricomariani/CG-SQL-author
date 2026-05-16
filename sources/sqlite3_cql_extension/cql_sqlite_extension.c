@@ -361,6 +361,12 @@ static int cql_rowset_column(sqlite3_vtab_cursor *cur, sqlite3_context *context,
   trace_printf("column %d\n", column);
   cql_rowset_cursor *pCur = (cql_rowset_cursor *)cur;
 
+  // SQLite's vtab architecture guarantees column >= 0: the VM routes negative
+  // iCol values (e.g. ROWID requests) to xRowid, never to xColumn.  The
+  // contract below documents that invariant and will fire in debug builds if
+  // it is ever violated by a future SQLite change or a direct call from tests.
+  cql_contract(column >= 0);
+
   cql_result_set_ref result_set = pCur->result_set;
   if (result_set == NULL) {
     sqlite3_result_text(context, "nil result set", -1, SQLITE_TRANSIENT);
@@ -535,6 +541,22 @@ static int cql_rowset_best_index(sqlite3_vtab *pVtab, sqlite3_index_info *pIdxIn
 
 // the standard helper to register a named tvf for wrapping a CQL proc and
 // access its result set as a virtual table function.
+//
+// OWNERSHIP CONTRACT FOR `aux`:
+//   `aux` MUST be allocated via `cql_rowset_create_aux_init()`, which uses
+//   `sqlite3_malloc` internally.  Once passed here, ownership transfers to
+//   SQLite: `sqlite3_create_module_v2` will call `cql_rowset_create_aux_destroy`
+//   (which calls `sqlite3_free`) when the module is no longer needed.
+//
+//   Do NOT pass:
+//     - a stack-allocated struct  (sqlite3_free on stack memory → crash)
+//     - a libc malloc'd pointer   (sqlite3_free may use a different heap → corruption)
+//     - a pointer you intend to free yourself (double-free)
+//
+//   The correct pattern is always:
+//     cql_rowset_aux_init *aux = cql_rowset_create_aux_init(my_func, my_decl);
+//     register_cql_rowset_tvf(db, aux, "my_tvf_name");
+//     // do not free aux — SQLite owns it now
 int register_cql_rowset_tvf(sqlite3 *db, cql_rowset_aux_init *aux, const char *name) {
   trace_printf("register %s\n", name);
 

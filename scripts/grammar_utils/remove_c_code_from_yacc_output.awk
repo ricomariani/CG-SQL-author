@@ -8,6 +8,8 @@ BEGIN {
     RULE_SECTION = 2;
 
     special["{"] = special["}"] = special["["] = special["]"] = special["'"] = special["\""] = 1;
+    special["/"] = 1;
+    special["*"] = 1;
     quote["'"] = quote["\""] = 1;
 
     cursor = 0;
@@ -17,6 +19,17 @@ function take() { return $(++cursor) }
 function put(char) { printf "%s", char; }
 function skipQuotedString(char) { while ($(++cursor) != char) { } }
 function skipLabel() { while ($(++cursor) != "]") { } }
+function skipLine() { while ($(++cursor) != "\n") { } }
+
+function skipComment() {
+   while (1) {
+     char = take();
+     while (char == "*") {
+       char = take();
+       if (char == "/") { return; }
+     }
+   }
+}
 
 function extract_quoted_string(start_quoting_char) {
     put(start_quoting_char);
@@ -41,6 +54,19 @@ function skipCode() {
         char = take();
 
         if (!(char in special )) { continue; }
+
+        if (char == "/") {
+            char = take();
+            if (!(char in special )) { continue; }
+            if (char == "/") {
+              skipLine();
+              continue;
+            }
+            if (char == "*") {
+              skipComment();
+              continue;
+            }
+        }
 
         if (char in quote) {
             skipQuotedString(char);

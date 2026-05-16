@@ -444,27 +444,27 @@ program: top_level_stmts[stmts] {
   }
   ;
 
-  top_level_stmts:
-    /* nil */ { $$ = NULL; /* empty file case */ }
-    | include_stmts { $$ = $include_stmts; }
-    | stmt_list { $$ = $stmt_list; }
-    | include_stmts[s1] stmt_list[s2] {
-       $$ = $s2;
-       if ($s1) {
-        // The following rules handle the implicit builtin includes that CQL loads
-        // before the user's file. The leading include_stmts represents builtins,
-        // NOT user @include statements (which should come after top_of_file_stmts).
-        // IMPORTANT: stmt_list must NEVER appear before include_stmts or top_of_file_stmts.
+top_level_stmts:
+  /* nil */ { $$ = NULL; /* empty file case */ }
+  | include_stmts { $$ = $include_stmts; }
+  | stmt_list { $$ = $stmt_list; }
+  | include_stmts[s1] stmt_list[s2] {
+      $$ = $s2;
+      if ($s1) {
+      // The following rules handle the implicit builtin includes that CQL loads
+      // before the user's file. The leading include_stmts represents builtins,
+      // NOT user @include statements (which should come after top_of_file_stmts).
+      // IMPORTANT: stmt_list must NEVER appear before include_stmts or top_of_file_stmts.
 
-        // use our tail pointer invariant so we can add at the tail without searching
-        // the re-stablish the invariant
-        ast_node *tail = $s1->parent;
-        $s1->parent = $s2->parent;
-        ast_set_right(tail, $s2);
-        $$ = $s1;
-      }
-   }
-   ;
+      // use our tail pointer invariant so we can add at the tail without searching
+      // the re-stablish the invariant
+      ast_node *tail = $s1->parent;
+      $s1->parent = $s2->parent;
+      ast_set_right(tail, $s2);
+      $$ = $s1;
+    }
+  }
+  ;
 
 include_section:
   BEGIN_INCLUDE top_level_stmts END_INCLUDE { $$ = $top_level_stmts; }
@@ -475,23 +475,23 @@ include_section:
   ;
 
 include_stmts:
-    include_section[s1] { $$ = $s1; }
-    | include_section[s1] include_stmts[s2] {
-       if (!$s1) {
-         $$ = $s2;
-       }
-       else {
-         $$ = $s1;
-         if ($s2) {
-           // use our tail pointer invariant so we can add at the tail without searching
-           // the re-establish the invariant
-           ast_node *tail = $s1->parent;
-           $s1->parent = $s2->parent;
-           ast_set_right(tail, $s2);
-        }
+  include_section[s1] { $$ = $s1; }
+  | include_section[s1] include_stmts[s2] {
+      if (!$s1) {
+        $$ = $s2;
+      }
+      else {
+        $$ = $s1;
+        if ($s2) {
+          // use our tail pointer invariant so we can add at the tail without searching
+          // the re-establish the invariant
+          ast_node *tail = $s1->parent;
+          $s1->parent = $s2->parent;
+          ast_set_right(tail, $s2);
       }
     }
-    ;
+  }
+  ;
 
 opt_stmt_list:
   /* nil */  { $$ = NULL; }

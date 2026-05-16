@@ -434,7 +434,7 @@ void cql_column_nullable_blob_ref(
   }
   else {
     const void *bytes = sqlite3_column_blob(stmt, index);
-    cql_int32 size = (cql_int32)sqlite3_column_bytes(stmt, index);
+    cql_uint32 size = (cql_uint32)sqlite3_column_bytes(stmt, index);
     *data = cql_blob_ref_new(bytes, size);
   }
 }
@@ -449,7 +449,7 @@ void cql_column_blob_ref(
   // the target may already have data, release it if it does
   cql_blob_release(*data);
   const void *bytes = sqlite3_column_blob(stmt, index);
-  cql_int32 size = (cql_int32)sqlite3_column_bytes(stmt, index);
+  cql_uint32 size = (cql_uint32)sqlite3_column_bytes(stmt, index);
   *data = cql_blob_ref_new(bytes, size);
 }
 
@@ -2962,7 +2962,7 @@ cql_code cql_cursor_to_blob(
 
   cql_cursor_to_bytebuf(dyn_cursor, &b);
 
-  cql_blob_ref new_blob = cql_blob_ref_new((const uint8_t *)b.ptr, (cql_int32)b.used);
+  cql_blob_ref new_blob = cql_blob_ref_new((const uint8_t *)b.ptr, (cql_uint32)b.used);
   cql_blob_release(*blob);
   *blob = new_blob;
 
@@ -3004,7 +3004,7 @@ cql_blob_ref _Nonnull cql_make_blob_stream(cql_object_ref _Nonnull blob_list)
     cql_bytebuf_append(&b, bytes, size);
   }
 
-  cql_blob_ref result = cql_blob_ref_new((const uint8_t *)b.ptr, (cql_int32)b.used);
+  cql_blob_ref result = cql_blob_ref_new((const uint8_t *)b.ptr, (cql_uint32)b.used);
   cql_bytebuf_close(&b);
 
   return result;
@@ -3291,7 +3291,7 @@ cql_code cql_cursor_from_bytes(
           if (!cql_input_inline_bytes(&input, &result, (cql_uint32)byte_count)) {
             goto error;
           }
-          *blob_ref = cql_blob_ref_new(result, byte_count);
+          *blob_ref = cql_blob_ref_new(result, (cql_uint32)byte_count);
           break;
         }
       }
@@ -4860,7 +4860,7 @@ cql_blob_ref _Nonnull cql_blob_from_int(
     cql_free_cstr(temp, prefix);
   }
   cql_bprintf(&b, "%d", value);
-  cql_blob_ref result = cql_blob_ref_new(b.ptr, (cql_int32)b.used);
+  cql_blob_ref result = cql_blob_ref_new(b.ptr, (cql_uint32)b.used);
   cql_bytebuf_close(&b);
   return result;
 }

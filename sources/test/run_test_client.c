@@ -496,7 +496,7 @@ int get_outstanding_refs()
 cql_blob_ref _Nonnull blob_from_string(cql_string_ref str)
 {
   if (str) {
-    return cql_blob_ref_new(str->ptr, strlen(str->ptr));
+    return cql_blob_ref_new(str->ptr, (cql_uint32)strlen(str->ptr));
   }
   else {
     return cql_blob_ref_new("", 1);
@@ -1099,7 +1099,7 @@ cql_code some_integers_fetch(
 cql_blob_ref create_truncated_blob(cql_blob_ref b, cql_int32 new_size) {
   cql_int32 existing_size = cql_get_blob_size(b);
   cql_contract(new_size <= existing_size);
-  return cql_blob_ref_new(cql_get_blob_bytes(b), new_size);
+  return cql_blob_ref_new(cql_get_blob_bytes(b), (cql_uint32)new_size);
 }
 
 static int32_t rand_state = 0;

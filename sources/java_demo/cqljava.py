@@ -558,7 +558,7 @@ def emit_proc_c_func_body(proc, meta_results, attributes):
             preamble += f"  if ({a_name}) {{\n"
             preamble += f"    jbyte *bytes_{a_name} = (*env)->GetByteArrayElements(env, {a_name}, NULL);"
             preamble += f"    jsize len_{a_name} = (*env)->GetArrayLength(env, {a_name});"
-            preamble += f"    blob_ref_{a_name} = cql_blob_ref_new(bytes_{a_name}, len_{a_name});\n"
+            preamble += f"    blob_ref_{a_name} = cql_blob_ref_new(bytes_{a_name}, (cql_uint32)len_{a_name});\n"
             preamble += f"    (*env)->ReleaseByteArrayElements(env, {a_name}, bytes_{a_name}, JNI_ABORT);\n"
             preamble += f"  }}\n"
             cleanup += f"  cql_set_blob_ref(&row->{a_name}, blob_ref_{a_name});\n" if inout else ""

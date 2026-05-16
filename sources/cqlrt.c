@@ -60,14 +60,14 @@ static void cql_blob_finalize(cql_type_ref _Nonnull ref) {
 // We create a new blob from size and count and copy the bytes.  The object
 // is set up so that it will use the finalizer above to give the memory back.
 // Note that blobs are immutable.
-cql_blob_ref _Nonnull cql_blob_ref_new(const void *_Nonnull bytes, cql_int32 size) {
+cql_blob_ref _Nonnull cql_blob_ref_new(const void *_Nonnull bytes, cql_uint32 size) {
   cql_invariant(bytes != NULL);
   cql_blob_ref result = malloc(sizeof(cql_blob));
   result->base.type = CQL_C_TYPE_BLOB;
   result->base.ref_count = 1;
   result->base.finalize = &cql_blob_finalize;
   result->ptr = malloc((size_t)size);
-  result->size = size;
+  result->size = (cql_int32)size;
   memcpy((void *)result->ptr, bytes, (size_t)size);
   cql_outstanding_refs++;
   return result;

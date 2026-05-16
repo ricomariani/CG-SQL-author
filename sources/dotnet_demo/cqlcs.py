@@ -497,7 +497,7 @@ def emit_proc_c_func_body(proc, meta_results, attributes):
             preamble += f"  if ({a_name}) {{\n"
             preamble += f"    void *bytes_{a_name} = \"xx\";\n"
             preamble += f"    int len_{a_name} = 2;\n"
-            preamble += f"    blob_ref_{a_name} = cql_blob_ref_new(bytes_{a_name}, len_{a_name});\n"
+            preamble += f"    blob_ref_{a_name} = cql_blob_ref_new(bytes_{a_name}, (cql_uint32)len_{a_name});\n"
             preamble += f"  }}\n"
             cleanup += f"  cql_set_blob_ref(&row->{a_name}, blob_ref_{a_name});\n" if inout else ""
             cleanup += f"  cql_blob_release(blob_ref_{a_name});\n"

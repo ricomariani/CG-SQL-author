@@ -118,7 +118,7 @@ cql_blob_ref _Nullable resolve_blob_from_sqlite3_value(sqlite3_value *_Nonnull v
 
   if (!blob) return NULL;
 
-  return cql_blob_ref_new(blob, sqlite3_value_bytes(value));
+  return cql_blob_ref_new(blob, (cql_uint32)sqlite3_value_bytes(value));
 }
 
 cql_object_ref _Nullable resolve_object_from_sqlite3_value(sqlite3_value *_Nonnull value) {

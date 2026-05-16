@@ -275,6 +275,37 @@ static int cql_rowset_filter(
   cql_rowset_table *pTab = (cql_rowset_table *)pCur->base.pVtab;
   pCur->func = pTab->func;
 
+  // Release any previous result set before calling the function.
+  //
+  // WHY THIS IS NECESSARY — the xFilter re-entrancy problem:
+  //
+  // SQLite's virtual table xFilter callback is not called exactly once per
+  // query.  It is called once per scan of the virtual table, and a single
+  // SQL query can scan the same virtual table cursor multiple times.  The
+  // most common case is a nested-loop join: if this TVF appears on the inner
+  // side of a join, xFilter is re-invoked for every row of the outer table.
+  // For example:
+  //
+  //   SELECT * FROM some_regular_table t
+  //   JOIN my_cql_tvf(t.id) tvf ON tvf.key = t.key;
+  //
+  // SQLite will call xFilter on the TVF cursor once per row in
+  // some_regular_table, passing a fresh t.id each time.  Each call produces
+  // a brand-new result set.  Without this release, each new result set would
+  // silently overwrite pCur->result_set, and the previous one's ref count
+  // would never reach zero — a memory leak proportional to the row count of
+  // the outer table.
+  //
+  // Setting result_set to NULL before the call is also important: if func()
+  // fails and leaves result_set unchanged (or sets it to NULL), the contract
+  // check below will fire cleanly rather than operating on stale data from a
+  // previous invocation.
+  //
+  // cql_result_set_release is NULL-safe, so this pattern is correct on the
+  // very first xFilter call when result_set has never been set.
+  cql_result_set_release(pCur->result_set);
+  pCur->result_set = NULL;
+
   // Call the function to get the result set
   cql_rowset_func func = pCur->func;
   func(pCur->db, argc, argv, &pCur->result_set);

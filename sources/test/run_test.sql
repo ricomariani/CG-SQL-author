@@ -7881,6 +7881,25 @@ begin
   EXPECT_EQ!(C, false);
 end);
 
+TEST!(blob_stream_truncated_index_read__,
+begin
+  -- A 5-byte blob: count=1 (bytes 0-3 = 0x01000000), one data byte at offset 4.
+  -- The end-offset entry for index 0 lives at bytes[(0+1)*4 .. (0+1)*4+3] = bytes[4..7].
+  -- Only byte 4 exists; bytes 5-7 are past the allocation.
+  -- Old check: (index+1)*4 >= len  =>  4 >= 5  => false  => proceeds to OOB read (ASAN).
+  -- New check: (index+2)*4 > len   =>  8 >  5  => true   => goto error before any read.
+  let b := (select x'0100000005');
+  let hit := 0;
+  cursor C like my_blob;
+  try
+    cql_cursor_from_blob_stream(C, b, 0);
+  catch
+    hit := 1;
+  end;
+  EXPECT_EQ!(hit, 1);
+  EXPECT_EQ!(C, false);
+end);
+
 END_SUITE();
 
 -- manually force tracing on by redefining the macros

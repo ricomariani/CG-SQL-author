@@ -3405,7 +3405,10 @@ cql_code cql_cursor_from_blob_stream(
   // note that we're assuming little endian here, this could be generalized
   uint32_t count = *(uint32_t *)bytes;
 
-  if (index < 0 || index >= count || (index + 1) * 4 >= len) {
+  // We need to read 4 bytes at offset (index+1)*4, so we need (index+1)*4 + 4 <= len,
+  // i.e. (index+2)*4 <= len.  Using (index+1)*4 >= len would only verify the start of
+  // the read is in bounds, leaving up to 3 bytes readable past the end of the blob.
+  if (index < 0 || index >= count || (index + 2) * 4 > len) {
     goto error;
   }
 

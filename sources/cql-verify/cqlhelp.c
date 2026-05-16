@@ -14,7 +14,7 @@
  * conventions and use CQL runtime types.
 */
 
-#include <alloca.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include "cqlhelp.h"
 
@@ -277,13 +277,15 @@ cql_string_ref str_mid(cql_string_ref in, int startIndex, int length) {
   size_t remaining = inputLength - (size_t)startIndex;
   size_t outputLength = ((size_t)length < remaining) ? (size_t)length : remaining;
 
-  char *temp = alloca(outputLength + 1);
-
+  char *temp = malloc(outputLength + 1);
+  cql_contract(temp);
   strncpy(temp, inStr + startIndex, outputLength);
   temp[outputLength] = '\0';
 
   cql_free_cstr(inStr, in);
-  return cql_string_ref_new(temp);
+  cql_string_ref result = cql_string_ref_new(temp);
+  free(temp);
+  return result;
 }
 
 /*
@@ -300,13 +302,15 @@ cql_string_ref str_left(cql_string_ref in, int length_) {
   size_t length = (size_t)length_;
 
   size_t outputLength = (length < inputLength) ? length : inputLength;
-  char *temp = alloca(outputLength + 1);
-
+  char *temp = malloc(outputLength + 1);
+  cql_contract(temp);
   strncpy(temp, inStr, outputLength);
   temp[outputLength] = '\0';
 
   cql_free_cstr(inStr, in);
-  return cql_string_ref_new(temp);
+  cql_string_ref result = cql_string_ref_new(temp);
+  free(temp);
+  return result;
 }
 
 /*
@@ -324,11 +328,13 @@ cql_string_ref str_right(cql_string_ref in, int length_) {
 
   size_t startIndex = (inputLength > length) ? inputLength - length : 0;
   size_t outputLength = (startIndex < inputLength) ? inputLength - startIndex : 0;
-  char *temp = alloca(outputLength + 1);
-
+  char *temp = malloc(outputLength + 1);
+  cql_contract(temp);
   strncpy(temp, inStr + startIndex, outputLength);
   temp[outputLength] = '\0';
 
   cql_free_cstr(inStr, in);
-  return cql_string_ref_new(temp);
+  cql_string_ref result = cql_string_ref_new(temp);
+  free(temp);
+  return result;
 }

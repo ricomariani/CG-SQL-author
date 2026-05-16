@@ -60,7 +60,7 @@ Quick access to all documentation:
 
 ## Meta Documentation (2 files)
 
-### 📋 [README.md](README.md) - 6.5 KB
+### 📋 [README.md](COPILOT-DOCS.md) - 6.5 KB
 **Overview and navigation**
 - How to use the documentation
 - File descriptions
@@ -82,7 +82,7 @@ Quick access to all documentation:
 ### I want to...
 
 **...understand the codebase**
-→ Start with [README.md](README.md), then [copilot-architecture.md](copilot-architecture.md)
+→ Start with [README.md](COPILOT-DOCS.md), then [copilot-architecture.md](copilot-architecture.md)
 
 **...build and test**
 → [copilot-instructions.md](copilot-instructions.md) + [copilot-testing.md](copilot-testing.md)

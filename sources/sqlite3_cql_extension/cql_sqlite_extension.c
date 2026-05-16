@@ -354,7 +354,7 @@ static int cql_rowset_column(sqlite3_vtab_cursor *cur, sqlite3_context *context,
 
   cql_result_set_meta *meta = cql_result_set_get_meta(result_set);
 
-  if (meta->columnOffsets == NULL) {
+  if (meta->columnOffsets == NULL || meta->dataTypes == NULL) {
     sqlite3_result_text(context, "rowset metadata null", -1, SQLITE_TRANSIENT);
     return SQLITE_ERROR;
   }
@@ -392,10 +392,66 @@ static int cql_rowset_column(sqlite3_vtab_cursor *cur, sqlite3_context *context,
       break;
     }
     case CQL_DATA_TYPE_OBJECT: {
-      // Not supported yet — See https://www.sqlite.org/bindptr.html
-      cql_object_ref obj_ref = cql_result_set_get_object_col(result_set, row, column);
-      cql_retain((cql_type_ref)obj_ref);
-      sqlite3_result_int64(context, (int64_t)obj_ref);
+      // Objects cannot be meaningfully represented as a SQLite column value.
+      // We return NULL here rather than crash or leak.
+      //
+      // Why this is fundamentally hard:
+      //
+      // 1. LIFETIME / REFERENCE COUNTING
+      //    CQL objects are ref-counted.  sqlite3_result_pointer() (see
+      //    https://www.sqlite.org/bindptr.html) can smuggle a raw pointer
+      //    through a result column, and it accepts a destructor callback, so
+      //    lifetime *could* be managed that way for a single consumer reading
+      //    the value exactly once.  But SQLite may copy or cache the value,
+      //    and the calling SQL expression may read the column multiple times.
+      //    The ref-count discipline becomes very difficult to reason about.
+      //
+      // 2. TYPE IDENTITY
+      //    sqlite3_result_pointer() tags the pointer with a caller-supplied
+      //    string ("type name"), but that is just a convention, not enforced
+      //    by SQLite.  There is no way to express the full CQL type — the
+      //    consumer must already know what it is getting and cast accordingly.
+      //    Any mismatch is a silent memory-safety bug.
+      //
+      // 3. NESTED RESULT SETS (the really crazy case)
+      //    A common CQL object column type is a child result set — a full
+      //    cql_result_set_ref representing a one-to-many relationship.  If we
+      //    tried to expose that through this TVF bridge, each row of the parent
+      //    TVF would need to somehow return a child *table* as a single column
+      //    value.  SQLite has no concept of a table-valued column; the only
+      //    options are:
+      //      a) Serialize the child rows into a blob — lossy, requires a
+      //         schema agreement, and loses all type information.
+      //      b) Return a raw pointer via sqlite3_result_pointer() and let the
+      //         caller invoke a second TVF over it — but now the child result
+      //         set must stay alive across an unbounded query lifetime, the
+      //         caller must know the child schema out-of-band, and joining the
+      //         two TVFs in SQL produces a cross-product unless the query
+      //         planner is very clever.
+      //      c) Flatten the parent+child into a single wide TVF — possible but
+      //         requires custom code per schema; this generic bridge cannot do
+      //         it automatically.
+      //    None of these are something a generic bridge layer can handle safely.
+      //
+      // 4. THE RECOMMENDED PATTERN FOR CHILD RESULT SETS
+      //    If you genuinely need to expose a child result set to SQL callers,
+      //    the best approach is a dedicated helper procedure with a contract
+      //    that is explicitly designed for it — e.g. a stored proc that accepts
+      //    a parent key, runs the child query directly, and returns those rows
+      //    as its own result set.  The caller then joins or correlates the two
+      //    result sets in application code rather than in SQL.
+      //    Trying to do it inside a TVF is highly problematic: the TVF can
+      //    appear in arbitrary JOIN expressions, meaning the child result set
+      //    pointer could be evaluated in any join order, duplicated across
+      //    multiple rows of a cross product, or held alive across a long-running
+      //    query with no predictable release point.  A purpose-built helper
+      //    procedure sidesteps all of that by having clear call/return
+      //    ownership semantics.
+      //
+      // Bottom line: if you need object columns exposed to SQL, you need a
+      // hand-written TVF that knows the specific object type and has a clear
+      // ownership contract.  This generic bridge deliberately returns NULL.
+      sqlite3_result_null(context);
       break;
     }
   }

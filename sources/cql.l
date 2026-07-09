@@ -85,6 +85,7 @@ static CSTR last_doc_comment = NULL;
 
 static bool_t cql_already_processed_file(CSTR);
 static void cql_record_processed_file(CSTR);
+static void cql_setup_ambient_path(CSTR);
 
 #ifndef CQL_AMALGAM
 // already in the headers in the amalgam
@@ -121,8 +122,10 @@ static bool cql_delete_main_buffer = false;
 static YY_BUFFER_STATE cql_main_buffer;
 
 // this remembers the directory in which we found the most recent file
-// later paths are relative to this by default
-static char ambient_path[PATH_MAX];
+// later paths are relative to this by default.  It points into the string
+// pool (or is NULL); there is no fixed-size buffer here so include paths of
+// any length are handled safely.
+static CSTR ambient_path;
 
 // Here we store the original input source, saving it in cql_main_buffer and
 // then we set up the lexer to read from the text returned by cql_builtin_text()
@@ -151,12 +154,10 @@ cql_noexport void cql_setup_for_builtins() {
   // use the path part of the initial input file as the starting ambient path
   // this is the path that later @include directive paths will be relative to.
   if (!strcmp("<stdin>", current_file)) {
-     ambient_path[0] = '\0';
+     ambient_path = NULL;
   }
   else {
-    strncpy(ambient_path, current_file, sizeof(ambient_path));
-    ambient_path[sizeof(ambient_path)-1] = 0;
-    Dirname(ambient_path);
+    cql_setup_ambient_path(current_file);
   }
 }
 
@@ -166,7 +167,7 @@ typedef struct {
   YY_BUFFER_STATE buf;
   int32_t line_saved;
   char *filename_saved;
-  char *ambient_saved;
+  CSTR ambient_saved;
 } cql_include_state;
 
 static cql_include_state cql_includes[MAX_INCLUDES];
@@ -178,7 +179,7 @@ static symtab *processed_files;
 // of previously processed files is removed.  The include stack
 // is cleared.
 cql_noexport void cql_reset_open_includes() {
-  ambient_path[0] = '\0';
+  ambient_path = NULL;
   cql_include_index = 0;
   memset(cql_includes, 0, sizeof(cql_includes));
   if (processed_files) {
@@ -195,6 +196,15 @@ cql_noexport void cql_cleanup_open_includes() {
      yy_delete_buffer(inc->buf);
   }
   cql_reset_open_includes();
+}
+
+// Set the ambient path (the directory used to resolve later relative
+// @include paths) to the directory portion of the given path.  The value is
+// copied into the string pool (Strdup) so there is no fixed-size buffer to
+// overflow; pool memory lives until the end of the run.  Dirname mutates its
+// argument in place, so we operate on the pool copy.
+static void cql_setup_ambient_path(CSTR path) {
+  ambient_path = Dirname(Strdup(path));
 }
 
 // we're starting a new @include directive.  We'll need
@@ -218,7 +228,7 @@ static void cql_setup_for_include(CSTR str) {
   inc->buf = YY_CURRENT_BUFFER;
   inc->line_saved = yylineno;
   inc->filename_saved = current_file;
-  inc->ambient_saved = Strdup(ambient_path);
+  inc->ambient_saved = ambient_path;
   cql_include_index++;
 
   CHARBUF_OPEN(name);
@@ -232,7 +242,7 @@ static void cql_setup_for_include(CSTR str) {
 
   // second, prepend the ambient path if there is one
   bclear(&path);
-  if (ambient_path[0]) {
+  if (ambient_path && ambient_path[0]) {
     bprintf(&path, "%s/%s", ambient_path, name.ptr);
   }
   else {
@@ -252,8 +262,7 @@ static void cql_setup_for_include(CSTR str) {
       goto done;
     }
 
-    strcpy(ambient_path, path.ptr);
-    Dirname(ambient_path);
+    cql_setup_ambient_path(path.ptr);
     yyin = fopen(abspath, "r");
   }
 
@@ -273,8 +282,7 @@ static void cql_setup_for_include(CSTR str) {
             goto done;
           }
 
-          strcpy(ambient_path, path.ptr);
-          Dirname(ambient_path);
+          cql_setup_ambient_path(path.ptr);
           yyin = fopen(path.ptr, "r");
           if (yyin) {
             opened_name = path.ptr;
@@ -702,7 +710,7 @@ X'({hex}{hex})*'                 { yylval.sval = Strdup(yytext); return BLOBLIT;
                                      yy_switch_to_buffer(inc->buf);
                                      yylineno = inc->line_saved;
                                      current_file = inc->filename_saved;
-                                     strcpy(ambient_path, inc->ambient_saved);
+                                     ambient_path = inc->ambient_saved;
                                      return END_INCLUDE;
                                    }
                                  }

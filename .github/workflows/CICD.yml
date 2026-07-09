@@ -17,17 +17,17 @@ jobs:
       group: ${{ github.workflow }}-${{ github.ref }}
     steps:
       - name: Git Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Create ${{ github.workspace }}/.www directory in workspace
         run: mkdir -p ${{ github.workspace }}/.www
       - name: Setup java 17 (to generate railroad diagrams)
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: '17'
           distribution: 'microsoft'
       - name: Attempt to retrieve Bottlecaps RailRoad from cache
         id: bottlecaps-railroad
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/rr-2.6-java11
           key: rr-2.6-java11
@@ -77,7 +77,7 @@ jobs:
       - name: Debug — List files in ${{ github.workspace }}/.www
         run: ls ${{ github.workspace }}/.www/
       - name: Upload Pages
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: ${{ github.workspace }}/.www/
 
@@ -96,7 +96,7 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
 
   test:
     name: Run Test Suite
@@ -106,7 +106,7 @@ jobs:
         working-directory: ${{ github.workspace }}/sources
     steps:
       - name: Git Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Dependencies
         run: |
           sudo apt-get update --yes
@@ -142,7 +142,7 @@ jobs:
           ../playground/play.sh run-data-access-demo
           ../playground/play.sh run c ../playground/examples/*.sql
       - name: Cache SQLite Build Folder
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: ${{ github.workspace }}/.cache/sqlite
           key: ${{ runner.os }}-sqlite-build

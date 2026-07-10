@@ -7,6 +7,11 @@ responsibly using GitHub’s private vulnerability reporting feature:
 
 https://github.com/ricomariani/CG-SQL-author/security/advisories/new
 
+> **Note:** You must be signed in to a GitHub account to open the report
+> form. If you are signed out, the link above will return a **404** — just
+> sign in and follow it again. Any GitHub account works; you do not need
+> write access to this repository.
+
 **Please do not open a public GitHub issue** for security-related problems.
 
 When reporting a vulnerability, please include:

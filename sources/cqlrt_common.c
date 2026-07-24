@@ -5530,6 +5530,63 @@ static void cql_compute_key_blob_shape(
   shape->variable_offset = shape->type_codes_offset + shape->type_codes_size;
 }
 
+// Verifies every stored variable field before an update uses its offset or
+// length to size or copy a replacement blob.
+static cql_bool cql_validate_blob_variable_fields(
+  const uint8_t *_Nonnull b,
+  uint64_t original_bytes,
+  uint64_t column_count,
+  uint64_t storage_offset,
+  uint64_t type_codes_offset,
+  uint64_t variable_offset)
+{
+  for (uint64_t icol = 0; icol < column_count; icol++) {
+    uint8_t blob_column_type = b[type_codes_offset + icol];
+
+    switch (blob_column_type) {
+      case CQL_BLOB_TYPE_BOOL:
+      case CQL_BLOB_TYPE_INT32:
+      case CQL_BLOB_TYPE_INT64:
+      case CQL_BLOB_TYPE_FLOAT:
+        break;
+
+      case CQL_BLOB_TYPE_STRING:
+      {
+        uint64_t val = cql_read_big_endian_u64(b + storage_offset + icol * sizeof(uint64_t));
+        uint64_t len = val & 0xffffffff;
+        uint64_t offset = val >> 32;
+        uint64_t bytes = len + 1;
+
+        if (offset < variable_offset || offset + bytes > original_bytes) {
+          return 0;
+        }
+
+        if (b[offset + len] != 0) {
+          return 0;
+        }
+        break;
+      }
+
+      default:
+      {
+        // Nothing else remains but a blob field.
+        cql_contract(blob_column_type == CQL_BLOB_TYPE_BLOB);
+
+        uint64_t val = cql_read_big_endian_u64(b + storage_offset + icol * sizeof(uint64_t));
+        uint64_t len = val & 0xffffffff;
+        uint64_t offset = val >> 32;
+
+        if (offset < variable_offset || offset + len > original_bytes) {
+          return 0;
+        }
+        break;
+      }
+    }
+  }
+
+  return 1;
+}
+
 // Returns a blob with the given items in value format
 // bcreatekey(
 //    record_code,
@@ -5854,6 +5911,15 @@ void bupdatekey(
   cql_key_blob_shape shape;
   cql_compute_key_blob_shape(&shape, header.column_count, 0);
   if (shape.variable_offset > original_bytes) {
+    goto cql_error;
+  }
+  if (!cql_validate_blob_variable_fields(
+        b,
+        original_bytes,
+        header.column_count,
+        shape.storage_offset,
+        shape.type_codes_offset,
+        shape.variable_offset)) {
     goto cql_error;
   }
 
@@ -6585,6 +6651,15 @@ void bupdateval(
   cql_val_blob_shape original_shape;
   cql_compute_val_blob_shape(&original_shape, header.column_count, 0);
   if (original_shape.variable_offset > original_bytes) {
+    goto cql_error;
+  }
+  if (!cql_validate_blob_variable_fields(
+        b,
+        original_bytes,
+        header.column_count,
+        original_shape.storage_offset,
+        original_shape.type_codes_offset,
+        original_shape.variable_offset)) {
     goto cql_error;
   }
   original_shape.total_bytes = original_bytes;

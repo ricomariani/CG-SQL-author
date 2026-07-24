@@ -6618,6 +6618,12 @@ begin
 
   -- valid magic but column_count=1 makes variable_offset exceed blob length
   EXPECT_EQ!((select bupdatekey(x'0000000000000000524d303000000001', 0, 99)), null);
+
+  -- The second field is an unchanged string with offset 0xffff and length
+  -- 0x100, both outside this 34-byte blob.
+  EXPECT_EQ!((select bupdatekey(
+    x'0000000000000001524d303000000002000000000000002a0000ffff000001000204',
+    0, 99)), null);
 end);
 
 @op blob : call val as bgetval;
@@ -6919,6 +6925,23 @@ begin
 
   -- valid magic but column_count=1 makes variable_offset exceed blob length
   EXPECT_EQ!((select bupdateval(x'0000000000000000524d303000000001', 99, 0, CQL_BLOB_TYPE_BOOL)), null);
+
+  -- The second field is an unchanged string with offset 0xffff and length
+  -- 0x100, both outside this 50-byte blob.  The update must reject malformed
+  -- variable-field metadata rather than copying from outside the input blob.
+  EXPECT_EQ!((select bupdateval(
+    x'0000000000000001524d30300000000200000000000000010000000000000002000000000000002a0000ffff000001000204',
+    1, 99, CQL_BLOB_TYPE_INT64)), null);
+
+  -- The unchanged string is in bounds but has no trailing NUL byte.
+  EXPECT_EQ!((select bupdateval(
+    x'0000000000000001524d30300000000200000000000000010000000000000002000000000000002a0000003200000000020478',
+    1, 99, CQL_BLOB_TYPE_INT64)), null);
+
+  -- The unchanged blob has offset and length metadata outside the input blob.
+  EXPECT_EQ!((select bupdateval(
+    x'0000000000000001524d30300000000200000000000000010000000000000002000000000000002a0000ffff000001000205',
+    1, 99, CQL_BLOB_TYPE_INT64)), null);
 end);
 
 TEST!(backed_tables,

@@ -10,7 +10,7 @@ COV_ARGS="${COV_COVERAGE_ARGS}"
 
 O="out"
 
-GCOVR=gcovr
+GCOVR=(python3 -m gcovr)
 
 coverage() {
 	rm -f *.gcov
@@ -27,7 +27,7 @@ coverage() {
 	fi
 
 	echo generating $O/report.html
-	if ! "${GCOVR}" \
+	if ! "${GCOVR[@]}" \
 		-g -k \
 		--html \
 		--html-details \
@@ -52,7 +52,7 @@ coverage() {
 	fi
 
 	echo generating $O/report.txt
-	if ! "${GCOVR}" \
+	if ! "${GCOVR[@]}" \
 		-g -k \
 		-o $O/report.txt \
 		${COV_EXTRA_ARGS} \

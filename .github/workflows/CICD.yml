@@ -122,7 +122,7 @@ jobs:
             default-jre \
             default-jdk
 
-          sudo pip3 install gcovr
+          python3 -m pip install --user 'gcovr==7.2'
       - name: Execute test script using Clang in non-interactive mode
         run: ./test.sh --use_clang --non_interactive
       - name: Execute test script using GCC in non-interactive mode

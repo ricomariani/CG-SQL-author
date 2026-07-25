@@ -51,6 +51,18 @@ begin
   end if;
 end;
 
+@MACRO(stmt_list) EXPECT_BLOB_FAILURE!(x! expr)
+begin
+  -- Blob UDFs are externally callable SQLite functions.  A rejected payload
+  -- must abort the query rather than quietly becoming NULL, which callers
+  -- could otherwise mistake for an absent value.
+  try
+    let @tmp(x) := (select x!);
+  catch
+    EXPECT_EQ!(@rc, 1); -- SQLITE_ERROR
+  end;
+end;
+
 -- use this for both normal eval and SQLite eval this is where we expect CQL to
 -- give us the same result as SQLite we do this by evaluating the predicate
 -- normally and also wrapped in a (select x).  This is a valuable control.
@@ -200,10 +212,15 @@ const group blob_types (
 -- Note that these are configurable so the compiler can't literally
 -- pre-declare them for you.  You tell it what you are going to do.
 
-declare select function bgetkey_type(b blob) long;
-declare select function bgetval_type(b blob) long;
-declare select function bgetkey(b blob, iarg int) long;
-declare select function bgetval(b blob, iarg long) long;
+-- Deliberately omit CQL argument checking for these external SQLite UDFs.
+-- This lets the regressions reach their runtime guards with attacker-controlled
+-- argument types, instead of having the compiler reject the call first.
+declare select function bgetkey_type no check long;
+declare select function bgetval_type no check long;
+declare select function bgetkey no check long;
+declare select function bgetval no check long;
+-- The creation and update UDFs are variadic, so their arity and type checks
+-- are necessarily runtime defenses against direct SQLite callers.
 declare select function bcreateval no check blob;
 declare select function bcreatekey no check blob;
 declare select function bupdateval no check blob;
@@ -6518,78 +6535,86 @@ end);
 
 TEST!(blob_createkey_func_errors,
 begin
-  -- not enough args
-  EXPECT_EQ!((select bcreatekey(112233)), null);
+  -- A key cannot have a well-defined serialized layout without a value/type
+  -- pair; accepting this would create data no reader can safely interpret.
+  EXPECT_BLOB_FAILURE!(bcreatekey(112233));
 
-  -- args have the wrong parity (it should be pairs)
-  EXPECT_EQ!((select bcreatekey(112233, 1)), null);
+  -- An unmatched value would shift all subsequent type metadata.
+  EXPECT_BLOB_FAILURE!(bcreatekey(112233, 1));
 
-  -- the first arg should be an int64
-  EXPECT_EQ!((select bcreatekey('112233', 1, 1)), null);
+  -- Record types become part of the durable header, so coercion must not make
+  -- arbitrary SQL text look like a valid record identity.
+  EXPECT_BLOB_FAILURE!(bcreatekey('112233', 1, 1));
 
-  -- the arg type should be a small integer
-  EXPECT_EQ!((select bcreatekey(112233, 1, 'error')), null);
+  -- A textual type code has no trusted wire-format meaning.
+  EXPECT_BLOB_FAILURE!(bcreatekey(112233, 1, 'error'));
 
-  -- the arg type should be a small integer
-  EXPECT_EQ!((select bcreatekey(112233, 1000, 99)), null);
+  -- An unknown numeric type code must not be persisted for a later reader.
+  EXPECT_BLOB_FAILURE!(bcreatekey(112233, 1000, 99));
 
-  -- the value doesn't match the blob type -- int32
-  EXPECT_EQ!((select bcreatekey(112233, 'xxx', CQL_BLOB_TYPE_BOOL)), null);
+  -- Reject text for integral storage rather than relying on SQLite coercion.
+  EXPECT_BLOB_FAILURE!(bcreatekey(112233, 'xxx', CQL_BLOB_TYPE_BOOL));
 
-  -- the value doesn't match the blob type -- int32
-  EXPECT_EQ!((select bcreatekey(112233, 'xxx', CQL_BLOB_TYPE_INT32)), null);
+  -- The same rule applies to the fixed-width int32 representation.
+  EXPECT_BLOB_FAILURE!(bcreatekey(112233, 'xxx', CQL_BLOB_TYPE_INT32));
 
-  -- the value doesn't match the blob type -- int64
-  EXPECT_EQ!((select bcreatekey(112233, 'xxx', CQL_BLOB_TYPE_INT64)), null);
+  -- And to the fixed-width int64 representation.
+  EXPECT_BLOB_FAILURE!(bcreatekey(112233, 'xxx', CQL_BLOB_TYPE_INT64));
 
-  -- the value doesn't match the blob type -- float
-  EXPECT_EQ!((select bcreatekey(112233, 'xxx', CQL_BLOB_TYPE_FLOAT)), null);
+  -- A nonnumeric value cannot safely define an IEEE floating-point field.
+  EXPECT_BLOB_FAILURE!(bcreatekey(112233, 'xxx', CQL_BLOB_TYPE_FLOAT));
 
-  -- the value doesn't match the blob type -- string
-  EXPECT_EQ!((select bcreatekey(112233, 1, CQL_BLOB_TYPE_STRING)), null);
+  -- String metadata requires text so its byte count has the intended meaning.
+  EXPECT_BLOB_FAILURE!(bcreatekey(112233, 1, CQL_BLOB_TYPE_STRING));
 
-  -- the value doesn't match the blob type -- blob
-  EXPECT_EQ!((select bcreatekey(112233, 1, CQL_BLOB_TYPE_BLOB)), null);
+  -- Blob metadata likewise requires opaque bytes, not a coerced scalar.
+  EXPECT_BLOB_FAILURE!(bcreatekey(112233, 1, CQL_BLOB_TYPE_BLOB));
 end);
 
 TEST!(blob_getkey_func_errors,
 begin
-  -- a test blob
+  -- Start from valid data so each rejection below is attributable only to the
+  -- malformed argument or payload it introduces.
   let b := (select bcreatekey(112235, 0x12345678912L, CQL_BLOB_TYPE_INT64, 0x87654321876L, CQL_BLOB_TYPE_INT64));
 
-  -- second arg is too big  only (0, 1) are valid
-  EXPECT_EQ!((select b:key(2)), null);
+  -- Direct SQLite callers bypass CQL's type checker; these must therefore
+  -- fail at the UDF boundary rather than reach blob parsing.
+  EXPECT_BLOB_FAILURE!(bgetkey(1234, 0));
+  EXPECT_BLOB_FAILURE!(bgetkey_type(1234));
 
-  -- second arg is negative
-  EXPECT_EQ!((select b:key(-1)), null);
+  -- An out-of-range key index must not alias unallocated column metadata.
+  EXPECT_BLOB_FAILURE!(bgetkey(b, 2));
 
-  -- the blob isn't a real encoded blob
-  EXPECT_EQ!((select bgetkey(x'0000000000000000000000000000', 0)), null);
+  -- A negative index must not become a large unsigned memory offset.
+  EXPECT_BLOB_FAILURE!(bgetkey(b, -1));
 
-  -- the blob isn't a real encoded blob
-  EXPECT_EQ!((select bgetkey_type(x'0000000000000000000000000000')), null);
+  -- A bogus header must fail before any shape-derived offset is trusted.
+  EXPECT_BLOB_FAILURE!(bgetkey(x'0000000000000000000000000000', 0));
 
-  -- valid magic but column_count=1 makes variable_offset exceed blob length
-  EXPECT_EQ!((select bgetkey(x'0000000000000000524d303000000001', 0)), null);
+  -- Type reads must enforce the same header trust boundary as value reads.
+  EXPECT_BLOB_FAILURE!(bgetkey_type(x'0000000000000000000000000000'));
 
-  -- An unchanged string's offset and length are outside the input blob.
-  EXPECT_EQ!((select bgetkey(
+  -- A plausible magic value cannot make a truncated layout trustworthy.
+  EXPECT_BLOB_FAILURE!(bgetkey(x'0000000000000000524d303000000001', 0));
+
+  -- Readers validate untouched fields too, so corrupt metadata cannot be
+  -- ignored merely because this query asks for another column.
+  EXPECT_BLOB_FAILURE!(bgetkey(
     x'0000000000000001524d303000000002000000000000002a0000ffff000001000204',
-    0)), null);
+    0));
 
-  -- An unknown serialized type code is corrupt input and must fail the query.
-  try
-    let ignored := (select bgetkey(
-      x'0000000000000001524d303000000002000000000000002a00000000000000000206',
-      1));
-  catch
-    EXPECT_EQ!(@rc, 1); -- SQLITE_ERROR
-  end;
+  -- A durable type code is attacker-controlled once stored; type readers and
+  -- value readers must reject unknown codes consistently.
+  EXPECT_BLOB_FAILURE!(bgetkey(
+    x'0000000000000001524d303000000002000000000000002a00000000000000000206',
+    1));
+  EXPECT_BLOB_FAILURE!(bgetkey_type(
+    x'0000000000000001524d303000000002000000000000002a00000000000000000206'));
 end);
 
 TEST!(blob_updatekey_func_errors,
 begin
-  -- a test blob
+  -- Start from valid data so each rejection below isolates one contract.
   let b := (select bcreatekey(
     112235,
     false, CQL_BLOB_TYPE_BOOL,
@@ -6599,54 +6624,51 @@ begin
     x'4546474849', CQL_BLOB_TYPE_BLOB
     ));
 
-  -- not enough args
-  EXPECT_EQ!((select bupdatekey(112233)), null);
+  -- Updates require at least one index/value pair to preserve key shape.
+  EXPECT_BLOB_FAILURE!(bupdatekey(112233));
 
-  -- args have the wrong parity (it should be pairs)
-  EXPECT_EQ!((select bupdatekey(112233, 1)), null);
+  -- An unmatched argument would desynchronize index/value interpretation.
+  EXPECT_BLOB_FAILURE!(bupdatekey(112233, 1));
 
-  -- the first arg should be a blob
-  EXPECT_EQ!((select bupdatekey(1234, 1, 1)), null);
+  -- Nonblob input cannot provide trusted serialized metadata.
+  EXPECT_BLOB_FAILURE!(bupdatekey(1234, 1, 1));
 
-  -- the first arg should be a blob in the standard format
-  EXPECT_EQ!((select bupdatekey(x'0000000000000000000000000000', 1, 1)), null);
+  -- A blob value alone is insufficient; it must carry the CQL wire format.
+  EXPECT_BLOB_FAILURE!(bupdatekey(x'0000000000000000000000000000', 1, 1));
 
-  -- the column index should be a small integer
-  EXPECT_EQ!((select bupdatekey(b, 'error', 1)), null);
+  -- Text must not be coerced into an index used to locate serialized fields.
+  EXPECT_BLOB_FAILURE!(bupdatekey(b, 'error', 1));
 
-  -- the column index must be in range
-  EXPECT_EQ!((select bupdatekey(b, 5, 1234)), null);
+  -- An excessive index must not select memory beyond the key's declared shape.
+  EXPECT_BLOB_FAILURE!(bupdatekey(b, 5, 1234));
 
-  -- the column index must be in range
-  EXPECT_EQ!((select bupdatekey(b, -1, 1234)), null);
+  -- Negative indices must not wrap into large unsigned offsets.
+  EXPECT_BLOB_FAILURE!(bupdatekey(b, -1, 1234));
 
-  -- the value doesn't match the blob type
-  EXPECT_EQ!((select bupdatekey(b, 0, 'xxx')), null);
-  EXPECT_EQ!((select bupdatekey(b, 1, 'xxx')), null);
-  EXPECT_EQ!((select bupdatekey(b, 2, 'xxx')), null);
-  EXPECT_EQ!((select bupdatekey(b, 3, 5.0)), null);
-  EXPECT_EQ!((select bupdatekey(b, 4, 5.0)), null);
+  -- Every stored type rejects incompatible replacements before allocation or copy.
+  EXPECT_BLOB_FAILURE!(bupdatekey(b, 0, 'xxx'));
+  EXPECT_BLOB_FAILURE!(bupdatekey(b, 1, 'xxx'));
+  EXPECT_BLOB_FAILURE!(bupdatekey(b, 2, 'xxx'));
+  EXPECT_BLOB_FAILURE!(bupdatekey(b, 3, 5.0));
+  EXPECT_BLOB_FAILURE!(bupdatekey(b, 4, 5.0));
 
-  -- can't update the same field twice (setting bool to false twice)
-  EXPECT_EQ!((select bupdatekey(b, 0, 0, 0, 0)), null);
+  -- Duplicate updates are rejected so sizing and final field selection remain
+  -- deterministic rather than depending on argument order.
+  EXPECT_BLOB_FAILURE!(bupdatekey(b, 0, 0, 0, 0));
 
-  -- valid magic but column_count=1 makes variable_offset exceed blob length
-  EXPECT_EQ!((select bupdatekey(x'0000000000000000524d303000000001', 0, 99)), null);
+  -- Valid magic cannot excuse a truncated shape.
+  EXPECT_BLOB_FAILURE!(bupdatekey(x'0000000000000000524d303000000001', 0, 99));
 
   -- The second field is an unchanged string with offset 0xffff and length
   -- 0x100, both outside this 34-byte blob.
-  EXPECT_EQ!((select bupdatekey(
+  EXPECT_BLOB_FAILURE!(bupdatekey(
     x'0000000000000001524d303000000002000000000000002a0000ffff000001000204',
-    0, 99)), null);
+    0, 99));
 
   -- An unknown serialized type code is corrupt input and must fail the query.
-  try
-    let ignored := (select bupdatekey(
-      x'0000000000000001524d303000000002000000000000002a00000000000000000206',
-      0, 99));
-  catch
-    EXPECT_EQ!(@rc, 1); -- SQLITE_ERROR
-  end;
+  EXPECT_BLOB_FAILURE!(bupdatekey(
+    x'0000000000000001524d303000000002000000000000002a00000000000000000206',
+    0, 99));
 end);
 
 @op blob : call val as bgetval;
@@ -6732,44 +6754,41 @@ TEST!(blob_createval_func_errors,
 begin
   let k1 := 123412341234;
 
-  -- not enough args
-  EXPECT_EQ!((select bcreateval()), null);
+  -- A value blob needs complete field-id/value/type triples so its parallel
+  -- metadata arrays cannot diverge.
+  EXPECT_BLOB_FAILURE!(bcreateval());
 
-  -- args have the wrong parity (it should be triples)
-  EXPECT_EQ!((select bcreateval(112233, 1)), null);
+  -- A partial triple would misalign field IDs, values, and type codes.
+  EXPECT_BLOB_FAILURE!(bcreateval(112233, 1));
 
-  -- the first arg should be an int64
-  EXPECT_EQ!((select bcreateval('112233', 1, 1, 1)), null);
+  -- Record type is durable header data, not an implicit SQLite conversion.
+  EXPECT_BLOB_FAILURE!(bcreateval('112233', 1, 1, 1));
 
-  -- the field id should be an integer
-  EXPECT_EQ!((select bcreateval(112233, 'error', 1, CQL_BLOB_TYPE_BOOL)), null);
+  -- Field lookup depends on exact integer identity, so text is not accepted.
+  EXPECT_BLOB_FAILURE!(bcreateval(112233, 'error', 1, CQL_BLOB_TYPE_BOOL));
 
-  -- the arg type should be a small integer
-  EXPECT_EQ!((select bcreateval(112233, k1, 1, 'error')), null);
+  -- A textual type code cannot safely become durable wire metadata.
+  EXPECT_BLOB_FAILURE!(bcreateval(112233, k1, 1, 'error'));
 
-  -- the field id type should be a small integer
-  EXPECT_EQ!((select bcreateval(112233, 'k1', 1, CQL_BLOB_TYPE_BOOL)), null);
+  -- A second field-id check protects the metadata address, independent of its value.
+  EXPECT_BLOB_FAILURE!(bcreateval(112233, 'k1', 1, CQL_BLOB_TYPE_BOOL));
 
-  -- the arg type should be a small integer
-  EXPECT_EQ!((select bcreateval(112233, k1, 1000, 99)), null);
+  -- Unsupported numeric codes must be rejected before they reach storage.
+  EXPECT_BLOB_FAILURE!(bcreateval(112233, k1, 1000, 99));
 
-  -- the value doesn't match the blob type -- int32
-  EXPECT_EQ!((select bcreateval(112233, k1, 'xxx', CQL_BLOB_TYPE_BOOL)), null);
+  -- Each incompatibility case below prevents SQLite coercion from changing
+  -- the intended durable representation.
+  EXPECT_BLOB_FAILURE!(bcreateval(112233, k1, 'xxx', CQL_BLOB_TYPE_BOOL));
 
-  -- the value doesn't match the blob type -- int32
-  EXPECT_EQ!((select bcreateval(112233, k1, 'xxx', CQL_BLOB_TYPE_INT32)), null);
+  EXPECT_BLOB_FAILURE!(bcreateval(112233, k1, 'xxx', CQL_BLOB_TYPE_INT32));
 
-  -- the value doesn't match the blob type -- int64
-  EXPECT_EQ!((select bcreateval(112233, k1, 'xxx', CQL_BLOB_TYPE_INT64)), null);
+  EXPECT_BLOB_FAILURE!(bcreateval(112233, k1, 'xxx', CQL_BLOB_TYPE_INT64));
 
-  -- the value doesn't match the blob type -- float
-  EXPECT_EQ!((select bcreateval(112233, k1, 'xxx', CQL_BLOB_TYPE_FLOAT)), null);
+  EXPECT_BLOB_FAILURE!(bcreateval(112233, k1, 'xxx', CQL_BLOB_TYPE_FLOAT));
 
-  -- the value doesn't match the blob type -- string
-  EXPECT_EQ!((select bcreateval(112233, k1, 1, CQL_BLOB_TYPE_STRING)), null);
+  EXPECT_BLOB_FAILURE!(bcreateval(112233, k1, 1, CQL_BLOB_TYPE_STRING));
 
-  -- the value doesn't match the blob type -- blob
-  EXPECT_EQ!((select bcreateval(112233, k1, 1, CQL_BLOB_TYPE_BLOB)), null);
+  EXPECT_BLOB_FAILURE!(bcreateval(112233, k1, 1, CQL_BLOB_TYPE_BLOB));
 end);
 
 TEST!(blob_getval_func_errors,
@@ -6778,22 +6797,26 @@ begin
   let k2 := 123412341235;
   let b := (select bcreateval(112233, k1, 1234, CQL_BLOB_TYPE_INT32, k2, 5678, CQL_BLOB_TYPE_INT32));
 
-  -- second arg is is not a valid key
+  -- These type violations simulate raw SQLite calls, which do not receive
+  -- CQL's normal argument checking.
+  EXPECT_BLOB_FAILURE!(bgetval(1234, k1));
+  EXPECT_BLOB_FAILURE!(bgetval_type(1234));
+
+  -- A missing field is the one non-error case: sparse value blobs use absence
+  -- to represent NULL, so callers can distinguish it from corrupt input.
   EXPECT_EQ!((select b:val(1111)), null);
 
-  -- An unchanged string's offset and length are outside the input blob.
-  EXPECT_EQ!((select bgetval(
+  -- Bounds-check all retained variable fields before exposing any result.
+  EXPECT_BLOB_FAILURE!(bgetval(
     x'0000000000000001524d30300000000200000000000000010000000000000002000000000000002a0000ffff000001000204',
-    1)), null);
+    1));
 
-  -- An unknown serialized type code is corrupt input and must fail the query.
-  try
-    let ignored := (select bgetval(
-      x'0000000000000001524d30300000000200000000000000010000000000000002000000000000000000000000000000000206',
-      2));
-  catch
-    EXPECT_EQ!(@rc, 1); -- SQLITE_ERROR
-  end;
+  -- Type lookup must not bless a corrupt blob merely because it reads metadata.
+  EXPECT_BLOB_FAILURE!(bgetval(
+    x'0000000000000001524d30300000000200000000000000010000000000000002000000000000000000000000000000000206',
+    2));
+  EXPECT_BLOB_FAILURE!(bgetval_type(
+    x'0000000000000001524d30300000000200000000000000010000000000000002000000000000000000000000000000000206'));
 end);
 
 TEST!(blob_updateval_null_cases,
@@ -6903,19 +6926,20 @@ begin
   EXPECT_EQ!((select b:val(k2)), 0x12345678912L);
   EXPECT_EQ!((select b:val(k4) ~text~), 'abc');
 
-  -- the blob isn't a real encoded blob
-  EXPECT_EQ!((select bgetval(x'0000000000000000000000000000', k1)), null);
+  -- A value read must reject untrusted headers before looking up a field ID.
+  EXPECT_BLOB_FAILURE!(bgetval(x'0000000000000000000000000000', k1));
 
-  -- the blob isn't a real encoded blob
-  EXPECT_EQ!((select bgetval_type(x'0000000000000000000000000000')), null);
+  -- Record-type retrieval has the same trust boundary as field retrieval.
+  EXPECT_BLOB_FAILURE!(bgetval_type(x'0000000000000000000000000000'));
 
-  -- valid magic but column_count=1 makes variable_offset exceed blob length
-  EXPECT_EQ!((select bgetval(x'0000000000000000524d303000000001', 99)), null);
+  -- Layout validation prevents a forged count from creating out-of-bounds arrays.
+  EXPECT_BLOB_FAILURE!(bgetval(x'0000000000000000524d303000000001', 99));
 end);
 
 TEST!(blob_updateval_func_errors,
 begin
-  -- a test blob
+  -- Start from valid data so each failed update proves one guard, not a
+  -- side effect of an earlier malformed field.
   let k1 := 123412341234;
   let k2 := 123412341235;
   let k3 := 123412341236;
@@ -6932,62 +6956,59 @@ begin
     k5, x'4546474849', CQL_BLOB_TYPE_BLOB
     ));
 
-  -- not enough args
-  EXPECT_EQ!((select bupdateval(112233)), null);
+  -- Updates need at least one complete field-id/value/type triple.
+  EXPECT_BLOB_FAILURE!(bupdateval(112233));
 
-  -- args have the wrong parity (it should be pairs)
-  EXPECT_EQ!((select bupdateval(112233, 1)), null);
+  -- A partial triple would desynchronize the value-blob metadata arrays.
+  EXPECT_BLOB_FAILURE!(bupdateval(112233, 1));
 
-  -- the first arg should be a blo)b
-  EXPECT_EQ!((select bupdateval(1234, k1, 1, CQL_BLOB_TYPE_BOOL)), null);
+  -- A scalar cannot provide trusted serialized field metadata.
+  EXPECT_BLOB_FAILURE!(bupdateval(1234, k1, 1, CQL_BLOB_TYPE_BOOL));
 
-  -- the column index should be a small integer
-  EXPECT_EQ!((select bupdateval(b, 'error', 1, CQL_BLOB_TYPE_BOOL)), null);
+  -- A noninteger field ID must not participate in a durable identity lookup.
+  EXPECT_BLOB_FAILURE!(bupdateval(b, 'error', 1, CQL_BLOB_TYPE_BOOL));
 
-  -- duplicate field id is an error
-  EXPECT_EQ!((select bupdateval(b, k1, 1, CQL_BLOB_TYPE_BOOL, k1, 1, CQL_BLOB_TYPE_BOOL)), null);
+  -- Duplicate field updates make replacement order ambiguous and sizing unsafe.
+  EXPECT_BLOB_FAILURE!(bupdateval(b, k1, 1, CQL_BLOB_TYPE_BOOL, k1, 1, CQL_BLOB_TYPE_BOOL));
 
-    -- the value doesn't match the blob type
-  EXPECT_EQ!((select bupdateval(b, k1, 'xxx', CQL_BLOB_TYPE_BOOL)), null);
-  EXPECT_EQ!((select bupdateval(b, k2, 'xxx', CQL_BLOB_TYPE_INT64)), null);
-  EXPECT_EQ!((select bupdateval(b, k3, 'xxx', CQL_BLOB_TYPE_FLOAT)), null);
-  EXPECT_EQ!((select bupdateval(b, k4, 5.0, CQL_BLOB_TYPE_STRING)), null);
-  EXPECT_EQ!((select bupdateval(b, k5, 5.0, CQL_BLOB_TYPE_BLOB)), null);
+  -- Reject incompatible replacements before they can change the stored type's
+  -- byte-level interpretation.
+  EXPECT_BLOB_FAILURE!(bupdateval(b, k1, 'xxx', CQL_BLOB_TYPE_BOOL));
+  EXPECT_BLOB_FAILURE!(bupdateval(b, k2, 'xxx', CQL_BLOB_TYPE_INT64));
+  EXPECT_BLOB_FAILURE!(bupdateval(b, k3, 'xxx', CQL_BLOB_TYPE_FLOAT));
+  EXPECT_BLOB_FAILURE!(bupdateval(b, k4, 5.0, CQL_BLOB_TYPE_STRING));
+  EXPECT_BLOB_FAILURE!(bupdateval(b, k5, 5.0, CQL_BLOB_TYPE_BLOB));
 
-  -- adding a new column but the types are not compatible
-  EXPECT_EQ!((select bupdateval(b, k1, 1, CQL_BLOB_TYPE_BOOL, k6, 'xxx', CQL_BLOB_TYPE_BOOL)), null);
+  -- A later invalid triple must fail the entire update, not leave a partial blob.
+  EXPECT_BLOB_FAILURE!(bupdateval(b, k1, 1, CQL_BLOB_TYPE_BOOL, k6, 'xxx', CQL_BLOB_TYPE_BOOL));
 
-  -- the first arg should be a blob in the standard format
-  EXPECT_EQ!((select bupdateval(x'0000000000000000000000000000', k1, 0, CQL_BLOB_TYPE_BOOL)), null);
+  -- A blob must carry the expected CQL format before its offsets are consulted.
+  EXPECT_BLOB_FAILURE!(bupdateval(x'0000000000000000000000000000', k1, 0, CQL_BLOB_TYPE_BOOL));
 
-  -- valid magic but column_count=1 makes variable_offset exceed blob length
-  EXPECT_EQ!((select bupdateval(x'0000000000000000524d303000000001', 99, 0, CQL_BLOB_TYPE_BOOL)), null);
+  -- Valid magic is insufficient when the declared layout is truncated.
+  EXPECT_BLOB_FAILURE!(bupdateval(x'0000000000000000524d303000000001', 99, 0, CQL_BLOB_TYPE_BOOL));
 
   -- The second field is an unchanged string with offset 0xffff and length
   -- 0x100, both outside this 50-byte blob.  The update must reject malformed
   -- variable-field metadata rather than copying from outside the input blob.
-  EXPECT_EQ!((select bupdateval(
+  EXPECT_BLOB_FAILURE!(bupdateval(
     x'0000000000000001524d30300000000200000000000000010000000000000002000000000000002a0000ffff000001000204',
-    1, 99, CQL_BLOB_TYPE_INT64)), null);
+    1, 99, CQL_BLOB_TYPE_INT64));
 
   -- The unchanged string is in bounds but has no trailing NUL byte.
-  EXPECT_EQ!((select bupdateval(
+  EXPECT_BLOB_FAILURE!(bupdateval(
     x'0000000000000001524d30300000000200000000000000010000000000000002000000000000002a0000003200000000020478',
-    1, 99, CQL_BLOB_TYPE_INT64)), null);
+    1, 99, CQL_BLOB_TYPE_INT64));
 
   -- The unchanged blob has offset and length metadata outside the input blob.
-  EXPECT_EQ!((select bupdateval(
+  EXPECT_BLOB_FAILURE!(bupdateval(
     x'0000000000000001524d30300000000200000000000000010000000000000002000000000000002a0000ffff000001000205',
-    1, 99, CQL_BLOB_TYPE_INT64)), null);
+    1, 99, CQL_BLOB_TYPE_INT64));
 
   -- An unknown serialized type code is corrupt input and must fail the query.
-  try
-    let ignored := (select bupdateval(
-      x'0000000000000001524d30300000000200000000000000010000000000000002000000000000000000000000000000000206',
-      1, 99, CQL_BLOB_TYPE_INT64));
-  catch
-    EXPECT_EQ!(@rc, 1); -- SQLITE_ERROR
-  end;
+  EXPECT_BLOB_FAILURE!(bupdateval(
+    x'0000000000000001524d30300000000200000000000000010000000000000002000000000000000000000000000000000206',
+    1, 99, CQL_BLOB_TYPE_INT64));
 end);
 
 TEST!(backed_tables,

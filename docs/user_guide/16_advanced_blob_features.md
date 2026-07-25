@@ -1068,6 +1068,36 @@ for indices you'll also need to do something like this:
 [[deterministic]] select function bupdatekey no check blob;
 ```
 
+#### Backed Table Helper Failure Behavior
+
+Backed-table helpers are SQLite UDFs that operate on persisted blobs.  Their
+inputs are therefore not trusted merely because they originated in a backing
+table: a database can contain data written by an older client, a different
+implementation, or a corrupt or hostile source.  Implementations of the
+configured `get_*`, `create_*`, and `update_*` helpers must validate their
+arguments and any serialized data before using it.
+
+If a helper receives invalid arguments or a malformed blob, it must report a
+SQLite error so that the statement using the backed table fails.  It must not
+return `NULL`, silently substitute a value, or use an internal assertion or
+contract for such input.  In particular, readers and updaters must reject a
+bad header, an inconsistent layout or column count, unsupported type codes,
+and variable-field offsets, lengths, or string terminators that do not fit in
+the supplied blob.  An updater must validate retained fields as well as the
+field being changed, because it may copy every retained field into its result.
+
+`bgetval` has one intentional exception: a *valid* value blob may omit a
+requested field because nullable value fields are represented by absence.  In
+that case the getter returns `NULL`; this is normal data, not a malformed
+blob.  A missing key field, invalid field selector, or any malformed data is
+an error.
+
+These rules are part of the backed-table helper contract.  Custom helpers
+selected with the backing-table attributes must provide equivalent behavior so
+that generated `SELECT`, `INSERT`, `UPDATE`, and `DELETE` statements fail
+atomically rather than treating corrupt backing data as a legitimate SQL
+`NULL`.
+
 `bgetval` and `bgetkey` are not readily declarable generally because their
 result is polymorphic so it's preferable to use `cql_blob_get` like the compiler
 does (see examples above) which then does the rewrite for you. But it is helpful

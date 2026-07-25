@@ -6571,6 +6571,20 @@ begin
 
   -- valid magic but column_count=1 makes variable_offset exceed blob length
   EXPECT_EQ!((select bgetkey(x'0000000000000000524d303000000001', 0)), null);
+
+  -- An unchanged string's offset and length are outside the input blob.
+  EXPECT_EQ!((select bgetkey(
+    x'0000000000000001524d303000000002000000000000002a0000ffff000001000204',
+    0)), null);
+
+  -- An unknown serialized type code is corrupt input and must fail the query.
+  try
+    let ignored := (select bgetkey(
+      x'0000000000000001524d303000000002000000000000002a00000000000000000206',
+      1));
+  catch
+    EXPECT_EQ!(@rc, 1); -- SQLITE_ERROR
+  end;
 end);
 
 TEST!(blob_updatekey_func_errors,
@@ -6624,6 +6638,15 @@ begin
   EXPECT_EQ!((select bupdatekey(
     x'0000000000000001524d303000000002000000000000002a0000ffff000001000204',
     0, 99)), null);
+
+  -- An unknown serialized type code is corrupt input and must fail the query.
+  try
+    let ignored := (select bupdatekey(
+      x'0000000000000001524d303000000002000000000000002a00000000000000000206',
+      0, 99));
+  catch
+    EXPECT_EQ!(@rc, 1); -- SQLITE_ERROR
+  end;
 end);
 
 @op blob : call val as bgetval;
@@ -6757,6 +6780,20 @@ begin
 
   -- second arg is is not a valid key
   EXPECT_EQ!((select b:val(1111)), null);
+
+  -- An unchanged string's offset and length are outside the input blob.
+  EXPECT_EQ!((select bgetval(
+    x'0000000000000001524d30300000000200000000000000010000000000000002000000000000002a0000ffff000001000204',
+    1)), null);
+
+  -- An unknown serialized type code is corrupt input and must fail the query.
+  try
+    let ignored := (select bgetval(
+      x'0000000000000001524d30300000000200000000000000010000000000000002000000000000000000000000000000000206',
+      2));
+  catch
+    EXPECT_EQ!(@rc, 1); -- SQLITE_ERROR
+  end;
 end);
 
 TEST!(blob_updateval_null_cases,
@@ -6942,6 +6979,15 @@ begin
   EXPECT_EQ!((select bupdateval(
     x'0000000000000001524d30300000000200000000000000010000000000000002000000000000002a0000ffff000001000205',
     1, 99, CQL_BLOB_TYPE_INT64)), null);
+
+  -- An unknown serialized type code is corrupt input and must fail the query.
+  try
+    let ignored := (select bupdateval(
+      x'0000000000000001524d30300000000200000000000000010000000000000002000000000000000000000000000000000206',
+      1, 99, CQL_BLOB_TYPE_INT64));
+  catch
+    EXPECT_EQ!(@rc, 1); -- SQLITE_ERROR
+  end;
 end);
 
 TEST!(backed_tables,

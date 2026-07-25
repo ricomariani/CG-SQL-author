@@ -5538,8 +5538,11 @@ static cql_bool cql_validate_blob_variable_fields(
   uint64_t column_count,
   uint64_t storage_offset,
   uint64_t type_codes_offset,
-  uint64_t variable_offset)
+  uint64_t variable_offset,
+  cql_bool *_Nonnull invalid_type)
 {
+  *invalid_type = 0;
+
   for (uint64_t icol = 0; icol < column_count; icol++) {
     uint8_t blob_column_type = b[type_codes_offset + icol];
 
@@ -5567,11 +5570,8 @@ static cql_bool cql_validate_blob_variable_fields(
         break;
       }
 
-      default:
+      case CQL_BLOB_TYPE_BLOB:
       {
-        // Nothing else remains but a blob field.
-        cql_contract(blob_column_type == CQL_BLOB_TYPE_BLOB);
-
         uint64_t val = cql_read_big_endian_u64(b + storage_offset + icol * sizeof(uint64_t));
         uint64_t len = val & 0xffffffff;
         uint64_t offset = val >> 32;
@@ -5581,6 +5581,10 @@ static cql_bool cql_validate_blob_variable_fields(
         }
         break;
       }
+
+      default:
+        *invalid_type = 1;
+        return 0;
     }
   }
 
@@ -5773,6 +5777,20 @@ void bgetkey(
   if (shape.variable_offset > original_bytes) {
     goto cql_error;
   }
+  cql_bool invalid_type;
+  if (!cql_validate_blob_variable_fields(
+        b,
+        original_bytes,
+        header.column_count,
+        shape.storage_offset,
+        shape.type_codes_offset,
+        shape.variable_offset,
+        &invalid_type)) {
+    if (invalid_type) {
+      goto cql_invalid_blob_type;
+    }
+    goto cql_error;
+  }
   uint64_t type_code_offset = shape.type_codes_offset + icol;
   uint64_t storage_offset = shape.storage_offset + icol * sizeof(int64_t);
 
@@ -5832,6 +5850,10 @@ void bgetkey(
       return;
     }
   }
+
+cql_invalid_blob_type:
+  sqlite3_result_error(context, "invalid CQL blob type", -1);
+  return;
 
 cql_error:
   sqlite3_result_null(context);
@@ -5913,13 +5935,18 @@ void bupdatekey(
   if (shape.variable_offset > original_bytes) {
     goto cql_error;
   }
+  cql_bool invalid_type;
   if (!cql_validate_blob_variable_fields(
         b,
         original_bytes,
         header.column_count,
         shape.storage_offset,
         shape.type_codes_offset,
-        shape.variable_offset)) {
+        shape.variable_offset,
+        &invalid_type)) {
+    if (invalid_type) {
+      goto cql_invalid_blob_type;
+    }
     goto cql_error;
   }
 
@@ -6167,6 +6194,10 @@ void bupdatekey(
   }
 
   sqlite3_result_blob(context, result, (int)total_bytes, sqlite3_free);
+  goto cleanup;
+
+cql_invalid_blob_type:
+  sqlite3_result_error(context, "invalid CQL blob type", -1);
   goto cleanup;
 
 cql_error:
@@ -6495,6 +6526,20 @@ void bgetval(
   if (shape.variable_offset > original_bytes) {
     goto cql_error;
   }
+  cql_bool invalid_type;
+  if (!cql_validate_blob_variable_fields(
+        b,
+        original_bytes,
+        header.column_count,
+        shape.storage_offset,
+        shape.type_codes_offset,
+        shape.variable_offset,
+        &invalid_type)) {
+    if (invalid_type) {
+      goto cql_invalid_blob_type;
+    }
+    goto cql_error;
+  }
 
   // we have to find the column using the field id
   cql_uint32 icol;
@@ -6570,6 +6615,10 @@ void bgetval(
       return;
     }
   }
+
+cql_invalid_blob_type:
+  sqlite3_result_error(context, "invalid CQL blob type", -1);
+  return;
 
 cql_error:
   sqlite3_result_null(context);
@@ -6653,13 +6702,18 @@ void bupdateval(
   if (original_shape.variable_offset > original_bytes) {
     goto cql_error;
   }
+  cql_bool invalid_type;
   if (!cql_validate_blob_variable_fields(
         b,
         original_bytes,
         header.column_count,
         original_shape.storage_offset,
         original_shape.type_codes_offset,
-        original_shape.variable_offset)) {
+        original_shape.variable_offset,
+        &invalid_type)) {
+    if (invalid_type) {
+      goto cql_invalid_blob_type;
+    }
     goto cql_error;
   }
   original_shape.total_bytes = original_bytes;
@@ -6967,6 +7021,10 @@ void bupdateval(
   cql_write_blob_header(result, &header);
 
   sqlite3_result_blob(context, result, (int)new_shape.total_bytes, sqlite3_free);
+  goto cleanup;
+
+cql_invalid_blob_type:
+  sqlite3_result_error(context, "invalid CQL blob type", -1);
   goto cleanup;
 
 cql_error:

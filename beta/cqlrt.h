@@ -108,6 +108,9 @@ typedef struct cql_blob *cql_blob_ref;
 typedef struct cql_blob {
   cql_type base;
   const void *_Nonnull ptr;
+  // size is signed because cql_get_blob_size() is callable from CQL, which has
+  // no unsigned integer type.  cql_blob_ref_new() takes cql_uint32 to reject
+  // negative sizes at the API boundary; the cast on store is intentional.
   cql_int32 size;
 } cql_blob;
 
@@ -126,7 +129,7 @@ typedef struct cql_blob {
 // @param size the number of bytes of the data.
 // @return A blob object of the type defined by cql_blob_ref.
 // cql_blob_ref cql_blob_ref_new(const void *data, cql_uint32 size);
-cql_blob_ref _Nonnull cql_blob_ref_new(const void *_Nonnull data, cql_int32 size);
+cql_blob_ref _Nonnull cql_blob_ref_new(const void *_Nonnull data, cql_uint32 size);
 
 // Get the bytes of the blob object.  This is not null, even if the blob is zero
 // size and in general the memory allocated might be larger than the size of the blob.
@@ -137,7 +140,10 @@ cql_blob_ref _Nonnull cql_blob_ref_new(const void *_Nonnull data, cql_int32 size
 
 // Get size of a blob ref in bytes.
 // @param blob The blob object to get the size from.
-// @return The size of the blob in bytes.
+// @return The size of the blob in bytes as a signed integer.
+// NOTE: This macro is exposed to CQL code via sem_func_cql_get_blob_size /
+// cg_func_cql_get_blob_size.  CQL has no unsigned integer type, so the return
+// type must be cql_int32.  Blobs larger than INT32_MAX are not supported.
 #define cql_get_blob_size(data) (data->size)
 
 // Creates a hash code for the blob object.

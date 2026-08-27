@@ -455,6 +455,8 @@ CQL_EXPORT void cql_rowset_copy(
   cql_int32 count);
 
 // getters
+// Row and column indexes must be nonnegative and within the result-set shape.
+// Invalid indexes are contract violations that terminate in all builds.
 
 // Generic is_null value getter on base result set object.
 // @param result_set The cql result_set object.
@@ -778,6 +780,8 @@ CQL_EXPORT cql_object_ref _Nullable cql_object_dictionary_find(
   cql_string_ref _Nullable key);
 
 // String list helpers
+// List indexes must be nonnegative and less than the current element count.
+// Invalid indexes are contract violations that terminate in all builds.
 // CQLABI
 CQL_EXPORT cql_object_ref _Nonnull cql_string_list_create(void);
 

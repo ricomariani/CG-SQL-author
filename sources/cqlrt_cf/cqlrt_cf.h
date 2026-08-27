@@ -8,6 +8,7 @@
 #pragma once
 
 #include <assert.h>
+#include <stdlib.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <math.h>
@@ -43,6 +44,12 @@ typedef int8_t Boolean;
 #endif
 
 #define cql_contract assert
+#define cql_contract_always(condition) \
+  do { \
+    if (!(condition)) { \
+      abort(); \
+    } \
+  } while (0)
 #define cql_invariant assert
 #define cql_tripwire assert
 

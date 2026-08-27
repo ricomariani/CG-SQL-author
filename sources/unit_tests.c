@@ -272,6 +272,14 @@ static bool test_badly_formed_utf8() {
   return result;
 }
 
+static bool test_comment_text_encoding() {
+  CHARBUF_OPEN(temp);
+  cg_encode_comment_text("\n\r\t\x01\x7fX", &temp);
+  bool result = !strcmp(temp.ptr, "\\n\\r\\t\\x01\\x7fX");
+  CHARBUF_CLOSE(temp);
+  return result;
+}
+
 cql_noexport void run_unit_tests() {
   TEST_ASSERT(test_strdup__empty_string());
   TEST_ASSERT(test_strdup__one_character_string());
@@ -307,6 +315,7 @@ cql_noexport void run_unit_tests() {
   TEST_ASSERT(test_unknown_macro());
   TEST_ASSERT(test_Dirname());
   TEST_ASSERT(test_badly_formed_utf8());
+  TEST_ASSERT(test_comment_text_encoding());
 }
 
 #endif

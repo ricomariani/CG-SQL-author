@@ -5327,20 +5327,47 @@ static void cg_lua_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
       }
       else {
         if (!options.compress) {
-          bprintf(cg_declarations_output, "\n-- Generated from %s:%d\n", stmt->filename, stmt->lineno);
+          CHARBUF_OPEN(filename);
+          cg_encode_comment_text(stmt->filename, &filename);
+          bprintf(cg_declarations_output, "\n-- Generated from %s:%d\n", filename.ptr, stmt->lineno);
+          CHARBUF_CLOSE(filename);
         }
       }
       if (!options.compress) {
         // emit source comment
         gen_sql_callbacks lua_escape = { .escape_attributes_for_lua = true };
-        bprintf(out, "\n--[[\n");
+        CHARBUF_OPEN(source);
         gen_stmt_level = 1;
-        gen_set_output_buffer(out);
+        gen_set_output_buffer(&source);
         if (misc_attrs) {
           gen_with_callbacks(misc_attrs, gen_misc_attrs, &lua_escape);
         }
         gen_with_callbacks(stmt, gen_one_stmt, &lua_escape);
-        bprintf(out, ";\n--]]\n");
+        gen_set_output_buffer(out);
+
+        int32_t equals_count = 0;
+        CHARBUF_OPEN(close_delimiter);
+        for (;;) {
+          bclear(&close_delimiter);
+          bputc(&close_delimiter, ']');
+          for (int32_t i = 0; i < equals_count; i++) {
+            bputc(&close_delimiter, '=');
+          }
+          bputc(&close_delimiter, ']');
+          if (!strstr(source.ptr, close_delimiter.ptr)) {
+            break;
+          }
+          equals_count++;
+        }
+
+        bprintf(out, "\n--[");
+        for (int32_t i = 0; i < equals_count; i++) {
+          bputc(out, '=');
+        }
+        bprintf(out, "[\n%s;\n--", source.ptr);
+        bprintf(out, "%s\n", close_delimiter.ptr);
+        CHARBUF_CLOSE(close_delimiter);
+        CHARBUF_CLOSE(source);
       }
     }
   }
@@ -5888,5 +5915,4 @@ cql_noexport void cg_lua_cleanup() {
 
 
 #endif
-
 

@@ -40,6 +40,35 @@
 import json
 import sys
 
+
+def quote_sql_identifier(identifier):
+    return '"' + identifier.replace('"', '""') + '"'
+
+
+def c_string_literal(value):
+    result = ['"']
+    for ch in value:
+        code = ord(ch)
+        if ch == '\\':
+            result.append('\\\\')
+        elif ch == '"':
+            result.append('\\"')
+        elif ch == '?':
+            result.append('\\?')
+        elif ch == '\n':
+            result.append('\\n')
+        elif ch == '\r':
+            result.append('\\r')
+        elif ch == '\t':
+            result.append('\\t')
+        elif code < 32 or code == 127:
+            result.append(f'\\{code:03o}')
+        else:
+            result.append(ch)
+    result.append('"')
+    return ''.join(result)
+
+
 # Function to display usage instructions for the script
 def usage():
     print(
@@ -311,11 +340,11 @@ int sqlite3_cqlextension_init(sqlite3 *_Nonnull db, char *_Nonnull *_Nonnull pzE
             # Example: SELECT * FROM my_proc(arg1, arg2) WHERE col1 > 5
             args = [{'name': f"arg_{a['name']}", 'type': f"{a['type']} hidden"} for a in proc['args']]
             col = [{'name': p['name'], 'type' : p['type'] } for p in proc['projection']]
-            cols = ", ".join(f"[{p['name']}] {p['type']}" for p in (col + args))
-            table_decl = f"CREATE TABLE {proc_name}({cols})"
+            cols = ", ".join(f"{quote_sql_identifier(p['name'])} {p['type']}" for p in (col + args))
+            table_decl = f"CREATE TABLE {quote_sql_identifier(proc_name)}({cols})"
             print(f"""
-  aux = cql_rowset_create_aux_init(call_{proc_name}, "{table_decl}");
-  rc = register_cql_rowset_tvf(db, aux, "{proc_name}");
+  aux = cql_rowset_create_aux_init(call_{proc_name}, {c_string_literal(table_decl)});
+  rc = register_cql_rowset_tvf(db, aux, {c_string_literal(proc_name)});
 """)
         else:
             # SCALAR FUNCTION REGISTRATION
@@ -325,7 +354,7 @@ int sqlite3_cqlextension_init(sqlite3 *_Nonnull db, char *_Nonnull *_Nonnull pzE
             # (only counting IN and INOUT, not pure OUT parameters)
             in_arg_count = len([arg for arg in proc['args'] if arg['binding'] in ['in', 'inout']])
             print(f"""
-  rc = sqlite3_create_function(db, "{proc_name}", {in_arg_count}, SQLITE_UTF8, NULL, call_{proc_name}, NULL, NULL);
+  rc = sqlite3_create_function(db, {c_string_literal(proc_name)}, {in_arg_count}, SQLITE_UTF8, NULL, call_{proc_name}, NULL, NULL);
 """)
         print("  if (rc != SQLITE_OK) return rc;")
 

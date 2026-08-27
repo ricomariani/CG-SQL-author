@@ -1,0 +1,46 @@
+#!/usr/bin/env python3
+
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+
+import subprocess
+import sys
+
+
+def main():
+    binary = sys.argv[1]
+    subprocess.run([binary], check=True)
+
+    cases = [
+        "result_get_row_negative",
+        "result_get_row_high",
+        "result_get_col_negative",
+        "result_get_col_high",
+        "result_set_row_negative",
+        "result_set_col_high",
+        "result_is_null_row_negative",
+        "result_set_null_col_high",
+        "string_get_negative",
+        "string_set_high",
+        "long_get_negative",
+        "long_set_high",
+        "real_get_negative",
+        "real_set_high",
+    ]
+
+    for test_case in cases:
+        result = subprocess.run(
+            [binary, test_case],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        if result.returncode == 0:
+            raise AssertionError(
+                f"contract test unexpectedly succeeded: {test_case}"
+            )
+
+
+if __name__ == "__main__":
+    main()

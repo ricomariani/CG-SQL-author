@@ -10,6 +10,7 @@
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <math.h>
 #include <sqlite3.h>
 
@@ -31,6 +32,15 @@
 
 // Assertion macro for API contract violations, these should stay in the release build.
 #define cql_contract assert
+
+// Always-on contract for public API violations that would otherwise permit
+// out-of-bounds memory access.
+#define cql_contract_always(condition) \
+  do { \
+    if (!(condition)) { \
+      abort(); \
+    } \
+  } while (0)
 
 // Assertion for internal invariant broken, these should stay in the release build.
 #define cql_invariant assert

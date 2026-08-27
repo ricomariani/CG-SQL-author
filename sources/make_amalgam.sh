@@ -134,7 +134,7 @@ generated SignedSource<<deadbeef8badf00ddefec8edfacefeed>>
 #ifndef _MSC_VER
 #include <libgen.h>
 #else
-#define PATH_MAX 255
+#define PATH_MAX _MAX_PATH
 #endif
 
 #endif

@@ -25,6 +25,8 @@ done
 
 pushd $S >/dev/null
 
+python3 "$S/cqlsqlite3extension_test.py"
+
 echo "running demo"
 set +e
 

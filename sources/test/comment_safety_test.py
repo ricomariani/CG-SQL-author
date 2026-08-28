@@ -8,11 +8,10 @@
 # Validate both generated-comment boundaries using comment_safety.sql.  The C
 # checks prove that decoded filename controls are rendered visibly and cannot
 # create a new source line.  The Lua checks prove that a delimiter found in the
-# reconstructed CQL forces a stronger long-comment delimiter.  Finally, Lua
-# parses the complete generated file so textual checks cannot hide invalid
-# generated syntax.
+# reconstructed CQL forces a stronger long-comment delimiter and that the
+# hostile text remains between the matching opener and closer.  The test
+# intentionally uses only Python because Lua is not a test-suite dependency.
 
-import subprocess
 import sys
 
 
@@ -24,7 +23,7 @@ def main():
     # The visible \n must appear in provenance in both generated C files, while
     # the decoded newline plus directive must never appear as a real source line.
     marker = "Generated from safe\\n#error provenance_injection:"
-    if marker not in c_source + c_header:
+    if marker not in c_source or marker not in c_header:
         raise AssertionError("C provenance control character was not encoded")
     if "\n#error provenance_injection" in c_source + c_header:
         raise AssertionError("C provenance escaped its line comment")
@@ -36,12 +35,15 @@ def main():
     if "--[=[" not in lua_source:
         raise AssertionError("Lua long comment delimiter was not strengthened")
 
-    # Parsing the complete file verifies that the chosen delimiter is balanced
-    # and that no hostile text became active Lua.
-    subprocess.run(
-        ["lua", "-e", f"assert(loadfile({sys.argv[3]!r}))"],
-        check=True,
-    )
+    # Locate the reconstructed CQL comment and verify that its hostile ]] text
+    # occurs before the matching level-one closer.  Since ]] cannot close a
+    # --[=[ comment, these ordered markers prove the source stays commented
+    # without requiring a Lua interpreter.
+    open_index = lua_source.find("--[=[\nPROC comment_safety")
+    hostile_index = lua_source.find("error('lua_comment_injection')", open_index)
+    close_index = lua_source.find("--]=]", hostile_index)
+    if not 0 <= open_index < hostile_index < close_index:
+        raise AssertionError("CQL source escaped its strengthened Lua comment")
 
 
 if __name__ == "__main__":

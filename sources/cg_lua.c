@@ -5345,6 +5345,15 @@ static void cg_lua_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
         gen_with_callbacks(stmt, gen_one_stmt, &lua_escape);
         gen_set_output_buffer(out);
 
+        // Lua long comments use matching delimiters with any number of equal
+        // signs: --[[...]], --[=[...]=], --[==[...]==], and so on.  The CQL
+        // source can contain any of those closing sequences in string literals
+        // or identifiers.  Using a fixed delimiter would let such a sequence
+        // end this comment early and expose the remaining text as Lua code.
+        //
+        // Find the first closing delimiter that does not occur in the source.
+        // Looking only for the closing form is sufficient because the opening
+        // form has no special meaning after Lua has entered the long comment.
         int32_t equals_count = 0;
         CHARBUF_OPEN(close_delimiter);
         for (;;) {
@@ -5360,6 +5369,10 @@ static void cg_lua_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
           equals_count++;
         }
 
+        // Emit the opening delimiter with the same number of equal signs as
+        // close_delimiter.  The "--" before the closing delimiter is retained
+        // as part of the generated CQL text; Lua ignores it inside the long
+        // comment, and the following delimiter still closes the comment.
         bprintf(out, "\n--[");
         for (int32_t i = 0; i < equals_count; i++) {
           bputc(out, '=');
@@ -5915,4 +5928,3 @@ cql_noexport void cg_lua_cleanup() {
 
 
 #endif
-

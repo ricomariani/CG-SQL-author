@@ -9,20 +9,36 @@
 #include "cqlrt_common.h"
 #include <string.h>
 
+// This binary is compiled with NDEBUG so that ordinary assert calls disappear.
+// The Python driver first runs it with no arguments to verify valid operations,
+// then runs each named contract violation in a separate process.  A working
+// cql_contract or cql_invariant aborts that child process.  If a check is
+// accidentally implemented with assert, the named operation returns normally
+// under NDEBUG and the Python driver reports the zero exit status as a failure.
+
+// The fixture is deliberately the smallest useful result set: one row with one
+// nullable integer column.  This makes -1 and 1 the exact invalid boundaries
+// for both row and column indexes.
 typedef struct contract_test_row {
   cql_nullable_int32 value;
 } contract_test_row;
 
+// Result-set offset arrays begin with the column count, followed by one offset
+// for each column.  The runtime uses these values for generic column access.
 static cql_uint16 contract_test_offsets[] = {
   1,
   offsetof(contract_test_row, value),
 };
 
+// The fixture column is nullable so the same row can exercise ordinary reads,
+// writes, set-to-null, and is-null accessors.
 static uint8_t contract_test_types[] = {
   CQL_DATA_TYPE_INT32,
 };
 
 static cql_result_set_ref make_result_set(void) {
+  // Ownership of this allocation transfers to the result set.  calloc also
+  // clears the nullable flag, making the assigned value initially non-null.
   contract_test_row *row = calloc(1, sizeof(contract_test_row));
   row->value.value = 42;
 
@@ -38,6 +54,8 @@ static cql_result_set_ref make_result_set(void) {
 }
 
 static int run_valid_tests(void) {
+  // These operations prove that the new checks preserve valid boundary indexes
+  // and nullable-column behavior.
   cql_result_set_ref result_set = make_result_set();
   if (cql_result_set_get_int32_col(result_set, 0, 0) != 42) {
     return 1;
@@ -52,6 +70,8 @@ static int run_valid_tests(void) {
   }
   cql_result_set_release(result_set);
 
+  // Each list has exactly one element.  Besides checking index zero, these
+  // cases ensure setters still accept legitimate zero-equivalent values.
   cql_string_ref one = cql_string_ref_new("one");
   cql_string_ref two = cql_string_ref_new("two");
   cql_object_ref strings = cql_string_list_create();
@@ -83,6 +103,8 @@ static int run_valid_tests(void) {
 }
 
 static void run_failure_test(const char *name) {
+  // Test the macros directly so this suite detects a future regression back to
+  // NDEBUG-sensitive assert definitions independently of any runtime accessor.
   if (!strcmp(name, "contract_failure")) {
     cql_contract(cql_false);
     return;
@@ -93,12 +115,16 @@ static void run_failure_test(const char *name) {
     return;
   }
 
+  // Row hashing performs pointer arithmetic from the selected row.  A negative
+  // row must be rejected before its signed value is converted to size_t.
   if (!strcmp(name, "row_hash_negative")) {
     cql_result_set_ref result_set = make_result_set();
     cql_row_hash(result_set, -1);
     return;
   }
 
+  // Check each result-set operand separately.  Testing only row1 could leave an
+  // unchecked negative row2 in the second data-pointer calculation.
   if (!strncmp(name, "rows_equal_", 11)) {
     cql_result_set_ref result_set = make_result_set();
     cql_int32 row1 = !strcmp(name, "rows_equal_first_negative") ? -1 : 0;
@@ -107,6 +133,8 @@ static void run_failure_test(const char *name) {
     return;
   }
 
+  // Identity comparison has the same two independent row inputs as strict
+  // equality, so both lower-bound checks need their own subprocess.
   if (!strncmp(name, "rows_same_", 10)) {
     cql_result_set_ref result_set = make_result_set();
     cql_int32 row1 = !strcmp(name, "rows_same_first_negative") ? -1 : 0;
@@ -115,6 +143,9 @@ static void run_failure_test(const char *name) {
     return;
   }
 
+  // Exercise every invalid slice dimension.  The INT32_MAX case specifically
+  // guards against restoring the old "from + count" check, whose signed
+  // addition could overflow before the range comparison.
   if (!strncmp(name, "rowset_copy_", 12)) {
     cql_result_set_ref result_set = make_result_set();
     cql_result_set_ref copy = NULL;
@@ -128,6 +159,9 @@ static void run_failure_test(const char *name) {
     return;
   }
 
+  // Most typed result-set getters and setters share cql_address_of_col, while
+  // the generic null helpers perform their own indexing.  These cases cover
+  // lower and upper bounds through both paths.
   if (!strncmp(name, "result_", 7)) {
     cql_result_set_ref result_set = make_result_set();
     if (!strcmp(name, "result_get_row_negative")) {
@@ -157,6 +191,8 @@ static void run_failure_test(const char *name) {
     return;
   }
 
+  // Each list below contains one element, so -1 tests the signed lower bound
+  // and 1 tests the first index beyond the current element count.
   if (!strncmp(name, "string_", 7)) {
     cql_string_ref value = cql_string_ref_new("value");
     cql_object_ref list = cql_string_list_create();
@@ -170,6 +206,9 @@ static void run_failure_test(const char *name) {
     return;
   }
 
+  // Integer and real setters must accept zero values; only their indexes are
+  // contracts.  The valid tests above cover zero, and these cases cover the
+  // invalid boundaries.
   if (!strncmp(name, "long_", 5)) {
     cql_object_ref list = cql_long_list_create();
     cql_long_list_add(list, 1);
@@ -182,6 +221,8 @@ static void run_failure_test(const char *name) {
     return;
   }
 
+  // The Python driver invokes this final branch only with the two real-list
+  // case names, so reaching the end normally always represents a failed check.
   cql_object_ref list = cql_real_list_create();
   cql_real_list_add(list, 1.0);
   if (!strcmp(name, "real_get_negative")) {
@@ -193,10 +234,14 @@ static void run_failure_test(const char *name) {
 }
 
 int main(int argc, char **argv) {
+  // No argument is the valid-operation smoke test and must return zero.
   if (argc == 1) {
     return run_valid_tests();
   }
 
+  // Every named operation is expected to terminate inside its contract.  This
+  // zero return is intentionally reachable only when a contract is missing;
+  // the Python parent treats that outcome as a test failure.
   run_failure_test(argv[1]);
   return 0;
 }

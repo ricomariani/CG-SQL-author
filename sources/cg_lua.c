@@ -5328,6 +5328,9 @@ static void cg_lua_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
       else {
         if (!options.compress) {
           CHARBUF_OPEN(filename);
+          // A decoded #line filename may contain a newline or another control
+          // character.  Encode it before placing it in this Lua line comment
+          // so the filename cannot terminate the comment and create Lua code.
           cg_encode_comment_text(stmt->filename, &filename);
           bprintf(cg_declarations_output, "\n-- Generated from %s:%d\n", filename.ptr, stmt->lineno);
           CHARBUF_CLOSE(filename);

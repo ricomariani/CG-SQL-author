@@ -201,6 +201,11 @@ building() {
   TEST_CMD="do_make amalgam"
   run_test_expect_success
 
+  TEST_NAME="amalgam_realpath_capacity"
+  TEST_DESC="Checking amalgam Realpath destination capacity"
+  TEST_CMD="grep -F '#define PATH_MAX _MAX_PATH' \"$O/cql_amalgam.c\" && grep -F 'char resolved_path[PATH_MAX]' \"$O/cql_amalgam.c\" && grep -F 'return _fullpath(absPathBuffer, relpath, _MAX_PATH);' \"$O/cql_amalgam.c\""
+  run_test_expect_success
+
   TEST_NAME="build_amalgam_test"
   TEST_DESC="Building CQL amalgam test"
   TEST_CMD="do_make amalgam_test"
@@ -1085,6 +1090,47 @@ unit_tests() {
   run_test_expect_success
 }
 
+cqlrt_contract_test() {
+  TEST_NAME="cqlrt_contract_build"
+  TEST_DESC="Building always-on runtime contract tests"
+  TEST_CMD="do_make $O/cqlrt_contract_test"
+  run_test_expect_success
+
+  TEST_NAME="cqlrt_cf_contract_build"
+  TEST_DESC="Building CoreFoundation always-on runtime contract test"
+  TEST_CMD="do_make $O/cqlrt_cf_contract_test.o"
+  run_test_expect_success
+
+  TEST_NAME="cqlrt_contract_run"
+  TEST_DESC="Testing runtime bounds contracts with NDEBUG"
+  TEST_CMD="python3 \"$T/cqlrt_contract_test.py\" \"./$O/cqlrt_contract_test\""
+  run_test_expect_success
+}
+
+cqljson_test() {
+  TEST_NAME="cqljson_sql_literals"
+  TEST_DESC="Testing cqljson SQL literal encoding"
+  TEST_CMD="python3 cqljson/cqljson_test.py"
+  run_test_expect_success
+}
+
+comment_safety_test() {
+  TEST_NAME="comment_safety_c"
+  TEST_DESC="Generating C with hostile provenance text"
+  TEST_CMD="${CQL} --nolines --cg \"$O/comment_safety.h\" \"$O/comment_safety.c\" --in \"$T/comment_safety.sql\""
+  run_test_expect_success
+
+  TEST_NAME="comment_safety_lua"
+  TEST_DESC="Generating Lua with hostile source comments"
+  TEST_CMD="${CQL} --nolines --cg \"$O/comment_safety.lua\" --in \"$T/comment_safety.sql\" --rt lua"
+  run_test_expect_success
+
+  TEST_NAME="comment_safety_validate"
+  TEST_DESC="Validating generated C and Lua comments"
+  TEST_CMD="python3 \"$T/comment_safety_test.py\" \"$O/comment_safety.c\" \"$O/comment_safety.h\" \"$O/comment_safety.lua\""
+  run_test_expect_success
+}
+
 code_gen_lua_test() {
   echo '--------------------------------- STAGE 17 -- LUA CODE GEN TEST'
   TEST_NAME="cg_test_lua"
@@ -1158,6 +1204,9 @@ if [ -n "$SPECIFIC_TEST" ]; then
     echo "Available tests:"
     echo "  basic_test"
     echo "  unit_tests"
+    echo "  cqlrt_contract_test"
+    echo "  cqljson_test"
+    echo "  comment_safety_test"
     echo "  macro_test"
     echo "  semantic_test"
     echo "  code_gen_c_test"
@@ -1182,6 +1231,8 @@ else
   # Run all tests
   basic_test
   unit_tests
+  cqlrt_contract_test
+  cqljson_test
   macro_test
   semantic_test
   code_gen_c_test
@@ -1197,6 +1248,7 @@ else
   stats_test
   amalgam_test
   signatures_test
+  comment_safety_test
   code_gen_lua_test
   dot_test
   cqlrt_diag

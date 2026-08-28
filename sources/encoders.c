@@ -143,6 +143,36 @@ cql_noexport void cg_encode_c_string_literal(CSTR str, charbuf *output) {
   bputc(output, quote);
 }
 
+// Append text that is safe to place after a C "//" or Lua "--" line-comment
+// marker.  The input can include decoded source-controlled text such as a
+// #line filename.  In particular, an embedded carriage return or newline must
+// not reach the generated output because it would end the comment and allow
+// the remaining text to be interpreted as generated C or Lua.
+//
+// Common whitespace controls use their familiar visible spellings.  Other C0
+// controls and DEL use \xNN so generated comments remain single-line and
+// inspectable.  These spellings are comment text, not C or Lua string escapes,
+// so no second decoding occurs.  Printable ASCII and non-ASCII UTF-8 bytes pass
+// through unchanged because they cannot terminate a line comment.  This helper
+// appends to output and does not clear any existing content.
+cql_noexport void cg_encode_comment_text(CSTR str, charbuf *output) {
+  for (const unsigned char *p = (const unsigned char *)str; *p; p++) {
+    switch (*p) {
+      case '\n': bprintf(output, "\\n"); break;
+      case '\r': bprintf(output, "\\r"); break;
+      case '\t': bprintf(output, "\\t"); break;
+      default:
+        if (*p < 32 || *p == 127) {
+          bprintf(output, "\\x%02x", *p);
+        }
+        else {
+          bputc(output, (char)*p);
+        }
+        break;
+    }
+  }
+}
+
 // Returns the expected length of a UTF-8 sequence based on its lead byte.
 // Returns 0 if the byte is not a valid UTF-8 lead byte.
 static int32_t utf8_sequence_length(unsigned char lead_byte) {

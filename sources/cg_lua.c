@@ -5327,20 +5327,63 @@ static void cg_lua_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
       }
       else {
         if (!options.compress) {
-          bprintf(cg_declarations_output, "\n-- Generated from %s:%d\n", stmt->filename, stmt->lineno);
+          CHARBUF_OPEN(filename);
+          // A decoded #line filename may contain a newline or another control
+          // character.  Encode it before placing it in this Lua line comment
+          // so the filename cannot terminate the comment and create Lua code.
+          cg_encode_comment_text(stmt->filename, &filename);
+          bprintf(cg_declarations_output, "\n-- Generated from %s:%d\n", filename.ptr, stmt->lineno);
+          CHARBUF_CLOSE(filename);
         }
       }
       if (!options.compress) {
         // emit source comment
         gen_sql_callbacks lua_escape = { .escape_attributes_for_lua = true };
-        bprintf(out, "\n--[[\n");
+        CHARBUF_OPEN(source);
         gen_stmt_level = 1;
-        gen_set_output_buffer(out);
+        gen_set_output_buffer(&source);
         if (misc_attrs) {
           gen_with_callbacks(misc_attrs, gen_misc_attrs, &lua_escape);
         }
         gen_with_callbacks(stmt, gen_one_stmt, &lua_escape);
-        bprintf(out, ";\n--]]\n");
+        gen_set_output_buffer(out);
+
+        // Lua long comments use matching delimiters with any number of equal
+        // signs: --[[...]], --[=[...]=], --[==[...]==], and so on.  The CQL
+        // source can contain any of those closing sequences in string literals
+        // or identifiers.  Using a fixed delimiter would let such a sequence
+        // end this comment early and expose the remaining text as Lua code.
+        //
+        // Find the first closing delimiter that does not occur in the source.
+        // Looking only for the closing form is sufficient because the opening
+        // form has no special meaning after Lua has entered the long comment.
+        int32_t equals_count = 0;
+        CHARBUF_OPEN(close_delimiter);
+        for (;;) {
+          bclear(&close_delimiter);
+          bputc(&close_delimiter, ']');
+          for (int32_t i = 0; i < equals_count; i++) {
+            bputc(&close_delimiter, '=');
+          }
+          bputc(&close_delimiter, ']');
+          if (!strstr(source.ptr, close_delimiter.ptr)) {
+            break;
+          }
+          equals_count++;
+        }
+
+        // Emit the opening delimiter with the same number of equal signs as
+        // close_delimiter.  The "--" before the closing delimiter is retained
+        // as part of the generated CQL text; Lua ignores it inside the long
+        // comment, and the following delimiter still closes the comment.
+        bprintf(out, "\n--[");
+        for (int32_t i = 0; i < equals_count; i++) {
+          bputc(out, '=');
+        }
+        bprintf(out, "[\n%s;\n--", source.ptr);
+        bprintf(out, "%s\n", close_delimiter.ptr);
+        CHARBUF_CLOSE(close_delimiter);
+        CHARBUF_CLOSE(source);
       }
     }
   }
@@ -5888,5 +5931,3 @@ cql_noexport void cg_lua_cleanup() {
 
 
 #endif
-
-

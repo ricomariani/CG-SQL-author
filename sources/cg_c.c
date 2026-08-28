@@ -7684,8 +7684,15 @@ static void cg_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
         bprintf(out, "\n// The statement ending at line %d\n", stmt->lineno);
       }
       else {
-        bprintf(cg_header_output, "\n// Generated from %s:%d\n", stmt->filename, stmt->lineno);
-        bprintf(cg_declarations_output, "\n// Generated from %s:%d\n", stmt->filename, stmt->lineno);
+        CHARBUF_OPEN(filename);
+        // A #line filename is source-controlled and has already been decoded,
+        // so it may contain newlines or other control characters.  Encode
+        // those characters before placing the filename in a C line comment;
+        // otherwise the filename could end the comment and expose text as C.
+        cg_encode_comment_text(stmt->filename, &filename);
+        bprintf(cg_header_output, "\n// Generated from %s:%d\n", filename.ptr, stmt->lineno);
+        bprintf(cg_declarations_output, "\n// Generated from %s:%d\n", filename.ptr, stmt->lineno);
+        CHARBUF_CLOSE(filename);
       }
       // emit source comment
       bprintf(out, "\n/*\n");

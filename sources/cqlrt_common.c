@@ -1430,7 +1430,7 @@ cql_hash_code cql_row_hash(
   cql_int32 row)
 {
   cql_int32 count = cql_result_set_get_count(result_set);
-  cql_contract(row < count);
+  cql_contract(row >= 0 && row < count);
 
   cql_result_set_meta *meta = cql_result_set_get_meta(result_set);
   cql_uint16 refs_count = meta->refsCount;
@@ -1490,8 +1490,8 @@ cql_bool cql_rows_equal(
 {
   cql_int32 count1 = cql_result_set_get_count(rs1);
   cql_int32 count2 = cql_result_set_get_count(rs2);
-  cql_contract(row1 < count1);
-  cql_contract(row2 < count2);
+  cql_contract(row1 >= 0 && row1 < count1);
+  cql_contract(row2 >= 0 && row2 < count2);
 
   // get offsets and verify this is the SAME metadata
   cql_result_set_meta *meta1 = cql_result_set_get_meta(rs1);
@@ -1544,8 +1544,8 @@ cql_bool cql_rows_same(
 {
   cql_int32 count1 = cql_result_set_get_count(rs1);
   cql_int32 count2 = cql_result_set_get_count(rs2);
-  cql_contract(row1 < count1);
-  cql_contract(row2 < count2);
+  cql_contract(row1 >= 0 && row1 < count1);
+  cql_contract(row2 >= 0 && row2 < count2);
 
   cql_result_set_meta *meta1 = cql_result_set_get_meta(rs1);
   cql_result_set_meta *meta2 = cql_result_set_get_meta(rs2);
@@ -1606,7 +1606,10 @@ void cql_rowset_copy(
   cql_int32 count)
 {
   cql_contract(from >= 0);
-  cql_contract(from + count <= cql_result_set_get_count(result_set));
+  cql_contract(count >= 0);
+  cql_int32 total = cql_result_set_get_count(result_set);
+  cql_contract(from <= total);
+  cql_contract(count <= total - from);
 
   // get offsets and rowsize metadata
   cql_result_set_meta *meta = cql_result_set_get_meta(result_set);
@@ -1675,8 +1678,9 @@ char *_Nonnull cql_address_of_col(
 {
   // Check to make sure the requested row is a valid row
   // See above for reasons why this might fail.
+  cql_contract(result_set);
   cql_int32 count = cql_result_set_get_count(result_set);
-  cql_contract(row < count);
+  cql_contract(row >= 0 && row < count);
 
   // Check to make sure the meta data has column data
   // See above for reasons why this might fail.
@@ -1686,7 +1690,7 @@ char *_Nonnull cql_address_of_col(
   // Check to make sure the requested column is a valid column
   // See above for reasons why this might fail.
   cql_int32 columnCount = meta->columnCount;
-  cql_contract(col < columnCount);
+  cql_contract(col >= 0 && col < columnCount);
 
   // Check to make sure the requested column is of the correct type
   // See above for reasons why this might fail.
@@ -1970,16 +1974,14 @@ void cql_result_set_set_blob_col(
 // CQLABI
 cql_bool cql_result_set_get_is_null_col(
   cql_result_set_ref _Nonnull result_set,
-  cql_int32 row_,
-  cql_int32 col_)
+  cql_int32 row,
+  cql_int32 col)
 {
-  cql_uint32 row = (cql_uint32)row_;
-  cql_uint32 col = (cql_uint32)col_;
-
   // Check to make sure the requested row is a valid row See cql_address_of_col
   // for reasons why this might fail.
+  cql_contract(result_set);
   cql_int32 count = cql_result_set_get_count(result_set);
-  cql_contract(row < count);
+  cql_contract(row >= 0 && row < count);
 
   // Check to make sure the meta data has column data See cql_address_of_col for
   // reasons why this might fail.
@@ -1989,13 +1991,13 @@ cql_bool cql_result_set_get_is_null_col(
   // Check to make sure the requested column is a valid column See
   // cql_address_of_col for reasons why this might fail.
   cql_int32 columnCount = meta->columnCount;
-  cql_contract(col < columnCount);
+  cql_contract(col >= 0 && col < columnCount);
 
   uint8_t data_type = meta->dataTypes[col];
 
   cql_uint16 offset = meta->columnOffsets[col + 1];
   size_t row_size = meta->rowsize;
-  char *data =((char *)cql_result_set_get_data(result_set)) + row * row_size + offset;
+  char *data =((char *)cql_result_set_get_data(result_set)) + ((size_t)row) * row_size + offset;
 
   cql_int32 core_data_type = CQL_CORE_DATA_TYPE_OF(data_type);
 
@@ -2037,16 +2039,14 @@ cql_bool cql_result_set_get_is_null_col(
 // This is the helper method that sets a nullable column to null
 void cql_result_set_set_to_null_col(
   cql_result_set_ref _Nonnull result_set,
-  cql_int32 row_,
-  cql_int32 col_)
+  cql_int32 row,
+  cql_int32 col)
 {
-  cql_uint32 row = (cql_uint32)row_;
-  cql_uint32 col = (cql_uint32)col_;
-
   // Check to make sure the requested row is a valid row See cql_address_of_col
   // for reasons why this might fail.
+  cql_contract(result_set);
   cql_int32 count = cql_result_set_get_count(result_set);
-  cql_contract(row < count);
+  cql_contract(row >= 0 && row < count);
 
   // Check to make sure the meta data has column data See cql_address_of_col for
   // reasons why this might fail.
@@ -2056,13 +2056,13 @@ void cql_result_set_set_to_null_col(
   // Check to make sure the requested column is a valid column See
   // cql_address_of_col for reasons why this might fail.
   cql_int32 columnCount = meta->columnCount;
-  cql_contract(col < columnCount);
+  cql_contract(col >= 0 && col < columnCount);
 
   uint8_t data_type = meta->dataTypes[col];
 
   cql_uint16 offset = meta->columnOffsets[col + 1];
   size_t row_size = meta->rowsize;
-  char *data =((char *)cql_result_set_get_data(result_set)) + row * row_size + offset;
+  char *data =((char *)cql_result_set_get_data(result_set)) + ((size_t)row) * row_size + offset;
 
   cql_int32 core_data_type = CQL_CORE_DATA_TYPE_OF(data_type);
 
@@ -4158,11 +4158,12 @@ cql_string_ref _Nonnull cql_string_list_get_at(
 {
   cql_contract(list);
   cql_string_ref result = NULL;
+  cql_contract(index_ >= 0);
   cql_uint32 index = (cql_uint32)index_; // CQL ABI has no unsigned
 
   cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
   cql_uint32 count = self->used / sizeof(cql_string_ref);
-  cql_contract(index >= 0 && index < count);
+  cql_contract(index < count);
   cql_invariant(self->ptr);
   size_t offset = index * sizeof(cql_string_ref);
   result = *(cql_string_ref *)(self->ptr + offset);
@@ -4179,11 +4180,12 @@ cql_object_ref _Nonnull cql_string_list_set_at(
   cql_contract(list);
   cql_contract(value);
 
+  cql_contract(index_ >= 0);
   cql_uint32 index = (cql_uint32)index_; // CQL ABI has no unsigned
 
   cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
   cql_uint32 count = self->used / sizeof(cql_string_ref);
-  cql_contract(index >= 0 && index < count);
+  cql_contract(index < count);
   cql_invariant(self->ptr);
   size_t offset = index * sizeof(cql_string_ref);
   cql_string_ref *data = (cql_string_ref *)(self->ptr + offset);
@@ -4314,11 +4316,12 @@ cql_int64 cql_long_list_get_at(
   cql_int32 index_)
 {
   cql_contract(list);
+  cql_contract(index_ >= 0);
   cql_uint32 index = (cql_uint32)index_; // CQL ABI has no unsigned
 
   cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
   cql_uint32 count = self->used / sizeof(cql_int64);
-  cql_contract(index >= 0 && index < count);
+  cql_contract(index < count);
   cql_invariant(self->ptr);
   size_t offset = index * sizeof(cql_int64);
   return *(cql_int64 *)(self->ptr + offset);
@@ -4332,12 +4335,12 @@ cql_object_ref _Nonnull cql_long_list_set_at(
   cql_int64 value)
 {
   cql_contract(list);
-  cql_contract(value);
+  cql_contract(index_ >= 0);
   cql_uint32 index = (cql_uint32)index_; // CQL ABI has no unsigned
 
   cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
   cql_uint32 count = self->used / sizeof(cql_int64);
-  cql_contract(index >= 0 && index < count);
+  cql_contract(index < count);
   cql_invariant(self->ptr);
   size_t offset = index * sizeof(cql_int64);
   *(cql_int64 *)(self->ptr + offset) = value;
@@ -4382,11 +4385,12 @@ cql_double cql_real_list_get_at(
   cql_int32 index_)
 {
   cql_contract(list);
+  cql_contract(index_ >= 0);
   cql_uint32 index = (cql_uint32)index_; // CQL ABI has no unsigned
 
   cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
   cql_uint32 count = self->used / sizeof(cql_double);
-  cql_contract(index >= 0 && index < count);
+  cql_contract(index < count);
   cql_invariant(self->ptr);
   size_t offset = index * sizeof(cql_double);
   return *(cql_double *)(self->ptr + offset);
@@ -4400,12 +4404,12 @@ cql_object_ref _Nonnull cql_real_list_set_at(
   cql_double value)
 {
   cql_contract(list);
-  cql_contract(value);
+  cql_contract(index_ >= 0);
   cql_uint32 index = (cql_uint32)index_; // CQL ABI has no unsigned
 
   cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
   cql_uint32 count = self->used / sizeof(cql_double);
-  cql_contract(index >= 0 && index < count);
+  cql_contract(index < count);
   cql_invariant(self->ptr);
   size_t offset = index * sizeof(cql_double);
   *(cql_double *)(self->ptr + offset) = value;

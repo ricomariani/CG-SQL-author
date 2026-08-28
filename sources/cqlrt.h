@@ -10,6 +10,7 @@
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <math.h>
 #include <sqlite3.h>
 
@@ -30,10 +31,10 @@
 #endif
 
 // Assertion macro for API contract violations, these should stay in the release build.
-#define cql_contract assert
+#define cql_contract(condition) do { if (!(condition)) abort(); } while (0)
 
 // Assertion for internal invariant broken, these should stay in the release build.
-#define cql_invariant assert
+#define cql_invariant(condition) do { if (!(condition)) abort(); } while (0)
 
 // Assertion for a failure that we might like to promote to an invariant
 // but there may be exceptions yet.  This should fire in debug builds.

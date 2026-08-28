@@ -15,6 +15,11 @@ begin
   select "Hello World!" as `the result`;
 end;
 
+proc quoted_projection()
+begin
+  select 1 as `odd]"slash\name`;
+end;
+
 -- multi-column result set, with pass through, one row
 proc three_int_test(x int, y int, z int)
 begin

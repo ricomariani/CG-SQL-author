@@ -331,6 +331,13 @@ void explicit_test(sqlite3 *db) {
 
     /* Cleanup */
     sqlite3_finalize(stmt);
+
+    rc = sqlite3_prepare_v2(db, "SELECT \"odd]\"\"slash\\name\" FROM quoted_projection", -1, &stmt, NULL);
+    if (rc != SQLITE_OK) exit(1);
+    if (sqlite3_step(stmt) != SQLITE_ROW) exit(1);
+    if (sqlite3_column_int(stmt, 0) != 1) exit(1);
+    sqlite3_finalize(stmt);
+
     printf("done explicit test\n");
 }
 

@@ -23,6 +23,15 @@ import json
 import sys
 
 
+# Encode one value as a SQLite string literal.  All names and metadata in the
+# generated SQL flow through this helper because quoted CQL identifiers may
+# contain apostrophes.  Doubling each apostrophe keeps the value inside the
+# literal; converting to str preserves the generator's existing treatment of
+# non-string attribute values.
+def sql_literal(value):
+    return "'" + str(value).replace("'", "''") + "'"
+
+
 def usage():
     print((
         "Usage:\n"
@@ -362,11 +371,11 @@ def emit_projection(p_name, projection):
     for p in projection:
         c_name = p["name"]
         type = p["type"]
-        kind = "'" + p["kind"] + "'" if "kind" in p else "NULL"
+        kind = sql_literal(p["kind"]) if "kind" in p else "NULL"
         isSensitive = p.get("isSensitive", 0)
         isNotNull = p["isNotNull"]
         print(
-            f"insert into proc_projections values('{p_name}', {col}, '{c_name}', '{type}', {kind}, {isSensitive}, {isNotNull});"
+            f"insert into proc_projections values({sql_literal(p_name)}, {col}, {sql_literal(c_name)}, {sql_literal(type)}, {kind}, {isSensitive}, {isNotNull});"
         )
         col = col + 1
 
@@ -380,46 +389,34 @@ def emit_projection(p_name, projection):
 def emit_procinfo(section, s_name):
     for src in section:
         p_name = src["name"]
-        print(f"insert into procs values('{p_name}', '{s_name}');")
+        print(f"insert into procs values({sql_literal(p_name)}, {sql_literal(s_name)});")
         if "projection" in src:
             emit_projection(p_name, src["projection"])
         usesTables = src["usesTables"]
         for tdep in usesTables:
-            print(f"insert into proc_deps values('{p_name}', '{tdep}');")
+            print(f"insert into proc_deps values({sql_literal(p_name)}, {sql_literal(tdep)});")
         for vdep in src.get("usesViews", []):
-            print(f"insert into proc_view_deps values('{p_name}', '{vdep}');")
+            print(f"insert into proc_view_deps values({sql_literal(p_name)}, {sql_literal(vdep)});")
 
 
-# Emits a single attribute value, it can be a list, a string (which might require escapes)
-# or value primitive that isn't a string (which doesn't).  Lists are emitted as comma
-# seperated values recursively
-def emit_attr_value(attr):
+# Formats a single attribute value. Lists are comma-separated recursively and
+# strings retain the double-quoted CQL attribute representation.
+def format_attr_value(attr):
     if isinstance(attr, list):
-        first = 1
-        print("(", end="")
-        for a in attr:
-            if first:
-                first = 0
-            else:
-                print(", ", end="")
-
-            emit_attr_value(a)
-        print(")", end="")
+        return "(" + ", ".join(format_attr_value(a) for a in attr) + ")"
     elif isinstance(attr, str):
-        astr = f"{attr}".replace("'", "''")
-        print(f'"{astr}"', end="")
+        return f'"{attr}"'
     else:
-        print(f"{attr}", end="")
+        return f"{attr}"
 
 
 # emits a single attribute name and value, the value might need recursive handling
 def emit_attribute(t_name, attr):
     a_name = attr["name"]
-    value = attr["value"]
-    print(f"insert into table_attributes values ('{t_name}', '{a_name}', '",
-          end="")
-    emit_attr_value(value)
-    print("');")
+    value = format_attr_value(attr["value"])
+    print(
+        f"insert into table_attributes values ({sql_literal(t_name)}, {sql_literal(a_name)}, {sql_literal(value)});"
+    )
 
 
 # emits all the attributes for a table (this is always a list even if it's a list of one)
@@ -454,7 +451,7 @@ def emit_sql(data):
         deleteVersion = t.get("deletedVersion", -1)
         groupName = t.get("recreateGroupName", "")
         print(
-            f"insert into tables values('{t_name}', '{region}', {deleted}, {createVersion}, {deleteVersion}, {recreated}, '{groupName}');"
+            f"insert into tables values({sql_literal(t_name)}, {sql_literal(region)}, {deleted}, {createVersion}, {deleteVersion}, {recreated}, {sql_literal(groupName)});"
         )
         if "attributes" in t:
             emit_attributes(t_name, t["attributes"])
@@ -466,11 +463,11 @@ def emit_sql(data):
             c_kind = c.get("kind", "")
             c_notnull = c["isNotNull"]
             print(
-                f"insert into columns values ('{t_name}', '{c_name}', '{c_type}', '{c_kind}', {c_notnull});"
+                f"insert into columns values ({sql_literal(t_name)}, {sql_literal(c_name)}, {sql_literal(c_type)}, {sql_literal(c_kind)}, {c_notnull});"
             )
 
         for pkcol in t["primaryKey"]:
-            print(f"insert into pks values('{t_name}', '{pkcol}');")
+            print(f"insert into pks values({sql_literal(t_name)}, {sql_literal(pkcol)});")
 
         ifk = 0
         for fktup in enumerate(t["foreignKeys"]):
@@ -484,16 +481,16 @@ def emit_sql(data):
                 fkcol = fkcols[icol]
                 fkref = fkrefs[icol]
                 print(
-                    f"insert into fks values('fk{ifk}', '{t_name}', '{reftable}', '{fkcol}', '{fkref}');"
+                    f"insert into fks values({sql_literal(f'fk{ifk}')}, {sql_literal(t_name)}, {sql_literal(reftable)}, {sql_literal(fkcol)}, {sql_literal(fkref)});"
                 )
 
     for tup in enumerate(data["regions"]):
         r = tup[1]
         r_name = r["name"]
-        print(f"insert into regions values('{r_name}');")
+        print(f"insert into regions values({sql_literal(r_name)});")
         for rdep in enumerate(r["using"]):
             rparent = rdep[1]
-            print(f"insert into region_deps values('{r_name}', '{rparent}');")
+            print(f"insert into region_deps values({sql_literal(r_name)}, {sql_literal(rparent)});")
 
     emit_procinfo(data["queries"], "queries")
     emit_procinfo(data["deletes"], "deletes")
@@ -510,7 +507,7 @@ def emit_sql(data):
         createVersion = v.get("addedVersion", 0)
         deleteVersion = v.get("deletedVersion", -1)
         print(
-            f"insert into views values('{v_name}', '{region}', {deleted}, {createVersion}, {deleteVersion});"
+            f"insert into views values({sql_literal(v_name)}, {sql_literal(region)}, {deleted}, {createVersion}, {deleteVersion});"
         )
 
     for tup in enumerate(data["triggers"]):
@@ -520,11 +517,11 @@ def emit_sql(data):
         region = tr.get("region", "None")
         deleted = 1 if tr["isDeleted"] else 0
         print(
-            f"insert into triggers values('{tr_name}', '{t_name}', '{region}', {deleted});"
+            f"insert into triggers values({sql_literal(tr_name)}, {sql_literal(t_name)}, {sql_literal(region)}, {deleted});"
         )
         usesTables = tr["usesTables"]
         for tdep in usesTables:
-            print(f"insert into trigger_deps values('{tr_name}', '{tdep}');")
+            print(f"insert into trigger_deps values({sql_literal(tr_name)}, {sql_literal(tdep)});")
 
 
 def get_fks(targets, tables, data, arg):

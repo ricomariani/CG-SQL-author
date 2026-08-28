@@ -93,6 +93,41 @@ static void run_failure_test(const char *name) {
     return;
   }
 
+  if (!strcmp(name, "row_hash_negative")) {
+    cql_result_set_ref result_set = make_result_set();
+    cql_row_hash(result_set, -1);
+    return;
+  }
+
+  if (!strncmp(name, "rows_equal_", 11)) {
+    cql_result_set_ref result_set = make_result_set();
+    cql_int32 row1 = !strcmp(name, "rows_equal_first_negative") ? -1 : 0;
+    cql_int32 row2 = !strcmp(name, "rows_equal_second_negative") ? -1 : 0;
+    cql_rows_equal(result_set, row1, result_set, row2);
+    return;
+  }
+
+  if (!strncmp(name, "rows_same_", 10)) {
+    cql_result_set_ref result_set = make_result_set();
+    cql_int32 row1 = !strcmp(name, "rows_same_first_negative") ? -1 : 0;
+    cql_int32 row2 = !strcmp(name, "rows_same_second_negative") ? -1 : 0;
+    cql_rows_same(result_set, row1, result_set, row2);
+    return;
+  }
+
+  if (!strncmp(name, "rowset_copy_", 12)) {
+    cql_result_set_ref result_set = make_result_set();
+    cql_result_set_ref copy = NULL;
+    cql_int32 from = !strcmp(name, "rowset_copy_from_high") ? 2 : 0;
+    cql_int32 count = !strcmp(name, "rowset_copy_count_negative") ? -1 : 0;
+    if (!strcmp(name, "rowset_copy_count_high")) {
+      from = 1;
+      count = INT32_MAX;
+    }
+    cql_rowset_copy(result_set, &copy, from, count);
+    return;
+  }
+
   if (!strncmp(name, "result_", 7)) {
     cql_result_set_ref result_set = make_result_set();
     if (!strcmp(name, "result_get_row_negative")) {

@@ -1430,7 +1430,7 @@ cql_hash_code cql_row_hash(
   cql_int32 row)
 {
   cql_int32 count = cql_result_set_get_count(result_set);
-  cql_contract(row < count);
+  cql_contract(row >= 0 && row < count);
 
   cql_result_set_meta *meta = cql_result_set_get_meta(result_set);
   cql_uint16 refs_count = meta->refsCount;
@@ -1490,8 +1490,8 @@ cql_bool cql_rows_equal(
 {
   cql_int32 count1 = cql_result_set_get_count(rs1);
   cql_int32 count2 = cql_result_set_get_count(rs2);
-  cql_contract(row1 < count1);
-  cql_contract(row2 < count2);
+  cql_contract(row1 >= 0 && row1 < count1);
+  cql_contract(row2 >= 0 && row2 < count2);
 
   // get offsets and verify this is the SAME metadata
   cql_result_set_meta *meta1 = cql_result_set_get_meta(rs1);
@@ -1544,8 +1544,8 @@ cql_bool cql_rows_same(
 {
   cql_int32 count1 = cql_result_set_get_count(rs1);
   cql_int32 count2 = cql_result_set_get_count(rs2);
-  cql_contract(row1 < count1);
-  cql_contract(row2 < count2);
+  cql_contract(row1 >= 0 && row1 < count1);
+  cql_contract(row2 >= 0 && row2 < count2);
 
   cql_result_set_meta *meta1 = cql_result_set_get_meta(rs1);
   cql_result_set_meta *meta2 = cql_result_set_get_meta(rs2);
@@ -1606,7 +1606,10 @@ void cql_rowset_copy(
   cql_int32 count)
 {
   cql_contract(from >= 0);
-  cql_contract(from + count <= cql_result_set_get_count(result_set));
+  cql_contract(count >= 0);
+  cql_int32 total = cql_result_set_get_count(result_set);
+  cql_contract(from <= total);
+  cql_contract(count <= total - from);
 
   // get offsets and rowsize metadata
   cql_result_set_meta *meta = cql_result_set_get_meta(result_set);

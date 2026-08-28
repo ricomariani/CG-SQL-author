@@ -78,17 +78,10 @@ threading model and locking primitives you need for correctness.
 The `CQLRT` interface includes some helper macros for logging.  These are defined
 as no-ops by default but, of course, they can be changed.
 
-```
-#define cql_contract assert
-#define cql_invariant assert
-#define cql_tripwire assert
-#define cql_log_database_error(...)
-#define cql_error_trace()
-```
-
-`cql_contract` and `cql_invariant` are for fatal errors. They both assert something
-that is expected to always be true (like `assert`) with the only difference being that
-the former is conventionally used to validate preconditions of functions.
+`cql_contract` and `cql_invariant` are for fatal errors in every build. They both
+check something that is expected to always be true, with the only difference being
+that the former is conventionally used to validate preconditions of functions.
+Unlike `assert`, neither check is disabled by `NDEBUG`.
 
 `cql_tripwire` is a slightly softer form of assert that should crash in debug
 builds but only log an error in production builds. It is generally used to enforce

@@ -9,5 +9,6 @@
 #include "cqlrt_cf/cqlrt_cf.h"
 
 void cqlrt_cf_contract_test(cql_bool condition) {
-  cql_contract_always(condition);
+  cql_contract(condition);
+  cql_invariant(condition);
 }

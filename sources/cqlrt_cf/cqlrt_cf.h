@@ -43,14 +43,18 @@ typedef int8_t Boolean;
 #endif
 #endif
 
-#define cql_contract assert
-#define cql_contract_always(condition) \
+#define cql_contract(condition) \
   do { \
     if (!(condition)) { \
       abort(); \
     } \
   } while (0)
-#define cql_invariant assert
+#define cql_invariant(condition) \
+  do { \
+    if (!(condition)) { \
+      abort(); \
+    } \
+  } while (0)
 #define cql_tripwire assert
 
 // Default database loggign does nothing

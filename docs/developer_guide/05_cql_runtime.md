@@ -67,20 +67,15 @@ your system.
 ### Contract and Error Macros
 
 CQL employs several macros for handling errors: `contract`, `invariant`, and
-`tripwire`, which typically all map to `assert`. It's worth noting that
+`tripwire`. Contracts and invariants are fatal in every build and are not
+disabled by `NDEBUG`; they differ only in documenting whether a failure is an
+API precondition violation or an internal consistency failure.
+
 `tripwire` doesn't necessarily need to result in a fatal error; it can log
 information in a production environment and continue execution. This represents
 a "softer" assertion — useful for scenarios where you want to enforce a
 condition like a `contract`, but there may be outstanding issues that need to be
 addressed first.
-
-```c
-#define cql_contract assert
-#define cql_invariant assert
-#define cql_tripwire assert
-#define cql_log_database_error(...)
-#define cql_error_trace()
-```
 
 ### The Value Types
 

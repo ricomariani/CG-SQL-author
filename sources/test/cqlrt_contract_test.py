@@ -14,6 +14,8 @@ def main():
     subprocess.run([binary], check=True)
 
     cases = [
+        "contract_failure",
+        "invariant_failure",
         "result_get_row_negative",
         "result_get_row_high",
         "result_get_col_negative",

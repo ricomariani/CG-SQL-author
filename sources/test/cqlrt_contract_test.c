@@ -83,6 +83,16 @@ static int run_valid_tests(void) {
 }
 
 static void run_failure_test(const char *name) {
+  if (!strcmp(name, "contract_failure")) {
+    cql_contract(cql_false);
+    return;
+  }
+
+  if (!strcmp(name, "invariant_failure")) {
+    cql_invariant(cql_false);
+    return;
+  }
+
   if (!strncmp(name, "result_", 7)) {
     cql_result_set_ref result_set = make_result_set();
     if (!strcmp(name, "result_get_row_negative")) {

@@ -83,6 +83,16 @@ check something that is expected to always be true, with the only difference bei
 that the former is conventionally used to validate preconditions of functions.
 Unlike `assert`, neither check is disabled by `NDEBUG`.
 
+```
+#define cql_contract(condition) \
+  do { if (!(condition)) abort(); } while (0)
+#define cql_invariant(condition) \
+  do { if (!(condition)) abort(); } while (0)
+#define cql_tripwire assert
+#define cql_log_database_error(...)
+#define cql_error_trace()
+```
+
 `cql_tripwire` is a slightly softer form of assert that should crash in debug
 builds but only log an error in production builds. It is generally used to enforce
 a new condition that may not always hold with the goal of eventually transitioning

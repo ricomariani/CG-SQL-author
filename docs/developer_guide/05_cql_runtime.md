@@ -77,6 +77,16 @@ a "softer" assertion — useful for scenarios where you want to enforce a
 condition like a `contract`, but there may be outstanding issues that need to be
 addressed first.
 
+```c
+#define cql_contract(condition) \
+  do { if (!(condition)) abort(); } while (0)
+#define cql_invariant(condition) \
+  do { if (!(condition)) abort(); } while (0)
+#define cql_tripwire assert
+#define cql_log_database_error(...)
+#define cql_error_trace()
+```
+
 ### The Value Types
 
 You can define these types according to what is suitable for your system.

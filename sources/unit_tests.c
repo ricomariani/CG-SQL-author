@@ -322,40 +322,143 @@ static bool test_comment_text_encoding() {
 }
 
 cql_noexport void run_unit_tests() {
+  // An empty duplicate must still be a valid, NUL-terminated allocation.
+  // Callers rely on receiving a string rather than NULL for empty input.
   TEST_ASSERT(test_strdup__empty_string());
+
+  // The smallest non-empty input verifies that Strdup produces the expected
+  // byte and terminator without truncation.
   TEST_ASSERT(test_strdup__one_character_string());
+
+  // A multi-byte input verifies that Strdup copies the complete string rather
+  // than accidentally handling only the first character.
   TEST_ASSERT(test_strdup__long_string());
+
+  // Two empty strings establish the equality base case without reading beyond
+  // either terminator.
   TEST_ASSERT(test_strcasecmp_empty_strings());
+
+  // Case-insensitive ordering must still report a lexical less-than result
+  // when the folded characters differ.
   TEST_ASSERT(test_strcasecmp_one_char_strings__result_is_less_than());
+
+  // Reverse operands verify the corresponding greater-than result and catch
+  // implementations that return only equality versus inequality.
   TEST_ASSERT(test_strcasecmp_one_char_strings__result_is_greater_than());
+
+  // Mixed casing at several positions must compare equal after case folding.
   TEST_ASSERT(test_strcasecmp_one_char_strings__result_is_equals());
+
+  // A difference after a shared multi-character prefix must determine
+  // less-than ordering, not just the first character.
   TEST_ASSERT(test_strcasecmp_long_strings__result_is_less_than());
+
+  // The reverse shared-prefix case verifies greater-than ordering at a later
+  // character in the strings.
   TEST_ASSERT(test_strcasecmp_long_strings__result_is_greater_than());
+
+  // The long-string comparison group also verifies equality when every folded
+  // character matches through the terminator.
   TEST_ASSERT(test_strcasecmp_long_strings__result_is_equals());
+
+  // When one folded string is a prefix of the other, the shorter string must
+  // sort first.
   TEST_ASSERT(test_strcasecmp_different_length_strings__result_is_less_than());
+
+  // Reversing a prefix pair must make the longer string sort after the shorter
+  // one.
   TEST_ASSERT(test_strcasecmp_different_length_strings__result_is_greater_than());
+
+  // A zero comparison limit must report equality without inspecting even empty
+  // input.
   TEST_ASSERT(test_strncasecmp__empty_strings__zero_cmp_size__result_is_equals());
+
+  // A limit beyond both empty strings verifies that comparison stops safely at
+  // their terminators.
   TEST_ASSERT(test_strncasecmp__empty_strings__past_length_cmp_size__result_is_equals());
+
+  // A zero limit must ignore differing non-empty input, matching strncasecmp
+  // semantics.
   TEST_ASSERT(test_strncasecmp__one_char_strings__zero_cmp_size__result_is_equals());
+
+  // With a limit beyond one-character inputs, folded lexical less-than must be
+  // reported before the terminators are reached.
   TEST_ASSERT(test_strncasecmp__one_char_strings__past_length_cmp_size__result_is_less_than());
+
+  // Reversing the one-character operands verifies greater-than with a limit
+  // larger than both strings.
   TEST_ASSERT(test_strncasecmp__one_char_strings__past_length_cmp_size__result_is_greater_than());
+
+  // Equal folded one-character strings must remain equal when the requested
+  // limit extends past their terminators.
   TEST_ASSERT(test_strncasecmp__one_char_strings__past_length_cmp_size__result_is_equals());
+
+  // Longer inputs verify less-than at a later character while the limit extends
+  // past the complete strings.
   TEST_ASSERT(test_strncasecmp__long_strings__past_length_cmp_size__result_is_less_than());
+
+  // The corresponding longer-input reverse case verifies greater-than after a
+  // shared prefix.
   TEST_ASSERT(test_strncasecmp__long_strings__past_length_cmp_size__result_is_greater_than());
+
+  // Mixed-case longer strings must compare equal and stop at the terminator
+  // even when the limit permits another byte.
   TEST_ASSERT(test_strncasecmp__long_strings__past_length_cmp_size__result_is_equals());
+
+  // A short comparison limit must return less-than using only the compared
+  // prefix and must ignore later characters.
   TEST_ASSERT(test_strncasecmp__long_strings__shorter_than_length_cmp_size__result_is_less_than());
+
+  // Reversing the compared prefix verifies greater-than without consulting the
+  // ignored suffix.
   TEST_ASSERT(test_strncasecmp__long_strings__shorter_than_length_cmp_size__result_is_greater_than());
+
+  // Equal folded prefixes must report equality even when characters after the
+  // limit differ.
   TEST_ASSERT(test_strncasecmp__long_strings__shorter_than_length_cmp_size__result_is_equals());
+
+  // A statement ending in one trailing space previously risked scanning past
+  // the buffer and inventing an extra fragment; exactly two tokens must remain.
   TEST_ASSERT(test_frag_tricky_case());
+
+  // This known hash vector protects the stable schema-signature encoding for a
+  // required string field.
   TEST_ASSERT(test_sha256_example1());
+
+  // This vector covers nullable integer type syntax so changes in punctuation
+  // or type spelling cannot silently alter stable hashes.
   TEST_ASSERT(test_sha256_example2());
+
+  // A shorter field description verifies hashing without dependence on the
+  // preceding examples' lengths or buffer contents.
   TEST_ASSERT(test_sha256_example3());
+
+  // Mixed-case field names and nullable integer syntax provide another stable
+  // real-world signature vector.
   TEST_ASSERT(test_sha256_example4());
+
+  // This input crosses a SHA-256 block boundary, protecting multi-block update
+  // and finalization behavior.
   TEST_ASSERT(test_sha256_example5());
+
+  // This input exercises final-block padding near the SHA-256 block boundary,
+  // where length and padding mistakes commonly occur.
   TEST_ASSERT(test_sha256_example6());
+
+  // Unknown macro arguments and definitions require distinct AST node tags so
+  // later parser and semantic phases can distinguish their roles.
   TEST_ASSERT(test_unknown_macro());
+
+  // Dirname must handle NULL, empty and separator-free names plus Windows and
+  // Unix separators, including the Unix root special case.
   TEST_ASSERT(test_Dirname());
+
+  // Invalid UTF-8 must be escaped into valid JSON rather than copied as malformed
+  // output or read past truncated byte sequences.
   TEST_ASSERT(test_badly_formed_utf8());
+
+  // Source-controlled provenance text must remain inside generated line
+  // comments while preserving printable and UTF-8 content.
   TEST_ASSERT(test_comment_text_encoding());
 }
 

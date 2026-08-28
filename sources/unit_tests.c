@@ -273,9 +273,50 @@ static bool test_badly_formed_utf8() {
 }
 
 static bool test_comment_text_encoding() {
+  bool result = true;
   CHARBUF_OPEN(temp);
-  cg_encode_comment_text("\n\r\t\x01\x7fX", &temp);
-  bool result = !strcmp(temp.ptr, "\\n\\r\\t\\x01\\x7fX");
+
+  // Ordinary printable text must be preserved exactly.  Filenames should stay
+  // readable, and line-comment punctuation is harmless within a line comment.
+  cg_encode_comment_text("safe [] -- // text", &temp);
+  result &= !strcmp(temp.ptr, "safe [] -- // text");
+
+  // CR and LF are the security-critical cases: either could terminate the
+  // generated line comment and expose the rest of a filename as source code.
+  bclear(&temp);
+  cg_encode_comment_text("a\nb\rc", &temp);
+  result &= !strcmp(temp.ptr, "a\\nb\\rc");
+
+  // A tab does not terminate the comment, but making it visible keeps generated
+  // provenance single-line and prevents invisible formatting surprises.
+  bclear(&temp);
+  cg_encode_comment_text("a\tb", &temp);
+  result &= !strcmp(temp.ptr, "a\\tb");
+
+  // Other C0 controls have no familiar spelling, so they use fixed-width hex.
+  // This verifies both ends of the encoded C0 range.
+  bclear(&temp);
+  cg_encode_comment_text("\x01\x1f", &temp);
+  result &= !strcmp(temp.ptr, "\\x01\\x1f");
+
+  // DEL sits outside the C0 range but is also non-printing and must be encoded.
+  bclear(&temp);
+  cg_encode_comment_text("\x7f", &temp);
+  result &= !strcmp(temp.ptr, "\\x7f");
+
+  // UTF-8 bytes cannot end a line comment and should remain readable rather
+  // than being expanded into byte escapes.
+  bclear(&temp);
+  cg_encode_comment_text("\xe2\x80\xa2", &temp);
+  result &= !strcmp(temp.ptr, "\xe2\x80\xa2");
+
+  // Encoders append to caller-owned buffers.  Verify this helper does not clear
+  // content that the caller emitted before the comment text.
+  bclear(&temp);
+  bprintf(&temp, "prefix:");
+  cg_encode_comment_text("value", &temp);
+  result &= !strcmp(temp.ptr, "prefix:value");
+
   CHARBUF_CLOSE(temp);
   return result;
 }

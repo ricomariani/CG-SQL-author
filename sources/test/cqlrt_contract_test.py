@@ -5,6 +5,15 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+# This driver verifies that runtime contracts remain active when the companion
+# C binary is compiled with NDEBUG.  It first runs the binary without arguments
+# as a control case: all valid operations must complete successfully.  It then
+# launches one child process for each named contract violation because a
+# successful contract check terminates the process and therefore cannot share a
+# process with later cases.  Any nonzero status means the expected fatal check
+# fired; a zero status means execution continued past a missing or assert-based
+# check and is reported as a test failure.
+
 import subprocess
 import sys
 

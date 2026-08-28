@@ -41,6 +41,7 @@ produces an error if this is happening.  You can get a more recent versions like
   brew link bison --force
   brew install flex
   brew link flex --force
+  brew install python
 ```
 
 ### Linux Users
@@ -57,6 +58,7 @@ sudo apt install gcc
 sudo apt install clang
 sudo apt install flex
 sudo apt install bison
+sudo apt install python3
 sudo apt install sqlite3
 sudo apt install libsqlite3-dev
 ```

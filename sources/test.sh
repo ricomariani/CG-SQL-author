@@ -203,7 +203,7 @@ building() {
 
   TEST_NAME="amalgam_realpath_capacity"
   TEST_DESC="Checking amalgam Realpath destination capacity"
-  TEST_CMD="grep -F '#define PATH_MAX _MAX_PATH' \"$O/cql_amalgam.c\" && grep -F 'Realpath(path.ptr, resolved_path, sizeof(resolved_path))' \"$O/cql_amalgam.c\" && grep -F 'return _fullpath(absPathBuffer, relpath, absPathBufferSize);' \"$O/cql_amalgam.c\""
+  TEST_CMD="grep -F '#define PATH_MAX _MAX_PATH' \"$O/cql_amalgam.c\" && grep -F 'char resolved_path[PATH_MAX]' \"$O/cql_amalgam.c\" && grep -F 'return _fullpath(absPathBuffer, relpath, _MAX_PATH);' \"$O/cql_amalgam.c\""
   run_test_expect_success
 
   TEST_NAME="build_amalgam_test"

@@ -134,6 +134,7 @@ generated SignedSource<<deadbeef8badf00ddefec8edfacefeed>>
 #ifndef _MSC_VER
 #include <libgen.h>
 #else
+// Realpath passes _MAX_PATH to _fullpath, so its destination must match.
 #define PATH_MAX _MAX_PATH
 #endif
 

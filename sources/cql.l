@@ -29,8 +29,7 @@
 
 // standard shim for most linux builds
 
-static char *Realpath(const char *relpath, char *absPathBuffer, size_t absPathBufferSize) {
-  (void)absPathBufferSize;
+static char *Realpath(const char *relpath, char *absPathBuffer) {
   return realpath(relpath, absPathBuffer);
 }
 
@@ -38,14 +37,14 @@ static char *Realpath(const char *relpath, char *absPathBuffer, size_t absPathBu
 
 // MSC has no useful realpath
 
-static char *Realpath(const char *relpath, char *absPathBuffer, size_t absPathBufferSize) {
+static char *Realpath(const char *relpath, char *absPathBuffer) {
   // Check if the file exists before resolving
   if (_access(relpath, 0) != 0) {
     return NULL;  // File does not exist
   }
 
   // Resolve absolute path
-  return _fullpath(absPathBuffer, relpath, absPathBufferSize);
+  return _fullpath(absPathBuffer, relpath, _MAX_PATH);
 }
 
 #endif
@@ -253,7 +252,7 @@ static void cql_setup_for_include(CSTR str) {
   // Next call Realpath to resolve the pathname to an absolute path
 
   CSTR opened_name = path.ptr;
-  char *abspath = Realpath(path.ptr, resolved_path, sizeof(resolved_path));
+  char *abspath = Realpath(path.ptr, resolved_path);
   if (abspath) {
 
     // skip the file if it's already been processed
@@ -275,7 +274,7 @@ static void cql_setup_for_include(CSTR str) {
      for (int i = 0; i < options.include_paths_count; i++) {
         bclear(&path);
         bprintf(&path, "%s/%s", options.include_paths[i], name.ptr);
-        abspath = Realpath(path.ptr, resolved_path, sizeof(resolved_path));
+        abspath = Realpath(path.ptr, resolved_path);
         if (abspath) {
           // as above, pop instantly if the file has already been processed.
           if (cql_already_processed_file(abspath)) {

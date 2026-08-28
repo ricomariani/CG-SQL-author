@@ -23,6 +23,11 @@ import json
 import sys
 
 
+# Encode one value as a SQLite string literal.  All names and metadata in the
+# generated SQL flow through this helper because quoted CQL identifiers may
+# contain apostrophes.  Doubling each apostrophe keeps the value inside the
+# literal; converting to str preserves the generator's existing treatment of
+# non-string attribute values.
 def sql_literal(value):
     return "'" + str(value).replace("'", "''") + "'"
 

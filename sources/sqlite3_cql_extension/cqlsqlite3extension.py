@@ -41,10 +41,18 @@ import json
 import sys
 
 
+# Quote a name for use as a SQLite identifier.  Projection and procedure names
+# come from CQL JSON and may contain SQLite's identifier delimiter, so embedded
+# double quotes must be doubled before adding the outer quotes.
 def quote_sql_identifier(identifier):
     return '"' + identifier.replace('"', '""') + '"'
 
 
+# Encode text as one C string literal for generated extension source.  This is
+# deliberately separate from SQL identifier quoting: the complete SQL
+# declaration is built first, then encoded for the surrounding C source.
+# Question marks are escaped to prevent legacy C trigraph replacement; octal
+# escapes are fixed-width so a following octal digit cannot extend them.
 def c_string_literal(value):
     result = ['"']
     for ch in value:
@@ -340,6 +348,10 @@ int sqlite3_cqlextension_init(sqlite3 *_Nonnull db, char *_Nonnull *_Nonnull pzE
             # Example: SELECT * FROM my_proc(arg1, arg2) WHERE col1 > 5
             args = [{'name': f"arg_{a['name']}", 'type': f"{a['type']} hidden"} for a in proc['args']]
             col = [{'name': p['name'], 'type' : p['type'] } for p in proc['projection']]
+            # First quote each CQL name as an SQL identifier.  Only after the
+            # declaration is complete does c_string_literal encode that SQL as
+            # C source; combining these two contexts in one escaping step is
+            # insufficient because SQL and C have different delimiters.
             cols = ", ".join(f"{quote_sql_identifier(p['name'])} {p['type']}" for p in (col + args))
             table_decl = f"CREATE TABLE {quote_sql_identifier(proc_name)}({cols})"
             print(f"""

@@ -483,6 +483,7 @@ extern CQL_WARN_UNUSED cql_code window13(sqlite3 *_Nonnull _db_, sqlite3_stmt *_
 extern CQL_WARN_UNUSED cql_code window14(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code window15(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code window16(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+extern CQL_WARN_UNUSED cql_code json_operator_right_nesting(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code virtual1(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code virtual2(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 
@@ -5386,6 +5387,169 @@ void not_in_test(cql_nullable_int32 x, cql_nullable_bool *_Nonnull b) {
 // The statement ending at line XXXX
 
 /*
+PROC in_nullable_rhs_test (x INT!, candidate INT, OUT b BOOL)
+BEGIN
+  SET b := x IN (2, candidate);
+END;
+*/
+
+#define _PROC_ "in_nullable_rhs_test"
+/*
+export:
+DECLARE PROC in_nullable_rhs_test (x INT!, candidate INT, OUT b BOOL);
+*/
+void in_nullable_rhs_test(cql_int32 x, cql_nullable_int32 candidate, cql_nullable_bool *_Nonnull b) {
+  cql_contract_argument_notnull((void *)b, 3);
+
+  cql_nullable_bool _tmp_n_bool_0 = { .is_null = 1 };
+  cql_int32 _tmp_int_1 = 0;
+
+  cql_set_null(*b); // set out arg to non-garbage
+  do {
+    _tmp_int_1 = x;
+    cql_set_notnull(_tmp_n_bool_0, 0);
+    if (_tmp_int_1 == 2) {
+      cql_set_notnull(_tmp_n_bool_0, 1);
+      break;
+    }
+    if (candidate.is_null) {
+      cql_set_null(_tmp_n_bool_0);
+    }
+    else if (_tmp_int_1 == candidate.value) {
+      cql_set_notnull(_tmp_n_bool_0, 1);
+      break;
+    }
+  } while (0);
+  cql_set_nullable(*b, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
+
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+PROC not_in_nullable_rhs_test (x INT!, candidate INT, OUT b BOOL)
+BEGIN
+  SET b := x NOT IN (2, candidate);
+END;
+*/
+
+#define _PROC_ "not_in_nullable_rhs_test"
+/*
+export:
+DECLARE PROC not_in_nullable_rhs_test (x INT!, candidate INT, OUT b BOOL);
+*/
+void not_in_nullable_rhs_test(cql_int32 x, cql_nullable_int32 candidate, cql_nullable_bool *_Nonnull b) {
+  cql_contract_argument_notnull((void *)b, 3);
+
+  cql_nullable_bool _tmp_n_bool_0 = { .is_null = 1 };
+  cql_int32 _tmp_int_1 = 0;
+
+  cql_set_null(*b); // set out arg to non-garbage
+  do {
+    _tmp_int_1 = x;
+    cql_set_notnull(_tmp_n_bool_0, 1);
+    if (_tmp_int_1 == 2) {
+      cql_set_notnull(_tmp_n_bool_0, 0);
+      break;
+    }
+    if (candidate.is_null) {
+      cql_set_null(_tmp_n_bool_0);
+    }
+    else if (_tmp_int_1 == candidate.value) {
+      cql_set_notnull(_tmp_n_bool_0, 0);
+      break;
+    }
+  } while (0);
+  cql_set_nullable(*b, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
+
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+PROC in_null_literal_rhs_test (x INT!, OUT b BOOL)
+BEGIN
+  SET b := x IN (NULL, 2);
+END;
+*/
+
+#define _PROC_ "in_null_literal_rhs_test"
+/*
+export:
+DECLARE PROC in_null_literal_rhs_test (x INT!, OUT b BOOL);
+*/
+void in_null_literal_rhs_test(cql_int32 x, cql_nullable_bool *_Nonnull b) {
+  cql_contract_argument_notnull((void *)b, 2);
+
+  cql_nullable_bool _tmp_n_bool_0 = { .is_null = 1 };
+  cql_int32 _tmp_int_1 = 0;
+
+  cql_set_null(*b); // set out arg to non-garbage
+  do {
+    _tmp_int_1 = x;
+    cql_set_notnull(_tmp_n_bool_0, 0);
+    cql_set_null(_tmp_n_bool_0);
+    if (_tmp_int_1 == 2) {
+      cql_set_notnull(_tmp_n_bool_0, 1);
+      break;
+    }
+  } while (0);
+  cql_set_nullable(*b, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
+
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+PROC in_empty_list_test (OUT b BOOL!)
+BEGIN
+  SET b := NULL IN ();
+END;
+*/
+
+#define _PROC_ "in_empty_list_test"
+/*
+export:
+DECLARE PROC in_empty_list_test (OUT b BOOL!);
+*/
+void in_empty_list_test(cql_bool *_Nonnull b) {
+  cql_contract_argument_notnull((void *)b, 1);
+
+  *b = 0; // set out arg to non-garbage
+  *b = 0;
+
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+PROC not_in_empty_list_test (OUT b BOOL!)
+BEGIN
+  SET b := NULL NOT IN ();
+END;
+*/
+
+#define _PROC_ "not_in_empty_list_test"
+/*
+export:
+DECLARE PROC not_in_empty_list_test (OUT b BOOL!);
+*/
+void not_in_empty_list_test(cql_bool *_Nonnull b) {
+  cql_contract_argument_notnull((void *)b, 1);
+
+  *b = 0; // set out arg to non-garbage
+  *b = 1;
+
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
 PROC drop_trigger_test ()
 BEGIN
   DROP TRIGGER IF EXISTS trigger1;
@@ -7448,7 +7612,7 @@ CQL_WARN_UNUSED cql_code hex_quote(sqlite3 *_Nonnull _db_) {
 
   _rc_ = cql_exec(_db_,
     "INSERT INTO bar(id, name) "
-      "VALUES (1, '\x01\x02\xa1\x1bg')");
+      "VALUES (1, '\001\002\241\033g')");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
 
@@ -10272,6 +10436,9 @@ BEGIN
   CREATE VIRTUAL TABLE v2 USING m2 (x) AS (
     id INT
   );
+  CREATE VIRTUAL TABLE `v 4` USING m2 (x) AS (
+    id INT
+  );
   CREATE VIRTUAL TABLE v3 USING m2 (ARGUMENTS FOLLOWING) AS (
     id INT
   );
@@ -10294,6 +10461,9 @@ CQL_WARN_UNUSED cql_code make_virt_table(sqlite3 *_Nonnull _db_) {
     "CREATE VIRTUAL TABLE v2 USING m2 (x)");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = cql_exec(_db_,
+    "CREATE VIRTUAL TABLE [v 4] USING m2 (x)");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = cql_exec(_db_,
     "CREATE VIRTUAL TABLE v3 USING m2 ( "
       "id INTEGER)");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -10301,6 +10471,86 @@ CQL_WARN_UNUSED cql_code make_virt_table(sqlite3 *_Nonnull _db_) {
 
 cql_cleanup:
   cql_error_report();
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+PROC json_operator_right_nesting ()
+BEGIN
+  SELECT '{}' -> ('$' || '.a') AS result;
+  SELECT 'p' || ('{}' -> '$.a') AS result;
+  SELECT '{}' ->> ~TEXT~ ('$' || '.a') AS result;
+END;
+*/
+
+#define _PROC_ "json_operator_right_nesting"
+static int32_t json_operator_right_nesting_perf_index;
+
+cql_string_proc_name(json_operator_right_nesting_stored_procedure_name, "json_operator_right_nesting");
+
+typedef struct json_operator_right_nesting_row {
+  cql_string_ref _Nullable result;
+} json_operator_right_nesting_row;
+
+uint8_t json_operator_right_nesting_data_types[json_operator_right_nesting_data_types_count] = {
+  CQL_DATA_TYPE_STRING, // result
+};
+
+#define json_operator_right_nesting_refs_offset cql_offsetof(json_operator_right_nesting_row, result) // count = 1
+
+static cql_uint16 json_operator_right_nesting_col_offsets[] = { 1,
+  cql_offsetof(json_operator_right_nesting_row, result)
+};
+
+cql_int32 json_operator_right_nesting_result_count(json_operator_right_nesting_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code json_operator_right_nesting_fetch_results(sqlite3 *_Nonnull _db_, json_operator_right_nesting_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_json_operator_right_nesting, &json_operator_right_nesting_perf_index);
+  cql_code rc = json_operator_right_nesting(_db_, &stmt);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = json_operator_right_nesting_data_types,
+    .col_offsets = json_operator_right_nesting_col_offsets,
+    .refs_count = 1,
+    .refs_offset = json_operator_right_nesting_refs_offset,
+    .rowsize = sizeof(json_operator_right_nesting_row),
+    .crc = CRC_json_operator_right_nesting,
+    .perf_index = &json_operator_right_nesting_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+/*
+export:
+DECLARE PROC json_operator_right_nesting () (result TEXT);
+*/
+CQL_WARN_UNUSED cql_code json_operator_right_nesting(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  cql_error_prepare();
+
+  _rc_ = cql_prepare(_db_, _result_stmt,
+    "SELECT '{}' -> ('$' || '.a')");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = cql_prepare(_db_, _result_stmt,
+    "SELECT 'p' || ('{}' -> '$.a')");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = cql_prepare(_db_, _result_stmt,
+    "SELECT '{}' ->> ('$' || '.a')");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_error_report();
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
   return _rc_;
 }
 #undef _PROC_
@@ -17827,7 +18077,7 @@ void end_proc(void) {
 DECLARE end_marker INT;
 */
 cql_nullable_int32 end_marker = { .is_null = 1 };
-#define _PROC_ cql_startup
+#define _PROC_ "cql_startup"
 
 cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
@@ -18640,15 +18890,23 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   // The statement ending at line XXXX
 
   /*
-  SET i2 := 3 IN (1, 2, NULL, 4);
+  SET i2 := 3 IN (1, 2, 4);
   */
   do {
     _tmp_int_1 = 3;
-    _tmp_bool_0 = 1;
-    if (_tmp_int_1 == 1) break;
-    if (_tmp_int_1 == 2) break;
-    if (_tmp_int_1 == 4) break;
     _tmp_bool_0 = 0;
+    if (_tmp_int_1 == 1) {
+      _tmp_bool_0 = 1;
+      break;
+    }
+    if (_tmp_int_1 == 2) {
+      _tmp_bool_0 = 1;
+      break;
+    }
+    if (_tmp_int_1 == 4) {
+      _tmp_bool_0 = 1;
+      break;
+    }
   } while (0);
   i2 = _tmp_bool_0;
 
@@ -18663,26 +18921,46 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
       cql_set_null(_tmp_n_bool_0);
       break;
     }
-    cql_set_notnull(_tmp_n_bool_0, 1);
-    if (_tmp_n_int_1.value == 1) break;
-    if (_tmp_n_int_1.value == 2) break;
-    if (cql_is_nullable_true(b0_nullable.is_null, _tmp_n_int_1.value == b0_nullable.value)) break;
     cql_set_notnull(_tmp_n_bool_0, 0);
+    if (_tmp_n_int_1.value == 1) {
+      cql_set_notnull(_tmp_n_bool_0, 1);
+      break;
+    }
+    if (_tmp_n_int_1.value == 2) {
+      cql_set_notnull(_tmp_n_bool_0, 1);
+      break;
+    }
+    cql_set_null(_tmp_n_bool_0);
+    if (b0_nullable.is_null) {
+      cql_set_null(_tmp_n_bool_0);
+    }
+    else if (_tmp_n_int_1.value == b0_nullable.value) {
+      cql_set_notnull(_tmp_n_bool_0, 1);
+      break;
+    }
   } while (0);
   cql_set_nullable(i0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
 
   // The statement ending at line XXXX
 
   /*
-  SET i2 := 3 NOT IN (1, 2, NULL, 4);
+  SET i2 := 3 NOT IN (1, 2, 4);
   */
   do {
     _tmp_int_1 = 3;
-    _tmp_bool_0 = 0;
-    if (_tmp_int_1 == 1) break;
-    if (_tmp_int_1 == 2) break;
-    if (_tmp_int_1 == 4) break;
     _tmp_bool_0 = 1;
+    if (_tmp_int_1 == 1) {
+      _tmp_bool_0 = 0;
+      break;
+    }
+    if (_tmp_int_1 == 2) {
+      _tmp_bool_0 = 0;
+      break;
+    }
+    if (_tmp_int_1 == 4) {
+      _tmp_bool_0 = 0;
+      break;
+    }
   } while (0);
   i2 = _tmp_bool_0;
 
@@ -18697,11 +18975,23 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
       cql_set_null(_tmp_n_bool_0);
       break;
     }
-    cql_set_notnull(_tmp_n_bool_0, 0);
-    if (_tmp_n_int_1.value == 1) break;
-    if (_tmp_n_int_1.value == 2) break;
-    if (cql_is_nullable_true(b0_nullable.is_null, _tmp_n_int_1.value == b0_nullable.value)) break;
     cql_set_notnull(_tmp_n_bool_0, 1);
+    if (_tmp_n_int_1.value == 1) {
+      cql_set_notnull(_tmp_n_bool_0, 0);
+      break;
+    }
+    if (_tmp_n_int_1.value == 2) {
+      cql_set_notnull(_tmp_n_bool_0, 0);
+      break;
+    }
+    cql_set_null(_tmp_n_bool_0);
+    if (b0_nullable.is_null) {
+      cql_set_null(_tmp_n_bool_0);
+    }
+    else if (_tmp_n_int_1.value == b0_nullable.value) {
+      cql_set_notnull(_tmp_n_bool_0, 0);
+      break;
+    }
   } while (0);
   cql_set_nullable(i0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
 
@@ -19003,10 +19293,21 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
       cql_set_null(_tmp_n_bool_0);
       break;
     }
-    cql_set_notnull(_tmp_n_bool_0, 1);
-    if (cql_is_nullable_true(!obj_var, _tmp_n_object_1 == obj_var)) break;
-    if (cql_is_nullable_true(!obj_var, _tmp_n_object_1 == obj_var)) break;
     cql_set_notnull(_tmp_n_bool_0, 0);
+    if (!obj_var) {
+      cql_set_null(_tmp_n_bool_0);
+    }
+    else if (_tmp_n_object_1 == obj_var) {
+      cql_set_notnull(_tmp_n_bool_0, 1);
+      break;
+    }
+    if (!obj_var) {
+      cql_set_null(_tmp_n_bool_0);
+    }
+    else if (_tmp_n_object_1 == obj_var) {
+      cql_set_notnull(_tmp_n_bool_0, 1);
+      break;
+    }
   } while (0);
   cql_set_nullable(b0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
 
@@ -19017,10 +19318,15 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   */
   do {
     cql_set_object_ref(&_tmp_object_1, obj_var2);
-    _tmp_bool_0 = 1;
-    if (_tmp_object_1 == obj_var2) break;
-    if (_tmp_object_1 == obj_var2) break;
     _tmp_bool_0 = 0;
+    if (_tmp_object_1 == obj_var2) {
+      _tmp_bool_0 = 1;
+      break;
+    }
+    if (_tmp_object_1 == obj_var2) {
+      _tmp_bool_0 = 1;
+      break;
+    }
   } while (0);
   b2 = _tmp_bool_0;
 
@@ -19035,10 +19341,21 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
       cql_set_null(_tmp_n_bool_0);
       break;
     }
-    cql_set_notnull(_tmp_n_bool_0, 0);
-    if (cql_is_nullable_true(!obj_var, _tmp_n_object_1 == obj_var)) break;
-    if (cql_is_nullable_true(!obj_var, _tmp_n_object_1 == obj_var)) break;
     cql_set_notnull(_tmp_n_bool_0, 1);
+    if (!obj_var) {
+      cql_set_null(_tmp_n_bool_0);
+    }
+    else if (_tmp_n_object_1 == obj_var) {
+      cql_set_notnull(_tmp_n_bool_0, 0);
+      break;
+    }
+    if (!obj_var) {
+      cql_set_null(_tmp_n_bool_0);
+    }
+    else if (_tmp_n_object_1 == obj_var) {
+      cql_set_notnull(_tmp_n_bool_0, 0);
+      break;
+    }
   } while (0);
   cql_set_nullable(b0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
 
@@ -19049,10 +19366,15 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   */
   do {
     cql_set_object_ref(&_tmp_object_1, obj_var2);
-    _tmp_bool_0 = 0;
-    if (_tmp_object_1 == obj_var2) break;
-    if (_tmp_object_1 == obj_var2) break;
     _tmp_bool_0 = 1;
+    if (_tmp_object_1 == obj_var2) {
+      _tmp_bool_0 = 0;
+      break;
+    }
+    if (_tmp_object_1 == obj_var2) {
+      _tmp_bool_0 = 0;
+      break;
+    }
   } while (0);
   b2 = _tmp_bool_0;
 
@@ -19347,26 +19669,45 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
       cql_set_null(_tmp_n_bool_0);
       break;
     }
-    cql_set_notnull(_tmp_n_bool_0, 1);
-    if (cql_blob_equal(_tmp_n_blob_1, blob_var)) break;
-    if (cql_blob_equal(_tmp_n_blob_1, blob_var)) break;
     cql_set_notnull(_tmp_n_bool_0, 0);
+    if (!blob_var) {
+      cql_set_null(_tmp_n_bool_0);
+    }
+    else if (cql_blob_equal(_tmp_n_blob_1, blob_var)) {
+      cql_set_notnull(_tmp_n_bool_0, 1);
+      break;
+    }
+    if (!blob_var) {
+      cql_set_null(_tmp_n_bool_0);
+    }
+    else if (cql_blob_equal(_tmp_n_blob_1, blob_var)) {
+      cql_set_notnull(_tmp_n_bool_0, 1);
+      break;
+    }
   } while (0);
   cql_set_nullable(b0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
 
   // The statement ending at line XXXX
 
   /*
-  SET b2 := blob_var2 IN (blob_var, blob_var2);
+  SET b0_nullable := blob_var2 IN (blob_var, blob_var2);
   */
   do {
     cql_set_blob_ref(&_tmp_blob_1, blob_var2);
-    _tmp_bool_0 = 1;
-    if (cql_blob_equal(_tmp_blob_1, blob_var)) break;
-    if (cql_blob_equal(_tmp_blob_1, blob_var2)) break;
-    _tmp_bool_0 = 0;
+    cql_set_notnull(_tmp_n_bool_0, 0);
+    if (!blob_var) {
+      cql_set_null(_tmp_n_bool_0);
+    }
+    else if (cql_blob_equal(_tmp_blob_1, blob_var)) {
+      cql_set_notnull(_tmp_n_bool_0, 1);
+      break;
+    }
+    if (cql_blob_equal(_tmp_blob_1, blob_var2)) {
+      cql_set_notnull(_tmp_n_bool_0, 1);
+      break;
+    }
   } while (0);
-  b2 = _tmp_bool_0;
+  cql_set_nullable(b0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
 
   // The statement ending at line XXXX
 
@@ -19379,26 +19720,45 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
       cql_set_null(_tmp_n_bool_0);
       break;
     }
-    cql_set_notnull(_tmp_n_bool_0, 0);
-    if (cql_blob_equal(_tmp_n_blob_1, blob_var)) break;
-    if (cql_blob_equal(_tmp_n_blob_1, blob_var)) break;
     cql_set_notnull(_tmp_n_bool_0, 1);
+    if (!blob_var) {
+      cql_set_null(_tmp_n_bool_0);
+    }
+    else if (cql_blob_equal(_tmp_n_blob_1, blob_var)) {
+      cql_set_notnull(_tmp_n_bool_0, 0);
+      break;
+    }
+    if (!blob_var) {
+      cql_set_null(_tmp_n_bool_0);
+    }
+    else if (cql_blob_equal(_tmp_n_blob_1, blob_var)) {
+      cql_set_notnull(_tmp_n_bool_0, 0);
+      break;
+    }
   } while (0);
   cql_set_nullable(b0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
 
   // The statement ending at line XXXX
 
   /*
-  SET b2 := blob_var2 NOT IN (blob_var, blob_var2);
+  SET b0_nullable := blob_var2 NOT IN (blob_var, blob_var2);
   */
   do {
     cql_set_blob_ref(&_tmp_blob_1, blob_var2);
-    _tmp_bool_0 = 0;
-    if (cql_blob_equal(_tmp_blob_1, blob_var)) break;
-    if (cql_blob_equal(_tmp_blob_1, blob_var2)) break;
-    _tmp_bool_0 = 1;
+    cql_set_notnull(_tmp_n_bool_0, 1);
+    if (!blob_var) {
+      cql_set_null(_tmp_n_bool_0);
+    }
+    else if (cql_blob_equal(_tmp_blob_1, blob_var)) {
+      cql_set_notnull(_tmp_n_bool_0, 0);
+      break;
+    }
+    if (cql_blob_equal(_tmp_blob_1, blob_var2)) {
+      cql_set_notnull(_tmp_n_bool_0, 0);
+      break;
+    }
   } while (0);
-  b2 = _tmp_bool_0;
+  cql_set_nullable(b0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
 
   // The statement ending at line XXXX
 

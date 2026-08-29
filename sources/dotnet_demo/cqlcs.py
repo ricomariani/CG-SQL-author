@@ -33,6 +33,38 @@ import json
 import sys
 
 
+def cql_identifier(name):
+    result = []
+    used_hex = False
+    for ch in name.encode("utf-8"):
+        if (ord("a") <= ch <= ord("z")
+                or ord("A") <= ch <= ord("Z") and ch != ord("X")
+                or ord("0") <= ch <= ord("9")
+                or ch == ord("_")):
+            result.append(chr(ch))
+        else:
+            result.append(f"X{ch:02x}")
+            used_hex = True
+    return ("X_" if used_hex else "") + "".join(result)
+
+
+def projection_member_names(projection):
+    # Count is emitted as a property on every projection class.  Reserving its
+    # accessor name avoids a get_Count method collision for single-row results.
+    used = {"Count"}
+    result = []
+    for col, projected_column in enumerate(projection):
+        base = cql_identifier(projected_column["name"])
+        candidate = base
+        if candidate in used:
+            candidate = f"{base}_{col}"
+            while candidate in used:
+                candidate += "_"
+        used.add(candidate)
+        result.append(candidate)
+    return result
+
+
 def usage():
     print(
         "Usage: input.json [options] >result.cs or >result.c\n"
@@ -351,6 +383,9 @@ def emit_proc_c_func_body(proc, meta_results, attributes):
                 print(f"  {xtype} {a_name}_value", end="")
             else:
                 print(f"{comma}  {xtype} {a_name}", end="")
+                if type == "blob":
+                    print(f",\n  cql_int32 {a_name}_len", end="")
+                    print(f",\n  cql_int32 {a_name}_has_value", end="")
 
             needsComma = True
 
@@ -488,16 +523,16 @@ def emit_proc_c_func_body(proc, meta_results, attributes):
             cleanup += f"  cql_string_release(str_ref_{a_name});\n"
             call += f"str_ref_{a_name}"
         elif a_type == "blob":
-            # Text is a byte in C#.  We need to "unbox" it into a
+            # A blob is a byte array in C#.  We need to copy it into a
             # cql_blob_ref.  We need to release the blob ref after the call. So
             # we emit a temporary blob ref, we initialize it from the C# blob
             # and then use it in the call.  For "inout" args, after the call
             # copy the blob reference to the output row.
             preamble += f"  cql_blob_ref blob_ref_{a_name} = NULL;\n"
-            preamble += f"  if ({a_name}) {{\n"
-            preamble += f"    void *bytes_{a_name} = \"xx\";\n"
-            preamble += f"    int len_{a_name} = 2;\n"
-            preamble += f"    blob_ref_{a_name} = cql_blob_ref_new(bytes_{a_name}, (cql_uint32)len_{a_name});\n"
+            preamble += f"  if ({a_name}_has_value) {{\n"
+            preamble += f"    const char empty_blob_{a_name} = 0;\n"
+            preamble += f"    const void *bytes_{a_name} = {a_name}_len ? {a_name} : &empty_blob_{a_name};\n"
+            preamble += f"    blob_ref_{a_name} = cql_blob_ref_new(bytes_{a_name}, (cql_uint32){a_name}_len);\n"
             preamble += f"  }}\n"
             cleanup += f"  cql_set_blob_ref(&row->{a_name}, blob_ref_{a_name});\n" if inout else ""
             cleanup += f"  cql_blob_release(blob_ref_{a_name});\n"
@@ -620,8 +655,7 @@ def emit_result_set_projection(proc, attributes):
     p_name = proc["name"]
     projection = proc["projection"]
     col = 0
-    for p in projection:
-        c_name = p["name"]
+    for p, member_name in zip(projection, projection_member_names(projection)):
         c_type = p["type"]
         kind = p.get("kind", "")
         isSensitive = p.get("isSensitive", 0)
@@ -659,7 +693,7 @@ def emit_result_set_projection(proc, attributes):
         row_formal = "0" if hasOutResult else "row"
 
         # we're done, we're ready to emit the function name and its body
-        print(f"    public {c_type}{q} get_{c_name}({row_arg}) {{")
+        print(f"    public {c_type}{q} get_{member_name}({row_arg}) {{")
         print(
             f"      return mResultSet.get{nullable}{getter}({row_formal}, {col});"
         )
@@ -767,13 +801,15 @@ def emit_proc_csharp_interop(proc, attributes):
     c_params = ""
     call_args = ""
     needs_wrapper = False
+    interop_param_count = 0
 
-    # if usesDatabase then we need the db argument, in c# it goes in __db
+    # if usesDatabase then we need the db argument, in C# it goes in __db
     if usesDatabase:
         params += "long __db"
         c_params += "long __db"
         call_args += "__db"
         commaNeeded = True
+        interop_param_count += 1
 
     # Now we walk the arguments and emit the C# types for all of the
     # in and inout arguments.  Note that the C# ABI does not use
@@ -799,16 +835,31 @@ def emit_proc_csharp_interop(proc, attributes):
                 c_params += ", "
                 call_args += ", "
 
-            if not isNotNull and split_types[type]:
+            if type == "blob":
+                call_args += (
+                    f"{a_name}, {a_name} == null ? 0 : {a_name}.Length, "
+                    f"{a_name} == null ? 0 : 1"
+                )
+                params += f"{xtype} {a_name}"
+                c_params += (
+                    "[In, MarshalAs(UnmanagedType.LPArray, "
+                    f"SizeParamIndex = {interop_param_count + 1})] "
+                    f"{xtype} {a_name}, int {a_name}_len, "
+                    f"int {a_name}_has_value"
+                )
+                interop_param_count += 3
+            elif not isNotNull and split_types[type]:
                 call_args += f"{a_name}.HasValue, {a_name}.GetValueOrDefault()"
                 params += f"{xtype} {a_name}"
                 xtype = notnull_types[type]
                 c_params += f"bool {a_name}_has_value, {xtype} {a_name}_value"
                 needs_wrapper = True
+                interop_param_count += 2
             else:
                 call_args += a_name
                 c_params += f"{xtype} {a_name}"
                 params += f"{xtype} {a_name}"
+                interop_param_count += 1
 
             commaNeeded = True
 

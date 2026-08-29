@@ -2607,6 +2607,21 @@ extern void in_test(cql_nullable_int32 x, cql_nullable_bool *_Nonnull b);
 extern void not_in_test(cql_nullable_int32 x, cql_nullable_bool *_Nonnull b);
 
 // The statement ending at line XXXX
+extern void in_nullable_rhs_test(cql_int32 x, cql_nullable_int32 candidate, cql_nullable_bool *_Nonnull b);
+
+// The statement ending at line XXXX
+extern void not_in_nullable_rhs_test(cql_int32 x, cql_nullable_int32 candidate, cql_nullable_bool *_Nonnull b);
+
+// The statement ending at line XXXX
+extern void in_null_literal_rhs_test(cql_int32 x, cql_nullable_bool *_Nonnull b);
+
+// The statement ending at line XXXX
+extern void in_empty_list_test(cql_bool *_Nonnull b);
+
+// The statement ending at line XXXX
+extern void not_in_empty_list_test(cql_bool *_Nonnull b);
+
+// The statement ending at line XXXX
 extern CQL_WARN_UNUSED cql_code drop_trigger_test(sqlite3 *_Nonnull _db_);
 
 // The statement ending at line XXXX
@@ -5604,6 +5619,40 @@ extern void out_arg_cursor(cql_int32 x, cql_int32 *_Nonnull y);
 
 // The statement ending at line XXXX
 extern CQL_WARN_UNUSED cql_code make_virt_table(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+#define CRC_json_operator_right_nesting -5523444366154181147L
+
+extern cql_string_ref _Nonnull json_operator_right_nesting_stored_procedure_name;
+
+#define json_operator_right_nesting_data_types_count 1
+
+extern uint8_t json_operator_right_nesting_data_types[json_operator_right_nesting_data_types_count];
+
+#ifndef result_set_type_decl_json_operator_right_nesting_result_set
+#define result_set_type_decl_json_operator_right_nesting_result_set 1
+cql_result_set_type_decl(json_operator_right_nesting_result_set, json_operator_right_nesting_result_set_ref);
+#endif
+#ifndef _json_operator_right_nesting_get_result_inline_
+#define _json_operator_right_nesting_get_result_inline_
+
+
+static inline cql_string_ref _Nullable json_operator_right_nesting_get_result(json_operator_right_nesting_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 0) ? NULL : cql_result_set_get_string_col((cql_result_set_ref)result_set, row, 0);
+}
+
+#endif
+
+
+extern cql_int32 json_operator_right_nesting_result_count(json_operator_right_nesting_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code json_operator_right_nesting_fetch_results(sqlite3 *_Nonnull _db_, json_operator_right_nesting_result_set_ref _Nullable *_Nonnull result_set);
+#define json_operator_right_nesting_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define json_operator_right_nesting_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
 
 // The statement ending at line XXXX
 

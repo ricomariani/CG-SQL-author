@@ -32,6 +32,22 @@ def sql_literal(value):
     return "'" + str(value).replace("'", "''") + "'"
 
 
+def sql_integer(value, field):
+    if type(value) is not int:
+        raise ValueError(f"{field} must be an integer")
+    if value < -(1 << 63) or value >= (1 << 63):
+        raise ValueError(f"{field} is outside the SQLite integer range")
+    return value
+
+
+def sql_boolean(value, field):
+    if type(value) is bool:
+        return 1 if value else 0
+    if type(value) is int and value in (0, 1):
+        return value
+    raise ValueError(f"{field} must be a boolean")
+
+
 def usage():
     print((
         "Usage:\n"
@@ -372,8 +388,9 @@ def emit_projection(p_name, projection):
         c_name = p["name"]
         type = p["type"]
         kind = sql_literal(p["kind"]) if "kind" in p else "NULL"
-        isSensitive = p.get("isSensitive", 0)
-        isNotNull = p["isNotNull"]
+        isSensitive = sql_boolean(
+            p.get("isSensitive", 0), "projection.isSensitive")
+        isNotNull = sql_boolean(p["isNotNull"], "projection.isNotNull")
         print(
             f"insert into proc_projections values({sql_literal(p_name)}, {col}, {sql_literal(c_name)}, {sql_literal(type)}, {kind}, {isSensitive}, {isNotNull});"
         )
@@ -400,12 +417,14 @@ def emit_procinfo(section, s_name):
 
 
 # Formats a single attribute value. Lists are comma-separated recursively and
-# strings retain the double-quoted CQL attribute representation.
+# strings retain a double-quoted representation.  json.dumps supplies the same
+# quote and backslash escaping needed to keep arbitrary string values
+# unambiguous inside that representation.
 def format_attr_value(attr):
     if isinstance(attr, list):
         return "(" + ", ".join(format_attr_value(a) for a in attr) + ")"
     elif isinstance(attr, str):
-        return f'"{attr}"'
+        return json.dumps(attr, ensure_ascii=False)
     else:
         return f"{attr}"
 
@@ -445,10 +464,12 @@ def emit_sql(data):
         t = tup[1]
         t_name = t["name"]
         region = t.get("region", "None")
-        deleted = 1 if t["isDeleted"] else 0
-        recreated = 1 if t["isRecreated"] else 0
-        createVersion = t.get("addedVersion", 0)
-        deleteVersion = t.get("deletedVersion", -1)
+        deleted = sql_boolean(t["isDeleted"], "table.isDeleted")
+        recreated = sql_boolean(t["isRecreated"], "table.isRecreated")
+        createVersion = sql_integer(
+            t.get("addedVersion", 0), "table.addedVersion")
+        deleteVersion = sql_integer(
+            t.get("deletedVersion", -1), "table.deletedVersion")
         groupName = t.get("recreateGroupName", "")
         print(
             f"insert into tables values({sql_literal(t_name)}, {sql_literal(region)}, {deleted}, {createVersion}, {deleteVersion}, {recreated}, {sql_literal(groupName)});"
@@ -461,7 +482,7 @@ def emit_sql(data):
             c_name = c["name"]
             c_type = c["type"]
             c_kind = c.get("kind", "")
-            c_notnull = c["isNotNull"]
+            c_notnull = sql_boolean(c["isNotNull"], "column.isNotNull")
             print(
                 f"insert into columns values ({sql_literal(t_name)}, {sql_literal(c_name)}, {sql_literal(c_type)}, {sql_literal(c_kind)}, {c_notnull});"
             )
@@ -503,9 +524,11 @@ def emit_sql(data):
         v = tup[1]
         v_name = v["name"]
         region = v.get("region", "None")
-        deleted = 1 if v["isDeleted"] else 0
-        createVersion = v.get("addedVersion", 0)
-        deleteVersion = v.get("deletedVersion", -1)
+        deleted = sql_boolean(v["isDeleted"], "view.isDeleted")
+        createVersion = sql_integer(
+            v.get("addedVersion", 0), "view.addedVersion")
+        deleteVersion = sql_integer(
+            v.get("deletedVersion", -1), "view.deletedVersion")
         print(
             f"insert into views values({sql_literal(v_name)}, {sql_literal(region)}, {deleted}, {createVersion}, {deleteVersion});"
         )
@@ -515,7 +538,7 @@ def emit_sql(data):
         tr_name = tr["name"]
         t_name = tr["target"]
         region = tr.get("region", "None")
-        deleted = 1 if tr["isDeleted"] else 0
+        deleted = sql_boolean(tr["isDeleted"], "trigger.isDeleted")
         print(
             f"insert into triggers values({sql_literal(tr_name)}, {sql_literal(t_name)}, {sql_literal(region)}, {deleted});"
         )

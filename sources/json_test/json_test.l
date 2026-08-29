@@ -1,4 +1,4 @@
-%option noyywrap nodefault yylineno case-insensitive
+%option noyywrap nodefault yylineno
 %{
 
 /*
@@ -28,7 +28,7 @@ int fileno(FILE *);
 
 %%
 
-\"crc\"[ \t]*:                   { return CRC; }
+\"CRC\"[ \t]*:                   { return CRC; }
 \"tables\"[ \t]*:                { return TABLES; }
 \"virtualTables\"[ \t]*:         { return VIRTUAL_TABLES; }
 \"name\"[ \t]*:                  { return NAME; }
@@ -153,7 +153,7 @@ int fileno(FILE *);
 
 [01]                             { return yytext[0]; }
 [0-9]+L                          { return LONG_LITERAL; }
-([0-9]+"."[0-9]*|"."[0-9]+)(E("+"|"-")?[0-9]+)? { return REAL_LITERAL; }
+([0-9]+"."[0-9]*|"."[0-9]+)([Ee]("+"|"-")?[0-9]+)? { return REAL_LITERAL; }
 [0-9]+                           { return INT_LITERAL; }
 \"(\\.|[^"\n])*\"                { return STRING_LITERAL; }
 null				 { return NULL_LITERAL; }

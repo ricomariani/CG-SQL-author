@@ -12,6 +12,7 @@
 # remained data rather than becoming another statement.
 
 import contextlib
+import copy
 import io
 import sqlite3
 
@@ -32,7 +33,10 @@ def main():
             "addedVersion": 2,
             "deletedVersion": 3,
             "recreateGroupName": "gro'up",
-            "attributes": [{"name": "att'r", "value": ["v'al", 7]}],
+            "attributes": [{
+                "name": "att'r",
+                "value": ["v'al", 'v"al\\ue', 7],
+            }],
             "columns": [{
                 "name": "co'l",
                 "type": "te'xt",
@@ -107,7 +111,7 @@ def main():
     )
     assert db.execute("select a_name, value from table_attributes").fetchone() == (
         "att'r",
-        '("v\'al", 7)',
+        '("v\'al", "v\\"al\\\\ue", 7)',
     )
     assert db.execute("select p_name, c_name, kind from proc_projections").fetchone() == (
         "pr'oc",
@@ -126,6 +130,41 @@ def main():
     assert db.execute(
         "select count(*) from sqlite_master where name = 'pwned'"
     ).fetchone() == (0,)
+
+    invalid_fields = [
+        ("tables", 0, "isDeleted", "0); create table numeric_pwned(x); --"),
+        ("tables", 0, "isRecreated", "true"),
+        ("tables", 0, "addedVersion", "0); create table numeric_pwned(x); --"),
+        ("tables", 0, "deletedVersion", 1.5),
+        ("columns", 0, "isNotNull", "false"),
+        ("projection", 0, "isSensitive", "0); create table numeric_pwned(x); --"),
+        ("projection", 0, "isNotNull", 2),
+        ("views", 0, "isDeleted", None),
+        ("views", 0, "addedVersion", True),
+        ("views", 0, "deletedVersion", "5"),
+        ("triggers", 0, "isDeleted", []),
+    ]
+
+    for section, index, field, invalid_value in invalid_fields:
+        invalid_data = copy.deepcopy(data)
+        if section == "columns":
+            target = invalid_data["tables"][0]["columns"][index]
+        elif section == "projection":
+            target = invalid_data["queries"][0]["projection"][index]
+        else:
+            target = invalid_data[section][index]
+        target[field] = invalid_value
+
+        output = io.StringIO()
+        try:
+            with contextlib.redirect_stdout(output):
+                cqljson.emit_sql(invalid_data)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError(f"{section}.{field} was not rejected")
+
+        assert "create table numeric_pwned" not in output.getvalue().lower()
 
 
 if __name__ == "__main__":

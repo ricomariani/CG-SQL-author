@@ -28,6 +28,36 @@ import json
 import sys
 
 
+def cql_identifier(name):
+    result = []
+    used_hex = False
+    for ch in name.encode("utf-8"):
+        if (ord("a") <= ch <= ord("z")
+                or ord("A") <= ch <= ord("Z") and ch != ord("X")
+                or ord("0") <= ch <= ord("9")
+                or ch == ord("_")):
+            result.append(chr(ch))
+        else:
+            result.append(f"X{ch:02x}")
+            used_hex = True
+    return ("X_" if used_hex else "") + "".join(result)
+
+
+def projection_member_names(projection):
+    used = set()
+    result = []
+    for col, projected_column in enumerate(projection):
+        base = cql_identifier(projected_column["name"])
+        candidate = base
+        if candidate in used:
+            candidate = f"{base}_{col}"
+            while candidate in used:
+                candidate += "_"
+        used.add(candidate)
+        result.append(candidate)
+    return result
+
+
 def usage():
     print(
         "Usage: input.json [options] >result.h or >result.m\n"
@@ -121,6 +151,15 @@ nullable_conv["real"] = "@"
 nullable_conv["object"] = "bridge"
 nullable_conv["blob"] = "bridge"
 nullable_conv["text"] = "bridge"
+
+result_set_getters = {}
+result_set_getters["bool"] = "cql_result_set_get_bool_col"
+result_set_getters["integer"] = "cql_result_set_get_int32_col"
+result_set_getters["long"] = "cql_result_set_get_int64_col"
+result_set_getters["real"] = "cql_result_set_get_double_col"
+result_set_getters["object"] = "cql_result_set_get_object_col"
+result_set_getters["blob"] = "cql_result_set_get_blob_col"
+result_set_getters["text"] = "cql_result_set_get_string_col"
 
 c_types = {}
 c_types[False] = c_nullable_types
@@ -223,6 +262,7 @@ def emit_proc_objc_projection_impl(proc, attributes):
         return
 
     projection = proc["projection"]
+    col = 0
 
     print("")
     print(dashes)
@@ -237,8 +277,7 @@ def emit_proc_objc_projection_impl(proc, attributes):
     print(f"  {p_name}_result_set_ref _result_set_ref;")
     print("}")
 
-    for p in projection:
-        c_name = p["name"]
+    for p, member_name in zip(projection, projection_member_names(projection)):
         c_type = p["type"]
         kind = p.get("kind", "")
         isSensitive = p.get("isSensitive", 0)
@@ -250,14 +289,17 @@ def emit_proc_objc_projection_impl(proc, attributes):
         print("")
 
         if hasOutResult:
-            print(f"- ({objc_type}){c_name}", end="")
+            print(f"- ({objc_type}){member_name}", end="")
         else:
-            print(f"- ({objc_type}){c_name}:(NSUInteger)row", end="")
+            print(f"- ({objc_type}){member_name}:(NSUInteger)row", end="")
 
         conv = notnull_conv[c_type] if isNotNull else nullable_conv[c_type]
         bool_fix = "" if objc_type != "cql_bool" else " ? YES : NO"
-        row_arg = "" if hasOutResult else ", row"
-        row_param = "" if hasOutResult else ", cql_int32 row"
+        row_value = "0" if hasOutResult else "row"
+        getter = (
+            f"{result_set_getters[c_type]}("
+            f"(cql_result_set_ref)_result_set_ref, {row_value}, {col})"
+        )
 
         # the getter body is one of three forms
         # 1. For reference types we convert the value to NSString, NSData etc.
@@ -268,28 +310,28 @@ def emit_proc_objc_projection_impl(proc, attributes):
 
         if conv == "@":
             print(
-                f"  return {p_name}_get_{c_name}_is_null(_result_set_ref{row_arg}) ? nil : @({p_name}_get_{c_name}_value(_result_set_ref{row_arg}));"
+                "  return cql_result_set_get_is_null_col("
+                f"(cql_result_set_ref)_result_set_ref, {row_value}, {col}) "
+                f"? nil : @({getter});"
             )
         elif conv == "bridge":
             if objc_type.endswith("RS *_Nullable"):
                 cls = objc_type[:-11]
                 print(f"  // make child result")
                 print(f"  {objc_type} rs = [{cls} new];")
+                c_result_type = kind[:-4]
                 print(
-                    f"  rs.result_set_ref = {p_name}_get_{c_name}(_result_set_ref{row_arg});"
+                    f"  rs.result_set_ref = ({c_result_type}_result_set_ref){getter};"
                 )
                 print(f"  cql_retain((cql_type_ref)rs.result_set_ref);")
                 print(f"  return rs;")
             else:
-                print(
-                    f"  return (__bridge {objc_type}){p_name}_get_{c_name}(_result_set_ref{row_arg}){bool_fix};"
-                )
+                print(f"  return (__bridge {objc_type}){getter}{bool_fix};")
         else:
-            print(
-                f"  return {p_name}_get_{c_name}(_result_set_ref{row_arg}){bool_fix};"
-            )
+            print(f"  return {getter}{bool_fix};")
 
         print("}")
+        col += 1
 
     identityResult = "YES" if "cql:identity" in attributes else "NO"
 
@@ -596,8 +638,7 @@ def emit_result_set_projection_header(proc, attributes):
     # the procedure is already known to have a projection or we wouldn't be here
     p_name = proc["name"]
     projection = proc["projection"]
-    for p in projection:
-        c_name = p["name"]
+    for p, member_name in zip(projection, projection_member_names(projection)):
         c_type = p["type"]
         kind = p.get("kind", "")
         isSensitive = p.get("isSensitive", 0)
@@ -607,9 +648,9 @@ def emit_result_set_projection_header(proc, attributes):
         c_type = objc_type_for_arg(c_type, kind, isNotNull)
 
         if hasOutResult:
-            print(f"@property (nonatomic, readonly) {c_type} {c_name};")
+            print(f"@property (nonatomic, readonly) {c_type} {member_name};")
         else:
-            print(f"- ({c_type}){c_name}:(NSUInteger)row;")
+            print(f"- ({c_type}){member_name}:(NSUInteger)row;")
 
 
 def hasOutArgs(args):
@@ -723,8 +764,7 @@ def emit_proc_objc_projection_header(proc, attributes):
 
     p_name = proc["name"]
     projection = proc["projection"]
-    for p in projection:
-        c_name = p["name"]
+    for p, member_name in zip(projection, projection_member_names(projection)):
         c_type = p["type"]
         kind = p.get("kind", "")
         isSensitive = p.get("isSensitive", 0)
@@ -734,9 +774,9 @@ def emit_proc_objc_projection_header(proc, attributes):
         c_type = objc_type_for_arg(c_type, kind, isNotNull)
 
         if hasOutResult:
-            print(f"@property (nonatomic, readonly) {c_type} {c_name};")
+            print(f"@property (nonatomic, readonly) {c_type} {member_name};")
         else:
-            print(f"- ({c_type}){c_name}:(NSUInteger)row;")
+            print(f"- ({c_type}){member_name}:(NSUInteger)row;")
 
     identityResult = "true" if "cql:identity" in attributes else "false"
 

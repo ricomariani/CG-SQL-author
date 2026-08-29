@@ -36,6 +36,19 @@ static uint8_t contract_test_types[] = {
   CQL_DATA_TYPE_INT32,
 };
 
+typedef struct hostile_cursor_test_row {
+  cql_bool has_row;
+  cql_bool value;
+  cql_bool canary;
+} hostile_cursor_test_row;
+
+// Generated C normally supplies this builtin declaration.  This standalone
+// runtime test needs the same prototype to exercise hostile blob input.
+extern CQL_WARN_UNUSED cql_code cql_cursor_from_blob(
+  sqlite3 *_Nonnull db,
+  cql_dynamic_cursor *_Nonnull dyn_cursor,
+  cql_blob_ref _Nullable b);
+
 static cql_result_set_ref make_result_set(void) {
   // Ownership of this allocation transfers to the result set.  calloc also
   // clears the nullable flag, making the assigned value initially non-null.
@@ -99,6 +112,47 @@ static int run_valid_tests(void) {
     return 1;
   }
   cql_object_release(reals);
+
+  // A hostile type header used to wrap the 16-bit field counters at 65,536
+  // entries.  The wrap made the one required boolean look absent, so the
+  // nullable-bool layout overwrote both the value and its adjacent canary.
+  enum { hostile_type_count = 65536 };
+  uint8_t *hostile_bytes = malloc(hostile_type_count + 1);
+  memset(hostile_bytes, 'F', hostile_type_count);
+  hostile_bytes[hostile_type_count] = 0;
+  cql_blob_ref hostile_blob =
+    cql_blob_ref_new(hostile_bytes, hostile_type_count + 1);
+  free(hostile_bytes);
+
+  hostile_cursor_test_row hostile_row = {
+    .value = 0x5a,
+    .canary = 0xa5,
+  };
+  cql_uint16 hostile_offsets[] = {
+    1,
+    offsetof(hostile_cursor_test_row, value),
+  };
+  uint8_t hostile_types[] = {
+    CQL_DATA_TYPE_BOOL | CQL_DATA_TYPE_NOT_NULL,
+    CQL_DATA_TYPE_BOOL | CQL_DATA_TYPE_NOT_NULL,
+  };
+  const char *hostile_fields[] = { "value" };
+  cql_dynamic_cursor hostile_cursor = {
+    .cursor_data = &hostile_row,
+    .cursor_has_row = &hostile_row.has_row,
+    .cursor_col_offsets = hostile_offsets,
+    .cursor_data_types = hostile_types,
+    .cursor_fields = hostile_fields,
+    .cursor_size = sizeof(hostile_row),
+  };
+
+  if (cql_cursor_from_blob(NULL, &hostile_cursor, hostile_blob) != SQLITE_ERROR ||
+      hostile_row.has_row ||
+      hostile_row.value != 0x5a ||
+      hostile_row.canary != 0xa5) {
+    return 1;
+  }
+  cql_blob_release(hostile_blob);
   return 0;
 }
 
@@ -124,9 +178,18 @@ static void run_failure_test(const char *name) {
   }
 
   // Check each result-set operand separately.  Testing only row1 could leave an
-  // unchecked negative row2 in the second data-pointer calculation.
+  // unchecked negative row2 in the second data-pointer calculation.  The shape
+  // case verifies that equality does not use the first result set's row size
+  // to read a differently sized second result set.  Optional logical
+  // column descriptors are intentionally irrelevant to bytewise equality.
   if (!strncmp(name, "rows_equal_", 11)) {
     cql_result_set_ref result_set = make_result_set();
+    if (!strcmp(name, "rows_equal_row_size_mismatch")) {
+      cql_result_set_ref other_result_set = make_result_set();
+      cql_result_set_get_meta(other_result_set)->rowsize++;
+      cql_rows_equal(result_set, 0, other_result_set, 0);
+      return;
+    }
     cql_int32 row1 = !strcmp(name, "rows_equal_first_negative") ? -1 : 0;
     cql_int32 row2 = !strcmp(name, "rows_equal_second_negative") ? -1 : 0;
     cql_rows_equal(result_set, row1, result_set, row2);

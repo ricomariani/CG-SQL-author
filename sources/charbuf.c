@@ -59,12 +59,21 @@ cql_noexport void vbprintf(charbuf *b, const char *format, va_list args) {
   va_copy(pass1, args);
   va_copy(pass2, args);
 
+  // does not include the trailing null
+  uint32_t needed = (uint32_t)vsnprintf(NULL, 0, format, pass1);
+
+  // Formatting into separate storage keeps both the format and any string
+  // arguments valid when they point into the destination buffer.
+  char local[CHARBUF_INTERNAL_SIZE];
+  char *formatted = local;
+  if (needed >= CHARBUF_INTERNAL_SIZE) {
+    formatted = _new_array(char, needed + 1);
+  }
+  vsnprintf(formatted, needed + 1, format, pass2);
+
   // invariant is that there is already a null in the buffer
   // we can re-use that one.
   uint32_t avail = b->max - b->used;
-
-  // does not include the trailing null
-  uint32_t needed = (uint32_t)vsnprintf(NULL, 0, format, pass1);
 
   if (needed > avail) {
     b->max += needed + CHARBUF_GROWTH_SIZE;
@@ -75,16 +84,16 @@ cql_noexport void vbprintf(charbuf *b, const char *format, va_list args) {
     if (b->ptr != &b->internal[0]) {
       free(b->ptr);
     }
-    avail = b->max - b->used;
     b->ptr = newptr;
   }
 
-  // clobber starting from the current null, there is one more byte
-  // than avail available to vsnprintf because we're backing off to
-  // globber the old null.  The result is always null terminated.
-  vsnprintf(b->ptr + b->used - 1, avail + 1, format, pass2);
+  // clobber the current null and copy the new null terminator with the text
+  memcpy(b->ptr + b->used - 1, formatted, needed + 1);
   b->used += needed;
 
+  if (formatted != local) {
+    free(formatted);
+  }
   va_end(pass1);
   va_end(pass2);
 }

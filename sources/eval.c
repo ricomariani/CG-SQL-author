@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <limits.h>
 #include <float.h>
+#include <string.h>
 #include "cg_common.h"
 #include "compat.h"
 #include "cql.h"
@@ -93,6 +94,32 @@ static void eval_num(ast_node *expr, eval_node *result) {
   eval_num_str(lit, num_type, result);
 }
 
+// The upper LONG bound is exclusive because INT64_MAX rounds to 2^63 when
+// represented as a double. These predicates also reject NaN and infinities
+// because all ordered comparisons with NaN are false and infinities exceed the
+// finite bounds.
+static bool_t eval_real_fits_int32(double value) {
+  // Values within one unit beyond either endpoint still truncate into range.
+  return value > (double)INT32_MIN - 1.0 && value < (double)INT32_MAX + 1.0;
+}
+
+static bool_t eval_real_fits_int64(double value) {
+  const double int64_limit = 9223372036854775808.0;
+  return value >= -int64_limit && value < int64_limit;
+}
+
+static int32_t eval_int32_from_bits(uint32_t bits) {
+  int32_t value;
+  memcpy(&value, &bits, sizeof(value));
+  return value;
+}
+
+static int64_t eval_int64_from_bits(uint64_t bits) {
+  int64_t value;
+  memcpy(&value, &bits, sizeof(value));
+  return value;
+}
+
 // Used for explicit casts but also for numeric conversions when
 // a free promotion is allowed.  This will convert between
 // any of the numeric types.  There are twelve possible conversions
@@ -110,13 +137,6 @@ cql_noexport void eval_cast_to(eval_node *result, sem_t sem_type) {
   if (core_type_source == core_type_target) {
     return;
   }
-
-  // The nested switch below is deliberately fully spelled out rather than
-  // using tables/macros: clarity of the narrow set of legal numeric pathways
-  // matters more than code size.  We rely on C's native casts for truncation
-  // semantics, matching runtime behavior.  Overflow detection is intentionally
-  // absent here; semantic analysis guarantees that any required diagnostics
-  // have already fired before constant folding runs.
 
   switch (core_type_target) {
     case SEM_TYPE_REAL:
@@ -136,6 +156,10 @@ cql_noexport void eval_cast_to(eval_node *result, sem_t sem_type) {
     case SEM_TYPE_LONG_INTEGER:
       switch (core_type_source) {
         case SEM_TYPE_REAL:
+          if (!eval_real_fits_int64(result->real_value)) {
+            result->sem_type = SEM_TYPE_ERROR;
+            return;
+          }
           result->int64_value = (int64_t)result->real_value;
           break;
         case SEM_TYPE_BOOL:
@@ -150,6 +174,10 @@ cql_noexport void eval_cast_to(eval_node *result, sem_t sem_type) {
     case SEM_TYPE_INTEGER:
       switch (core_type_source) {
         case SEM_TYPE_REAL:
+          if (!eval_real_fits_int32(result->real_value)) {
+            result->sem_type = SEM_TYPE_ERROR;
+            return;
+          }
           result->int32_value = (int32_t)result->real_value;
           break;
         case SEM_TYPE_BOOL:
@@ -157,7 +185,9 @@ cql_noexport void eval_cast_to(eval_node *result, sem_t sem_type) {
           break;
         default:
           Invariant(core_type_source == SEM_TYPE_LONG_INTEGER); // nothing else left
-          result->int32_value = (int32_t)result->int64_value;
+          // CQL integers have fixed widths; narrowing keeps the low 32 bits
+          // rather than relying on implementation-defined signed conversion.
+          result->int32_value = eval_int32_from_bits((uint32_t)result->int64_value);
           break;
       }
       break;
@@ -294,23 +324,9 @@ static sem_t eval_combined_type(eval_node *left, eval_node *right) {
   return result;
 }
 
-#define DIV_TEST(x)
-
-// All the normal binary operators are handled the same way, only the operator
-// actually varies. The thing is the operator has to be lexically substituted in
-// so that we get the correct math type so much as this much macro is a code
-// smell, the alternative is open coding this for every binary operator which is
-// worse.  The steps are:
-//   * any error in the operands results in an error
-//   * any null operand results in a null result
-//   * find the smallest numeric type that will hold the answer
-//   * convert to that type if needed
-//   * apply the operator on that type
-//
-// NOTE: logical AND/OR cannot be on this plan because of their short circuit
-//       behavior. for bitwise operators, see the _NO_REAL version of this macro
-//       for comparisons likewise see below for a slightly different version.
-#define BINARY_OP(op) \
+// The bitwise operators have no overflow cases, but otherwise use the same
+// null/error propagation and type promotion as the arithmetic operators.
+#define BINARY_BIT_OP(op) \
   eval_node left = EVAL_NIL; \
   eval_node right = EVAL_NIL; \
   eval(expr->left, &left); \
@@ -325,78 +341,6 @@ static sem_t eval_combined_type(eval_node *left, eval_node *right) {
     result->sem_type = SEM_TYPE_NULL; \
     return; \
   } \
-  \
-  DIV_TEST( \
-    if ((#op)[0] == '/' && result_is_false(&right)) { \
-      /* special case to prevent divide by zero */ \
-      result->sem_type = SEM_TYPE_ERROR; \
-      return; \
-    } \
-  ) \
-  \
-  sem_t core_type = eval_combined_type(&left, &right); \
-  eval_cast_to(&left, core_type); \
-  eval_cast_to(&right, core_type); \
-  result->sem_type = SEM_TYPE_ERROR; \
-  \
-  switch (core_type) { \
-  case SEM_TYPE_INTEGER: \
-    result->sem_type = SEM_TYPE_INTEGER; \
-    result->int32_value = (left.int32_value op right.int32_value); \
-    break; \
-  \
-  case SEM_TYPE_LONG_INTEGER: \
-    result->sem_type = SEM_TYPE_LONG_INTEGER; \
-    result->int64_value = (left.int64_value op right.int64_value); \
-    break; \
-  \
-  case SEM_TYPE_BOOL: \
-    result->sem_type = SEM_TYPE_BOOL; \
-    result->bool_value = 0 != (left.bool_value op right.bool_value); \
-    break; \
-  \
-  default: \
-    /* this is all that's left */ \
-    Invariant(core_type == SEM_TYPE_REAL); \
-    result->sem_type = SEM_TYPE_REAL; \
-    result->real_value = (left.real_value op right.real_value); \
-    break; \
-  } \
-  \
-  Invariant(result->sem_type == core_type)
-
-// Rationale: The macro above centralizes error/null checks, type promotion, and
-// divide-by-zero guarding so every arithmetic operator stays behaviorally
-// identical.  This avoids subtle drift when adding new numeric kinds and keeps
-// three-valued (error/null/value) logic uniform.  The small cost in readability
-// is traded for semantic consistency and easier auditing.
-
-// This is exactly like the standard binary operator macro except it is for the
-// operators that are not allowed to apply to real numbers.  e.g. bitwise and/or
-// and left/right shift.
-#define BINARY_OP_NO_REAL(op) \
-  eval_node left = EVAL_NIL; \
-  eval_node right = EVAL_NIL; \
-  eval(expr->left, &left); \
-  eval(expr->right, &right); \
-  \
-  if (left.sem_type == SEM_TYPE_ERROR || right.sem_type == SEM_TYPE_ERROR) { \
-    result->sem_type = SEM_TYPE_ERROR; \
-    return; \
-  } \
-  \
-  if (left.sem_type == SEM_TYPE_NULL || right.sem_type == SEM_TYPE_NULL) { \
-    result->sem_type = SEM_TYPE_NULL; \
-    return; \
-  } \
-  \
-  DIV_TEST( \
-    if ((#op)[0] == '%' && result_is_false(&right)) { \
-      /* special case to prevent divide by zero */ \
-      result->sem_type = SEM_TYPE_ERROR; \
-      return; \
-    } \
-  ) \
   sem_t core_type = eval_combined_type(&left, &right); \
   \
   eval_cast_to(&left, core_type); \
@@ -423,10 +367,6 @@ static sem_t eval_combined_type(eval_node *left, eval_node *right) {
   } \
   \
   Invariant(result->sem_type == core_type)
-
-// Rationale: Variant of BINARY_OP that intentionally forbids REAL results.
-// Using a separate macro rather than a flag keeps expansion simple and lets
-// the compiler enforce missing REAL branches as invariants.
 
 // The final large class of operators are the comparisons. These have similar
 // rules to the normal operators but the return type is bool/null/error.  The
@@ -527,37 +467,244 @@ static bool_t result_is_true(eval_node *result) {
   return temp.bool_value;
 }
 
+typedef enum {
+  EVAL_ARITH_ADD,
+  EVAL_ARITH_SUB,
+  EVAL_ARITH_MUL,
+  EVAL_ARITH_DIV,
+  EVAL_ARITH_MOD
+} eval_arith_op;
+
+static bool_t eval_binary_prep(
+  ast_node *expr,
+  eval_node *left,
+  eval_node *right,
+  eval_node *result,
+  sem_t *core_type)
+{
+  eval(expr->left, left);
+  eval(expr->right, right);
+
+  if (left->sem_type == SEM_TYPE_ERROR || right->sem_type == SEM_TYPE_ERROR) {
+    result->sem_type = SEM_TYPE_ERROR;
+    return false;
+  }
+
+  if (left->sem_type == SEM_TYPE_NULL || right->sem_type == SEM_TYPE_NULL) {
+    result->sem_type = SEM_TYPE_NULL;
+    return false;
+  }
+
+  *core_type = eval_combined_type(left, right);
+  eval_cast_to(left, *core_type);
+  eval_cast_to(right, *core_type);
+  return true;
+}
+
+// All checks are arranged so that the check itself cannot overflow. Multiplication
+// uses unsigned magnitudes so that INT64_MIN can be handled without negating it.
+static bool_t eval_int64_arith(
+  eval_arith_op op,
+  int64_t left,
+  int64_t right,
+  int64_t *value)
+{
+  switch (op) {
+    case EVAL_ARITH_ADD:
+      if ((right > 0 && left > INT64_MAX - right) ||
+          (right < 0 && left < INT64_MIN - right)) {
+        return false;
+      }
+      *value = left + right;
+      return true;
+
+    case EVAL_ARITH_SUB:
+      if ((right > 0 && left < INT64_MIN + right) ||
+          (right < 0 && left > INT64_MAX + right)) {
+        return false;
+      }
+      *value = left - right;
+      return true;
+
+    case EVAL_ARITH_MUL: {
+      bool_t negative = (left < 0) != (right < 0);
+      uint64_t left_magnitude = left < 0 ? 0 - (uint64_t)left : (uint64_t)left;
+      uint64_t right_magnitude = right < 0 ? 0 - (uint64_t)right : (uint64_t)right;
+      uint64_t limit = negative ? (uint64_t)INT64_MAX + 1 : (uint64_t)INT64_MAX;
+
+      if (right_magnitude && left_magnitude > limit / right_magnitude) {
+        return false;
+      }
+
+      uint64_t magnitude = left_magnitude * right_magnitude;
+      if (!negative) {
+        *value = (int64_t)magnitude;
+      }
+      else if (magnitude == (uint64_t)INT64_MAX + 1) {
+        *value = INT64_MIN;
+      }
+      else {
+        *value = -(int64_t)magnitude;
+      }
+      return true;
+    }
+
+    case EVAL_ARITH_DIV:
+      if (!right || (left == INT64_MIN && right == -1)) {
+        return false;
+      }
+      *value = left / right;
+      return true;
+
+    default:
+      Invariant(op == EVAL_ARITH_MOD);
+      if (!right) {
+        return false;
+      }
+      // The quotient for INT64_MIN / -1 is not representable, but its
+      // mathematical remainder is exactly zero.
+      *value = right == -1 ? 0 : left % right;
+      return true;
+  }
+}
+
+static bool_t eval_int32_arith(
+  eval_arith_op op,
+  int32_t left,
+  int32_t right,
+  int32_t *value)
+{
+  int64_t wide_value;
+  if (!eval_int64_arith(op, left, right, &wide_value) ||
+      wide_value < INT32_MIN ||
+      wide_value > INT32_MAX) {
+    return false;
+  }
+
+  *value = (int32_t)wide_value;
+  return true;
+}
+
+static bool_t eval_real_arith(
+  eval_arith_op op,
+  double left,
+  double right,
+  double *value)
+{
+  if (!(left >= -DBL_MAX && left <= DBL_MAX) ||
+      !(right >= -DBL_MAX && right <= DBL_MAX)) {
+    return false;
+  }
+
+  if (op == EVAL_ARITH_ADD) {
+    if ((right > 0 && left > DBL_MAX - right) ||
+        (right < 0 && left < -DBL_MAX - right)) {
+      return false;
+    }
+    *value = left + right;
+    return true;
+  }
+
+  if (op == EVAL_ARITH_SUB) {
+    if ((right > 0 && left < -DBL_MAX + right) ||
+        (right < 0 && left > DBL_MAX + right)) {
+      return false;
+    }
+    *value = left - right;
+    return true;
+  }
+
+  if (op == EVAL_ARITH_MUL) {
+    double left_magnitude = left < 0 ? -left : left;
+    double right_magnitude = right < 0 ? -right : right;
+    if (right_magnitude && left_magnitude > DBL_MAX / right_magnitude) {
+      return false;
+    }
+    *value = left * right;
+    return true;
+  }
+
+  // MOD is rejected during semantic analysis, so DIV is the only operation
+  // that can remain for real operands.
+  Invariant(op == EVAL_ARITH_DIV);
+  if (right == 0) {
+    return false;
+  }
+
+  double left_magnitude = left < 0 ? -left : left;
+  double right_magnitude = right < 0 ? -right : right;
+  if (right_magnitude < 1 && left_magnitude > DBL_MAX * right_magnitude) {
+    return false;
+  }
+  *value = left / right;
+  return true;
+}
+
+static void eval_binary_arith(ast_node *expr, eval_node *result, eval_arith_op op) {
+  eval_node left = EVAL_NIL;
+  eval_node right = EVAL_NIL;
+  sem_t core_type;
+
+  if (!eval_binary_prep(expr, &left, &right, result, &core_type)) {
+    return;
+  }
+
+  result->sem_type = core_type;
+
+  switch (core_type) {
+    case SEM_TYPE_INTEGER:
+      if (!eval_int32_arith(op, left.int32_value, right.int32_value, &result->int32_value)) {
+        result->sem_type = SEM_TYPE_ERROR;
+      }
+      break;
+
+    case SEM_TYPE_LONG_INTEGER:
+      if (!eval_int64_arith(op, left.int64_value, right.int64_value, &result->int64_value)) {
+        result->sem_type = SEM_TYPE_ERROR;
+      }
+      break;
+
+    case SEM_TYPE_BOOL: {
+      int32_t value = 0;
+      bool_t ok = eval_int32_arith(op, !!left.bool_value, !!right.bool_value, &value);
+      result->bool_value = value != 0;
+      if (!ok) {
+        result->sem_type = SEM_TYPE_ERROR;
+      }
+      break;
+    }
+
+    default:
+      Invariant(core_type == SEM_TYPE_REAL);
+      if (!eval_real_arith(op, left.real_value, right.real_value, &result->real_value)) {
+        result->sem_type = SEM_TYPE_ERROR;
+      }
+      break;
+  }
+}
+
 // Having defined the helper macros all of the normal operators
 // are now just one of the standard expansions
 
 static void eval_add(ast_node *expr, eval_node *result) {
-  BINARY_OP(+);
+  eval_binary_arith(expr, result, EVAL_ARITH_ADD);
 }
 
 static void eval_sub(ast_node *expr, eval_node *result) {
-  BINARY_OP(-);
+  eval_binary_arith(expr, result, EVAL_ARITH_SUB);
 }
 
 static void eval_mul(ast_node *expr, eval_node *result) {
-  BINARY_OP(*);
+  eval_binary_arith(expr, result, EVAL_ARITH_MUL);
 }
 
-// add the divide by zero logic for / and %
-#undef DIV_TEST
-#define DIV_TEST(x) x
-
-// note: BINARY_OP has divide by zero logic
 static void eval_div(ast_node *expr, eval_node *result) {
-  BINARY_OP(/);
+  eval_binary_arith(expr, result, EVAL_ARITH_DIV);
 }
 
-// note: BINARY_OP_NO_REAL has divide by zero logic
 static void eval_mod(ast_node *expr, eval_node *result) {
-  BINARY_OP_NO_REAL(%);
+  eval_binary_arith(expr, result, EVAL_ARITH_MOD);
 }
-
-#undef DIV_TEST
-#define DIV_TEST(x)
 
 static void eval_eq(ast_node *expr, eval_node *result) {
   COMPARE_BINARY_OP(==);
@@ -583,20 +730,89 @@ static void eval_gt(ast_node *expr, eval_node *result) {
   COMPARE_BINARY_OP(>);
 }
 
+// Shift counts must fit the fixed width of the promoted CQL type. Unsigned
+// shifts provide deterministic low-bit behavior for left shifts, while the
+// explicit fill masks give negative right operands arithmetic shift semantics.
+static void eval_shift(ast_node *expr, eval_node *result, bool_t left_shift) {
+  eval_node left = EVAL_NIL;
+  eval_node right = EVAL_NIL;
+  sem_t core_type;
+
+  if (!eval_binary_prep(expr, &left, &right, result, &core_type)) {
+    return;
+  }
+
+  result->sem_type = core_type;
+
+  switch (core_type) {
+    case SEM_TYPE_INTEGER: {
+      int32_t shift = right.int32_value;
+      if (shift < 0 || shift >= 32) {
+        result->sem_type = SEM_TYPE_ERROR;
+        return;
+      }
+
+      uint32_t bits = (uint32_t)left.int32_value;
+      if (left_shift) {
+        bits <<= shift;
+      }
+      else if (shift) {
+        bits >>= shift;
+        if (left.int32_value < 0) {
+          bits |= UINT32_MAX << (32 - shift);
+        }
+      }
+      result->int32_value = eval_int32_from_bits(bits);
+      break;
+    }
+
+    case SEM_TYPE_LONG_INTEGER: {
+      int64_t shift = right.int64_value;
+      if (shift < 0 || shift >= 64) {
+        result->sem_type = SEM_TYPE_ERROR;
+        return;
+      }
+
+      uint64_t bits = (uint64_t)left.int64_value;
+      if (left_shift) {
+        bits <<= shift;
+      }
+      else if (shift) {
+        bits >>= shift;
+        if (left.int64_value < 0) {
+          bits |= UINT64_MAX << (64 - shift);
+        }
+      }
+      result->int64_value = eval_int64_from_bits(bits);
+      break;
+    }
+
+    default:
+      Invariant(core_type == SEM_TYPE_BOOL);
+      if (left_shift) {
+        result->bool_value = 0 != (!!left.bool_value << !!right.bool_value);
+      }
+      else {
+        result->bool_value = 0 != (!!left.bool_value >> !!right.bool_value);
+      }
+      break;
+  }
+}
+
 static void eval_lshift(ast_node *expr, eval_node *result) {
-  BINARY_OP_NO_REAL(<<);
+  eval_shift(expr, result, true);
 }
 
 static void eval_rshift(ast_node *expr, eval_node *result) {
-  BINARY_OP_NO_REAL(>>);
+  eval_shift(expr, result, false);
 }
 
 static void eval_bin_and(ast_node *expr, eval_node *result) {
-  BINARY_OP_NO_REAL(&);
+  BINARY_BIT_OP(&);
 }
 
 static void eval_bin_or(ast_node *expr, eval_node *result) {
-  BINARY_OP_NO_REAL(|);
+  BINARY_BIT_OP(|);
 }
 
 // The 'is' form is very similar to the others but the null handling is
@@ -803,15 +1019,26 @@ static void eval_uminus(ast_node *expr, eval_node *result) {
 
   switch (result->sem_type) {
     case SEM_TYPE_INTEGER:
+      if (result->int32_value == INT32_MIN) {
+        result->sem_type = SEM_TYPE_ERROR;
+        return;
+      }
       result->int32_value = -result->int32_value;
       break;
 
     case SEM_TYPE_LONG_INTEGER:
+      if (result->int64_value == INT64_MIN) {
+        result->sem_type = SEM_TYPE_ERROR;
+        return;
+      }
       result->int64_value = -result->int64_value;
       break;
 
     case SEM_TYPE_REAL:
       result->real_value = -result->real_value;
+      if (!(result->real_value >= -DBL_MAX && result->real_value <= DBL_MAX)) {
+        result->sem_type = SEM_TYPE_ERROR;
+      }
       break;
 
     default:
@@ -1078,10 +1305,18 @@ cql_noexport void eval_add_one(eval_node *result) {
 
   switch (result->sem_type) {
     case SEM_TYPE_INTEGER:
+      if (result->int32_value == INT32_MAX) {
+        result->sem_type = SEM_TYPE_ERROR;
+        return;
+      }
       result->int32_value++;
       break;
 
     case SEM_TYPE_LONG_INTEGER:
+      if (result->int64_value == INT64_MAX) {
+        result->sem_type = SEM_TYPE_ERROR;
+        return;
+      }
       result->int64_value++;
       break;
 

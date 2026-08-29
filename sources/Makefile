@@ -199,7 +199,7 @@ $O/cqlrt_mocked.o: cqlrt.c cqlrt.h cqlrt_common.c cqlrt_common.h
 $O/cqlrt_diag.o: cqlrt.c cqlrt.h cqlrt_common.c cqlrt_common.h
 	$(CC) $(CFLAGS) -DCQLRT_DIAG -c -o $O/cqlrt_diag.o cqlrt.c
 
-$O/cqlrt_contract_test: $T/cqlrt_contract_test.c cqlrt.c cqlrt.h cqlrt_common.c cqlrt_common.h
+$O/cqlrt_contract_test: $T/cqlrt_contract_test.c cqlrt.c cqlrt.h cqlrt_common.c cqlrt_common.h $(SQLITE_OBJ)
 	$(CC) $(CFLAGS:--coverage=) -DNDEBUG -o $@ $T/cqlrt_contract_test.c cqlrt.c $(SQLITE_LINK)
 
 $O/cqlrt_cf_contract_test.o: $T/cqlrt_cf_contract_test.c cqlrt_cf/cqlrt_cf.h

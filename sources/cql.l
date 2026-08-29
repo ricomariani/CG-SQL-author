@@ -15,7 +15,10 @@
 // the code flex generates from it.
 
 #include "cql.y.h"
+#include <inttypes.h>
+#include <limits.h>
 #include <stdarg.h>
+#include <stdint.h>
 #include <string.h>
 #include <stdio.h>
 #include <cql.h>
@@ -81,6 +84,8 @@ cql_noexport char *Dirname(char *path) {
 void yyerror(const char *s, ...);
 void line_directive(const char *);
 char *Strdup(const char *);
+int yylex_destroy(void);
+void yyrestart(FILE *);
 static CSTR last_doc_comment = NULL;
 
 static bool_t cql_already_processed_file(CSTR);
@@ -118,8 +123,8 @@ cql_noexport CSTR get_last_doc_comment() {
 }
 
 static bool cql_builtins_processing = false;
-static bool cql_delete_main_buffer = false;
 static YY_BUFFER_STATE cql_main_buffer;
+static FILE *cql_owned_main_file;
 
 // this remembers the directory in which we found the most recent file
 // later paths are relative to this by default.  It points into the string
@@ -139,12 +144,10 @@ cql_noexport void cql_setup_for_builtins() {
   // in the amalgam case, if we do then use that.
   if (YY_CURRENT_BUFFER) {
     cql_main_buffer = YY_CURRENT_BUFFER;
-    cql_delete_main_buffer = false;
   }
   else {
     // if we don't already have a buffer make one using yyin or stdin
     cql_main_buffer = yy_create_buffer(yyin ? yyin : stdin, YY_BUF_SIZE);
-    cql_delete_main_buffer = true;
   }
 
   // add the builtin declares before we process the real input
@@ -165,6 +168,7 @@ cql_noexport void cql_setup_for_builtins() {
 
 typedef struct {
   YY_BUFFER_STATE buf;
+  FILE *file;
   int32_t line_saved;
   char *filename_saved;
   CSTR ambient_saved;
@@ -181,6 +185,9 @@ static symtab *processed_files;
 cql_noexport void cql_reset_open_includes() {
   ambient_path = NULL;
   cql_include_index = 0;
+  cql_builtins_processing = false;
+  cql_main_buffer = NULL;
+  last_doc_comment = NULL;
   memset(cql_includes, 0, sizeof(cql_includes));
   if (processed_files) {
     symtab_delete(processed_files);
@@ -188,14 +195,55 @@ cql_noexport void cql_reset_open_includes() {
   }
 }
 
-// cleanup the memory associated with any pending files
-// in the include stack.
+// Clean up all scanner buffers and files owned by this compile.  Saved parent
+// buffers are outside Flex's active stack, so delete those explicitly and let
+// yylex_destroy release the one current buffer and Flex's stack allocation.
 cql_noexport void cql_cleanup_open_includes() {
+  YY_BUFFER_STATE current_buffer = YY_CURRENT_BUFFER;
+
   for (int32_t i = 0; i < cql_include_index; i++) {
      cql_include_state *inc = &cql_includes[i];
-     yy_delete_buffer(inc->buf);
+     if (inc->buf && inc->buf != current_buffer) {
+       if (inc->buf == cql_main_buffer) {
+         cql_main_buffer = NULL;
+       }
+       yy_delete_buffer(inc->buf);
+     }
   }
+
+  if (cql_main_buffer && cql_main_buffer != current_buffer) {
+    yy_delete_buffer(cql_main_buffer);
+  }
+  cql_main_buffer = NULL;
+
+  yylex_destroy();
+
+  for (int32_t i = 0; i < cql_include_index; i++) {
+    cql_include_state *inc = &cql_includes[i];
+    if (inc->file) {
+      fclose(inc->file);
+      inc->file = NULL;
+    }
+  }
+
+  if (cql_owned_main_file) {
+    fclose(cql_owned_main_file);
+    cql_owned_main_file = NULL;
+  }
+
   cql_reset_open_includes();
+}
+
+// Set a main input stream owned by the scanner.  yyrestart must happen before
+// the previous stream is closed because Flex can reuse the current buffer.
+cql_noexport void cql_set_input_file(FILE *file) {
+  FILE *previous_file = cql_owned_main_file;
+  yyrestart(file);
+  cql_owned_main_file = file;
+
+  if (previous_file && previous_file != file) {
+    fclose(previous_file);
+  }
 }
 
 // Set the ambient path (the directory used to resolve later relative
@@ -226,6 +274,7 @@ static void cql_setup_for_include(CSTR str) {
   cql_include_state *inc = &cql_includes[cql_include_index];
 
   inc->buf = YY_CURRENT_BUFFER;
+  inc->file = NULL;
   inc->line_saved = yylineno;
   inc->filename_saved = current_file;
   inc->ambient_saved = ambient_path;
@@ -301,6 +350,7 @@ static void cql_setup_for_include(CSTR str) {
 
   // we have a file and path now, so mark it as processed and make the buffer
   cql_record_processed_file(abspath);
+  inc->file = yyin;
   yy_switch_to_buffer(yy_create_buffer(yyin, YY_BUF_SIZE));
 
 done:
@@ -331,6 +381,59 @@ static void cql_record_processed_file(CSTR str) {
 static bool_t cql_already_processed_file(CSTR str) {
   Contract(processed_files);
   return !!symtab_find(processed_files, str);
+}
+
+// Integer literals are retained as text in the AST, but they must still fit
+// the target integer representation.  Hex literals use unsigned 64-bit bit
+// pattern semantics.  Decimal INT64_MAX+1 is retained as the sole exceptional
+// magnitude and is validated against its AST parent after parsing.
+static int32_t cql_integer_literal_token(char *text, bool_t is_hex, bool_t force_long) {
+  size_t len = strlen(text);
+  if (force_long) {
+    Contract(len > 0);
+    text[--len] = 0;
+  }
+
+  CSTR digits = is_hex ? text + 2 : text;
+  uint64_t value = 0;
+  uint32_t base = is_hex ? 16 : 10;
+
+  for (CSTR p = digits; *p; p++) {
+    uint32_t digit;
+    if (*p >= '0' && *p <= '9') {
+      digit = (uint32_t)(*p - '0');
+    }
+    else if (*p >= 'a' && *p <= 'f') {
+      digit = (uint32_t)(*p - 'a' + 10);
+    }
+    else {
+      Contract(*p >= 'A' && *p <= 'F');
+      digit = (uint32_t)(*p - 'A' + 10);
+    }
+
+    if (value > (UINT64_MAX - digit) / base) {
+      yylval.sval = text;
+      yyerror("integer literal out of range");
+      return LONGLIT;
+    }
+    value = value * base + digit;
+  }
+
+  if (!is_hex && value > (uint64_t)INT64_MAX + 1u) {
+    yylval.sval = text;
+    yyerror("integer literal out of range");
+    return LONGLIT;
+  }
+
+  if (!is_hex && value == (uint64_t)INT64_MAX + 1u) {
+    text = Strdup("9223372036854775808");
+  }
+
+  yylval.sval = text;
+  if (!force_long && value <= INT32_MAX) {
+    return INTLIT;
+  }
+  return LONGLIT;
 }
 
 %}
@@ -626,25 +729,13 @@ WITHOUT                          { return WITHOUT; }
 "|="                             { return OR_EQ; }
 "||"                             { return CONCAT; }
 
-0x{hex}+                         { char *s = Strdup(yytext);
-                                   yylval.sval = s;
-                                   errno = 0;
-                                   return (strtoll(s+2, NULL, 16) <= 0x7fffffff  && errno == 0) ? INTLIT: LONGLIT; }
+0x{hex}+                         { return cql_integer_literal_token(Strdup(yytext), true, false); }
 
-0x{hex}+L                        { char *s = Strdup(yytext);
-                                   s[strlen(s)-1] = 0; /* remove the L */
-                                   yylval.sval = s;
-                                   return LONGLIT; }
+0x{hex}+L                        { return cql_integer_literal_token(Strdup(yytext), true, true); }
 
-{d}+                             { char *s = Strdup(yytext);
-                                   yylval.sval = s;
-                                   errno = 0;
-                                   return (strtoll(s, NULL, 10) <= 0x7fffffff  && errno == 0) ? INTLIT: LONGLIT; }
+{d}+                             { return cql_integer_literal_token(Strdup(yytext), false, false); }
 
-{d}+L                            { char *s = Strdup(yytext);
-                                   s[strlen(s)-1] = 0; /* remove the L */
-                                   yylval.sval = s;
-                                   return LONGLIT; }
+{d}+L                            { return cql_integer_literal_token(Strdup(yytext), false, true); }
 
 {reallit}                        { yylval.sval = Strdup(yytext); return REALLIT; }
 {qid}                            { yylval.sval = Strdup(yytext); return QID; }
@@ -698,15 +789,15 @@ X'({hex}{hex})*'                 { yylval.sval = Strdup(yytext); return BLOBLIT;
                                      cql_finish_builtin_stream();
                                    }
                                    else if (!cql_include_index) {
-                                     if (cql_delete_main_buffer) {
-                                        yy_delete_buffer(YY_CURRENT_BUFFER);
-                                        cql_delete_main_buffer = false;
-                                     }
                                      yyterminate();
                                    }
                                    else {
                                      yy_delete_buffer(YY_CURRENT_BUFFER);
                                      cql_include_state *inc = &cql_includes[--cql_include_index];
+                                     if (inc->file) {
+                                       fclose(inc->file);
+                                       inc->file = NULL;
+                                     }
                                      yy_switch_to_buffer(inc->buf);
                                      yylineno = inc->line_saved;
                                      current_file = inc->filename_saved;

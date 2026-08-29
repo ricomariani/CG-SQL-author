@@ -13,6 +13,7 @@ cql_noexport void run_unit_tests() {}
 #else
 
 #include "cql.h"
+#include "bytebuf.h"
 #include "cg_common.h"
 #include "unit_tests.h"
 #include "encoders.h"
@@ -321,6 +322,123 @@ static bool test_comment_text_encoding() {
   return result;
 }
 
+static bool test_bytebuf_self_append() {
+  bytebuf buffer;
+  bytebuf_open(&buffer);
+
+  // Use more than one growth quantum so duplicating the buffer must replace
+  // its allocation while the append source still refers to the old contents.
+  char seed[BYTEBUF_GROWTH_SIZE + 1];
+  for (uint32_t i = 0; i < sizeof(seed); i++) {
+    seed[i] = (char)(i & 0x7f);
+  }
+  bytebuf_append(&buffer, seed, sizeof(seed));
+  bytebuf_append(&buffer, buffer.ptr, buffer.used);
+
+  bool result =
+    buffer.used == 2 * sizeof(seed) &&
+    !memcmp(buffer.ptr, seed, sizeof(seed)) &&
+    !memcmp(buffer.ptr + sizeof(seed), seed, sizeof(seed));
+
+  bytebuf_close(&buffer);
+  return result;
+}
+
+static void test_vbprintf_alias(charbuf *buffer, const char *format, ...) {
+  va_list args;
+  va_start(args, format);
+  vbprintf(buffer, format, args);
+  va_end(args);
+}
+
+static bool test_charbuf_format_aliases() {
+  bool result = true;
+  CHARBUF_OPEN(temp);
+
+  // Force heap storage and growth so a %s argument into the destination would
+  // become dangling if formatting released the old allocation too early.
+  for (uint32_t i = 0; i < CHARBUF_INTERNAL_SIZE + 1; i++) {
+    bputc(&temp, 'a');
+  }
+  bprintf(&temp, "%s", temp.ptr);
+  result &= temp.used == 2 * (CHARBUF_INTERNAL_SIZE + 1) + 1;
+  for (uint32_t i = 0; i < 2 * (CHARBUF_INTERNAL_SIZE + 1); i++) {
+    result &= temp.ptr[i] == 'a';
+  }
+
+  // The format string itself may also reside in the destination buffer.
+  bclear(&temp);
+  bprintf(&temp, "literal");
+  test_vbprintf_alias(&temp, temp.ptr);
+  result &= !strcmp(temp.ptr, "literalliteral");
+
+  CHARBUF_CLOSE(temp);
+  return result;
+}
+
+static bool test_c_control_before_hex_digit() {
+  CHARBUF_OPEN(temp);
+
+  // A C \x escape consumes every following hex digit; the encoded bytes must
+  // remain 0x01 and 'f', rather than being compiled as the single byte 0x1f.
+  cg_encode_c_string_literal("\x01" "f", &temp);
+  bool result = !strcmp(temp.ptr, "\"\\001f\"");
+
+  CHARBUF_CLOSE(temp);
+  return result;
+}
+
+static bool test_json_utf8_portability() {
+  bool result = true;
+  CHARBUF_OPEN(temp);
+
+  // Invalid high bytes must be escaped even when plain char is unsigned.
+  cg_encode_char_as_json_string_literal((char)0x81, &temp);
+  result &= !strcmp(temp.ptr, "\\u0081");
+
+  // Pretty JSON quoting must preserve a complete UTF-8 sequence, rather than
+  // converting each byte into a different Latin-1 Unicode code point.
+  bclear(&temp);
+  cg_pretty_quote_plaintext("'\xe2\x80\xa2'", &temp, PRETTY_QUOTE_JSON);
+  result &= !strcmp(temp.ptr, "\"'\xe2\x80\xa2'\"");
+
+  CHARBUF_CLOSE(temp);
+  return result;
+}
+
+static bool test_empty_comment_marker_scan() {
+  bool result = true;
+  CHARBUF_OPEN(temp);
+
+  // Empty and one-byte buffers contain no two-byte marker and must not make
+  // the unsigned scan bound wrap around.
+  cg_remove_slash_star_and_star_slash(&temp);
+  result &= !strcmp(temp.ptr, "");
+  bputc(&temp, '/');
+  cg_remove_slash_star_and_star_slash(&temp);
+  result &= !strcmp(temp.ptr, "/");
+
+  // Keep the existing marker rewriting behavior covered at the same boundary.
+  bclear(&temp);
+  bprintf(&temp, "/* */");
+  cg_remove_slash_star_and_star_slash(&temp);
+  result &= !strcmp(temp.ptr, "/+ +/");
+
+  CHARBUF_CLOSE(temp);
+  return result;
+}
+
+static bool test_replacing_scanner_input_closes_previous_file() {
+  FILE *first = tmpfile();
+  FILE *second = tmpfile();
+  Contract(first);
+  Contract(second);
+
+  cql_set_input_file(first);
+  cql_set_input_file(second);
+  return true;
+}
+
 cql_noexport void run_unit_tests() {
   // An empty duplicate must still be a valid, NUL-terminated allocation.
   // Callers rely on receiving a string rather than NULL for empty input.
@@ -460,6 +578,28 @@ cql_noexport void run_unit_tests() {
   // Source-controlled provenance text must remain inside generated line
   // comments while preserving printable and UTF-8 content.
   TEST_ASSERT(test_comment_text_encoding());
+
+  // Appending bytes already owned by a byte buffer must survive capacity
+  // growth and reproduce the original bytes exactly.
+  TEST_ASSERT(test_bytebuf_self_append());
+
+  // Formatting must permit both the format and string arguments to refer to
+  // the destination without overlap or lifetime violations.
+  TEST_ASSERT(test_charbuf_format_aliases());
+
+  // C control-byte escapes must not absorb a following hexadecimal digit.
+  TEST_ASSERT(test_c_control_before_hex_digit());
+
+  // JSON encoding must be independent of char signedness and preserve UTF-8
+  // through the pretty-quoting path.
+  TEST_ASSERT(test_json_utf8_portability());
+
+  // Comment-marker removal must safely accept buffers shorter than a marker.
+  TEST_ASSERT(test_empty_comment_marker_scan());
+
+  // Replacing scanner input must close the previously owned stream so repeated
+  // in-process compiler runs do not leak one descriptor per source file.
+  TEST_ASSERT(test_replacing_scanner_input_closes_previous_file());
 }
 
 #endif

@@ -1081,8 +1081,6 @@ static void cg_lua_unary(ast_node *ast, CSTR op, charbuf *value, int32_t pri, in
 // sign has a standard helper
 static void cg_lua_func_sign(ast_node *call_ast, charbuf *value) {
   Contract(is_ast_call(call_ast));
-  EXTRACT_NAME_AST(name_ast, call_ast->left);
-  CSTR name = name_ast->sem->name;
   EXTRACT_NOTNULL(call_arg_list, call_ast->right);
   EXTRACT(arg_list, call_arg_list->right);
   EXTRACT_ANY_NOTNULL(expr, arg_list->left);

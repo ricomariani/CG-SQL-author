@@ -146,14 +146,24 @@ static int run_valid_tests(void) {
     .cursor_size = sizeof(hostile_row),
   };
 
-  if (cql_cursor_from_blob(NULL, &hostile_cursor, hostile_blob) != SQLITE_ERROR ||
-      hostile_row.has_row ||
-      hostile_row.value != 0x5a ||
-      hostile_row.canary != 0xa5) {
+  // The builtin's database argument is nonnull even though this error path
+  // does not use it, so provide a real handle and keep the Clang contract
+  // diagnostics meaningful.
+  sqlite3 *db = NULL;
+  if (sqlite3_open(":memory:", &db) != SQLITE_OK) {
+    cql_blob_release(hostile_blob);
     return 1;
   }
+
+  int failed =
+    cql_cursor_from_blob(db, &hostile_cursor, hostile_blob) != SQLITE_ERROR ||
+    hostile_row.has_row ||
+    hostile_row.value != 0x5a ||
+    hostile_row.canary != 0xa5;
+
+  sqlite3_close(db);
   cql_blob_release(hostile_blob);
-  return 0;
+  return failed;
 }
 
 static void run_failure_test(const char *name) {

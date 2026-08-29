@@ -617,7 +617,7 @@ static bool_t eval_real_arith(
   if (op == EVAL_ARITH_MUL) {
     double left_magnitude = left < 0 ? -left : left;
     double right_magnitude = right < 0 ? -right : right;
-    if (right_magnitude && left_magnitude > DBL_MAX / right_magnitude) {
+    if (right_magnitude != 0.0 && left_magnitude > DBL_MAX / right_magnitude) {
       return false;
     }
     *value = left * right;

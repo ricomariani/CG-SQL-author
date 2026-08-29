@@ -344,6 +344,7 @@ end
 function with_result_set_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = with_result_set(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
@@ -381,6 +382,7 @@ end
 function select_from_view_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = select_from_view(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "Ii", { "id", "type" })
@@ -470,6 +472,7 @@ end
 function get_data_fetch_results(_db_, name_, id_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = get_data(_db_, name_, id_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
@@ -676,6 +679,7 @@ end
 function complex_return_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = complex_return(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "FILDSf", { "_bool", "_integer", "_longint", "_real", "_text", "_nullable_bool" })
@@ -726,6 +730,7 @@ end
 function hierarchical_query_fetch_results(_db_, rate_, limit_, offset_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = hierarchical_query(_db_, rate_, limit_, offset_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "id" })
@@ -776,6 +781,7 @@ end
 function hierarchical_unmatched_query_fetch_results(_db_, rate_, limit_, offset_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = hierarchical_unmatched_query(_db_, rate_, limit_, offset_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "id" })
@@ -814,6 +820,7 @@ end
 function union_select_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = union_select(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "A" })
@@ -852,6 +859,7 @@ end
 function union_all_select_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = union_all_select(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "A" })
@@ -891,6 +899,7 @@ end
 function union_all_with_nullable_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = union_all_with_nullable(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "s", { "name" })
@@ -969,6 +978,7 @@ end
 function with_stmt_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = with_stmt(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "III", { "a", "b", "c" })
@@ -1012,6 +1022,7 @@ end
 function with_recursive_stmt_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = with_recursive_stmt(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "III", { "a", "b", "c" })
@@ -1048,6 +1059,7 @@ end
 function parent_proc_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = parent_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "III", { "one", "two", "three" })
@@ -1084,6 +1096,7 @@ end
 function parent_proc_child_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = parent_proc_child(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "III", { "four", "five", "six" })
@@ -1234,6 +1247,7 @@ end
 
 function cursor_with_object_fetch_results(object_)
   local result_set = nil
+  local _result_ = nil
   _result_ = cursor_with_object(object_)
   result_set = { _result_ }
 
@@ -1399,6 +1413,7 @@ end
 function uses_proc_for_result_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = uses_proc_for_result(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
@@ -1610,6 +1625,7 @@ end
 function blob_returner_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = blob_returner(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "IBb", { "blob_id", "b_notnull", "b_nullable" })
@@ -1681,6 +1697,7 @@ end
 
 function out_cursor_proc_fetch_results(_db_)
   local result_set = nil
+  local _result_ = nil
   local _rc_
   _rc_, _result_ = out_cursor_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -1812,6 +1829,7 @@ end
 function thread_theme_info_list_fetch_results(_db_, thread_key_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = thread_theme_info_list(_db_, thread_key_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "L", { "thread_key" })
@@ -2012,6 +2030,7 @@ end
 
 function out_no_db_fetch_results()
   local result_set = nil
+  local _result_ = nil
   _result_ = out_no_db()
   result_set = { _result_ }
 
@@ -2051,6 +2070,7 @@ end
 
 function declare_cursor_like_cursor_fetch_results()
   local result_set = nil
+  local _result_ = nil
   _result_ = declare_cursor_like_cursor()
   result_set = { _result_ }
 
@@ -2082,6 +2102,7 @@ end
 
 function declare_cursor_like_proc_fetch_results()
   local result_set = nil
+  local _result_ = nil
   _result_ = declare_cursor_like_proc()
   result_set = { _result_ }
 
@@ -2113,6 +2134,7 @@ end
 
 function declare_cursor_like_table_fetch_results()
   local result_set = nil
+  local _result_ = nil
   _result_ = declare_cursor_like_table()
   result_set = { _result_ }
 
@@ -2144,6 +2166,7 @@ end
 
 function declare_cursor_like_view_fetch_results()
   local result_set = nil
+  local _result_ = nil
   _result_ = declare_cursor_like_view()
   result_set = { _result_ }
 
@@ -2376,6 +2399,7 @@ end
 
 function fetch_to_cursor_from_cursor_fetch_results()
   local result_set = nil
+  local _result_ = nil
   _result_ = fetch_to_cursor_from_cursor()
   result_set = { _result_ }
 
@@ -3000,6 +3024,7 @@ end
 function simple_identity_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = simple_identity(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "II", { "id", "data" })
@@ -3037,6 +3062,7 @@ end
 function complex_identity_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = complex_identity(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "III", { "col1", "col2", "data" })
@@ -3086,6 +3112,7 @@ end
 
 function out_cursor_identity_fetch_results(_db_)
   local result_set = nil
+  local _result_ = nil
   local _rc_
   _rc_, _result_ = out_cursor_identity(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -3123,6 +3150,7 @@ end
 function radioactive_proc_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = radioactive_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "Is", { "id", "data" })
@@ -3212,6 +3240,7 @@ end
 function autodropper_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = autodropper(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "II", { "a", "b" })
@@ -3250,6 +3279,7 @@ end
 
 function simple_cursor_proc_fetch_results()
   local result_set = nil
+  local _result_ = nil
   _result_ = simple_cursor_proc()
   result_set = { _result_ }
 
@@ -3284,6 +3314,7 @@ end
 function redundant_cast_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = redundant_cast(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "II", { "plugh", "five" })
@@ -3378,6 +3409,7 @@ end
 function top_level_select_alias_unused_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = top_level_select_alias_unused(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "II", { "id", "x" })
@@ -3418,6 +3450,7 @@ end
 function top_level_select_alias_used_in_orderby_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = top_level_select_alias_used_in_orderby(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "II", { "id", "x" })
@@ -4044,6 +4077,7 @@ end
 function window_function_invocation_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = window_function_invocation(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "II", { "id", "row_num" })
@@ -4131,6 +4165,7 @@ end
 function use_return_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = use_return(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "x" })
@@ -4323,7 +4358,7 @@ END;
 function hex_quote(_db_)
   local _rc_ = CQL_OK
   _rc_ = cql_exec(_db_,
-    "INSERT INTO bar(id, name) VALUES (1, '\x01\x02\xa1\x1bg')")
+    "INSERT INTO bar(id, name) VALUES (1, '\001\002\241\033g')")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -4363,6 +4398,7 @@ end
 function lotsa_columns_no_getters_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = lotsa_columns_no_getters(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
@@ -4406,6 +4442,7 @@ end
 function sproc_with_copy_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = sproc_with_copy(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
@@ -4460,6 +4497,7 @@ end
 
 function emit_object_with_setters_fetch_results(o, x, i, l, b, d, t, bl)
   local result_set = nil
+  local _result_ = nil
   _result_ = emit_object_with_setters(o, x, i, l, b, d, t, bl)
   result_set = { _result_ }
 
@@ -4502,6 +4540,7 @@ end
 
 function emit_setters_with_nullables_fetch_results(o, x, i, l, b, d, t, bl)
   local result_set = nil
+  local _result_ = nil
   _result_ = emit_setters_with_nullables(o, x, i, l, b, d, t, bl)
   result_set = { _result_ }
 
@@ -4542,6 +4581,7 @@ end
 function no_out_with_setters_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = no_out_with_setters(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
@@ -4654,6 +4694,7 @@ end
 function vault_sensitive_with_values_proc_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = vault_sensitive_with_values_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
@@ -4697,6 +4738,7 @@ end
 function vault_not_nullable_sensitive_with_values_proc_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = vault_not_nullable_sensitive_with_values_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "ISSL", { "id", "name", "title", "type" })
@@ -4739,6 +4781,7 @@ end
 function vault_sensitive_mixed_proc_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = vault_sensitive_mixed_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
@@ -4788,6 +4831,7 @@ end
 function vault_union_all_table_proc_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = vault_union_all_table_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
@@ -4826,6 +4870,7 @@ end
 function vault_alias_column_proc_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = vault_alias_column_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "s", { "alias_name" })
@@ -4864,6 +4909,7 @@ end
 function vault_alias_column_name_proc_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = vault_alias_column_name_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "s", { "alias_name" })
@@ -4940,6 +4986,7 @@ end
 function vault_sensitive_with_context_and_sensitive_columns_proc_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = vault_sensitive_with_context_and_sensitive_columns_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
@@ -4982,6 +5029,7 @@ end
 function vault_sensitive_with_no_context_and_sensitive_columns_proc_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = vault_sensitive_with_no_context_and_sensitive_columns_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
@@ -5024,6 +5072,7 @@ end
 function vault_sensitive_with_context_and_no_sensitive_columns_proc_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = vault_sensitive_with_context_and_no_sensitive_columns_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
@@ -5111,7 +5160,7 @@ END;
 function local_cast_int_notnull()
   local x = 0
 
-  x = cql_to_integer(3.2)
+  x = ((function(_cql_cast_) if _cql_cast_ == nil then return nil end return (math.modf(_cql_cast_)) end)(3.2))
 
 end
 
@@ -5132,7 +5181,7 @@ function local_cast_int()
   local r
 
   r = 3.2
-  x = cql_to_integer(r)
+  x = ((function(_cql_cast_) if _cql_cast_ == nil then return nil end return (math.modf(_cql_cast_)) end)(r))
 
 end
 
@@ -5149,7 +5198,7 @@ END;
 function local_cast_long_notnull()
   local x = 0
 
-  x = cql_to_integer(3.2)
+  x = ((function(_cql_cast_) if _cql_cast_ == nil then return nil end return (math.modf(_cql_cast_)) end)(3.2))
 
 end
 
@@ -5170,7 +5219,146 @@ function local_cast_long()
   local r
 
   r = 3.2
-  x = cql_to_integer(r)
+  x = ((function(_cql_cast_) if _cql_cast_ == nil then return nil end return (math.modf(_cql_cast_)) end)(r))
+
+end
+
+-- The statement ending at line XXXX
+
+--[[
+PROC local_cast_negative ()
+BEGIN
+  DECLARE x INT!;
+  SET x := CAST(-1.5 AS INT);
+END;
+--]]
+
+function local_cast_negative()
+  local x = 0
+
+  x = ((function(_cql_cast_) if _cql_cast_ == nil then return nil end return (math.modf(_cql_cast_)) end)(- 1.5))
+
+end
+
+-- The statement ending at line XXXX
+
+--[[
+PROC mixed_case_cursor_references (Value1 INT)
+BEGIN
+  CURSOR C FOR
+    SELECT 1 AS X;
+  FETCH c;
+  SET vAlUe1 := c.X;
+  UPDATE CURSOR c(x) FROM VALUES (2);
+  CLOSE c;
+END;
+--]]
+
+function mixed_case_cursor_references(_db_, Value1)
+  local _rc_ = CQL_OK
+  local C_stmt = nil
+  local C = { _has_row_ = false }
+  local C_fields_ = { "X" }
+  local C_types_ = "I"
+
+  _rc_, C_stmt = cql_prepare(_db_, 
+    "SELECT 1")
+  if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+  -- step and fetch
+  _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
+  if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+  Value1 = C.X
+  if C._has_row_ then
+    C.X = 2
+  end
+  cql_finalize_stmt(C_stmt)
+  C_stmt = nil
+  C = { _has_row_ = false }
+  _rc_ = CQL_OK
+
+::cql_cleanup::
+  cql_finalize_stmt(C_stmt)
+  C_stmt = nil
+  return _rc_
+end
+
+-- The statement ending at line XXXX
+
+--[[
+PROC lua_reserved_parameter (goto INT!)
+BEGIN
+  SET goto := goto + 1;
+END;
+--]]
+
+function lua_reserved_parameter(_cql_goto)
+  cql_contract_argument_notnull(_cql_goto, 1)
+
+  _cql_goto = _cql_goto + 1
+
+end
+
+-- The statement ending at line XXXX
+
+--[[
+PROC lua_reserved_local ()
+BEGIN
+  DECLARE goto INT;
+  SET goto := 1;
+END;
+--]]
+
+function lua_reserved_local()
+  local _cql_goto
+
+  _cql_goto = 1
+
+end
+
+-- The statement ending at line XXXX
+
+--[[
+PROC lua_reserved_reusable_target ()
+BEGIN
+  LET goto := CASE
+    WHEN 1 THEN 2
+    ELSE 3
+  END;
+END;
+--]]
+
+function lua_reserved_reusable_target()
+  local _cql_goto = 0
+
+  repeat
+    if true then
+      _cql_goto = 2
+      break
+    end
+    _cql_goto = 3
+  until true
+
+end
+
+-- The statement ending at line XXXX
+
+--[[
+PROC lua_reserved_cursor ()
+BEGIN
+  CURSOR goto LIKE SELECT 1 AS goto;
+  FETCH goto(goto) FROM VALUES (2);
+  SET i2 := goto.goto;
+END;
+--]]
+
+function lua_reserved_cursor()
+  local _cql_goto = { _has_row_ = false }
+  local goto_fields_ = { "goto" }
+  local goto_types_ = "I"
+
+  _cql_goto._has_row_ = true
+  _cql_goto["goto"] = 2
+  i2 = _cql_goto["goto"]
 
 end
 
@@ -5526,6 +5714,7 @@ end
 function window1_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = window1(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
@@ -5564,6 +5753,7 @@ end
 function window2_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = window2(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "RunningTotal" })
@@ -5602,6 +5792,7 @@ end
 function window3_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = window3(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
@@ -5640,6 +5831,7 @@ end
 function window4_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = window4(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
@@ -5678,6 +5870,7 @@ end
 function window5_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = window5(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
@@ -5716,6 +5909,7 @@ end
 function window6_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = window6(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
@@ -5754,6 +5948,7 @@ end
 function window7_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = window7(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
@@ -5792,6 +5987,7 @@ end
 function window8_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = window8(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
@@ -5830,6 +6026,7 @@ end
 function window9_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = window9(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
@@ -5868,6 +6065,7 @@ end
 function window10_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = window10(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
@@ -5906,6 +6104,7 @@ end
 function window11_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = window11(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
@@ -5944,6 +6143,7 @@ end
 function window12_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = window12(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
@@ -5982,6 +6182,7 @@ end
 function window13_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = window13(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
@@ -6020,6 +6221,7 @@ end
 function window14_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = window14(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
@@ -6058,6 +6260,7 @@ end
 function window15_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = window15(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
@@ -6096,6 +6299,7 @@ end
 function window16_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = window16(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
@@ -6450,6 +6654,7 @@ end
 function virtual1_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = virtual1(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "i", { "vy" })
@@ -6488,6 +6693,7 @@ end
 function virtual2_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = virtual2(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "Ii", { "vx", "vy" })
@@ -7146,6 +7352,7 @@ end
 
 function out_object_fetch_results(o)
   local result_set = nil
+  local _result_ = nil
   _result_ = out_object(o)
   result_set = { _result_ }
 
@@ -7241,6 +7448,7 @@ end
 function result_set_proc_with_contract_in_fetch_results_fetch_results(_db_, t)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = result_set_proc_with_contract_in_fetch_results(_db_, t)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
@@ -7277,6 +7485,7 @@ end
 
 function out_proc_with_contract_in_fetch_results_fetch_results(t)
   local result_set = nil
+  local _result_ = nil
   _result_ = out_proc_with_contract_in_fetch_results(t)
   result_set = { _result_ }
 
@@ -7319,6 +7528,7 @@ end
 function nullability_improvements_are_erased_for_sql_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = nullability_improvements_are_erased_for_sql(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "b" })
@@ -7724,6 +7934,7 @@ end
 function sensitive_function_is_a_no_op_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = sensitive_function_is_a_no_op(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "S", { "y" })
@@ -7805,6 +8016,7 @@ end
 function foo_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = foo(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "shared_something" })
@@ -7891,9 +8103,71 @@ end
 function shared_conditional_user_fetch_results(_db_, x)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = shared_conditional_user(_db_, x)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
+
+::cql_cleanup::
+  cql_finalize_stmt(stmt)
+  stmt = nil
+  return _rc_, result_set
+end
+
+
+-- The statement ending at line XXXX
+
+--[[
+PROC shared_integer_condition_user ()
+BEGIN
+  WITH
+    shared_integer_condition (value) AS (CALL shared_integer_condition(0))
+  SELECT shared_integer_condition.value
+    FROM shared_integer_condition;
+END;
+--]]
+
+function shared_integer_condition_user(_db_)
+  local _rc_ = CQL_OK
+  local _result_stmt = nil
+  local _p1_x_ = 0
+  local _preds_1  -- 4 possible fragments
+  local _vpreds_1 -- 0 possible bindings
+
+  _preds_1 = {}
+  _vpreds_1 = {}
+  _p1_x_ = 0
+  _preds_1[0] = true
+  if cql_to_bool(_p1_x_) then
+    _preds_1[1] = true
+  else
+    _preds_1[2] = true
+  end
+  _preds_1[3] = true
+  _rc_, _result_stmt = cql_prepare_var(_db_, 
+    4, _preds_1,
+    {
+    "WITH shared_integer_condition (value) AS (",
+    "SELECT 1",
+    "SELECT 0",
+    ") SELECT shared_integer_condition.value FROM shared_integer_condition"
+    }
+  )
+  if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+  _rc_ = CQL_OK
+
+::cql_cleanup::
+  if _rc_ == CQL_OK and _result_stmt == nil then _rc_, _result_stmt = cql_no_rows_stmt(_db_) end
+  return _rc_, _result_stmt
+end
+
+function shared_integer_condition_user_fetch_results(_db_)
+  local result_set = nil
+  local _rc_
+  local stmt = nil
+  _rc_, stmt = shared_integer_condition_user(_db_)
+  if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+  _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "value" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -7977,6 +8251,7 @@ end
 function nested_shared_stuff_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = nested_shared_stuff(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "x" })
@@ -8065,6 +8340,7 @@ end
 function use_nested_select_shared_frag_form_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = use_nested_select_shared_frag_form(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "x" })
@@ -8319,6 +8595,7 @@ end
 
 function some_redeclared_out_proc_fetch_results(_db_)
   local result_set = nil
+  local _result_ = nil
   local _rc_
   _rc_, _result_ = some_redeclared_out_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -8533,6 +8810,7 @@ end
 function simple_child_proc_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = simple_child_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "II", { "x", "y" })
@@ -9060,6 +9338,7 @@ end
 function insert_returning_resultset_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = insert_returning_resultset(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "iii", { "xy", "ix", "iy" })
@@ -9126,6 +9405,7 @@ end
 function delete_returning_resultset_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = delete_returning_resultset(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "iii", { "xy", "ix", "iy" })
@@ -9339,6 +9619,7 @@ end
 function get_xy_fetch_results(_db_)
   local result_set = nil
   local _rc_
+  local stmt = nil
   _rc_, stmt = get_xy(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, result_set = cql_fetch_all_rows(stmt, "LL", { "x", "y" })
@@ -9378,6 +9659,7 @@ function cql_startup(_db_)
   local _tmp_n_int_3
   local _tmp_bool_0 = false
   local _tmp_n_bool_3
+  local _tmp_bool_1 = false
   local _tmp_n_bool_0
   local _tmp_n_int_1
   local _tmp_text_0
@@ -10027,15 +10309,40 @@ function cql_startup(_db_)
   -- The statement ending at line XXXX
 
   --[[
-  SET i2 := 3 IN (1, 2, NULL, 4);
+  SET i2 := CASE 1 = 1
+    WHEN 1 THEN 100
+    ELSE 200
+  END;
+  --]]
+  repeat
+    _tmp_bool_1 = 1 == 1
+    if cql_to_num(_tmp_bool_1) == 1 then
+      i2 = 100
+      break
+    end
+    i2 = 200
+  until true
+
+  -- The statement ending at line XXXX
+
+  --[[
+  SET i2 := 3 IN (1, 2, 4);
   --]]
   repeat
     _tmp_int_1 = 3
-    _tmp_bool_0 = true
-    if _tmp_int_1 == 1 then break end
-    if _tmp_int_1 == 2 then break end
-    if _tmp_int_1 == 4 then break end
     _tmp_bool_0 = false
+    if _tmp_int_1 == 1 then
+      _tmp_bool_0 = true
+      break
+    end
+    if _tmp_int_1 == 2 then
+      _tmp_bool_0 = true
+      break
+    end
+    if _tmp_int_1 == 4 then
+      _tmp_bool_0 = true
+      break
+    end
   until true
   i2 = cql_to_num(_tmp_bool_0)
 
@@ -10050,26 +10357,47 @@ function cql_startup(_db_)
       _tmp_n_bool_0 = nil
       break
     end
-    _tmp_n_bool_0 = true
-    if _tmp_n_int_1 == 1 then break end
-    if _tmp_n_int_1 == 2 then break end
-    if _tmp_n_int_1 == cql_to_num(b0_nullable) then break end
     _tmp_n_bool_0 = false
+    if _tmp_n_int_1 == 1 then
+      _tmp_n_bool_0 = true
+      break
+    end
+    if _tmp_n_int_1 == 2 then
+      _tmp_n_bool_0 = true
+      break
+    end
+    _tmp_n_bool_0 = nil
+    if cql_to_num(b0_nullable) == nil then
+      _tmp_n_bool_0 = nil
+    else
+      if _tmp_n_int_1 == cql_to_num(b0_nullable) then
+        _tmp_n_bool_0 = true
+        break
+      end
+    end
   until true
   i0_nullable = cql_to_num(_tmp_n_bool_0)
 
   -- The statement ending at line XXXX
 
   --[[
-  SET i2 := 3 NOT IN (1, 2, NULL, 4);
+  SET i2 := 3 NOT IN (1, 2, 4);
   --]]
   repeat
     _tmp_int_1 = 3
-    _tmp_bool_0 = false
-    if _tmp_int_1 == 1 then break end
-    if _tmp_int_1 == 2 then break end
-    if _tmp_int_1 == 4 then break end
     _tmp_bool_0 = true
+    if _tmp_int_1 == 1 then
+      _tmp_bool_0 = false
+      break
+    end
+    if _tmp_int_1 == 2 then
+      _tmp_bool_0 = false
+      break
+    end
+    if _tmp_int_1 == 4 then
+      _tmp_bool_0 = false
+      break
+    end
   until true
   i2 = cql_to_num(_tmp_bool_0)
 
@@ -10084,13 +10412,40 @@ function cql_startup(_db_)
       _tmp_n_bool_0 = nil
       break
     end
-    _tmp_n_bool_0 = false
-    if _tmp_n_int_1 == 1 then break end
-    if _tmp_n_int_1 == 2 then break end
-    if _tmp_n_int_1 == cql_to_num(b0_nullable) then break end
     _tmp_n_bool_0 = true
+    if _tmp_n_int_1 == 1 then
+      _tmp_n_bool_0 = false
+      break
+    end
+    if _tmp_n_int_1 == 2 then
+      _tmp_n_bool_0 = false
+      break
+    end
+    _tmp_n_bool_0 = nil
+    if cql_to_num(b0_nullable) == nil then
+      _tmp_n_bool_0 = nil
+    else
+      if _tmp_n_int_1 == cql_to_num(b0_nullable) then
+        _tmp_n_bool_0 = false
+        break
+      end
+    end
   until true
   i0_nullable = cql_to_num(_tmp_n_bool_0)
+
+  -- The statement ending at line XXXX
+
+  --[[
+  SET b2 := NULL IN ();
+  --]]
+  b2 = false
+
+  -- The statement ending at line XXXX
+
+  --[[
+  SET b2 := NULL NOT IN ();
+  --]]
+  b2 = true
 
   -- The statement ending at line XXXX
 
@@ -10207,7 +10562,7 @@ function cql_startup(_db_)
   --[[
   SET s := printf('%lld %lld %lld %llu %d %d %llu %d %f %f %s %f', CAST(4 AS LONG), CAST(nullable(5) AS LONG), CAST(TRUE AS LONG), 0L, CAST(FALSE AS INT), 0, 6L, 7, 0.0, 0.0, NULL, CAST(8 AS REAL));
   --]]
-  s = cql_printf("%lld %lld %lld %llu %d %d %llu %d %f %f %s %f", cql_to_integer(4), cql_to_integer(5), cql_to_integer(true), 0, cql_to_integer(false), 0, 6, 7, 0.0, 0.0, nil, cql_to_float(8))
+  s = cql_printf("%lld %lld %lld %llu %d %d %llu %d %f %f %s %f", ((function(_cql_cast_) if _cql_cast_ == nil then return nil end return (math.modf(_cql_cast_)) end)(4)), ((function(_cql_cast_) if _cql_cast_ == nil then return nil end return (math.modf(_cql_cast_)) end)(5)), cql_to_integer(true), 0, cql_to_integer(false), 0, 6, 7, 0.0, 0.0, nil, cql_to_float(8))
 
   -- The statement ending at line XXXX
 
@@ -10299,10 +10654,23 @@ function cql_startup(_db_)
       _tmp_n_bool_0 = nil
       break
     end
-    _tmp_n_bool_0 = true
-    if _tmp_n_object_1 == obj_var then break end
-    if _tmp_n_object_1 == obj_var then break end
     _tmp_n_bool_0 = false
+    if obj_var == nil then
+      _tmp_n_bool_0 = nil
+    else
+      if _tmp_n_object_1 == obj_var then
+        _tmp_n_bool_0 = true
+        break
+      end
+    end
+    if obj_var == nil then
+      _tmp_n_bool_0 = nil
+    else
+      if _tmp_n_object_1 == obj_var then
+        _tmp_n_bool_0 = true
+        break
+      end
+    end
   until true
   b0_nullable = _tmp_n_bool_0
 
@@ -10313,10 +10681,15 @@ function cql_startup(_db_)
   --]]
   repeat
     _tmp_object_1 = obj_var2
-    _tmp_bool_0 = true
-    if _tmp_object_1 == obj_var2 then break end
-    if _tmp_object_1 == obj_var2 then break end
     _tmp_bool_0 = false
+    if _tmp_object_1 == obj_var2 then
+      _tmp_bool_0 = true
+      break
+    end
+    if _tmp_object_1 == obj_var2 then
+      _tmp_bool_0 = true
+      break
+    end
   until true
   b2 = _tmp_bool_0
 
@@ -10331,10 +10704,23 @@ function cql_startup(_db_)
       _tmp_n_bool_0 = nil
       break
     end
-    _tmp_n_bool_0 = false
-    if _tmp_n_object_1 == obj_var then break end
-    if _tmp_n_object_1 == obj_var then break end
     _tmp_n_bool_0 = true
+    if obj_var == nil then
+      _tmp_n_bool_0 = nil
+    else
+      if _tmp_n_object_1 == obj_var then
+        _tmp_n_bool_0 = false
+        break
+      end
+    end
+    if obj_var == nil then
+      _tmp_n_bool_0 = nil
+    else
+      if _tmp_n_object_1 == obj_var then
+        _tmp_n_bool_0 = false
+        break
+      end
+    end
   until true
   b0_nullable = _tmp_n_bool_0
 
@@ -10345,10 +10731,15 @@ function cql_startup(_db_)
   --]]
   repeat
     _tmp_object_1 = obj_var2
-    _tmp_bool_0 = false
-    if _tmp_object_1 == obj_var2 then break end
-    if _tmp_object_1 == obj_var2 then break end
     _tmp_bool_0 = true
+    if _tmp_object_1 == obj_var2 then
+      _tmp_bool_0 = false
+      break
+    end
+    if _tmp_object_1 == obj_var2 then
+      _tmp_bool_0 = false
+      break
+    end
   until true
   b2 = _tmp_bool_0
 
@@ -10621,26 +11012,48 @@ function cql_startup(_db_)
       _tmp_n_bool_0 = nil
       break
     end
-    _tmp_n_bool_0 = true
-    if cql_blob_eq(_tmp_n_blob_1, blob_var) then break end
-    if cql_blob_eq(_tmp_n_blob_1, blob_var) then break end
     _tmp_n_bool_0 = false
+    if blob_var == nil then
+      _tmp_n_bool_0 = nil
+    else
+      if cql_blob_eq(_tmp_n_blob_1, blob_var) then
+        _tmp_n_bool_0 = true
+        break
+      end
+    end
+    if blob_var == nil then
+      _tmp_n_bool_0 = nil
+    else
+      if cql_blob_eq(_tmp_n_blob_1, blob_var) then
+        _tmp_n_bool_0 = true
+        break
+      end
+    end
   until true
   b0_nullable = _tmp_n_bool_0
 
   -- The statement ending at line XXXX
 
   --[[
-  SET b2 := blob_var2 IN (blob_var, blob_var2);
+  SET b0_nullable := blob_var2 IN (blob_var, blob_var2);
   --]]
   repeat
     _tmp_blob_1 = blob_var2
-    _tmp_bool_0 = true
-    if cql_blob_eq(_tmp_blob_1, blob_var) then break end
-    if cql_blob_eq(_tmp_blob_1, blob_var2) then break end
-    _tmp_bool_0 = false
+    _tmp_n_bool_0 = false
+    if blob_var == nil then
+      _tmp_n_bool_0 = nil
+    else
+      if cql_blob_eq(_tmp_blob_1, blob_var) then
+        _tmp_n_bool_0 = true
+        break
+      end
+    end
+    if cql_blob_eq(_tmp_blob_1, blob_var2) then
+      _tmp_n_bool_0 = true
+      break
+    end
   until true
-  b2 = _tmp_bool_0
+  b0_nullable = _tmp_n_bool_0
 
   -- The statement ending at line XXXX
 
@@ -10653,26 +11066,44 @@ function cql_startup(_db_)
       _tmp_n_bool_0 = nil
       break
     end
-    _tmp_n_bool_0 = false
-    if cql_blob_eq(_tmp_n_blob_1, blob_var) then break end
-    if cql_blob_eq(_tmp_n_blob_1, blob_var2) then break end
     _tmp_n_bool_0 = true
+    if blob_var == nil then
+      _tmp_n_bool_0 = nil
+    else
+      if cql_blob_eq(_tmp_n_blob_1, blob_var) then
+        _tmp_n_bool_0 = false
+        break
+      end
+    end
+    if cql_blob_eq(_tmp_n_blob_1, blob_var2) then
+      _tmp_n_bool_0 = false
+      break
+    end
   until true
   b0_nullable = _tmp_n_bool_0
 
   -- The statement ending at line XXXX
 
   --[[
-  SET b2 := blob_var2 NOT IN (blob_var, blob_var2);
+  SET b0_nullable := blob_var2 NOT IN (blob_var, blob_var2);
   --]]
   repeat
     _tmp_blob_1 = blob_var2
-    _tmp_bool_0 = false
-    if cql_blob_eq(_tmp_blob_1, blob_var) then break end
-    if cql_blob_eq(_tmp_blob_1, blob_var2) then break end
-    _tmp_bool_0 = true
+    _tmp_n_bool_0 = true
+    if blob_var == nil then
+      _tmp_n_bool_0 = nil
+    else
+      if cql_blob_eq(_tmp_blob_1, blob_var) then
+        _tmp_n_bool_0 = false
+        break
+      end
+    end
+    if cql_blob_eq(_tmp_blob_1, blob_var2) then
+      _tmp_n_bool_0 = false
+      break
+    end
   until true
-  b2 = _tmp_bool_0
+  b0_nullable = _tmp_n_bool_0
 
   -- The statement ending at line XXXX
 

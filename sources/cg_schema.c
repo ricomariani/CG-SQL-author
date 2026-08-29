@@ -1357,6 +1357,7 @@ static void cg_schema_manage_recreate_tables(
   callbacks.mode = gen_mode_no_annotations;
 
   crc_t table_crc = 0;
+  uint32_t group_table_count = 0;
 
   for (size_t i = 0; i < count; i++) {
     recreate_annotation *note = &notes[i];
@@ -1396,7 +1397,9 @@ static void cg_schema_manage_recreate_tables(
 
     EXTRACT_NOTNULL(create_table_name_flags, ast->left);
     EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
-    EXTRACT_STRING(table_name, create_table_name_flags->right);
+    EXTRACT_NAME_AST(table_name_ast, create_table_name_flags->right);
+    EXTRACT_STRING(table_name, table_name_ast);
+    group_table_count++;
 
     // recreate if needed
 
@@ -1414,7 +1417,9 @@ static void cg_schema_manage_recreate_tables(
       // explicitly drop only tables that are unsubscribed or deleted
       // others dropped inside cql_rebuild_recreate_group
       if (strlen(delete_tables.ptr) != 0) bprintf(&delete_tables, "\n");
-      bprintf(&delete_tables, "DROP TABLE IF EXISTS %s;", table_name);
+      bprintf(&delete_tables, "DROP TABLE IF EXISTS ");
+      cg_schema_name_as_cql_string(&delete_tables, table_name_ast);
+      bprintf(&delete_tables, ";");
     }
 
     // if the table is deleted or unsubscribed don't restore its indices
@@ -1439,8 +1444,6 @@ static void cg_schema_manage_recreate_tables(
       }
     }
     table_crc ^= crc_charbuf(&make_table);
-    table_crc ^= crc_charbuf(&delete_tables);
-    table_crc ^= crc_charbuf(&update_indices);
 
     bprintf(&pending_table_creates, "%s", make_table.ptr);
     CHARBUF_CLOSE(make_table);
@@ -1479,7 +1482,29 @@ static void cg_schema_manage_recreate_tables(
 
       bprintf(decls, "DECLARE PROC %s() USING TRANSACTION;\n", proc);
 
+    }
+
+    if (group_table_count == 1) {
+      // Preserve the historical CRC for ungrouped and single-table recreate
+      // operations so that they do not rebuild solely because of this fix.
+      table_crc ^= crc_charbuf(&delete_tables);
+      table_crc ^= crc_charbuf(&update_indices);
       table_crc ^= crc_charbuf(&migrate_table);
+    }
+    else {
+      // The old group CRC XORed cumulative index and delete buffers once per
+      // table.  Repeated prefixes could therefore cancel.  Hash the finalized
+      // inputs in their execution order instead.
+      static const char separator = 0;
+      table_crc = crc_init();
+      table_crc = crc_update(table_crc, update_tables.ptr, strlen(update_tables.ptr));
+      table_crc = crc_update(table_crc, &separator, 1);
+      table_crc = crc_update(table_crc, update_indices.ptr, strlen(update_indices.ptr));
+      table_crc = crc_update(table_crc, &separator, 1);
+      table_crc = crc_update(table_crc, delete_tables.ptr, strlen(delete_tables.ptr));
+      table_crc = crc_update(table_crc, &separator, 1);
+      table_crc = crc_update(table_crc, migrate_table.ptr, strlen(migrate_table.ptr));
+      table_crc = crc_finalize(table_crc);
     }
     // Construct call to cql_rebuild_recreate_group with CQL compressed strings (with --compress compiler flag)
     // After the call to cql_rebuild_recreate_group() result will hold 1 if we rebuilt and 0 if we recreated the group.
@@ -1536,6 +1561,7 @@ static void cg_schema_manage_recreate_tables(
 
     // once we emit, we reset the CRC we've been accumulating and reset the buffer of table recreates, index creates, and table drops
     table_crc = 0;
+    group_table_count = 0;
     bclear(&delete_tables);
     bclear(&update_indices);
     bclear(&update_tables);

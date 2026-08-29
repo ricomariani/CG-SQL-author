@@ -367,14 +367,14 @@ attribute_value: any_literal | attribute_array
 any_integer: BOOL_LITERAL | INT_LITERAL
   ;
 
-any_literal:  BOOL_LITERAL |
+any_literal:  BOOL_LITERAL | '-' BOOL_LITERAL |
               INT_LITERAL | '-' INT_LITERAL |
               LONG_LITERAL | '-' LONG_LITERAL |
               REAL_LITERAL | '-' REAL_LITERAL |
               STRING_LITERAL | NULL_LITERAL
   ;
 
-num_literal:  BOOL_LITERAL |
+num_literal:  BOOL_LITERAL | '-' BOOL_LITERAL |
               INT_LITERAL | '-' INT_LITERAL |
               LONG_LITERAL | '-' LONG_LITERAL |
               REAL_LITERAL | '-' REAL_LITERAL

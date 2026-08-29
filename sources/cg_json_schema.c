@@ -651,7 +651,7 @@ static void cg_json_subscriptions(charbuf* output) {
 
     EXTRACT_NOTNULL(version_annotation, ast->left);
     EXTRACT_DETAIL(vers, version_annotation->left);
-    EXTRACT_STRING(name, version_annotation->right);
+    EXTRACT_NAME_AST(name_ast, version_annotation->right);
     CSTR region = ast->sem->region;
 
     cg_json_test_details(output, ast, NULL);
@@ -660,7 +660,8 @@ static void cg_json_subscriptions(charbuf* output) {
     bprintf(output, "{\n");
     BEGIN_INDENT(t, 2);
     bprintf(output, "\"type\" : \"unsub\",\n");
-    bprintf(output, "\"table\" : \"%s\"", name);
+    bprintf(output, "\"table\" : ");
+    cg_json_sql_name(output, name_ast);
     if (region) {
       cg_json_emit_region_info(output, ast);
     }
@@ -866,7 +867,9 @@ static void cg_json_col_attrs(charbuf *output, col_info *info) {
       }
       bprintf(output, "{\n");
       BEGIN_INDENT(fk, 2)
-      bprintf(output, "\"columns\" : [ \"%s\" ]", name);
+      bprintf(output, "\"columns\" : [ ");
+      cg_json_sql_name_ex(output, name, !!(sem_type & SEM_TYPE_QID));
+      bprintf(output, " ]");
       cg_json_fk_target_options(output, attr->left);
       END_INDENT(fk);
       bprintf(output,"\n}");
@@ -983,9 +986,7 @@ static void cg_json_name_list(charbuf *output, ast_node *list) {
   Contract(is_ast_name_list(list));
 
   for (ast_node *item = list; item; item = item->right) {
-    bprintf(output, "\"");
-    cg_json_name(output, item->left);
-    bprintf(output, "\"");
+    cg_json_sql_name(output, item->left);
     if (item->right) {
       bprintf(output, ", ");
     }
@@ -1002,17 +1003,29 @@ static void cg_json_vanilla_expr(charbuf *output, ast_node *expr) {
   gen_with_callbacks(expr, gen_root_expr, &callbacks);
 }
 
-// Similar to the above, this is also a list of names but we emit two arrays
-// one array for the names and another array for the sort orders specified if any.
-// Note unspecified sort orders are emitted as "".
-static void cg_json_indexed_columns(charbuf *cols, charbuf *orders, ast_node *list) {
+// Emit indexed items and their sort orders.  Table constraints normalize
+// simple names so consumers can match them to column metadata.  CREATE INDEX
+// preserves all expression text, including quoted-name syntax.  Non-name
+// expressions always retain their SQL text and are then escaped as JSON.
+static void cg_json_indexed_columns(
+  charbuf *cols,
+  charbuf *orders,
+  ast_node *list,
+  bool_t preserve_expressions)
+{
   for (ast_node *item = list; item; item = item->right) {
     Contract(is_ast_indexed_columns(list));
     EXTRACT_NOTNULL(indexed_column, item->left);
 
-    bprintf(cols, "\"");
-    cg_json_vanilla_expr(cols, indexed_column->left);
-    bprintf(cols, "\"");
+    if (!preserve_expressions && is_ast_str(indexed_column->left)) {
+      cg_json_sql_name(cols, indexed_column->left);
+    }
+    else {
+      CHARBUF_OPEN(column);
+      cg_json_vanilla_expr(&column, indexed_column->left);
+      cg_encode_json_string_literal(column.ptr, cols);
+      CHARBUF_CLOSE(column);
+    }
 
     if (is_ast_asc(indexed_column->right)) {
       bprintf(orders, "\"asc\"");
@@ -1040,7 +1053,7 @@ static void cg_json_pk_def(charbuf *output, ast_node *def) {
   CHARBUF_OPEN(cols);
   CHARBUF_OPEN(orders);
 
-  cg_json_indexed_columns(&cols, &orders, indexed_columns);
+  cg_json_indexed_columns(&cols, &orders, indexed_columns, false);
 
   bprintf(output, "\"primaryKey\" : [ %s ]", cols.ptr);
   bprintf(output, ",\n\"primaryKeySortOrders\" : [ %s ],\n", orders.ptr);
@@ -1092,10 +1105,10 @@ static void cg_json_fk_target_options(charbuf *output, ast_node *ast) {
 
   EXTRACT_NOTNULL(fk_target, ast->left);
   EXTRACT_DETAIL(flags, ast->right);
-  EXTRACT_STRING(table_name, fk_target->left);
   EXTRACT_NAMED_NOTNULL(ref_list, name_list, fk_target->right);
 
-  bprintf(output, ",\n\"referenceTable\" : \"%s\"", table_name);
+  bprintf(output, ",\n\"referenceTable\" : ");
+  cg_json_sql_name(output, fk_target->left);
 
   bprintf(output, ",\n\"referenceColumns\" : [ ");
   cg_json_name_list(output, ref_list);
@@ -1145,7 +1158,7 @@ static void cg_json_unq_def(charbuf *output, ast_node *def) {
   CHARBUF_OPEN(cols);
   CHARBUF_OPEN(orders);
 
-  cg_json_indexed_columns(&cols, &orders, indexed_columns);
+  cg_json_indexed_columns(&cols, &orders, indexed_columns, false);
 
   bprintf(output, "\"columns\" : [ %s ]", cols.ptr);
   bprintf(output, ",\n\"sortOrders\" : [ %s ]", orders.ptr);
@@ -1235,8 +1248,9 @@ static void cg_json_col_key_list(charbuf *output, ast_node *ast) {
 
 
   if (pk_def && pk_def->left) {
-    EXTRACT_STRING(pk_name, pk_def->left);
-    bprintf(output, "\"primaryKeyName\" : \"%s\",\n", pk_name);
+    bprintf(output, "\"primaryKeyName\" : ");
+    cg_json_sql_name(output, pk_def->left);
+    bprintf(output, ",\n");
   }
 
   {
@@ -1359,9 +1373,11 @@ static void cg_json_indices(charbuf *output) {
     }
 
     if (opt_where) {
-      bprintf(output, ",\n\"where\" : \"");
-      cg_json_vanilla_expr(output, opt_where->left);
-      bprintf(output, "\"");
+      CHARBUF_OPEN(where);
+      cg_json_vanilla_expr(&where, opt_where->left);
+      bprintf(output, ",\n\"where\" : ");
+      cg_encode_json_string_literal(where.ptr, output);
+      CHARBUF_CLOSE(where);
     }
 
     if (misc_attrs) {
@@ -1372,7 +1388,7 @@ static void cg_json_indices(charbuf *output) {
     CHARBUF_OPEN(cols);
     CHARBUF_OPEN(orders);
 
-    cg_json_indexed_columns(&cols, &orders, indexed_columns);
+    cg_json_indexed_columns(&cols, &orders, indexed_columns, true);
 
     bprintf(output, ",\n\"columns\" : [ %s ]", cols.ptr);
     bprintf(output, ",\n\"sortOrders\" : [ %s ]", orders.ptr);
@@ -2090,7 +2106,8 @@ static void cg_json_insert_stmt(charbuf *output, ast_node *ast, bool_t emit_valu
   // use the canonical name (which may be case-sensitively different)
   CSTR name = name_ast->sem->sptr->struct_name;
 
-  bprintf(output, ",\n\"table\" : \"%s\"", name);
+  bprintf(output, ",\n\"table\" : ");
+  cg_json_sql_name_ex(output, name, is_qid(name_ast));
   cg_fragment_with_params(output, "statement", ast, gen_one_stmt);
 
   cg_fragment(output, "statementType", insert_type, gen_insert_type);
@@ -2148,7 +2165,8 @@ static void cg_json_delete_stmt(charbuf *output, ast_node * ast) {
   // use the canonical name (which may be case-sensitively different)
   CSTR name = name_ast->sem->sptr->struct_name;
 
-  bprintf(output, ",\n\"table\" : \"%s\"", name);
+  bprintf(output, ",\n\"table\" : ");
+  cg_json_sql_name_ex(output, name, is_qid(name_ast));
   cg_fragment_with_params(output, "statement", ast, gen_one_stmt);
 }
 
@@ -2163,7 +2181,8 @@ static void cg_json_update_stmt(charbuf *output, ast_node *ast) {
   // use the canonical name (which may be case-sensitively different)
   CSTR name = name_ast->sem->sptr->struct_name;
 
-  bprintf(output, ",\n\"table\" : \"%s\"", name);
+  bprintf(output, ",\n\"table\" : ");
+  cg_json_sql_name_ex(output, name, is_qid(name_ast));
   cg_fragment_with_params(output, "statement", ast, gen_one_stmt);
 }
 

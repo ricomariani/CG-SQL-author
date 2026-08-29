@@ -219,7 +219,7 @@
 -- +   LET query_plan_trivial_blob := trivial_blob();
 --
 -- +   LET stmt := "WITH\\n  I (id) AS (CALL ids_from_string('1')),\\n  E (id) AS (CALL ids_from_string('1'))\\nSELECT %\\n  FROM C\\n  WHERE C.id IN (SELECT %\\n  FROM I) AND C.id NOT IN (SELECT %\\n  FROM E)";
--- +   INSERT INTO sql_temp(id, sql) VALUES(21, stmt);
+-- +   INSERT INTO sql_temp(id, sql) VALUES(22, stmt);
 -- +   CURSOR C FOR EXPLAIN QUERY PLAN
 -- +   WITH
 -- +     I (id) AS (CALL ids_from_string('1')),
@@ -231,7 +231,7 @@
 -- +     FROM E);
 -- +   LOOP FETCH C
 -- +   BEGIN
--- +     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(21, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+-- +     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(22, C.iselectid, C.iorder, C.ifrom, C.zdetail);
 -- +   END;
 -- + END;
 --
@@ -279,7 +279,7 @@
 -- + SELECT v AS val;
 -- + END;
 --
--- + PROC populate_query_plan_40()
+-- + PROC populate_query_plan_41()
 --
 -- + PROC populate_table_scan_alert_table(table_ text!)
 -- + BEGIN
@@ -295,6 +295,14 @@
 -- + END;
 --
 -- + PROC populate_b_tree_alert_table()
+-- + END;
+--
+-- + PROC print_query_violation()
+-- +     CALL printf("%s", json_quote(C2.info_list));
+-- + END;
+--
+-- + PROC print_query_plan_stat(id_ int!)
+-- +           WHERE zdetail LIKE '%search%using%covering%' AND sql_id = id_
 -- + END;
 --
 -- + PROC print_query_plan_graph(id_ int!)
@@ -314,12 +322,12 @@
 -- +      substr('|.............................', 1, min(level, 1)*3) ||
 -- +      zdetail as graph_line FROM plan_chain;
 --
--- +   CALL printf("   \"plan\" : \"");
+-- +   LET plan_ := "";
 -- +   LOOP FETCH C
 -- +   BEGIN
--- +     CALL printf("%s%s", IIF(C.level, "\\n", ""), C.graph_line);
+-- +     SET plan_ := printf("%s%s%s", plan_, IIF(C.level, "\n", ""), C.graph_line);
 -- +   END;
--- +   CALL printf("\"\n");
+-- +   CALL printf("   \"plan\" : %s\n", json_quote(plan_));
 -- + END;
 --
 -- + PROC print_query_plan(sql_id int!)
@@ -356,6 +364,11 @@
 -- + END;
 [[no_table_scan]]
 create table `table one`(id int primary key, name text);
+
+-- TEST: quoted scan names are decoded and CQL-string encoded
+-- + ("scan \"quoted\"\\table")
+[[no_table_scan]]
+create table `scan "quoted"\table`(id int);
 
 -- duplicate, no problem!  only one will be emitted for SQLite
 [[no_table_scan]]
@@ -513,6 +526,14 @@ end;
 proc use_ok_table_scan_attr()
 begin
   select * from scan_ok;
+end;
+
+-- TEST: quoted ok_table_scan names are decoded and CQL-string encoded
+-- + "#scan \"quoted\"\\table#"
+[[ok_table_scan=(`scan "quoted"\table`)]]
+proc use_quoted_ok_table_scan()
+begin
+  select * from `scan "quoted"\table`;
 end;
 
 -- test no table scan on "foo_", "_foo" but should be on "foo"

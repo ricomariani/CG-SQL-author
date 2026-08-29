@@ -42,6 +42,8 @@ typedef struct macro_state_t {
   CSTR name;
   CSTR file;
   int32_t line;
+  int32_t depth;
+  ast_node *def;
   struct macro_state_t *parent;
   symtab *args;
 } macro_state_t;
@@ -51,6 +53,8 @@ static CSTR expanding_proc;
 static bool in_macro_args;
 static int32_t current_macro_count;
 static int32_t next_macro_count;
+
+#define MAX_MACRO_EXPANSION_DEPTH 256
 
 // Helper object to just hold info in find_attribute_str(...) and
 // find_attribute_num(...)
@@ -494,6 +498,8 @@ cql_noexport void ast_init() {
   macro_state.line = -1;
   macro_state.file = "<Unknown>";
   macro_state.name = "None";
+  macro_state.depth = 0;
+  macro_state.def = NULL;
   macro_state.parent = NULL;
   expanding_proc = NULL;
   in_macro_args = false;
@@ -1332,6 +1338,11 @@ cql_noexport void print_ast(
   }
 
   if (!node) {
+    return;
+  }
+
+  if ((uint32_t)pad + 2 >= sizeof(padbuffer)) {
+    cql_output("%s{AST print depth limit reached}\n", padbuffer);
     return;
   }
 
@@ -2277,6 +2288,21 @@ static void expand_macro_refs(ast_node *ast) {
   }
 
   Invariant(minfo);
+
+  if (is_ref) {
+    for (macro_state_t *state = &macro_state; state; state = state->parent) {
+      if (state->def == minfo->def) {
+        report_macro_error(ast, "recursive macro expansion is not allowed", name);
+        return;
+      }
+    }
+
+    if (macro_state.depth >= MAX_MACRO_EXPANSION_DEPTH) {
+      report_macro_error(ast, "macro expansion nesting limit exceeded", name);
+      return;
+    }
+  }
+
   ast_node *copy = ast_clone_tree(minfo->def);
 
   // the body is handing off the right if we copied a macro def
@@ -2303,6 +2329,8 @@ static void expand_macro_refs(ast_node *ast) {
     macro_state.line = ast->lineno;
     macro_state.file = ast->filename;
     macro_state.name = macro_name;
+    macro_state.depth = macro_state_saved.depth + 1;
+    macro_state.def = minfo->def;
     macro_arg_table = macro_state.args = symtab_new();
 
     // Loop over each formal, we match the type of the argument

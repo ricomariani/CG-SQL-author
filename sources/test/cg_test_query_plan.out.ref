@@ -55,6 +55,9 @@ BEGIN
     id INT PRIMARY KEY,
     name TEXT
   );
+  CREATE TABLE `scan "quoted"\table`(
+    id INT
+  );
   CREATE TABLE t2(
     id INT PRIMARY KEY,
     name TEXT
@@ -166,6 +169,7 @@ PROC populate_no_table_scan()
 BEGIN
   INSERT OR IGNORE INTO no_table_scan(table_name) VALUES
     ("table one"),
+    ("scan \"quoted\"\\table"),
     ("t2"),
     ("scan_ok"),
     ("foo");
@@ -352,7 +356,7 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  LET stmt := "INSERT INTO `table one`(id, name)\\n  VALUES (1, 'Irene')\\nON CONFLICT (id)\\nDO UPDATE\\n  SET name = excluded.name || 'replace' || ' \xe2\x80\xa2 ' || '\\\\x01\\\\x02\\\\xA1\\\\x1b\\\\x00\\\\xg' || 'it''s high noon\\\\r\\\\n\\\\f\\\\b\\\\t\\\\v' || \\\"it's\\\" || name";
+  LET stmt := "INSERT INTO `table one`(id, name)\\n  VALUES (1, 'Irene')\\nON CONFLICT (id)\\nDO UPDATE\\n  SET name = excluded.name || 'replace' || ' \342\200\242 ' || '\\\\x01\\\\x02\\\\xA1\\\\x1b\\\\x00\\\\xg' || 'it''s high noon\\\\r\\\\n\\\\f\\\\b\\\\t\\\\v' || \\\"it's\\\" || name";
   INSERT INTO sql_temp(id, sql) VALUES(10, stmt);
   CURSOR C FOR EXPLAIN QUERY PLAN
   INSERT INTO `table one`(id, name)
@@ -371,7 +375,7 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  LET stmt := "WITH\\n  some_cte (id, name) AS (\\n    SELECT 1, 'Irene'\\n  )\\nINSERT INTO `table one`(id, name)\\n  SELECT some_cte.id, some_cte.name\\n    FROM some_cte\\n    WHERE id = 1\\nON CONFLICT (id)\\nDO UPDATE\\n  SET name = excluded.name || 'replace' || ' \xe2\x80\xa2 ' || ' \xf0\x9f\x98\x80 ' || ' \xc3\xa9 ' || '\\\\x01\\\\x02\\\\xA1\\\\x1b\\\\x00\\\\xg' || 'it''s high noon\\\\r\\\\n\\\\f\\\\b\\\\t\\\\v' || \\\"it's\\\" || name";
+  LET stmt := "WITH\\n  some_cte (id, name) AS (\\n    SELECT 1, 'Irene'\\n  )\\nINSERT INTO `table one`(id, name)\\n  SELECT some_cte.id, some_cte.name\\n    FROM some_cte\\n    WHERE id = 1\\nON CONFLICT (id)\\nDO UPDATE\\n  SET name = excluded.name || 'replace' || ' \342\200\242 ' || ' \360\237\230\200 ' || ' \303\251 ' || '\\\\x01\\\\x02\\\\xA1\\\\x1b\\\\x00\\\\xg' || 'it''s high noon\\\\r\\\\n\\\\f\\\\b\\\\t\\\\v' || \\\"it's\\\" || name";
   INSERT INTO sql_temp(id, sql) VALUES(11, stmt);
   CURSOR C FOR EXPLAIN QUERY PLAN
   WITH
@@ -511,12 +515,12 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  LET stmt := "SELECT 1 AS n\\n  FROM foo_,\\n    _foo";
+  LET stmt := "SELECT `scan \\\"quoted\\\"\\\\table`.id\\n  FROM `scan \\\"quoted\\\"\\\\table`";
   INSERT INTO sql_temp(id, sql) VALUES(19, stmt);
+  INSERT INTO ok_table_scan(sql_id, proc_name, table_names) VALUES(19, "use_quoted_ok_table_scan", "#scan \"quoted\"\\table#");
   CURSOR C FOR EXPLAIN QUERY PLAN
-  SELECT 1 AS n
-    FROM foo_,
-      _foo;
+  SELECT `scan "quoted"\table`.id
+    FROM `scan "quoted"\table`;
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(19, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -528,13 +532,30 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  LET stmt := "SELECT ifnull(nullable(1), 42) AS nullable_result";
+  LET stmt := "SELECT 1 AS n\\n  FROM foo_,\\n    _foo";
   INSERT INTO sql_temp(id, sql) VALUES(20, stmt);
+  CURSOR C FOR EXPLAIN QUERY PLAN
+  SELECT 1 AS n
+    FROM foo_,
+      _foo;
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(20, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
+PROC populate_query_plan_21()
+BEGIN
+  LET query_plan_trivial_object := trivial_object();
+  LET query_plan_trivial_blob := trivial_blob();
+
+  LET stmt := "SELECT ifnull(nullable(1), 42) AS nullable_result";
+  INSERT INTO sql_temp(id, sql) VALUES(21, stmt);
   CURSOR C FOR EXPLAIN QUERY PLAN
   SELECT ifnull(nullable(1), 42) AS nullable_result;
   LOOP FETCH C
   BEGIN
-    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(20, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(21, C.iselectid, C.iorder, C.ifrom, C.zdetail);
   END;
 END;
 
@@ -563,13 +584,13 @@ SELECT CAST(tok AS LONG) AS id
   FROM toks;
 END;
 
-PROC populate_query_plan_21()
+PROC populate_query_plan_22()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
   LET stmt := "WITH\\n  I (id) AS (CALL ids_from_string('1')),\\n  E (id) AS (CALL ids_from_string('1'))\\nSELECT C.id, C.name\\n  FROM C\\n  WHERE C.id IN (SELECT I.id\\n  FROM I) AND C.id NOT IN (SELECT E.id\\n  FROM E)";
-  INSERT INTO sql_temp(id, sql) VALUES(21, stmt);
+  INSERT INTO sql_temp(id, sql) VALUES(22, stmt);
   CURSOR C FOR EXPLAIN QUERY PLAN
   WITH
     I (id) AS (CALL ids_from_string('1')),
@@ -581,7 +602,7 @@ BEGIN
     FROM E);
   LOOP FETCH C
   BEGIN
-    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(21, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(22, C.iselectid, C.iorder, C.ifrom, C.zdetail);
   END;
 END;
 
@@ -629,24 +650,6 @@ BEGIN
 SELECT v AS val;
 END;
 
-PROC populate_query_plan_22()
-BEGIN
-  LET query_plan_trivial_object := trivial_object();
-  LET query_plan_trivial_blob := trivial_blob();
-
-  LET stmt := "WITH\\n  frag (val) AS (CALL frag(1))\\nSELECT frag.val\\n  FROM frag";
-  INSERT INTO sql_temp(id, sql) VALUES(22, stmt);
-  CURSOR C FOR EXPLAIN QUERY PLAN
-  WITH
-    frag (val) AS (CALL frag(1))
-  SELECT frag.val
-    FROM frag;
-  LOOP FETCH C
-  BEGIN
-    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(22, C.iselectid, C.iorder, C.ifrom, C.zdetail);
-  END;
-END;
-
 PROC populate_query_plan_23()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
@@ -670,8 +673,26 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  LET stmt := "SELECT\\n    one.id,\\n    one.t,\\n    one.b,\\n    one.r,\\n    two.id AS id_,\\n    two.t AS t_,\\n    two.b AS b_,\\n    two.r AS r_\\n  FROM select_virtual_table AS one,\\n    select_virtual_table AS two";
+  LET stmt := "WITH\\n  frag (val) AS (CALL frag(1))\\nSELECT frag.val\\n  FROM frag";
   INSERT INTO sql_temp(id, sql) VALUES(24, stmt);
+  CURSOR C FOR EXPLAIN QUERY PLAN
+  WITH
+    frag (val) AS (CALL frag(1))
+  SELECT frag.val
+    FROM frag;
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(24, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
+PROC populate_query_plan_25()
+BEGIN
+  LET query_plan_trivial_object := trivial_object();
+  LET query_plan_trivial_blob := trivial_blob();
+
+  LET stmt := "SELECT\\n    one.id,\\n    one.t,\\n    one.b,\\n    one.r,\\n    two.id AS id_,\\n    two.t AS t_,\\n    two.b AS b_,\\n    two.r AS r_\\n  FROM select_virtual_table AS one,\\n    select_virtual_table AS two";
+  INSERT INTO sql_temp(id, sql) VALUES(25, stmt);
   CURSOR C FOR EXPLAIN QUERY PLAN
   SELECT
       one.id,
@@ -686,25 +707,6 @@ BEGIN
       select_virtual_table AS two;
   LOOP FETCH C
   BEGIN
-    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(24, C.iselectid, C.iorder, C.ifrom, C.zdetail);
-  END;
-END;
-
-PROC populate_query_plan_25()
-BEGIN
-  LET query_plan_trivial_object := trivial_object();
-  LET query_plan_trivial_blob := trivial_blob();
-
-  LET stmt := "WITH\\n  backed (rowid, id, name) AS (CALL _backed())\\nSELECT backed.id, backed.name\\n  FROM backed\\n  WHERE name = 'x'";
-  INSERT INTO sql_temp(id, sql) VALUES(25, stmt);
-  CURSOR C FOR EXPLAIN QUERY PLAN
-  WITH
-    backed (rowid, id, name) AS (CALL _backed())
-  SELECT backed.id, backed.name
-    FROM backed
-    WHERE name = 'x';
-  LOOP FETCH C
-  BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(25, C.iselectid, C.iorder, C.ifrom, C.zdetail);
   END;
 END;
@@ -714,10 +716,14 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  LET stmt := "SELECT CAST(1L AS INT)";
+  LET stmt := "WITH\\n  backed (rowid, id, name) AS (CALL _backed())\\nSELECT backed.id, backed.name\\n  FROM backed\\n  WHERE name = 'x'";
   INSERT INTO sql_temp(id, sql) VALUES(26, stmt);
   CURSOR C FOR EXPLAIN QUERY PLAN
-  SELECT CAST(1L AS INT);
+  WITH
+    backed (rowid, id, name) AS (CALL _backed())
+  SELECT backed.id, backed.name
+    FROM backed
+    WHERE name = 'x';
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(26, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -729,10 +735,10 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  LET stmt := "SELECT CAST(1.0 AS INT)";
+  LET stmt := "SELECT CAST(1L AS INT)";
   INSERT INTO sql_temp(id, sql) VALUES(27, stmt);
   CURSOR C FOR EXPLAIN QUERY PLAN
-  SELECT CAST(1.0 AS INT);
+  SELECT CAST(1L AS INT);
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(27, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -744,10 +750,10 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  LET stmt := "SELECT CAST(1 AS REAL)";
+  LET stmt := "SELECT CAST(1.0 AS INT)";
   INSERT INTO sql_temp(id, sql) VALUES(28, stmt);
   CURSOR C FOR EXPLAIN QUERY PLAN
-  SELECT CAST(1 AS REAL);
+  SELECT CAST(1.0 AS INT);
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(28, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -759,13 +765,28 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  LET stmt := "SELECT CAST(true AS INT)";
+  LET stmt := "SELECT CAST(1 AS REAL)";
   INSERT INTO sql_temp(id, sql) VALUES(29, stmt);
+  CURSOR C FOR EXPLAIN QUERY PLAN
+  SELECT CAST(1 AS REAL);
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(29, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
+PROC populate_query_plan_30()
+BEGIN
+  LET query_plan_trivial_object := trivial_object();
+  LET query_plan_trivial_blob := trivial_blob();
+
+  LET stmt := "SELECT CAST(true AS INT)";
+  INSERT INTO sql_temp(id, sql) VALUES(30, stmt);
   CURSOR C FOR EXPLAIN QUERY PLAN
   SELECT CAST(true AS INT);
   LOOP FETCH C
   BEGIN
-    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(29, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(30, C.iselectid, C.iorder, C.ifrom, C.zdetail);
   END;
 END;
 
@@ -775,35 +796,35 @@ BEGIN
 SELECT v AS val;
 END;
 
-PROC populate_query_plan_30()
-BEGIN
-  LET query_plan_trivial_object := trivial_object();
-  LET query_plan_trivial_blob := trivial_blob();
-
-  LET stmt := "SELECT _select_.val\\n  FROM (CALL notnull_int_frag(1))";
-  INSERT INTO sql_temp(id, sql) VALUES(30, stmt);
-  CURSOR C FOR EXPLAIN QUERY PLAN
-  SELECT _select_.val
-    FROM (CALL notnull_int_frag(1));
-  LOOP FETCH C
-  BEGIN
-    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(30, C.iselectid, C.iorder, C.ifrom, C.zdetail);
-  END;
-END;
-
 PROC populate_query_plan_31()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  LET stmt := "SELECT stuff() AS x, notnull_int_frag(1) AS y, T1.val\\n  FROM (CALL notnull_int_frag(1 + 1)) AS T1";
+  LET stmt := "SELECT _select_.val\\n  FROM (CALL notnull_int_frag(1))";
   INSERT INTO sql_temp(id, sql) VALUES(31, stmt);
+  CURSOR C FOR EXPLAIN QUERY PLAN
+  SELECT _select_.val
+    FROM (CALL notnull_int_frag(1));
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(31, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
+PROC populate_query_plan_32()
+BEGIN
+  LET query_plan_trivial_object := trivial_object();
+  LET query_plan_trivial_blob := trivial_blob();
+
+  LET stmt := "SELECT stuff() AS x, notnull_int_frag(1) AS y, T1.val\\n  FROM (CALL notnull_int_frag(1 + 1)) AS T1";
+  INSERT INTO sql_temp(id, sql) VALUES(32, stmt);
   CURSOR C FOR EXPLAIN QUERY PLAN
   SELECT stuff() AS x, notnull_int_frag(1) AS y, T1.val
     FROM (CALL notnull_int_frag(1 + 1)) AS T1;
   LOOP FETCH C
   BEGIN
-    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(31, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(32, C.iselectid, C.iorder, C.ifrom, C.zdetail);
   END;
 END;
 
@@ -813,19 +834,19 @@ BEGIN
 SELECT 1 AS xx;
 END;
 
-PROC populate_query_plan_32()
+PROC populate_query_plan_33()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
   LET stmt := "SELECT _select_.xx\\n  FROM (CALL simple_blob_fragment(nullable(trivial_blob())))";
-  INSERT INTO sql_temp(id, sql) VALUES(32, stmt);
+  INSERT INTO sql_temp(id, sql) VALUES(33, stmt);
   CURSOR C FOR EXPLAIN QUERY PLAN
   SELECT _select_.xx
     FROM (CALL simple_blob_fragment(nullable(trivial_blob())));
   LOOP FETCH C
   BEGIN
-    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(32, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(33, C.iselectid, C.iorder, C.ifrom, C.zdetail);
   END;
 END;
 
@@ -835,19 +856,19 @@ BEGIN
 SELECT 1 AS xx;
 END;
 
-PROC populate_query_plan_33()
+PROC populate_query_plan_34()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
   LET stmt := "SELECT _select_.xx\\n  FROM (CALL simple_object_fragment(nullable(trivial_object())))";
-  INSERT INTO sql_temp(id, sql) VALUES(33, stmt);
+  INSERT INTO sql_temp(id, sql) VALUES(34, stmt);
   CURSOR C FOR EXPLAIN QUERY PLAN
   SELECT _select_.xx
     FROM (CALL simple_object_fragment(nullable(trivial_object())));
   LOOP FETCH C
   BEGIN
-    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(33, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(34, C.iselectid, C.iorder, C.ifrom, C.zdetail);
   END;
 END;
 
@@ -866,36 +887,18 @@ SELECT qp_take_inner_blob.inner_a
   FROM qp_take_inner_blob;
 END;
 
-PROC populate_query_plan_34()
-BEGIN
-  LET query_plan_trivial_object := trivial_object();
-  LET query_plan_trivial_blob := trivial_blob();
-
-  LET stmt := "WITH\\n  qp_take_blob (inner_a) AS (CALL qp_take_blob(nullable(query_plan_trivial_blob)))\\nSELECT qp_take_blob.inner_a\\n  FROM qp_take_blob";
-  INSERT INTO sql_temp(id, sql) VALUES(34, stmt);
-  CURSOR C FOR EXPLAIN QUERY PLAN
-  WITH
-    qp_take_blob (inner_a) AS (CALL qp_take_blob(nullable(query_plan_trivial_blob)))
-  SELECT qp_take_blob.inner_a
-    FROM qp_take_blob;
-  LOOP FETCH C
-  BEGIN
-    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(34, C.iselectid, C.iorder, C.ifrom, C.zdetail);
-  END;
-END;
-
 PROC populate_query_plan_35()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  LET stmt := "WITH\\n  qp_take_inner_blob (inner_a) AS (CALL qp_take_inner_blob(nullable(query_plan_trivial_blob)))\\nSELECT qp_take_inner_blob.inner_a\\n  FROM qp_take_inner_blob";
+  LET stmt := "WITH\\n  qp_take_blob (inner_a) AS (CALL qp_take_blob(nullable(query_plan_trivial_blob)))\\nSELECT qp_take_blob.inner_a\\n  FROM qp_take_blob";
   INSERT INTO sql_temp(id, sql) VALUES(35, stmt);
   CURSOR C FOR EXPLAIN QUERY PLAN
   WITH
-    qp_take_inner_blob (inner_a) AS (CALL qp_take_inner_blob(nullable(query_plan_trivial_blob)))
-  SELECT qp_take_inner_blob.inner_a
-    FROM qp_take_inner_blob;
+    qp_take_blob (inner_a) AS (CALL qp_take_blob(nullable(query_plan_trivial_blob)))
+  SELECT qp_take_blob.inner_a
+    FROM qp_take_blob;
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(35, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -907,13 +910,31 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  LET stmt := "SELECT nullable(query_plan_trivial_blob) AS foo";
+  LET stmt := "WITH\\n  qp_take_inner_blob (inner_a) AS (CALL qp_take_inner_blob(nullable(query_plan_trivial_blob)))\\nSELECT qp_take_inner_blob.inner_a\\n  FROM qp_take_inner_blob";
   INSERT INTO sql_temp(id, sql) VALUES(36, stmt);
+  CURSOR C FOR EXPLAIN QUERY PLAN
+  WITH
+    qp_take_inner_blob (inner_a) AS (CALL qp_take_inner_blob(nullable(query_plan_trivial_blob)))
+  SELECT qp_take_inner_blob.inner_a
+    FROM qp_take_inner_blob;
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(36, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
+PROC populate_query_plan_37()
+BEGIN
+  LET query_plan_trivial_object := trivial_object();
+  LET query_plan_trivial_blob := trivial_blob();
+
+  LET stmt := "SELECT nullable(query_plan_trivial_blob) AS foo";
+  INSERT INTO sql_temp(id, sql) VALUES(37, stmt);
   CURSOR C FOR EXPLAIN QUERY PLAN
   SELECT nullable(query_plan_trivial_blob) AS foo;
   LOOP FETCH C
   BEGIN
-    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(36, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(37, C.iselectid, C.iorder, C.ifrom, C.zdetail);
   END;
 END;
 
@@ -930,32 +951,16 @@ SELECT _select_.x
   FROM (CALL object_frag(nullable(trivial_object())));
 END;
 
-PROC populate_query_plan_37()
-BEGIN
-  LET query_plan_trivial_object := trivial_object();
-  LET query_plan_trivial_blob := trivial_blob();
-
-  LET stmt := "SELECT _select_.x\\n  FROM (CALL outer_frag())";
-  INSERT INTO sql_temp(id, sql) VALUES(37, stmt);
-  CURSOR C FOR EXPLAIN QUERY PLAN
-  SELECT _select_.x
-    FROM (CALL outer_frag());
-  LOOP FETCH C
-  BEGIN
-    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(37, C.iselectid, C.iorder, C.ifrom, C.zdetail);
-  END;
-END;
-
 PROC populate_query_plan_38()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  LET stmt := "SELECT alias.id, alias.name\\n  FROM `table one` AS alias";
+  LET stmt := "SELECT _select_.x\\n  FROM (CALL outer_frag())";
   INSERT INTO sql_temp(id, sql) VALUES(38, stmt);
   CURSOR C FOR EXPLAIN QUERY PLAN
-  SELECT alias.id, alias.name
-    FROM `table one` AS alias;
+  SELECT _select_.x
+    FROM (CALL outer_frag());
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(38, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -967,10 +972,10 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  LET stmt := "SELECT alias.rowid\\n  FROM `table one` AS alias";
+  LET stmt := "SELECT alias.id, alias.name\\n  FROM `table one` AS alias";
   INSERT INTO sql_temp(id, sql) VALUES(39, stmt);
   CURSOR C FOR EXPLAIN QUERY PLAN
-  SELECT alias.rowid
+  SELECT alias.id, alias.name
     FROM `table one` AS alias;
   LOOP FETCH C
   BEGIN
@@ -983,14 +988,30 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  LET stmt := "SELECT view.id, view.name, view.id2\\n  FROM my_view_using_table_alias AS view";
+  LET stmt := "SELECT alias.rowid\\n  FROM `table one` AS alias";
   INSERT INTO sql_temp(id, sql) VALUES(40, stmt);
+  CURSOR C FOR EXPLAIN QUERY PLAN
+  SELECT alias.rowid
+    FROM `table one` AS alias;
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(40, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
+PROC populate_query_plan_41()
+BEGIN
+  LET query_plan_trivial_object := trivial_object();
+  LET query_plan_trivial_blob := trivial_blob();
+
+  LET stmt := "SELECT view.id, view.name, view.id2\\n  FROM my_view_using_table_alias AS view";
+  INSERT INTO sql_temp(id, sql) VALUES(41, stmt);
   CURSOR C FOR EXPLAIN QUERY PLAN
   SELECT view.id, view.name, view.id2
     FROM my_view_using_table_alias AS view;
   LOOP FETCH C
   BEGIN
-    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(40, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(41, C.iselectid, C.iorder, C.ifrom, C.zdetail);
   END;
 END;
 
@@ -1035,7 +1056,7 @@ BEGIN
     IF C2.info_list IS NOT NULL THEN
       CALL printf("%s", IIF(first, "", ",\n"));
       CALL printf("  \"%s\" : ", C2.key);
-      CALL printf("\"%s\"", C2.info_list);
+      CALL printf("%s", json_quote(C2.info_list));
       SET first := false;
     END IF;
   END;
@@ -1080,7 +1101,7 @@ BEGIN
         WHERE zdetail LIKE '%search%' AND iselectid NOT IN (
           SELECT iselectid 
           FROM plan_temp 
-          WHERE zdetail LIKE '%search%using%covering%'
+          WHERE zdetail LIKE '%search%using%covering%' AND sql_id = id_
         ) AND sql_id = id_
     ),
     search_fast(name, count, priority) AS (
@@ -1132,12 +1153,12 @@ BEGIN
      substr('|.............................', 1, min(level, 1)*3) ||
      zdetail as graph_line FROM plan_chain;
 
-  CALL printf("   \"plan\" : \"");
+  LET plan_ := "";
   LOOP FETCH C
   BEGIN
-    CALL printf("%s%s", IIF(C.level, "\\n", ""), C.graph_line);
+    SET plan_ := printf("%s%s%s", plan_, IIF(C.level, "\n", ""), C.graph_line);
   END;
-  CALL printf("\"\n");
+  CALL printf("   \"plan\" : %s\n", json_quote(plan_));
 END;
 
 PROC print_query_plan(sql_id int!)
@@ -1399,11 +1420,17 @@ BEGIN
     CALL printf("failed populating query 40\n");
     THROW;
   END;
+  TRY
+    CALL populate_query_plan_41();
+  CATCH
+    CALL printf("failed populating query 41\n");
+    THROW;
+  END;
   CALL printf("{\n");
   CALL print_query_violation();
   CALL printf("\"plans\" : [\n");
   LET q := 1;
-  WHILE q <= 40
+  WHILE q <= 41
   BEGIN
     CALL printf("%s", IIF(q == 1, "", ",\n"));
     CALL print_query_plan(q);

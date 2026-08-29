@@ -24,6 +24,36 @@ import json
 import sys
 
 
+def cql_identifier(name):
+    result = []
+    used_hex = False
+    for ch in name.encode("utf-8"):
+        if (ord("a") <= ch <= ord("z")
+                or ord("A") <= ch <= ord("Z") and ch != ord("X")
+                or ord("0") <= ch <= ord("9")
+                or ch == ord("_")):
+            result.append(chr(ch))
+        else:
+            result.append(f"X{ch:02x}")
+            used_hex = True
+    return ("X_" if used_hex else "") + "".join(result)
+
+
+def projection_member_names(projection):
+    used = set()
+    result = []
+    for col, projected_column in enumerate(projection):
+        base = cql_identifier(projected_column["name"])
+        candidate = base
+        if candidate in used:
+            candidate = f"{base}_{col}"
+            while candidate in used:
+                candidate += "_"
+        used.add(candidate)
+        result.append(candidate)
+    return result
+
+
 def usage():
     print(
         "Usage: input.json [options] >result.h\n"
@@ -72,6 +102,15 @@ nullable_conv["object"] = "(__bridge NSObject *)"
 nullable_conv["blob"] = "(__bridge NSData *)"
 nullable_conv["text"] = "(__bridge NSString *)"
 
+result_set_getters = {}
+result_set_getters["bool"] = "cql_result_set_get_bool_col"
+result_set_getters["integer"] = "cql_result_set_get_int32_col"
+result_set_getters["long"] = "cql_result_set_get_int64_col"
+result_set_getters["real"] = "cql_result_set_get_double_col"
+result_set_getters["object"] = "cql_result_set_get_object_col"
+result_set_getters["blob"] = "cql_result_set_get_blob_col"
+result_set_getters["text"] = "cql_result_set_get_string_col"
+
 # Storage for the various command line arguments
 cmd_args = {}
 cmd_args["cql_header"] = ""
@@ -91,8 +130,7 @@ def emit_result_set_projection(proc, attributes):
     p_name = proc["name"]
     projection = proc["projection"]
     col = 0
-    for p in projection:
-        c_name = p["name"]
+    for p, member_name in zip(projection, projection_member_names(projection)):
         c_type = p["type"]
         kind = p.get("kind", "")
         isNotNull = p["isNotNull"]
@@ -104,13 +142,17 @@ def emit_result_set_projection(proc, attributes):
 
         bool_fix = "" if objc_type != "cql_bool" else " ? YES : NO"
 
-        row_arg = "" if hasOutResult else ", row"
         row_param = "" if hasOutResult else ", cql_int32 row"
+        row_value = "0" if hasOutResult else "row"
+        getter = (
+            f"{result_set_getters[c_type]}("
+            f"(cql_result_set_ref)cResultSet, {row_value}, {col})"
+        )
 
         sp = "" if objc_type.endswith("*") else " "
 
         print(
-            f"static inline {objc_type}{sp}{CGS}{p_name}_get_{c_name}({CGS}{p_name} *resultSet{row_param})"
+            f"static inline {objc_type}{sp}{CGS}{p_name}_get_{member_name}({CGS}{p_name} *resultSet{row_param})"
         )
         print("{")
         print(
@@ -119,14 +161,15 @@ def emit_result_set_projection(proc, attributes):
 
         if conv == "@":
             print(
-                f"  return {p_name}_get_{c_name}_is_null(cResultSet{row_arg}) ? nil : @({p_name}_get_{c_name}_value(cResultSet{row_arg}));"
+                "  return cql_result_set_get_is_null_col("
+                f"(cql_result_set_ref)cResultSet, {row_value}, {col}) "
+                f"? nil : @({getter});"
             )
         else:
-            print(
-                f"  return {conv}{p_name}_get_{c_name}(cResultSet{row_arg}){bool_fix};"
-            )
+            print(f"  return {conv}{getter}{bool_fix};")
         print("}")
         print("")
+        col += 1
 
 
 CGS = "CGS_"

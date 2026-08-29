@@ -68,6 +68,59 @@ cql_noexport void cg_lua_init(void);
 static void cg_lua_no_op(ast_node * ast) {
 }
 
+static bool_t cg_lua_is_reserved(CSTR name) {
+  static CSTR reserved[] = {
+    "and", "break", "do", "else", "elseif", "end", "false", "for",
+    "function", "goto", "if", "in", "local", "nil", "not", "or",
+    "repeat", "return", "then", "true", "until", "while"
+  };
+
+  for (uint32_t i = 0; i < sizeof(reserved) / sizeof(reserved[0]); i++) {
+    if (!strcmp(name, reserved[i])) {
+      return true;
+    }
+  }
+  return false;
+}
+
+static void cg_lua_emit_simple_name(charbuf *output, CSTR name) {
+  if (cg_lua_is_reserved(name)) {
+    bprintf(output, "_cql_");
+  }
+  bprintf(output, "%s", name);
+}
+
+static void cg_lua_emit_name(charbuf *output, CSTR name) {
+  CSTR dot = strchr(name, '.');
+  if (!dot) {
+    cg_lua_emit_simple_name(output, name);
+    return;
+  }
+
+  CHARBUF_OPEN(base);
+  bprintf(&base, "%.*s", (int32_t)(dot - name), name);
+  cg_lua_emit_simple_name(output, base.ptr);
+  CHARBUF_CLOSE(base);
+
+  CSTR field = dot + 1;
+  if (cg_lua_is_reserved(field)) {
+    bprintf(output, "[\"%s\"]", field);
+  }
+  else {
+    bprintf(output, ".%s", field);
+  }
+}
+
+static void cg_lua_emit_field(charbuf *output, CSTR base, CSTR field) {
+  cg_lua_emit_simple_name(output, base);
+  if (cg_lua_is_reserved(field)) {
+    bprintf(output, "[\"%s\"]", field);
+  }
+  else {
+    bprintf(output, ".%s", field);
+  }
+}
+
 // Emits a sql statement with bound args.
 static int32_t cg_lua_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg_lua_exec);
 
@@ -437,7 +490,7 @@ static void cg_lua_var_decl(charbuf *output, sem_t sem_type, CSTR name) {
     bprintf(output, "local ");
   }
 
-  bprintf(output, "%s", name);
+  cg_lua_emit_simple_name(output, name);
   cg_lua_emit_local_init(output, sem_type);
 }
 
@@ -480,8 +533,8 @@ static void cg_lua_scratch_var(ast_node *ast, sem_t sem_type, charbuf *var, char
   if (lua_is_assignment_target_reusable(ast, sem_type)) {
     Invariant(ast && ast->parent && ast->parent->left);
     EXTRACT_NAME_AST(name_ast, ast->parent->left);
-    EXTRACT_STRING(name, name_ast);
-    bprintf(var, "%s", name);
+    CSTR name = name_ast->sem->name;
+    cg_lua_emit_name(var, name);
   }
   else {
     // Scratch temps are keyed by (core type, nullability, stack_level) and
@@ -1028,8 +1081,6 @@ static void cg_lua_unary(ast_node *ast, CSTR op, charbuf *value, int32_t pri, in
 // sign has a standard helper
 static void cg_lua_func_sign(ast_node *call_ast, charbuf *value) {
   Contract(is_ast_call(call_ast));
-  EXTRACT_NAME_AST(name_ast, call_ast->left);
-  EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, call_ast->right);
   EXTRACT(arg_list, call_arg_list->right);
   EXTRACT_ANY_NOTNULL(expr, arg_list->left);
@@ -1057,23 +1108,22 @@ static void cg_lua_func_abs(ast_node *call_ast, charbuf *value) {
   CG_LUA_POP_EVAL(expr);
 }
 
-// This helper generates the tests for each entry in the IN list.
-// we generate the appropriate equality test.  We use a helper function
-// for blob comparison for flexibility. Note expr is already known
-// to be not null here.  There was previous codegen for that case.  The result
-// is either bool or nullable bool.
+// This helper generates the tests for each entry in the IN list.  The result
+// starts as "not found"; a nil candidate changes it to nil, and a later match
+// changes it to "found" and exits the enclosing repeat.
 static void cg_lua_in_or_not_in_expr_list(ast_node *head, CSTR expr, CSTR result, sem_t sem_type_result, bool_t is_not_in) {
   Contract(is_bool(sem_type_result));
   CSTR found_value = is_not_in ? "false" : "true";
   CSTR not_found_value = is_not_in ? "true" : "false";
 
-  cg_lua_store_same_type(cg_main_output, result, sem_type_result, found_value);
+  cg_lua_store_same_type(cg_main_output, result, sem_type_result, not_found_value);
 
   for (ast_node *ast = head; ast; ast = ast->right) {
     EXTRACT_ANY_NOTNULL(in_expr, ast->left)
 
-    // null can't ever match anything, waste of time.
+    // A NULL makes the result unknown unless a later candidate matches.
     if (is_ast_null(in_expr)) {
+      cg_lua_set_null(cg_main_output, result, sem_type_result);
       continue;
     }
 
@@ -1084,11 +1134,27 @@ static void cg_lua_in_or_not_in_expr_list(ast_node *head, CSTR expr, CSTR result
 
     cg_lua_to_num(sem_type_expr, &in_expr_value);
 
+    if (is_nullable(sem_type_expr)) {
+      bprintf(cg_main_output, "if %s == nil then\n", in_expr_value.ptr);
+      bprintf(cg_main_output, "  ");
+      cg_lua_set_null(cg_main_output, result, sem_type_result);
+      bprintf(cg_main_output, "else\n");
+    }
+
+    CSTR match_indent = is_nullable(sem_type_expr) ? "  " : "";
     if (core_type_of(sem_type_expr) == SEM_TYPE_BLOB) {
-      bprintf(cg_main_output, "if cql_blob_eq(%s, %s) then break end\n", expr, in_expr_value.ptr);
+      bprintf(cg_main_output, "%sif cql_blob_eq(%s, %s) then\n", match_indent, expr, in_expr_value.ptr);
     }
     else {
-      bprintf(cg_main_output, "if %s == %s then break end\n", expr, in_expr_value.ptr);
+      bprintf(cg_main_output, "%sif %s == %s then\n", match_indent, expr, in_expr_value.ptr);
+    }
+    bprintf(cg_main_output, "%s  ", match_indent);
+    cg_lua_store_same_type(cg_main_output, result, sem_type_result, found_value);
+    bprintf(cg_main_output, "%s  break\n", match_indent);
+    bprintf(cg_main_output, "%send\n", match_indent);
+
+    if (is_nullable(sem_type_expr)) {
+      bprintf(cg_main_output, "end\n");
     }
 
     CG_LUA_POP_EVAL(in_expr);
@@ -1098,8 +1164,6 @@ static void cg_lua_in_or_not_in_expr_list(ast_node *head, CSTR expr, CSTR result
     // we used it in the "if" test, but we're done with it.
     lua_stack_level = lua_stack_level_saved;
   }
-
-  cg_lua_store_same_type(cg_main_output, result, sem_type_result, not_found_value);
 }
 
 // The [NOT] IN structure is the simplest of the multi-test forms.
@@ -1115,19 +1179,18 @@ static void cg_lua_in_or_not_in_expr_list(ast_node *head, CSTR expr, CSTR result
 //    temp = X;
 //    if temp is null then result = null break; end [only needed if X is nullable]
 //
-//    result = true  /* cg_lua_in_or_not_in_expr_list generates the alternatives */
-//    (result = false if NOT IN case)
+//    result = false  /* cg_lua_in_or_not_in_expr_list generates the alternatives */
+//    (result = true if NOT IN case)
 //
 //    prep statements for U;
 //    compute U;
-//    if (temp == U) break;
+//    if U is nil then result = nil
+//    elseif temp == U then result = true break end
 //
 //    prep statements for V
 //    compute V
-//    if temp == V then break end
-//
-//    result = false
-//    (result = true if NOT IN case)
+//    if V is nil then result = nil
+//    elseif temp == V then result = true break end
 //   until true
 //
 // The result ends up in the is_null and value fields as usual.
@@ -1141,6 +1204,13 @@ static void cg_lua_expr_in_pred_or_not_in(
 
   sem_t sem_type_result = ast->sem->sem_type;
   sem_t sem_type_expr = expr->sem->sem_type;
+
+  if (!expr_list) {
+    CG_LUA_SETUP_RESULT_VAR(ast, sem_type_result);
+    cg_lua_store_same_type(cg_main_output, result_var.ptr, sem_type_result, is_ast_not_in(ast) ? "true" : "false");
+    CG_LUA_CLEANUP_RESULT_VAR();
+    return;
+  }
 
   if (is_null_type(sem_type_expr)) {
     bprintf(value, "nil");
@@ -1190,7 +1260,13 @@ static void cg_lua_expr_in_pred_or_not_in(
 // expression the temporary holding the expression is in expr.  Expr has
 // already been tested for null if that was a possibility so we only need its
 // value at this point.
-static void cg_lua_case_list(ast_node *head, CSTR expr, CSTR result, sem_t sem_type_result) {
+static void cg_lua_case_list(
+  ast_node *head,
+  CSTR expr,
+  sem_t sem_type_expr,
+  CSTR result,
+  sem_t sem_type_result)
+{
   Contract(is_ast_case_list(head));
 
   for (ast_node *ast = head; ast; ast = ast->right) {
@@ -1207,7 +1283,15 @@ static void cg_lua_case_list(ast_node *head, CSTR expr, CSTR result, sem_t sem_t
     CG_LUA_PUSH_EVAL(case_expr, LUA_EXPR_PRI_EQ_NE);
 
     if (expr) {
-      bprintf(cg_main_output, "if %s == %s then\n", expr, case_expr_value.ptr);
+      CHARBUF_OPEN(expr_comparable);
+      CHARBUF_OPEN(case_comparable);
+      bprintf(&expr_comparable, "%s", expr);
+      bprintf(&case_comparable, "%s", case_expr_value.ptr);
+      cg_lua_to_num(sem_type_expr, &expr_comparable);
+      cg_lua_to_num(sem_type_case_expr, &case_comparable);
+      bprintf(cg_main_output, "if %s == %s then\n", expr_comparable.ptr, case_comparable.ptr);
+      CHARBUF_CLOSE(case_comparable);
+      CHARBUF_CLOSE(expr_comparable);
     }
     else {
       cg_lua_to_bool(sem_type_case_expr, &case_expr_value);
@@ -1313,14 +1397,14 @@ static void cg_lua_expr_case(ast_node *case_expr, CSTR str, charbuf *value, int3
       bprintf(cg_main_output, "goto case_else_%d end\n", else_label_number);
     }
 
-    cg_lua_case_list(case_list, temp_value.ptr, result_var.ptr, sem_type_result);
+    cg_lua_case_list(case_list, temp_value.ptr, sem_type_expr, result_var.ptr, sem_type_result);
 
     CG_LUA_POP_EVAL(expr);
     CG_LUA_POP_TEMP(temp);
   }
   else {
     // Otherwise do the case list with no expression...
-    cg_lua_case_list(case_list, NULL, result_var.ptr, sem_type_result);
+    cg_lua_case_list(case_list, NULL, 0, result_var.ptr, sem_type_result);
   }
 
   if (else_label_number >= 0) {
@@ -1376,7 +1460,16 @@ static void cg_lua_expr_cast(ast_node *cast_expr, CSTR str, charbuf *value, int3
   else switch (core_type_result) {
     case SEM_TYPE_INTEGER:
     case SEM_TYPE_LONG_INTEGER:
-      bprintf(value, "cql_to_integer(%s)", expr_value.ptr);
+      if (is_bool(sem_type_expr)) {
+        bprintf(value, "cql_to_integer(%s)", expr_value.ptr);
+      }
+      else {
+        bprintf(
+          value,
+          "((function(_cql_cast_) if _cql_cast_ == nil then return nil end "
+          "return (math.modf(_cql_cast_)) end)(%s))",
+          expr_value.ptr);
+      }
       break;
 
     case SEM_TYPE_REAL:
@@ -1470,8 +1563,8 @@ static void cg_lua_expr_between_rewrite(
 // This is the first of the key primitives in codegen -- it generates the
 // output buffers for an identifier.  There are a few interesting cases.
 //
-//   * LUA identifiers are very simple, we don't need structs or temps so
-//     we can simply emit the name with no changes
+//   * LUA identifiers are simple except for reserved words, which are given
+//     a stable _cql_ prefix; reserved cursor fields use bracket syntax
 //   * we have special case code for the @RC identifier for the most recent result code
 //   * we have to undo the cursor transform _C_has_row_ into C._has_row_ because
 //     cursors are uniform in LUA, this is goofy but works for now
@@ -1504,9 +1597,12 @@ static void cg_lua_id(ast_node *expr, charbuf *value) {
      int32_t plen = sizeof("_has_row_") - 1;
      int32_t index = len - plen;
      if (len > plen && strcmp(name + index, "_has_row_") == 0) {
+       CHARBUF_OPEN(cursor_name);
        for (int32_t i = 1; i < index; i++) {
-         bputc(value, name[i]);
+         bputc(&cursor_name, name[i]);
        }
+       cg_lua_emit_simple_name(value, cursor_name.ptr);
+       CHARBUF_CLOSE(cursor_name);
        bprintf(value, "._has_row_");
        return;
      }
@@ -1522,7 +1618,7 @@ static void cg_lua_id(ast_node *expr, charbuf *value) {
     }
   }
 
-  bprintf(value, "%s", name);
+  cg_lua_emit_name(value, name);
 }
 
 // Recall that coalesce returns the first non-null arg from the list of arguments.
@@ -2243,6 +2339,8 @@ static void cg_lua_assign(ast_node *ast) {
   EXTRACT_ANY_NOTNULL(expr, ast->right);
 
   CSTR name = name_ast->sem->name;  // crucial: use the canonical name not the specified name
+  CHARBUF_OPEN(lua_name);
+  cg_lua_emit_name(&lua_name, name);
 
   Contract(lua_stack_level == 0);
 
@@ -2252,8 +2350,9 @@ static void cg_lua_assign(ast_node *ast) {
   sem_t sem_type_expr = expr->sem->sem_type;
 
   CG_LUA_PUSH_EVAL(expr, LUA_EXPR_PRI_ASSIGN);
-  cg_lua_store(cg_main_output, name, sem_type_var, sem_type_expr, expr_value.ptr);
+  cg_lua_store(cg_main_output, lua_name.ptr, sem_type_var, sem_type_expr, expr_value.ptr);
   CG_LUA_POP_EVAL(expr);
+  CHARBUF_CLOSE(lua_name);
 }
 
 // In the LET statement, we declare the variable based on type, emit that
@@ -2292,14 +2391,14 @@ static void cg_lua_params(ast_node *ast, charbuf *decls, charbuf *returns) {
       if (decls->used > 1) {
         bprintf(decls, ", ");
       }
-      bprintf(decls, "%s", param->sem->name);
+      cg_lua_emit_simple_name(decls, param->sem->name);
     }
 
     if (is_out_parameter(sem_type)) {
       if (returns->used > 1) {
         bprintf(returns, ", ");
       }
-      bprintf(returns, "%s", param->sem->name);
+      cg_lua_emit_simple_name(returns, param->sem->name);
     }
 
     ast = ast->right;
@@ -2365,7 +2464,6 @@ static void cg_lua_emit_contracts(ast_node *ast, charbuf *b) {
     EXTRACT_NOTNULL(param, params->left);
     EXTRACT_NOTNULL(param_detail, param->right);
     EXTRACT_NAME_AST(name_ast, param_detail->left);
-    EXTRACT_STRING(name, name_ast);
     sem_t sem_type = name_ast->sem->sem_type;
 
     if (is_out_parameter(sem_type) && !is_in_parameter(sem_type)) {
@@ -2376,7 +2474,9 @@ static void cg_lua_emit_contracts(ast_node *ast, charbuf *b) {
     bool_t notnull = is_not_nullable(sem_type);
 
     if (notnull) {
-      bprintf(b, "  cql_contract_argument_notnull(%s, %d)\n", name, position);
+      bprintf(b, "  cql_contract_argument_notnull(");
+      cg_lua_emit_simple_name(b, name_ast->sem->name);
+      bprintf(b, ", %d)\n", position);
       did_emit_contract = true;
     }
   }
@@ -2669,7 +2769,7 @@ static void cg_lua_create_proc_stmt(ast_node *ast) {
       if (returns.used > 1)  {
         bprintf(&returns, ", ");
       }
-      bprintf(&returns, "%s", param->sem->name);
+      cg_lua_emit_simple_name(&returns, param->sem->name);
     }
     item = item->right;
   }
@@ -2804,12 +2904,15 @@ static bool_t cg_lua_table_rename(ast_node *ast, void *context, charbuf *buffer)
 // This helper method fetches a single column from a select statement.  The result
 // is to be stored in the local variable "var"
 static void cg_lua_get_column(sem_t sem_type, CSTR cursor, int32_t index, CSTR var, charbuf *output) {
+  CHARBUF_OPEN(lua_var);
+  cg_lua_emit_name(&lua_var, var);
   if (core_type_of(sem_type) == SEM_TYPE_BOOL) {
-    bprintf(output, "  %s = cql_to_bool(cql_get_value(%s, %d))\n", var, cursor, index);
+    bprintf(output, "  %s = cql_to_bool(cql_get_value(%s, %d))\n", lua_var.ptr, cursor, index);
   }
   else {
-    bprintf(output, "  %s = cql_get_value(%s, %d)\n", var, cursor, index);
+    bprintf(output, "  %s = cql_get_value(%s, %d)\n", lua_var.ptr, cursor, index);
   }
+  CHARBUF_CLOSE(lua_var);
 }
 
 // Emit a declaration for the temporary statement _temp_stmt_ if we haven't
@@ -2944,6 +3047,7 @@ static void cg_lua_fragment_cond_action(ast_node *ast, charbuf *buffer) {
 
   CG_LUA_PUSH_EVAL(expr, LUA_EXPR_PRI_ROOT);
 
+  cg_lua_to_bool(expr->sem->sem_type, &expr_value);
   bprintf(cg_main_output, "if %s then\n", expr_value.ptr);
 
   CG_LUA_POP_EVAL(expr);
@@ -3571,7 +3675,7 @@ static int32_t cg_lua_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_
       if (item != vars) {
         bprintf(cg_main_output, ", ");
       }
-      bprintf(cg_main_output, "%s", item->ast->sem->name);
+      cg_lua_emit_name(cg_main_output, item->ast->sem->name);
     }
 
     bprintf(cg_main_output, ")\n");
@@ -3676,7 +3780,9 @@ static void cg_lua_declare_auto_cursor(CSTR cursor_name, sem_struct *sptr) {
   }
 
   // this should really zero the cursor
-  bprintf(cg_declarations_output, "%s%s = { _has_row_ = false }\n", local, cursor_name);
+  bprintf(cg_declarations_output, "%s", local);
+  cg_lua_emit_simple_name(cg_declarations_output, cursor_name);
+  bprintf(cg_declarations_output, " = { _has_row_ = false }\n");
   bprintf(cg_declarations_output, "%s%s_fields_ = ", local, cursor_name);
   cg_lua_emit_field_names(cg_declarations_output, sptr);
   bprintf(cg_declarations_output, "\n");
@@ -3695,7 +3801,7 @@ static void cg_lua_declare_auto_cursor(CSTR cursor_name, sem_struct *sptr) {
 static void cg_lua_declare_cursor(ast_node *ast) {
   Contract(is_ast_declare_cursor(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
-  EXTRACT_STRING(cursor_name, name_ast);
+  CSTR cursor_name = name_ast->sem->name;
 
   // TODO, finalize cursor before fetching if in loop cg_c does this
 
@@ -3821,15 +3927,16 @@ static void cg_lua_set_from_cursor(ast_node *ast) {
   Contract(is_ast_set_from_cursor(ast));
   EXTRACT_ANY_NOTNULL(variable, ast->left);
   EXTRACT_ANY_NOTNULL(cursor, ast->right);
-  EXTRACT_STRING(cursor_name, cursor);
-  EXTRACT_STRING(var_name, variable);
+  CSTR cursor_name = cursor->sem->name;
+  CSTR var_name = variable->sem->name;
 
   // in LUA the statement is already an object, we just store it
-  bprintf(cg_main_output, "%s = %s_stmt\n", var_name, cursor_name);
+  cg_lua_emit_name(cg_main_output, var_name);
+  bprintf(cg_main_output, " = %s_stmt\n", cursor_name);
 }
 
 static void cg_lua_declare_cursor_like(ast_node *name_ast) {
-  EXTRACT_STRING(cursor_name, name_ast);
+  CSTR cursor_name = name_ast->sem->name;
 
   Contract(name_ast->sem->sem_type & SEM_TYPE_HAS_SHAPE_STORAGE);
   cg_lua_declare_auto_cursor(cursor_name, name_ast->sem->sptr);
@@ -3864,7 +3971,7 @@ static void cg_lua_declare_cursor_like_typed_names(ast_node *ast) {
 static void cg_lua_declare_value_cursor(ast_node *ast) {
   Contract(is_ast_declare_value_cursor(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
-  EXTRACT_STRING(cursor_name, name_ast);
+  CSTR cursor_name = name_ast->sem->name;
   EXTRACT_NOTNULL(call_stmt, ast->right);
 
   // DECLARE [name] CURSOR FETCH FROM [call_stmt]]
@@ -3896,16 +4003,17 @@ static void cg_lua_fetch_values_stmt(ast_node *ast) {
 
   ast_node *value = insert_list;
 
-  bprintf(cg_main_output, "%s._has_row_ = true\n", cursor_name);
+  cg_lua_emit_simple_name(cg_main_output, cursor_name);
+  bprintf(cg_main_output, "._has_row_ = true\n");
 
   for (ast_node *item = name_list ; item; item = item->right, value = value->right) {
     EXTRACT_ANY_NOTNULL(expr, value->left);
     EXTRACT_ANY_NOTNULL(col, item->left);
-    EXTRACT_STRING(var, col);
+    CSTR var = col->sem->name;
 
     CG_LUA_PUSH_EVAL(expr, LUA_EXPR_PRI_ROOT);
     CHARBUF_OPEN(temp);
-    bprintf(&temp, "%s.%s", cursor_name, var);
+    cg_lua_emit_field(&temp, cursor_name, var);
     cg_lua_store(cg_main_output, temp.ptr, col->sem->sem_type, expr->sem->sem_type, expr_value.ptr);
     CHARBUF_CLOSE(temp);
     CG_LUA_POP_EVAL(expr);
@@ -3928,6 +4036,8 @@ static void cg_lua_fetch_stmt(ast_node *ast) {
 
   // use the canonical name, not the AST name (case could be different)
   CSTR cursor_name = cursor_ast->sem->name;
+  CHARBUF_OPEN(lua_cursor_name);
+  cg_lua_emit_simple_name(&lua_cursor_name, cursor_name);
 
   // FETCH [name] [INTO [name_list]]
 
@@ -3936,10 +4046,10 @@ static void cg_lua_fetch_stmt(ast_node *ast) {
   if (uses_out_union) {
     bprintf(cg_main_output, "%s_row_num_ = %s_row_num_ + 1\n", cursor_name, cursor_name);
     bprintf(cg_main_output, "if %s_row_num_ <= %s_row_count_ then\n", cursor_name, cursor_name);
-    bprintf(cg_main_output, "  %s = %s_result_set_[%s_row_num_]\n", cursor_name, cursor_name, cursor_name);
+    bprintf(cg_main_output, "  %s = %s_result_set_[%s_row_num_]\n", lua_cursor_name.ptr, cursor_name, cursor_name);
     bprintf(cg_main_output, "else\n");
     // this should really zero the cursor
-    bprintf(cg_main_output, "  %s = { _has_row_ = false }\n", cursor_name);
+    bprintf(cg_main_output, "  %s = { _has_row_ = false }\n", lua_cursor_name.ptr);
     bprintf(cg_main_output, "end\n");
   }
 
@@ -3953,7 +4063,7 @@ static void cg_lua_fetch_stmt(ast_node *ast) {
   else {
     bprintf(cg_main_output, "-- step and fetch\n");
     bprintf(cg_main_output, "_rc_ = cql_multifetch(%s_stmt, %s, %s_types_, %s_fields_",
-      cursor_name, cursor_name, cursor_name, cursor_name);
+      cursor_name, lua_cursor_name.ptr, cursor_name, cursor_name);
     bprintf(cg_main_output, ")\n");
     cg_lua_error_on_expr("_rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE");
   }
@@ -3964,22 +4074,25 @@ static void cg_lua_fetch_stmt(ast_node *ast) {
 
     for (ast_node *item = name_list; item; item = item->right, i++) {
       EXTRACT_NAME_AST(name_ast, item->left);
-      EXTRACT_STRING(var, name_ast);
-      bprintf(cg_main_output, "%s = %s.", var, cursor_name);
+      CSTR var = name_ast->sem->name;
+      cg_lua_emit_name(cg_main_output, var);
+      bprintf(cg_main_output, " = ");
       if (strcmp(sptr->names[i], "_anon")) {
-        bprintf(cg_main_output, "%s", sptr->names[i]);
+        cg_lua_emit_field(cg_main_output, cursor_name, sptr->names[i]);
       }
       else {
-        bprintf(cg_main_output, "_anon%d", i);
+        cg_lua_emit_simple_name(cg_main_output, cursor_name);
+        bprintf(cg_main_output, "._anon%d", i);
       }
       bprintf(cg_main_output, "\n");
     }
   }
+  CHARBUF_CLOSE(lua_cursor_name);
 }
 
 static void cg_lua_fetch_call_stmt(ast_node *ast) {
   Contract(is_ast_fetch_call_stmt(ast));
-  EXTRACT_STRING(cursor_name, ast->left);
+  CSTR cursor_name = ast->left->sem->name;
   EXTRACT_ANY_NOTNULL(call_stmt, ast->right);
 
   cg_lua_call_stmt_with_cursor(call_stmt, cursor_name);
@@ -3995,13 +4108,15 @@ static void cg_lua_fetch_call_stmt(ast_node *ast) {
 static void cg_lua_update_cursor_stmt(ast_node *ast) {
   Contract(is_ast_update_cursor_stmt(ast));
   EXTRACT_ANY(cursor, ast->left);
-  EXTRACT_STRING(name, cursor);
+  CSTR name = cursor->sem->name;
   EXTRACT_NOTNULL(columns_values, ast->right);
   EXTRACT_NOTNULL(column_spec, columns_values->left);
   EXTRACT_ANY_NOTNULL(name_list, column_spec->left);
   EXTRACT_ANY_NOTNULL(insert_list, columns_values->right);
 
-  bprintf(cg_main_output, "if %s._has_row_ then\n", name);
+  bprintf(cg_main_output, "if ");
+  cg_lua_emit_simple_name(cg_main_output, name);
+  bprintf(cg_main_output, "._has_row_ then\n");
 
   CG_PUSH_MAIN_INDENT2(stores);
 
@@ -4014,7 +4129,7 @@ static void cg_lua_update_cursor_stmt(ast_node *ast) {
 
     CG_LUA_PUSH_EVAL(expr, LUA_EXPR_PRI_ROOT);
     CHARBUF_OPEN(temp);
-    bprintf(&temp, "%s.%s", name, name_ast->sem->name);
+    cg_lua_emit_field(&temp, name, name_ast->sem->name);
     cg_lua_store(cg_main_output, temp.ptr, name_ast->sem->sem_type, expr->sem->sem_type, expr_value.ptr);
     CHARBUF_CLOSE(temp);
     CG_LUA_POP_EVAL(expr);
@@ -4277,6 +4392,8 @@ static void cg_lua_loop_stmt(ast_node *ast) {
 
   // get the canonical name of the cursor (the name in the tree might be case-sensitively different)
   CSTR cursor_name = cursor_ast->sem->name;
+  CHARBUF_OPEN(lua_cursor_name);
+  cg_lua_emit_simple_name(&lua_cursor_name, cursor_name);
 
   // LOOP [fetch_stmt] BEGIN [stmt_list] END
 
@@ -4285,7 +4402,7 @@ static void cg_lua_loop_stmt(ast_node *ast) {
 
   cg_lua_fetch_stmt(fetch_stmt);
 
-  bprintf(cg_main_output, "if not %s._has_row_ then break end\n", cursor_name);
+  bprintf(cg_main_output, "if not %s._has_row_ then break end\n", lua_cursor_name.ptr);
 
   bool_t loop_saved = lua_in_loop;
   lua_in_loop = true;
@@ -4309,6 +4426,7 @@ static void cg_lua_loop_stmt(ast_node *ast) {
   lua_in_loop = loop_saved;
   lua_continue_label_needed = lua_continue_label_needed_saved;
   lua_continue_label_number = lua_continue_label_number_saved;
+  CHARBUF_CLOSE(lua_cursor_name);
 }
 
 // Only SQL loops are allowed to use C loops, so "continue" is perfect
@@ -4379,7 +4497,7 @@ static void cg_lua_commit_return_stmt(ast_node *ast) {
 static void cg_lua_close_stmt(ast_node *ast) {
   Contract(is_ast_close_stmt(ast));
   EXTRACT_ANY_NOTNULL(cursor_ast, ast->left);
-  EXTRACT_STRING(name, cursor_ast);
+  CSTR name = cursor_ast->sem->name;
 
   // CLOSE [name]
 
@@ -4390,7 +4508,8 @@ static void cg_lua_close_stmt(ast_node *ast) {
     bprintf(cg_main_output, "%s_stmt = nil\n", name);
   }
   // this should really zero the cursor
-  bprintf(cg_main_output, "%s = { _has_row_ = false }\n", name);
+  cg_lua_emit_simple_name(cg_main_output, name);
+  bprintf(cg_main_output, " = { _has_row_ = false }\n");
 }
 
 // The OUT statement copies the current value of a cursor into an implicit
@@ -4406,7 +4525,9 @@ static void cg_lua_out_stmt(ast_node *ast) {
 
   // OUT [cursor_name]
 
-  bprintf(cg_main_output, "_result_ = cql_clone_row(%s)\n", cursor_name);
+  bprintf(cg_main_output, "_result_ = cql_clone_row(");
+  cg_lua_emit_simple_name(cg_main_output, cursor_name);
+  bprintf(cg_main_output, ")\n");
 }
 
 static void cg_lua_out_union_stmt(ast_node *ast) {
@@ -4417,8 +4538,12 @@ static void cg_lua_out_union_stmt(ast_node *ast) {
 
   // OUT UNION [cursor_name]
 
-  bprintf(cg_main_output, "if %s._has_row_ then\n", cursor_name);
-  bprintf(cg_main_output, "  table.insert(_rows_, cql_clone_row(%s))\n", cursor_name);
+  bprintf(cg_main_output, "if ");
+  cg_lua_emit_simple_name(cg_main_output, cursor_name);
+  bprintf(cg_main_output, "._has_row_ then\n");
+  bprintf(cg_main_output, "  table.insert(_rows_, cql_clone_row(");
+  cg_lua_emit_simple_name(cg_main_output, cursor_name);
+  bprintf(cg_main_output, "))\n");
   bprintf(cg_main_output, "end\n");
 }
 
@@ -4512,7 +4637,7 @@ static void cg_lua_emit_one_arg(ast_node *arg, sem_t sem_type_param, sem_t sem_t
     if (returns->used > 1) {
       bprintf(returns, ", ");
     }
-    bprintf(returns, "%s", arg->sem->name);
+    cg_lua_emit_name(returns, arg->sem->name);
   }
 
   if (is_in_parameter(sem_type_param)) {
@@ -4523,7 +4648,8 @@ static void cg_lua_emit_one_arg(ast_node *arg, sem_t sem_type_param, sem_t sem_t
 
     if (is_cursor_formal(sem_type_param)) {
       // cursor formal expands to three actual arguments
-      bprintf(invocation, "%s, %s_types_, %s_fields_", arg->sem->name, arg->sem->name, arg->sem->name);
+      cg_lua_emit_name(invocation, arg->sem->name);
+      bprintf(invocation, ", %s_types_, %s_fields_", arg->sem->name, arg->sem->name);
     }
     else if (is_bool(sem_type_param) && !is_bool(sem_type_arg)) {
        cg_lua_emit_to_bool(invocation, arg_value.ptr);
@@ -4806,7 +4932,7 @@ static void cg_lua_call_stmt_with_cursor(ast_node *ast, CSTR cursor_name) {
     if (returns.used > 1) {
       bprintf(&returns, ", ");
     }
-    bprintf(&returns, "%s", cursor_name);
+    cg_lua_emit_simple_name(&returns, cursor_name);
   }
 
   // we don't need to manage the stack, we're always called at the top level
@@ -5535,6 +5661,7 @@ static void cg_lua_proc_result_set(ast_node *ast) {
     cg_lua_emit_fetch_results_prototype(dml_proc, params, name, d);
 
     bprintf(d, "  local result_set = nil\n");
+    bprintf(d, "  local _result_ = nil\n");
 
     CHARBUF_OPEN(args);
     CHARBUF_OPEN(returns);
@@ -5592,6 +5719,7 @@ static void cg_lua_proc_result_set(ast_node *ast) {
 
       bprintf(d, "  local result_set = nil\n");
       bprintf(d, "  local _rc_\n");
+      bprintf(d, "  local stmt = nil\n");
 
       CHARBUF_OPEN(args);
       CHARBUF_OPEN(returns);

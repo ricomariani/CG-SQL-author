@@ -56,6 +56,10 @@ CREATE TABLE grouped_table_3(
   name TEXT
 );
 
+CREATE TABLE [deleted recreate table](
+  id INTEGER
+);
+
 CREATE TABLE t5(
   [an id] INTEGER PRIMARY KEY AUTOINCREMENT,
   data TEXT
@@ -214,6 +218,8 @@ CREATE INDEX gr1_index3 ON g1 (my_func(name), [an id]);
 CREATE INDEX not_shared_present_index ON table2 (name1, name2);
 
 CREATE INDEX index_going_away ON table2 (name3);
+
+CREATE INDEX grouped_table_1_crc_index ON grouped_table_1 (name);
 
 CREATE INDEX recreate_index_needs_deleting ON [migrated from recreate] (t);
 

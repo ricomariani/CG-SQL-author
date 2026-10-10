@@ -85,7 +85,7 @@ cql_noexport void vbprintf(charbuf *b, const char *format, va_list args) {
 
   // clobber starting from the current null, there is one more byte
   // than avail available to vsnprintf because we're backing off to
-  // clobber the old null.  The result is always null terminated.
+  // globber the old null.  The result is always null terminated.
   vsnprintf(b->ptr + b->used - 1, avail + 1, format, pass2);
   b->used += needed;
 

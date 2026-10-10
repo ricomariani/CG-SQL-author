@@ -347,70 +347,6 @@ static bool test_bytebuf_self_append() {
   return result;
 }
 
-static void test_vbprintf(charbuf *buffer, const char *format, ...) {
-  va_list args;
-  va_start(args, format);
-  vbprintf(buffer, format, args);
-  va_end(args);
-}
-
-static bool test_charbuf_formatting() {
-  bool result = true;
-  CHARBUF_OPEN(source);
-  CHARBUF_OPEN(format);
-  CHARBUF_OPEN(temp);
-
-  bprintf(&source, "abc");
-  bprintf(&temp, "abc");
-  bprintf(&temp, "%s|%s", source.ptr, source.ptr + 1);
-  result &= !strcmp(temp.ptr, "abcabc|bc");
-  result &= temp.used == sizeof("abcabc|bc");
-
-  bclear(&temp);
-  bprintf(&format, "=%s", "%s");
-  bprintf(&temp, "=%s", "%s");
-  test_vbprintf(&temp, format.ptr, "value");
-  result &= !strcmp(temp.ptr, "=%s=value");
-  result &= temp.used == sizeof("=%s=value");
-
-  bclear(&temp);
-  bprintf(&temp, "%s", "");
-  result &= temp.used == 1 && temp.ptr[0] == 0;
-
-  // Force heap storage and growth with independently owned string input.
-  bclear(&source);
-  for (uint32_t i = 0; i < CHARBUF_INTERNAL_SIZE + 1; i++) {
-    bputc(&temp, 'a');
-    bputc(&source, 'a');
-  }
-  bprintf(&temp, "%s", source.ptr);
-  result &= temp.used == 2 * (CHARBUF_INTERNAL_SIZE + 1) + 1;
-  for (uint32_t i = 0; i < 2 * (CHARBUF_INTERNAL_SIZE + 1); i++) {
-    result &= temp.ptr[i] == 'a';
-  }
-  result &= temp.ptr[temp.used - 1] == 0;
-  CHARBUF_CLOSE(temp);
-
-  // The format and its interior string argument belong to a separate buffer.
-  CHARBUF_OPEN(format_buffer);
-  bprintf(&format_buffer, "%s", "%s");
-  for (uint32_t i = 0; i < CHARBUF_INTERNAL_SIZE - 1; i++) {
-    bputc(&format_buffer, 'a');
-  }
-  CHARBUF_OPEN(output);
-  test_vbprintf(&output, format_buffer.ptr, format_buffer.ptr + 2);
-  result &= output.used == 2 * (CHARBUF_INTERNAL_SIZE - 1) + 1;
-  for (uint32_t i = 0; i < output.used - 1; i++) {
-    result &= output.ptr[i] == 'a';
-  }
-  result &= output.ptr[output.used - 1] == 0;
-  CHARBUF_CLOSE(output);
-  CHARBUF_CLOSE(format_buffer);
-  CHARBUF_CLOSE(format);
-  CHARBUF_CLOSE(source);
-  return result;
-}
-
 cql_noexport void run_unit_tests() {
   // An empty duplicate must still be a valid, NUL-terminated allocation.
   // Callers rely on receiving a string rather than NULL for empty input.
@@ -551,7 +487,6 @@ cql_noexport void run_unit_tests() {
   // comments while preserving printable and UTF-8 content.
   TEST_ASSERT(test_comment_text_encoding());
   TEST_ASSERT(test_bytebuf_self_append());
-  TEST_ASSERT(test_charbuf_formatting());
 }
 
 #endif

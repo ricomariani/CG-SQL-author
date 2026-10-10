@@ -13,6 +13,7 @@ cql_noexport void run_unit_tests() {}
 #else
 
 #include "cql.h"
+#include "bytebuf.h"
 #include "cg_common.h"
 #include "unit_tests.h"
 #include "encoders.h"
@@ -321,6 +322,31 @@ static bool test_comment_text_encoding() {
   return result;
 }
 
+static bool test_bytebuf_self_append() {
+  bytebuf buffer;
+  bytebuf_open(&buffer);
+
+  // Duplicating this seed forces growth while the source aliases the buffer.
+  char seed[BYTEBUF_GROWTH_SIZE + 1];
+  for (uint32_t i = 0; i < sizeof(seed); i++) {
+    seed[i] = (char)(i & 0x7f);
+  }
+  bytebuf_append(&buffer, seed, sizeof(seed));
+  bytebuf_append(&buffer, buffer.ptr, buffer.used);
+
+  bool result =
+    buffer.used == 2 * sizeof(seed) &&
+    !memcmp(buffer.ptr, seed, sizeof(seed)) &&
+    !memcmp(buffer.ptr + sizeof(seed), seed, sizeof(seed));
+
+  bytebuf_append(&buffer, buffer.ptr + 17, 31);
+  result &= buffer.used == 2 * sizeof(seed) + 31;
+  result &= !memcmp(buffer.ptr + 2 * sizeof(seed), seed + 17, 31);
+
+  bytebuf_close(&buffer);
+  return result;
+}
+
 cql_noexport void run_unit_tests() {
   // An empty duplicate must still be a valid, NUL-terminated allocation.
   // Callers rely on receiving a string rather than NULL for empty input.
@@ -460,6 +486,7 @@ cql_noexport void run_unit_tests() {
   // Source-controlled provenance text must remain inside generated line
   // comments while preserving printable and UTF-8 content.
   TEST_ASSERT(test_comment_text_encoding());
+  TEST_ASSERT(test_bytebuf_self_append());
 }
 
 #endif

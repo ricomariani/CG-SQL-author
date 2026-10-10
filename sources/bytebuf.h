@@ -23,6 +23,8 @@ typedef struct bytebuf {
 cql_noexport void bytebuf_open(bytebuf *_Nonnull buf);
 cql_noexport void bytebuf_close(bytebuf *_Nonnull buf);
 cql_noexport void *_Nonnull bytebuf_alloc(bytebuf *_Nonnull buf, uint32_t needed);
+
+// The source may be a range within the buffer's used bytes, even when appending grows it.
 cql_noexport void bytebuf_append(bytebuf *_Nonnull buf, const void *_Nonnull bytes, uint32_t count);
 
 // helper macro for new from a bufferß

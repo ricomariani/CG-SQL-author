@@ -61,6 +61,21 @@ cql_noexport void bytebuf_append(
   const void *_Nonnull bytes,
   uint32_t count)
 {
+  uint32_t offset = 0;
+  bool_t aliases_buffer = false;
+
+  if (buf->ptr) {
+    uintptr_t source = (uintptr_t)bytes;
+    uintptr_t start = (uintptr_t)buf->ptr;
+    if (source >= start && source - start < buf->used) {
+      offset = (uint32_t)(source - start);
+      aliases_buffer = true;
+    }
+  }
+
   void *mem = bytebuf_alloc(buf, count);
-  memcpy(mem, bytes, count);
+  if (aliases_buffer) {
+    bytes = buf->ptr + offset;
+  }
+  memmove(mem, bytes, count);
 }

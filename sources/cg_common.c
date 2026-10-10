@@ -154,10 +154,12 @@ cql_noexport int64_t sha256_charbuf(charbuf *input) {
   SHA256_CTX ctx;
   sha256_init(&ctx);
   sha256_update(&ctx, (const SHA256_BYTE *)input->ptr, input->used - 1);
-  SHA256_BYTE hash_bytes[64];
-  sha256_final(&ctx, hash_bytes);
-  int64_t *h = (int64_t *)hash_bytes;
-  int64_t hash = h[0] ^ h[1] ^h[2] ^ h[3];
+  // Allocate as int64_t so the reduction reads properly aligned, correctly
+  // typed words. sha256_final writes through their byte view, which is allowed
+  // to alias the words. The digest bytes and native-endian XOR are unchanged.
+  int64_t words[SHA256_BLOCK_SIZE / sizeof(int64_t)];
+  sha256_final(&ctx, (SHA256_BYTE *)words);
+  int64_t hash = words[0] ^ words[1] ^ words[2] ^ words[3];
   return hash;
 }
 

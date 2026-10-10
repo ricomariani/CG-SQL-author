@@ -43,6 +43,7 @@
 #include <stdio.h>
 #include "cql.h"
 #include "charbuf.h"
+#include "bytebuf.h"
 
 #include "ast.h"
 #include "cg_common.h"
@@ -102,6 +103,9 @@ static ast_node *make_statement_node(ast_node *misc_attrs, ast_node *any_stmt);
 static ast_node *make_coldef_node(ast_node *col_def_tye_attrs, ast_node *misc_attrs);
 static ast_node *reduce_str_chain(ast_node *str_chain);
 static ast_node *new_simple_call_from_name(ast_node *name);
+static bool_t validate_integer_literals(ast_node *node);
+static bool_t parse_decimal_int32_prefix(CSTR text, int32_t min_value, int32_t max_value, int32_t *result, CSTR *end);
+static bool_t parse_decimal_int32(CSTR text, int32_t min_value, int32_t max_value, int32_t *result);
 
 // Set to true upon a call to `yyerror`.
 static bool_t parse_error_occurred;
@@ -113,9 +117,8 @@ static void cql_add_define(CSTR name);
 
 int yylex();
 void yyerror(const char *s, ...);
-void yyset_in(FILE *);
 void yyset_lineno(int);
-void yyrestart(FILE *);
+cql_noexport void cql_set_input_file(FILE *);
 
 #ifndef _MSC_VER
 #pragma clang diagnostic push
@@ -395,7 +398,7 @@ static void cql_reset_globals(void);
 %%
 
 program: top_level_stmts[stmts] {
-    if (!parse_error_occurred) {
+    if (!parse_error_occurred && validate_integer_literals($stmts)) {
       // Top-level statement ordering rules:
       //
       // IMPORTANT: stmt_list must NEVER appear before include_stmts or top_of_file_stmts.
@@ -417,6 +420,9 @@ program: top_level_stmts[stmts] {
         expand_macros($stmts);
         if (macro_expansion_errors) {
           cql_cleanup_and_exit(3);
+        }
+        if (!validate_integer_literals($stmts)) {
+          cql_exit_on_parse_errors();
         }
       }
       if (options.semantic) {
@@ -3067,22 +3073,16 @@ static void parse_cmd(int argc, char **argv) {
         cql_error("unable to open '%s' for read\n", argv[a]);
         cql_cleanup_and_exit(1);
       }
-      yyset_in(f);
-      // reset the scanner to point to the newly input file (yyset_in(f)). Otherwise the scanner
-      // might continue to point to the input file from the previous run in case there are still
-      // a stream to read.
-      // Usually when the parser encouter a syntax error, it stops reading the input file.
-      // On the next run the scanner will want to continue and finish from where it stops
-      // before moving to the file of the current run.
-      // Therefore it's important to always do this because we're in a new run and should ignore
-      // previous run because a result were already produced for that prevous run.
-      yyrestart(f);
+      cql_set_input_file(f);
 
       current_file = argv[a];
     }
     else if (strcmp(arg, "--min_schema_version") == 0) {
       a = gather_arg_param(a, argc, argv, NULL, "for the minimum schema version");
-      options.min_schema_version = atoi(argv[a]);
+      if (!parse_decimal_int32(argv[a], 0, INT32_MAX, &options.min_schema_version)) {
+        cql_error("invalid minimum schema version '%s'\n", argv[a]);
+        cql_cleanup_and_exit(1);
+      }
     }
     else if (strcmp(arg, "--global_proc") == 0) {
       a = gather_arg_param(a, argc, argv, NULL,  "for the global proc name");
@@ -3643,6 +3643,47 @@ static int32_t gather_arg_param(int32_t a, int32_t argc, char **argv, char **out
   return a;
 }
 
+static bool_t parse_decimal_int32_prefix(
+  CSTR text,
+  int32_t min_value,
+  int32_t max_value,
+  int32_t *result,
+  CSTR *end)
+{
+  if (!text || text[0] < '0' || text[0] > '9') {
+    return false;
+  }
+
+  int64_t value = 0;
+  CSTR p = text;
+  for (; *p >= '0' && *p <= '9'; p++) {
+    int32_t digit = *p - '0';
+    if (value > max_value / 10 ||
+        (value == max_value / 10 && digit > max_value % 10)) {
+      return false;
+    }
+    value = value * 10 + digit;
+  }
+
+  if (value < min_value) {
+    return false;
+  }
+
+  *result = (int32_t)value;
+  *end = p;
+  return true;
+}
+
+static bool_t parse_decimal_int32(
+  CSTR text,
+  int32_t min_value,
+  int32_t max_value,
+  int32_t *result)
+{
+  CSTR end;
+  return parse_decimal_int32_prefix(text, min_value, max_value, result, &end) && !*end;
+}
+
 extern int yylineno;
 
 void line_directive(const char *directive) {
@@ -3650,7 +3691,21 @@ void line_directive(const char *directive) {
   Invariant(directive_start != NULL);
   char *line_start = strchr(directive_start + 1, ' ');
   Invariant(line_start != NULL);
-  int line = atoi(line_start + 1);
+
+  int32_t line;
+  CSTR line_end;
+  bool_t valid_line = parse_decimal_int32_prefix(
+    line_start + 1,
+    1,
+    INT32_MAX / 2,
+    &line,
+    &line_end) && *line_end == ' ';
+
+  if (!valid_line) {
+    yyerror("invalid #line directive line number");
+    return;
+  }
+
   yyset_lineno(line -1);  // we are about to process the linefeed
 
   char *q1 = strchr(directive_start +1, '"');
@@ -3977,6 +4032,55 @@ static ast_node *reduce_str_chain(ast_node *str_chain) {
   return lit;
 }
 
+// Decimal 9223372036854775808 is the magnitude of INT64_MIN.  It is only
+// representable when it is the direct operand of unary minus.  The lexer keeps
+// this one exceptional magnitude as a long literal so the AST shape can make
+// the final determination here before any semantic or code generation pass.
+static bool_t validate_integer_literals(ast_node *node) {
+  bytebuf stack;
+  bytebuf_open(&stack);
+  bytebuf_append_var(&stack, node);
+
+  while (stack.used) {
+    stack.used -= sizeof(node);
+    memcpy(&node, stack.ptr + stack.used, sizeof(node));
+
+    if (is_ast_num(node)) {
+      EXTRACT_NUM_TYPE(num_type, node);
+      EXTRACT_NUM_VALUE(value, node);
+
+      if (num_type == NUM_LONG && !strcmp(value, "9223372036854775808")) {
+        ast_node *parent = node->parent;
+        bool_t valid = parent &&
+          is_ast_uminus(parent) &&
+          parent->left == node &&
+          !(parent->parent && is_ast_uminus(parent->parent));
+
+        if (!valid) {
+          cql_error("%s:%d:1: error: integer literal out of range\n",
+            node->filename, node->lineno);
+          parse_error_occurred = true;
+          cql_exit_code = 2;
+          bytebuf_close(&stack);
+          return false;
+        }
+      }
+      continue;
+    }
+
+    if (ast_has_left(node)) {
+      bytebuf_append_var(&stack, node->left);
+    }
+
+    if (ast_has_right(node)) {
+      bytebuf_append_var(&stack, node->right);
+    }
+  }
+
+  bytebuf_close(&stack);
+  return true;
+}
+
 // This will hold the defined symbols -- the ones that came in
 // via the --defines command line.  Currently there is no @define
 // so you only get what came in on the command line
@@ -4167,4 +4271,3 @@ cql_noexport int32_t macro_type_from_str(CSTR type) {
   Contract(macro_type != EOF);
   return macro_type;
 }
-

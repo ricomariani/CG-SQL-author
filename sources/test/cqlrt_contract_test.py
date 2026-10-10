@@ -10,11 +10,12 @@
 # as a control case: all valid operations must complete successfully.  It then
 # launches one child process for each named contract violation because a
 # successful contract check terminates the process and therefore cannot share a
-# process with later cases.  Any nonzero status means the expected fatal check
-# fired; a zero status means execution continued past a missing or assert-based
-# check and is reported as a test failure.
+# process with later cases.  Each child must terminate specifically with
+# SIGABRT; accepting any nonzero status would let an unrelated crash such as
+# SIGSEGV masquerade as a successful contract check.
 
 import subprocess
+import signal
 import sys
 
 
@@ -28,6 +29,7 @@ def main():
         "row_hash_negative",
         "rows_equal_first_negative",
         "rows_equal_second_negative",
+        "rows_equal_row_size_mismatch",
         "rows_same_first_negative",
         "rows_same_second_negative",
         "rowset_copy_count_negative",
@@ -55,9 +57,10 @@ def main():
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
-        if result.returncode == 0:
+        if result.returncode != -signal.SIGABRT:
             raise AssertionError(
-                f"contract test unexpectedly succeeded: {test_case}"
+                f"contract test did not terminate with SIGABRT: "
+                f"{test_case} returned {result.returncode}"
             )
 
 

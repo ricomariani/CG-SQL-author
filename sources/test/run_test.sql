@@ -1257,6 +1257,49 @@ begin
   EXPECT_EQ!(result, null);
 end);
 
+proc in_nullable_rhs_tester(value int!, candidate int, out result bool)
+begin
+  result := value in (2, candidate);
+end;
+
+proc not_in_nullable_rhs_tester(value int!, candidate int, out result bool)
+begin
+  result := value not in (2, candidate);
+end;
+
+TEST!(in_test_nullable_rhs,
+begin
+  declare result bool;
+
+  in_nullable_rhs_tester(4, null, result);
+  EXPECT_EQ!(result, null);
+  in_nullable_rhs_tester(2, null, result);
+  EXPECT!(result);
+  in_nullable_rhs_tester(4, 4, result);
+  EXPECT!(result);
+
+  not_in_nullable_rhs_tester(4, null, result);
+  EXPECT_EQ!(result, null);
+  not_in_nullable_rhs_tester(2, null, result);
+  EXPECT!(not result);
+  not_in_nullable_rhs_tester(4, 4, result);
+  EXPECT!(not result);
+
+  result := 3 in (null, 2);
+  EXPECT_EQ!(result, null);
+  result := 2 in (null, 2);
+  EXPECT!(result);
+end);
+
+TEST!(in_test_empty_rhs,
+begin
+  declare result bool!;
+  result := null in ();
+  EXPECT!(not result);
+  result := null not in ();
+  EXPECT!(result);
+end);
+
 proc nullables_case_tester(value int, out result int!)
 begin
   -- this is a very weird way to get a bool
@@ -1294,6 +1337,11 @@ begin
   result := value in ("this", "that");
 end;
 
+proc in_nullable_string_rhs_tester(value text!, candidate text, out result bool)
+begin
+  result := value in ("this", candidate);
+end;
+
 TEST!(string_in_test,
 begin
   declare result bool;
@@ -1305,6 +1353,13 @@ begin
   EXPECT!(not result);
   in_string_tester(null, result);
   EXPECT_EQ!(result, null);
+
+  in_nullable_string_rhs_tester("other", null, result);
+  EXPECT_EQ!(result, null);
+  in_nullable_string_rhs_tester("this", null, result);
+  EXPECT!(result);
+  in_nullable_string_rhs_tester("other", "other", result);
+  EXPECT!(result);
 end);
 
 TEST!(string_between_test,
@@ -2387,8 +2442,7 @@ begin
   EXPECT_SQL_TOO!(3 / 3 in (1, 2));
   EXPECT_SQL_TOO!(3 / 3 in (1, 2) in (1));
   EXPECT_SQL_TOO!(1 in (null, 1));
-  EXPECT!(not (1 in (null, 5)));
-  EXPECT!((select null is (not (1 in (null, 5))))); -- known sqlite and CQL in difference for null
+  EXPECT_SQL_TOO!((1 in (null, 5)) is null);
   EXPECT_SQL_TOO!(null is (null in (1)));
 
   -- Test not in
@@ -2398,8 +2452,7 @@ begin
   EXPECT_SQL_TOO!(3 / 1 not in (1, 2));
   EXPECT_SQL_TOO!(3 / 1 not in (1, 2) not in (0));
   EXPECT_SQL_TOO!(not (1 not in (null, 1)));
-  EXPECT!(1 not in (null, 5));
-  EXPECT!((select null is (1 not in (null, 5))));  -- known sqlite and CQL in difference for null
+  EXPECT_SQL_TOO!((1 not in (null, 5)) is null);
   EXPECT_SQL_TOO!(null is (null not in (1)));
 
   declare x text;
@@ -2815,7 +2868,7 @@ begin
   EXPECT_SQL_TOO!(x3 / x3 in (x1, x2));
   EXPECT_SQL_TOO!(x3 / x3 in (x1, x2) in (x1));
   EXPECT_SQL_TOO!(x1 in (null, x1));
-  EXPECT!(not (x1 in (null, x5))); -- known difference between CQL and SQLite in
+  EXPECT_SQL_TOO!((x1 in (null, x5)) is null);
   EXPECT_SQL_TOO!(null is (null in (x1)));
 
   -- Test not in
@@ -2825,7 +2878,7 @@ begin
   EXPECT_SQL_TOO!(x3 / x1 not in (x1, x2));
   EXPECT_SQL_TOO!(x3 / x1 not in (x1, x2) in (x1));
   EXPECT_SQL_TOO!(not (x1 not in (null, x1)));
-  EXPECT!(x1 not in (null, x5)); -- known difference between CQL and SQLite in
+  EXPECT_SQL_TOO!((x1 not in (null, x5)) is null);
   EXPECT_SQL_TOO!(null is (null not in (x1)));
 
   declare x text;
@@ -5102,6 +5155,8 @@ end);
 
 [[blob_storage]]
 create table small_blob_table(x int, y int);
+[[blob_storage]]
+create table large_blob_table(large_text text!, flag bool!);
 
 TEST!(blob_function_pattern,
 begin
@@ -5125,6 +5180,21 @@ begin
   EXPECT_EQ!(s1, s2);
   EXPECT_EQ!(s2, s3);
   EXPECT_EQ!(h1, h2);
+end);
+
+TEST!(blob_serialization_survives_buffer_growth,
+begin
+  -- The long string forces the serialization buffer to grow.  Boolean bits
+  -- written afterward must use the new allocation rather than the freed one.
+  declare C cursor like large_blob_table;
+  fetch C from values(printf("%1025s", "x"), true);
+
+  let encoded := C:to_blob;
+  declare D cursor like large_blob_table;
+  D:from_blob(encoded);
+
+  EXPECT_EQ!(D.large_text, C.large_text);
+  EXPECT!(D.flag);
 end);
 
 const group long_constants (

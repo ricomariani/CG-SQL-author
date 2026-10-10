@@ -75,23 +75,24 @@ cql_code upgrade(sqlite3* db, bool should_use_virtual) {
   sqlite3_trace_v2(db, SQLITE_TRACE_PROFILE, sqlite_trace_callback, NULL);
 #endif
 
-
-  if (begin_transaction(db)) {
+  rv = begin_transaction(db);
+  if (rv != SQLITE_OK) {
     fprintf(stderr, "failed to begin transaction\n");
+    return rv;
   }
 
   if (should_use_virtual) {
     rv = create_test_module(db);
     if (rv != SQLITE_OK) {
       fprintf(stderr, "failed sqlite3_create_module for test module\n");
-    return rv;
-  }
+      goto rollback;
+    }
 
     test_result_set_ref result_set;
     rv = test_fetch_results(db, &result_set);
     if (rv != SQLITE_OK) {
       fprintf(stderr, "failed fetching upgrade results (including virtuals)\n");
-      return rv;
+      goto rollback;
     }
     cql_result_set_release(result_set);
   }
@@ -100,16 +101,54 @@ cql_code upgrade(sqlite3* db, bool should_use_virtual) {
     rv = test_no_virtual_tables_fetch_results(db, &result_set);
     if (rv != SQLITE_OK) {
       fprintf(stderr, "failed fetching upgrade results (no virtuals)\n");
-      return rv;
+      goto rollback;
     }
     cql_result_set_release(result_set);
   }
 
-  if (commit_transaction(db)) {
+  rv = commit_transaction(db);
+  if (rv != SQLITE_OK) {
     fprintf(stderr, "failed to commit transaction\n");
+    goto rollback;
   }
 
+  return SQLITE_OK;
+
+rollback:
+  sqlite3_exec(db, "ROLLBACK TRANSACTION", NULL, NULL, NULL);
   return rv;
+}
+
+static int reject_commit(void *context) {
+  (*(int *)context)++;
+  return 1;
+}
+
+static cql_code test_transaction_failure_propagation(sqlite3 *db) {
+  cql_code rv = begin_transaction(db);
+  if (rv != SQLITE_OK) {
+    return rv;
+  }
+
+  rv = upgrade(db, false);
+  if (rv == SQLITE_OK) {
+    return SQLITE_ERROR;
+  }
+
+  if (sqlite3_exec(db, "ROLLBACK TRANSACTION", NULL, NULL, NULL) != SQLITE_OK) {
+    return SQLITE_ERROR;
+  }
+
+  int commit_attempts = 0;
+  sqlite3_commit_hook(db, reject_commit, &commit_attempts);
+  rv = upgrade(db, false);
+  sqlite3_commit_hook(db, NULL, NULL);
+
+  if (rv == SQLITE_OK || commit_attempts != 1 || !sqlite3_get_autocommit(db)) {
+    return SQLITE_ERROR;
+  }
+
+  return SQLITE_OK;
 }
 
 cql_code post_validate(sqlite3* db, cql_int64 old_version) {
@@ -138,8 +177,8 @@ cql_code post_validate(sqlite3* db, cql_int64 old_version) {
 }
 
 int main(int argc, char *argv[]) {
-  if (argc != 2) {
-    fprintf(stderr, "Expected usage: ./upgrade_test /path/to/db/\n");
+  if (argc != 2 && !(argc == 3 && !strcmp(argv[2], "--test-transaction-failures"))) {
+    fprintf(stderr, "Expected usage: ./upgrade_test /path/to/db/ [--test-transaction-failures]\n");
     return SQLITE_ERROR;
   }
 
@@ -148,6 +187,12 @@ int main(int argc, char *argv[]) {
       SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL)) {
     fprintf(stderr, "Unable to open DB '%s'\n", argv[1]);
     return SQLITE_ERROR;
+  }
+
+  if (argc == 3) {
+    cql_code rc = test_transaction_failure_propagation(db);
+    cql_code close_rc = sqlite3_close_v2(db);
+    return rc != SQLITE_OK ? rc : close_rc;
   }
 
   // Excluding virtual tables on v3 upgrade tests that no-vt and full upgrade

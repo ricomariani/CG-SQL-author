@@ -1023,8 +1023,8 @@ order by bogus limit 'y';
 select (select not 'x');
 
 -- TEST: basic IN statement -- null is ok anywhere
--- + {select_stmt}: _select_: { _anon: bool notnull }
--- + {in_pred}: bool notnull
+-- + {select_stmt}: _select_: { _anon: bool }
+-- + {in_pred}: bool
 -- +2 {int 1}: integer notnull
 -- +1 {int 2}: integer notnull
 -- + {null}: null
@@ -1039,9 +1039,9 @@ select 1 in (1, 2, null);
 select 1 in ('x', 2);
 
 -- TEST: simple string works
--- + {select_stmt}: _select_: { _anon: bool notnull }
--- note null in the list changes nothing
--- + {in_pred}: bool notnull
+-- + {select_stmt}: _select_: { _anon: bool }
+-- a null in the list makes a no-match result null
+-- + {in_pred}: bool
 -- +2 {strlit 'x'}: text notnull
 -- +1 {strlit 'y'}: text notnull
 -- +1 {null}: null
@@ -1095,8 +1095,8 @@ select (not 'x') in (1, 'x');
 select distinct 1 in (1, not 'x', 'y');
 
 -- TEST: basic NOT IN statement -- null is ok anywhere
--- + {select_stmt}: _select_: { _anon: bool notnull }
--- + {not_in}: bool notnull
+-- + {select_stmt}: _select_: { _anon: bool }
+-- + {not_in}: bool
 -- + {int 1}: integer notnull
 -- + {int 1}: integer notnull
 -- + {int 2}: integer notnull
@@ -1112,9 +1112,9 @@ select 1 not in (1, 2, null);
 select 1 not in ('x', 2);
 
 -- TEST: simple string works
--- + {select_stmt}: _select_: { _anon: bool notnull }
--- note null in the list changes nothing
--- + {not_in}: bool notnull
+-- + {select_stmt}: _select_: { _anon: bool }
+-- a null in the list makes a no-match result null
+-- + {not_in}: bool
 -- + {strlit 'x'}: text notnull
 -- + {strlit 'x'}: text notnull
 -- + {strlit 'y'}: text notnull
@@ -2752,7 +2752,7 @@ end;
 -- + {delete_stmt}: ok
 -- + {eq}: bool
 -- + {name arg1}: arg1: integer variable in
--- + {in_pred}: bool notnull
+-- + {in_pred}: bool
 -- + {name arg2}: arg2: text variable in
 -- - error:
 procedure proc2(arg1 INT, arg2 text)
@@ -3011,6 +3011,22 @@ end;
 -- + {call_stmt}: err
 -- +1 error:
 call proc_with_output(1, X, X);
+
+-- TEST: OUT alias detection uses resolved bindings, not case-sensitive spelling
+-- + error: % OUT or INOUT argument cannot be used again in same call 'X'
+-- + {call_stmt}: err
+-- +1 error:
+call proc_with_output(1, X, x);
+
+-- TEST: dotted argument-bundle names that resolve to the same storage may not alias
+-- + error: % OUT or INOUT argument cannot be used again in same call 'C.arg2'
+-- + {create_proc_stmt}: err
+-- + {call_stmt}: err
+-- +1 error:
+proc dotted_out_arguments_may_not_alias(C like proc_with_output arguments)
+begin
+  call proc_with_output(1, C.arg2, C.arg2);
+end;
 
 -- TEST: a variable may not be passed as both an IN and INOUT argument
 -- + error: % OUT or INOUT argument cannot be used again in same call 'X'
@@ -4456,6 +4472,12 @@ select id from foo where id in (select id from bar);
 -- +1 error:
 select id from foo where id in (select id, id from bar);
 
+-- TEST: semantic errors in an IN subquery propagate to the containing expression
+-- + error: % table/view not defined 'missing_in_table'
+-- + {select_stmt}: err
+-- +1 error:
+select id from foo where id in (select id from missing_in_table);
+
 -- TEST: subquery within in clause with wrong type
 -- + error: % required 'INT' not compatible with found 'TEXT' context 'IN'
 -- + {select_stmt}: err
@@ -4467,6 +4489,24 @@ select id from foo where id in (select name from bar);
 -- + {select_from_etc}: TABLE { bar: bar }
 -- - error:
 select id from foo where id not in (select id from bar);
+
+-- TEST: nullable values from an IN subquery make the result nullable
+-- + {in_pred}: bool
+-- + {select_stmt}: rate: longint
+-- - error:
+select 1 in (select rate from bar);
+
+-- TEST: nullable values from a NOT IN subquery make the result nullable
+-- + {not_in}: bool
+-- + {select_stmt}: rate: longint
+-- - error:
+select 1 not in (select rate from bar);
+
+-- TEST: a NULL value is legal in an IN subquery and makes the result nullable
+-- + {in_pred}: bool
+-- + {select_stmt}: _anon: null
+-- - error:
+select 1 in (select null);
 
 -- TEST: subquery within not in clause with wrong type
 -- + error: % required 'INT' not compatible with found 'TEXT' context 'NOT IN'
@@ -4651,6 +4691,177 @@ select const(1 % 0L);
 -- + {const}: err
 -- +1 error:
 select const(1 % not 1);
+
+-- TEST: integer addition overflow is a constant evaluation error
+-- + error: % evaluation of constant failed
+-- + {const}: err
+-- +1 error:
+select const(2147483647 + 1);
+
+-- TEST: integer subtraction overflow is a constant evaluation error
+-- + error: % evaluation of constant failed
+-- + {const}: err
+-- +1 error:
+select const((-2147483647 - 1) - 1);
+
+-- TEST: long multiplication overflow is a constant evaluation error
+-- + error: % evaluation of constant failed
+-- + {const}: err
+-- +1 error:
+select const(9223372036854775807L * 2L);
+
+-- TEST: long addition underflow is a constant evaluation error
+-- + error: % evaluation of constant failed
+-- + {const}: err
+-- +1 error:
+select const((-9223372036854775807L - 1L) + -1L);
+
+-- TEST: long subtraction overflow is a constant evaluation error
+-- + error: % evaluation of constant failed
+-- + {const}: err
+-- +1 error:
+select const(9223372036854775807L - -1L);
+
+-- TEST: multiplying to exactly the minimum long remains representable
+-- + SELECT -9223372036854775808L;
+-- - error:
+select const((-9223372036854775807L - 1L) * 1L);
+
+-- TEST: negative long multiplication preserves ordinary negative results
+-- + SELECT -6L;
+-- - error:
+select const(-2L * 3L);
+
+-- TEST: the minimum long divided by negative one is not representable
+-- + error: % evaluation of constant failed
+-- + {const}: err
+-- +1 error:
+select const((-9223372036854775807L - 1L) / -1L);
+
+-- TEST: the minimum long modulo negative one has the representable result zero
+-- + SELECT 0L;
+-- + {select_stmt}: _select_: { _anon: longint notnull }
+-- - error:
+select const((-9223372036854775807L - 1L) % -1L);
+
+-- TEST: negating the minimum integer is not representable
+-- + error: % evaluation of constant failed
+-- + {const}: err
+-- +1 error:
+select const(-(-2147483647 - 1));
+
+-- TEST: negating the minimum long is not representable
+-- + error: % evaluation of constant failed
+-- + {const}: err
+-- +1 error:
+select const(-(-9223372036854775807L - 1L));
+
+-- TEST: overflowing real arithmetic is a constant evaluation error
+-- + error: % evaluation of constant failed
+-- + {const}: err
+-- +1 error:
+select const(1.0e300 * 1.0e300);
+
+-- TEST: non-finite real operands are rejected before arithmetic
+-- + error: % evaluation of constant failed
+-- + {const}: err
+-- +1 error:
+select const(1.0e400 + 1.0);
+
+-- TEST: negating a non-finite real is a constant evaluation error
+-- + error: % evaluation of constant failed
+-- + {const}: err
+-- +1 error:
+select const(-1.0e400);
+
+-- TEST: real addition underflow is a constant evaluation error
+-- + error: % evaluation of constant failed
+-- + {const}: err
+-- +1 error:
+select const(-1.0e308 + -1.0e308);
+
+-- TEST: real subtraction overflow is a constant evaluation error
+-- + error: % evaluation of constant failed
+-- + {const}: err
+-- +1 error:
+select const(1.0e308 - -1.0e308);
+
+-- TEST: real division overflow is a constant evaluation error
+-- + error: % evaluation of constant failed
+-- + {const}: err
+-- +1 error:
+select const(1.0e308 / 1.0e-308);
+
+-- TEST: boolean arithmetic reports division by false as an evaluation error
+-- + error: % evaluation of constant failed
+-- + {const}: err
+-- +1 error:
+select const((not 0) / (not 1));
+
+-- TEST: negative shift counts are rejected
+-- + error: % evaluation of constant failed
+-- + {const}: err
+-- +1 error:
+select const(1 << -1);
+
+-- TEST: signed long right shift propagates the sign bit
+-- + SELECT -4L;
+-- - error:
+select const(-8L >> 1L);
+
+-- TEST: integer-width shift counts are rejected
+-- + error: % evaluation of constant failed
+-- + {const}: err
+-- +1 error:
+select const(1 << 32);
+
+-- TEST: long-width shift counts are rejected
+-- + error: % evaluation of constant failed
+-- + {const}: err
+-- +1 error:
+select const(1L >> 64L);
+
+-- TEST: valid shifts use fixed-width bit semantics
+-- + SELECT -2147483648;
+-- + {select_stmt}: _select_: { _anon: integer notnull }
+-- - error:
+select const(1 << 31);
+
+-- TEST: right shifts of negative integers explicitly sign extend
+-- + SELECT -1;
+-- + {select_stmt}: _select_: { _anon: integer notnull }
+-- - error:
+select const(-1 >> 31);
+
+-- TEST: an out-of-range real-to-integer cast is rejected
+-- + error: % evaluation of constant failed
+-- + {const}: err
+-- +1 error:
+select const(cast(2147483648.0 as int));
+
+-- TEST: an out-of-range real-to-long cast is rejected
+-- + error: % evaluation of constant failed
+-- + {const}: err
+-- +1 error:
+select const(cast(9223372036854775808.0 as long));
+
+-- TEST: real-to-integer casts accept the inclusive lower bound
+-- + SELECT -2147483648;
+-- + {select_stmt}: _select_: { _anon: integer notnull }
+-- - error:
+select const(cast(-2147483648.0 as int));
+
+-- TEST: real-to-long casts accept the inclusive lower bound
+-- + SELECT -9223372036854775808L;
+-- + {select_stmt}: _select_: { _anon: longint notnull }
+-- - error:
+select const(cast(-9223372036854775808.0 as long));
+
+-- TEST: narrowing a long to an integer keeps the low 32 bits
+-- + SELECT -1;
+-- + {select_stmt}: _select_: { _anon: integer notnull }
+-- - error:
+select const(cast(4294967295L as int));
 
 -- TEST: not handles error prop
 -- + error: % evaluation of constant failed
@@ -5971,7 +6182,7 @@ select * from goo;
 -- TEST: verify that we can use non-simple selects inside of an IN
 -- + {select_expr}: A: bool notnull
 -- + {in_pred}: bool notnull
--- + {select_stmt}: _anon: integer
+-- + {select_stmt}: _anon: integer notnull
 -- - error:
 select 1 in (select 1 union all select 2 union all select 3) as A;
 
@@ -7969,6 +8180,16 @@ select rowid from foo;
 -- - error:
 select T1.rowid from foo T1, bar T2;
 
+-- TEST: rowid on the null-extended side of an outer join is nullable
+-- + {select_stmt}: _select_: { rowid: longint }
+-- - error:
+select T2.rowid from foo T1 left join bar T2;
+
+-- TEST: rowid on the preserved side of an outer join stays not null
+-- + {select_stmt}: _select_: { rowid: longint notnull }
+-- - error:
+select T1.rowid from foo T1 left join bar T2;
+
 -- TEST: name not unique, not found
 -- + error: % name not found 'T1.rowid'
 -- + {select_stmt}: err
@@ -7980,6 +8201,41 @@ select T1.rowid from foo T2, foo T3;
 -- + {select_stmt}: err
 -- +1 error:
 select rowid from foo T1, foo T2;
+
+-- TEST: WITHOUT ROWID tables do not synthesize rowid
+-- - error:
+create table rowidless_table_for_resolution(
+  id integer primary key
+) without rowid;
+
+-- TEST: rowid is not available on a WITHOUT ROWID table
+-- + error: % name not found 'R.rowid'
+-- + {select_stmt}: err
+-- +1 error:
+select R.rowid from rowidless_table_for_resolution R;
+
+-- TEST: views do not synthesize rowid
+-- - error:
+create view rowid_view_for_resolution as select id from foo;
+
+-- TEST: rowid is not available on a view
+-- + error: % name not found 'V.rowid'
+-- + {select_stmt}: err
+-- +1 error:
+select V.rowid from rowid_view_for_resolution V;
+
+-- TEST: CTEs do not synthesize rowid
+-- + error: % name not found 'C.rowid'
+-- + {select_stmt}: err
+-- +1 error:
+with C(id) as (select id from foo)
+select C.rowid from C;
+
+-- TEST: subqueries do not synthesize rowid
+-- + error: % name not found 'S.rowid'
+-- + {select_stmt}: err
+-- +1 error:
+select S.rowid from (select id from foo) S;
 
 -- TEST: read the result of a non-dml proc;  we must not become a dml proc for doing so
 -- - dml_proc
@@ -9168,7 +9424,7 @@ set _sens := _sens + 1;
 set _sens := _sens in (1, 2);
 
 -- TEST: in an IN expression (haystack)
--- + {in_pred}: bool notnull sensitive
+-- + {in_pred}: bool sensitive
 -- + {int 1}: integer notnull
 -- + {expr_list}: _sens: integer variable sensitive
 -- + {name _sens}: _sens: integer variable sensitive
@@ -9176,8 +9432,8 @@ set _sens := _sens in (1, 2);
 set _sens := 1 in (1, _sens);
 
 -- TEST: in an IN expression (select form)
--- + {select_stmt}: _anon: bool notnull sensitive
--- + {in_pred}: bool notnull sensitive
+-- + {select_stmt}: _anon: bool sensitive
+-- + {in_pred}: bool sensitive
 -- - error:
 set _sens := (select 1 in (select info from with_sensitive));
 
@@ -10900,6 +11156,53 @@ create table recreatable_reference_6(
   id integer primary key references recreatable_reference_4(id) on update cascade on delete cascade,
   name text
 ) @recreate(rtest);
+
+-- TEST: create the root of a layered recreate dependency graph
+-- - error:
+create table recreate_dedup_root(
+  id integer primary key
+) @recreate(recreate_dedup_root_group);
+
+-- TEST: duplicate foreign keys between two groups create only one dependency edge
+-- - error:
+create table recreate_dedup_left(
+  id integer primary key references recreate_dedup_root(id) on update cascade on delete cascade,
+  root_id integer references recreate_dedup_root(id) on update cascade on delete cascade
+) @recreate(recreate_dedup_left_group);
+
+-- TEST: add the second branch of a layered recreate dependency graph
+-- - error:
+create table recreate_dedup_right(
+  id integer primary key references recreate_dedup_root(id) on update cascade on delete cascade
+) @recreate(recreate_dedup_right_group);
+
+-- TEST: both branches may share the same dependent group
+-- - error:
+create table recreate_dedup_leaf(
+  id integer primary key references recreate_dedup_left(id) on update cascade on delete cascade,
+  right_id integer references recreate_dedup_right(id) on update cascade on delete cascade
+) @recreate(recreate_dedup_leaf_group);
+
+-- TEST: create an unrelated recreate group for a no-cycle graph search
+-- - error:
+create table recreate_dedup_unrelated(
+  id integer primary key
+) @recreate(recreate_dedup_unrelated_group);
+
+-- TEST: a no-cycle search terminates after revisiting the shared descendant
+-- - error:
+create table recreate_dedup_root_extension(
+  id integer primary key references recreate_dedup_unrelated(id) on update cascade on delete cascade
+) @recreate(recreate_dedup_root_group);
+
+-- TEST: cycle detection terminates and finds a cycle through the layered shared graph
+-- + error: % referenced table can be independently recreated so it cannot be used in a foreign key 'recreate_dedup_leaf'
+-- + {create_table_stmt}: err
+-- + {col_attrs_fk}: err
+-- +1 error:
+create table recreate_dedup_cycle(
+  id integer primary key references recreate_dedup_leaf(id) on update cascade on delete cascade
+) @recreate(recreate_dedup_root_group);
 
 -- TEST: once we have found one error in the constraint section it's not safe to proceed to look for more
 --       errors because the semantic type of the node has already been changed to "error"
@@ -14586,6 +14889,40 @@ enum integer_things integer (
   pencil
 );
 
+-- TEST: implicit integer enum values may not overflow
+-- + error: % evaluation failed 'overflow'
+-- + {declare_enum_stmt}: err
+-- +1 error:
+enum integer_enum_increment_overflow integer (
+  maximum = 2147483647,
+  overflow
+);
+
+-- TEST: implicit long enum values may not overflow
+-- + error: % evaluation failed 'overflow'
+-- + {declare_enum_stmt}: err
+-- +1 error:
+enum long_enum_increment_overflow long_int (
+  maximum = 9223372036854775807L,
+  overflow
+);
+
+-- TEST: explicit null enum values fail constant evaluation
+-- + error: % evaluation failed 'null_value'
+-- + {declare_enum_stmt}: err
+-- +1 error:
+enum integer_enum_null_value integer (
+  null_value = null
+);
+
+-- TEST: enum values outside their declared type fail conversion
+-- + error: % evaluation failed 'too_large'
+-- + {declare_enum_stmt}: err
+-- +1 error:
+enum integer_enum_cast_overflow integer (
+  too_large = 1.0e300
+);
+
 declare proc test_shape() (x integer_things);
 
 -- TEST: ensure that the type kind is preserved on cursor read
@@ -16536,6 +16873,23 @@ enum three_things integer (
   _count = 3
 );
 
+enum hidden_things_only integer (
+  _sentinel = 1
+);
+
+-- TEST: ALL VALUES on an enum with no public members reports an extra value
+-- rather than indexing an empty enum-value buffer
+-- + error: % a value exists in the switch that is not present in the enum '1'
+-- + {create_proc_stmt}: err
+-- + {switch_stmt}: err
+-- +1 error:
+proc switch_with_hidden_enum_values_only(e hidden_things_only)
+begin
+  switch e all values
+    when 1 then let sink := 1;
+  end;
+end;
+
 -- TEST: switch with all values test: all good here
 -- + {switch_stmt}: ok
 -- +1 {expr_list}: ok
@@ -18220,6 +18574,46 @@ end;
 
 -- Used in the following tests.
 declare proc requires_int_notnull(a int!);
+
+-- TEST: A jumping branch must not contribute inherited improvements after
+-- being removed from the branch count.
+-- + error: % cannot assign/copy possibly null expression to not null target 'a'
+-- + error: % additional info: calling 'requires_int_notnull' argument #1 intended for parameter 'a' has the problem
+-- + {create_proc_stmt}: err
+-- + {call_stmt}: err
+-- +2 error:
+proc jumping_branch_does_not_contribute_inherited_improvements(a int, b bool!)
+begin
+  if a is null then
+    set b := true;
+  else if b then
+    return;
+  else
+    set b := false;
+  end if;
+
+  call requires_int_notnull(a);
+end;
+
+-- TEST: Empty branches remain neutral rather than making preceding false
+-- conditions persist beyond the branch group.
+-- + error: % cannot assign/copy possibly null expression to not null target 'a'
+-- + error: % additional info: calling 'requires_int_notnull' argument #1 intended for parameter 'a' has the problem
+-- + {create_proc_stmt}: err
+-- + {call_stmt}: err
+-- +2 error:
+proc empty_branches_inherit_preceding_false_improvements(a int, b bool!)
+begin
+  if a is null then
+    set a := 1;
+  else if b then
+    -- empty
+  else
+    -- empty
+  end if;
+
+  call requires_int_notnull(a);
+end;
 
 -- TEST: Improvements that are unset within a loop affect all preceding
 -- statements within the loop.
@@ -21385,6 +21779,56 @@ begin
   let z := (select cql_blob_update(b, 1, basic_table.id, 2, basic_table2.id));
 end;
 
+-- TEST: cql_blob_update may not mix key and value columns
+-- + error: % key and value columns may not be mixed in cql_blob_update 'name'
+-- + {call}: err
+-- +1 error:
+proc blob_update_mixed_partitions()
+begin
+  declare b blob;
+  let z := (select cql_blob_update(b, 1, basic_table.id, 'x', basic_table.name));
+end;
+
+-- TEST: cql_blob_update may not update the same column twice
+-- + error: % duplicate name in list 'id'
+-- + {call}: err
+-- +1 error:
+proc blob_update_duplicate_column()
+begin
+  declare b blob;
+  let z := (select cql_blob_update(b, 1, basic_table.id, 2, basic_table.id));
+end;
+
+-- TEST: cql_blob_update may not store nullable data in a not-null column
+-- + error: % cannot assign/copy possibly null expression to not null target 'cql_blob_update value'
+-- + {call}: err
+-- +1 error:
+proc blob_update_nullable_notnull_column()
+begin
+  declare b blob;
+  let z := (select cql_blob_update(b, nullable(1), basic_table.id));
+end;
+
+-- TEST: cql_blob_update may not store sensitive data in a non-sensitive column
+-- + error: % cannot assign/copy sensitive expression to non-sensitive target 'cql_blob_update value'
+-- + {call}: err
+-- +1 error:
+proc blob_update_sensitive_nonsensitive_column()
+begin
+  declare b blob;
+  let z := (select cql_blob_update(b, sensitive(1), basic_table.id));
+end;
+
+-- TEST: cql_blob_update enforces column type kinds
+-- + error: % expressions of different kinds can't be mixed: 'cool_text' vs. 'surname'
+-- + {call}: err
+-- +1 error:
+proc blob_update_incompatible_kind()
+begin
+  declare b blob;
+  let z := (select cql_blob_update(b, kind_string, basic_table.name));
+end;
+
 -- TEST: cql_blob_update first arg not a table
 -- + error: % required 'BLOB' not compatible with found 'INT' context 'cql_blob_update arg1'
 -- + {call}: err
@@ -21466,7 +21910,7 @@ begin
 end;
 
 -- TEST: blob update wrong argument type
--- + error: % required 'TEXT' not compatible with found 'INT' context 'cql_blob_update value'
+-- + error: % required 'INT' not compatible with found 'TEXT' context 'cql_blob_update value'
 -- + {call}: err
 -- +1 error:
 proc blob_update_column_wrong_arg_type()
@@ -21597,6 +22041,77 @@ begin
   let z := (select cql_blob_create(basic_table, 1, basic_table.id));
 end;
 
+-- TEST: cql_blob_create may not mix key and value columns
+-- + error: % key and value columns may not be mixed in cql_blob_create 'name'
+-- + {call}: err
+-- +1 error:
+proc blob_create_mixed_partitions()
+begin
+  let z := (select cql_blob_create(basic_table, 1, basic_table.id, 'x', basic_table.name));
+end;
+
+-- TEST: cql_blob_create requires every composite key column
+-- + error: % all key columns must appear exactly once in primary key order in cql_blob_create 'bt_default'
+-- + {call}: err
+-- +1 error:
+proc blob_create_incomplete_key()
+begin
+  let z := (select cql_blob_create(bt_default, 1, bt_default.pk1));
+end;
+
+-- TEST: cql_blob_create requires composite key declaration order
+-- + error: % key columns must appear exactly once in primary key order in cql_blob_create 'pk2'
+-- + {call}: err
+-- +1 error:
+proc blob_create_key_out_of_order()
+begin
+  let z := (select cql_blob_create(bt_default, 2, bt_default.pk2, 1, bt_default.pk1));
+end;
+
+-- TEST: cql_blob_create accepts a complete composite key in declaration order
+-- + {call}: blob notnull
+-- - error:
+proc blob_create_complete_key()
+begin
+  let z := (select cql_blob_create(bt_default, 1, bt_default.pk1, 2, bt_default.pk2));
+end;
+
+-- TEST: cql_blob_create may not store the same value column twice
+-- + error: % duplicate name in list 'name'
+-- + {call}: err
+-- +1 error:
+proc blob_create_duplicate_column()
+begin
+  let z := (select cql_blob_create(basic_table, 'x', basic_table.name, 'y', basic_table.name));
+end;
+
+-- TEST: cql_blob_create may not store nullable data in a not-null column
+-- + error: % cannot assign/copy possibly null expression to not null target 'cql_blob_create'
+-- + {call}: err
+-- +1 error:
+proc blob_create_nullable_notnull_column()
+begin
+  let z := (select cql_blob_create(basic_table, nullable(1), basic_table.id));
+end;
+
+-- TEST: cql_blob_create may not store sensitive data in a non-sensitive column
+-- + error: % cannot assign/copy sensitive expression to non-sensitive target 'cql_blob_create'
+-- + {call}: err
+-- +1 error:
+proc blob_create_sensitive_nonsensitive_column()
+begin
+  let z := (select cql_blob_create(basic_table, sensitive(1), basic_table.id));
+end;
+
+-- TEST: cql_blob_create enforces column type kinds
+-- + error: % expressions of different kinds can't be mixed: 'cool_text' vs. 'surname'
+-- + {call}: err
+-- +1 error:
+proc blob_create_incompatible_kind()
+begin
+  let z := (select cql_blob_create(basic_table, kind_string, basic_table.name));
+end;
+
 -- TEST: cql_blob_create arg 1 is not even a string
 -- + error: % argument 1 must be a table name that is a backed table 'cql_blob_create'
 -- + {call}: err
@@ -21673,7 +22188,7 @@ begin
 end;
 
 -- TEST: blob create wrong argument type
--- + error: % required 'TEXT' not compatible with found 'INT' context 'cql_blob_create'
+-- + error: % required 'INT' not compatible with found 'TEXT' context 'cql_blob_create'
 -- + {call}: err
 -- +1 error:
 proc blob_create_column_wrong_arg_type()
@@ -24279,6 +24794,13 @@ end;
 -- - error;
 let in_pred_empty := 1 in ();
 
+-- TEST: an empty IN list is not null even when the needle is NULL
+-- + LET in_pred_empty_null := NULL IN ();
+-- + {let_stmt}: in_pred_empty_null: bool notnull variable
+-- + {in_pred}: bool notnull
+-- - error;
+let in_pred_empty_null := null in ();
+
 -- TEST: verifies identifier creation based resolution
 -- + DECLARE foobar2 REAL;
 -- + {declare_vars_type}: real
@@ -24549,6 +25071,13 @@ select json_array_length('');
 -- - error:
 select json_array_length('', '$.x');
 
+-- TEST: one-argument json_array_length preserves NULL input
+-- + {select_stmt}: _select_: { _anon: integer }
+-- + {call}: integer
+-- + {name json_array_length}: integer
+-- - error:
+select json_array_length(nullable('[]'));
+
 -- TEST: json function for JSON array_length with too many args
 -- + error: % too many arguments in function 'json_array_length'
 -- + {call}: err
@@ -24579,6 +25108,13 @@ select json_array_length('x', 1);
 -- + {name json_error_position}: integer notnull
 -- - error:
 select json_error_position('');
+
+-- TEST: json_error_position preserves NULL input
+-- + {select_stmt}: _select_: { _anon: integer }
+-- + {call}: integer
+-- + {name json_error_position}: integer
+-- - error:
+select json_error_position(nullable('{}'));
 
 -- TEST: json function for JSON error_position with too many args
 -- + error: % too many arguments in function 'json_error_position'
@@ -24832,6 +25368,13 @@ select json_pretty('[1]', 5);
 -- + {name json_type}: text notnull
 -- - error:
 select json_type('[]');
+
+-- TEST: one-argument json_type preserves NULL input
+-- + {select_stmt}: _select_: { _anon: text }
+-- + {call}: text
+-- + {name json_type}: text
+-- - error:
+select json_type(nullable('[]'));
 
 -- TEST: json function for JSON array_length with 2 args
 -- + {select_stmt}: _select_: { _anon: text }

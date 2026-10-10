@@ -483,6 +483,10 @@ cql_noexport void flow_context_branch_group_add_empty_branch() {
   Contract(current_context);
   Contract(current_context->kind == FLOW_CONTEXT_KIND_BRANCH_GROUP);
 
+  // Empty branches are deliberately neutral.  In particular, an explicit
+  // empty ELSE must not turn the false condition of an earlier branch into a
+  // lasting improvement; code may later be added to that branch without
+  // changing the surrounding flow-analysis shape.
   current_context->branch_group.branch_count++;
 }
 
@@ -529,34 +533,6 @@ cql_noexport void _flow_push_context_branch() {
   push_context_with_kind(FLOW_CONTEXT_KIND_BRANCH);
 
   current_context->branch.always_jumps = false;
-
-  // Clone the current history of (typically negative) improvements within the
-  // branch group itself and add it to the accumulated history of its branches.
-  // The reason we do this is so that we can calculate the correct delta sum
-  // later on.
-  //
-  // Consider the following code:
-  //
-  // IF x IS NULL THEN
-  //   SET x := 42;
-  // ELSE IF y THEN
-  //   -- do nothing
-  // ELSE
-  //   -- do nothing
-  // END IF;
-  //
-  // Here, even though the second and third branches have not improved the type
-  // of `x` to be nonnull themselves, it is still the case that x is nonnull
-  // at the end of the second and third branches due to the condition of the
-  // first branch. It is therefore safe and appropriate to treat the branches as
-  // though they each made the improvement themselves so that x can be treated
-  // as nonnull after END IF.
-  //
-  // To put it more plainly, we want a delta sum of 3 for the improvement to x.
-  // If we didn't perform this step, it would only be 1.
-  flow_history branch_group_history = clone_history(current_context->parent->history);
-  append_history(&branch_group_history, current_context->parent->branch_group.branch_histories);
-  current_context->parent->branch_group.branch_histories = branch_group_history;
 
   // Increment the branch count of the parent branch group so that it can be
   // later compared against delta sums.
@@ -646,8 +622,16 @@ cql_noexport void _flow_pop_context_branch() {
     current_context->parent->branch_group.branch_count--;
   }
   else {
-    // Add the history of the branch to the total set of branch histories for
-    // the current branch group.
+    // A branch inherits the negative improvements established by the false
+    // conditions of all preceding branches. Add that inherited history only
+    // now, after we know this branch does not always jump. Adding it at push
+    // time would leave a stale contribution when a jumping branch is elided
+    // from branch_count, allowing merge_effects to infer an unsafe improvement.
+    flow_history branch_group_history = clone_history(current_context->parent->history);
+    append_history(&current_context->history, branch_group_history);
+
+    // Add the local and inherited history of the branch to the total set of
+    // branch histories for the current branch group.
     append_history(&current_context->history, current_context->parent->branch_group.branch_histories);
     current_context->parent->branch_group.branch_histories = current_context->history;
   }

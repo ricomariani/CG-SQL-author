@@ -85,6 +85,7 @@ typedef struct sem_struct {
   CSTR *names;                    // field names
   CSTR *kinds;                    // the "kind" text of each column, if any, e.g. integer<foo> foo is the kind
   sem_t *semtypes;                // typecode for each field
+  sem_t rowid_type;               // implicit rowid type, or zero if this row source has no rowid
   bool_t is_backed;               // original backed table source
 } sem_struct;
 

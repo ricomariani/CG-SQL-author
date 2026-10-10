@@ -21,13 +21,17 @@ int main(int argc, char **argv) {
   // Setup database
   sqlite3 *db = NULL;
   cql_code rc;
+  cql_code close_rc;
 
   // first access the database using the C interface
   rc = sqlite3_open(":memory:", &db);
   if (rc == SQLITE_OK) {
     rc = run_client(db);
   }
-  sqlite3_close(db);
+  close_rc = sqlite3_close(db);
+  if (rc == SQLITE_OK) {
+    rc = close_rc;
+  }
   if (rc) exit(rc);
 
   // now try again using the stored procs and a clean db
@@ -36,6 +40,9 @@ int main(int argc, char **argv) {
     rc = cql_startup(db);
   }
 
-  sqlite3_close(db);
+  close_rc = sqlite3_close(db);
+  if (rc == SQLITE_OK) {
+    rc = close_rc;
+  }
   exit(rc);
 }

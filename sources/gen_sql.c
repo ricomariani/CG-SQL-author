@@ -32,6 +32,30 @@ cql_noexport void gen_stmt_list_to_stdout(ast_node *ast) {}
 #include <string.h>
 #include <stdlib.h>
 
+// CQL accepts exactly two hex digits after \x, unlike C where a hex escape can
+// consume following digits.  Echoed CQL therefore needs its own representation
+// for otherwise unprintable bytes.
+static void gen_encode_cql_string_literal(CSTR str, charbuf *output) {
+  bputc(output, '"');
+  for (const unsigned char *p = (const unsigned char *)str; *p; p++) {
+    if (*p >= 128 ||
+        (*p < 32 &&
+         *p != '\a' &&
+         *p != '\b' &&
+         *p != '\f' &&
+         *p != '\n' &&
+         *p != '\r' &&
+         *p != '\t' &&
+         *p != '\v')) {
+      bprintf(output, "\\x%02x", *p);
+    }
+    else {
+      cg_encode_char_as_c_string_literal((char)*p, output);
+    }
+  }
+  bputc(output, '"');
+}
+
 // for dispatching expression types
 typedef struct gen_expr_dispatch {
   void (*func)(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new);
@@ -1171,7 +1195,7 @@ static void gen_concat(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   if (pri_new < pri) gen_printf("(");
   gen_expr(ast->left, pri_new);
   gen_printf(" %s ", op);
-  gen_expr(ast->right, pri_new);
+  gen_expr(ast->right, pri_new + 1);
   if (pri_new < pri) gen_printf(")");
 }
 
@@ -1184,7 +1208,7 @@ static void gen_jex1(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   if (pri_new < pri) gen_printf("(");
   gen_expr(ast->left, pri_new);
   gen_printf(" %s ", op);
-  gen_expr(ast->right, pri_new);
+  gen_expr(ast->right, pri_new + 1);
   if (pri_new < pri) gen_printf(")");
 }
 
@@ -1204,7 +1228,7 @@ static void gen_jex2(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
     gen_data_type(ast->right->left);
     gen_printf("~ ");
   }
-  gen_expr(ast->right->right, pri_new);
+  gen_expr(ast->right->right, pri_new + 1);
   if (pri_new < pri) gen_printf(")");
 }
 
@@ -1325,7 +1349,9 @@ static void gen_expr_num(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(val);
 
   if (has_hex_prefix(val) && gen_callbacks && gen_callbacks->convert_hex) {
-    int64_t v = strtol(val, NULL, 16);
+    uint64_t unsigned_value = strtoull(val, NULL, 16);
+    int64_t v;
+    memcpy(&v, &unsigned_value, sizeof(v));
     gen_printf("%lld", (llint_t)v);
   }
   else {
@@ -1500,7 +1526,7 @@ static void gen_expr_str(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
       CHARBUF_OPEN(decoded);
       CHARBUF_OPEN(encoded);
       cg_decode_string_literal(str, &decoded);
-      cg_encode_c_string_literal(decoded.ptr, &encoded);
+      gen_encode_cql_string_literal(decoded.ptr, &encoded);
 
       gen_literal(encoded.ptr);
       CHARBUF_CLOSE(encoded);
@@ -3893,7 +3919,7 @@ static void gen_create_virtual_table_stmt(ast_node *ast) {
   EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
   EXTRACT_DETAIL(flags, table_flags_attrs->left);
   EXTRACT_ANY(table_attrs, table_flags_attrs->right);
-  EXTRACT_STRING(name, create_table_name_flags->right);
+  EXTRACT_NAME_AST(table_name_ast, create_table_name_flags->right);
   EXTRACT_NOTNULL(col_key_list, create_table_stmt->right);
   EXTRACT_STRING(module_name, module_info->left);
   EXTRACT_ANY(module_args, module_info->right);
@@ -3904,7 +3930,8 @@ static void gen_create_virtual_table_stmt(ast_node *ast) {
   gen_printf("CREATE VIRTUAL TABLE ");
   gen_if_not_exists(ast, if_not_exist);
   gen_eponymous(ast, is_eponymous);
-  gen_printf("%s USING %s", name, module_name);
+  gen_name(table_name_ast);
+  gen_printf(" USING %s", module_name);
 
   if (!for_sqlite()) {
     if (is_ast_following(module_args)) {

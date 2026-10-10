@@ -29,7 +29,7 @@
 -- validating the basic shape of the output
 -- + "name" : "Foo"
 -- + "region" : "region0",
--- + "indices" : [ "region_0_index", "MyIndex", "MyOtherIndex", "MyExpressionIndex", "MyPartialIndex", "MyIndexWithAttributes" ],
+-- + "indices" : [ "region_0_index", "MyIndex", "MyOtherIndex", "MyExpressionIndex", "MyPartialIndex", "EscapedPartialIndex", "MyIndexWithAttributes" ],
 -- + "columns" : [
 -- + "name" : "id"
 -- + "type" : "integer",
@@ -111,6 +111,12 @@ create table T3
 -- + "value" : -7
 -- + "name" : "hex"
 -- + "value" : 83
+-- + "name" : "hex32"
+-- + "value" : 4294967296
+-- + "name" : "hex_min"
+-- + "value" : -9223372036854775808
+-- + "name" : "hex_neg_one"
+-- + "value" : -1
 -- + "name" : "qid"
 -- + "value" : "quoted identifier"
 -- + "columns" : [
@@ -121,6 +127,9 @@ create table T3
 @attribute(foo=bar)
 @attribute(num=-7)
 @attribute(hex=0x53)
+@attribute(hex32=0x100000000)
+@attribute(hex_min=0x8000000000000000)
+@attribute(hex_neg_one=0xffffffffffffffff)
 @attribute(qid=`quoted identifier`)
 create table T4
 (
@@ -292,6 +301,41 @@ create table T10 (
   constraint uk1 unique ( id2, id3 ),
   unique ( id3, id4 )
 );
+
+-- TEST: quoted constraint and column-level FK names are decoded in metadata
+create table `json parent`(
+  `id col` integer primary key
+);
+
+-- + "name" : "json names",
+-- + "primaryKeyName" : "pk name",
+-- + "columns" : [ "fk col" ],
+create table `json names`(
+  `fk col` integer references `json parent`(`id col`),
+  constraint `pk name` primary key (`fk col`)
+);
+
+-- TEST: quoted DML targets are decoded in statement metadata
+-- + "name" : "insert_quoted_json_name",
+-- + "table" : "json names",
+proc insert_quoted_json_name()
+begin
+  insert into `json names`(`fk col`) values (1);
+end;
+
+-- + "name" : "update_quoted_json_name",
+-- + "table" : "json names",
+proc update_quoted_json_name()
+begin
+  update `json names` set `fk col` = 2;
+end;
+
+-- + "name" : "delete_quoted_json_name",
+-- + "table" : "json names",
+proc delete_quoted_json_name()
+begin
+  delete from `json names`;
+end;
 
 -- TEST: create an fk
 -- + "name" : "T11"
@@ -554,6 +598,11 @@ create index MyExpressionIndex on Foo(id+5, id*id);
 -- + "columns" : [ "id * id" ],
 -- + "sortOrders" : [ "" ]
 create index MyPartialIndex on Foo(id*id) where id < 1000;
+
+-- TEST: partial-index predicates are JSON encoded
+-- + "name" : "EscapedPartialIndex",
+-- + "where" : "name = 'a\"b\\c'",
+create index EscapedPartialIndex on Foo(name) where name = 'a"b\c';
 
 -- TEST: an index
 -- + "name" : "YetAnotherIndex",
@@ -1547,6 +1596,12 @@ create table t_for_unsub(
 -- + "version" : 1
 @unsub(t_for_unsub);
 
+-- TEST: quoted subscription names are decoded in metadata
+create table `quoted unsub table`(id integer);
+-- + "type" : "unsub",
+-- + "table" : "quoted unsub table",
+@unsub(`quoted unsub table`);
+
 @end_schema_region;
 
 -- TEST: more clauses, including having and others
@@ -2182,3 +2237,20 @@ end;
 
 -- TEST: emit another_group explicitly (since @emit_group with no names doesn't emit all)
 @emit_group another_group;
+
+-- TEST: quoted identifiers are escaped in primary and foreign key metadata
+-- + "name" : "json\"parent",
+-- + "primaryKey" : [ "id\"\\key" ],
+-- + "columns" : [ "id\"\\key" ],
+create table `json"parent` (
+  `id"\key` int!,
+  primary key (`id"\key`),
+  unique (`id"\key`)
+);
+
+-- + "referenceTable" : "json\"parent",
+-- + "referenceColumns" : [ "id\"\\key" ],
+create table json_child (
+  child_id int,
+  foreign key (child_id) references `json"parent` (`id"\key`)
+);

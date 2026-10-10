@@ -74,13 +74,11 @@ cql_noexport void cg_encode_char_as_c_string_literal(char c, charbuf *output) {
     case '\v':  bputc(output, backslash); bputc(output, 'v'); break;
     case '\\':  bputc(output, c); bputc(output, c); break;
     default  :
-      // note: 0x80 - 0xff will be negative and are hence covered by this test
       if (c < 32) {
-        uint32_t ch = (uint32_t)c;
-        ch &= 0xff;
-        bprintf(output, "\\x");
-        emit_hex_digit(ch >> 4, output);
-        emit_hex_digit(ch & 0xf, output);
+        uint32_t ch = (uint32_t)(unsigned char)c;
+        // C hex escapes consume following hex digits.  Fixed-width octal
+        // escapes remain one byte regardless of the next source character.
+        bprintf(output, "\\%03o", ch);
       }
       else {
         bputc(output, c);
@@ -106,6 +104,7 @@ cql_noexport void cg_encode_char_as_c_string_literal(char c, charbuf *output) {
 cql_noexport void cg_encode_char_as_json_string_literal(char c, charbuf *output) {
   const char quote = '"';
   const char backslash = '\\';
+  uint32_t ch = (uint32_t)(unsigned char)c;
 
   switch (c) {
     case '\"':  bputc(output, backslash); bputc(output, quote); break;
@@ -116,10 +115,7 @@ cql_noexport void cg_encode_char_as_json_string_literal(char c, charbuf *output)
     case '\r':  bputc(output, backslash); bputc(output, 'r'); break;
     case '\t':  bputc(output, backslash); bputc(output, 't'); break;
     default  :
-      // note: 0x80 - 0xff will be negative and are hence covered by this test
-      if (c < 32) {
-        uint32_t ch = (uint32_t)c;
-        ch &= 0xff;
+      if (ch < 32 || ch >= 0x80) {
         bprintf(output, "\\u00");
         emit_hex_digit(ch >> 4, output);
         emit_hex_digit(ch & 0xf, output);
@@ -411,7 +407,17 @@ cql_noexport void cg_pretty_quote_plaintext(CSTR str, charbuf *output, uint32_t 
     }
     else {
       if (for_json) {
-        cg_encode_char_as_json_string_literal(p[0], output);
+        const unsigned char *utf8 = (const unsigned char *)p;
+        int32_t seq_len = valid_utf8_sequence(utf8);
+        if (seq_len > 1) {
+          for (int32_t i = 0; i < seq_len; i++) {
+            bputc(output, (char)utf8[i]);
+          }
+          p += seq_len - 1;
+        }
+        else {
+          cg_encode_char_as_json_string_literal(p[0], output);
+        }
       }
       else {
         cg_encode_char_as_c_string_literal(p[0], output);
@@ -435,6 +441,10 @@ cql_noexport void cg_pretty_quote_plaintext(CSTR str, charbuf *output, uint32_t 
 // You can only use this function on text that is going
 // into a comment block.
 cql_noexport void cg_remove_slash_star_and_star_slash(charbuf *_Nonnull b) {
+  if (b->used < 3) {
+    return;
+  }
+
   char *p = b->ptr;
   for (uint32_t i = 0; i < b->used - 2; i++) {
     if (p[i] == '*' && p[i+1] == '/') {

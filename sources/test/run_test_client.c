@@ -1102,7 +1102,7 @@ cql_blob_ref create_truncated_blob(cql_blob_ref b, cql_int32 new_size) {
   return cql_blob_ref_new(cql_get_blob_bytes(b), (cql_uint32)new_size);
 }
 
-static int32_t rand_state = 0;
+static uint32_t rand_state = 0;
 
 // to ensure we can get the same series again (this is public)
 void rand_reset() {
@@ -1115,8 +1115,9 @@ void rand_reset() {
 // integers in linear congruence math. So for this lame thing I picked my
 // own constants out of thin air and I have no idea if they are any good
 // but they are my own and really we just don't care that much.
-static int32_t seriously_lousy_rand() {
-  rand_state = (rand_state * 1302475243 + 21493) & 0x7fffffff;
+static uint32_t seriously_lousy_rand() {
+  rand_state =
+    (rand_state * UINT32_C(1302475243) + UINT32_C(21493)) & UINT32_C(0x7fffffff);
   return rand_state;
 }
 
@@ -1155,12 +1156,37 @@ cql_code test_cql_rebuild_recreate_group(sqlite3 *db) {
   E(rc == SQLITE_OK, "expected succesful table creates\n");
   rc = cql_exec_internal(db, indices);
   E(rc == SQLITE_OK, "expected succesful index create\n");
+  rc = cql_exec(db, "INSERT INTO g1(id, name) VALUES(1, 'sentinel')");
+  E(rc == SQLITE_OK, "expected successful sentinel insert\n");
   rc = cql_rebuild_recreate_group(db, tables, indices, deletes, &result);
   E(rc == SQLITE_OK, "expected succesful recreate group upgrade\n");
+  E(!result, "expected recreate rather than rebuild\n");
+
+  sqlite3_stmt *stmt = NULL;
+  rc = sqlite3_prepare_v2(
+      db,
+      "SELECT "
+      "  (SELECT count(*) FROM g1) = 0 AND "
+      "  (SELECT count(*) FROM sqlite_master "
+      "     WHERE type = 'table' AND name IN ('g1', 'use g1', 'foo', 'g2', 'use_g2')) = 5 AND "
+      "  (SELECT count(*) FROM sqlite_master "
+      "     WHERE type = 'index' AND name = 'extra_index' AND tbl_name = 'g1') = 1",
+      -1,
+      &stmt,
+      NULL);
+  E(rc == SQLITE_OK, "expected successful recreate group validation prepare\n");
+  rc = sqlite3_step(stmt);
+  E(rc == SQLITE_ROW, "expected one recreate group validation row\n");
+  E(sqlite3_column_int(stmt, 0), "recreate group did not restore the expected schema\n");
+  rc = sqlite3_step(stmt);
+  E(rc == SQLITE_DONE, "expected exactly one recreate group validation row\n");
+  rc = sqlite3_finalize(stmt);
+  E(rc == SQLITE_OK, "expected successful recreate group validation finalize\n");
+
   cql_string_release(tables);
   cql_string_release(indices);
   cql_string_release(deletes);
-  return rc;
+  return SQLITE_OK;
 }
 
 void take_bool(cql_nullable_bool x, cql_nullable_bool y)
@@ -1189,37 +1215,53 @@ cql_code test_cql_parent_child(sqlite3 *db) {
   cql_int32 count = TestParentChild_result_count(parent);
   E(count == 2, "expected two rows\n");
 
+  static const cql_int32 expected_room_ids[] = { 2, 1 };
+  static const char *expected_names[] = { "bar", "foo" };
+  static const cql_int32 expected_child_counts[] = { 1, 2 };
+  static const cql_int32 expected_tasks[][2] = { { 200, 0 }, { 100, 101 } };
+
   for (int i = 0; i < count; i++) {
     cql_int32 roomID = TestParentChild_get_roomID(parent, i);
-     cql_string_ref name_ref = TestParentChild_get_name(parent, i);
+    cql_string_ref name_ref = TestParentChild_get_name(parent, i);
 
-     cql_alloc_cstr(cstr, name_ref);
+    E(roomID == expected_room_ids[i], "unexpected parent room id\n");
 
-     if (roomID == 1) {
-       E(!strcmp(cstr, "foo"), "expected room to be 'foo'");
-     }
-     else {
-       E(!strcmp(cstr, "bar"), "expected room to be 'bar'");
-     }
+    cql_alloc_cstr(cstr, name_ref);
+    cql_bool name_matches = !strcmp(cstr, expected_names[i]);
+    cql_free_cstr(cstr, name_ref);
+    E(name_matches, "unexpected parent room name\n");
 
-     cql_free_cstr(cstr, name_ref);
+    // note that the shape of the result set from the Parent/Child will be
+    // slightly different than the shape of child if you call it directly
+    // because the partitioning logic will add the columns `has_row`,
+    // `refs_count` and `refs_offset`.  But this is supposed to be no problem.
+    // We verify the accessors work in this case with the code below
 
-     // note that the shape of the result set from the Parent/Child will be
-     // slightly different than the shape of child if you call it directly
-     // because the partitioning logic will add the columns `has_row`,
-     // `refs_count` and `refs_offset`.  But this is supposed to be no problem.
-     // We verify the accessors work in this case with the code below
+    TestChild_result_set_ref child = TestParentChild_get_test_tasks(parent, i);
+    cql_int32 children = TestChild_result_count(child);
+    E(children == expected_child_counts[i], "unexpected child count\n");
+    cql_bool seen[2] = { false, false };
 
-     TestChild_result_set_ref child = TestParentChild_get_test_tasks(parent, i);
-     cql_int32 children = TestChild_result_count(child);
+    for (int j = 0; j < children; j++) {
+      cql_int32 child_room = TestChild_get_roomID(child, j);
+      cql_int32 child_task = TestChild_get_thisIsATask(child, j);
 
-     for (int j = 0; j < children; j++) {
-       cql_int32 child_room = TestChild_get_roomID(child, j);
-       cql_int32 child_task = TestChild_get_thisIsATask(child, j);
+      E(child_room == expected_room_ids[i], "expected matching parent and child room id\n");
 
-       E(child_room == roomID, "expected matching parent and child room id\n");
-       E(child_task == 100*roomID + j, "child task did not match expected formula\n");
-     }
+      cql_bool found = false;
+      for (int k = 0; k < expected_child_counts[i]; k++) {
+        if (!seen[k] && child_task == expected_tasks[i][k]) {
+          seen[k] = true;
+          found = true;
+          break;
+        }
+      }
+      E(found, "unexpected or duplicate child task\n");
+    }
+
+    for (int j = 0; j < expected_child_counts[i]; j++) {
+      E(seen[j], "missing expected child task\n");
+    }
   }
   cql_result_set_release(parent);
 

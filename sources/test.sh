@@ -253,6 +253,56 @@ basic_test() {
   TEST_CMD="${CQL} --ast_no_echo --dev --include_paths test2 --in \"$T/test.sql\""
   run_test_expect_success
 
+  TEST_NAME="ast_depth_limit"
+  TEST_DESC="Testing bounded AST printing for deeply nested expressions"
+  TEST_CMD="awk 'BEGIN { printf \"select \"; for (i = 0; i < 2100; i++) printf \"not \"; print \"1;\" }' >\"$O/ast_depth.sql\" && ${CQL} --ast_no_echo --hide_builtins --in \"$O/ast_depth.sql\" >\"$O/ast_depth.txt\" && grep -F 'AST print depth limit reached' \"$O/ast_depth.txt\""
+  run_test_expect_success
+
+  TEST_NAME="integer_literal_boundaries"
+  TEST_DESC="Testing accepted integer literal boundaries"
+  TEST_CMD="${CQL} --sem --in \"$T/integer_literal_boundaries.sql\""
+  run_test_expect_success
+
+  TEST_NAME="integer_literal_overflow"
+  TEST_DESC="Rejecting decimal integer literal overflow"
+  TEST_CMD="${CQL} --sem --in \"$T/integer_literal_overflow.sql\" >\"$O/integer_literal_overflow.tmp\" 2>&1; rc=\$?; test \$rc -ne 0 && grep -F 'integer literal out of range' \"$O/integer_literal_overflow.tmp\""
+  run_test_expect_success
+
+  TEST_NAME="integer_literal_positive_min_magnitude"
+  TEST_DESC="Rejecting positive INT64_MIN magnitude"
+  TEST_CMD="${CQL} --sem --in \"$T/integer_literal_positive_min_magnitude.sql\" >\"$O/integer_literal_positive_min_magnitude.tmp\" 2>&1; rc=\$?; test \$rc -ne 0 && grep -F 'integer literal out of range' \"$O/integer_literal_positive_min_magnitude.tmp\""
+  run_test_expect_success
+
+  TEST_NAME="integer_literal_double_negation"
+  TEST_DESC="Rejecting double negation of INT64_MIN magnitude"
+  TEST_CMD="${CQL} --sem --in \"$T/integer_literal_double_negation.sql\" >\"$O/integer_literal_double_negation.tmp\" 2>&1; rc=\$?; test \$rc -ne 0 && grep -F 'integer literal out of range' \"$O/integer_literal_double_negation.tmp\""
+  run_test_expect_success
+
+  TEST_NAME="integer_literal_macro_double_negation"
+  TEST_DESC="Rejecting macro-generated double negation of INT64_MIN magnitude"
+  TEST_CMD="${CQL} --exp --in \"$T/integer_literal_macro_double_negation.sql\" >\"$O/integer_literal_macro_double_negation.tmp\" 2>&1; rc=\$?; test \$rc -ne 0 && grep -F 'integer literal out of range' \"$O/integer_literal_macro_double_negation.tmp\""
+  run_test_expect_success
+
+  TEST_NAME="integer_literal_hex_overflow"
+  TEST_DESC="Rejecting hexadecimal integer literal overflow"
+  TEST_CMD="${CQL} --sem --in \"$T/integer_literal_hex_overflow.sql\" >\"$O/integer_literal_hex_overflow.tmp\" 2>&1; rc=\$?; test \$rc -ne 0 && grep -F 'integer literal out of range' \"$O/integer_literal_hex_overflow.tmp\""
+  run_test_expect_success
+
+  TEST_NAME="min_schema_version_validation"
+  TEST_DESC="Rejecting malformed minimum schema versions"
+  TEST_CMD="ok=1; if ! ${CQL} --sem --min_schema_version 2147483647 --in \"$T/integer_literal_boundaries.sql\"; then ok=0; fi; for value in \"\" -1 1x 2147483648; do if ${CQL} --sem --min_schema_version \"\$value\" --in \"$T/integer_literal_boundaries.sql\" >\"$O/min_schema_version_validation.tmp\" 2>&1; then ok=0; break; fi; if ! grep -F 'invalid minimum schema version' \"$O/min_schema_version_validation.tmp\" >/dev/null; then ok=0; break; fi; done; test \$ok -eq 1"
+  run_test_expect_success
+
+  TEST_NAME="line_directive_invalid"
+  TEST_DESC="Rejecting unsafe line directive values"
+  TEST_CMD="${CQL} --sem --in \"$T/line_directive_invalid.sql\" >\"$O/line_directive_invalid.tmp\" 2>&1; rc=\$?; test \$rc -ne 0 && grep -F 'invalid #line directive line number' \"$O/line_directive_invalid.tmp\""
+  run_test_expect_success
+
+  TEST_NAME="line_directive_valid_large"
+  TEST_DESC="Accepting a large safe line directive value"
+  TEST_CMD="${CQL} --sem --in \"$T/line_directive_valid_large.sql\""
+  run_test_expect_success
+
   echo "  computing diffs (empty if none)"
   on_diff_exit test.out
   on_diff_exit test_ast.out
@@ -334,6 +384,16 @@ macro_test() {
   echo "  computing diffs (empty if none)"
   on_diff_exit macro_exp_errors.err
 
+  TEST_NAME="macro_recursion"
+  TEST_DESC="Rejecting recursive macro expansion"
+  TEST_CMD="${CQL} --exp --in \"$T/macro_recursion_test.sql\" >\"$O/macro_recursion.tmp\" 2>&1; rc=\$?; test \$rc -ne 0 && grep -F 'recursive macro expansion is not allowed' \"$O/macro_recursion.tmp\""
+  run_test_expect_success
+
+  TEST_NAME="macro_depth"
+  TEST_DESC="Rejecting excessive macro expansion depth"
+  TEST_CMD="if ! { for i in \$(seq 0 256); do next=\$((i + 1)); echo \"@macro(expr) m\$i!() begin m\$next!() end;\"; done; echo '@macro(expr) m257!() begin 1 end;'; echo 'm0!();'; } >\"$O/macro_depth.sql\"; then false; else ${CQL} --exp --in \"$O/macro_depth.sql\" >\"$O/macro_depth.tmp\" 2>&1; rc=\$?; test \$rc -ne 0 && grep -F 'macro expansion nesting limit exceeded' \"$O/macro_depth.tmp\"; fi"
+  run_test_expect_success
+
   TEST_NAME="macro_test_dup"
   TEST_DESC="Running macro expansion duplicate name"
   TEST_CMD="${CQL} --exp --in \"$T/macro_test_dup_arg.sql\""
@@ -409,6 +469,30 @@ code_gen_c_test() {
   TEST_NAME="cg_test_c_with_type_getters_compile"
   TEST_DESC="Compiling generated C code from type getters codegen test"
   TEST_CMD="do_make $O/cg_test_c_with_type_getters.o"
+  run_test_expect_success
+
+  TEST_NAME="cg_api_symbol_collision"
+  TEST_DESC="Rejecting collisions between generated result helpers and procedures"
+  TEST_CMD="${CQL} --cg \"$O/cg_api_symbol_collision.h\" \"$O/cg_api_symbol_collision.c\" --in \"$T/cg_api_symbol_collision.sql\""
+  CG_API_SYMBOL_COLLISION_ERR="$O/${TEST_NAME}.err"
+  run_test_expect_fail
+  grep -F "generated C symbol 'foo_get_x'" "$CG_API_SYMBOL_COLLISION_ERR" >/dev/null || failed
+
+  TEST_NAME="cg_internal_symbol_collision"
+  TEST_DESC="Rejecting user variables that collide with the generated return code"
+  TEST_CMD="${CQL} --cg \"$O/cg_internal_symbol_collision.h\" \"$O/cg_internal_symbol_collision.c\" --in \"$T/cg_internal_symbol_collision.sql\""
+  CG_INTERNAL_SYMBOL_COLLISION_ERR="$O/${TEST_NAME}.err"
+  run_test_expect_fail
+  grep -F "reserves variable name '_rc_'" "$CG_INTERNAL_SYMBOL_COLLISION_ERR" >/dev/null || failed
+
+  TEST_NAME="cg_global_proc_name"
+  TEST_DESC="Quoting the global procedure name used by tracing runtimes"
+  TEST_CMD="${CQL} --cg \"$O/cg_global_proc.h\" \"$O/cg_global_proc.c\" --in \"$T/cg_global_proc.sql\" --global_proc cql_startup"
+  run_test_expect_success
+
+  TEST_NAME="cg_global_proc_name_check"
+  TEST_DESC="Checking the quoted global procedure tracing name"
+  TEST_CMD="grep -F '#define _PROC_ \"cql_startup\"' \"$O/cg_global_proc.c\""
   run_test_expect_success
 
   TEST_NAME="cg_test_c_with_namespace"
@@ -824,6 +908,18 @@ json_schema_test() {
 
   json_validate "$T/cg_test_json_schema.sql"
 
+  sed 's/"tables"/"TABLES"/' "$O/cql_test.json" >"$O/cql_test_bad_case.json"
+
+  TEST_NAME="json_wrong_case_created"
+  TEST_DESC="Checking that the JSON schema key-case mutation was created"
+  TEST_CMD="grep -q '\"TABLES\"' \"$O/cql_test_bad_case.json\""
+  run_test_expect_success
+
+  TEST_NAME="json_wrong_case_rejected"
+  TEST_DESC="Checking that incorrectly cased JSON schema keys are rejected"
+  TEST_CMD="out/json_test <\"$O/cql_test_bad_case.json\""
+  run_test_expect_fail
+
   echo "Running JSON codegen test for an empty file"
   echo "" >"$O/__temp"
   json_validate "$O/__temp"
@@ -974,8 +1070,8 @@ query_plan_test() {
   run_test_expect_success
 
   TEST_NAME="query_plan_json_validate"
-  TEST_DESC="Validating JSON format of query plan report"
-  TEST_CMD="common/json_check.py <\"$O/query_plan_run.out\""
+  TEST_DESC="Validating JSON format and contents of query plan report"
+  TEST_CMD="common/json_check.py --query-plan-count 41 <\"$O/query_plan_run.out\""
   run_test_expect_success
 
   TEST_NAME="query_plan_empty_codegen"
@@ -1074,7 +1170,7 @@ amalgam_test() {
 
   TEST_NAME="cql_amalgam_test"
   TEST_DESC="Running CQL amalgam tests"
-  TEST_CMD="./$O/amalgam_test \"$T/cql_amalgam_test_success.sql\" \"$T/cql_amalgam_test_semantic_error.sql\" \"$T/cql_amalgam_test_syntax_error.sql\""
+  TEST_CMD="ulimit -n 32; ./$O/amalgam_test \"$T/cql_amalgam_test_success.sql\" \"$T/cql_amalgam_test_semantic_error.sql\" \"$T/cql_amalgam_test_syntax_error.sql\" \"$T/scanner_cleanup_main.sql\""
   run_test_expect_success
 
   on_diff_exit cql_amalgam_test.out
@@ -1111,6 +1207,35 @@ cqljson_test() {
   TEST_NAME="cqljson_sql_literals"
   TEST_DESC="Testing cqljson SQL literal encoding"
   TEST_CMD="python3 cqljson/cqljson_test.py"
+  run_test_expect_success
+}
+
+binding_generator_test() {
+  TEST_NAME="cqlrt_cf_objc_binding_generator"
+  TEST_DESC="Testing CoreFoundation Objective-C binding generation"
+  TEST_CMD="python3 cqlrt_cf/cqlobjc_test.py"
+  run_test_expect_success
+
+  TEST_NAME="objc_full_binding_generator"
+  TEST_DESC="Testing full Objective-C binding generation"
+  TEST_CMD="python3 objc_full/cql_objc_full_test.py"
+  run_test_expect_success
+
+  TEST_NAME="java_binding_generator"
+  TEST_DESC="Testing Java binding generation"
+  TEST_CMD="python3 java_demo/cqljava_test.py"
+  run_test_expect_success
+
+  TEST_NAME="dotnet_binding_generator"
+  TEST_DESC="Testing .NET binding generation"
+  TEST_CMD="python3 dotnet_demo/cqlcs_test.py"
+  run_test_expect_success
+}
+
+sqlite3_cql_extension_test() {
+  TEST_NAME="sqlite3_cql_extension_encoding"
+  TEST_DESC="Testing SQLite extension SQL and C encoding"
+  TEST_CMD="python3 sqlite3_cql_extension/cqlsqlite3extension_test.py"
   run_test_expect_success
 }
 
@@ -1206,6 +1331,8 @@ if [ -n "$SPECIFIC_TEST" ]; then
     echo "  unit_tests"
     echo "  cqlrt_contract_test"
     echo "  cqljson_test"
+    echo "  binding_generator_test"
+    echo "  sqlite3_cql_extension_test"
     echo "  comment_safety_test"
     echo "  macro_test"
     echo "  semantic_test"
@@ -1233,6 +1360,8 @@ else
   unit_tests
   cqlrt_contract_test
   cqljson_test
+  binding_generator_test
+  sqlite3_cql_extension_test
   macro_test
   semantic_test
   code_gen_c_test

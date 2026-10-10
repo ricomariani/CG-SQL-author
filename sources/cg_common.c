@@ -154,10 +154,16 @@ cql_noexport int64_t sha256_charbuf(charbuf *input) {
   SHA256_CTX ctx;
   sha256_init(&ctx);
   sha256_update(&ctx, (const SHA256_BYTE *)input->ptr, input->used - 1);
-  SHA256_BYTE hash_bytes[64];
+  SHA256_BYTE hash_bytes[SHA256_BLOCK_SIZE];
   sha256_final(&ctx, hash_bytes);
-  int64_t *h = (int64_t *)hash_bytes;
-  int64_t hash = h[0] ^ h[1] ^h[2] ^ h[3];
+
+  // Preserve the existing native-endian hash reduction without relying on
+  // alignment or violating strict aliasing.
+  uint64_t words[SHA256_BLOCK_SIZE / sizeof(uint64_t)];
+  memcpy(words, hash_bytes, sizeof(words));
+  uint64_t hash_bits = words[0] ^ words[1] ^ words[2] ^ words[3];
+  int64_t hash;
+  memcpy(&hash, &hash_bits, sizeof(hash));
   return hash;
 }
 

@@ -21,7 +21,7 @@
       "isRecreated": 0,
       "region" : "region0",
       "deployedInRegion" : "region2",
-      "indices" : [ "region_0_index", "MyIndex", "MyOtherIndex", "MyExpressionIndex", "MyPartialIndex", "MyIndexWithAttributes" ],
+      "indices" : [ "region_0_index", "MyIndex", "MyOtherIndex", "MyExpressionIndex", "MyPartialIndex", "EscapedPartialIndex", "MyIndexWithAttributes" ],
       "columns" : [
         {
           "name" : "id",
@@ -141,6 +141,9 @@
     @ATTRIBUTE(foo=bar)
     @ATTRIBUTE(num=-7)
     @ATTRIBUTE(hex=0x53)
+    @ATTRIBUTE(hex32=0x100000000L)
+    @ATTRIBUTE(hex_min=0x8000000000000000L)
+    @ATTRIBUTE(hex_neg_one=0xffffffffffffffffL)
     @ATTRIBUTE(qid=`quoted identifier`)
     CREATE TABLE T4(
       @ATTRIBUTE(cool)
@@ -169,6 +172,18 @@
         {
           "name" : "hex",
           "value" : 83
+        },
+        {
+          "name" : "hex32",
+          "value" : 4294967296
+        },
+        {
+          "name" : "hex_min",
+          "value" : -9223372036854775808
+        },
+        {
+          "name" : "hex_neg_one",
+          "value" : -1
         },
         {
           "name" : "qid",
@@ -715,6 +730,92 @@
           "columns" : [ "id3", "id4" ],
           "sortOrders" : [ "", "" ]
         }
+      ],
+      "checkExpressions" : [
+      ]
+    },
+
+    The statement ending at line XXXX
+
+    CREATE TABLE `json parent`(
+      `id col` INT PRIMARY KEY
+    )
+
+    {
+      "name" : "json parent",
+      "schema" : "CREATE TABLE [json parent](\n  [id col] INTEGER PRIMARY KEY\n)",
+      "CRC" : "2863249205121147912",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "columns" : [
+        {
+          "name" : "id col",
+          "type" : "integer",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 1,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [ "id col" ],
+      "primaryKeySortOrders" : [ "" ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
+      ]
+    },
+
+    The statement ending at line XXXX
+
+    CREATE TABLE `json names`(
+      `fk col` INT REFERENCES `json parent` (`id col`),
+      CONSTRAINT `pk name` PRIMARY KEY (`fk col`)
+    )
+
+    {
+      "name" : "json names",
+      "schema" : "CREATE TABLE [json names](\n  [fk col] INTEGER REFERENCES [json parent] ([id col]),\n  CONSTRAINT [pk name] PRIMARY KEY ([fk col])\n)",
+      "CRC" : "1438194849823937952",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "columns" : [
+        {
+          "name" : "fk col",
+          "type" : "integer",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [ "fk col" ],
+      "primaryKeySortOrders" : [ "" ],
+      "primaryKeyName" : "pk name",
+      "foreignKeys" : [
+        {
+          "columns" : [ "fk col" ],
+          "referenceTable" : "json parent",
+          "referenceColumns" : [ "id col" ],
+          "onUpdate" : "NO ACTION",
+          "onDelete" : "NO ACTION",
+          "isDeferred" : 0
+        }
+      ],
+      "uniqueKeys" : [
       ],
       "checkExpressions" : [
       ]
@@ -1642,6 +1743,47 @@
 
     The statement ending at line XXXX
 
+    CREATE TABLE `quoted unsub table`(
+      id INT
+    )
+
+    {
+      "name" : "quoted unsub table",
+      "schema" : "CREATE TABLE [quoted unsub table](\n  id INTEGER\n)",
+      "CRC" : "-3920002665264900443",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 1,
+      "isRecreated": 0,
+      "unsubscribedVersion" : 1,
+      "region" : "region0",
+      "deployedInRegion" : "region2",
+      "columns" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [  ],
+      "primaryKeySortOrders" : [  ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
+      ]
+    },
+
+    The statement ending at line XXXX
+
     [[backed_by=backing]]
     CREATE TABLE name(
       first TEXT!,
@@ -2504,6 +2646,97 @@
       ],
       "checkExpressions" : [
       ]
+    },
+
+    The statement ending at line XXXX
+
+    CREATE TABLE `json"parent`(
+      `id"\key` INT!,
+      PRIMARY KEY (`id"\key`),
+      UNIQUE (`id"\key`)
+    )
+
+    {
+      "name" : "json\"parent",
+      "schema" : "CREATE TABLE [json\"parent](\n  [id\"\\key] INTEGER NOT NULL,\n  PRIMARY KEY ([id\"\\key]),\n  UNIQUE ([id\"\\key])\n)",
+      "CRC" : "-2727499162120759219",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "columns" : [
+        {
+          "name" : "id\"\\key",
+          "type" : "integer",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [ "id\"\\key" ],
+      "primaryKeySortOrders" : [ "" ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+        {
+          "columns" : [ "id\"\\key" ],
+          "sortOrders" : [ "" ]
+        }
+      ],
+      "checkExpressions" : [
+      ]
+    },
+
+    The statement ending at line XXXX
+
+    CREATE TABLE json_child(
+      child_id INT,
+      FOREIGN KEY (child_id) REFERENCES `json"parent` (`id"\key`)
+    )
+
+    {
+      "name" : "json_child",
+      "schema" : "CREATE TABLE json_child(\n  child_id INTEGER,\n  FOREIGN KEY (child_id) REFERENCES [json\"parent] ([id\"\\key])\n)",
+      "CRC" : "5700632232983100764",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "columns" : [
+        {
+          "name" : "child_id",
+          "type" : "integer",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [  ],
+      "primaryKeySortOrders" : [  ],
+      "foreignKeys" : [
+        {
+          "columns" : [ "child_id" ],
+          "referenceTable" : "json\"parent",
+          "referenceColumns" : [ "id\"\\key" ],
+          "onUpdate" : "NO ACTION",
+          "onDelete" : "NO ACTION",
+          "isDeferred" : 0
+        }
+      ],
+      "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
+      ]
     }
   ],
   "virtualTables" : [
@@ -3182,6 +3415,23 @@
     }
     The statement ending at line XXXX
 
+    CREATE INDEX EscapedPartialIndex ON Foo (name)
+    WHERE name = 'a"b\c'
+
+    ,
+    {
+      "name" : "EscapedPartialIndex",
+      "CRC" : "3479430622224278031",
+      "table" : "Foo",
+      "isUnique" : 0,
+      "ifNotExists" : 0,
+      "isDeleted" : 0,
+      "where" : "name = 'a\"b\\c'",
+      "columns" : [ "name" ],
+      "sortOrders" : [ "" ]
+    }
+    The statement ending at line XXXX
+
     CREATE INDEX YetAnotherIndex ON Foo (id) @DELETE(1)
 
     ,
@@ -3546,7 +3796,7 @@
     {
       "name" : "crazy_string",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 164,
+      "definedOnLine" : 173,
       "args" : [
       ],
       "usesTables" : [  ],
@@ -3573,7 +3823,7 @@
     {
       "name" : "a_query",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 356,
+      "definedOnLine" : 400,
       "args" : [
         {
           "name" : "pattern",
@@ -3619,7 +3869,7 @@
     {
       "name" : "bigger_query",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 391,
+      "definedOnLine" : 435,
       "args" : [
         {
           "name" : "pattern",
@@ -3672,7 +3922,7 @@
     {
       "name" : "joiner",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 641,
+      "definedOnLine" : 690,
       "args" : [
         {
           "name" : "id_",
@@ -3737,7 +3987,7 @@
     {
       "name" : "radioactive_proc",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 791,
+      "definedOnLine" : 840,
       "args" : [
       ],
       "fromTables" : [ "radioactive" ],
@@ -3769,7 +4019,7 @@
     {
       "name" : "object_proc",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 848,
+      "definedOnLine" : 897,
       "args" : [
         {
           "name" : "anObject",
@@ -3800,7 +4050,7 @@
     {
       "name" : "proc_inside_region",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1075,
+      "definedOnLine" : 1124,
       "args" : [
       ],
       "usesTables" : [  ],
@@ -3840,7 +4090,7 @@
     {
       "name" : "with_select_proc",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1091,
+      "definedOnLine" : 1140,
       "args" : [
       ],
       "usesTables" : [  ],
@@ -3865,7 +4115,7 @@
     {
       "name" : "json_escapes",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1172,
+      "definedOnLine" : 1221,
       "args" : [
       ],
       "usesTables" : [  ],
@@ -3891,7 +4141,7 @@
     {
       "name" : "use_view",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1216,
+      "definedOnLine" : 1265,
       "args" : [
       ],
       "fromTables" : [ "Foo" ],
@@ -3926,7 +4176,7 @@
     {
       "name" : "null_attribute",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1224,
+      "definedOnLine" : 1273,
       "args" : [
       ],
       "fromTables" : [ "Foo" ],
@@ -3964,7 +4214,7 @@
     {
       "name" : "shared_frag_user_function_style",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1455,
+      "definedOnLine" : 1504,
       "args" : [
       ],
       "fromTables" : [ "T2" ],
@@ -3991,7 +4241,7 @@
     {
       "name" : "high_bit_escapes",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1464,
+      "definedOnLine" : 1513,
       "args" : [
       ],
       "usesTables" : [  ],
@@ -4017,7 +4267,7 @@
     {
       "name" : "potato",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1483,
+      "definedOnLine" : 1532,
       "args" : [
         {
           "name" : "i",
@@ -4071,7 +4321,7 @@
     {
       "name" : "uses_deleted_view_alias",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1517,
+      "definedOnLine" : 1566,
       "args" : [
       ],
       "usesTables" : [  ],
@@ -4102,7 +4352,7 @@
     {
       "name" : "test_interface1_implementation_correct",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1566,
+      "definedOnLine" : 1621,
       "args" : [
         {
           "name" : "id_",
@@ -4151,7 +4401,7 @@
     {
       "name" : "generate_quoted_items",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1947,
+      "definedOnLine" : 2002,
       "args" : [
       ],
       "fromTables" : [ "abc def" ],
@@ -4184,7 +4434,7 @@
     {
       "name" : "insert_returning_stmt",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1979,
+      "definedOnLine" : 2034,
       "args" : [
       ],
       "insertTables" : [ "returning_tests" ],
@@ -4221,7 +4471,7 @@
     {
       "name" : "delete_returning_stmt",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 2010,
+      "definedOnLine" : 2065,
       "args" : [
       ],
       "deleteTables" : [ "returning_tests" ],
@@ -4259,7 +4509,7 @@
     {
       "name" : "update_returning_stmt",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 2041,
+      "definedOnLine" : 2096,
       "args" : [
       ],
       "updateTables" : [ "returning_tests" ],
@@ -4289,6 +4539,35 @@
 
     The statement ending at line XXXX
 
+    PROC insert_quoted_json_name ()
+    BEGIN
+    INSERT INTO `json names`(`fk col`)
+      VALUES (1);
+    END
+
+    {
+      "name" : "insert_quoted_json_name",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "definedOnLine" : 321,
+      "args" : [
+      ],
+      "insertTables" : [ "json names" ],
+      "usesTables" : [ "json names" ],
+      "table" : "json names",
+      "statement" : "INSERT INTO [json names]([fk col]) VALUES (1)",
+      "statementArgs" : [  ],
+      "statementType" : "INSERT",
+      "columns" : [ "fk col" ],
+      "values" : [
+        {
+          "value" : "1",
+          "valueArgs" : [  ]
+        }
+      ]
+    },
+
+    The statement ending at line XXXX
+
     PROC insert_proc (id_ INT!, name_ TEXT)
     BEGIN
     INSERT OR REPLACE INTO Foo(id, name)
@@ -4298,7 +4577,7 @@
     {
       "name" : "insert_proc",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 408,
+      "definedOnLine" : 452,
       "args" : [
         {
           "name" : "id_",
@@ -4342,7 +4621,7 @@
     {
       "name" : "dummy_insert_proc",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 622,
+      "definedOnLine" : 671,
       "args" : [
         {
           "name" : "seed_",
@@ -4383,7 +4662,7 @@
     {
       "name" : "insert_with_select",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 740,
+      "definedOnLine" : 789,
       "args" : [
       ],
       "insertTables" : [ "T3" ],
@@ -4408,7 +4687,7 @@
     {
       "name" : "insert_compound",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 758,
+      "definedOnLine" : 807,
       "args" : [
       ],
       "insertTables" : [ "T3" ],
@@ -4434,7 +4713,7 @@
     {
       "name" : "insert_multi_value",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 775,
+      "definedOnLine" : 824,
       "args" : [
       ],
       "insertTables" : [ "T3" ],
@@ -4461,7 +4740,7 @@
     {
       "name" : "upsert_proc",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 804,
+      "definedOnLine" : 853,
       "args" : [
       ],
       "insertTables" : [ "T3" ],
@@ -4497,7 +4776,7 @@
     {
       "name" : "with_upsert_proc",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 817,
+      "definedOnLine" : 866,
       "args" : [
       ],
       "insertTables" : [ "T3" ],
@@ -4528,7 +4807,7 @@
     {
       "name" : "with_insert_proc",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 835,
+      "definedOnLine" : 884,
       "args" : [
         {
           "name" : "x",
@@ -4550,6 +4829,27 @@
 
     The statement ending at line XXXX
 
+    PROC update_quoted_json_name ()
+    BEGIN
+    UPDATE `json names`
+      SET `fk col` = 2;
+    END
+
+    {
+      "name" : "update_quoted_json_name",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "definedOnLine" : 328,
+      "args" : [
+      ],
+      "updateTables" : [ "json names" ],
+      "usesTables" : [ "json names" ],
+      "table" : "json names",
+      "statement" : "UPDATE [json names] SET [fk col] = 2",
+      "statementArgs" : [  ]
+    },
+
+    The statement ending at line XXXX
+
     PROC update_proc (id_ INT!, name_ TEXT)
     BEGIN
     UPDATE foO
@@ -4562,7 +4862,7 @@
     {
       "name" : "update_proc",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 502,
+      "definedOnLine" : 546,
       "args" : [
         {
           "name" : "id_",
@@ -4603,7 +4903,7 @@
     {
       "name" : "update_with_proc",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 512,
+      "definedOnLine" : 556,
       "args" : [
         {
           "name" : "id_",
@@ -4629,6 +4929,26 @@
 
     The statement ending at line XXXX
 
+    PROC delete_quoted_json_name ()
+    BEGIN
+    DELETE FROM `json names`;
+    END
+
+    {
+      "name" : "delete_quoted_json_name",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "definedOnLine" : 335,
+      "args" : [
+      ],
+      "deleteTables" : [ "json names" ],
+      "usesTables" : [ "json names" ],
+      "table" : "json names",
+      "statement" : "DELETE FROM [json names]",
+      "statementArgs" : [  ]
+    },
+
+    The statement ending at line XXXX
+
     PROC delete_proc (name_ TEXT)
     BEGIN
     DELETE FROM foO WHERE name LIKE name_;
@@ -4637,7 +4957,7 @@
     {
       "name" : "delete_proc",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 486,
+      "definedOnLine" : 530,
       "args" : [
         {
           "name" : "name_",
@@ -4670,7 +4990,7 @@
     {
       "name" : "delete_with_values",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 492,
+      "definedOnLine" : 536,
       "args" : [
         {
           "name" : "name_",
@@ -4700,7 +5020,7 @@
     {
       "name" : "with_complex_args",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 371,
+      "definedOnLine" : 415,
       "args" : [
         {
           "binding" : "out",
@@ -4739,7 +5059,7 @@
     {
       "name" : "atypical_noreturn",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 416,
+      "definedOnLine" : 460,
       "args" : [
       ],
       "usesTables" : [  ],
@@ -4760,7 +5080,7 @@
     {
       "name" : "typical_outresult",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 432,
+      "definedOnLine" : 476,
       "args" : [
       ],
       "usesTables" : [  ],
@@ -4791,7 +5111,7 @@
     {
       "name" : "typical_out_union_result",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 451,
+      "definedOnLine" : 495,
       "args" : [
       ],
       "usesTables" : [  ],
@@ -4823,7 +5143,7 @@
     {
       "name" : "typical_select",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 472,
+      "definedOnLine" : 516,
       "args" : [
       ],
       "fromTables" : [ "T5" ],
@@ -4863,7 +5183,7 @@
     {
       "name" : "proc_args_1",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 872,
+      "definedOnLine" : 921,
       "args" : [
         {
           "name" : "arg1_x",
@@ -4891,7 +5211,7 @@
     {
       "name" : "proc_args_2",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 879,
+      "definedOnLine" : 928,
       "args" : [
         {
           "name" : "id_",
@@ -4919,7 +5239,7 @@
     {
       "name" : "proc_args_3",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 888,
+      "definedOnLine" : 937,
       "args" : [
         {
           "name" : "x_",
@@ -4947,7 +5267,7 @@
     {
       "name" : "proc_args_4",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 896,
+      "definedOnLine" : 945,
       "args" : [
         {
           "name" : "id_",
@@ -4975,7 +5295,7 @@
     {
       "name" : "proc_args_5",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 903,
+      "definedOnLine" : 952,
       "args" : [
         {
           "name" : "arg1_x",
@@ -5003,7 +5323,7 @@
     {
       "name" : "proc_args_6",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 911,
+      "definedOnLine" : 960,
       "args" : [
         {
           "name" : "foo_",
@@ -5037,7 +5357,7 @@
     {
       "name" : "empty_proc",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1114,
+      "definedOnLine" : 1163,
       "args" : [
       ],
       "usesTables" : [  ],
@@ -5079,7 +5399,7 @@
     {
       "name" : "empty_blocks",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1127,
+      "definedOnLine" : 1176,
       "args" : [
       ],
       "usesTables" : [  ],
@@ -5098,7 +5418,7 @@
     {
       "name" : "proc_with_deps",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1163,
+      "definedOnLine" : 1212,
       "args" : [
         {
           "binding" : "out",
@@ -5123,7 +5443,7 @@
     {
       "name" : "using_kinds",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1359,
+      "definedOnLine" : 1408,
       "args" : [
         {
           "name" : "list",
@@ -5160,7 +5480,7 @@
     {
       "name" : "shared_frag_user",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1416,
+      "definedOnLine" : 1465,
       "args" : [
       ],
       "fromTables" : [ "Foo", "T1", "T2", "T6" ],
@@ -5191,7 +5511,7 @@
     {
       "name" : "shared_frag_user_nested_select",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1434,
+      "definedOnLine" : 1483,
       "args" : [
       ],
       "fromTables" : [ "Foo", "T1", "T2", "T6" ],
@@ -5218,7 +5538,7 @@
     {
       "name" : "string_literal_attr",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1473,
+      "definedOnLine" : 1522,
       "args" : [
       ],
       "usesTables" : [  ],
@@ -5249,7 +5569,7 @@
     {
       "name" : "insert_returning_cursor",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1960,
+      "definedOnLine" : 2015,
       "args" : [
       ],
       "insertTables" : [ "returning_tests" ],
@@ -5275,7 +5595,7 @@
     {
       "name" : "delete_returning_cursor",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1991,
+      "definedOnLine" : 2046,
       "args" : [
       ],
       "deleteTables" : [ "returning_tests" ],
@@ -5302,7 +5622,7 @@
     {
       "name" : "update_returning_cursor",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 2022,
+      "definedOnLine" : 2077,
       "args" : [
       ],
       "updateTables" : [ "returning_tests" ],
@@ -8626,7 +8946,7 @@
     {
       "name" : "interface1",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1563,
+      "definedOnLine" : 1618,
       "attributes" : [
         {
           "name" : "cql:java_package",
@@ -9117,6 +9437,18 @@
       "deployedInRegion" : "region2",
       "version" : 1
     }
+    The statement ending at line XXXX
+
+    @UNSUB(`quoted unsub table`)
+
+    ,
+    {
+      "type" : "unsub",
+      "table" : "quoted unsub table",
+      "region" : "region0",
+      "deployedInRegion" : "region2",
+      "version" : 1
+    }
   ],
   "tableUsers" : {
     "Foo" : [ "a_query", "bigger_query", "insert_proc", "delete_proc", "delete_with_values", "update_proc", "update_with_proc", "dummy_insert_proc", "joiner", "use_view", "null_attribute", "shared_frag_user", "shared_frag_user_nested_select", "insert_returning_cursor", "delete_returning_cursor", "update_returning_cursor" ],
@@ -9126,6 +9458,7 @@
     "T5" : [ "typical_select", "joiner" ],
     "T6" : [ "shared_frag_user", "shared_frag_user_nested_select" ],
     "X_abcX20def" : [ "generate_quoted_items" ],
+    "X_jsonX20names" : [ "insert_quoted_json_name", "update_quoted_json_name", "delete_quoted_json_name" ],
     "radioactive" : [ "radioactive_proc" ],
     "returning_tests" : [ "insert_returning_cursor", "insert_returning_stmt", "delete_returning_cursor", "delete_returning_stmt", "update_returning_cursor", "update_returning_stmt" ]
   }

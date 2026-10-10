@@ -204,6 +204,7 @@ typedef struct rtdata {
 cql_data_decl( rtdata *rt );
 
 cql_noexport void cql_cleanup_and_exit(int32_t code);
+cql_noexport void cql_set_input_file(FILE *file);
 
 // output to "stderr"
 cql_noexport void cql_error(const char *format, ...) _printf_checking_(1, 2);

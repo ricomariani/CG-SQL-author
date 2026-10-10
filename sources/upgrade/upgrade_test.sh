@@ -94,6 +94,13 @@ done
 if ! make ${MAKE_COVERAGE_ARGS} upgrade_test; then
   echo make ${MAKE_COVERAGE_ARGS} upgrade_test
   echo failed compiling upgraders
+  exit 1
+fi
+
+if ! "$O/upgrade0" "$O/transaction_failures.db" --test-transaction-failures >"$O/transaction_failures.out" 2>"$O/transaction_failures.err"; then
+  echo "upgrade transaction failure propagation test failed"
+  echo "$O/upgrade0 $O/transaction_failures.db --test-transaction-failures"
+  exit 1
 fi
 
 # now do the basic validation, can we create a schema of version n?
@@ -158,6 +165,7 @@ do
       if ! $O/upgrade$j "$O/test.db" > $O/partial.out; then
         echo $O/upgrade$j "$O/test.db > $O/partial.out"
         echo "initial step to version $j" failed
+        exit 1
       fi
 
       if ! diff "$O/upgrade_schema_v$j.out" "$O/partial.out";  then
@@ -169,6 +177,7 @@ do
       if ! $O/upgrade$i "$O/test.db" > $O/final.out; then
         echo $O/upgrade$i "$O/test.db > $O/final.out"
         echo "initial step to version $i" failed
+        exit 1
       fi
 
       if ! diff "$O/upgrade_schema_v$i.out" "$O/final.out";  then

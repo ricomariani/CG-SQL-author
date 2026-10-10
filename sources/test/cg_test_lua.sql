@@ -548,17 +548,29 @@ end;
 -- + until true
 set i2 := case when 1 then 100 when 2 then 200 else 300 end;
 
+-- TEST: simple CASE normalizes BOOL/numeric operands before comparison
+-- + if cql_to_num(_tmp_bool_%) == 1 then
+set i2 := case (1 == 1) when 1 then 100 else 200 end;
+
 -- TEST: a simple in expression
 -- +  repeat
 -- +    _tmp_int_1 = 3
--- +    _tmp_bool_0 = true
--- +    if _tmp_int_1 == 1 then break end
--- +    if _tmp_int_1 == 2 then break end
--- +    if _tmp_int_1 == 4 then break end
 -- +    _tmp_bool_0 = false
+-- +    if _tmp_int_1 == 1 then
+-- +      _tmp_bool_0 = true
+-- +      break
+-- +    end
+-- +    if _tmp_int_1 == 2 then
+-- +      _tmp_bool_0 = true
+-- +      break
+-- +    end
+-- +    if _tmp_int_1 == 4 then
+-- +      _tmp_bool_0 = true
+-- +      break
+-- +    end
 -- + until true
 -- + i2 = cql_to_num(_tmp_bool_0)
-set i2 := 3 in (1, 2, null, 4);
+set i2 := 3 in (1, 2, 4);
 
 -- TEST: in with nullables
 -- + repeat
@@ -567,11 +579,24 @@ set i2 := 3 in (1, 2, null, 4);
 -- +     _tmp_n_bool_0 = nil
 -- +     break
 -- +   end
--- +   _tmp_n_bool_0 = true
--- +   if _tmp_n_int_1 == 1 then break end
--- +   if _tmp_n_int_1 == 2 then break end
--- +   if _tmp_n_int_1 == cql_to_num(b0_nullable) then break end
 -- +   _tmp_n_bool_0 = false
+-- +   if _tmp_n_int_1 == 1 then
+-- +     _tmp_n_bool_0 = true
+-- +     break
+-- +   end
+-- +   if _tmp_n_int_1 == 2 then
+-- +     _tmp_n_bool_0 = true
+-- +     break
+-- +   end
+-- +   _tmp_n_bool_0 = nil
+-- +   if cql_to_num(b0_nullable) == nil then
+-- +     _tmp_n_bool_0 = nil
+-- +   else
+-- +     if _tmp_n_int_1 == cql_to_num(b0_nullable) then
+-- +       _tmp_n_bool_0 = true
+-- +       break
+-- +     end
+-- +   end
 -- + until true
 -- + i0_nullable = cql_to_num(_tmp_n_bool_0)
 set i0_nullable := i1_nullable in (1, 2, null, b0_nullable);
@@ -579,14 +604,22 @@ set i0_nullable := i1_nullable in (1, 2, null, b0_nullable);
 -- TEST: a simple not in expression
 -- + repeat
 -- +   _tmp_int_1 = 3
--- +   _tmp_bool_0 = false
--- +   if _tmp_int_1 == 1 then break end
--- +   if _tmp_int_1 == 2 then break end
--- +   if _tmp_int_1 == 4 then break end
 -- +   _tmp_bool_0 = true
+-- +   if _tmp_int_1 == 1 then
+-- +     _tmp_bool_0 = false
+-- +     break
+-- +   end
+-- +   if _tmp_int_1 == 2 then
+-- +     _tmp_bool_0 = false
+-- +     break
+-- +   end
+-- +   if _tmp_int_1 == 4 then
+-- +     _tmp_bool_0 = false
+-- +     break
+-- +   end
 -- + until true
 -- + i2 = cql_to_num(_tmp_bool_0)
-set i2 := 3 not in (1, 2, null, 4);
+set i2 := 3 not in (1, 2, 4);
 
 -- TEST: not in with nullables
 -- + repeat
@@ -595,14 +628,35 @@ set i2 := 3 not in (1, 2, null, 4);
 -- +     _tmp_n_bool_0 = nil
 -- +     break
 -- +   end
--- +   _tmp_n_bool_0 = false
--- +   if _tmp_n_int_1 == 1 then break end
--- +   if _tmp_n_int_1 == 2 then break end
--- +   if _tmp_n_int_1 == cql_to_num(b0_nullable) then break end
 -- +   _tmp_n_bool_0 = true
+-- +   if _tmp_n_int_1 == 1 then
+-- +     _tmp_n_bool_0 = false
+-- +     break
+-- +   end
+-- +   if _tmp_n_int_1 == 2 then
+-- +     _tmp_n_bool_0 = false
+-- +     break
+-- +   end
+-- +   _tmp_n_bool_0 = nil
+-- +   if cql_to_num(b0_nullable) == nil then
+-- +     _tmp_n_bool_0 = nil
+-- +   else
+-- +     if _tmp_n_int_1 == cql_to_num(b0_nullable) then
+-- +       _tmp_n_bool_0 = false
+-- +       break
+-- +     end
+-- +   end
 -- + until true
 -- + i0_nullable = cql_to_num(_tmp_n_bool_0)
 set i0_nullable := i1_nullable not in (1, 2, null, b0_nullable);
+
+-- TEST: empty IN lists are constants even with a NULL needle
+-- + b2 = false
+set b2 := null in ();
+
+-- TEST: empty NOT IN lists are constants even with a NULL needle
+-- + b2 = true
+set b2 := null not in ();
 
 -- TEST: between with strings
 -- + SET b2 := 'b' BETWEEN 'a' AND 'c';
@@ -656,6 +710,7 @@ set b0_nullable := 'b' not between null and 'c';
 -- + "SELECT bar.id, bar.name, bar.rate, bar.type, bar.size FROM bar"
 -- + if _rc_ == CQL_OK and _result_stmt == nil then _rc_, _result_stmt = cql_no_rows_stmt(_db_) end
 -- + function with_result_set_fetch_results(_db_)
+-- + local stmt = nil
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
 procedure with_result_set()
 begin
@@ -795,7 +850,7 @@ set s := printf('%d and %d', 1, 2);
 set s := printf('%d and %d', 3, 4);
 
 -- TEST: printf inserts casts for numeric types (but only as needed)
--- + s = cql_printf("%lld %lld %lld %llu %d %d %llu %d %f %f %s %f", cql_to_integer(4), cql_to_integer(5), cql_to_integer(true), 0, cql_to_integer(false), 0, 6, 7, 0.0, 0.0, nil, cql_to_float(8))
+-- + s = cql_printf("%lld %lld %lld %llu %d %d %llu %d %f %f %s %f", ((function(_cql_cast_) if _cql_cast_ == nil then return nil end return (math.modf(_cql_cast_)) end)(4)), ((function(_cql_cast_) if _cql_cast_ == nil then return nil end return (math.modf(_cql_cast_)) end)(5)), cql_to_integer(true), 0, cql_to_integer(false), 0, 6, 7, 0.0, 0.0, nil, cql_to_float(8))
 set s := printf('%lld %lld %lld %llu %d %d %llu %d %f %f %s %f', 4, nullable(5), true, null, false, null, 6L, 7, 0.0, null, null, 8);
 
 -- TEST: printf doesn't insert casts when used in SQL
@@ -1025,24 +1080,30 @@ set b0_nullable := obj_var == obj_var;
 
 -- TEST: object variable in IN clause
 -- + _tmp_n_object_% = obj_var
--- + if _tmp_n_object_% == obj_var then break end
+-- + if obj_var == nil then
+-- + if _tmp_n_object_% == obj_var then
+-- + _tmp_n_bool_% = true
 -- + b0_nullable = _tmp_n_bool_%
 set b0_nullable := obj_var in (obj_var, obj_var);
 
 -- TEST: object variable in IN clause
 -- +_tmp_object_% = obj_var2
--- + if _tmp_object_% == obj_var2 then break end
+-- + if _tmp_object_% == obj_var2 then
+-- + _tmp_bool_% = true
 set b2 := obj_var2 in (obj_var2, obj_var2);
 
 -- TEST: object variable in NOT IN clause
 -- +  _tmp_n_object_% = obj_var
 -- +  if _tmp_n_object_% == nil then
--- +  if _tmp_n_object_% == obj_var then break end
+-- +  if obj_var == nil then
+-- +  if _tmp_n_object_% == obj_var then
+-- +  _tmp_n_bool_% = false
 set b0_nullable := obj_var not in (obj_var, obj_var);
 
 -- TEST: object variable in NOT IN clause
 -- +  _tmp_object_% = obj_var2
--- +  if _tmp_object_% == obj_var2 then break end
+-- +  if _tmp_object_% == obj_var2 then
+-- +  _tmp_bool_% = false
 set b2 := obj_var2 not in (obj_var2, obj_var2);
 
 -- TEST: proc with object args (boring in Lua)
@@ -1062,6 +1123,7 @@ end;
 -- + C.object_ = object_
 -- + _result_ = cql_clone_row(C)
 -- + function cursor_with_object_fetch_results(object_)
+-- + local _result_ = nil
 -- +  _result_ = cursor_with_object(object_)
 -- +  result_set = { _result_ }
 proc cursor_with_object(object_ object)
@@ -1345,27 +1407,31 @@ set b0_nullable := blob_var IS NOT blob_var;
 
 -- TEST: blob variable in IN clause
 -- + _tmp_n_blob_1 = blob_var
--- + if cql_blob_eq(_tmp_n_blob_1, blob_var) then break end
--- + if cql_blob_eq(_tmp_n_blob_1, blob_var) then break end
+-- + if blob_var == nil then
+-- + if cql_blob_eq(_tmp_n_blob_1, blob_var) then
+-- + _tmp_n_bool_% = true
 set b0_nullable := blob_var in (blob_var, blob_var);
 
 -- TEST: blob variable in IN clause
 -- + _tmp_blob_% = blob_var2
--- + if cql_blob_eq(_tmp_blob_%, blob_var) then break end
--- + if cql_blob_eq(_tmp_blob_%, blob_var2) then break end
-set b2 := blob_var2 in (blob_var, blob_var2);
+-- + if blob_var == nil then
+-- + if cql_blob_eq(_tmp_blob_%, blob_var) then
+-- + if cql_blob_eq(_tmp_blob_%, blob_var2) then
+set b0_nullable := blob_var2 in (blob_var, blob_var2);
 
 -- TEST: blob variable in NOT IN clause
 -- + _tmp_n_blob_% = blob_var
--- + if cql_blob_eq(_tmp_n_blob_%, blob_var) then break end
--- + if cql_blob_eq(_tmp_n_blob_%, blob_var2) then break end
+-- + if blob_var == nil then
+-- + if cql_blob_eq(_tmp_n_blob_%, blob_var) then
+-- + if cql_blob_eq(_tmp_n_blob_%, blob_var2) then
 set b0_nullable := blob_var not in (blob_var, blob_var2);
 
 -- TEST: blob variable in NOT IN clause
 -- + _tmp_blob_% = blob_var2
--- + if cql_blob_eq(_tmp_blob_%, blob_var) then break end
--- + if cql_blob_eq(_tmp_blob_%, blob_var2) then break end
-set b2 := blob_var2 not in (blob_var, blob_var2);
+-- + if blob_var == nil then
+-- + if cql_blob_eq(_tmp_blob_%, blob_var) then
+-- + if cql_blob_eq(_tmp_blob_%, blob_var2) then
+set b0_nullable := blob_var2 not in (blob_var, blob_var2);
 
 -- TEST: proc with blob args
 -- + function blob_proc()
@@ -2727,7 +2793,7 @@ begin
 end;
 
 -- TEST: string literal with hex forms
--- + "INSERT INTO bar(id, name) VALUES (1, '\x01\x02\xa1\x1bg')"
+-- + "INSERT INTO bar(id, name) VALUES (1, '\001\002\241\033g')"
 proc hex_quote()
 begin
   insert into bar(id, name) values (1, "\x01\x02\xA1\x1b\x00\xg");
@@ -3046,7 +3112,7 @@ begin
 end;
 
 -- TEST: numeric cast operation int32
--- + x = cql_to_integer(3.2)
+-- + x = ((function(_cql_cast_) if _cql_cast_ == nil then return nil end return (math.modf(_cql_cast_)) end)(3.2))
 proc local_cast_int_notnull()
 begin
   declare x integer not null;
@@ -3055,7 +3121,7 @@ end;
 
 -- TEST: numeric cast operation int32 nullable
 -- + r = 3.2
--- + x = cql_to_integer(r)
+-- + x = ((function(_cql_cast_) if _cql_cast_ == nil then return nil end return (math.modf(_cql_cast_)) end)(r))
 proc local_cast_int()
 begin
   declare x integer;
@@ -3065,7 +3131,7 @@ begin
 end;
 
 -- TEST: numeric cast operation int64 nullable
--- + x = cql_to_integer(3.2)
+-- + x = ((function(_cql_cast_) if _cql_cast_ == nil then return nil end return (math.modf(_cql_cast_)) end)(3.2))
 proc local_cast_long_notnull()
 begin
   declare x long not null;
@@ -3074,13 +3140,69 @@ end;
 
 -- TEST: numeric cast operation int64 nullable
 -- + r = 3.2
--- + x = cql_to_integer(r)
+-- + x = ((function(_cql_cast_) if _cql_cast_ == nil then return nil end return (math.modf(_cql_cast_)) end)(r))
 proc local_cast_long()
 begin
   declare x long;
   declare r real;
   set r := nullable(3.2);
   set x := cast(r as long);
+end;
+
+-- TEST: negative real casts truncate toward zero
+-- + x = ((function(_cql_cast_) if _cql_cast_ == nil then return nil end return (math.modf(_cql_cast_)) end)(- 1.5))
+proc local_cast_negative()
+begin
+  declare x integer not null;
+  set x := cast(-1.5 as integer);
+end;
+
+-- TEST: case-insensitive cursor and FETCH target references use canonical names
+-- + Value1 = C.X
+-- + if C._has_row_ then
+-- +   C.X = 2
+-- + cql_finalize_stmt(C_stmt)
+proc mixed_case_cursor_references(Value1 integer)
+begin
+  declare C cursor for select 1 X;
+  fetch c;
+  set vAlUe1 := c.X;
+  update cursor c(x) from values (2);
+  close c;
+end;
+
+-- TEST: Lua-reserved local, parameter, cursor, and field names are encoded
+-- + function lua_reserved_parameter(_cql_goto)
+-- + _cql_goto = _cql_goto + 1
+proc lua_reserved_parameter(goto integer not null)
+begin
+  set goto := goto + 1;
+end;
+
+-- + local _cql_goto
+-- + _cql_goto = 1
+proc lua_reserved_local()
+begin
+  declare goto integer;
+  set goto := 1;
+end;
+
+-- TEST: reusable assignment targets retain Lua reserved-name encoding
+-- + local _cql_goto
+-- + _cql_goto = 2
+proc lua_reserved_reusable_target()
+begin
+  let goto := case when 1 then 2 else 3 end;
+end;
+
+-- + local _cql_goto = { _has_row_ = false }
+-- + _cql_goto["goto"] = 2
+-- + i2 = _cql_goto["goto"]
+proc lua_reserved_cursor()
+begin
+  declare goto cursor like select 1 goto;
+  fetch goto(goto) from values (2);
+  set i2 := goto.goto;
 end;
 
 -- TEST: numeric cast operation real
@@ -3586,7 +3708,7 @@ enum some_reals real (
 
 -- TEST: make a long enum
 enum some_longs long (
-  foo = 87363537363847643647937,
+  foo = 9223372036854775807,
   bar = 3
 );
 
@@ -4633,6 +4755,24 @@ begin
   some_cte(id) as (select x),
   (call shared_conditional(1))
   select bar.* from bar join some_cte on x = 5;
+end;
+
+[[shared_fragment]]
+proc shared_integer_condition(x integer not null)
+begin
+  if x then
+    select 1 value;
+  else
+    select 0 value;
+  end if;
+end;
+
+-- TEST: conditional shared fragments apply CQL truth conversion
+-- + if cql_to_bool(_p1_x_) then
+proc shared_integer_condition_user()
+begin
+  with (call shared_integer_condition(0))
+  select * from shared_integer_condition;
 end;
 
 

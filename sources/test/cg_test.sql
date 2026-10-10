@@ -589,14 +589,22 @@ set i2 := case when 1 then 100 when 2 then 200 else 300 end;
 -- TEST: a simple in expression
 -- + do {
 -- +  _tmp_int_% = 3;
--- +  _tmp_bool_0 = 1;
--- +  if (_tmp_int_% == 1) break;
--- +  if (_tmp_int_% == 2) break;
--- +  if (_tmp_int_% == 4) break;
 -- +  _tmp_bool_0 = 0;
+-- +  if (_tmp_int_% == 1) {
+-- +   _tmp_bool_0 = 1;
+-- +   break;
+-- +  }
+-- +  if (_tmp_int_% == 2) {
+-- +   _tmp_bool_0 = 1;
+-- +   break;
+-- +  }
+-- +  if (_tmp_int_% == 4) {
+-- +   _tmp_bool_0 = 1;
+-- +   break;
+-- +  }
 -- + } while (0);
 -- + i2 = _tmp_bool_0;
-set i2 := 3 in (1, 2, null, 4);
+set i2 := 3 in (1, 2, 4);
 
 -- TEST: in with nullables
 -- + do {
@@ -605,11 +613,23 @@ set i2 := 3 in (1, 2, null, 4);
 -- +    cql_set_null(_tmp_n_bool_0);
 -- +    break;
 -- +  }
--- +  cql_set_notnull(_tmp_n_bool_0, 1);
--- +  if (_tmp_n_int_%.value == 1) break;
--- +  if (_tmp_n_int_%.value == 2) break;
--- +  if (cql_is_nullable_true(b0_nullable.is_null, _tmp_n_int_%.value == b0_nullable.value)) break;
 -- +  cql_set_notnull(_tmp_n_bool_0, 0);
+-- +  if (_tmp_n_int_%.value == 1) {
+-- +   cql_set_notnull(_tmp_n_bool_0, 1);
+-- +   break;
+-- +  }
+-- +  if (_tmp_n_int_%.value == 2) {
+-- +   cql_set_notnull(_tmp_n_bool_0, 1);
+-- +   break;
+-- +  }
+-- +  cql_set_null(_tmp_n_bool_0);
+-- +  if (b0_nullable.is_null) {
+-- +   cql_set_null(_tmp_n_bool_0);
+-- +  }
+-- +  else if (_tmp_n_int_%.value == b0_nullable.value) {
+-- +   cql_set_notnull(_tmp_n_bool_0, 1);
+-- +   break;
+-- +  }
 -- + } while (0);
 -- + cql_set_nullable(i0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
 set i0_nullable := i1_nullable in (1, 2, null, b0_nullable);
@@ -617,14 +637,22 @@ set i0_nullable := i1_nullable in (1, 2, null, b0_nullable);
 -- TEST: a simple not in expression
 -- + do {
 -- +  _tmp_int_% = 3;
--- +  _tmp_bool_0 = 0;
--- +  if (_tmp_int_% == 1) break;
--- +  if (_tmp_int_% == 2) break;
--- +  if (_tmp_int_% == 4) break;
 -- +  _tmp_bool_0 = 1;
+-- +  if (_tmp_int_% == 1) {
+-- +   _tmp_bool_0 = 0;
+-- +   break;
+-- +  }
+-- +  if (_tmp_int_% == 2) {
+-- +   _tmp_bool_0 = 0;
+-- +   break;
+-- +  }
+-- +  if (_tmp_int_% == 4) {
+-- +   _tmp_bool_0 = 0;
+-- +   break;
+-- +  }
 -- + } while (0);
 -- + i2 = _tmp_bool_0;
-set i2 := 3 not in (1, 2, null, 4);
+set i2 := 3 not in (1, 2, 4);
 
 -- TEST: not in with nullables
 -- + do {
@@ -633,11 +661,23 @@ set i2 := 3 not in (1, 2, null, 4);
 -- +    cql_set_null(_tmp_n_bool_0);
 -- +    break;
 -- +  }
--- +  cql_set_notnull(_tmp_n_bool_0, 0);
--- +  if (_tmp_n_int_%.value == 1) break;
--- +  if (_tmp_n_int_%.value == 2) break;
--- +  if (cql_is_nullable_true(b0_nullable.is_null, _tmp_n_int_%.value == b0_nullable.value)) break;
 -- +  cql_set_notnull(_tmp_n_bool_0, 1);
+-- +  if (_tmp_n_int_%.value == 1) {
+-- +   cql_set_notnull(_tmp_n_bool_0, 0);
+-- +   break;
+-- +  }
+-- +  if (_tmp_n_int_%.value == 2) {
+-- +   cql_set_notnull(_tmp_n_bool_0, 0);
+-- +   break;
+-- +  }
+-- +  cql_set_null(_tmp_n_bool_0);
+-- +  if (b0_nullable.is_null) {
+-- +   cql_set_null(_tmp_n_bool_0);
+-- +  }
+-- +  else if (_tmp_n_int_%.value == b0_nullable.value) {
+-- +   cql_set_notnull(_tmp_n_bool_0, 0);
+-- +   break;
+-- +  }
 -- + } while (0);
 -- + cql_set_nullable(i0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
 set i0_nullable := i1_nullable not in (1, 2, null, b0_nullable);
@@ -1073,21 +1113,27 @@ set obj_var := null;
 set b0_nullable := obj_var == obj_var;
 
 -- TEST: object variable in IN clause
--- + if (cql_is_nullable_true(!obj_var, _tmp_n_object_% == obj_var)) break;
--- + if (cql_is_nullable_true(!obj_var, _tmp_n_object_% == obj_var)) break;
+-- + if (!obj_var) {
+-- + cql_set_null(_tmp_n_bool_%);
+-- + else if (_tmp_n_object_% == obj_var) {
+-- + cql_set_notnull(_tmp_n_bool_%, 1);
 set b0_nullable := obj_var in (obj_var, obj_var);
 
 -- TEST: object variable in IN clause
--- + if (_tmp_object_% == obj_var2) break;
+-- + if (_tmp_object_% == obj_var2) {
+-- + _tmp_bool_% = 1;
 set b2 := obj_var2 in (obj_var2, obj_var2);
 
 -- TEST: object variable in NOT IN clause
--- + if (cql_is_nullable_true(!obj_var, _tmp_n_object_% == obj_var)) break;
--- + if (cql_is_nullable_true(!obj_var, _tmp_n_object_% == obj_var)) break;
+-- + if (!obj_var) {
+-- + cql_set_null(_tmp_n_bool_%);
+-- + else if (_tmp_n_object_% == obj_var) {
+-- + cql_set_notnull(_tmp_n_bool_%, 0);
 set b0_nullable := obj_var not in (obj_var, obj_var);
 
 -- TEST: object variable in NOT IN clause
--- + if (_tmp_object_% == obj_var2) break;
+-- + if (_tmp_object_% == obj_var2) {
+-- + _tmp_bool_% = 0;
 set b2 := obj_var2 not in (obj_var2, obj_var2);
 
 -- TEST: proc with object args
@@ -1405,31 +1451,36 @@ set b0_nullable := blob_var IS blob_var;
 set b0_nullable := blob_var IS NOT blob_var;
 
 -- TEST: blob variable in IN clause
--- + cql_set_notnull(_tmp_n_bool_0, 1);
--- + if (cql_blob_equal(_tmp_n_blob_%, blob_var)) break;
--- + if (cql_blob_equal(_tmp_n_blob_%, blob_var)) break;
 -- + cql_set_notnull(_tmp_n_bool_0, 0);
+-- + if (!blob_var) {
+-- + cql_set_null(_tmp_n_bool_0);
+-- + else if (cql_blob_equal(_tmp_n_blob_%, blob_var)) {
+-- + cql_set_notnull(_tmp_n_bool_0, 1);
 set b0_nullable := blob_var in (blob_var, blob_var);
 
 -- TEST: blob variable in IN clause
--- + _tmp_bool_0 = 1;
--- + if (cql_blob_equal(_tmp_blob_%, blob_var)) break;
--- + if (cql_blob_equal(_tmp_blob_%, blob_var2)) break;
--- + _tmp_bool_0 = 0;
-set b2 := blob_var2 in (blob_var, blob_var2);
+-- + cql_set_notnull(_tmp_n_bool_0, 0);
+-- + if (!blob_var) {
+-- + cql_set_null(_tmp_n_bool_0);
+-- + else if (cql_blob_equal(_tmp_blob_%, blob_var)) {
+-- + if (cql_blob_equal(_tmp_blob_%, blob_var2)) {
+set b0_nullable := blob_var2 in (blob_var, blob_var2);
 
 -- TEST: blob variable in NOT IN clause
--- + cql_set_notnull(_tmp_n_bool_0, 0);
--- + if (cql_blob_equal(_tmp_n_blob_%, blob_var)) break;
--- + if (cql_blob_equal(_tmp_n_blob_%, blob_var)) break;
 -- + cql_set_notnull(_tmp_n_bool_0, 1);
+-- + if (!blob_var) {
+-- + cql_set_null(_tmp_n_bool_0);
+-- + else if (cql_blob_equal(_tmp_n_blob_%, blob_var)) {
+-- + cql_set_notnull(_tmp_n_bool_0, 0);
 set b0_nullable := blob_var not in (blob_var, blob_var);
 
 -- TEST: blob variable in NOT IN clause
--- + if (cql_blob_equal(_tmp_blob_%, blob_var)) break;
--- + if (cql_blob_equal(_tmp_blob_%, blob_var2)) break;
--- + b2 = _tmp_bool_0;
-set b2 := blob_var2 not in (blob_var, blob_var2);
+-- + cql_set_notnull(_tmp_n_bool_0, 1);
+-- + if (!blob_var) {
+-- + cql_set_null(_tmp_n_bool_0);
+-- + else if (cql_blob_equal(_tmp_blob_%, blob_var)) {
+-- + if (cql_blob_equal(_tmp_blob_%, blob_var2)) {
+set b0_nullable := blob_var2 not in (blob_var, blob_var2);
 
 -- TEST: proc with blob args
 -- + void blob_proc(cql_blob_ref _Nullable *_Nonnull a_blob)
@@ -2232,6 +2283,51 @@ begin
   set b := NULL NOT IN (1);
 end;
 
+-- TEST: nullable IN candidates preserve SQL three-valued logic
+-- + cql_set_notnull(%, 0);
+-- + if (candidate.is_null) {
+-- + cql_set_null(%);
+-- + else if (% == candidate.value) {
+-- + cql_set_notnull(%, 1);
+proc in_nullable_rhs_test(x int!, candidate int, out b bool)
+begin
+  set b := x in (2, candidate);
+end;
+
+-- TEST: nullable NOT IN candidates preserve SQL three-valued logic
+-- + cql_set_notnull(%, 1);
+-- + if (candidate.is_null) {
+-- + cql_set_null(%);
+-- + else if (% == candidate.value) {
+-- + cql_set_notnull(%, 0);
+proc not_in_nullable_rhs_test(x int!, candidate int, out b bool)
+begin
+  set b := x not in (2, candidate);
+end;
+
+-- TEST: a literal NULL candidate is retained as an unknown no-match result
+-- + cql_set_null(%);
+-- + if (% == 2) {
+-- + cql_set_notnull(%, 1);
+proc in_null_literal_rhs_test(x int!, out b bool)
+begin
+  set b := x in (null, 2);
+end;
+
+-- TEST: empty IN lists are constants even with a NULL needle
+-- + *b = 0;
+proc in_empty_list_test(out b bool!)
+begin
+  set b := null in ();
+end;
+
+-- TEST: empty NOT IN lists are constants even with a NULL needle
+-- + *b = 1;
+proc not_in_empty_list_test(out b bool!)
+begin
+  set b := null not in ();
+end;
+
 -- TEST: drop a trigger (both flavors)
 -- +1 "DROP TRIGGER IF EXISTS trigger1"
 -- +1 "DROP TRIGGER trigger1"
@@ -2820,7 +2916,7 @@ end;
 
 -- TEST: string literal with hex forms
 -- + "INSERT INTO bar(id, name) "
--- +   "VALUES (1, '\x01\x02\xa1\x1bg')");
+-- +   "VALUES (1, '\001\002\241\033g')");
 proc hex_quote()
 begin
   insert into bar(id, name) values (1, "\x01\x02\xA1\x1b\x00\xg");
@@ -3494,7 +3590,7 @@ declare enum some_reals real (
 
 -- TEST: make a long enum
 declare enum some_longs long (
-  foo = 87363537363847643647937,
+  foo = 9223372036854775807,
   bar = 3
 );
 
@@ -3532,13 +3628,26 @@ end;
 -- TEST: create virtual table
 -- + "CREATE VIRTUAL TABLE v1 USING m1");
 -- + "CREATE VIRTUAL TABLE v2 USING m2 (x)");
+-- + "CREATE VIRTUAL TABLE [v 4] USING m2 (x)");
 -- + "CREATE VIRTUAL TABLE v3 USING m2 ( "
 -- +   "id INTEGER)");
 proc make_virt_table()
 begin
   create virtual table v1 using m1 as (id int);
   create virtual table v2 using m2(x) as (id int);
+  create virtual table `v 4` using m2(x) as (id int);
   create virtual table v3 using m2(arguments following) as (id int);
+end;
+
+-- TEST: equal-precedence JSON and concatenation operators preserve right nesting
+-- + "SELECT '{}' -> ('$' || '.a')");
+-- + "SELECT 'p' || ('{}' -> '$.a')");
+-- + "SELECT '{}' ->> ('$' || '.a')");
+proc json_operator_right_nesting()
+begin
+  select '{}' -> ('$' || '.a') as result;
+  select 'p' || ('{}' -> '$.a') as result;
+  select '{}' ->> ~text~ ('$' || '.a') as result;
 end;
 
 -- TEST: declaration of a named type
@@ -6235,4 +6344,3 @@ proc end_proc() begin end;
 -- + cql_code cql_startup(sqlite3 *_Nonnull _db_)
 declare end_marker int;
 --------------------------------------------------------------------
-

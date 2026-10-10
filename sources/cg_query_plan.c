@@ -315,13 +315,19 @@ static void cg_qp_explain_query_stmt(ast_node *stmt) {
 
   bprintf(&body, "INSERT INTO sql_temp(id, sql) VALUES(%d, stmt);\n", sql_stmt_count);
   if (current_procedure_name && current_ok_table_scan && current_ok_table_scan->used > 1) {
+    CHARBUF_OPEN(proc_name_literal);
+    CHARBUF_OPEN(table_names_literal);
+    cg_pretty_quote_plaintext(current_procedure_name, &proc_name_literal, PRETTY_QUOTE_C | PRETTY_QUOTE_SINGLE_LINE);
+    cg_pretty_quote_plaintext(current_ok_table_scan->ptr, &table_names_literal, PRETTY_QUOTE_C | PRETTY_QUOTE_SINGLE_LINE);
     bprintf(
       &body,
-      "INSERT INTO ok_table_scan(sql_id, proc_name, table_names) VALUES(%d, \"%s\", \"%s\");\n",
+      "INSERT INTO ok_table_scan(sql_id, proc_name, table_names) VALUES(%d, %s, %s);\n",
       sql_stmt_count,
-      current_procedure_name,
-      current_ok_table_scan->ptr
+      proc_name_literal.ptr,
+      table_names_literal.ptr
     );
+    CHARBUF_CLOSE(table_names_literal);
+    CHARBUF_CLOSE(proc_name_literal);
   }
   bprintf(&body, "CURSOR C FOR EXPLAIN QUERY PLAN\n");
   bprintf(&body, "%s;\n", sql.ptr);
@@ -383,7 +389,14 @@ static void cg_qp_ok_table_scan_callback(
   }
   // The "#" around the name make it easier to do a whole-word
   // match on the table name later
-  bprintf(ok_table_scan_buf, "#%s#", table_name);
+  bprintf(ok_table_scan_buf, "#");
+  if (is_qid(misc_attr_value)) {
+    cg_unquote_encoded_qstr(ok_table_scan_buf, table_name);
+  }
+  else {
+    bprintf(ok_table_scan_buf, "%s", table_name);
+  }
+  bprintf(ok_table_scan_buf, "#");
 }
 
 // If we're processing a conditional fragment and there is an annotation
@@ -540,14 +553,17 @@ static void emit_populate_no_table_scan_proc(charbuf *output) {
           if (no_scan_tables_buf.used > 1) {
             bprintf(&no_scan_tables_buf, ",\n");
           }
-          bprintf(&no_scan_tables_buf, "    (\"");
+          CHARBUF_OPEN(table_name);
           if (is_qid(name_ast)) {
-            cg_unquote_encoded_qstr(&no_scan_tables_buf, name);
+            cg_unquote_encoded_qstr(&table_name, name);
           }
           else {
-             bprintf(&no_scan_tables_buf, "%s", name);
+            bprintf(&table_name, "%s", name);
           }
-          bprintf(&no_scan_tables_buf, "\")");
+          bprintf(&no_scan_tables_buf, "    (");
+          cg_pretty_quote_plaintext(table_name.ptr, &no_scan_tables_buf, PRETTY_QUOTE_C | PRETTY_QUOTE_SINGLE_LINE);
+          bprintf(&no_scan_tables_buf, ")");
+          CHARBUF_CLOSE(table_name);
         }
       }
     }
@@ -725,7 +741,7 @@ static void emit_print_query_violation_proc(charbuf *output) {
     "    IF C2.info_list IS NOT NULL THEN\n"
     "      CALL printf(\"%s\", IIF(first, \"\", \",\\n\"));\n"
     "      CALL printf(\"  \\\"%s\\\" : \", C2.key);\n"
-    "      CALL printf(\"\\\"%s\\\"\", C2.info_list);\n"
+    "      CALL printf(\"%s\", json_quote(C2.info_list));\n"
     "      SET first := false;\n"
     "    END IF;\n"
     "  END;\n"
@@ -769,7 +785,7 @@ static void emit_print_query_plan_stat_proc(charbuf *output) {
     "        WHERE zdetail LIKE '%search%' AND iselectid NOT IN (\n"
     "          SELECT iselectid \n"
     "          FROM plan_temp \n"
-    "          WHERE zdetail LIKE '%search%using%covering%'\n"
+    "          WHERE zdetail LIKE '%search%using%covering%' AND sql_id = id_\n"
     "        ) AND sql_id = id_\n"
     "    ),\n"
     "    search_fast(name, count, priority) AS (\n"
@@ -827,12 +843,12 @@ static void emit_print_query_plan_graph_proc(charbuf *output) {
     "     substr('|.............................', 1, min(level, 1)*3) ||\n"
     "     zdetail as graph_line FROM plan_chain;\n"
     "\n"
-    "  CALL printf(\"   \\\"plan\\\" : \\\"\");\n"
+    "  LET plan_ := \"\";\n"
     "  LOOP FETCH C\n"
     "  BEGIN\n"
-    "    CALL printf(\"%s%s\", IIF(C.level, \"\\\\n\", \"\"), C.graph_line);\n"
+    "    SET plan_ := printf(\"%s%s%s\", plan_, IIF(C.level, \"\\n\", \"\"), C.graph_line);\n"
     "  END;\n"
-    "  CALL printf(\"\\\"\\n\");\n"
+    "  CALL printf(\"   \\\"plan\\\" : %s\\n\", json_quote(plan_));\n"
     "END;\n"
     "\n"
   );

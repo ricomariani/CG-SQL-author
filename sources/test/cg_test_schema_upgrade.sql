@@ -113,6 +113,16 @@ create table grouped_table_1( `an id` integer not null, name text ) @recreate(my
 create table grouped_table_2( `an id` integer not null, name text ) @recreate(my_group);
 create table grouped_table_3( `an id` integer not null, name text ) @recreate(my_group);
 
+-- The recreate-group CRC must include an index on an earlier table exactly
+-- once; changing this index in a previous/current schema pair must change the
+-- group CRC rather than canceling against a repeated cumulative buffer.
+create index grouped_table_1_crc_index on grouped_table_1(name);
+
+-- TEST: deleted recreate tables retain quoted identifiers in generated drops
+create table `deleted recreate table`(
+  id integer
+) @recreate(quoted_delete_group) @delete;
+
 -- temp tables go into the temp table section
 create temp table this_table_appears_in_temp_section(
  temp_section_integer integer

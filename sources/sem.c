@@ -2081,28 +2081,50 @@ CSTR create_group_id(CSTR group_name, CSTR table_name) {
    }
 }
 
-// Helper function to walk the graph stored in recreate_group_deps from a
-// starting group name to an ending group name. We perform a simple depth first
-// search.
-static bool_t walk_recreate_group_deps (CSTR start, CSTR end) {
+// Shared descendants can be reached by many paths, so each group is searched
+// at most once.  Neighbor order remains insertion order.
+static bool_t walk_recreate_group_deps_helper(CSTR start, CSTR end, symtab *visited) {
   if (!StrCaseCmp(start, end)) {
     return true;
   }
+
+  if (!symtab_add(visited, start, NULL)) {
+    return false;
+  }
+
   bytebuf *buf = symtab_ensure_bytebuf(recreate_group_deps, start);
   size_t count = buf->used / sizeof(CSTR);
   CSTR *neighbors = (CSTR *) (buf->ptr);
 
   for (size_t i = 0; i < count; i++) {
-    if (walk_recreate_group_deps(neighbors[i], end)) {
+    if (walk_recreate_group_deps_helper(neighbors[i], end, visited)) {
       return true;
     }
   }
   return false;
 }
 
+static bool_t walk_recreate_group_deps(CSTR start, CSTR end) {
+  symtab *visited = symtab_new();
+  bool_t found = walk_recreate_group_deps_helper(start, end, visited);
+  symtab_delete(visited);
+  return found;
+}
+
 static bool_t add_group_dependency_to_recreate_group(CSTR group_name, CSTR new_dependent_group_name) {
   // We don't want to create self-cycles in our symbol table
   if (!StrCaseCmp(group_name, new_dependent_group_name)) return true;
+
+  // Keep only the first edge so traversal and generated dependency order are
+  // deterministic even when several foreign keys connect the same groups.
+  bytebuf *buf = symtab_ensure_bytebuf(recreate_group_deps, group_name);
+  size_t count = buf->used / sizeof(CSTR);
+  CSTR *neighbors = (CSTR *)buf->ptr;
+  for (size_t i = 0; i < count; i++) {
+    if (!StrCaseCmp(neighbors[i], new_dependent_group_name)) {
+      return true;
+    }
+  }
 
   // We want to make sure adding a new dependency does not introduce a cycle in
   // recreate_group_deps. We know that recreate_group_deps before this function
@@ -2592,6 +2614,7 @@ static sem_struct * new_sem_struct(CSTR name, uint32_t count) {
   sptr->names = _ast_pool_new_array(CSTR, count);
   sptr->kinds = _ast_pool_new_array(CSTR, count);
   sptr->semtypes = _ast_pool_new_array(sem_t, count);
+  sptr->rowid_type = 0;
   sptr->is_backed = false;
 
   for (uint32_t i = 0; i < count; i++) {
@@ -2629,6 +2652,7 @@ static sem_join * new_sem_join(uint32_t count) {
 // with the indicated removals.
 static sem_struct *sem_clone_struct_strip_flags(sem_struct *sptr, sem_t strip) {
   sem_struct *result = new_sem_struct(sptr->struct_name, sptr->count);
+  result->rowid_type = sptr->rowid_type & sem_not(strip);
   for (uint32_t i = 0; i < sptr->count; i++) {
     result->names[i] = sptr->names[i];
     result->kinds[i] = sptr->kinds[i];
@@ -6377,7 +6401,8 @@ static sem_resolve sem_try_resolve_column(
   return SEM_RESOLVE_STOP;
 }
 
-// rowid is a special name (with 2 aliases) that exists in every table.
+// rowid is a special name (with 2 aliases) that exists only on rowid-capable
+// base tables.
 static sem_resolve sem_try_resolve_rowid(
   ast_node *ast,
   CSTR name,
@@ -6401,56 +6426,46 @@ static sem_resolve sem_try_resolve_rowid(
     return SEM_RESOLVE_CONTINUE;
   }
 
-  // Now we have to make sure it is a specific rowid that we can infer, directly or indirectly.
+  // Walk nested join scopes just like normal column resolution.  Views, CTEs,
+  // subqueries, and WITHOUT ROWID tables carry a zero rowid_type.
+  for (sem_joinscope *jscp = current_joinscope; jscp; jscp = jscp->parent) {
+    sem_join *jptr = jscp->jptr;
 
-  sem_join *jptr = current_joinscope->jptr;
-  if (scope == NULL && jptr && jptr->count == 1) {
-    // if only one table then that's the rowid
-    col = name;
-    sem_type = SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL;
-  }
-  else if (scope != NULL) {
-    // We walk the chain of scopes until we find a stop frame or else we run out
-    // this allows nested joins to see their parent scopes.
-    for (sem_joinscope *jscp = current_joinscope; jscp; jscp = jscp->parent) {
-      jptr = jscp->jptr;
+    if (!jptr) {
+      continue;
+    }
 
-      // an empty jptr has no names, skip it
-      if (!jptr) {
-        continue;
-      }
+    if (jptr == &join_block) {
+      break;
+    }
 
-      // stop if we find the sentinel
-      if (jptr == &join_block) {
-        break;
-      }
-
-      // more than one table but the name is scoped, still have a chance
-      for (uint32_t i = 0; i < jptr->count; i++) {
-        if (!StrCaseCmp(scope, jptr->names[i])) {
-          col = name;
-          kind = NULL;
-          sem_type = SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL;
-
-          // Insert table alias name override if enabled.
-          if (keep_table_name_in_aliases && !in_trigger && !in_trigger_when_expr && ast && scope) {
-            Invariant(is_ast_dot(ast));
-            insert_table_alias_string_overide(ast->left, jptr->tables[i]->struct_name);
-          }
-
-          break;
-        }
-      }
-
-      if (col) {
-        break;
+    uint32_t candidates = 0;
+    uint32_t candidate_index = 0;
+    for (uint32_t i = 0; i < jptr->count; i++) {
+      if ((scope == NULL || !StrCaseCmp(scope, jptr->names[i])) &&
+          jptr->tables[i]->rowid_type) {
+        candidates++;
+        candidate_index = i;
       }
     }
-  }
-  else {
-    report_resolve_error(ast, "CQL0066: identifier is ambiguous", name);
-    record_resolve_error(ast);
-    return SEM_RESOLVE_STOP;
+
+    if (candidates > 1) {
+      report_resolve_error(ast, "CQL0066: identifier is ambiguous", name);
+      record_resolve_error(ast);
+      return SEM_RESOLVE_STOP;
+    }
+
+    if (candidates == 1) {
+      sem_struct *table = jptr->tables[candidate_index];
+      col = name;
+      sem_type = table->rowid_type;
+
+      if (keep_table_name_in_aliases && !in_trigger && !in_trigger_when_expr && ast && scope) {
+        Invariant(is_ast_dot(ast));
+        insert_table_alias_string_overide(ast->left, table->struct_name);
+      }
+      break;
+    }
   }
 
   if (!col) {
@@ -7688,10 +7703,33 @@ static void sem_coalesce(ast_node *call_ast, bool_t is_ifnull) {
   call_ast->sem->kind = kind_result;
 }
 
+// Analyze the row-producing RHS of IN without applying scalar-subquery
+// nullability.  An empty subquery does not make IN null; only nullable values
+// in its one result column do.
+static void sem_expr_in_subquery(ast_node *select_stmt) {
+  sem_select_rewrite_backing(select_stmt);
+  if (is_error(select_stmt)) {
+    return;
+  }
+
+  Invariant(is_struct(select_stmt->sem->sem_type));
+  sem_struct *sptr = select_stmt->sem->sptr;
+  Invariant(sptr);
+  if (sptr->count != 1) {
+    report_error(select_stmt, "CQL0232: nested select expression must return exactly one column", NULL);
+    record_error(select_stmt);
+    return;
+  }
+
+  sem_t sem_type = sptr->semtypes[0];
+  select_stmt->sem = new_sem(sem_type);
+  select_stmt->sem->name = sptr->names[0];
+  select_stmt->sem->kind = sptr->kinds[0];
+}
+
 // The in predicate is like many of the other multi-argument operators.  All the
-// items must be type compatible.  Note that in this case the nullability of
-// the items does not matter, only the nullability of the item being tested.
-// Note that null in (null) is null, not true.
+// items must be type compatible.  The result is nullable if the non-empty RHS
+// can contain NULL, or if the item being tested can be NULL.
 static void sem_expr_in_pred_or_not_in(ast_node *ast, CSTR cstr) {
   Contract(is_ast_in_pred(ast) || is_ast_not_in(ast));
   EXTRACT_ANY_NOTNULL(needle, ast->left);
@@ -7706,10 +7744,13 @@ static void sem_expr_in_pred_or_not_in(ast_node *ast, CSTR cstr) {
 
   sem_t sem_type_needed = needle->sem->sem_type;
   CSTR kind_needed = needle->sem->kind;
-  sem_t combined_flags = not_nullable_flag(sem_type_needed) | sensitive_flag(sem_type_needed);
+  sem_t combined_flags = sensitive_flag(sem_type_needed);
+  bool_t result_is_notnull = is_not_nullable(sem_type_needed);
 
   if (ast->right == NULL) {
-    // empty in list, nothing to validate
+    // SQLite defines IN () as false and NOT IN () as true, even for a NULL
+    // needle, so an empty list always has a not-null result.
+    result_is_notnull = true;
   }
   else if (is_ast_expr_list(ast->right)) {
     EXTRACT_NOTNULL(expr_list, ast->right);
@@ -7738,6 +7779,7 @@ static void sem_expr_in_pred_or_not_in(ast_node *ast, CSTR cstr) {
       }
 
       combined_flags |= sensitive_flag(sem_type_current);
+      result_is_notnull = result_is_notnull && is_not_nullable(sem_type_current);
       sem_type_needed = sem_combine_types(sem_type_needed, sem_type_current);
     }
   }
@@ -7759,7 +7801,7 @@ static void sem_expr_in_pred_or_not_in(ast_node *ast, CSTR cstr) {
 
     EXTRACT_ANY_NOTNULL(select_stmt, ast->right);
 
-    sem_expr_select((ast_node *)select_stmt, "SELECT");
+    sem_expr_in_subquery((ast_node *)select_stmt);
     if (is_error(select_stmt)) {
       record_error(ast);
       return;
@@ -7777,6 +7819,11 @@ static void sem_expr_in_pred_or_not_in(ast_node *ast, CSTR cstr) {
     }
 
     combined_flags |= sensitive_flag(select_stmt->sem->sem_type);
+    result_is_notnull = result_is_notnull && is_not_nullable(select_stmt->sem->sem_type);
+  }
+
+  if (result_is_notnull) {
+    combined_flags |= SEM_TYPE_NOTNULL;
   }
 
   ast->sem = new_sem(SEM_TYPE_BOOL | combined_flags);
@@ -7942,6 +7989,115 @@ static void sem_special_func_cql_blob_get_type(ast_node *ast, uint32_t arg_count
   name_ast->sem = ast->sem = new_sem_std(SEM_TYPE_LONG_INTEGER, arg_list->right);
 }
 
+typedef struct blob_column_validation {
+  ast_node *backed_table_ast;
+  CSTR function_name;
+  CSTR assignment_subject;
+  CSTR invalid_column_error;
+  symtab *seen_columns;
+  bool_t partition_known;
+  bool_t key_partition;
+  bool_t require_complete_key;
+  uint32_t column_count;
+} blob_column_validation;
+
+// Validate one value/table.column pair used by cql_blob_create/update. The
+// generated blob operation is selected from the first column's key/value
+// partition, so every later column must use that same partition.
+static bool_t sem_validate_blob_column(
+  blob_column_validation *info,
+  ast_node *val_expr,
+  ast_node *table_expr)
+{
+  sem_expr(val_expr);
+  if (is_error(val_expr)) {
+    return false;
+  }
+
+  if (!is_ast_dot(table_expr) || !is_ast_str(table_expr->left) || !is_ast_str(table_expr->right)) {
+    report_error(table_expr, info->invalid_column_error, info->function_name);
+    return false;
+  }
+
+  EXTRACT_STRING(t_name, table_expr->left);
+  EXTRACT_STRING(c_name, table_expr->right);
+
+  ast_node *table_ast = find_usable_and_not_deleted_table_or_view(
+    t_name,
+    table_expr->left,
+    "CQL0095: table/view not defined");
+  if (!table_ast) {
+    return false;
+  }
+
+  if (info->backed_table_ast != table_ast) {
+    CSTR err_msg = dup_printf(
+      "CQL0488: the indicated table is not consistently used through all of %s",
+      info->function_name);
+    report_error(table_expr, err_msg, t_name);
+    return false;
+  }
+
+  sem_struct *sptr = table_ast->sem->sptr;
+  int32_t column_index = find_col_in_sptr(sptr, c_name);
+  if (column_index < 0) {
+    CSTR err_data = dup_printf("%s.%s", t_name, c_name);
+    report_error(table_expr, "CQL0489: the indicated column is not present in the named backed storage", err_data);
+    return false;
+  }
+
+  sem_t sem_type = sptr->semtypes[column_index];
+  bool_t is_key = is_primary_key(sem_type) || is_partial_pk(sem_type);
+
+  if (!info->partition_known) {
+    info->partition_known = true;
+    info->key_partition = is_key;
+  }
+  else if (info->key_partition != is_key) {
+    CSTR err_msg = dup_printf(
+      "CQL0488: key and value columns may not be mixed in %s",
+      info->function_name);
+    report_error(table_expr, err_msg, c_name);
+    return false;
+  }
+
+  if (!symtab_add(info->seen_columns, c_name, NULL)) {
+    report_error(table_expr, "CQL0206: duplicate name in list", c_name);
+    return false;
+  }
+
+  if (info->require_complete_key && is_key) {
+    table_node *table_info = table_ast->sem->table_info;
+    Invariant(table_info);
+    if (info->column_count >= (uint32_t)table_info->key_count ||
+        table_info->key_cols[info->column_count] != column_index) {
+      CSTR err_msg = dup_printf(
+        "CQL0488: key columns must appear exactly once in primary key order in %s",
+        info->function_name);
+      report_error(table_expr, err_msg, c_name);
+      return false;
+    }
+  }
+
+  if (!sem_verify_assignment(
+      val_expr,
+      sem_type,
+      val_expr->sem->sem_type,
+      info->assignment_subject)) {
+    return false;
+  }
+
+  sem_combine_kinds(val_expr, sptr->kinds[column_index]);
+  if (is_error(val_expr)) {
+    return false;
+  }
+
+  table_expr->sem = new_sem(sem_type);
+  table_expr->sem->kind = sptr->kinds[column_index];
+  info->column_count++;
+  return true;
+}
+
 // cql_blob_create(backed_type, value, backed_type.col, value2, backed_type.col, ...),
 // this will ultimately expand into something like
 //
@@ -7949,9 +8105,10 @@ static void sem_special_func_cql_blob_get_type(ast_node *ast, uint32_t arg_count
 // or
 // blob_create(12345 /* blob type */, value, 12345 /* field hash*/, 5 /* field type */, etc.)
 //
-// All we have to do here is ensure that count of columns is 2n+1
-// All the types are from the same backed type
-// all the values are type compatible with the indicated column type
+// Validation ensures that the count is 2n+1, all columns are from the same
+// backed type and key/value partition, and values are assignment-compatible
+// with their columns. Key blobs additionally require every key exactly once in
+// primary key order because offset encoding relies on that layout.
 // normally this is generated by an automatic rewrite so that basically always happens
 // but it is possible to call the function directly -- the rewrite is only sugar after all
 // we we have to check even if it's usually redundant.
@@ -8002,58 +8159,43 @@ static void sem_special_func_cql_blob_create(ast_node *ast, uint32_t arg_count, 
     return;
   }
 
-  // already verified 2n + 1 args so this is safe!
+  symtab *seen_columns = symtab_new();
+  blob_column_validation validation = {
+    .backed_table_ast = backed_table_ast,
+    .function_name = "cql_blob_create",
+    .assignment_subject = "cql_blob_create",
+    .invalid_column_error = "CQL0490: argument must be table.column where table is a backed table",
+    .seen_columns = seen_columns,
+    .require_complete_key = true,
+  };
+
+  // already verified 2n + 1 args so this is safe
   for (ast_node *next_arg = arg_list->right; next_arg; next_arg = next_arg->right->right) {
     EXTRACT_ANY_NOTNULL(val_expr, next_arg->left);
     EXTRACT_ANY_NOTNULL(table_expr, next_arg->right->left);
 
-    sem_expr(val_expr);
-    if (is_error(val_expr)) {
+    if (!sem_validate_blob_column(&validation, val_expr, table_expr)) {
+      symtab_delete(seen_columns);
       record_error(ast);
       return;
     }
-
-    if (!is_ast_dot(table_expr) || !is_ast_str(table_expr->left) || !is_ast_str(table_expr->right)) {
-      report_error(table_expr, "CQL0490: argument must be table.column where table is a backed table", "cql_blob_create");
-      record_error(ast);
-      return;
-    }
-
-    EXTRACT_STRING(t_name, table_expr->left);
-    EXTRACT_STRING(c_name, table_expr->right);
-
-    // give a better error if the table is not found
-    ast_node *table_ast = find_usable_and_not_deleted_table_or_view(
-        t_name,
-        table_expr->left,
-        "CQL0095: table/view not defined");
-    if (!table_ast) {
-      record_error(ast);
-      return;
-    }
-
-    if (backed_table_ast != table_ast) {
-      report_error(table_expr, "CQL0488: the indicated table is not consistently used through all of cql_blob_create", t_name);
-      record_error(ast);
-      return;
-    }
-
-    sem_t sem_type = find_column_type(t_name, c_name);
-    if (!sem_type) {
-      CSTR err_data = dup_printf("%s.%s", t_name, c_name);
-      report_error(table_expr, "CQL0489: the indicated column is not present in the named backed storage", err_data);
-      record_error(ast);
-      return;
-    }
-
-    if (!sem_verify_compat(val_expr, val_expr->sem->sem_type, sem_type, "cql_blob_create")) {
-      record_error(ast);
-      return;
-    }
-
-    table_expr->sem = new_sem(sem_type);
   }
 
+  if (validation.partition_known && validation.key_partition) {
+    table_node *table_info = backed_table_ast->sem->table_info;
+    Invariant(table_info);
+    if (validation.column_count != (uint32_t)table_info->key_count) {
+      report_error(
+        ast,
+        "CQL0488: all key columns must appear exactly once in primary key order in cql_blob_create",
+        backed_table_name);
+      symtab_delete(seen_columns);
+      record_error(ast);
+      return;
+    }
+  }
+
+  symtab_delete(seen_columns);
   name_ast->sem = ast->sem = new_sem(SEM_TYPE_BLOB | SEM_TYPE_NOTNULL);
 }
 
@@ -8064,9 +8206,9 @@ static void sem_special_func_cql_blob_create(ast_node *ast, uint32_t arg_count, 
 // or
 // blob_update(blob, value, 12345 /* field hash*/, 5 /* field type */, etc.)
 //
-// All we have to do here is ensure that count of columns is 2n+1
-// All the types are from the same backed type
-// all the values are type compatible with the indicated column type
+// Validation ensures that the count is 2n+1, all columns are from the same
+// backed type and key/value partition, each column appears at most once, and
+// values are assignment-compatible with their columns.
 // normally this is generated by an automatic rewrite so that basically always happens
 // but it is possible to call the function directly -- the rewrite is only sugar after all
 // we we have to check even if it's usually redundant.
@@ -8133,58 +8275,28 @@ static void sem_special_func_cql_blob_update(ast_node *ast, uint32_t arg_count, 
     return;
   }
 
-  // already verified 2n + 1 args so this is safe!
+  symtab *seen_columns = symtab_new();
+  blob_column_validation validation = {
+    .backed_table_ast = backed_table_ast,
+    .function_name = "cql_blob_update",
+    .assignment_subject = "cql_blob_update value",
+    .invalid_column_error = "CQL0257: argument must be table.column where table is a backed table",
+    .seen_columns = seen_columns,
+  };
+
+  // already verified 2n + 1 args so this is safe
   for (ast_node *next_arg = arg_list->right; next_arg; next_arg = next_arg->right->right) {
     EXTRACT_ANY_NOTNULL(val_expr, next_arg->left);
     EXTRACT_ANY_NOTNULL(table_expr, next_arg->right->left);
 
-    sem_expr(val_expr);
-    if (is_error(val_expr)) {
+    if (!sem_validate_blob_column(&validation, val_expr, table_expr)) {
+      symtab_delete(seen_columns);
       record_error(ast);
       return;
     }
-
-    if (!is_ast_dot(table_expr) || !is_ast_str(table_expr->left) || !is_ast_str(table_expr->right)) {
-      report_error(table_expr, "CQL0257: argument must be table.column where table is a backed table", "cql_blob_update");
-      record_error(ast);
-      return;
-    }
-
-    EXTRACT_STRING(t_name, table_expr->left);
-    EXTRACT_STRING(c_name, table_expr->right);
-
-    // give a better error if the table is not found
-    ast_node *table_ast = find_usable_and_not_deleted_table_or_view(
-        t_name,
-        table_expr->left,
-        "CQL0095: table/view not defined");
-    if (!table_ast) {
-      record_error(ast);
-      return;
-    }
-
-    if (backed_table_ast != table_ast) {
-      report_error(table_expr, "CQL0488: the indicated table is not consistently used through all of cql_blob_update", t_name);
-      record_error(ast);
-      return;
-    }
-
-    sem_t sem_type = find_column_type(t_name, c_name);
-    if (!sem_type) {
-      CSTR err_data = dup_printf("%s.%s", t_name, c_name);
-      report_error(table_expr, "CQL0489: the indicated column is not present in the named backed storage", err_data);
-      record_error(ast);
-      return;
-    }
-
-    if (!sem_verify_compat(val_expr, val_expr->sem->sem_type, sem_type, "cql_blob_update value")) {
-      record_error(ast);
-      return;
-    }
-
-    table_expr->sem = new_sem(sem_type);
   }
 
+  symtab_delete(seen_columns);
   name_ast->sem = ast->sem = new_sem(SEM_TYPE_BLOB | SEM_TYPE_NOTNULL);
 }
 
@@ -8796,6 +8908,8 @@ static void sem_func_jsonb_array(ast_node *ast, uint32_t arg_count) {
 static void sem_func_json_item_path_helper(ast_node *ast, uint32_t arg_count, sem_t sem_type_result) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
 
   // json functions can only appear inside of SQL, they are rewritten if elsewhere
   Contract(sem_validate_appear_inside_sql_stmt(ast));
@@ -8804,12 +8918,13 @@ static void sem_func_json_item_path_helper(ast_node *ast, uint32_t arg_count, se
     return;
   }
 
-  if (arg_count == 1) {
-    sem_type_result |= SEM_TYPE_NOTNULL;
+  // The one-argument forms return NULL exactly when the JSON input is NULL.
+  // The path forms can additionally return NULL when the path does not exist,
+  // even when both arguments are known to be nonnull.
+  name_ast->sem = ast->sem = new_sem_std(sem_type_result, arg_list);
+  if (arg_count == 2) {
+    copy_nullability(ast, 0);
   }
-
-  // kind is not preserved
-  name_ast->sem = ast->sem = new_sem(sem_type_result);
 }
 
 static void sem_func_json_array_length(ast_node *ast, uint32_t arg_count) {
@@ -8834,8 +8949,8 @@ static void sem_func_json_error_position(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
-  // kind is not preserved, there is normally more than one
-  name_ast->sem = ast->sem = new_sem(SEM_TYPE_INTEGER | SEM_TYPE_NOTNULL);
+  // NULL input produces NULL; otherwise SQLite returns zero or an error offset.
+  name_ast->sem = ast->sem = new_sem_std(SEM_TYPE_INTEGER, arg_list);
 }
 
 // helper for json_extract() jsonb_extract() as well as json_remove() and jsonb_remove()
@@ -15065,6 +15180,15 @@ static void sem_create_trigger_stmt(ast_node *ast) {
   sem_join *jptr;
   sem_struct *sptr = target->sem->sptr;
 
+  // SQLite exposes OLD.rowid and NEW.rowid to INSTEAD OF triggers on views
+  // even though the view itself is not a rowid-capable source in a query.
+  // Keep that trigger-only pseudo-column behavior without making rowid
+  // resolvable on ordinary view references.
+  if (is_ast_create_view_stmt(target)) {
+    sptr = sem_clone_struct_strip_flags(sptr, 0);
+    sptr->rowid_type = SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL;
+  }
+
   if (flags & TRIGGER_INSERT) {
     jptr = new_sem_join(1);
     jptr->names[0] = "new";
@@ -16013,6 +16137,9 @@ static void sem_create_table_stmt(ast_node *ast) {
   // the types have already been computed so all we have to do is
   // check for duplicates
   sem_struct *sptr = new_sem_struct(name, cols);
+  if (!no_rowid) {
+    sptr->rowid_type = SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL;
+  }
 
   symtab *columns = symtab_new();
 
@@ -21300,7 +21427,7 @@ static void sem_declare_enum_stmt(ast_node *ast) {
        // we're ready to evaluate constants having replaced enums and consts
        eval(expr, &result);
 
-       if (result.sem_type == SEM_TYPE_ERROR || result.sem_type == SEM_TYPE_NULL) {
+       if (result.sem_type == SEM_TYPE_NULL) {
          report_error(enum_value, "CQL0355: evaluation failed", enum_name);
          record_error(ast);
          goto cleanup;
@@ -21310,7 +21437,19 @@ static void sem_declare_enum_stmt(ast_node *ast) {
        eval_add_one(&result);
      }
 
+     if (result.sem_type == SEM_TYPE_ERROR) {
+       report_error(enum_value, "CQL0355: evaluation failed", enum_name);
+       record_error(ast);
+       goto cleanup;
+     }
+
      eval_cast_to(&result, ast->sem->sem_type);
+     if (result.sem_type == SEM_TYPE_ERROR) {
+       report_error(enum_value, "CQL0355: evaluation failed", enum_name);
+       record_error(ast);
+       goto cleanup;
+     }
+
      enum_name_ast->sem = new_sem(sem_type_enum);
      enum_name_ast->sem->value = _ast_pool_new(eval_node);
      *enum_name_ast->sem->value = result;
@@ -22540,6 +22679,18 @@ static void sem_check_all_values_condition(ast_node *expr, bytebuf *case_buffer)
   case_val *enum_vals = (case_val *)enum_buffer->ptr;
   qsort(enum_vals, enum_count, sizeof(case_val), case_val_comparator);
 
+  // Underscore-prefixed enum members are intentionally excluded from ALL
+  // VALUES coverage. An enum containing only such members therefore has no
+  // public values, making every WHEN value extra rather than leaving anything
+  // for the deduplication loop below.
+  if (enum_count == 0) {
+    Invariant(case_count > 0);
+    CSTR errant = dup_printf("%lld", (llint_t)case_vals[0].value);
+    report_error(case_vals[0].source, "CQL0388: a value exists in the switch that is not present in the enum", errant);
+    record_error(expr);
+    goto cleanup;
+  }
+
   // dedupe the enumeration cases, there are sometimes aliases
   // e.g. declare enum integer ( x = 1, another_name_for_x = 1);
 
@@ -23142,45 +23293,47 @@ static bool_t sem_validate_arg_vs_formal(ast_node *arg, ast_node *param) {
   return true;
 }
 
-// Pointer tag indicating an id that is passed as an OUT or INOUT argument.
-static const uintptr_t id_out_tag_bit = 0x1;
-
-// Given a (possibly) tagged id, return an untagged, deferencable pointer.
-static ast_node *id_from_out_tagged_id(ast_node *tagged_id) {
-  return (ast_node *)((uintptr_t)tagged_id & ~id_out_tag_bit);
-}
-
-// Given an id, return the tagged version.
-static ast_node *out_tagged_id_from_id(ast_node *id) {
- return (ast_node *)((uintptr_t)id | id_out_tag_bit);
-}
-
-// Returns true if `id` is tagged, else false.
-static bool_t is_id_out_tagged(ast_node *id) {
-  return !!((uintptr_t)id & id_out_tag_bit);
-}
-
 cql_noexport bool_t is_alias_ast(ast_node *_Nonnull ast) {
  Contract(ast);
  return ast->sem && (ast->sem->sem_type & SEM_TYPE_ALIAS);
 }
 
-// Compares the names of two (possibly) tagged ids in a manner such that
-// `out_tagged_id_comparator` can be used as a comparator for `qsort`. If the
-// names match, we then compare by line number so that, if we later report an
-// error, we can easily point to the first use.
-static int out_tagged_id_comparator(const void *a, const void *b) {
-  ast_node *id_a = id_from_out_tagged_id(*(ast_node **)a);
-  ast_node *id_b = id_from_out_tagged_id(*(ast_node **)b);
-  EXTRACT_STRING(a_name, id_a);
-  EXTRACT_STRING(b_name, id_b);
+typedef struct call_arg_binding {
+  ast_node *arg;
+  sem_t *type;
+  uint32_t ordinal;
+  bool_t is_out;
+} call_arg_binding;
 
-  int result = strcmp(a_name, b_name);
-  if (!result) {
-    return id_a->lineno > id_b->lineno ? 1 : id_a->lineno < id_b->lineno ? -1 : 0;
+// Returns the stable semantic type storage for a top-level argument that
+// refers to a mutable binding. This identity is shared by case variants and by
+// alternate spellings such as bundle.field and bundle_field.
+static sem_t *sem_find_call_arg_binding(ast_node *arg) {
+  if (!is_id_or_dot(arg) || !arg->sem || !is_variable(arg->sem->sem_type)) {
+    return NULL;
   }
 
-  return result;
+  if (is_id(arg)) {
+    ast_node *variable = find_local_or_global_variable(arg->sem->name);
+    return variable ? &variable->sem->sem_type : NULL;
+  }
+
+  EXTRACT_NAME_AND_SCOPE(arg);
+  return find_mutable_type(name, scope);
+}
+
+// Sort bindings by resolved storage identity, preserving source argument order
+// within each identity so diagnostics continue to point at the first use.
+static int call_arg_binding_comparator(const void *a, const void *b) {
+  const call_arg_binding *binding_a = (const call_arg_binding *)a;
+  const call_arg_binding *binding_b = (const call_arg_binding *)b;
+  uintptr_t type_a = (uintptr_t)binding_a->type;
+  uintptr_t type_b = (uintptr_t)binding_b->type;
+
+  if (type_a < type_b) return -1;
+  if (type_a > type_b) return 1;
+  return (binding_a->ordinal > binding_b->ordinal) -
+         (binding_a->ordinal < binding_b->ordinal);
 }
 
 // Returns true if all OUT and INOUT arguments in `arg_list` are unique with
@@ -23192,77 +23345,60 @@ static bool_t sem_validate_out_args_are_unique(ast_node *arg_list, ast_node *par
   Contract(!arg_list || is_ast_arg_list(arg_list) || is_ast_expr_list(arg_list));
   Contract(!params || is_ast_params(params));
 
-  // Count up the ids passed as arguments so that we can allocate an array of
-  // the correct size to hold all of them. As a minor optimization, we also
-  // check whether we have at least one OUT or INOUT argument so we can bail out
-  // early if we don't.
-  //
-  // NOTE: Technically, we only count ids with an associated parameter. If this
-  // procedure is called after checking that the correct number of arguments
-  // were provided, we'll always have enough parameters to count all of the ids
-  // and will check all of the arguments for aliasing. If not, we'll check just
-  // the arguments that have parameters and the caller can then fail due to
-  // excess arguments later on. The caller decides which behavior it prefers.
-  uint32_t ids_count = 0;
+  // Count top-level mutable bindings with associated parameters. Calls with
+  // count mismatches are rejected before this check is reached.
+  uint32_t binding_count = 0;
   bool_t has_out_argument = false;
   ast_node *arg_item = arg_list;
   ast_node *param_item = params;
   for (; arg_item && param_item; arg_item = arg_item->right, param_item = param_item->right) {
     EXTRACT_ANY_NOTNULL(arg, arg_item->left);
-    if (!is_id(arg)) {
-      continue;
-    }
-    ids_count++;
     EXTRACT_NOTNULL(param, param_item->left);
     if (is_out_parameter(param->sem->sem_type)) {
       has_out_argument = true;
     }
+    if (sem_find_call_arg_binding(arg)) {
+      binding_count++;
+    }
   }
 
   // If there isn't at least one OUT or INOUT argument, or if we don't have at
-  // least two ids, there can be no aliasing.
-  if (!has_out_argument || ids_count < 2) {
+  // least two resolved bindings, there can be no aliasing.
+  if (!has_out_argument || binding_count < 2) {
     return true;
   }
 
-  // Put all of the ids into an array, tagging the ones that were used for OUT
-  // or INOUT arguments. We do this because the arguments themselves do not
-  // contain whether or not they were used as OUT or INOUT arguments in their
-  // sem nodes: That information is only present in the associated parameter.
-  // Tagging ids gives us an easy way to track OUT/INOUT usage without having to
-  // later unset anything on the ids themselves.
-  ast_node **ids = _ast_pool_new_array(ast_node *, ids_count);
-  ast_node **ids_ptr = ids;
+  call_arg_binding *bindings = _ast_pool_new_array(call_arg_binding, binding_count);
+  call_arg_binding *binding_ptr = bindings;
   arg_item = arg_list;
   param_item = params;
-  for (; arg_item && param_item; arg_item = arg_item->right, param_item = param_item->right) {
+  uint32_t ordinal = 0;
+  for (; arg_item && param_item; arg_item = arg_item->right, param_item = param_item->right, ordinal++) {
     EXTRACT_ANY_NOTNULL(arg, arg_item->left);
-    if (!is_id(arg)) {
+    sem_t *type = sem_find_call_arg_binding(arg);
+    if (!type) {
       continue;
     }
     EXTRACT_NOTNULL(param, param_item->left);
-    *ids_ptr++ = is_out_parameter(param->sem->sem_type) ? out_tagged_id_from_id(arg) : arg;
+    binding_ptr->arg = arg;
+    binding_ptr->type = type;
+    binding_ptr->ordinal = ordinal;
+    binding_ptr->is_out = is_out_parameter(param->sem->sem_type);
+    binding_ptr++;
   }
+  Invariant(binding_ptr == bindings + binding_count);
 
-  // Sort them by name, then by line number.
-  qsort(ids, ids_count, sizeof(ast_node *), out_tagged_id_comparator);
+  qsort(bindings, binding_count, sizeof(call_arg_binding), call_arg_binding_comparator);
 
-  // Look for duplicates involving an OUT or INOUT usage.
-  for (uint32_t i = 1; i < ids_count; i++) {
-    // If either the current id or previous id is tagged, and if their names
-    // match, it must be the case that an OUT or INOUT argument is aliased.
-    if (is_id_out_tagged(ids[i - 1]) || is_id_out_tagged(ids[i])) {
-      ast_node *previous_id = id_from_out_tagged_id(ids[i - 1]);
-      ast_node *id = id_from_out_tagged_id(ids[i]);
-      EXTRACT_STRING(previous_id_name, previous_id);
-      EXTRACT_STRING(id_name, id);
-      if (!strcmp(previous_id_name, id_name)) {
-        // We sorted by name and then by line number, so `previous_id` is
-        // guaranteed to contain the earliest line number we could report.
-        CSTR msg = "CQL0426: OUT or INOUT argument cannot be used again in same call";
-        report_error(previous_id, msg, id_name);
-        return false;
-      }
+  // Equal type addresses identify the same mutable storage regardless of
+  // source spelling. If either use is OUT/INOUT, the call would alias.
+  for (uint32_t i = 1; i < binding_count; i++) {
+    call_arg_binding *previous = &bindings[i - 1];
+    call_arg_binding *current = &bindings[i];
+    if (previous->type == current->type && (previous->is_out || current->is_out)) {
+      CSTR msg = "CQL0426: OUT or INOUT argument cannot be used again in same call";
+      report_error(previous->arg, msg, expr_as_text(previous->arg));
+      return false;
     }
   }
 

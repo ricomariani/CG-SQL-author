@@ -840,26 +840,47 @@ end
 
 function cql_partition_cursor(partition, key, key_types, key_fields, cursor, cursor_types, cursor_fields)
   if not cursor._has_row_ then return false end
-  key = cql_make_str_key(key, key_fields)
-  cursor = cql_clone_row(cursor)
-  if partition[key] ~= nil then
-     table.insert(partition[key], cursor)
+
+  local hash = cql_cursor_hash(key, key_types, key_fields)
+  local bucket = partition[hash]
+  if bucket ~= nil then
+    for _, entry in ipairs(bucket) do
+      if cql_cursors_equal(
+          entry.key, key_types, key_fields,
+          key, key_types, key_fields) then
+        table.insert(entry.rows, cql_clone_row(cursor))
+        return true
+      end
+    end
   else
-     partition[key] = {cursor}
+    bucket = {}
+    partition[hash] = bucket
   end
+
+  table.insert(bucket, {
+    key = cql_clone_row(key),
+    rows = {cql_clone_row(cursor)}
+  })
   return true
 end;
 
 function cql_extract_partition(partition, key, key_types, key_fields)
-  key = cql_make_str_key(key, key_fields)
-  if partition[key] ~= nil then
-     return partition[key]
-  else
-     if partition.__empty__ == nil then
-       partition.__empty__ = {}
-     end
-     return partition.__empty__
+  local hash = cql_cursor_hash(key, key_types, key_fields)
+  local bucket = partition[hash]
+  if bucket ~= nil then
+    for _, entry in ipairs(bucket) do
+      if cql_cursors_equal(
+          entry.key, key_types, key_fields,
+          key, key_types, key_fields) then
+        return entry.rows
+      end
+    end
   end
+
+  if partition.__empty__ == nil then
+    partition.__empty__ = {}
+  end
+  return partition.__empty__
 end
 
 function cql_facets_create()

@@ -248,6 +248,8 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0207: expected a variable name for 
 test/sem_test.sql:XXXX:1: error: in num : additional info: calling 'proc_with_output' argument #3 intended for parameter 'arg3' has the problem
 test/sem_test.sql:XXXX:1: error: in str : CQL0426: OUT or INOUT argument cannot be used again in same call 'X'
 test/sem_test.sql:XXXX:1: error: in str : CQL0426: OUT or INOUT argument cannot be used again in same call 'X'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0426: OUT or INOUT argument cannot be used again in same call 'C.arg2'
+test/sem_test.sql:XXXX:1: error: in str : CQL0426: OUT or INOUT argument cannot be used again in same call 'X'
 test/sem_test.sql:XXXX:1: error: in str : CQL0426: OUT or INOUT argument cannot be used again in same call 'X'
 test/sem_test.sql:XXXX:1: error: in str : CQL0207: expected a variable name for OUT or INOUT argument 'arg1'
 test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'test_proc3' argument #1 intended for parameter 'arg1' has the problem
@@ -383,6 +385,7 @@ test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : CQL0196: procedure decla
 test/sem_test.sql:XXXX:1: error: in str : CQL0175: duplicate parameter name 'id'
 test/sem_test.sql:XXXX:1: error: in str : CQL0190: duplicate column name 'id'
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0232: nested select expression must return exactly one column
+test/sem_test.sql:XXXX:1: error: in table_or_subquery : CQL0095: table/view not defined 'missing_in_table'
 test/sem_test.sql:XXXX:1: error: in in_pred : CQL0009: required 'INT' not compatible with found 'TEXT' context 'IN'
 test/sem_test.sql:XXXX:1: error: in not_in : CQL0009: required 'INT' not compatible with found 'TEXT' context 'NOT IN'
 test/sem_test.sql:XXXX:1: error: in select_core : CQL0058: if multiple selects, all column names must be identical so they have unambiguous names; error in column 2: 'C' vs. 'B'
@@ -415,6 +418,26 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0070: expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
 test/sem_test.sql:XXXX:1: error: in call : CQL0079: too many arguments in function 'nullable'
 test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'sensitive'
+test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
+test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
+test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
+test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
+test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
+test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
+test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
+test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
+test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
+test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
+test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
+test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
+test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
+test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
+test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
+test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
+test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
+test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
+test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
+test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
 test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
 test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
 test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
@@ -750,6 +773,10 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 test/sem_test.sql:XXXX:1: error: in declare_cursor_like_select : CQL0197: duplicate variable name in the same scope 'X'
 test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'T1.rowid'
 test/sem_test.sql:XXXX:1: error: in str : CQL0066: identifier is ambiguous 'rowid'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'R.rowid'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'V.rowid'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'C.rowid'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'S.rowid'
 test/sem_test.sql:XXXX:1: error: in name_list : CQL0272: columns referenced in the foreign key statement should match exactly a unique key in the parent table 'bar'
 test/sem_test.sql:XXXX:1: error: in str : CQL0154: table in update statement does not exist 'This_Table_Does_Not_Exist'
 test/sem_test.sql:XXXX:1: error: in col_def : CQL0028: FK reference must be exactly one column with the correct type 'fk_src'
@@ -945,6 +972,7 @@ test/sem_test.sql:XXXX:1: error: in null : CQL0076: argument 1 is a NULL literal
 test/sem_test.sql:XXXX:1: error: in null : CQL0076: argument 2 is a NULL literal; useless in 'min'
 test/sem_test.sql:XXXX:1: error: in col_def : CQL0060: referenced table can be independently recreated so it cannot be used in a foreign key 'recreatable'
 test/sem_test.sql:XXXX:1: error: in col_def : CQL0060: referenced table can be independently recreated so it cannot be used in a foreign key 'recreatable_reference_4'
+test/sem_test.sql:XXXX:1: error: in col_def : CQL0060: referenced table can be independently recreated so it cannot be used in a foreign key 'recreate_dedup_leaf'
 test/sem_test.sql:XXXX:1: error: in fk_def : CQL0021: foreign key refers to non-existent table 'table_not_found'
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0396: versioning attributes may not be used on DDL inside a procedure 'inv_1'
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0396: versioning attributes may not be used on DDL inside a procedure 'inv2'
@@ -1202,6 +1230,10 @@ test/sem_test.sql:XXXX:1: error: in proc_savepoint_stmt : CQL0351: statement sho
 test/sem_test.sql:XXXX:1: error: in rollback_return_stmt : CQL0350: statement must appear inside of a PROC SAVEPOINT block
 test/sem_test.sql:XXXX:1: error: in commit_return_stmt : CQL0350: statement must appear inside of a PROC SAVEPOINT block
 test/sem_test.sql:XXXX:1: error: in return_stmt : CQL0352: use COMMIT RETURN or ROLLBACK RETURN in within a proc savepoint block
+test/sem_test.sql:XXXX:1: error: in enum_value : CQL0355: evaluation failed 'overflow'
+test/sem_test.sql:XXXX:1: error: in enum_value : CQL0355: evaluation failed 'overflow'
+test/sem_test.sql:XXXX:1: error: in enum_value : CQL0355: evaluation failed 'null_value'
+test/sem_test.sql:XXXX:1: error: in enum_value : CQL0355: evaluation failed 'too_large'
 test/sem_test.sql:XXXX:1: error: in dot : CQL0070: expressions of different kinds can't be mixed: 'real_things' vs. 'integer_things'
 test/sem_test.sql:XXXX:1: error: in dot : CQL0357: enum does not contain 'nope'
 Incompatible declarations found
@@ -1345,6 +1377,7 @@ test/sem_test.sql:XXXX:1: error: in switch_case : CQL0384: switch statement did 
 test/sem_test.sql:XXXX:1: error: in switch_case : CQL0383: switch ... ALL VALUES is useless with an ELSE clause
 test/sem_test.sql:XXXX:1: error: in num : CQL0385: WHEN clauses contain duplicate values '2'
 test/sem_test.sql:XXXX:1: error: in str : CQL0381: case expression must be a not-null integral type
+test/sem_test.sql:XXXX:1: error: in num : CQL0388: a value exists in the switch that is not present in the enum '1'
 test/sem_test.sql:XXXX:1: error: in num : CQL0386: SWITCH ... ALL VALUES is used but the switch expression is not an enum type
 test/sem_test.sql:XXXX:1: error: in dot : CQL0387: a value exists in the enum that is not present in the switch 'zero'
 test/sem_test.sql:XXXX:1: error: in dot : CQL0387: a value exists in the enum that is not present in the switch 'one'
@@ -1383,6 +1416,10 @@ test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'requires_not
 test/sem_test.sql:XXXX:1: error: in str : CQL0013: cannot assign/copy possibly null expression to not null target 'a'
 test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'requires_notnull_inout' argument #1 intended for parameter 'a' has the problem
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'some_undefined_variable'
+test/sem_test.sql:XXXX:1: error: in str : CQL0013: cannot assign/copy possibly null expression to not null target 'a'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'requires_int_notnull' argument #1 intended for parameter 'a' has the problem
+test/sem_test.sql:XXXX:1: error: in str : CQL0013: cannot assign/copy possibly null expression to not null target 'a'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'requires_int_notnull' argument #1 intended for parameter 'a' has the problem
 test/sem_test.sql:XXXX:1: error: in str : CQL0013: cannot assign/copy possibly null expression to not null target 'a'
 test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'requires_int_notnull' argument #1 intended for parameter 'a' has the problem
 test/sem_test.sql:XXXX:1: error: in str : CQL0438: variable possibly used before initialization 'a'
@@ -1574,6 +1611,11 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 test/sem_test.sql:XXXX:1: error: in dot : CQL0488: the indicated table is not declared for backed storage 'simple_backing_table'
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 test/sem_test.sql:XXXX:1: error: in dot : CQL0488: the indicated table is not consistently used through all of cql_blob_update 'basic_table2'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0488: key and value columns may not be mixed in cql_blob_update 'name'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0206: duplicate name in list 'id'
+test/sem_test.sql:XXXX:1: error: in call : CQL0013: cannot assign/copy possibly null expression to not null target 'cql_blob_update value'
+test/sem_test.sql:XXXX:1: error: in call : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 'cql_blob_update value'
+test/sem_test.sql:XXXX:1: error: in str : CQL0070: expressions of different kinds can't be mixed: 'cool_text' vs. 'surname'
 test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'BLOB' not compatible with found 'INT' context 'cql_blob_update arg1'
 test/sem_test.sql:XXXX:1: error: in add : CQL0490: argument must be table.column where table is a backed table 'cql_blob_update'
 test/sem_test.sql:XXXX:1: error: in add : CQL0257: argument must be table.column where table is a backed table 'cql_blob_update'
@@ -1582,10 +1624,17 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0095: table/view not defined 'table
 test/sem_test.sql:XXXX:1: error: in dot : CQL0489: the indicated column is not present in the named backed storage 'basic_table.col_not_exists'
 test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'cql_blob_update'
 test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'cql_blob_update'
-test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'TEXT' not compatible with found 'INT' context 'cql_blob_update value'
+test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'INT' not compatible with found 'TEXT' context 'cql_blob_update value'
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0488: the indicated table is not declared for backed storage 'simple_backing_table'
 test/sem_test.sql:XXXX:1: error: in str : CQL0160: table in insert statement does not exist 'bogus_table_not_present'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0488: key and value columns may not be mixed in cql_blob_create 'name'
+test/sem_test.sql:XXXX:1: error: in call : CQL0488: all key columns must appear exactly once in primary key order in cql_blob_create 'bt_default'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0488: key columns must appear exactly once in primary key order in cql_blob_create 'pk2'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0206: duplicate name in list 'name'
+test/sem_test.sql:XXXX:1: error: in call : CQL0013: cannot assign/copy possibly null expression to not null target 'cql_blob_create'
+test/sem_test.sql:XXXX:1: error: in call : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 'cql_blob_create'
+test/sem_test.sql:XXXX:1: error: in str : CQL0070: expressions of different kinds can't be mixed: 'cool_text' vs. 'surname'
 test/sem_test.sql:XXXX:1: error: in num : CQL0491: argument 1 must be a table name that is a backed table 'cql_blob_create'
 test/sem_test.sql:XXXX:1: error: in dot : CQL0488: the indicated table is not consistently used through all of cql_blob_create 'basic_table2'
 test/sem_test.sql:XXXX:1: error: in str : CQL0095: table/view not defined 'not_a_table'
@@ -1594,7 +1643,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0095: table/view not defined 'table
 test/sem_test.sql:XXXX:1: error: in dot : CQL0489: the indicated column is not present in the named backed storage 'basic_table.col_not_exists'
 test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'cql_blob_create'
 test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'cql_blob_create'
-test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'TEXT' not compatible with found 'INT' context 'cql_blob_create'
+test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'INT' not compatible with found 'TEXT' context 'cql_blob_create'
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0488: the indicated table is not declared for backed storage 'simple_backing_table'
 test/sem_test.sql:XXXX:1: error: in str : CQL0061: in the cursor and the blob type, all columns must be an exact type match (expected integer notnull; found text notnull) 'name'

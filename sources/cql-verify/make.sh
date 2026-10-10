@@ -1,2 +1,6 @@
+#!/bin/bash
+
+set -euo pipefail
+
 ./regen.sh
-(cd ..;make cql-verify)
+make -C .. cql-verify

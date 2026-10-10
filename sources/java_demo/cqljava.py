@@ -33,6 +33,36 @@ import json
 import sys
 
 
+def cql_identifier(name):
+    result = []
+    used_hex = False
+    for ch in name.encode("utf-8"):
+        if (ord("a") <= ch <= ord("z")
+                or ord("A") <= ch <= ord("Z") and ch != ord("X")
+                or ord("0") <= ch <= ord("9")
+                or ch == ord("_")):
+            result.append(chr(ch))
+        else:
+            result.append(f"X{ch:02x}")
+            used_hex = True
+    return ("X_" if used_hex else "") + "".join(result)
+
+
+def projection_member_names(projection):
+    used = set()
+    result = []
+    for col, projected_column in enumerate(projection):
+        base = cql_identifier(projected_column["name"])
+        candidate = base
+        if candidate in used:
+            candidate = f"{base}_{col}"
+            while candidate in used:
+                candidate += "_"
+        used.add(candidate)
+        result.append(candidate)
+    return result
+
+
 def usage():
     print(
         "Usage: input.json [options] >result.java or >result.c\n"
@@ -682,8 +712,7 @@ def emit_result_set_projection(proc, attributes):
     p_name = proc["name"]
     projection = proc["projection"]
     col = 0
-    for p in projection:
-        c_name = p["name"]
+    for p, member_name in zip(projection, projection_member_names(projection)):
         c_type = p["type"]
         kind = p.get("kind", "")
         isSensitive = p.get("isSensitive", 0)
@@ -713,7 +742,7 @@ def emit_result_set_projection(proc, attributes):
         row_formal = "0" if hasOutResult else "row"
 
         # we're done, we're ready to emit the function name and its body
-        print(f"    public {c_type} get_{c_name}({row_arg}) {{")
+        print(f"    public {c_type} get_{member_name}({row_arg}) {{")
         print(
             f"      return mResultSet.get{nullable}{getter}({row_formal}, {col});"
         )

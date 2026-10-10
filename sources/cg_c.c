@@ -182,6 +182,10 @@ static symtab *text_pieces;
 // when recursing over referenced procedures via object<proc_name SET>
 static symtab *emitted_proc_decls;
 
+// Generated C functions and public helpers share the ordinary C identifier
+// namespace even when their CQL source names are distinct.
+static symtab *generated_c_symbols;
+
 // The current shared fragment number in the current procdure
 static int32_t proc_cte_index;
 
@@ -230,6 +234,25 @@ static int32_t cur_fragment_predicate = 0;
 // we use these to emit the appropriate booleans for each bound variable
 static int32_t prev_variable_count;
 static int32_t cur_variable_count;
+
+static bool_t cg_c_symbols_conflict(CSTR previous_origin, CSTR origin) {
+  return !!strcmp(previous_origin, origin);
+}
+
+static void cg_register_c_symbol(CSTR symbol, CSTR origin) {
+  symtab_entry *entry = symtab_find(generated_c_symbols, symbol);
+  if (!entry) {
+    symtab_add(generated_c_symbols, Strdup(symbol), Strdup(origin));
+    return;
+  }
+
+  CSTR previous_origin = (CSTR)entry->val;
+  if (cg_c_symbols_conflict(previous_origin, origin)) { cql_error("generated C symbol '%s' for %s conflicts with %s\n", symbol, origin, previous_origin); cql_cleanup_and_exit(1); }
+}
+
+static void cg_verify_user_variable_name(CSTR name) {
+  if (!strcmp(name, "_rc_")) { cql_error("C code generation reserves variable name '_rc_'\n"); cql_cleanup_and_exit(1); }
+}
 
 // Emit the line directive, escape the file name using the C convention
 static void cg_line_directive(CSTR filename, int32_t lineno, charbuf *output) {
@@ -1912,23 +1935,22 @@ static void cg_func_abs(ast_node *call_ast, charbuf *is_null, charbuf *value) {
   CHARBUF_CLOSE(abs_value);
 }
 
-// This helper generates the tests for each entry in the IN list.
-// we generate the appropriate equality test -- one for strings
-// one for nullables and one for not nullables.  Note expr is already known
-// to be not null here.  There was previous codegen for that case.  The result
-// is either bool or nullable bool.
+// This helper generates the tests for each entry in the IN list.  The result
+// starts as "not found"; a NULL candidate changes it to NULL, and a later match
+// changes it to "found" and exits the enclosing do/while.
 static void cg_in_or_not_in_expr_list(ast_node *head, CSTR expr, CSTR result, sem_t sem_type_result, bool_t is_not_in) {
   Contract(is_bool(sem_type_result));
   CSTR found_value = is_not_in ? "0" : "1";
   CSTR not_found_value = is_not_in ? "1" : "0";
 
-  cg_store_same_type(cg_main_output, result, sem_type_result, "0", found_value);
+  cg_store_same_type(cg_main_output, result, sem_type_result, "0", not_found_value);
 
   for (ast_node *ast = head; ast; ast = ast->right) {
     EXTRACT_ANY_NOTNULL(in_expr, ast->left)
 
-    // null can't ever match anything, waste of time.
+    // A NULL makes the result unknown unless a later candidate matches.
     if (is_ast_null(in_expr)) {
+      cg_set_null(cg_main_output, result, sem_type_result);
       continue;
     }
 
@@ -1938,24 +1960,28 @@ static void cg_in_or_not_in_expr_list(ast_node *head, CSTR expr, CSTR result, se
     CG_PUSH_EVAL(in_expr, C_EXPR_PRI_EQ_NE);
     sem_t sem_type_in_expr = in_expr->sem->sem_type;
 
+    if (is_nullable(sem_type_in_expr)) {
+      bprintf(cg_main_output, "if (%s) {\n", in_expr_is_null.ptr);
+      bprintf(cg_main_output, "  ");
+      cg_set_null(cg_main_output, result, sem_type_result);
+      bprintf(cg_main_output, "}\nelse ");
+    }
+
     if (is_text(sem_type_in_expr)) {
       bprintf(cg_main_output, "if (cql_string_compare(%s, %s) == 0)", expr, in_expr_value.ptr);
     }
     else if (is_blob(sem_type_in_expr)) {
       bprintf(cg_main_output, "if (cql_blob_equal(%s, %s))", expr, in_expr_value.ptr);
     }
-    else if (is_nullable(sem_type_in_expr)) {
-      bprintf(cg_main_output,
-              "if (cql_is_nullable_true(%s, %s == %s))",
-              in_expr_is_null.ptr,
-              expr,
-              in_expr_value.ptr);
-    }
     else {
       bprintf(cg_main_output, "if (%s == %s)", expr, in_expr_value.ptr);
     }
 
-    bprintf(cg_main_output, " break;\n");
+    bprintf(cg_main_output, " {\n");
+    bprintf(cg_main_output, "  ");
+    cg_store_same_type(cg_main_output, result, sem_type_result, "0", found_value);
+    bprintf(cg_main_output, "  break;\n");
+    bprintf(cg_main_output, "}\n");
     CG_POP_EVAL(in_expr);
 
     // This comparison clause fully used any temporaries associated with expr
@@ -1963,8 +1989,6 @@ static void cg_in_or_not_in_expr_list(ast_node *head, CSTR expr, CSTR result, se
     // result we used it in the "if" test, but we're done with it.
     stack_level = stack_level_saved;
   }
-
-  cg_store_same_type(cg_main_output, result, sem_type_result, "0", not_found_value);
 }
 
 // Helper to generate a null result.  For consistency with other nullable
@@ -1990,19 +2014,18 @@ static void cg_null_result(ast_node *ast, charbuf *is_null, charbuf *value) {
 //    temp = X;
 //    if (temp is null) { result = null; break; } [only needed if X is nullable]
 //
-//    result = 1;  /* cg_in_or_not_in_expr_list generates the alternatives */
-//    (result = 0; if NOT IN case)
+//    result = 0;  /* cg_in_or_not_in_expr_list generates the alternatives */
+//    (result = 1; if NOT IN case)
 //
 //    prep statements for U;
 //    compute U;
-//    if (temp == U) break;
+//    if (U is null) result = null;
+//    else if (temp == U) { result = 1; break; }
 //
 //    prep statements for V;
 //    compute V;
-//    if (temp == V) break;
-//
-//    result = 0;
-//    (result = 1; if NOT IN case)
+//    if (V is null) result = null;
+//    else if (temp == V) { result = 1; break; }
 //   } while (0);
 //
 // The result ends up in the is_null and value fields as usual.
@@ -2016,6 +2039,13 @@ static void cg_expr_in_pred_or_not_in(
 
   sem_t sem_type_result = ast->sem->sem_type;
   sem_t sem_type_expr = expr->sem->sem_type;
+
+  if (!expr_list) {
+    CG_SETUP_RESULT_VAR(ast, sem_type_result);
+    cg_store_same_type(cg_main_output, result_var.ptr, sem_type_result, "0", is_ast_not_in(ast) ? "1" : "0");
+    CG_CLEANUP_RESULT_VAR();
+    return;
+  }
 
   if (is_null_type(sem_type_expr)) {
     cg_null_result(ast, is_null, value);
@@ -3330,6 +3360,7 @@ static void cg_param(ast_node *ast, charbuf *decls, bool_t alias_in_ref) {
   // [in out] name [datatype]
 
   sem_t sem_type = name_ast->sem->sem_type;
+  cg_verify_user_variable_name(name);
 
   // If this parameter will be mutated we have to own the reference, so we make
   // an alias We'll initialize the alias from the argument during param init.
@@ -3805,6 +3836,9 @@ static void cg_emit_fetch_results_prototype(
 {
   CG_CHARBUF_OPEN_SYM(fetch_results_sym, proc_name, "_fetch_results");
   CG_CHARBUF_OPEN_SYM(result_set_ref, result_set_name, "_result_set_ref");
+  cg_register_c_symbol(
+    fetch_results_sym.ptr,
+    dup_printf("fetch-results helper for procedure '%s'", proc_name));
 
   // either return code or void
   if (dml_proc) {
@@ -3874,6 +3908,11 @@ static void cg_emit_proc_prototype(ast_node *ast, charbuf *proc_decl, bool_t for
     }
   }
   CG_CHARBUF_OPEN_SYM_WITH_PREFIX(proc_sym, prefix, name, suffix);
+  cg_register_c_symbol(
+    proc_sym.ptr,
+    suffix[0]
+      ? dup_printf("fetch-results helper for procedure '%s'", name)
+      : dup_printf("procedure '%s'", name));
 
   if (private_proc) {
     bprintf(proc_decl, "static ");
@@ -4270,6 +4309,7 @@ static void cg_declare_func_stmt(ast_node *ast) {
 
   CHARBUF_OPEN(func_decl);
   CG_CHARBUF_OPEN_SYM(func_sym, name);
+  cg_register_c_symbol(func_sym.ptr, dup_printf("function '%s'", name));
 
   cg_var_decl(&func_decl, sem_type_return, func_sym.ptr, 0);
   bprintf(&func_decl, "(");
@@ -4362,6 +4402,8 @@ static void cg_declare_proc_stmt(ast_node *ast) {
 }
 
 static void cg_declare_simple_var(sem_t sem_type, CSTR name) {
+  cg_verify_user_variable_name(name);
+
   // if in a variable group we only emit the header part of the declarations
   if (!in_var_group_decl) {
     cg_var_decl(cg_declarations_output, sem_type, name, CG_VAR_DECL_FULL);
@@ -5591,6 +5633,7 @@ static bool cg_verify_unbound_stmt(ast_node *stmt) {
 static void cg_declare_auto_cursor(CSTR cursor_name, sem_node *sem) {
   Contract(cursor_name);
   Contract(sem);
+  cg_verify_user_variable_name(cursor_name);
 
   sem_struct *sptr = sem->sptr;
   Contract(sptr);
@@ -5887,6 +5930,7 @@ static void cg_declare_cursor(ast_node *ast) {
   Contract(is_ast_declare_cursor(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(cursor_name, name_ast);
+  cg_verify_user_variable_name(cursor_name);
 
   bool_t is_for_select = false;
   bool_t is_for_call = false;
@@ -7873,6 +7917,13 @@ static void cg_proc_result_set_type_based_getter(function_info *_Nonnull info)
     "_get_",
     info->col,
     info->sym_suffix);
+  cg_register_c_symbol(
+    col_getter_sym.ptr,
+    dup_printf(
+      "result getter for procedure '%s', column '%s%s'",
+      info->name,
+      info->col,
+      info->sym_suffix ? info->sym_suffix : ""));
 
   CHARBUF_OPEN(func_decl);
   cg_col_reader_type(&func_decl, info->ret_type, info->ret_kind, col_getter_sym.ptr);
@@ -7993,6 +8044,13 @@ static void cg_proc_result_set_setter(function_info *_Nonnull info, bool_t is_se
     "_set_",
     info->col,
     info->sym_suffix);
+  cg_register_c_symbol(
+    col_getter_sym.ptr,
+    dup_printf(
+      "result setter for procedure '%s', column '%s%s'",
+      info->name,
+      info->col,
+      info->sym_suffix ? info->sym_suffix : ""));
 
   CHARBUF_OPEN(var_decl);
 
@@ -8238,6 +8296,9 @@ static void cg_proc_result_set(ast_node *ast) {
   CG_CHARBUF_OPEN_SYM(fetch_results_sym, name, "_fetch_results");
   CG_CHARBUF_OPEN_SYM(copy_sym, name, "_copy");
   CG_CHARBUF_OPEN_SYM(perf_index, name, "_perf_index");
+  cg_register_c_symbol(
+    result_count_sym.ptr,
+    dup_printf("result-count helper for procedure '%s'", name));
 
   sem_struct *sptr = ast->sem->sptr;
   uint32_t count = sptr->count;
@@ -8749,8 +8810,14 @@ cql_noexport void cg_c_main(ast_node *head) {
 
   if (global_proc_needed) {
     exit_on_no_global_proc();
+    cg_register_c_symbol(
+      global_proc_name,
+      dup_printf("global procedure '%s'", global_proc_name));
 
-    bprintf(&body_file, "#define _PROC_ %s\n", global_proc_name);
+    CHARBUF_OPEN(global_proc_literal);
+    cg_encode_c_string_literal(global_proc_name, &global_proc_literal);
+    bprintf(&body_file, "#define _PROC_ %s\n", global_proc_literal.ptr);
+    CHARBUF_CLOSE(global_proc_literal);
 
     bindent(&indent, cg_scratch_vars_output, 2);
     bprintf(&body_file, "\ncql_code %s(sqlite3 *_Nonnull _db_) {\n", global_proc_name);
@@ -8819,6 +8886,9 @@ cql_noexport void cg_c_init(void) {
 
   Contract(!emitted_proc_decls);
   emitted_proc_decls = symtab_new();
+
+  Contract(!generated_c_symbols);
+  generated_c_symbols = symtab_new_case_sens();
 
   DDL_STMT_INIT(drop_table_stmt);
   DDL_STMT_INIT(drop_view_stmt);
@@ -9007,6 +9077,7 @@ cql_noexport void cg_c_cleanup() {
   SYMTAB_CLEANUP(string_literals);
   SYMTAB_CLEANUP(text_pieces);
   SYMTAB_CLEANUP(emitted_proc_decls);
+  SYMTAB_CLEANUP(generated_c_symbols);
 
   exports_output = NULL;
   error_target = NULL;

@@ -1502,6 +1502,7 @@ cql_bool cql_rows_equal(
   cql_contract(meta2->refsOffset == refs_offset);
 
   size_t row_size = meta1->rowsize;
+  cql_contract(meta2->rowsize == row_size);
   char *data1 = ((char *)cql_result_set_get_data(rs1)) + ((size_t)row1) * row_size;
   char *data2 = ((char *)cql_result_set_get_data(rs2)) + ((size_t)row2) * row_size;
 
@@ -2604,17 +2605,11 @@ cql_bool cql_facet_upsert(
 
 #define cql_append_value(b, var) cql_bytebuf_append(b, &var, sizeof(var))
 
-#define cql_append_nullable_value(b, var) \
-  if (!var.is_null) { \
-    cql_setbit(bits, nullable_index); \
-    cql_append_value(b, var.value); \
-  }
-
-static void cql_setbit(uint8_t *_Nonnull bytes, uint16_t index) {
+static void cql_setbit(uint8_t *_Nonnull bytes, uint64_t index) {
   bytes[index / 8] |= (1 << (index % 8));
 }
 
-static cql_bool cql_getbit(const uint8_t *_Nonnull bytes, uint16_t index) {
+static cql_bool cql_getbit(const uint8_t *_Nonnull bytes, uint64_t index) {
   return !!(bytes[index / 8] & (1 << (index % 8)));
 }
 
@@ -2786,8 +2781,8 @@ void cql_cursor_to_bytebuf(
   uint8_t *cursor = dyn_cursor->cursor_data;  // we will be using char offsets
 
   uint8_t code = 0;
-  uint16_t nullable_count = 0;
-  uint16_t bool_count = 0;
+  uint32_t nullable_count = 0;
+  uint32_t bool_count = 0;
 
   for (uint16_t i = 0; i < count; i++) {
     uint8_t type = types[i];
@@ -2820,11 +2815,15 @@ void cql_cursor_to_bytebuf(
   code = 0;
   cql_append_value(b, code);
 
-  uint16_t bitvector_bytes_needed = (nullable_count + bool_count + 7) / 8;
-  uint8_t *bits = cql_bytebuf_alloc(b, bitvector_bytes_needed);
-  memset(bits, 0, bitvector_bytes_needed);
-  uint16_t nullable_index = 0;
-  uint16_t bool_index = 0;
+  uint32_t bitvector_bytes_needed = (nullable_count + bool_count + 7) / 8;
+
+  // The value data appended below can grow the byte buffer.  Keep the offset,
+  // not a pointer into the allocation, so every bit update uses the current
+  // buffer after any growth.
+  uint32_t bits_offset = b->used;
+  memset(cql_bytebuf_alloc(b, bitvector_bytes_needed), 0, bitvector_bytes_needed);
+  uint32_t nullable_index = 0;
+  uint32_t bool_index = 0;
 
   for (uint16_t i = 0; i < count; i++) {
     uint16_t offset = offsets[i+1];
@@ -2855,7 +2854,7 @@ void cql_cursor_to_bytebuf(
         case CQL_DATA_TYPE_BOOL: {
           cql_bool bool_data = *(cql_bool *)(cursor + offset);
           if (bool_data) {
-            cql_setbit(bits, nullable_count + bool_index);
+            cql_setbit((uint8_t *)b->ptr + bits_offset, nullable_count + bool_index);
           }
           bool_index++;
           break;
@@ -2882,7 +2881,7 @@ void cql_cursor_to_bytebuf(
         case CQL_DATA_TYPE_INT32: {
           cql_nullable_int32 int32_data = *(cql_nullable_int32 *)(cursor + offset);
           if (!int32_data.is_null) {
-            cql_setbit(bits, nullable_index);
+            cql_setbit((uint8_t *)b->ptr + bits_offset, nullable_index);
             cql_write_varint_32(b, int32_data.value);
           }
           break;
@@ -2890,7 +2889,7 @@ void cql_cursor_to_bytebuf(
         case CQL_DATA_TYPE_INT64: {
           cql_nullable_int64 int64_data = *(cql_nullable_int64 *)(cursor + offset);
           if (!int64_data.is_null) {
-            cql_setbit(bits, nullable_index);
+            cql_setbit((uint8_t *)b->ptr + bits_offset, nullable_index);
             cql_write_varint_64(b, int64_data.value);
           }
           break;
@@ -2900,15 +2899,18 @@ void cql_cursor_to_bytebuf(
           // good enough for SQLite so it's good enough for us. We're punting on
           // their ARM7 mixed endian support, we don't care about ARM7
           cql_nullable_double double_data = *(cql_nullable_double *)(cursor + offset);
-          cql_append_nullable_value(b, double_data);
+          if (!double_data.is_null) {
+            cql_setbit((uint8_t *)b->ptr + bits_offset, nullable_index);
+            cql_append_value(b, double_data.value);
+          }
           break;
         }
         case CQL_DATA_TYPE_BOOL: {
           cql_nullable_bool bool_data = *(cql_nullable_bool *)(cursor + offset);
           if (!bool_data.is_null) {
-            cql_setbit(bits, nullable_index);
+            cql_setbit((uint8_t *)b->ptr + bits_offset, nullable_index);
             if (bool_data.value) {
-              cql_setbit(bits, nullable_count + bool_index);
+              cql_setbit((uint8_t *)b->ptr + bits_offset, nullable_count + bool_index);
             }
           }
           bool_index++;
@@ -2917,7 +2919,7 @@ void cql_cursor_to_bytebuf(
         case CQL_DATA_TYPE_STRING: {
           cql_string_ref str_ref = *(cql_string_ref *)(cursor + offset);
           if (str_ref) {
-            cql_setbit(bits, nullable_index);
+            cql_setbit((uint8_t *)b->ptr + bits_offset, nullable_index);
             cql_alloc_cstr(temp, str_ref);
             cql_bytebuf_append(b, temp, (uint32_t)(strlen(temp) + 1));
             cql_free_cstr(temp, str_ref);
@@ -2927,7 +2929,7 @@ void cql_cursor_to_bytebuf(
         case CQL_DATA_TYPE_BLOB: {
           cql_blob_ref blob_ref = *(cql_blob_ref *)(cursor + offset);
           if (blob_ref) {
-            cql_setbit(bits, nullable_index);
+            cql_setbit((uint8_t *)b->ptr + bits_offset, nullable_index);
             const void *bytes = cql_get_blob_bytes(blob_ref);
             cql_int32 size = cql_get_blob_size(blob_ref);
             cql_write_varint_32(b, size);
@@ -3103,12 +3105,12 @@ cql_code cql_cursor_from_bytes(
   input.data = bytes;
   input.remaining = size;
 
-  uint16_t needed_count = offsets[0];  // the first index is the count of fields
+  uint32_t needed_count = offsets[0];  // the first index is the count of fields
 
-  uint16_t nullable_count = 0;
-  uint16_t bool_count = 0;
-  uint16_t actual_count = 0;
-  uint16_t i = 0;
+  uint64_t nullable_count = 0;
+  uint64_t bool_count = 0;
+  uint32_t actual_count = 0;
+  uint32_t i = 0;
 
   for (;;) {
     char code;
@@ -3172,13 +3174,16 @@ cql_code cql_cursor_from_bytes(
 
   // get the bool bits we need
   const uint8_t *bits;
-  uint16_t bytes_needed = (nullable_count + bool_count + 7) / 8;
+  // The type header occupies at least one byte per field, so even if every
+  // field contributes both a nullable bit and a boolean bit, this quotient
+  // fits in the uint32_t input-buffer size.
+  uint32_t bytes_needed = (uint32_t)((nullable_count + bool_count + 7) / 8);
   if (!cql_input_inline_bytes(&input, &bits, bytes_needed)) {
     goto error;
   }
 
-  uint16_t nullable_index = 0;
-  uint16_t bool_index = 0;
+  uint64_t nullable_index = 0;
+  uint64_t bool_index = 0;
 
   // The types are compatible and we have enough of them, we can start
   // trying to decode.
@@ -3193,7 +3198,7 @@ cql_code cql_cursor_from_bytes(
     bool needed_notnull = !!(type & CQL_DATA_TYPE_NOT_NULL);
 
     if (i >= actual_count) {
-      // we don't have this field
+      // Missing required fields were rejected while validating the header.
       fetch_data = false;
     }
     else {

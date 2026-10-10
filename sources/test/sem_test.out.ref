@@ -4074,13 +4074,13 @@ The statement ending at line XXXX
 
 SELECT 1 IN (1, 2, NULL);
 
-  {select_stmt}: _select_: { _anon: bool notnull }
-  | {select_core_list}: _select_: { _anon: bool notnull }
-  | | {select_core}: _select_: { _anon: bool notnull }
-  |   | {select_expr_list_con}: _select_: { _anon: bool notnull }
-  |     | {select_expr_list}: _select_: { _anon: bool notnull }
-  |     | | {select_expr}: bool notnull
-  |     |   | {in_pred}: bool notnull
+  {select_stmt}: _select_: { _anon: bool }
+  | {select_core_list}: _select_: { _anon: bool }
+  | | {select_core}: _select_: { _anon: bool }
+  |   | {select_expr_list_con}: _select_: { _anon: bool }
+  |     | {select_expr_list}: _select_: { _anon: bool }
+  |     | | {select_expr}: bool
+  |     |   | {in_pred}: bool
   |     |     | {int 1}: integer notnull
   |     |     | {expr_list}: integer notnull
   |     |       | {int 1}: integer notnull
@@ -4126,13 +4126,13 @@ The statement ending at line XXXX
 
 SELECT 'x' IN ('x', 'y', NULL);
 
-  {select_stmt}: _select_: { _anon: bool notnull }
-  | {select_core_list}: _select_: { _anon: bool notnull }
-  | | {select_core}: _select_: { _anon: bool notnull }
-  |   | {select_expr_list_con}: _select_: { _anon: bool notnull }
-  |     | {select_expr_list}: _select_: { _anon: bool notnull }
-  |     | | {select_expr}: bool notnull
-  |     |   | {in_pred}: bool notnull
+  {select_stmt}: _select_: { _anon: bool }
+  | {select_core_list}: _select_: { _anon: bool }
+  | | {select_core}: _select_: { _anon: bool }
+  |   | {select_expr_list_con}: _select_: { _anon: bool }
+  |     | {select_expr_list}: _select_: { _anon: bool }
+  |     | | {select_expr}: bool
+  |     |   | {in_pred}: bool
   |     |     | {strlit 'x'}: text notnull
   |     |     | {expr_list}: text notnull
   |     |       | {strlit 'x'}: text notnull
@@ -4312,13 +4312,13 @@ The statement ending at line XXXX
 
 SELECT 1 NOT IN (1, 2, NULL);
 
-  {select_stmt}: _select_: { _anon: bool notnull }
-  | {select_core_list}: _select_: { _anon: bool notnull }
-  | | {select_core}: _select_: { _anon: bool notnull }
-  |   | {select_expr_list_con}: _select_: { _anon: bool notnull }
-  |     | {select_expr_list}: _select_: { _anon: bool notnull }
-  |     | | {select_expr}: bool notnull
-  |     |   | {not_in}: bool notnull
+  {select_stmt}: _select_: { _anon: bool }
+  | {select_core_list}: _select_: { _anon: bool }
+  | | {select_core}: _select_: { _anon: bool }
+  |   | {select_expr_list_con}: _select_: { _anon: bool }
+  |     | {select_expr_list}: _select_: { _anon: bool }
+  |     | | {select_expr}: bool
+  |     |   | {not_in}: bool
   |     |     | {int 1}: integer notnull
   |     |     | {expr_list}: integer notnull
   |     |       | {int 1}: integer notnull
@@ -4364,13 +4364,13 @@ The statement ending at line XXXX
 
 SELECT 'x' NOT IN ('x', 'y', NULL);
 
-  {select_stmt}: _select_: { _anon: bool notnull }
-  | {select_core_list}: _select_: { _anon: bool notnull }
-  | | {select_core}: _select_: { _anon: bool notnull }
-  |   | {select_expr_list_con}: _select_: { _anon: bool notnull }
-  |     | {select_expr_list}: _select_: { _anon: bool notnull }
-  |     | | {select_expr}: bool notnull
-  |     |   | {not_in}: bool notnull
+  {select_stmt}: _select_: { _anon: bool }
+  | {select_core_list}: _select_: { _anon: bool }
+  | | {select_core}: _select_: { _anon: bool }
+  |   | {select_expr_list_con}: _select_: { _anon: bool }
+  |     | {select_expr_list}: _select_: { _anon: bool }
+  |     | | {select_expr}: bool
+  |     |   | {not_in}: bool
   |     |     | {strlit 'x'}: text notnull
   |     |     | {expr_list}: text notnull
   |     |       | {strlit 'x'}: text notnull
@@ -9148,7 +9148,7 @@ END;
         | {opt_where}: bool
           | {eq}: bool
             | {name arg1}: arg1: integer variable in
-            | {in_pred}: bool notnull
+            | {in_pred}: bool
               | {strlit 'x'}: text notnull
               | {expr_list}: arg2: text variable in
                 | {name arg2}: arg2: text variable in
@@ -9846,6 +9846,64 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0426: OUT or INOUT argument cannot 
       | {name X}: X: integer variable was_set
       | {arg_list}
         | {name X}: X: integer variable was_set
+
+The statement ending at line XXXX
+
+CALL proc_with_output(1, X, x);
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0426: OUT or INOUT argument cannot be used again in same call 'X'
+
+  {call_stmt}: err
+  | {name proc_with_output}: ok
+  | {arg_list}: ok
+    | {int 1}: integer notnull
+    | {arg_list}
+      | {name X}: X: integer variable was_set
+      | {arg_list}
+        | {name x}: X: integer variable was_set
+
+The statement ending at line XXXX
+
+PROC dotted_out_arguments_may_not_alias (C_arg1 INT, INOUT C_arg2 INT, OUT C_arg3 INT)
+BEGIN
+  CALL proc_with_output(1, C.arg2, C.arg2);
+END;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0426: OUT or INOUT argument cannot be used again in same call 'C.arg2'
+
+  {create_proc_stmt}: err
+  | {name dotted_out_arguments_may_not_alias}: err
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: C_arg1: integer variable in
+    | | | {param_detail}: C_arg1: integer variable in
+    | |   | {name C_arg1}: C_arg1: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: C_arg2: integer variable in out was_set
+    |   | | {inout}
+    |   | | {param_detail}: C_arg2: integer variable in out was_set
+    |   |   | {name C_arg2}: C_arg2: integer variable in out was_set
+    |   |   | {type_int}: integer
+    |   | {params}
+    |     | {param}: C_arg3: integer variable out
+    |       | {out}
+    |       | {param_detail}: C_arg3: integer variable out
+    |         | {name C_arg3}: C_arg3: integer variable out
+    |         | {type_int}: integer
+    | {stmt_list}: err
+      | {call_stmt}: err
+        | {name proc_with_output}: ok
+        | {arg_list}: ok
+          | {int 1}: integer notnull
+          | {arg_list}
+            | {dot}: C_arg2: integer variable in out
+            | | {name C}
+            | | {name arg2}
+            | {arg_list}
+              | {dot}: C_arg2: integer variable in out was_set
+                | {name C}
+                | {name arg2}
 
 The statement ending at line XXXX
 
@@ -15943,7 +16001,7 @@ SELECT id
   |         | {opt_where}: bool notnull
   |         | | {in_pred}: bool notnull
   |         |   | {name id}: id: integer notnull
-  |         |   | {select_stmt}: id: integer
+  |         |   | {select_stmt}: id: integer notnull
   |         |     | {select_core_list}: _select_: { id: integer notnull }
   |         |     | | {select_core}: _select_: { id: integer notnull }
   |         |     |   | {select_expr_list_con}: _select_: { id: integer notnull }
@@ -16004,6 +16062,53 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0232: nested select express
   |         |     |       | {table_or_subquery_list}: TABLE { bar: bar }
   |         |     |       | | {table_or_subquery}: TABLE { bar: bar }
   |         |     |       |   | {name bar}: TABLE { bar: bar }
+  |         |     |       | {select_where}
+  |         |     |         | {select_groupby}
+  |         |     |           | {select_having}
+  |         |     | {select_orderby}
+  |         |       | {select_limit}
+  |         |         | {select_offset}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT id
+  FROM foo
+  WHERE id IN (SELECT id
+  FROM missing_in_table);
+
+test/sem_test.sql:XXXX:1: error: in table_or_subquery : CQL0095: table/view not defined 'missing_in_table'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}
+  |     |   | {name id}
+  |     | {select_from_etc}: err
+  |       | {table_or_subquery_list}: TABLE { foo: foo }
+  |       | | {table_or_subquery}: TABLE { foo: foo }
+  |       |   | {name foo}: TABLE { foo: foo }
+  |       | {select_where}
+  |         | {opt_where}: err
+  |         | | {in_pred}: err
+  |         |   | {name id}: id: integer notnull
+  |         |   | {select_stmt}: err
+  |         |     | {select_core_list}: err
+  |         |     | | {select_core}: err
+  |         |     |   | {select_expr_list_con}: err
+  |         |     |     | {select_expr_list}: err
+  |         |     |     | | {select_expr}
+  |         |     |     |   | {name id}
+  |         |     |     | {select_from_etc}: err
+  |         |     |       | {table_or_subquery_list}: err
+  |         |     |       | | {table_or_subquery}: err
+  |         |     |       |   | {name missing_in_table}
   |         |     |       | {select_where}
   |         |     |         | {select_groupby}
   |         |     |           | {select_having}
@@ -16085,7 +16190,7 @@ SELECT id
   |         | {opt_where}: bool notnull
   |         | | {not_in}: bool notnull
   |         |   | {name id}: id: integer notnull
-  |         |   | {select_stmt}: id: integer
+  |         |   | {select_stmt}: id: integer notnull
   |         |     | {select_core_list}: _select_: { id: integer notnull }
   |         |     | | {select_core}: _select_: { id: integer notnull }
   |         |     |   | {select_expr_list_con}: _select_: { id: integer notnull }
@@ -16102,6 +16207,116 @@ SELECT id
   |         |     | {select_orderby}
   |         |       | {select_limit}
   |         |         | {select_offset}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 1 IN (SELECT rate
+  FROM bar);
+
+  {select_stmt}: _select_: { _anon: bool }
+  | {select_core_list}: _select_: { _anon: bool }
+  | | {select_core}: _select_: { _anon: bool }
+  |   | {select_expr_list_con}: _select_: { _anon: bool }
+  |     | {select_expr_list}: _select_: { _anon: bool }
+  |     | | {select_expr}: bool
+  |     |   | {in_pred}: bool
+  |     |     | {int 1}: integer notnull
+  |     |     | {select_stmt}: rate: longint
+  |     |       | {select_core_list}: _select_: { rate: longint }
+  |     |       | | {select_core}: _select_: { rate: longint }
+  |     |       |   | {select_expr_list_con}: _select_: { rate: longint }
+  |     |       |     | {select_expr_list}: _select_: { rate: longint }
+  |     |       |     | | {select_expr}: rate: longint
+  |     |       |     |   | {name rate}: rate: longint
+  |     |       |     | {select_from_etc}: TABLE { bar: bar }
+  |     |       |       | {table_or_subquery_list}: TABLE { bar: bar }
+  |     |       |       | | {table_or_subquery}: TABLE { bar: bar }
+  |     |       |       |   | {name bar}: TABLE { bar: bar }
+  |     |       |       | {select_where}
+  |     |       |         | {select_groupby}
+  |     |       |           | {select_having}
+  |     |       | {select_orderby}
+  |     |         | {select_limit}
+  |     |           | {select_offset}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 1 NOT IN (SELECT rate
+  FROM bar);
+
+  {select_stmt}: _select_: { _anon: bool }
+  | {select_core_list}: _select_: { _anon: bool }
+  | | {select_core}: _select_: { _anon: bool }
+  |   | {select_expr_list_con}: _select_: { _anon: bool }
+  |     | {select_expr_list}: _select_: { _anon: bool }
+  |     | | {select_expr}: bool
+  |     |   | {not_in}: bool
+  |     |     | {int 1}: integer notnull
+  |     |     | {select_stmt}: rate: longint
+  |     |       | {select_core_list}: _select_: { rate: longint }
+  |     |       | | {select_core}: _select_: { rate: longint }
+  |     |       |   | {select_expr_list_con}: _select_: { rate: longint }
+  |     |       |     | {select_expr_list}: _select_: { rate: longint }
+  |     |       |     | | {select_expr}: rate: longint
+  |     |       |     |   | {name rate}: rate: longint
+  |     |       |     | {select_from_etc}: TABLE { bar: bar }
+  |     |       |       | {table_or_subquery_list}: TABLE { bar: bar }
+  |     |       |       | | {table_or_subquery}: TABLE { bar: bar }
+  |     |       |       |   | {name bar}: TABLE { bar: bar }
+  |     |       |       | {select_where}
+  |     |       |         | {select_groupby}
+  |     |       |           | {select_having}
+  |     |       | {select_orderby}
+  |     |         | {select_limit}
+  |     |           | {select_offset}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 1 IN (SELECT NULL);
+
+  {select_stmt}: _select_: { _anon: bool }
+  | {select_core_list}: _select_: { _anon: bool }
+  | | {select_core}: _select_: { _anon: bool }
+  |   | {select_expr_list_con}: _select_: { _anon: bool }
+  |     | {select_expr_list}: _select_: { _anon: bool }
+  |     | | {select_expr}: bool
+  |     |   | {in_pred}: bool
+  |     |     | {int 1}: integer notnull
+  |     |     | {select_stmt}: _anon: null
+  |     |       | {select_core_list}: _select_: { _anon: null }
+  |     |       | | {select_core}: _select_: { _anon: null }
+  |     |       |   | {select_expr_list_con}: _select_: { _anon: null }
+  |     |       |     | {select_expr_list}: _select_: { _anon: null }
+  |     |       |     | | {select_expr}: null
+  |     |       |     |   | {null}: null
+  |     |       |     | {select_from_etc}: ok
+  |     |       |       | {select_where}
+  |     |       |         | {select_groupby}
+  |     |       |           | {select_having}
+  |     |       | {select_orderby}
+  |     |         | {select_limit}
+  |     |           | {select_offset}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
   |         | {select_groupby}
   |           | {select_having}
   | {select_orderby}
@@ -17017,6 +17232,680 @@ test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant fail
   |     |       | {int 1}: integer notnull
   |     |       | {not}: bool notnull
   |     |         | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(2147483647 + 1);
+
+test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {add}: integer notnull
+  |     |       | {int 2147483647}: integer notnull
+  |     |       | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(-2147483647 - 1 - 1);
+
+test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {sub}: integer notnull
+  |     |       | {sub}: integer notnull
+  |     |       | | {uminus}: integer notnull
+  |     |       | | | {int 2147483647}: integer notnull
+  |     |       | | {int 1}: integer notnull
+  |     |       | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(9223372036854775807L * 2L);
+
+test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {mul}: longint notnull
+  |     |       | {longint 9223372036854775807}: longint notnull
+  |     |       | {longint 2}: longint notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(-9223372036854775807L - 1L + -1L);
+
+test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {add}: longint notnull
+  |     |       | {sub}: longint notnull
+  |     |       | | {uminus}: longint notnull
+  |     |       | | | {longint 9223372036854775807}: longint notnull
+  |     |       | | {longint 1}: longint notnull
+  |     |       | {uminus}: longint notnull
+  |     |         | {longint 1}: longint notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(9223372036854775807L - -1L);
+
+test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {sub}: longint notnull
+  |     |       | {longint 9223372036854775807}: longint notnull
+  |     |       | {uminus}: longint notnull
+  |     |         | {longint 1}: longint notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT -9223372036854775808L;
+
+  {select_stmt}: _select_: { _anon: longint notnull }
+  | {select_core_list}: _select_: { _anon: longint notnull }
+  | | {select_core}: _select_: { _anon: longint notnull }
+  |   | {select_expr_list_con}: _select_: { _anon: longint notnull }
+  |     | {select_expr_list}: _select_: { _anon: longint notnull }
+  |     | | {select_expr}: longint notnull
+  |     |   | {uminus}: longint notnull
+  |     |     | {longint 9223372036854775808}: longint notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT -6L;
+
+  {select_stmt}: _select_: { _anon: longint notnull }
+  | {select_core_list}: _select_: { _anon: longint notnull }
+  | | {select_core}: _select_: { _anon: longint notnull }
+  |   | {select_expr_list_con}: _select_: { _anon: longint notnull }
+  |     | {select_expr_list}: _select_: { _anon: longint notnull }
+  |     | | {select_expr}: longint notnull
+  |     |   | {longint -6}: longint notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST((-9223372036854775807L - 1L) / -1L);
+
+test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {div}: longint notnull
+  |     |       | {sub}: longint notnull
+  |     |       | | {uminus}: longint notnull
+  |     |       | | | {longint 9223372036854775807}: longint notnull
+  |     |       | | {longint 1}: longint notnull
+  |     |       | {uminus}: longint notnull
+  |     |         | {longint 1}: longint notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 0L;
+
+  {select_stmt}: _select_: { _anon: longint notnull }
+  | {select_core_list}: _select_: { _anon: longint notnull }
+  | | {select_core}: _select_: { _anon: longint notnull }
+  |   | {select_expr_list_con}: _select_: { _anon: longint notnull }
+  |     | {select_expr_list}: _select_: { _anon: longint notnull }
+  |     | | {select_expr}: longint notnull
+  |     |   | {longint 0}: longint notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(-(-2147483647 - 1));
+
+test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {uminus}: integer notnull
+  |     |       | {sub}: integer notnull
+  |     |         | {uminus}: integer notnull
+  |     |         | | {int 2147483647}: integer notnull
+  |     |         | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(-(-9223372036854775807L - 1L));
+
+test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {uminus}: longint notnull
+  |     |       | {sub}: longint notnull
+  |     |         | {uminus}: longint notnull
+  |     |         | | {longint 9223372036854775807}: longint notnull
+  |     |         | {longint 1}: longint notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(1.0e300 * 1.0e300);
+
+test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {mul}: real notnull
+  |     |       | {dbl 1.0e300}: real notnull
+  |     |       | {dbl 1.0e300}: real notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(1.0e400 + 1.0);
+
+test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {add}: real notnull
+  |     |       | {dbl 1.0e400}: real notnull
+  |     |       | {dbl 1.0}: real notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(-1.0e400);
+
+test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {uminus}: real notnull
+  |     |       | {dbl 1.0e400}: real notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(-1.0e308 + -1.0e308);
+
+test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {add}: real notnull
+  |     |       | {uminus}: real notnull
+  |     |       | | {dbl 1.0e308}: real notnull
+  |     |       | {uminus}: real notnull
+  |     |         | {dbl 1.0e308}: real notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(1.0e308 - -1.0e308);
+
+test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {sub}: real notnull
+  |     |       | {dbl 1.0e308}: real notnull
+  |     |       | {uminus}: real notnull
+  |     |         | {dbl 1.0e308}: real notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(1.0e308 / 1.0e-308);
+
+test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {div}: real notnull
+  |     |       | {dbl 1.0e308}: real notnull
+  |     |       | {dbl 1.0e-308}: real notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST((NOT 0) / (NOT 1));
+
+test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {div}: integer notnull
+  |     |       | {not}: bool notnull
+  |     |       | | {int 0}: integer notnull
+  |     |       | {not}: bool notnull
+  |     |         | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(1 << -1);
+
+test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {lshift}: integer notnull
+  |     |       | {int 1}: integer notnull
+  |     |       | {uminus}: integer notnull
+  |     |         | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT -4L;
+
+  {select_stmt}: _select_: { _anon: longint notnull }
+  | {select_core_list}: _select_: { _anon: longint notnull }
+  | | {select_core}: _select_: { _anon: longint notnull }
+  |   | {select_expr_list_con}: _select_: { _anon: longint notnull }
+  |     | {select_expr_list}: _select_: { _anon: longint notnull }
+  |     | | {select_expr}: longint notnull
+  |     |   | {longint -4}: longint notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(1 << 32);
+
+test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {lshift}: integer notnull
+  |     |       | {int 1}: integer notnull
+  |     |       | {int 32}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(1L >> 64L);
+
+test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {rshift}: longint notnull
+  |     |       | {longint 1}: longint notnull
+  |     |       | {longint 64}: longint notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT -2147483648;
+
+  {select_stmt}: _select_: { _anon: integer notnull }
+  | {select_core_list}: _select_: { _anon: integer notnull }
+  | | {select_core}: _select_: { _anon: integer notnull }
+  |   | {select_expr_list_con}: _select_: { _anon: integer notnull }
+  |     | {select_expr_list}: _select_: { _anon: integer notnull }
+  |     | | {select_expr}: integer notnull
+  |     |   | {int -2147483648}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT -1;
+
+  {select_stmt}: _select_: { _anon: integer notnull }
+  | {select_core_list}: _select_: { _anon: integer notnull }
+  | | {select_core}: _select_: { _anon: integer notnull }
+  |   | {select_expr_list_con}: _select_: { _anon: integer notnull }
+  |     | {select_expr_list}: _select_: { _anon: integer notnull }
+  |     | | {select_expr}: integer notnull
+  |     |   | {int -1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(CAST(2147483648.0 AS INT));
+
+test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {cast_expr}: integer notnull
+  |     |       | {dbl 2147483648.0}: real notnull
+  |     |       | {type_int}: integer
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CONST(CAST(9223372036854775808.0 AS LONG));
+
+test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {const}: err
+  |     |     | {cast_expr}: longint notnull
+  |     |       | {dbl 9223372036854775808.0}: real notnull
+  |     |       | {type_long}: longint
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT -2147483648;
+
+  {select_stmt}: _select_: { _anon: integer notnull }
+  | {select_core_list}: _select_: { _anon: integer notnull }
+  | | {select_core}: _select_: { _anon: integer notnull }
+  |   | {select_expr_list_con}: _select_: { _anon: integer notnull }
+  |     | {select_expr_list}: _select_: { _anon: integer notnull }
+  |     | | {select_expr}: integer notnull
+  |     |   | {int -2147483648}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT -9223372036854775808L;
+
+  {select_stmt}: _select_: { _anon: longint notnull }
+  | {select_core_list}: _select_: { _anon: longint notnull }
+  | | {select_core}: _select_: { _anon: longint notnull }
+  |   | {select_expr_list_con}: _select_: { _anon: longint notnull }
+  |     | {select_expr_list}: _select_: { _anon: longint notnull }
+  |     | | {select_expr}: longint notnull
+  |     |   | {uminus}: longint notnull
+  |     |     | {longint 9223372036854775808}: longint notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT -1;
+
+  {select_stmt}: _select_: { _anon: integer notnull }
+  | {select_core_list}: _select_: { _anon: integer notnull }
+  | | {select_core}: _select_: { _anon: integer notnull }
+  |   | {select_expr_list_con}: _select_: { _anon: integer notnull }
+  |     | {select_expr_list}: _select_: { _anon: integer notnull }
+  |     | | {select_expr}: integer notnull
+  |     |   | {int -1}: integer notnull
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -23729,7 +24618,7 @@ SELECT 3) AS A;
   |     | | {select_expr}: A: bool notnull
   |     |   | {in_pred}: bool notnull
   |     |   | | {int 1}: integer notnull
-  |     |   | | {select_stmt}: _anon: integer
+  |     |   | | {select_stmt}: _anon: integer notnull
   |     |   |   | {select_core_list}: UNION ALL: { _anon: integer notnull }
   |     |   |   | | {select_core}: _select_: { _anon: integer notnull }
   |     |   |   | | | {select_expr_list_con}: _select_: { _anon: integer notnull }
@@ -30057,6 +30946,78 @@ SELECT T1.rowid
 
 The statement ending at line XXXX
 
+SELECT T2.rowid
+  FROM foo AS T1
+    LEFT JOIN bar AS T2;
+
+  {select_stmt}: _select_: { rowid: longint }
+  | {select_core_list}: _select_: { rowid: longint }
+  | | {select_core}: _select_: { rowid: longint }
+  |   | {select_expr_list_con}: _select_: { rowid: longint }
+  |     | {select_expr_list}: _select_: { rowid: longint }
+  |     | | {select_expr}: rowid: longint
+  |     |   | {dot}: rowid: longint
+  |     |     | {name T2}
+  |     |     | {name rowid}
+  |     | {select_from_etc}: JOIN { T1: foo, T2: bar }
+  |       | {join_clause}: JOIN { T1: foo, T2: bar }
+  |       | | {table_or_subquery}: TABLE { T1: foo }
+  |       | | | {name foo}: TABLE { T1: foo }
+  |       | | | {opt_as_alias}
+  |       | |   | {name T1}
+  |       | | {join_target_list}
+  |       |   | {join_target}: JOIN { T1: foo, T2: bar }
+  |       |     | {detail 5} {join_left}
+  |       |     | {table_join}
+  |       |       | {table_or_subquery}: TABLE { T2: bar }
+  |       |         | {name bar}: TABLE { T2: bar }
+  |       |         | {opt_as_alias}
+  |       |           | {name T2}
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT T1.rowid
+  FROM foo AS T1
+    LEFT JOIN bar AS T2;
+
+  {select_stmt}: _select_: { rowid: longint notnull }
+  | {select_core_list}: _select_: { rowid: longint notnull }
+  | | {select_core}: _select_: { rowid: longint notnull }
+  |   | {select_expr_list_con}: _select_: { rowid: longint notnull }
+  |     | {select_expr_list}: _select_: { rowid: longint notnull }
+  |     | | {select_expr}: rowid: longint notnull
+  |     |   | {dot}: rowid: longint notnull
+  |     |     | {name T1}
+  |     |     | {name rowid}
+  |     | {select_from_etc}: JOIN { T1: foo, T2: bar }
+  |       | {join_clause}: JOIN { T1: foo, T2: bar }
+  |       | | {table_or_subquery}: TABLE { T1: foo }
+  |       | | | {name foo}: TABLE { T1: foo }
+  |       | | | {opt_as_alias}
+  |       | |   | {name T1}
+  |       | | {join_target_list}
+  |       |   | {join_target}: JOIN { T1: foo, T2: bar }
+  |       |     | {detail 5} {join_left}
+  |       |     | {table_join}
+  |       |       | {table_or_subquery}: TABLE { T2: bar }
+  |       |         | {name bar}: TABLE { T2: bar }
+  |       |         | {opt_as_alias}
+  |       |           | {name T2}
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
 SELECT T1.rowid
   FROM foo AS T2,
     foo AS T3;
@@ -30116,6 +31077,217 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0066: identifier is ambiguous 'rowi
   |       |     | {name foo}: TABLE { T2: foo }
   |       |     | {opt_as_alias}
   |       |       | {name T2}
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE TABLE rowidless_table_for_resolution(
+  id INT PRIMARY KEY
+) WITHOUT ROWID;
+
+  {create_table_stmt}: rowidless_table_for_resolution: { id: integer notnull primary_key }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {detail 4} {without_rowid}
+  | | {name rowidless_table_for_resolution}
+  | {col_key_list}
+    | {col_def}: id: integer notnull primary_key
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+        | | {name id}
+        | | {type_int}: integer
+        | {col_attrs_pk}: ok
+          | {autoinc_and_conflict_clause}
+
+The statement ending at line XXXX
+
+SELECT R.rowid
+  FROM rowidless_table_for_resolution AS R;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'R.rowid'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {dot}: err
+  |     |     | {name R}
+  |     |     | {name rowid}
+  |     | {select_from_etc}: TABLE { R: rowidless_table_for_resolution }
+  |       | {table_or_subquery_list}: TABLE { R: rowidless_table_for_resolution }
+  |       | | {table_or_subquery}: TABLE { R: rowidless_table_for_resolution }
+  |       |   | {name rowidless_table_for_resolution}: TABLE { R: rowidless_table_for_resolution }
+  |       |   | {opt_as_alias}
+  |       |     | {name R}
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE VIEW rowid_view_for_resolution AS
+  SELECT id
+    FROM foo;
+
+  {create_view_stmt}: rowid_view_for_resolution: { id: integer notnull }
+  | {detail 0} {no_flags}
+  | {view_and_attrs}
+    | {view_details_select}
+      | {view_details}
+      | | {name rowid_view_for_resolution}
+      | {select_stmt}: rowid_view_for_resolution: { id: integer notnull }
+        | {select_core_list}: rowid_view_for_resolution: { id: integer notnull }
+        | | {select_core}: rowid_view_for_resolution: { id: integer notnull }
+        |   | {select_expr_list_con}: rowid_view_for_resolution: { id: integer notnull }
+        |     | {select_expr_list}: rowid_view_for_resolution: { id: integer notnull }
+        |     | | {select_expr}: id: integer notnull
+        |     |   | {name id}: id: integer notnull
+        |     | {select_from_etc}: TABLE { foo: foo }
+        |       | {table_or_subquery_list}: TABLE { foo: foo }
+        |       | | {table_or_subquery}: TABLE { foo: foo }
+        |       |   | {name foo}: TABLE { foo: foo }
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT V.rowid
+  FROM rowid_view_for_resolution AS V;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'V.rowid'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {dot}: err
+  |     |     | {name V}
+  |     |     | {name rowid}
+  |     | {select_from_etc}: TABLE { V: rowid_view_for_resolution }
+  |       | {table_or_subquery_list}: TABLE { V: rowid_view_for_resolution }
+  |       | | {table_or_subquery}: TABLE { V: rowid_view_for_resolution }
+  |       |   | {name rowid_view_for_resolution}: TABLE { V: rowid_view_for_resolution }
+  |       |   | {opt_as_alias}
+  |       |     | {name V}
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+WITH
+  C (id) AS (
+    SELECT id
+      FROM foo
+  )
+SELECT C.rowid
+  FROM C;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'C.rowid'
+
+  {with_select_stmt}: err
+  | {with}
+  | | {cte_tables}: ok
+  |   | {cte_table}: C: { id: integer notnull }
+  |     | {cte_decl}: C: { id: integer notnull }
+  |     | | {name C}
+  |     | | {name_list}
+  |     |   | {name id}
+  |     | {select_stmt}: _select_: { id: integer notnull }
+  |       | {select_core_list}: _select_: { id: integer notnull }
+  |       | | {select_core}: _select_: { id: integer notnull }
+  |       |   | {select_expr_list_con}: _select_: { id: integer notnull }
+  |       |     | {select_expr_list}: _select_: { id: integer notnull }
+  |       |     | | {select_expr}: id: integer notnull
+  |       |     |   | {name id}: id: integer notnull
+  |       |     | {select_from_etc}: TABLE { foo: foo }
+  |       |       | {table_or_subquery_list}: TABLE { foo: foo }
+  |       |       | | {table_or_subquery}: TABLE { foo: foo }
+  |       |       |   | {name foo}: TABLE { foo: foo }
+  |       |       | {select_where}
+  |       |         | {select_groupby}
+  |       |           | {select_having}
+  |       | {select_orderby}
+  |         | {select_limit}
+  |           | {select_offset}
+  | {select_stmt}: err
+    | {select_core_list}: err
+    | | {select_core}: err
+    |   | {select_expr_list_con}: err
+    |     | {select_expr_list}: err
+    |     | | {select_expr}: err
+    |     |   | {dot}: err
+    |     |     | {name C}
+    |     |     | {name rowid}
+    |     | {select_from_etc}: TABLE { C: C }
+    |       | {table_or_subquery_list}: TABLE { C: C }
+    |       | | {table_or_subquery}: TABLE { C: C }
+    |       |   | {name C}: TABLE { C: C }
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT S.rowid
+  FROM (SELECT id
+        FROM foo) AS S;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'S.rowid'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {dot}: err
+  |     |     | {name S}
+  |     |     | {name rowid}
+  |     | {select_from_etc}: TABLE { S: _select_ }
+  |       | {table_or_subquery_list}: TABLE { S: _select_ }
+  |       | | {table_or_subquery}: TABLE { S: _select_ }
+  |       |   | {select_stmt}: _select_: { id: integer notnull }
+  |       |   | | {select_core_list}: _select_: { id: integer notnull }
+  |       |   | | | {select_core}: _select_: { id: integer notnull }
+  |       |   | |   | {select_expr_list_con}: _select_: { id: integer notnull }
+  |       |   | |     | {select_expr_list}: _select_: { id: integer notnull }
+  |       |   | |     | | {select_expr}: id: integer notnull
+  |       |   | |     |   | {name id}: id: integer notnull
+  |       |   | |     | {select_from_etc}: TABLE { foo: foo }
+  |       |   | |       | {table_or_subquery_list}: TABLE { foo: foo }
+  |       |   | |       | | {table_or_subquery}: TABLE { foo: foo }
+  |       |   | |       |   | {name foo}: TABLE { foo: foo }
+  |       |   | |       | {select_where}
+  |       |   | |         | {select_groupby}
+  |       |   | |           | {select_having}
+  |       |   | | {select_orderby}
+  |       |   |   | {select_limit}
+  |       |   |     | {select_offset}
+  |       |   | {opt_as_alias}
+  |       |     | {name S}
   |       | {select_where}
   |         | {select_groupby}
   |           | {select_having}
@@ -34847,7 +36019,7 @@ SET _sens := 1 IN (1, _sens);
 
   {assign}: _sens: integer variable sensitive was_set
   | {name _sens}: _sens: integer variable sensitive was_set
-  | {in_pred}: bool notnull sensitive
+  | {in_pred}: bool sensitive
     | {int 1}: integer notnull
     | {expr_list}: integer notnull
       | {int 1}: integer notnull
@@ -34861,13 +36033,13 @@ SET _sens := ( SELECT 1 IN (SELECT info
 
   {assign}: _sens: integer variable sensitive was_set
   | {name _sens}: _sens: integer variable sensitive was_set
-  | {select_stmt}: _anon: bool notnull sensitive
-    | {select_core_list}: _select_: { _anon: bool notnull sensitive }
-    | | {select_core}: _select_: { _anon: bool notnull sensitive }
-    |   | {select_expr_list_con}: _select_: { _anon: bool notnull sensitive }
-    |     | {select_expr_list}: _select_: { _anon: bool notnull sensitive }
-    |     | | {select_expr}: bool notnull sensitive
-    |     |   | {in_pred}: bool notnull sensitive
+  | {select_stmt}: _anon: bool sensitive
+    | {select_core_list}: _select_: { _anon: bool sensitive }
+    | | {select_core}: _select_: { _anon: bool sensitive }
+    |   | {select_expr_list_con}: _select_: { _anon: bool sensitive }
+    |     | {select_expr_list}: _select_: { _anon: bool sensitive }
+    |     | | {select_expr}: bool sensitive
+    |     |   | {in_pred}: bool sensitive
     |     |     | {int 1}: integer notnull
     |     |     | {select_stmt}: info: integer sensitive
     |     |       | {select_core_list}: _select_: { info: integer sensitive }
@@ -36623,7 +37795,7 @@ END;
           | {opt_where}: bool notnull
             | {in_pred}: bool notnull
               | {name id}: id: integer notnull
-              | {select_stmt}: id: integer
+              | {select_stmt}: id: integer notnull
                 | {select_core_list}: _select_: { id: integer notnull }
                 | | {select_core}: _select_: { id: integer notnull }
                 |   | {select_expr_list_con}: _select_: { id: integer notnull }
@@ -36861,7 +38033,7 @@ END;
                 | {opt_where}: bool notnull
                 | | {in_pred}: bool notnull
                 |   | {name id}: id: integer notnull
-                |   | {select_stmt}: id: integer
+                |   | {select_stmt}: id: integer notnull
                 |     | {select_core_list}: _select_: { id: integer notnull }
                 |     | | {select_core}: _select_: { id: integer notnull }
                 |     |   | {select_expr_list_con}: _select_: { id: integer notnull }
@@ -41862,6 +43034,225 @@ test/sem_test.sql:XXXX:1: error: in col_def : CQL0060: referenced table can be i
           | {col_def_name_type}
             | {name name}
             | {type_text}
+
+The statement ending at line XXXX
+
+CREATE TABLE recreate_dedup_root(
+  id INT PRIMARY KEY
+) @RECREATE(recreate_dedup_root_group);
+
+  {create_table_stmt}: recreate_dedup_root: { id: integer notnull primary_key } @recreate(recreate_dedup_root_group)
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {detail 0} {no_flags}
+  | | | {recreate_attr}
+  | |   | {name recreate_dedup_root_group}
+  | | {name recreate_dedup_root}
+  | {col_key_list}
+    | {col_def}: id: integer notnull primary_key
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+        | | {name id}
+        | | {type_int}: integer
+        | {col_attrs_pk}: ok
+          | {autoinc_and_conflict_clause}
+
+The statement ending at line XXXX
+
+CREATE TABLE recreate_dedup_left(
+  id INT PRIMARY KEY REFERENCES recreate_dedup_root (id) ON UPDATE CASCADE ON DELETE CASCADE,
+  root_id INT REFERENCES recreate_dedup_root (id) ON UPDATE CASCADE ON DELETE CASCADE
+) @RECREATE(recreate_dedup_left_group);
+
+  {create_table_stmt}: recreate_dedup_left: { id: integer notnull primary_key foreign_key, root_id: integer foreign_key } @recreate(recreate_dedup_left_group)
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {detail 0} {no_flags}
+  | | | {recreate_attr}
+  | |   | {name recreate_dedup_left_group}
+  | | {name recreate_dedup_left}
+  | {col_key_list}
+    | {col_def}: id: integer notnull primary_key foreign_key
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |   | | {name id}
+    |   | | {type_int}: integer
+    |   | {col_attrs_pk}: ok
+    |     | {autoinc_and_conflict_clause}
+    |     | {col_attrs_fk}: ok
+    |       | {fk_target_options}
+    |         | {fk_target}
+    |         | | {name recreate_dedup_root}
+    |         | | {name_list}
+    |         |   | {name id}: id: integer notnull
+    |         | {detail 51} on_update: {cascade}, on_delete: {cascade}, deferrability: {no_flags}
+    | {col_key_list}
+      | {col_def}: root_id: integer foreign_key
+        | {col_def_type_attrs}: ok
+          | {col_def_name_type}
+          | | {name root_id}
+          | | {type_int}: integer
+          | {col_attrs_fk}: ok
+            | {fk_target_options}
+              | {fk_target}
+              | | {name recreate_dedup_root}
+              | | {name_list}
+              |   | {name id}: id: integer notnull
+              | {detail 51} on_update: {cascade}, on_delete: {cascade}, deferrability: {no_flags}
+
+The statement ending at line XXXX
+
+CREATE TABLE recreate_dedup_right(
+  id INT PRIMARY KEY REFERENCES recreate_dedup_root (id) ON UPDATE CASCADE ON DELETE CASCADE
+) @RECREATE(recreate_dedup_right_group);
+
+  {create_table_stmt}: recreate_dedup_right: { id: integer notnull primary_key foreign_key } @recreate(recreate_dedup_right_group)
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {detail 0} {no_flags}
+  | | | {recreate_attr}
+  | |   | {name recreate_dedup_right_group}
+  | | {name recreate_dedup_right}
+  | {col_key_list}
+    | {col_def}: id: integer notnull primary_key foreign_key
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+        | | {name id}
+        | | {type_int}: integer
+        | {col_attrs_pk}: ok
+          | {autoinc_and_conflict_clause}
+          | {col_attrs_fk}: ok
+            | {fk_target_options}
+              | {fk_target}
+              | | {name recreate_dedup_root}
+              | | {name_list}
+              |   | {name id}: id: integer notnull
+              | {detail 51} on_update: {cascade}, on_delete: {cascade}, deferrability: {no_flags}
+
+The statement ending at line XXXX
+
+CREATE TABLE recreate_dedup_leaf(
+  id INT PRIMARY KEY REFERENCES recreate_dedup_left (id) ON UPDATE CASCADE ON DELETE CASCADE,
+  right_id INT REFERENCES recreate_dedup_right (id) ON UPDATE CASCADE ON DELETE CASCADE
+) @RECREATE(recreate_dedup_leaf_group);
+
+  {create_table_stmt}: recreate_dedup_leaf: { id: integer notnull primary_key foreign_key, right_id: integer foreign_key } @recreate(recreate_dedup_leaf_group)
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {detail 0} {no_flags}
+  | | | {recreate_attr}
+  | |   | {name recreate_dedup_leaf_group}
+  | | {name recreate_dedup_leaf}
+  | {col_key_list}
+    | {col_def}: id: integer notnull primary_key foreign_key
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |   | | {name id}
+    |   | | {type_int}: integer
+    |   | {col_attrs_pk}: ok
+    |     | {autoinc_and_conflict_clause}
+    |     | {col_attrs_fk}: ok
+    |       | {fk_target_options}
+    |         | {fk_target}
+    |         | | {name recreate_dedup_left}
+    |         | | {name_list}
+    |         |   | {name id}: id: integer notnull
+    |         | {detail 51} on_update: {cascade}, on_delete: {cascade}, deferrability: {no_flags}
+    | {col_key_list}
+      | {col_def}: right_id: integer foreign_key
+        | {col_def_type_attrs}: ok
+          | {col_def_name_type}
+          | | {name right_id}
+          | | {type_int}: integer
+          | {col_attrs_fk}: ok
+            | {fk_target_options}
+              | {fk_target}
+              | | {name recreate_dedup_right}
+              | | {name_list}
+              |   | {name id}: id: integer notnull
+              | {detail 51} on_update: {cascade}, on_delete: {cascade}, deferrability: {no_flags}
+
+The statement ending at line XXXX
+
+CREATE TABLE recreate_dedup_unrelated(
+  id INT PRIMARY KEY
+) @RECREATE(recreate_dedup_unrelated_group);
+
+  {create_table_stmt}: recreate_dedup_unrelated: { id: integer notnull primary_key } @recreate(recreate_dedup_unrelated_group)
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {detail 0} {no_flags}
+  | | | {recreate_attr}
+  | |   | {name recreate_dedup_unrelated_group}
+  | | {name recreate_dedup_unrelated}
+  | {col_key_list}
+    | {col_def}: id: integer notnull primary_key
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+        | | {name id}
+        | | {type_int}: integer
+        | {col_attrs_pk}: ok
+          | {autoinc_and_conflict_clause}
+
+The statement ending at line XXXX
+
+CREATE TABLE recreate_dedup_root_extension(
+  id INT PRIMARY KEY REFERENCES recreate_dedup_unrelated (id) ON UPDATE CASCADE ON DELETE CASCADE
+) @RECREATE(recreate_dedup_root_group);
+
+  {create_table_stmt}: recreate_dedup_root_extension: { id: integer notnull primary_key foreign_key } @recreate(recreate_dedup_root_group)
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {detail 0} {no_flags}
+  | | | {recreate_attr}
+  | |   | {name recreate_dedup_root_group}
+  | | {name recreate_dedup_root_extension}
+  | {col_key_list}
+    | {col_def}: id: integer notnull primary_key foreign_key
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+        | | {name id}
+        | | {type_int}: integer
+        | {col_attrs_pk}: ok
+          | {autoinc_and_conflict_clause}
+          | {col_attrs_fk}: ok
+            | {fk_target_options}
+              | {fk_target}
+              | | {name recreate_dedup_unrelated}
+              | | {name_list}
+              |   | {name id}: id: integer notnull
+              | {detail 51} on_update: {cascade}, on_delete: {cascade}, deferrability: {no_flags}
+
+The statement ending at line XXXX
+
+CREATE TABLE recreate_dedup_cycle(
+  id INT PRIMARY KEY REFERENCES recreate_dedup_leaf (id) ON UPDATE CASCADE ON DELETE CASCADE
+) @RECREATE(recreate_dedup_root_group);
+
+test/sem_test.sql:XXXX:1: error: in col_def : CQL0060: referenced table can be independently recreated so it cannot be used in a foreign key 'recreate_dedup_leaf'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {detail 0} {no_flags}
+  | | | {recreate_attr}
+  | |   | {name recreate_dedup_root_group}
+  | | {name recreate_dedup_cycle}
+  | {col_key_list}
+    | {col_def}: err
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+        | | {name id}
+        | | {type_int}: integer
+        | {col_attrs_pk}: err
+          | {autoinc_and_conflict_clause}
+          | {col_attrs_fk}: err
+            | {fk_target_options}
+              | {fk_target}
+              | | {name recreate_dedup_leaf}
+              | | {name_list}
+              |   | {name id}
+              | {detail 51} on_update: {cascade}, on_delete: {cascade}, deferrability: {no_flags}
 
 The statement ending at line XXXX
 
@@ -55628,6 +57019,82 @@ ENUM integer_things INT (
 
 The statement ending at line XXXX
 
+ENUM integer_enum_increment_overflow INT (
+  maximum = 2147483647,
+  overflow
+);
+
+test/sem_test.sql:XXXX:1: error: in enum_value : CQL0355: evaluation failed 'overflow'
+
+  {declare_enum_stmt}: err
+  | {typed_name}: integer_enum_increment_overflow: integer<integer_enum_increment_overflow> notnull
+  | | {name integer_enum_increment_overflow}
+  | | {type_int}: integer_enum_increment_overflow: integer<integer_enum_increment_overflow> notnull
+  | {enum_values}
+    | {enum_value}
+    | | {name maximum}: integer = 2147483647 notnull
+    | | {int 2147483647}: integer notnull
+    | {enum_values}
+      | {enum_value}
+        | {name overflow}
+
+The statement ending at line XXXX
+
+ENUM long_enum_increment_overflow LONG (
+  maximum = 9223372036854775807L,
+  overflow
+);
+
+test/sem_test.sql:XXXX:1: error: in enum_value : CQL0355: evaluation failed 'overflow'
+
+  {declare_enum_stmt}: err
+  | {typed_name}: long_enum_increment_overflow: longint<long_enum_increment_overflow> notnull
+  | | {name long_enum_increment_overflow}
+  | | {type_long}: long_enum_increment_overflow: longint<long_enum_increment_overflow> notnull
+  | {enum_values}
+    | {enum_value}
+    | | {name maximum}: longint = 9223372036854775807 notnull
+    | | {longint 9223372036854775807}: longint notnull
+    | {enum_values}
+      | {enum_value}
+        | {name overflow}
+
+The statement ending at line XXXX
+
+ENUM integer_enum_null_value INT (
+  null_value = NULL
+);
+
+test/sem_test.sql:XXXX:1: error: in enum_value : CQL0355: evaluation failed 'null_value'
+
+  {declare_enum_stmt}: err
+  | {typed_name}: integer_enum_null_value: integer<integer_enum_null_value> notnull
+  | | {name integer_enum_null_value}
+  | | {type_int}: integer_enum_null_value: integer<integer_enum_null_value> notnull
+  | {enum_values}
+    | {enum_value}
+      | {name null_value}
+      | {null}: null
+
+The statement ending at line XXXX
+
+ENUM integer_enum_cast_overflow INT (
+  too_large = 1.0e300
+);
+
+test/sem_test.sql:XXXX:1: error: in enum_value : CQL0355: evaluation failed 'too_large'
+
+  {declare_enum_stmt}: err
+  | {typed_name}: integer_enum_cast_overflow: integer<integer_enum_cast_overflow> notnull
+  | | {name integer_enum_cast_overflow}
+  | | {type_int}: integer_enum_cast_overflow: integer<integer_enum_cast_overflow> notnull
+  | {enum_values}
+    | {enum_value}
+      | {name too_large}
+      | {dbl 1.0e300}: real notnull
+
+The statement ending at line XXXX
+
 DECLARE PROC test_shape () (x INT<integer_things>!);
 
   {declare_proc_stmt}: test_shape: { x: integer<integer_things> notnull } dml_proc
@@ -62366,6 +63833,57 @@ ENUM three_things INT (
 
 The statement ending at line XXXX
 
+ENUM hidden_things_only INT (
+  _sentinel = 1
+);
+
+  {declare_enum_stmt}: hidden_things_only: integer<hidden_things_only> notnull
+  | {typed_name}: hidden_things_only: integer<hidden_things_only> notnull
+  | | {name hidden_things_only}
+  | | {type_int}: hidden_things_only: integer<hidden_things_only> notnull
+  | {enum_values}
+    | {enum_value}
+      | {name _sentinel}: integer = 1 notnull
+      | {int 1}: integer notnull
+
+The statement ending at line XXXX
+
+PROC switch_with_hidden_enum_values_only (e INT<hidden_things_only>!)
+BEGIN
+  SWITCH e ALL VALUES
+    WHEN 1 THEN
+      LET sink := 1;
+  END;
+END;
+
+test/sem_test.sql:XXXX:1: error: in num : CQL0388: a value exists in the switch that is not present in the enum '1'
+
+  {create_proc_stmt}: err
+  | {name switch_with_hidden_enum_values_only}: err
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: e: integer<hidden_things_only> notnull variable in
+    |   | {param_detail}: e: integer<hidden_things_only> notnull variable in
+    |     | {name e}: e: integer<hidden_things_only> notnull variable in
+    |     | {notnull}: integer<hidden_things_only> notnull
+    |       | {type_int}: integer<hidden_things_only>
+    |         | {name hidden_things_only}
+    | {stmt_list}: err
+      | {switch_stmt}: err
+        | {detail 1} {switch_all_values}
+        | {switch_body}
+          | {name e}: err
+          | {switch_case}: err
+            | {connector}
+              | {expr_list}: ok
+              | | {int 1}: integer notnull
+              | {stmt_list}: ok
+                | {let_stmt}: sink: integer notnull variable
+                  | {name sink}: sink: integer notnull variable
+                  | {int 1}: integer notnull
+
+The statement ending at line XXXX
+
 SWITCH 0 ALL VALUES
   WHEN 0, 1, 2 THEN
     SET x := 1;
@@ -68484,6 +70002,112 @@ DECLARE PROC requires_int_notnull (a INT!);
           | {name a}: a: integer notnull variable in
           | {notnull}: integer notnull
             | {type_int}: integer
+
+The statement ending at line XXXX
+
+PROC jumping_branch_does_not_contribute_inherited_improvements (a INT, b BOOL!)
+BEGIN
+  IF a IS NULL THEN
+    SET b := TRUE;
+  ELSE IF b THEN
+    RETURN;
+  ELSE
+    SET b := FALSE;
+  END;
+  CALL requires_int_notnull(a);
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0013: cannot assign/copy possibly null expression to not null target 'a'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'requires_int_notnull' argument #1 intended for parameter 'a' has the problem
+
+  {create_proc_stmt}: err
+  | {name jumping_branch_does_not_contribute_inherited_improvements}: err
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a: integer variable in
+    | | | {param_detail}: a: integer variable in
+    | |   | {name a}: a: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: b: bool notnull variable in was_set
+    |     | {param_detail}: b: bool notnull variable in was_set
+    |       | {name b}: b: bool notnull variable in was_set
+    |       | {notnull}: bool notnull
+    |         | {type_bool}: bool
+    | {stmt_list}: err
+      | {if_stmt}: bool notnull
+      | | {cond_action}: bool notnull
+      | | | {is}: bool notnull
+      | | | | {name a}: a: integer variable in
+      | | | | {null}: null
+      | | | {stmt_list}: ok
+      | |   | {assign}: b: bool notnull variable in was_set
+      | |     | {name b}: b: bool notnull variable in was_set
+      | |     | {bool 1}: bool notnull
+      | | {if_alt}: ok
+      |   | {elseif}: b: bool notnull variable in was_set
+      |   | | {cond_action}: b: bool notnull variable in was_set
+      |   |   | {name b}: b: bool notnull variable in was_set
+      |   |   | {stmt_list}: ok
+      |   |     | {return_stmt}: ok
+      |   | {else}: ok
+      |     | {stmt_list}: ok
+      |       | {assign}: b: bool notnull variable in was_set
+      |         | {name b}: b: bool notnull variable in was_set
+      |         | {bool 0}: bool notnull
+      | {call_stmt}: err
+        | {name requires_int_notnull}: ok
+        | {arg_list}: ok
+          | {name a}: a: integer variable in
+
+The statement ending at line XXXX
+
+PROC empty_branches_inherit_preceding_false_improvements (a INT, b BOOL!)
+BEGIN
+  IF a IS NULL THEN
+    SET a := 1;
+  ELSE IF b THEN
+  ELSE
+  END;
+  CALL requires_int_notnull(a);
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0013: cannot assign/copy possibly null expression to not null target 'a'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'requires_int_notnull' argument #1 intended for parameter 'a' has the problem
+
+  {create_proc_stmt}: err
+  | {name empty_branches_inherit_preceding_false_improvements}: err
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a: integer variable in was_set
+    | | | {param_detail}: a: integer variable in was_set
+    | |   | {name a}: a: integer variable in was_set
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: b: bool notnull variable in
+    |     | {param_detail}: b: bool notnull variable in
+    |       | {name b}: b: bool notnull variable in
+    |       | {notnull}: bool notnull
+    |         | {type_bool}: bool
+    | {stmt_list}: err
+      | {if_stmt}: bool notnull
+      | | {cond_action}: bool notnull
+      | | | {is}: bool notnull
+      | | | | {name a}: a: integer variable in
+      | | | | {null}: null
+      | | | {stmt_list}: ok
+      | |   | {assign}: a: integer variable in was_set
+      | |     | {name a}: a: integer variable in was_set
+      | |     | {int 1}: integer notnull
+      | | {if_alt}: ok
+      |   | {elseif}: b: bool notnull variable in
+      |   | | {cond_action}: b: bool notnull variable in
+      |   |   | {name b}: b: bool notnull variable in
+      |   | {else}: ok
+      | {call_stmt}: err
+        | {name requires_int_notnull}: ok
+        | {arg_list}: ok
+          | {name a}: a: integer variable in was_set
 
 The statement ending at line XXXX
 
@@ -81601,6 +83225,258 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0488: the indicated table is not co
 
 The statement ending at line XXXX
 
+PROC blob_update_mixed_partitions ()
+BEGIN
+  DECLARE b BLOB;
+  LET z := ( SELECT cql_blob_update(b, 1, basic_table.id, 'x', basic_table.name) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0488: key and value columns may not be mixed in cql_blob_update 'name'
+
+  {create_proc_stmt}: err
+  | {name blob_update_mixed_partitions}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_vars_type}: blob
+      | | {name_list}: b: blob variable
+      | | | {name b}: b: blob variable
+      | | {type_blob}: blob
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_update}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name b}: b: blob variable
+          |     |         | {arg_list}
+          |     |           | {int 1}: integer notnull
+          |     |           | {arg_list}
+          |     |             | {dot}: integer notnull primary_key
+          |     |             | | {name basic_table}
+          |     |             | | {name id}
+          |     |             | {arg_list}
+          |     |               | {strlit 'x'}: text notnull
+          |     |               | {arg_list}
+          |     |                 | {dot}
+          |     |                   | {name basic_table}
+          |     |                   | {name name}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+PROC blob_update_duplicate_column ()
+BEGIN
+  DECLARE b BLOB;
+  LET z := ( SELECT cql_blob_update(b, 1, basic_table.id, 2, basic_table.id) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0206: duplicate name in list 'id'
+
+  {create_proc_stmt}: err
+  | {name blob_update_duplicate_column}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_vars_type}: blob
+      | | {name_list}: b: blob variable
+      | | | {name b}: b: blob variable
+      | | {type_blob}: blob
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_update}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name b}: b: blob variable
+          |     |         | {arg_list}
+          |     |           | {int 1}: integer notnull
+          |     |           | {arg_list}
+          |     |             | {dot}: integer notnull primary_key
+          |     |             | | {name basic_table}
+          |     |             | | {name id}
+          |     |             | {arg_list}
+          |     |               | {int 2}: integer notnull
+          |     |               | {arg_list}
+          |     |                 | {dot}
+          |     |                   | {name basic_table}
+          |     |                   | {name id}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+PROC blob_update_nullable_notnull_column ()
+BEGIN
+  DECLARE b BLOB;
+  LET z := ( SELECT cql_blob_update(b, nullable(1), basic_table.id) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0013: cannot assign/copy possibly null expression to not null target 'cql_blob_update value'
+
+  {create_proc_stmt}: err
+  | {name blob_update_nullable_notnull_column}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_vars_type}: blob
+      | | {name_list}: b: blob variable
+      | | | {name b}: b: blob variable
+      | | {type_blob}: blob
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_update}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name b}: b: blob variable
+          |     |         | {arg_list}
+          |     |           | {call}: integer
+          |     |           | | {name nullable}: integer
+          |     |           | | {call_arg_list}
+          |     |           |   | {call_filter_clause}
+          |     |           |   | {arg_list}: ok
+          |     |           |     | {int 1}: integer notnull
+          |     |           | {arg_list}
+          |     |             | {dot}
+          |     |               | {name basic_table}
+          |     |               | {name id}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+PROC blob_update_sensitive_nonsensitive_column ()
+BEGIN
+  DECLARE b BLOB;
+  LET z := ( SELECT cql_blob_update(b, sensitive(1), basic_table.id) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 'cql_blob_update value'
+
+  {create_proc_stmt}: err
+  | {name blob_update_sensitive_nonsensitive_column}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_vars_type}: blob
+      | | {name_list}: b: blob variable
+      | | | {name b}: b: blob variable
+      | | {type_blob}: blob
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_update}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name b}: b: blob variable
+          |     |         | {arg_list}
+          |     |           | {call}: integer notnull sensitive
+          |     |           | | {name sensitive}: integer notnull sensitive
+          |     |           | | {call_arg_list}
+          |     |           |   | {call_filter_clause}
+          |     |           |   | {arg_list}: ok
+          |     |           |     | {int 1}: integer notnull
+          |     |           | {arg_list}
+          |     |             | {dot}
+          |     |               | {name basic_table}
+          |     |               | {name id}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+PROC blob_update_incompatible_kind ()
+BEGIN
+  DECLARE b BLOB;
+  LET z := ( SELECT cql_blob_update(b, kind_string, basic_table.name) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0070: expressions of different kinds can't be mixed: 'cool_text' vs. 'surname'
+
+  {create_proc_stmt}: err
+  | {name blob_update_incompatible_kind}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_vars_type}: blob
+      | | {name_list}: b: blob variable
+      | | | {name b}: b: blob variable
+      | | {type_blob}: blob
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_update}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name b}: b: blob variable
+          |     |         | {arg_list}
+          |     |           | {name kind_string}: err
+          |     |           | {arg_list}
+          |     |             | {dot}
+          |     |               | {name basic_table}
+          |     |               | {name name}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
 PROC blob_update_arg_one_error ()
 BEGIN
   DECLARE not_a_blob INT;
@@ -81962,7 +83838,7 @@ BEGIN
   LET z := ( SELECT cql_blob_update(b, "x", basic_table.id) );
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'TEXT' not compatible with found 'INT' context 'cql_blob_update value'
+test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'INT' not compatible with found 'TEXT' context 'cql_blob_update value'
 
   {create_proc_stmt}: err
   | {name blob_update_column_wrong_arg_type}: err
@@ -82341,7 +84217,7 @@ DO NOTHING;
     |       |     |             | | {name V}
     |       |     |             | | {name name}
     |       |     |             | {arg_list}
-    |       |     |               | {dot}: text
+    |       |     |               | {dot}: text<cool_text>
     |       |     |                 | {name basic_table}
     |       |     |                 | {name name}
     |       |     | {select_from_etc}: TABLE { V: _vals }
@@ -82475,7 +84351,7 @@ DO UPDATE
     |       |     |             | | {name V}
     |       |     |             | | {name name}
     |       |     |             | {arg_list}
-    |       |     |               | {dot}: text
+    |       |     |               | {dot}: text<cool_text>
     |       |     |                 | {name basic_table}
     |       |     |                 | {name name}
     |       |     | {select_from_etc}: TABLE { V: _vals }
@@ -82714,7 +84590,7 @@ DO UPDATE
     |       |     |             | | {name V}
     |       |     |             | | {name name}
     |       |     |             | {arg_list}
-    |       |     |               | {dot}: text
+    |       |     |               | {dot}: text<cool_text>
     |       |     |                 | {name basic_table}
     |       |     |                 | {name name}
     |       |     | {select_from_etc}: TABLE { V: _vals }
@@ -82812,6 +84688,366 @@ END;
           |     |             | {dot}: integer notnull primary_key
           |     |               | {name basic_table}
           |     |               | {name id}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+PROC blob_create_mixed_partitions ()
+BEGIN
+  LET z := ( SELECT cql_blob_create(basic_table, 1, basic_table.id, 'x', basic_table.name) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0488: key and value columns may not be mixed in cql_blob_create 'name'
+
+  {create_proc_stmt}: err
+  | {name blob_create_mixed_partitions}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_create}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name basic_table}
+          |     |         | {arg_list}
+          |     |           | {int 1}: integer notnull
+          |     |           | {arg_list}
+          |     |             | {dot}: integer notnull primary_key
+          |     |             | | {name basic_table}
+          |     |             | | {name id}
+          |     |             | {arg_list}
+          |     |               | {strlit 'x'}: text notnull
+          |     |               | {arg_list}
+          |     |                 | {dot}
+          |     |                   | {name basic_table}
+          |     |                   | {name name}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+PROC blob_create_incomplete_key ()
+BEGIN
+  LET z := ( SELECT cql_blob_create(bt_default, 1, bt_default.pk1) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0488: all key columns must appear exactly once in primary key order in cql_blob_create 'bt_default'
+
+  {create_proc_stmt}: err
+  | {name blob_create_incomplete_key}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_create}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name bt_default}
+          |     |         | {arg_list}
+          |     |           | {int 1}: integer notnull
+          |     |           | {arg_list}
+          |     |             | {dot}: integer notnull has_default partial_pk
+          |     |               | {name bt_default}
+          |     |               | {name pk1}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+PROC blob_create_key_out_of_order ()
+BEGIN
+  LET z := ( SELECT cql_blob_create(bt_default, 2, bt_default.pk2, 1, bt_default.pk1) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0488: key columns must appear exactly once in primary key order in cql_blob_create 'pk2'
+
+  {create_proc_stmt}: err
+  | {name blob_create_key_out_of_order}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_create}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name bt_default}
+          |     |         | {arg_list}
+          |     |           | {int 2}: integer notnull
+          |     |           | {arg_list}
+          |     |             | {dot}
+          |     |             | | {name bt_default}
+          |     |             | | {name pk2}
+          |     |             | {arg_list}
+          |     |               | {int 1}
+          |     |               | {arg_list}
+          |     |                 | {dot}
+          |     |                   | {name bt_default}
+          |     |                   | {name pk1}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+PROC blob_create_complete_key ()
+BEGIN
+  LET z := ( SELECT cql_blob_create(bt_default, 1, bt_default.pk1, 2, bt_default.pk2) );
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name blob_create_complete_key}: ok dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {let_stmt}: z: blob notnull variable
+        | {name z}: z: blob notnull variable
+        | {select_stmt}: _anon: blob notnull
+          | {select_core_list}: _select_: { _anon: blob notnull }
+          | | {select_core}: _select_: { _anon: blob notnull }
+          |   | {select_expr_list_con}: _select_: { _anon: blob notnull }
+          |     | {select_expr_list}: _select_: { _anon: blob notnull }
+          |     | | {select_expr}: blob notnull
+          |     |   | {call}: blob notnull
+          |     |     | {name cql_blob_create}: blob notnull
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name bt_default}
+          |     |         | {arg_list}
+          |     |           | {int 1}: integer notnull
+          |     |           | {arg_list}
+          |     |             | {dot}: integer notnull has_default partial_pk
+          |     |             | | {name bt_default}
+          |     |             | | {name pk1}
+          |     |             | {arg_list}
+          |     |               | {int 2}: integer notnull
+          |     |               | {arg_list}
+          |     |                 | {dot}: integer notnull has_default partial_pk
+          |     |                   | {name bt_default}
+          |     |                   | {name pk2}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+PROC blob_create_duplicate_column ()
+BEGIN
+  LET z := ( SELECT cql_blob_create(basic_table, 'x', basic_table.name, 'y', basic_table.name) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0206: duplicate name in list 'name'
+
+  {create_proc_stmt}: err
+  | {name blob_create_duplicate_column}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_create}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name basic_table}
+          |     |         | {arg_list}
+          |     |           | {strlit 'x'}: text notnull
+          |     |           | {arg_list}
+          |     |             | {dot}: text<cool_text>
+          |     |             | | {name basic_table}
+          |     |             | | {name name}
+          |     |             | {arg_list}
+          |     |               | {strlit 'y'}: text notnull
+          |     |               | {arg_list}
+          |     |                 | {dot}
+          |     |                   | {name basic_table}
+          |     |                   | {name name}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+PROC blob_create_nullable_notnull_column ()
+BEGIN
+  LET z := ( SELECT cql_blob_create(basic_table, nullable(1), basic_table.id) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0013: cannot assign/copy possibly null expression to not null target 'cql_blob_create'
+
+  {create_proc_stmt}: err
+  | {name blob_create_nullable_notnull_column}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_create}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name basic_table}
+          |     |         | {arg_list}
+          |     |           | {call}: integer
+          |     |           | | {name nullable}: integer
+          |     |           | | {call_arg_list}
+          |     |           |   | {call_filter_clause}
+          |     |           |   | {arg_list}: ok
+          |     |           |     | {int 1}: integer notnull
+          |     |           | {arg_list}
+          |     |             | {dot}
+          |     |               | {name basic_table}
+          |     |               | {name id}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+PROC blob_create_sensitive_nonsensitive_column ()
+BEGIN
+  LET z := ( SELECT cql_blob_create(basic_table, sensitive(1), basic_table.id) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 'cql_blob_create'
+
+  {create_proc_stmt}: err
+  | {name blob_create_sensitive_nonsensitive_column}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_create}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name basic_table}
+          |     |         | {arg_list}
+          |     |           | {call}: integer notnull sensitive
+          |     |           | | {name sensitive}: integer notnull sensitive
+          |     |           | | {call_arg_list}
+          |     |           |   | {call_filter_clause}
+          |     |           |   | {arg_list}: ok
+          |     |           |     | {int 1}: integer notnull
+          |     |           | {arg_list}
+          |     |             | {dot}
+          |     |               | {name basic_table}
+          |     |               | {name id}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+PROC blob_create_incompatible_kind ()
+BEGIN
+  LET z := ( SELECT cql_blob_create(basic_table, kind_string, basic_table.name) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0070: expressions of different kinds can't be mixed: 'cool_text' vs. 'surname'
+
+  {create_proc_stmt}: err
+  | {name blob_create_incompatible_kind}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_create}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name basic_table}
+          |     |         | {arg_list}
+          |     |           | {name kind_string}: err
+          |     |           | {arg_list}
+          |     |             | {dot}
+          |     |               | {name basic_table}
+          |     |               | {name name}
           |     | {select_from_etc}: ok
           |       | {select_where}
           |         | {select_groupby}
@@ -83149,7 +85385,7 @@ BEGIN
   LET z := ( SELECT cql_blob_create(basic_table, "x", basic_table.id) );
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'TEXT' not compatible with found 'INT' context 'cql_blob_create'
+test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'INT' not compatible with found 'TEXT' context 'cql_blob_create'
 
   {create_proc_stmt}: err
   | {name blob_create_column_wrong_arg_type}: err
@@ -88426,7 +90662,7 @@ DELETE FROM dummy_table_for_backed_test WHERE id IN (SELECT id
     | {opt_where}: bool
       | {in_pred}: bool
         | {name id}: id: integer
-        | {select_stmt}: id: integer
+        | {select_stmt}: id: integer notnull
           | {select_core_list}: _select_: { id: integer notnull }
           | | {select_core}: _select_: { id: integer notnull }
           |   | {select_expr_list_con}: _select_: { id: integer notnull }
@@ -88482,7 +90718,7 @@ UPDATE dummy_table_for_backed_test
           | {opt_where}: bool
           | | {in_pred}: bool
           |   | {name id}: id: integer
-          |   | {select_stmt}: id: integer
+          |   | {select_stmt}: id: integer notnull
           |     | {select_core_list}: _select_: { id: integer notnull }
           |     | | {select_core}: _select_: { id: integer notnull }
           |     |   | {select_expr_list_con}: _select_: { id: integer notnull }
@@ -92584,6 +94820,15 @@ LET in_pred_empty := 1 IN ();
 
 The statement ending at line XXXX
 
+LET in_pred_empty_null := NULL IN ();
+
+  {let_stmt}: in_pred_empty_null: bool notnull variable
+  | {name in_pred_empty_null}: in_pred_empty_null: bool notnull variable
+  | {in_pred}: bool notnull
+    | {null}: null
+
+The statement ending at line XXXX
+
 DECLARE foobar2 REAL;
 
   {declare_vars_type}: real
@@ -93564,6 +95809,35 @@ SELECT json_array_length('', '$.x');
 
 The statement ending at line XXXX
 
+SELECT json_array_length(nullable('[]'));
+
+  {select_stmt}: _select_: { _anon: integer }
+  | {select_core_list}: _select_: { _anon: integer }
+  | | {select_core}: _select_: { _anon: integer }
+  |   | {select_expr_list_con}: _select_: { _anon: integer }
+  |     | {select_expr_list}: _select_: { _anon: integer }
+  |     | | {select_expr}: integer
+  |     |   | {call}: integer
+  |     |     | {name json_array_length}: integer
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {call}: text
+  |     |           | {name nullable}: text
+  |     |           | {call_arg_list}
+  |     |             | {call_filter_clause}
+  |     |             | {arg_list}: ok
+  |     |               | {strlit '[]'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
 SELECT json_array_length('', '$.x', '');
 
 test/sem_test.sql:XXXX:1: error: in call : CQL0079: too many arguments in function 'json_array_length'
@@ -93689,6 +95963,35 @@ SELECT json_error_position('');
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
   |     |         | {strlit ''}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT json_error_position(nullable('{}'));
+
+  {select_stmt}: _select_: { _anon: integer }
+  | {select_core_list}: _select_: { _anon: integer }
+  | | {select_core}: _select_: { _anon: integer }
+  |   | {select_expr_list_con}: _select_: { _anon: integer }
+  |     | {select_expr_list}: _select_: { _anon: integer }
+  |     | | {select_expr}: integer
+  |     |   | {call}: integer
+  |     |     | {name json_error_position}: integer
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {call}: text
+  |     |           | {name nullable}: text
+  |     |           | {call_arg_list}
+  |     |             | {call_filter_clause}
+  |     |             | {arg_list}: ok
+  |     |               | {strlit '{}'}: text notnull
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -94826,6 +97129,35 @@ SELECT json_type('[]');
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
   |     |         | {strlit '[]'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT json_type(nullable('[]'));
+
+  {select_stmt}: _select_: { _anon: text }
+  | {select_core_list}: _select_: { _anon: text }
+  | | {select_core}: _select_: { _anon: text }
+  |   | {select_expr_list_con}: _select_: { _anon: text }
+  |     | {select_expr_list}: _select_: { _anon: text }
+  |     | | {select_expr}: text
+  |     |   | {call}: text
+  |     |     | {name json_type}: text
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {call}: text
+  |     |           | {name nullable}: text
+  |     |           | {call_arg_list}
+  |     |             | {call_filter_clause}
+  |     |             | {arg_list}: ok
+  |     |               | {strlit '[]'}: text notnull
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -98518,7 +100850,7 @@ END;
         |   | {opt_where}: bool notnull
         |     | {in_pred}: bool notnull
         |       | {name rowid}: rowid: longint notnull
-        |       | {select_stmt}: rowid: longint
+        |       | {select_stmt}: rowid: longint notnull
         |         | {select_core_list}: _select_: { rowid: longint notnull }
         |         | | {select_core}: _select_: { rowid: longint notnull }
         |         |   | {select_expr_list_con}: _select_: { rowid: longint notnull }
@@ -98641,7 +100973,7 @@ END;
         |   | {opt_where}: bool notnull
         |     | {in_pred}: bool notnull
         |       | {name rowid}: rowid: longint notnull
-        |       | {select_stmt}: rowid: longint
+        |       | {select_stmt}: rowid: longint notnull
         |         | {select_core_list}: _select_: { rowid: longint notnull }
         |         | | {select_core}: _select_: { rowid: longint notnull }
         |         |   | {select_expr_list_con}: _select_: { rowid: longint notnull }
@@ -98656,7 +100988,7 @@ END;
         |         |         | {opt_where}: bool notnull
         |         |         | | {in_pred}: bool notnull
         |         |         |   | {name id}: id: integer notnull
-        |         |         |   | {select_stmt}: x: integer
+        |         |         |   | {select_stmt}: x: integer notnull
         |         |         |     | {select_core_list}: _select_: { x: integer notnull }
         |         |         |     | | {select_core}: _select_: { x: integer notnull }
         |         |         |     |   | {select_expr_list_con}: _select_: { x: integer notnull }
@@ -98759,7 +101091,7 @@ END;
           |   | {opt_where}: bool notnull
           |     | {in_pred}: bool notnull
           |       | {name rowid}: rowid: longint notnull
-          |       | {select_stmt}: rowid: longint
+          |       | {select_stmt}: rowid: longint notnull
           |         | {select_core_list}: _select_: { rowid: longint notnull }
           |         | | {select_core}: _select_: { rowid: longint notnull }
           |         |   | {select_expr_list_con}: _select_: { rowid: longint notnull }
@@ -98973,7 +101305,7 @@ END;
         |         | {opt_where}: bool notnull
         |         | | {in_pred}: bool notnull
         |         |   | {name rowid}: rowid: longint notnull
-        |         |   | {select_stmt}: rowid: longint
+        |         |   | {select_stmt}: rowid: longint notnull
         |         |     | {select_core_list}: _select_: { rowid: longint notnull }
         |         |     | | {select_core}: _select_: { rowid: longint notnull }
         |         |     |   | {select_expr_list_con}: _select_: { rowid: longint notnull }
@@ -99116,7 +101448,7 @@ END;
         |         | {opt_where}: bool notnull
         |         | | {in_pred}: bool notnull
         |         |   | {name rowid}: rowid: longint notnull
-        |         |   | {select_stmt}: rowid: longint
+        |         |   | {select_stmt}: rowid: longint notnull
         |         |     | {select_core_list}: _select_: { rowid: longint notnull }
         |         |     | | {select_core}: _select_: { rowid: longint notnull }
         |         |     |   | {select_expr_list_con}: _select_: { rowid: longint notnull }
@@ -99237,7 +101569,7 @@ END;
           |         | {opt_where}: bool notnull
           |         | | {in_pred}: bool notnull
           |         |   | {name rowid}: rowid: longint notnull
-          |         |   | {select_stmt}: rowid: longint
+          |         |   | {select_stmt}: rowid: longint notnull
           |         |     | {select_core_list}: _select_: { rowid: longint notnull }
           |         |     | | {select_core}: _select_: { rowid: longint notnull }
           |         |     |   | {select_expr_list_con}: _select_: { rowid: longint notnull }
@@ -100180,7 +102512,7 @@ END;
           |     |     |       | {dot}: integer qid
           |     |     |         | {name `a table`}
           |     |     |         | {name `col 2`}
-          |     |     | {select_stmt}: x: integer
+          |     |     | {select_stmt}: x: integer notnull
           |     |       | {select_core_list}: _select_: { x: integer notnull }
           |     |       | | {select_core}: _select_: { x: integer notnull }
           |     |       |   | {select_expr_list_con}: _select_: { x: integer notnull }
@@ -100913,7 +103245,7 @@ END;
           |             |   |       | {dot}: integer notnull primary_key
           |             |   |         | {name a_table}
           |             |   |         | {name col1}
-          |             |   | {select_stmt}: col1: integer
+          |             |   | {select_stmt}: col1: integer notnull
           |             |     | {select_core_list}: UNION: { col1: integer notnull }
           |             |     | | {select_core}: _select_: { col1: integer notnull }
           |             |     | | | {select_expr_list_con}: _select_: { col1: integer notnull }

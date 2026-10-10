@@ -32,6 +32,7 @@ int main(int argc, char **argv) {
   // Setup database
   sqlite3 *db = NULL;
   cql_code rc;
+  cql_code close_rc;
 
   rc = sqlite3_open(":memory:", &db);
 
@@ -81,6 +82,9 @@ int main(int argc, char **argv) {
     rc = test_test_child_blob_primary_key_drop_tables(db);
   }
 
-  sqlite3_close(db);
+  close_rc = sqlite3_close(db);
+  if (rc == SQLITE_OK) {
+    rc = close_rc;
+  }
   return rc;
 }

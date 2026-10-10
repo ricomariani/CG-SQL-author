@@ -79,6 +79,10 @@ CREATE TABLE grouped_table_3(
   name TEXT
 ) @RECREATE(my_group);
 
+CREATE TABLE `deleted recreate table`(
+  id INT
+) @RECREATE(quoted_delete_group) @DELETE;
+
 CREATE TABLE t5(
   `an id` LONG PRIMARY KEY AUTOINCREMENT,
   data TEXT
@@ -303,6 +307,8 @@ CREATE INDEX not_shared_present_index ON table2 (name1, name2);
 @begin_schema_region extra;
 CREATE INDEX index_going_away ON table2 (name3) @DELETE(3);
 @end_schema_region;
+
+CREATE INDEX grouped_table_1_crc_index ON grouped_table_1 (name);
 
 CREATE INDEX recreate_index_needs_deleting ON `migrated from recreate` (t);
 

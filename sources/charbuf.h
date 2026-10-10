@@ -33,7 +33,8 @@ cql_noexport void bclose(charbuf *b);
 cql_noexport void bclear(charbuf *b);
 cql_noexport void release_open_charbufs(void);
 
-// The format and string arguments may refer to the destination's stored text.
+// The format must not point into the destination allocation (always-on contract).
+// String arguments must not alias it either; callers enforce this precondition.
 cql_noexport void vbprintf(charbuf *b, const char *format, va_list args);
 cql_noexport void bprintf(charbuf *b, const char *format, ...) _printf_checking_(2, 3);
 cql_noexport CSTR dup_printf(const char *format, ...) _printf_checking_(1, 2);

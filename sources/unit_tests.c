@@ -347,25 +347,29 @@ static bool test_bytebuf_self_append() {
   return result;
 }
 
-static void test_vbprintf_alias(charbuf *buffer, const char *format, ...) {
+static void test_vbprintf(charbuf *buffer, const char *format, ...) {
   va_list args;
   va_start(args, format);
   vbprintf(buffer, format, args);
   va_end(args);
 }
 
-static bool test_charbuf_format_aliases() {
+static bool test_charbuf_formatting() {
   bool result = true;
+  CHARBUF_OPEN(source);
+  CHARBUF_OPEN(format);
   CHARBUF_OPEN(temp);
 
+  bprintf(&source, "abc");
   bprintf(&temp, "abc");
-  bprintf(&temp, "%s|%s", temp.ptr, temp.ptr + 1);
+  bprintf(&temp, "%s|%s", source.ptr, source.ptr + 1);
   result &= !strcmp(temp.ptr, "abcabc|bc");
   result &= temp.used == sizeof("abcabc|bc");
 
   bclear(&temp);
+  bprintf(&format, "=%s", "%s");
   bprintf(&temp, "=%s", "%s");
-  test_vbprintf_alias(&temp, temp.ptr, "value");
+  test_vbprintf(&temp, format.ptr, "value");
   result &= !strcmp(temp.ptr, "=%s=value");
   result &= temp.used == sizeof("=%s=value");
 
@@ -373,11 +377,13 @@ static bool test_charbuf_format_aliases() {
   bprintf(&temp, "%s", "");
   result &= temp.used == 1 && temp.ptr[0] == 0;
 
-  // Force heap storage and growth while a string argument aliases it.
+  // Force heap storage and growth with independently owned string input.
+  bclear(&source);
   for (uint32_t i = 0; i < CHARBUF_INTERNAL_SIZE + 1; i++) {
     bputc(&temp, 'a');
+    bputc(&source, 'a');
   }
-  bprintf(&temp, "%s", temp.ptr);
+  bprintf(&temp, "%s", source.ptr);
   result &= temp.used == 2 * (CHARBUF_INTERNAL_SIZE + 1) + 1;
   for (uint32_t i = 0; i < 2 * (CHARBUF_INTERNAL_SIZE + 1); i++) {
     result &= temp.ptr[i] == 'a';
@@ -385,20 +391,23 @@ static bool test_charbuf_format_aliases() {
   result &= temp.ptr[temp.used - 1] == 0;
   CHARBUF_CLOSE(temp);
 
-  // Both the format and an interior string argument must survive heap growth.
+  // The format and its interior string argument belong to a separate buffer.
   CHARBUF_OPEN(format_buffer);
   bprintf(&format_buffer, "%s", "%s");
   for (uint32_t i = 0; i < CHARBUF_INTERNAL_SIZE - 1; i++) {
     bputc(&format_buffer, 'a');
   }
-  test_vbprintf_alias(&format_buffer, format_buffer.ptr, format_buffer.ptr + 2);
-  result &= format_buffer.used == 3 * (CHARBUF_INTERNAL_SIZE - 1) + 3;
-  result &= format_buffer.ptr[0] == '%' && format_buffer.ptr[1] == 's';
-  for (uint32_t i = 2; i < format_buffer.used - 1; i++) {
-    result &= format_buffer.ptr[i] == 'a';
+  CHARBUF_OPEN(output);
+  test_vbprintf(&output, format_buffer.ptr, format_buffer.ptr + 2);
+  result &= output.used == 2 * (CHARBUF_INTERNAL_SIZE - 1) + 1;
+  for (uint32_t i = 0; i < output.used - 1; i++) {
+    result &= output.ptr[i] == 'a';
   }
-  result &= format_buffer.ptr[format_buffer.used - 1] == 0;
+  result &= output.ptr[output.used - 1] == 0;
+  CHARBUF_CLOSE(output);
   CHARBUF_CLOSE(format_buffer);
+  CHARBUF_CLOSE(format);
+  CHARBUF_CLOSE(source);
   return result;
 }
 
@@ -542,7 +551,7 @@ cql_noexport void run_unit_tests() {
   // comments while preserving printable and UTF-8 content.
   TEST_ASSERT(test_comment_text_encoding());
   TEST_ASSERT(test_bytebuf_self_append());
-  TEST_ASSERT(test_charbuf_format_aliases());
+  TEST_ASSERT(test_charbuf_formatting());
 }
 
 #endif

@@ -8,9 +8,6 @@
 #include "cql.h"
 #include "charbuf.h"
 
-// Compiler Contract uses assert; this precondition must also hold under NDEBUG.
-#define CHARBUF_CONTRACT(condition) do { if (!(condition)) abort(); } while (0)
-
 cql_data_defn( int32_t charbuf_open_count );
 cql_data_defn( pending_charbuf *__charbufs_in_flight; )
 
@@ -60,7 +57,7 @@ cql_noexport void bclear(charbuf *b) {
 cql_noexport void vbprintf(charbuf *b, const char *format, va_list args) {
   uintptr_t source = (uintptr_t)format;
   uintptr_t start = (uintptr_t)b->ptr;
-  CHARBUF_CONTRACT(source < start || source - start >= b->max);
+  Contract(source < start || source - start >= b->max);
 
   va_list pass1, pass2;
   va_copy(pass1, args);

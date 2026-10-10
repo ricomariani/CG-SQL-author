@@ -108,8 +108,8 @@ typedef struct cmd_options {
 
 cql_data_decl( cmd_options options );
 
-#define Invariant assert
-#define Contract assert
+#define Invariant(condition) do { if (!(condition)) abort(); } while (0)
+#define Contract(condition) do { if (!(condition)) abort(); } while (0)
 
 #define _new(x) ((x*)malloc(sizeof(x)))
 #define _new_array(x,c) ((x*)malloc(c*sizeof(x)))

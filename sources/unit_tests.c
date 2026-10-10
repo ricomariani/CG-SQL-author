@@ -347,6 +347,61 @@ static bool test_bytebuf_self_append() {
   return result;
 }
 
+static void test_vbprintf_alias(charbuf *buffer, const char *format, ...) {
+  va_list args;
+  va_start(args, format);
+  vbprintf(buffer, format, args);
+  va_end(args);
+}
+
+static bool test_charbuf_format_aliases() {
+  bool result = true;
+  CHARBUF_OPEN(temp);
+
+  bprintf(&temp, "abc");
+  bprintf(&temp, "%s|%s", temp.ptr, temp.ptr + 1);
+  result &= !strcmp(temp.ptr, "abcabc|bc");
+  result &= temp.used == sizeof("abcabc|bc");
+
+  bclear(&temp);
+  bprintf(&temp, "=%s", "%s");
+  test_vbprintf_alias(&temp, temp.ptr, "value");
+  result &= !strcmp(temp.ptr, "=%s=value");
+  result &= temp.used == sizeof("=%s=value");
+
+  bclear(&temp);
+  bprintf(&temp, "%s", "");
+  result &= temp.used == 1 && temp.ptr[0] == 0;
+
+  // Force heap storage and growth while a string argument aliases it.
+  for (uint32_t i = 0; i < CHARBUF_INTERNAL_SIZE + 1; i++) {
+    bputc(&temp, 'a');
+  }
+  bprintf(&temp, "%s", temp.ptr);
+  result &= temp.used == 2 * (CHARBUF_INTERNAL_SIZE + 1) + 1;
+  for (uint32_t i = 0; i < 2 * (CHARBUF_INTERNAL_SIZE + 1); i++) {
+    result &= temp.ptr[i] == 'a';
+  }
+  result &= temp.ptr[temp.used - 1] == 0;
+  CHARBUF_CLOSE(temp);
+
+  // Both the format and an interior string argument must survive heap growth.
+  CHARBUF_OPEN(format_buffer);
+  bprintf(&format_buffer, "%s", "%s");
+  for (uint32_t i = 0; i < CHARBUF_INTERNAL_SIZE - 1; i++) {
+    bputc(&format_buffer, 'a');
+  }
+  test_vbprintf_alias(&format_buffer, format_buffer.ptr, format_buffer.ptr + 2);
+  result &= format_buffer.used == 3 * (CHARBUF_INTERNAL_SIZE - 1) + 3;
+  result &= format_buffer.ptr[0] == '%' && format_buffer.ptr[1] == 's';
+  for (uint32_t i = 2; i < format_buffer.used - 1; i++) {
+    result &= format_buffer.ptr[i] == 'a';
+  }
+  result &= format_buffer.ptr[format_buffer.used - 1] == 0;
+  CHARBUF_CLOSE(format_buffer);
+  return result;
+}
+
 cql_noexport void run_unit_tests() {
   // An empty duplicate must still be a valid, NUL-terminated allocation.
   // Callers rely on receiving a string rather than NULL for empty input.
@@ -487,6 +542,7 @@ cql_noexport void run_unit_tests() {
   // comments while preserving printable and UTF-8 content.
   TEST_ASSERT(test_comment_text_encoding());
   TEST_ASSERT(test_bytebuf_self_append());
+  TEST_ASSERT(test_charbuf_format_aliases());
 }
 
 #endif

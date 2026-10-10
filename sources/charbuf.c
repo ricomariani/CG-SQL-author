@@ -55,6 +55,10 @@ cql_noexport void bclear(charbuf *b) {
 // count is arbitrary. We use vsnprintf twice to get the size and then
 // to do the actual append.
 cql_noexport void vbprintf(charbuf *b, const char *format, va_list args) {
+  uintptr_t source = (uintptr_t)format;
+  uintptr_t start = (uintptr_t)b->ptr;
+  Contract(source < start || source - start >= b->max);
+
   va_list pass1, pass2;
   va_copy(pass1, args);
   va_copy(pass2, args);

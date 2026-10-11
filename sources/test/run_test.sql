@@ -6588,28 +6588,79 @@ begin
   -- A negative index must not become a large unsigned memory offset.
   EXPECT_BLOB_FAILURE!(bgetkey(b, -1));
 
-  -- A bogus header must fail before any shape-derived offset is trusted.
+  -- Fourteen zero bytes: shorter than the 16-byte header (8 record-type,
+  -- 4 magic, 4 count bytes); magic at 8..11 is also zero, not "RM00".
+  -- Reject before deriving any column offsets.
   EXPECT_BLOB_FAILURE!(bgetkey(x'0000000000000000000000000000', 0));
 
-  -- Type reads must enforce the same header trust boundary as value reads.
+  -- Same 14-byte all-zero, truncated/invalid header as above; type-only
+  -- lookup must reject it too, rather than bypass header validation.
   EXPECT_BLOB_FAILURE!(bgetkey_type(x'0000000000000000000000000000'));
 
-  -- A plausible magic value cannot make a truncated layout trustworthy.
+  -- Header-only 16-byte key: big-endian record type 0 at 0..7,
+  -- magic 524d3030 ("RM00") at 8..11, count 1 at 12..15.
+  -- Missing column storage at 16..23 and type at 24; minimum size is 25.
   EXPECT_BLOB_FAILURE!(bgetkey(x'0000000000000000524d303000000001', 0));
 
-  -- Readers validate untouched fields too, so corrupt metadata cannot be
-  -- ignored merely because this query asks for another column.
+  -- 34-byte key, big-endian header: record type 1 at 0..7, magic "RM00"
+  -- at 8..11, count 2 at 12..15. Column 0 storage at 16..23 is integer 42;
+  -- column 1 at 24..31 is 0000ffff00000100 (offset 65535, length 256).
+  -- Types at 32..33 are 02 04 (INT64, STRING); payload would start at 34,
+  -- but none exists. String range 65535..65791 includes its required NUL
+  -- and is outside the input. Reject even when requesting column 0.
   EXPECT_BLOB_FAILURE!(bgetkey(
     x'0000000000000001524d303000000002000000000000002a0000ffff000001000204',
     0));
 
-  -- A durable type code is attacker-controlled once stored; type readers and
-  -- value readers must reject unknown codes consistently.
+  -- 34-byte key: big-endian record type 1, magic "RM00", count 2.
+  -- Storage at 16..23 is integer 42, at 24..31 is zero; type bytes at
+  -- 32..33 are 02 06. INT64 (02) is valid; 06 is not a defined blob type.
+  -- No variable payload. Reject the unknown second type.
   EXPECT_BLOB_FAILURE!(bgetkey(
     x'0000000000000001524d303000000002000000000000002a00000000000000000206',
     1));
+  -- Identical 34-byte key with unknown type 06 at byte 33; type-only lookup
+  -- must validate the column types, not merely return record type 1.
   EXPECT_BLOB_FAILURE!(bgetkey_type(
     x'0000000000000001524d303000000002000000000000002a00000000000000000206'));
+end);
+
+TEST!(blob_updatekey_overlapping_fields,
+begin
+  -- Hand-built 47-byte key blob; offsets below are decimal, ranges inclusive.
+  -- All multi-byte header/storage values are big endian:
+  --   0..7: record type 1; 8..11: magic 524d3030 ("RM00"); 12..15: count 3.
+  --   16..23: column 0 integer 42 (000000000000002a).
+  --   24..31: column 1 string descriptor 0000002b00000003: offset 43, length 3.
+  --   32..39: column 2 has the identical string descriptor.
+  --   40..42: type bytes 01 04 04: INT32, STRING, STRING.
+  --   43..46: shared payload 61 62 63 00 ("abc" and its NUL terminator).
+  -- String lengths exclude NUL, so each field needs four output bytes.
+  -- Updating only the integer leaves both strings to be copied: output must
+  -- have 43 metadata bytes + 4 + 4 payload bytes = 51, not the input's 47.
+  let shared := (select x'0000000000000001524d303000000003000000000000002a0000002b000000030000002b0000000301040461626300');
+  let b := (select bupdatekey(shared, 0, 99));
+  EXPECT_EQ!((select bgetkey(b, 0)), 99);
+  EXPECT_EQ!((select bgetkey(b, 1) ~text~), 'abc');
+  EXPECT_EQ!((select bgetkey(b, 2) ~text~), 'abc');
+  EXPECT_EQ!(length(b), 51);
+
+  b := (select bupdatekey(shared, 1, 'x'));
+  EXPECT_EQ!((select bgetkey(b, 1) ~text~), 'x');
+  EXPECT_EQ!((select bgetkey(b, 2) ~text~), 'abc');
+  EXPECT_EQ!(length(b), 49);
+
+  -- Same 47-byte layout as above, except column 2 is now BLOB:
+  --   32..39: descriptor 0000002b00000004: offset 43, length 4.
+  --   40..42: type bytes 01 04 05: INT32, STRING, BLOB.
+  -- Its length includes all four bytes 61 62 63 00, whereas the overlapping
+  -- string descriptor excludes the terminator. Both need four output bytes;
+  -- updating the integer must preserve both values in a 51-byte result.
+  shared := (select x'0000000000000001524d303000000003000000000000002a0000002b000000030000002b0000000401040561626300');
+  b := (select bupdatekey(shared, 0, 99));
+  EXPECT_EQ!((select bgetkey(b, 1) ~text~), 'abc');
+  EXPECT!((select bgetkey(b, 2) ~blob~ == x'61626300'));
+  EXPECT_EQ!(length(b), 51);
 end);
 
 TEST!(blob_updatekey_func_errors,
@@ -6633,7 +6684,8 @@ begin
   -- Nonblob input cannot provide trusted serialized metadata.
   EXPECT_BLOB_FAILURE!(bupdatekey(1234, 1, 1));
 
-  -- A blob value alone is insufficient; it must carry the CQL wire format.
+  -- Fourteen all-zero bytes: truncated 16-byte header and invalid zero magic
+  -- at 8..11. An update must reject this before interpreting index 1.
   EXPECT_BLOB_FAILURE!(bupdatekey(x'0000000000000000000000000000', 1, 1));
 
   -- Text must not be coerced into an index used to locate serialized fields.
@@ -6656,16 +6708,23 @@ begin
   -- deterministic rather than depending on argument order.
   EXPECT_BLOB_FAILURE!(bupdatekey(b, 0, 0, 0, 0));
 
-  -- Valid magic cannot excuse a truncated shape.
+  -- Header-only 16-byte key: big-endian record type 0, "RM00" magic, count 1.
+  -- Missing the eight storage bytes at 16..23 and type byte at 24;
+  -- updating column 0 must reject the incomplete 25-byte minimum shape.
   EXPECT_BLOB_FAILURE!(bupdatekey(x'0000000000000000524d303000000001', 0, 99));
 
-  -- The second field is an unchanged string with offset 0xffff and length
-  -- 0x100, both outside this 34-byte blob.
+  -- 34-byte key: big-endian record type 1, "RM00" magic, count 2 at 0..15.
+  -- Storage 16..23 is integer 42; 24..31 is descriptor 0000ffff00000100
+  -- (offset 65535, length 256). Type bytes 32..33 are 02 04 (INT64, STRING).
+  -- There is no payload after metadata; the string needs bytes 65535..65791,
+  -- including NUL. Updating column 0 must also validate unchanged column 1.
   EXPECT_BLOB_FAILURE!(bupdatekey(
     x'0000000000000001524d303000000002000000000000002a0000ffff000001000204',
     0, 99));
 
-  -- An unknown serialized type code is corrupt input and must fail the query.
+  -- 34-byte key: big-endian record type 1, "RM00" magic, count 2.
+  -- Storage 16..23 is 42, 24..31 is zero, types 32..33 are 02 06.
+  -- Type 06 is undefined; reject it in unchanged column 1 before rewriting.
   EXPECT_BLOB_FAILURE!(bupdatekey(
     x'0000000000000001524d303000000002000000000000002a00000000000000000206',
     0, 99));
@@ -6806,17 +6865,73 @@ begin
   -- to represent NULL, so callers can distinguish it from corrupt input.
   EXPECT_EQ!((select b:val(1111)), null);
 
-  -- Bounds-check all retained variable fields before exposing any result.
+  -- 50-byte value blob; all multi-byte values are big endian.
+  -- Header 0..15: record type 1, magic "RM00", count 2.
+  -- IDs 16..23 and 24..31: 1 and 2. Storage 32..39: integer 42;
+  -- 40..47: 0000ffff00000100 (string offset 65535, length 256).
+  -- Types 48..49: 02 04 (INT64, STRING). No payload follows metadata.
+  -- String range 65535..65791, including NUL, is outside the blob.
+  -- Reject even when reading the unaffected integer field ID 1.
   EXPECT_BLOB_FAILURE!(bgetval(
     x'0000000000000001524d30300000000200000000000000010000000000000002000000000000002a0000ffff000001000204',
     1));
 
-  -- Type lookup must not bless a corrupt blob merely because it reads metadata.
+  -- 50-byte value blob: big-endian header is record type 1, "RM00", count 2;
+  -- IDs at 16..31 are 1, 2, storage at 32..47 is two zero words.
+  -- Types at 48..49 are 02 06: valid INT64 then undefined type 06.
+  -- No payload; reject the unknown type when reading field ID 2.
   EXPECT_BLOB_FAILURE!(bgetval(
     x'0000000000000001524d30300000000200000000000000010000000000000002000000000000000000000000000000000206',
     2));
+  -- Identical 50-byte value blob: undefined type 06 at byte 49 must also
+  -- prevent type-only lookup from returning its record type.
   EXPECT_BLOB_FAILURE!(bgetval_type(
     x'0000000000000001524d30300000000200000000000000010000000000000002000000000000000000000000000000000206'));
+end);
+
+TEST!(blob_updateval_overlapping_fields,
+begin
+  -- Hand-built 71-byte value blob; offsets below are decimal, ranges inclusive.
+  -- All multi-byte header/ID/storage values are big endian:
+  --   0..7: record type 1; 8..11: magic 524d3030 ("RM00"); 12..15: count 3.
+  --   16..23, 24..31, 32..39: field IDs 1, 2, 3 respectively.
+  --   40..47: field 1 integer 42 (000000000000002a).
+  --   48..55: field 2 string descriptor 0000004300000003: offset 67, length 3.
+  --   56..63: field 3 has the identical string descriptor.
+  --   64..66: type bytes 01 04 04: INT32, STRING, STRING.
+  --   67..70: shared payload 61 62 63 00 ("abc" and its NUL terminator).
+  -- String lengths exclude NUL. Updating only field 1 must allocate
+  -- 67 metadata bytes + 4 + 4 payload bytes = 75, not the input's 71.
+  let shared := (select x'0000000000000001524d303000000003000000000000000100000000000000020000000000000003000000000000002a0000004300000003000000430000000301040461626300');
+  let b := (select bupdateval(shared, 1, 99, CQL_BLOB_TYPE_INT32));
+  EXPECT_EQ!((select bgetval(b, 1)), 99);
+  EXPECT_EQ!((select bgetval(b, 2) ~text~), 'abc');
+  EXPECT_EQ!((select bgetval(b, 3) ~text~), 'abc');
+  EXPECT_EQ!(length(b), 75);
+
+  -- Replacement needs 7 bytes for "longer\0" plus the other string's 4.
+  b := (select bupdateval(shared, 2, 'longer', CQL_BLOB_TYPE_STRING));
+  EXPECT_EQ!((select bgetval(b, 2) ~text~), 'longer');
+  EXPECT_EQ!((select bgetval(b, 3) ~text~), 'abc');
+  EXPECT_EQ!(length(b), 78);
+
+  -- Deletion leaves two fields: 16 header + 2*(8 ID + 8 storage + 1 type)
+  -- + 4 bytes for the retained string = 54 bytes.
+  b := (select bupdateval(shared, 2, null, CQL_BLOB_TYPE_STRING));
+  EXPECT_EQ!((select bgetval(b, 2)), null);
+  EXPECT_EQ!((select bgetval(b, 3) ~text~), 'abc');
+  EXPECT_EQ!(length(b), 54);
+
+  -- Same 71-byte layout as above, except field 3 is now BLOB:
+  --   56..63: descriptor 0000004300000004: offset 67, length 4.
+  --   64..66: type bytes 01 04 05: INT32, STRING, BLOB.
+  -- The blob includes the string's NUL byte. Its independent four-byte copy
+  -- still requires a 75-byte output when only the integer is updated.
+  shared := (select x'0000000000000001524d303000000003000000000000000100000000000000020000000000000003000000000000002a0000004300000003000000430000000401040561626300');
+  b := (select bupdateval(shared, 1, 99, CQL_BLOB_TYPE_INT32));
+  EXPECT_EQ!((select bgetval(b, 2) ~text~), 'abc');
+  EXPECT!((select bgetval(b, 3) ~blob~ == x'61626300'));
+  EXPECT_EQ!(length(b), 75);
 end);
 
 TEST!(blob_updateval_null_cases,
@@ -6926,13 +7041,17 @@ begin
   EXPECT_EQ!((select b:val(k2)), 0x12345678912L);
   EXPECT_EQ!((select b:val(k4) ~text~), 'abc');
 
-  -- A value read must reject untrusted headers before looking up a field ID.
+  -- Fourteen all-zero bytes: missing two bytes of the 16-byte header,
+  -- with invalid zero magic at 8..11. Reject before looking up field k1.
   EXPECT_BLOB_FAILURE!(bgetval(x'0000000000000000000000000000', k1));
 
-  -- Record-type retrieval has the same trust boundary as field retrieval.
+  -- Same 14-byte all-zero invalid/truncated header; record-type lookup
+  -- must reject it instead of treating the first eight zero bytes as a type.
   EXPECT_BLOB_FAILURE!(bgetval_type(x'0000000000000000000000000000'));
 
-  -- Layout validation prevents a forged count from creating out-of-bounds arrays.
+  -- Header-only 16-byte value blob: big-endian record type 0, "RM00", count 1.
+  -- Missing ID 16..23, storage 24..31, and type byte 32 (minimum size 33).
+  -- Reject the shape before searching for the absent field ID 99.
   EXPECT_BLOB_FAILURE!(bgetval(x'0000000000000000524d303000000001', 99));
 end);
 
@@ -6982,30 +7101,45 @@ begin
   -- A later invalid triple must fail the entire update, not leave a partial blob.
   EXPECT_BLOB_FAILURE!(bupdateval(b, k1, 1, CQL_BLOB_TYPE_BOOL, k6, 'xxx', CQL_BLOB_TYPE_BOOL));
 
-  -- A blob must carry the expected CQL format before its offsets are consulted.
+  -- Fourteen all-zero bytes: truncated 16-byte header and invalid zero magic
+  -- at 8..11. Reject before using the field ID or constructing output.
   EXPECT_BLOB_FAILURE!(bupdateval(x'0000000000000000000000000000', k1, 0, CQL_BLOB_TYPE_BOOL));
 
-  -- Valid magic is insufficient when the declared layout is truncated.
+  -- Header-only 16-byte value blob: big-endian record type 0, "RM00", count 1.
+  -- Missing ID at 16..23, storage at 24..31, and type at 32.
+  -- Updating field 99 must reject this, not add to an incomplete input shape.
   EXPECT_BLOB_FAILURE!(bupdateval(x'0000000000000000524d303000000001', 99, 0, CQL_BLOB_TYPE_BOOL));
 
-  -- The second field is an unchanged string with offset 0xffff and length
-  -- 0x100, both outside this 50-byte blob.  The update must reject malformed
-  -- variable-field metadata rather than copying from outside the input blob.
+  -- 50-byte value blob; big-endian header 0..15: record type 1, "RM00", count 2.
+  -- IDs 16..31: 1, 2. Storage 32..39: integer 42; 40..47: string descriptor
+  -- 0000ffff00000100 (offset 65535, length 256). Types 48..49: 02 04.
+  -- No payload; the string's required range 65535..65791 includes its NUL
+  -- and lies outside the blob. Updating ID 1 must reject unchanged ID 2.
   EXPECT_BLOB_FAILURE!(bupdateval(
     x'0000000000000001524d30300000000200000000000000010000000000000002000000000000002a0000ffff000001000204',
     1, 99, CQL_BLOB_TYPE_INT64));
 
-  -- The unchanged string is in bounds but has no trailing NUL byte.
+  -- 51-byte value blob; big-endian header 0..15: record type 1, "RM00", count 2.
+  -- IDs 16..31: 1, 2. Storage 32..39: integer 42; 40..47: 0000003200000000
+  -- (string offset 50, length 0). Types 48..49: 02 04 (INT64, STRING).
+  -- Byte 50 is 78 ('x'), not NUL. Even an empty string requires a terminator
+  -- at offset + length; reject it while updating the unaffected ID 1.
   EXPECT_BLOB_FAILURE!(bupdateval(
     x'0000000000000001524d30300000000200000000000000010000000000000002000000000000002a0000003200000000020478',
     1, 99, CQL_BLOB_TYPE_INT64));
 
-  -- The unchanged blob has offset and length metadata outside the input blob.
+  -- 50-byte value blob; big-endian header: record type 1, "RM00", count 2.
+  -- IDs 16..31: 1, 2. Storage 32..39: integer 42; 40..47: 0000ffff00000100
+  -- (blob offset 65535, length 256). Types 48..49: 02 05 (INT64, BLOB).
+  -- No payload. Unlike a string, no NUL is counted, but the blob range
+  -- 65535..65790 is still outside the input; reject unchanged ID 2.
   EXPECT_BLOB_FAILURE!(bupdateval(
     x'0000000000000001524d30300000000200000000000000010000000000000002000000000000002a0000ffff000001000205',
     1, 99, CQL_BLOB_TYPE_INT64));
 
-  -- An unknown serialized type code is corrupt input and must fail the query.
+  -- 50-byte value blob; big-endian header: record type 1, "RM00", count 2.
+  -- IDs 16..31: 1, 2; storage 32..47: two zero words; types 48..49: 02 06.
+  -- No payload. Undefined type 06 in ID 2 must be rejected before updating ID 1.
   EXPECT_BLOB_FAILURE!(bupdateval(
     x'0000000000000001524d30300000000200000000000000010000000000000002000000000000000000000000000000000206',
     1, 99, CQL_BLOB_TYPE_INT64));
@@ -7858,7 +7992,18 @@ create table my_blob
 
 proc control_blob(out control blob!)
 begin
-  -- the hex for the test blob we use
+  -- Fixed 79-byte stream of five serialized my_blob rows (x=i, y=i, z="z_i").
+  -- Unlike backed-blob headers, the stream table uses little-endian uint32:
+  --   0..3: count 5; 4..23: exclusive payload ends 35, 46, 57, 68, 79
+  --   (hex words 23000000, 2e000000, 39000000, 44000000, 4f000000).
+  -- Payload starts at (count+1)*4 = 24. Each row occupies 11 bytes:
+  --   row i ranges: 24..34, 35..45, 46..56, 57..67, 68..78.
+  --   Relative bytes 0..3: 69 69 73 00 ("iis\0"), nullable INT32, INT32,
+  --   STRING type header; byte 4: 07, all three values present.
+  --   Bytes 5..6: two one-byte zigzag varints, each 2*i (00,02,04,06,08).
+  --   Bytes 7..10: 7a 5f (30+i) 00, text "z_i" with its NUL terminator.
+  -- Comparing constructed output with this literal protects the wire format;
+  -- decoding it separately checks the count/table and each row's values.
   control :=
     (select x'05000000230000002E00000039000000440000004F000000696973000700007A5F3000696973000702027A5F3100696973000704047A5F3200696973000706067A5F3300696973000708087A5F3400');
 end;
@@ -7913,6 +8058,8 @@ end);
 
 TEST!(blob_stream_empty,
 begin
+  -- A single zero byte: not even the four-byte little-endian stream count
+  -- is present. Reading row 0 must report an error and leave C empty.
   let b := (select x'00');
   let hit := false;
   cursor C like my_blob;
@@ -7928,6 +8075,11 @@ end);
 
 TEST!(blob_stream_invalid_offsets__,
 begin
+  -- 12-byte stream, little-endian uint32 words:
+  --   0..3: count 5; 4..7: first exclusive end 255; 8..11: second end 0.
+  -- Count 5 requires a 24-byte count/offset table, but bytes 12..23 and all
+  -- row payloads are missing. Index 0's end exceeds length 12; index 1 has
+  -- start 255 > end 0; later indices cannot read their complete table entries.
   let b := (select x'05000000FF00000000000000');
   let hit := 0;
   cursor C like my_blob;
@@ -7973,7 +8125,9 @@ end);
 
 TEST!(blob_stream_truncated_index_read__,
 begin
-  -- A 5-byte blob: count=1 (bytes 0-3 = 0x01000000), one data byte at offset 4.
+  -- A 5-byte stream: little-endian count 1 at 0..3 (01 00 00 00).
+  -- Byte 4 is 05, only the first byte of the exclusive end-offset entry,
+  -- not payload. A complete one-row stream needs an 8-byte count/offset table.
   -- The end-offset entry for index 0 lives at bytes[(0+1)*4 .. (0+1)*4+3] = bytes[4..7].
   -- Only byte 4 exists; bytes 5-7 are past the allocation.
   -- Old check: (index+1)*4 >= len  =>  4 >= 5  => false  => proceeds to OOB read (ASAN).

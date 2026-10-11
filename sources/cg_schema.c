@@ -334,7 +334,8 @@ static void cg_schema_helpers(charbuf *decls) {
 
   bprintf(decls, "PROC %s_drop_table_helper(table_name TEXT!)\n", global_proc_name);
   bprintf(decls, "BEGIN\n");
-  bprintf(decls, "  CALL cql_exec_internal(printf('DROP TABLE IF EXISTS [%%s]', table_name));\n");
+  // SQLite identifiers escape embedded double quotes by doubling them.
+  bprintf(decls, "  CALL cql_exec_internal(printf('DROP TABLE IF EXISTS \"%%s\"', replace(table_name, '\"', '\"\"')));\n");
   bprintf(decls, "  -- remove the table from our dictionary marking it dropped\n");
   bprintf(decls, "  IF %s_tables_dict_ IS NULL THROW;\n", global_proc_name);
   bprintf(decls, "  LET added := cql_string_dictionary_add(%s_tables_dict_, table_name, '');\n", global_proc_name);
@@ -971,7 +972,7 @@ static void cg_schema_manage_triggers(charbuf *output, int32_t *drops, int32_t *
     bprintf(output, "  DECLARE C CURSOR FOR CALL %s_cql_get_all_triggers();\n", global_proc_name);
     bprintf(output, "  LOOP FETCH C\n");
     bprintf(output, "  BEGIN\n");
-    bprintf(output, "    CALL cql_exec_internal(printf('DROP TRIGGER [%%s];', C.name));\n");
+    bprintf(output, "    CALL cql_exec_internal(printf('DROP TRIGGER \"%%s\";', replace(C.name, '\"', '\"\"')));\n");
     bprintf(output, "  END;\n");
     bprintf(output, "END;\n\n");
 
@@ -1066,7 +1067,7 @@ static void cg_schema_manage_views(charbuf *output, int32_t *drops, int32_t *cre
     bprintf(output, "  DECLARE C CURSOR FOR CALL %s_cql_get_all_views();\n", global_proc_name);
     bprintf(output, "  LOOP FETCH C\n");
     bprintf(output, "  BEGIN\n");
-    bprintf(output, "    CALL cql_exec_internal(printf('DROP VIEW [%%s];', C.name));\n");
+    bprintf(output, "    CALL cql_exec_internal(printf('DROP VIEW \"%%s\";', replace(C.name, '\"', '\"\"')));\n");
     bprintf(output, "  END;\n");
     bprintf(output, "END;\n\n");
 
@@ -1217,7 +1218,7 @@ static void cg_schema_manage_indices(charbuf *output, int32_t *drops, int32_t *c
     bprintf(output, "  DECLARE C CURSOR FOR CALL %s_cql_get_unknown_indices();\n", global_proc_name);
     bprintf(output, "  LOOP FETCH C\n");
     bprintf(output, "  BEGIN\n");
-    bprintf(output, "    CALL cql_exec_internal(printf('DROP INDEX [%%s];', C.name));\n");
+    bprintf(output, "    CALL cql_exec_internal(printf('DROP INDEX \"%%s\";', replace(C.name, '\"', '\"\"')));\n");
     bprintf(output, "  END;\n");
     bprintf(output, "END;\n\n");
 

@@ -137,6 +137,20 @@ cql_code post_validate(sqlite3* db, cql_int64 old_version) {
   return result;
 }
 
+static cql_code test_drop_quoted_tables(sqlite3 *db) {
+  cql_object_ref saved_dictionary = test_tables_dict_;
+  cql_object_retain(saved_dictionary);
+  cql_set_created_object_ref(&test_tables_dict_, cql_string_dictionary_create());
+  cql_code rc = verify_quoted_table_drops(db);
+
+  cql_set_object_ref(&test_tables_dict_, saved_dictionary);
+  cql_object_release(saved_dictionary);
+  if (rc != SQLITE_OK) {
+    fprintf(stderr, "Quoted table-drop helper regression failed: %s\n", sqlite3_errmsg(db));
+  }
+  return rc;
+}
+
 int main(int argc, char *argv[]) {
   if (argc != 2) {
     fprintf(stderr, "Expected usage: ./upgrade_test /path/to/db/\n");
@@ -172,8 +186,19 @@ int main(int argc, char *argv[]) {
     return SQLITE_ERROR;
   }
 
+  bool check_identifiers = proposed_version == 4 && current_version != 4;
+  if (check_identifiers && prepare_quoted_schema_objects(db) != SQLITE_OK) {
+    fprintf(stderr, "Unable to prepare quoted schema objects.\n");
+    return SQLITE_ERROR;
+  }
+
   if (upgrade(db, should_use_virtual_tables)) {
     fprintf(stderr, "Unable to upgrade DB.\n");
+    return SQLITE_ERROR;
+  }
+
+  if (check_identifiers && verify_quoted_schema_drops(db) != SQLITE_OK) {
+    fprintf(stderr, "Quoted schema-drop regression failed.\n");
     return SQLITE_ERROR;
   }
 
@@ -193,6 +218,10 @@ int main(int argc, char *argv[]) {
 
   if (post_validate(db, version)) {
     fprintf(stderr, "Unable to validate DB contents post-upgrade.\n");
+    return SQLITE_ERROR;
+  }
+
+  if (test_drop_quoted_tables(db) != SQLITE_OK) {
     return SQLITE_ERROR;
   }
 

@@ -11,6 +11,8 @@
 declare proc test_cql_get_facet_version(facet text not null, out version long not null) using transaction;
 declare proc printf no check;
 declare proc printf_stderr no check;
+declare proc cql_exec_internal(sql text!) using transaction;
+declare proc test_drop_table_helper(table_name text!) using transaction;
 
 @echo c, '
 #define printf_stderr(...) fprintf(stderr, __VA_ARGS__)
@@ -24,6 +26,65 @@ create table sqlite_master (
   rootpage integer not null,
   sql text
 );
+
+create table identifier_host (value int);
+
+-- ']' breaks the old bracket quoting; '"' exercises doubling in the new form.
+create proc verify_quoted_table_drops()
+begin
+  declare names cursor for select 'identifier_table]bracket' name
+    union all select 'identifier_table"quote' name;
+  loop fetch names
+  begin
+    call cql_exec_internal(printf('CREATE TABLE "%s"(value)',
+      replace(names.name, '"', '""')));
+    call test_drop_table_helper(names.name);
+    if (select exists(select 1 from sqlite_master where name = names.name)) then
+      printf_stderr("ERROR! quoted table %s was not dropped\n", names.name);
+      throw;
+    end if;
+  end;
+end;
+
+create proc prepare_quoted_schema_objects()
+begin
+  -- Seed unmanaged objects before an exclusive upgrade; verification runs after it.
+  create table identifier_host (value int);
+  insert into identifier_host values (42);
+  declare names cursor for select ']bracket' suffix
+    union all select '"quote' suffix;
+  loop fetch names
+  begin
+    let view_name := printf('identifier_view%s', names.suffix);
+    let trigger_name := printf('identifier_trigger%s', names.suffix);
+    let index_name := printf('identifier_index%s', names.suffix);
+    call cql_exec_internal(printf('CREATE VIEW "%s" AS SELECT * FROM identifier_host',
+      replace(view_name, '"', '""')));
+    call cql_exec_internal(printf(
+      'CREATE TRIGGER "%s" AFTER INSERT ON identifier_host BEGIN SELECT 1; END',
+      replace(trigger_name, '"', '""')));
+    call cql_exec_internal(printf('CREATE INDEX "%s" ON identifier_host(value)',
+      replace(index_name, '"', '""')));
+  end;
+end;
+
+create proc verify_quoted_schema_drops()
+begin
+  if (select exists(select 1 from sqlite_master
+    where name in ('identifier_view]bracket', 'identifier_view"quote',
+      'identifier_trigger]bracket', 'identifier_trigger"quote',
+      'identifier_index]bracket', 'identifier_index"quote'))) then
+    printf_stderr("ERROR! quoted schema objects were not dropped\n");
+    throw;
+  end if;
+  -- This table is intentionally outside the managed schema and must survive.
+  if (select count(*) from identifier_host) != 1 or
+     (select value from identifier_host) != 42 then
+    printf_stderr("ERROR! schema drops modified unrelated data\n");
+    throw;
+  end if;
+  drop table identifier_host;
+end;
 
 create proc verify_object_present_in_even_versions(
   version_ int not null,

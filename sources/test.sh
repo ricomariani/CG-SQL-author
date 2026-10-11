@@ -931,11 +931,6 @@ upgrade_test() {
   TEST_DESC="Running schema upgrade test"
   TEST_CMD="upgrade/upgrade_test.sh \"${TEST_COVERAGE_ARGS}\""
   run_test_expect_success
-
-  TEST_NAME="schema_drop_identifiers"
-  TEST_DESC="Testing exclusive schema drops with quoted database identifiers"
-  TEST_CMD="python3 \"$T/schema_drop_identifiers_test.py\" \"$O\""
-  run_test_expect_success
 }
 
 query_plan_test() {

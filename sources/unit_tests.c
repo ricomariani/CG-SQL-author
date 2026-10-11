@@ -322,6 +322,26 @@ static bool test_comment_text_encoding() {
   return result;
 }
 
+static bool test_comment_marker_scan() {
+  CHARBUF_OPEN(temp);
+
+  cg_remove_slash_star_and_star_slash(&temp);
+  bool result = temp.used == 1 && !strcmp(temp.ptr, "");
+
+  const char *inputs[] = { "/", "*", "/*", "*/", "/* */", "text/*", "text*/" };
+  const char *outputs[] = { "/", "*", "/+", "+/", "/+ +/", "text/+", "text+/" };
+  for (uint32_t i = 0; i < sizeof(inputs) / sizeof(inputs[0]); i++) {
+    bclear(&temp);
+    bprintf(&temp, "%s", inputs[i]);
+    uint32_t used = temp.used;
+    cg_remove_slash_star_and_star_slash(&temp);
+    result &= temp.used == used && !strcmp(temp.ptr, outputs[i]);
+  }
+
+  CHARBUF_CLOSE(temp);
+  return result;
+}
+
 static bool test_bytebuf_self_append() {
   bytebuf buffer;
   bytebuf_open(&buffer);
@@ -486,6 +506,7 @@ cql_noexport void run_unit_tests() {
   // Source-controlled provenance text must remain inside generated line
   // comments while preserving printable and UTF-8 content.
   TEST_ASSERT(test_comment_text_encoding());
+  TEST_ASSERT(test_comment_marker_scan());
   TEST_ASSERT(test_bytebuf_self_append());
 }
 

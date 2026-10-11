@@ -436,7 +436,8 @@ cql_noexport void cg_pretty_quote_plaintext(CSTR str, charbuf *output, uint32_t 
 // into a comment block.
 cql_noexport void cg_remove_slash_star_and_star_slash(charbuf *_Nonnull b) {
   char *p = b->ptr;
-  for (uint32_t i = 0; i < b->used - 2; i++) {
+  // Require two text bytes before the NUL without subtracting from an empty buffer's used count.
+  for (uint32_t i = 0; i + 2 < b->used; i++) {
     if (p[i] == '*' && p[i+1] == '/') {
       p[i] = '+';
     }

@@ -433,7 +433,7 @@ CQL_EXPORT cql_string_ref _Nonnull cql_cursor_format_column(
   cql_dynamic_cursor *_Nonnull dyn_cursor,
   cql_int32 i);
 
-// compare two rows for equality
+// compare two rows for equality; row sizes and reference layouts must match
 CQL_EXPORT cql_bool cql_rows_equal(
   cql_result_set_ref _Nonnull rs1,
   cql_int32 row1,

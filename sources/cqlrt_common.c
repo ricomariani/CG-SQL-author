@@ -1493,7 +1493,7 @@ cql_bool cql_rows_equal(
   cql_contract(row1 >= 0 && row1 < count1);
   cql_contract(row2 >= 0 && row2 < count2);
 
-  // get offsets and verify this is the SAME metadata
+  // Verify the physical layout used to address and compare both rows.
   cql_result_set_meta *meta1 = cql_result_set_get_meta(rs1);
   cql_result_set_meta *meta2 = cql_result_set_get_meta(rs2);
   cql_uint16 refs_count = meta1->refsCount;
@@ -1502,6 +1502,7 @@ cql_bool cql_rows_equal(
   cql_contract(meta2->refsOffset == refs_offset);
 
   size_t row_size = meta1->rowsize;
+  cql_contract(meta2->rowsize == row_size);
   char *data1 = ((char *)cql_result_set_get_data(rs1)) + ((size_t)row1) * row_size;
   char *data2 = ((char *)cql_result_set_get_data(rs2)) + ((size_t)row2) * row_size;
 

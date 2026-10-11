@@ -137,6 +137,44 @@ cql_code post_validate(sqlite3* db, cql_int64 old_version) {
   return result;
 }
 
+static cql_code test_drop_quoted_tables(sqlite3 *db) {
+  const char *names[] = {
+    "identifier_table]bracket",
+    "identifier_table\"quote",
+    "identifier_table'apostrophe",
+    "identifier_table ] \" ; -- mixed"
+  };
+  cql_object_ref saved_dictionary = test_tables_dict_;
+  cql_object_retain(saved_dictionary);
+  cql_set_created_object_ref(&test_tables_dict_, cql_string_dictionary_create());
+  cql_code rc = SQLITE_OK;
+
+  for (size_t i = 0; i < sizeof(names) / sizeof(names[0]); i++) {
+    char *sql = sqlite3_mprintf("CREATE TABLE \"%w\"(value)", names[i]);
+    rc = sqlite3_exec(db, sql, NULL, NULL, NULL);
+    sqlite3_free(sql);
+    if (rc != SQLITE_OK) break;
+
+    cql_string_ref name = cql_string_ref_new(names[i]);
+    rc = test_drop_table_helper(db, name);
+    cql_string_release(name);
+    if (rc != SQLITE_OK) break;
+
+    // Creating the same name again proves the helper dropped the literal table.
+    sql = sqlite3_mprintf("CREATE TABLE \"%w\"(value); DROP TABLE \"%w\"", names[i], names[i]);
+    rc = sqlite3_exec(db, sql, NULL, NULL, NULL);
+    sqlite3_free(sql);
+    if (rc != SQLITE_OK) break;
+  }
+
+  cql_set_object_ref(&test_tables_dict_, saved_dictionary);
+  cql_object_release(saved_dictionary);
+  if (rc != SQLITE_OK) {
+    fprintf(stderr, "Quoted table-drop helper regression failed: %s\n", sqlite3_errmsg(db));
+  }
+  return rc;
+}
+
 int main(int argc, char *argv[]) {
   if (argc != 2) {
     fprintf(stderr, "Expected usage: ./upgrade_test /path/to/db/\n");
@@ -193,6 +231,10 @@ int main(int argc, char *argv[]) {
 
   if (post_validate(db, version)) {
     fprintf(stderr, "Unable to validate DB contents post-upgrade.\n");
+    return SQLITE_ERROR;
+  }
+
+  if (test_drop_quoted_tables(db) != SQLITE_OK) {
     return SQLITE_ERROR;
   }
 

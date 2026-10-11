@@ -8061,6 +8061,7 @@ begin
   -- A single zero byte: not even the four-byte little-endian stream count
   -- is present. Reading row 0 must report an error and leave C empty.
   let b := (select x'00');
+  EXPECT_EQ!(cql_blob_stream_count(b), 0);
   let hit := false;
   cursor C like my_blob;
   try
@@ -8076,11 +8077,10 @@ end);
 TEST!(blob_stream_invalid_offsets__,
 begin
   -- 12-byte stream, little-endian uint32 words:
-  --   0..3: count 5; 4..7: first exclusive end 255; 8..11: second end 0.
-  -- Count 5 requires a 24-byte count/offset table, but bytes 12..23 and all
-  -- row payloads are missing. Index 0's end exceeds length 12; index 1 has
-  -- start 255 > end 0; later indices cannot read their complete table entries.
-  let b := (select x'05000000FF00000000000000');
+  --   0..3: count 2; 4..7: first exclusive end 255; 8..11: second end 0.
+  -- The complete 12-byte table is present, but no row payload follows.
+  -- Index 0's end exceeds length 12; index 1 has start 255 > end 0.
+  let b := (select x'02000000FF00000000000000');
   let hit := 0;
   cursor C like my_blob;
   try
@@ -8094,7 +8094,7 @@ begin
 
   hit := 0;
   try
-    -- the start offset of the 2nd blob (index 0) is too big
+    -- the start offset of the 2nd blob (index 1) is too big
     cql_cursor_from_blob_stream(C, b, 1);
   catch
     hit := 1;
@@ -8104,7 +8104,7 @@ begin
 
   hit := 0;
   try
-    -- the count claims to be 5 but there are not enough offsets
+    -- index 3 is outside the declared count 2
     cql_cursor_from_blob_stream(C, b, 3);
   catch
     hit := 1;
@@ -8130,8 +8130,7 @@ begin
   -- not payload. A complete one-row stream needs an 8-byte count/offset table.
   -- The end-offset entry for index 0 lives at bytes[(0+1)*4 .. (0+1)*4+3] = bytes[4..7].
   -- Only byte 4 exists; bytes 5-7 are past the allocation.
-  -- Old check: (index+1)*4 >= len  =>  4 >= 5  => false  => proceeds to OOB read (ASAN).
-  -- New check: (index+2)*4 > len   =>  8 >  5  => true   => goto error before any read.
+  -- Table validation: count 1 > floor(5/4)-1 = 0, so reject before any offset read.
   let b := (select x'0100000005');
   let hit := 0;
   cursor C like my_blob;
@@ -8142,6 +8141,54 @@ begin
   end;
   EXPECT_EQ!(hit, 1);
   EXPECT_EQ!(C, false);
+end);
+
+TEST!(blob_stream_table_bounds__,
+begin
+  let control := control_blob();
+  cursor cases for
+    -- Four-byte little-endian count INT32_MAX (2,147,483,647), with no
+    -- offsets or payload. Index INT32_MAX-1 overflowed the old index+2.
+    select x'FFFFFF7F' as b, 2147483646 as idx
+    union all
+    -- Four-byte count 536,870,912, no offsets or payload. Index 536,870,910
+    -- made the old (index+2)*4 overflow signed INT32 despite this tiny input.
+    select x'00000020' as b, 536870910 as idx
+    union all
+    -- Four-byte unsigned count UINT32_MAX, no offsets or payload.
+    -- The old (count+1)*4 wrapped to zero; the full table cannot fit.
+    select x'FFFFFFFF' as b, 0 as idx
+    union all
+    -- Four-byte count zero: a complete empty stream, with no row 0.
+    select x'00000000' as b, 0 as idx
+    union all
+    -- 23-byte stream: count 2 at 0..3, ends 8 and 23 at 4..11.
+    -- Bytes 12..22 encode my_blob (0,0,"z_0"): "iis\0", presence bits 07,
+    -- zigzag integers 00,00, then "z_0\0". For index 1, start 8 is inside
+    -- the 12-byte table; it must not be treated as serialized row data.
+    select x'020000000800000017000000696973000700007A5F3000' as b, 1 as idx
+    union all
+    -- Complete valid five-row control stream; only the indices are invalid.
+    select control as b, -1 as idx
+    union all
+    select control as b, 5 as idx;
+
+  cursor C like my_blob;
+  loop fetch cases
+  begin
+    -- Rejection must clear an existing row, including its string reference.
+    fetch C() from values () @dummy_seed(42) @dummy_nullables;
+    let hit := false;
+    try
+      cql_cursor_from_blob_stream(C, cases.b, cases.idx);
+    catch
+      EXPECT_EQ!(@rc, 1); -- SQLITE_ERROR
+      hit := true;
+    end;
+    EXPECT_EQ!(hit, true);
+    EXPECT_EQ!(C, false);
+    EXPECT_EQ!(C.z, null);
+  end;
 end);
 
 END_SUITE();

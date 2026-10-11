@@ -3379,8 +3379,12 @@ cql_int32 cql_blob_stream_count(cql_blob_ref _Nonnull b)
   const uint8_t *bytes = (const uint8_t *)cql_get_blob_bytes(b);
   const uint32_t len = (uint32_t)cql_get_blob_size(b);
 
-  // the first 4 bytes are the count of blobs
-  return len >= 4 ? *(cql_int32 *)bytes : 0;
+  // Preserve the native-byte-order count without alignment or aliasing assumptions.
+  cql_int32 count = 0;
+  if (len >= sizeof(count)) {
+    memcpy(&count, bytes, sizeof(count));
+  }
+  return count;
 }
 
 
@@ -3404,31 +3408,36 @@ cql_code cql_cursor_from_blob_stream(
 
   // the first 4 bytes are the count of blobs
   // note that we're assuming little endian here, this could be generalized
-  uint32_t count = *(uint32_t *)bytes;
+  uint32_t count;
+  memcpy(&count, bytes, sizeof(count));
 
-  // We need to read 4 bytes at offset (index+1)*4, so we need (index+1)*4 + 4 <= len,
-  // i.e. (index+2)*4 <= len.  Using (index+1)*4 >= len would only verify the start of
-  // the read is in bounds, leaving up to 3 bytes readable past the end of the blob.
-  if (index < 0 || index >= count || (index + 2) * 4 > len) {
+  // Prove the entire count/offset table fits before any count or index arithmetic.
+  if (count > len / sizeof(uint32_t) - 1) {
+    goto error;
+  }
+
+  if (index < 0 || (uint32_t)index >= count) {
     goto error;
   }
 
   // note that we're assuming little endian here, this could be generalized
-  uint32_t end = *(uint32_t *)(bytes + (index + 1) * 4);
+  uint32_t end;
+  memcpy(&end, bytes + ((uint32_t)index + 1) * sizeof(end), sizeof(end));
   if (end > len) {
     goto error;
   }
 
   // the first blob starts after the offsets and count
-  uint32_t start = (count + 1) * sizeof(cql_int32);
+  uint32_t table_end = (count + 1) * sizeof(uint32_t);
+  uint32_t start = table_end;
 
   if (index > 0) {
-    // the first blob starts at 0 which is not recorded
+    // Subsequent blobs start at the preceding exclusive end.
     // note that we're assuming little endian here, this could be generalized
-    start = *(uint32_t *)(bytes + index * 4);
+    memcpy(&start, bytes + (uint32_t)index * sizeof(start), sizeof(start));
   }
 
-  if (start > end) {
+  if (start < table_end || start > end) {
     goto error;
   }
 

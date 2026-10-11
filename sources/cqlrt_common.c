@@ -5535,15 +5535,18 @@ static void cql_compute_key_blob_shape(
 }
 
 // Verifies every stored variable field before an update uses its offset or
-// length to size or copy a replacement blob.
+// length to size or copy a replacement blob. Optionally returns the sum of
+// field lengths, counting overlapping storage once per logical field.
 static cql_bool cql_validate_blob_variable_fields(
   const uint8_t *_Nonnull b,
   uint64_t original_bytes,
   uint64_t column_count,
   uint64_t storage_offset,
   uint64_t type_codes_offset,
-  uint64_t variable_offset)
+  uint64_t variable_offset,
+  uint64_t *_Nullable variable_size)
 {
+  uint64_t total_variable_size = 0;
   for (uint64_t icol = 0; icol < column_count; icol++) {
     uint8_t blob_column_type = b[type_codes_offset + icol];
 
@@ -5568,6 +5571,7 @@ static cql_bool cql_validate_blob_variable_fields(
         if (b[offset + len] != 0) {
           return 0;
         }
+        total_variable_size += bytes;
         break;
       }
 
@@ -5580,6 +5584,7 @@ static cql_bool cql_validate_blob_variable_fields(
         if (offset < variable_offset || offset + len > original_bytes) {
           return 0;
         }
+        total_variable_size += len;
         break;
       }
 
@@ -5588,6 +5593,10 @@ static cql_bool cql_validate_blob_variable_fields(
     }
   }
 
+  if (variable_size) {
+    // Shared payload ranges still need one copy per field in an updated blob.
+    *variable_size = total_variable_size;
+  }
   return 1;
 }
 
@@ -5787,7 +5796,7 @@ void bgetkey(
         header.column_count,
         shape.storage_offset,
         shape.type_codes_offset,
-        shape.variable_offset)) {
+        shape.variable_offset, NULL)) {
     goto cql_error;
   }
   uint64_t type_code_offset = shape.type_codes_offset + icol;
@@ -5888,7 +5897,7 @@ void bgetkey_type(
         header.column_count,
         shape.storage_offset,
         shape.type_codes_offset,
-        shape.variable_offset)) {
+        shape.variable_offset, NULL)) {
     goto cql_error;
   }
   sqlite3_result_int64(context, (int64_t)header.record_type);
@@ -5950,7 +5959,7 @@ void bupdatekey(
         header.column_count,
         shape.storage_offset,
         shape.type_codes_offset,
-        shape.variable_offset)) {
+        shape.variable_offset, &shape.variable_size)) {
     goto cql_error;
   }
 
@@ -6030,7 +6039,7 @@ void bupdatekey(
   }
 
   // adjust for change in length of variable length payload
-  uint64_t total_bytes = (uint64_t)(original_bytes + variable_size_adjustment);
+  uint64_t total_bytes = (uint64_t)((int64_t)(shape.variable_offset + shape.variable_size) + variable_size_adjustment);
 
   // we don't support records this big, they are insane already
   cql_contract(total_bytes == (cql_int32)total_bytes);
@@ -6533,7 +6542,7 @@ void bgetval(
         header.column_count,
         shape.storage_offset,
         shape.type_codes_offset,
-        shape.variable_offset)) {
+        shape.variable_offset, NULL)) {
     goto cql_error;
   }
 
@@ -6651,7 +6660,7 @@ void bgetval_type(
         header.column_count,
         shape.storage_offset,
         shape.type_codes_offset,
-        shape.variable_offset)) {
+        shape.variable_offset, NULL)) {
     goto cql_error;
   }
   sqlite3_result_int64(context, (int64_t)header.record_type);
@@ -6715,11 +6724,10 @@ void bupdateval(
         header.column_count,
         original_shape.storage_offset,
         original_shape.type_codes_offset,
-        original_shape.variable_offset)) {
+        original_shape.variable_offset, &original_shape.variable_size)) {
     goto cql_error;
   }
   original_shape.total_bytes = original_bytes;
-  original_shape.variable_size = original_bytes - original_shape.variable_offset;
 
   // We need to track how much variable space we need to add or remove we'll do
   // it here.  Likewise we track if columns were added or removed.
@@ -6817,36 +6825,31 @@ void bupdateval(
       if (!compat) {
         goto cql_error;
       }
-
-      switch (blob_column_type) {
-        // String field is stored in the variable space. The int64 storage
-        // encodes the length and offset. Length does not include the trailing
-        // null.
-        case CQL_BLOB_TYPE_STRING:
-        {
-          uint64_t val = cql_read_big_endian_u64(b + storage_offset);
-          uint32_t len = val & 0xffffffff;
-          variable_size_stored = len + 1;
-          break;
-        }
-
-        // Blob field is stored in the variable space. The int64 storage encodes
-        // the length and offset.
-        case CQL_BLOB_TYPE_BLOB:
-        {
-          uint64_t val = cql_read_big_endian_u64(b + storage_offset);
-          uint32_t len = val & 0xffffffff;
-          variable_size_stored = len;
-        }
-      }
     }
     else {
-      // The provided value is null, so we're deleting this column. There will
-      // be one less column in the result.
+      // The provided value is null, so we're deleting this column.
       col_adjustment--;
     }
 
-    variable_size_adjustment += variable_size_new - variable_size_stored;
+    switch (blob_column_type) {
+      // Subtract the old payload for replacements and deletions alike.
+      case CQL_BLOB_TYPE_STRING:
+      {
+        uint64_t val = cql_read_big_endian_u64(b + storage_offset);
+        uint32_t len = val & 0xffffffff;
+        variable_size_stored = (uint64_t)len + 1;
+        break;
+      }
+
+      case CQL_BLOB_TYPE_BLOB:
+      {
+        uint64_t val = cql_read_big_endian_u64(b + storage_offset);
+        uint32_t len = val & 0xffffffff;
+        variable_size_stored = len;
+      }
+    }
+
+    variable_size_adjustment += (int64_t)variable_size_new - (int64_t)variable_size_stored;
   }
 
   // compute the final shape parameters of the updated blob

@@ -49,8 +49,8 @@ end;
 create proc prepare_quoted_schema_objects()
 begin
   -- Seed unmanaged objects before an exclusive upgrade; verification runs after it.
-  call cql_exec_internal('CREATE TABLE identifier_host(value)');
-  call cql_exec_internal('INSERT INTO identifier_host VALUES (42)');
+  create table identifier_host (value int);
+  insert into identifier_host values (42);
   declare names cursor for select ']bracket' suffix
     union all select '"quote' suffix;
   loop fetch names
@@ -83,7 +83,7 @@ begin
     printf_stderr("ERROR! schema drops modified unrelated data\n");
     throw;
   end if;
-  call cql_exec_internal('DROP TABLE identifier_host');
+  drop table identifier_host;
 end;
 
 create proc verify_object_present_in_even_versions(

@@ -79,35 +79,47 @@ Here is the pattern that matters most:
 > must remain true across several compiler phases, representations, backends, or
 > ownership conventions.
 
-I came away with five ideas that organize the history:
+I came away with seven ideas that organize the history:
 
 1. **Cross-phase semantic invariants** - nullability, sensitivity, error state,
    identifier spelling, and ownership must survive semantic analysis, rewriting,
    SQL generation, and multiple backends. Novel AST kinds are a special case:
    the normal path is deliberately fail-fast, so missing handlers are forced
    out during development.
-2. **Schema evolution and dependency ordering** - create order, drop order,
-   dependency order, declaration order, key order, and quoted-name handling are
-   related but not interchangeable.
+2. **Schema evolution needs an observable-state oracle** - create order, drop
+   order, dependency order, declaration order, and quoted-name handling are
+   related but not interchangeable. More importantly, version CRCs and
+   housekeeping cannot be allowed to overrule the physical schema they claim
+   to describe.
 3. **Global compiler state and C ownership** - the intentionally stateful
    implementation is concise and effective, but nested compilation work,
    repeated invocation, aliasing, and `+1` reference ownership require explicit
    protocols.
-4. **Representation boundaries** - growable buffers, serialized blobs, offset
-   tables, platform integer widths, and C aliasing/alignment rules produce a
-   disproportionate share of low-level fixes.
-5. **Coverage-driven fail-fast development plus independent tests** - 100%
+4. **Representation boundaries and changing contracts** - growable buffers,
+   serialized blobs, offset tables, platform integer widths, and C
+   aliasing/alignment rules produce a disproportionate share of low-level
+   fixes. The two binary serializers had very different starting requirements,
+   which explains why their histories also look different.
+5. **Rationale comments as design memory** - non-obvious transformations,
+   invariants, constraints, ordering rules, ownership exceptions, and warnings
+   against tempting changes preserve the WHY that the C type system cannot
+   express.
+6. **Coverage-driven fail-fast development plus independent tests** - 100%
    coverage and always-on contracts force new tree shapes through every stage
    that can see them. Golden output is still only a consistency oracle, so the
    hardest remaining bugs survived when the compiler and its expected outputs
    shared the same mistaken assumption.
+7. **Outputs and examples can become infrastructure** - JSON became a stable
+   intermediate contract, and some Python examples eventually replaced large C
+   backends. Their required standard changed when their job changed.
 
 CQL is also a useful counterexample to a fair amount of conventional C advice.
 It has a 27,000-line semantic-analysis file, hundreds of file-static variables,
 large macros, and several very long functions. At the same time, the median
-function is only 14 lines, naming is exceptionally regular, contracts are dense
-and always on, arenas simplify allocation lifetimes, and the test suite compiles
-and executes generated code through several independent paths.
+function is only 14 lines, naming is exceptionally regular, the comment corpus
+is unusually large and purposeful, contracts are dense and always on, arenas
+simplify allocation lifetimes, and the test suite compiles and executes
+generated code through several independent paths.
 
 The apparent contradiction is the interesting part:
 
@@ -232,7 +244,7 @@ The following counts overlap because a commit can affect several phases:
 | Code generation | 25 |
 | Runtime | 24 |
 | Semantic analysis | 22 |
-| Other production tools and bindings | 16 |
+| Other tools and bindings | 16 |
 | Core AST, buffer, and symbol utilities | 9 |
 | Parser | 9 |
 | Lexer | 7 |
@@ -248,7 +260,7 @@ machine-level optimization.
 
 ---
 
-## Does it work?
+## Is CQL reliable?
 
 Yes.
 
@@ -277,8 +289,8 @@ attach a percentile to "exceptionally low." It is my engineering judgment, not
 a measured statistic.
 
 So yes, the compiler works. The low operational bug rate, fail-fast covered
-tree walking, layered execution tests, and long production use all point in the
-same direction.
+tree walking, rationale-heavy comments and preserved design history, layered
+execution tests, and long production use all point in the same direction.
 
 ---
 
@@ -742,8 +754,23 @@ in the flow protocol.
 
 ### 2. Schema migration and ordering form the hardest persistent subsystem
 
-Schema evolution repeatedly produced fixes around order, dependency, and name
-handling. This is the clearest long-running cluster in the public history.
+Schema migration was the most maddening subsystem in the history.
+
+It had high coverage, including the 100% norm, and it was tested relentlessly.
+The implementation usually did exactly what we intended. The problem was that
+I did not fully understand all the constraints, so we verified the wrong model
+with great precision.
+
+There were two related failure families:
+
+1. version CRCs and housekeeping history could disagree with the actual SQLite
+   schema;
+2. drop, create, dependency, and recreate order were each individually
+   plausible but not interchangeable.
+
+The first family caused the more consequential operational failures. The
+second produced ordinary implementation bugs around comparators, loop
+direction, graph order, backend parity, and quoted names.
 
 The question is which order applies. Schema work has several perfectly
 legitimate answers:
@@ -759,6 +786,104 @@ legitimate answers:
 
 Each one is locally reasonable. Trouble starts when code reuses one where
 another is required.
+
+#### The first problem was the model, not merely the comparator
+
+The original theory treated schema versions as a durable history. Each version
+had a CRC, so parallel development could add different work to the same version
+and the upgrader could tell which exact version contents had already run.
+
+That sounded reasonable and the generated code faithfully implemented it. It
+was still the wrong abstraction.
+
+Schema regions meant that an old version could legitimately acquire new work
+when a product subscribed to another region. `@unsub` and `@resub` added more
+historical transitions. The stored facet could say that a later delete or
+column upgrade had already happened while the physical database had returned
+to an older state.
+
+This produced "zombie" tables. A newly active old-version step could recreate a
+table while its later deletion facet remained clean. Commit
+[`c5b3bb92`](https://github.com/ricomariani/CG-SQL-author/commit/c5b3bb9221715a4cd06ab578549c774cc79371e3)
+moved tombstoned table drops out of individual versions and ran them whenever
+any upgrade occurred. The public historical account says that change reduced
+schema-upgrade failures by **90%**.
+
+We then found weird housekeeping states: operators could manually remove
+schema without tombstones, manually delete tables, or leave old version facets
+behind. Commit
+[`89660734`](https://github.com/ricomariani/CG-SQL-author/commit/896607347de1cbafd999ebd3b1f519ad2af015f0)
+deleted facets for version gaps. That reconciled one class of stale metadata,
+but it still repaired the history rather than asking what was physically
+present.
+
+The test oracle was also getting stronger. In April 2021,
+[`24410139`](https://github.com/ricomariani/CG-SQL-author/commit/24410139a8dcc4919c7e7e452dc140b6de070199)
+made the integration suite execute every `nothing -> vj -> vi` path and compare
+the result with a direct install of `vi`:
+
+```sh
+echo "Upgrade from nothing to v$j, then to v$i -- must match direct update to v$i"
+```
+
+The validator canonicalized the actual `sqlite_master` contents. This was much
+stronger than asking whether generated text matched a golden. At Meta we had
+the same idea first against real product schemas. The public regression made
+the principle general and durable.
+
+The decisive change came after we had frequency data. The public history says
+roughly **one database in 100,000** was missing columns even though the
+corresponding version CRC claimed the upgrade had run. We could see the
+physical failure, but we could not reproduce the complete historical path that
+created it.
+
+Commit
+[`fe921eac`](https://github.com/ricomariani/CG-SQL-author/commit/fe921eac81c4000b690c4c4a8cec54dbbd56109a)
+stopped using per-version CRCs to decide whether normal tables and columns
+needed creation. In schematic form:
+
+```text
+before: version CRC changed -> run the version's operations
+after:  schema changed -> run idempotent operations guarded by physical existence
+```
+
+Versions became ordering labels. Actual table and column presence came from a
+cached dictionary built from `sqlite_master`. Each operation became locally
+idempotent:
+
+```c
+bprintf(&preamble, "  LET result := cql_string_dictionary_find(%s_tables_dict_, table_);\n", global_proc_name);
+bprintf(&preamble, "  SET exists_ := result IS NOT NULL and result IS NOT '';\n");
+
+bprintf(&upgrade, "    IF NOT %s_table_exists(cql_compressed('%s')) THEN\n", global_proc_name, target_name);
+```
+
+The direct test was both simpler and faster. The public account reports a
+13-15% improvement and a 2.2% reduction in upgrader size for the important
+case.
+
+The final simplification was deletion. Commit
+[`27f0cb64`](https://github.com/ricomariani/CG-SQL-author/commit/27f0cb649e33ed04d37a0172ccbc146c66427194)
+removed `@resub`, its grammar and semantic machinery, historical transition
+matching, diagnostics, and dedicated tests: **2,136 deleted lines** across 49
+files. A table is unsubscribed or it is not. Removing `@unsub` is the
+resubscription operation.
+
+At Meta the recreate-group policy hook went further and compared actual schema
+with desired schema before deciding whether destructive recreation was needed.
+It also had to cope with old orphaned tables, missing tombstones, and other
+states that should never have existed. The public runtime exposes this hook but
+deliberately implements the naive policy: it always performs full recreation.
+
+The customer-visible symptom of the internal failures was a full schema reset
+and a full content download rather than preservation across upgrade. It was not
+fatal, but it was expensive and disruptive. Public Git records the aggregate
+failure-rate improvements; the reset and redownload behavior comes from my
+operational recollection.
+
+This is the cleanest example in the study where 100% coverage did exactly what
+coverage promises while the system still failed. Every line of the wrong model
+could execute correctly. The missing oracle was the physical end state.
 
 #### Drop order was not create order
 
@@ -909,13 +1034,76 @@ So `3b597671` fixed C drop order and expanded the C fixture, while
 introducing a zero-iteration Lua loop; `6f2c9498` completed the correction. The
 fixture checks successful execution, but it does not independently prove the
 drop order because the referenced tables are empty. This is a multi-backend
-correction sequence: the drop-order failure is the operational bug, and the
-Lua loop is an incomplete first fix in its correction chain, not a separately
+correction sequence. I remember the drop-order failure as operational. Public
+Git proves the correction chain but does not independently classify it as a
+released incident. The Lua loop is an incomplete first fix, not a separately
 reported field defect.
 
 These are different bugs, but they point to the same weak spot. "Order" lived
 implicitly in loops, comparators, and buffer accumulation instead of in named
 order domains.
+
+#### Recreate groups show what happened after the model matured
+
+I remembered recreate groups as the point where we finally had this under
+control. The Git history supports that conclusion, with an important
+qualification: the feature was not flawless on its first patch.
+
+Vaishnavi Mantha's first visible repository work in July 2022 was the runtime
+skeleton for `cql_rebuild_recreate_group`. She then added generated integration,
+compressed desired-schema inputs, the dependency graph, cycle rejection,
+partial rebuild status, and recursive dependent-group handling.
+
+The runtime hook began before the decisive October create-plan simplification.
+The harder partial-rebuild and cross-group dependency work landed after that
+change, when physical state had become the ordinary create-plan authority.
+
+This was harder than the original recreate feature. A runtime could preserve a
+group when the actual and desired schemas were compatible, or destructively
+recreate it otherwise. Foreign-key dependencies between groups meant that a
+parent recreation could force children to recreate as well.
+
+The feature arrived after the integration suite had already spent more than a
+year requiring every staged upgrade path to converge on the same canonical
+physical schema. Dependency tests came with the implementation. They covered
+named groups, multiple referenced groups, same-group references, and cycle
+rejection.
+
+Public Git does show several development corrections:
+
+- the default rebuild result needed initialization;
+- comparator direction needed a concrete parent/child counterexample;
+- creation order had to become a true topological group order;
+- dropping a child through its parent had to dirty the child's saved state;
+- migration procedures had to run only after destructive recreation;
+- deleted-table drops needed reverse order in both C and Lua.
+
+The topological fix in
+[`c5df0113`](https://github.com/ricomariani/CG-SQL-author/commit/c5df01133b43502042c9d7c799f24821a5329e96)
+states the conceptual correction directly:
+
+```diff
+-// We use create order for groups
++// We use topological order for groups.
++// recreate_group_deps holds (parent->child) edges and has no cycles.
+```
+
+Its regression used the kind of interleaving that declaration order could not
+solve: one group contained a table that depended on another group, followed by
+another table from the first group.
+
+Every recreate-group correction I found predates the first public version tag,
+`v1.0.0`, on February 25, 2024. I found no later functional recreate-group fix
+and no public issue or commit describing a released recreate-group incident.
+That absence cannot prove private deployment history, but it corroborates my
+recollection that the issues were found before release and that the feature
+produced no customer incident.
+
+This is the positive counterexample. The earlier migration failures repeatedly
+revealed missing concepts in the state model. Recreate-group failures were
+bounded implementation edges around an explicit dependency graph and an
+end-to-end physical-schema oracle. Each counterexample produced a focused fix
+and a durable regression rather than another redesign of the subsystem.
 
 #### Identifier correctness was distributed
 
@@ -1770,15 +1958,143 @@ classes, or when code spells out the protocol by hand.
 
 ---
 
-### 5. Late audit hardening exposed hidden representation assumptions
+### 5. Representation boundaries expose hidden assumptions
 
-I weight this section differently from the older history. It is
-disproportionately made up of late-2026 AI-assisted audit work. Several changes
-strengthened an invariant that no known production caller violated.
+This family has two layers: a longer serializer history and a concentrated
+late-2026 AI-assisted correctness audit.
 
-These changes make the code better. They expose low-level preconditions that
-had been implicit. They do not show that buffers were routinely failing in
-operation.
+I weight the late audit changes differently from observed operational bugs.
+Several strengthened an invariant that no known production caller violated.
+They make the code better and expose low-level preconditions that had been
+implicit. They do not show that buffers were routinely failing in operation.
+
+#### Two serializers, two starting contracts
+
+There are two binary serializer histories in this codebase and they should not
+be mashed together.
+
+The original cursor serializer was designed to take arbitrary cursor-shaped
+data and turn it into a blob for storage or transport. From the beginning we
+expected version skew: the reader might be older or newer than the writer. We
+also expected the blob to be attacker controlled. The March 2022 introduction,
+[`b573687a`](https://github.com/ricomariani/CG-SQL-author/commit/b573687a5f0283b93d87987d6b29ae97fc2942f8),
+said so directly:
+
+> The blob reading code is hardened so that it assumes the content of the blob
+> is hostile. There are tests for this.
+
+That was not an aspiration added years later. It was in the first change.
+`cql_cursor_from_bytes` still puts the contract next to the implementation:
+
+```c
+// This is the inverse of cql_cursor_to_bytebuf, it takes a byte stream and
+// reconstructs a dynamic cursor from it.  The byte stream is assumed to be
+// hostile. It could be corrupted in any kind of way and this code is expected
+// to handle that.
+cql_code cql_cursor_from_bytes(
+  cql_dynamic_cursor *_Nonnull dyn_cursor,
+  const uint8_t *_Nonnull bytes,
+  uint32_t size)
+```
+
+The type signature in the blob provides shape versioning. A newer reader can
+fill missing trailing nullable fields with `NULL`. Two days after the initial
+change, [`0b3c88a6`](https://github.com/ricomariani/CG-SQL-author/commit/0b3c88a671b7a644e27243d329938919cdbecc9e)
+completed the other direction so that an older reader can ignore extra
+trailing fields from a newer writer. The current comment is wonderfully
+specific:
+
+```c
+// Extra fields do not have to match, the assumption is that this is a
+// future version of the type talking to a past version.  The past version
+// sees only what it expects to see.  However, we did have to compute the
+// nullable_count and bool_count to get the bit vector size correct.
+```
+
+The first few changes already included malformed-input cases, exhaustive
+truncation, and mutation under sanitizers. The serializer still had bugs.
+The most informative one appeared when the Lua implementation was required to
+produce exactly the same bytes as C in
+[`d94eded9`](https://github.com/ricomariani/CG-SQL-author/commit/d94eded92d63eed26952b6149d5a9136682e75b1).
+That comparison found two shared-format mistakes:
+
+- nested blob lengths used a fixed native integer instead of a varint;
+- a nullable Boolean that was `NULL` did not advance the Boolean bit index.
+
+The second problem made nullable Booleans effectively unusable. Ordinary C
+round trips did not reveal either problem because the C encoder and decoder
+agreed with the same representation. A fixed byte sequence and an independent
+Lua implementation did.
+
+The `bgetkey`/`bcreatekey`/`bupdatekey` family had a completely different
+origin. These are SQLite extensions for backed tables. The operation names are
+configurable because applications are allowed to provide whatever storage
+format they want.
+
+At Meta we had a hardened implementation that depended on internal
+infrastructure and could not be open-sourced. I needed enough public
+implementation to run the compiler tests, so the first open-source version was
+deliberately a stub. The September 2022 source could hardly have been clearer:
+
+```c
+// this is nothing like a generic blob format but it's enough to do some tests
+// the blobs that are stored can only be integers of course but since the
+// codegen is the same for all types it still makes for a useful test
+typedef struct test_blob {
+  int64_t type;
+  int64_t int1;
+  int64_t int2;
+  int64_t int3;
+} test_blob;
+```
+
+Over time the stub became useful enough that it started becoming real. The 2023
+implementation added all the primitive types, sparse values, canonical keys,
+updates, and a versioned header. The comments openly tracked the unfinished
+parts:
+
+```c
+// NOTE: THIS CODE DOES NOT HANDLE NULL COLUMNS (which are basically the same as missing)
+void bcreateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *_Nonnull *_Nonnull argv) {
+
+// NOTE: THIS CODE DOES NOT HANDLE THE CASE WHERE NEW COLUMNS ARE ADDED
+void bupdateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *_Nonnull *_Nonnull argv) {
+```
+
+Those limitations were subsequently removed, but the input contract was still
+the old one. A later version said:
+
+```c
+// not computed but that is of no import since we are not yet validating all
+// the internal offsets (blobs are assumed to be well formed for now)
+```
+
+and its failure path returned SQL `NULL` with the comment:
+
+```c
+// If anything goes wrong we just return a null blob
+// We could probably do better than this.
+```
+
+That history explains the 2026 sequence much better than a flat list of bounds
+bugs. The code's job changed in stages:
+
+1. exercise the backed-table rewrites;
+2. provide a convenient general binary implementation;
+3. produce canonical durable keys and sparse values;
+4. survive arbitrary persisted input;
+5. distinguish an absent nullable value from malformed storage by returning
+   `NULL` for the former and `SQLITE_ERROR` for the latter.
+
+CQL now offers the configurable binary UDF implementation and SQLite
+JSON/JSONB backing as ready-made choices, while custom implementations remain
+part of the design.
+
+The different histories matter to the conclusions. The cursor serializer
+started with hostile-input and version-skew requirements, so its later defects
+show the limits of strong defenses and shared round-trip tests. The backed
+serializer started as visible test scaffolding. Its repeated upgrades show what
+happens when useful sample code gradually acquires a production contract.
 
 #### `bytebuf` self-append was a prophylactic invariant change
 
@@ -1919,7 +2235,9 @@ It is registered in `run_unit_tests` with
 
 #### Serialized blobs need whole-shape validation
 
-The backed-blob and blob-stream fixes form a recognizable family:
+By 2026 the two serializer histories converged on the same mechanical lesson,
+even though they arrived there from different starting contracts. The
+backed-blob and blob-stream fixes form a recognizable family:
 
 - canonical field ordering;
 - offset-table off-by-one errors;
@@ -2234,7 +2552,127 @@ rule.
 
 ---
 
-### 7. The tests are unusually layered; independence matters more than volume
+### 7. Outputs and examples can become infrastructure
+
+JSON has its own expectation-migration story.
+
+I remember it starting as a nice-to-have output. It became critical to the
+Meta CI/CD system because it was a much better boundary than adding another
+large C backend every time somebody needed a new integration. The missing axis
+is downstream usage: the generator was already capable at release, but only a
+small amount of the build depended on it.
+
+JSON was present in the October 2020 open-source release.
+`cg_json_schema.c` arrived in the initial commit with 1,819 physical lines,
+nearly 1,000 lines of test input, and a 2,473-line golden. The standard suite
+already checked expected content, generic JSON validity, and conformance to the
+CQL JSON grammar. So it did not begin in public as an untested toy.
+
+What changed after release was the ambition and importance of the output. The
+public history captures plenty of that transition: 80 later commits touched
+`cg_json_schema.c`, while its test input roughly doubled and its golden more
+than tripled. JSON accumulated views, virtual tables, attributes, interfaces,
+subscriptions, declarations, dependencies, canonical duplicate suppression,
+per-entity CRCs, source locations, schema text, and other facts needed by real
+downstream tools.
+
+The 2021 changes show the center of gravity moving. JSON gained view, index,
+and trigger attributes; per-entity CRCs for cheap change detection in
+[`8ae78ade`](https://github.com/ricomariani/CG-SQL-author/commit/8ae78adee49330eaecd984af9c8679e34a86ffb3);
+and shared-fragment dependency traversal in
+[`52b6f6bb`](https://github.com/ricomariani/CG-SQL-author/commit/52b6f6bbf89b29d0e6380c6a1a3d93976017af2c).
+At the end of that year,
+[`c31e0053`](https://github.com/ricomariani/CG-SQL-author/commit/c31e0053842ec22e563251e513f256e2c848cc69)
+added `cqljson.py`, making the format immediately useful for databases,
+diagrams, and other flexible consumers. That is the phase where JSON stopped
+being merely nice output and became an engineering boundary.
+
+Downstream use kept growing. At Meta the build system eventually consumed JSON
+to phase the build and decide which secondary artifacts had to be generated.
+At that point JSON was no longer just metadata handed to optional tools. It was
+part of the build's control plane.
+
+The public history later shows the same direction. Commit
+[`e5e91286`](https://github.com/ricomariani/CG-SQL-author/commit/e5e912867b884b657efcb6c03e2503bdb1a53221)
+added `isEmitted` and variable-group information so JSON consumers could tell
+which groups a translation unit actually emitted. That is build-planning
+information, not decorative schema output.
+
+The important design choice was to make the JSON format the contract and let
+the consumers be ordinary programs. That contract steadily became richer:
+
+- attributes and dependencies had to survive compiler abstractions;
+- per-entity CRCs made schema sameness cheap to test;
+- duplicate legal declarations had to collapse to one canonical entry;
+- high-bit text and later general UTF-8 had to remain valid JSON;
+- field naming changes became compatibility events rather than local
+  pretty-printing choices.
+
+This moved a lot of work out of wordy C and into flexible Python. The deleted
+history makes the scale visible.
+
+In January 2023,
+[`a94c748c`](https://github.com/ricomariani/CG-SQL-author/commit/a94c748c5e2d0ca2ad699e282c0d015c9e1de498)
+removed the old Java C backend and its runtime/test surface: 2,934 deleted
+lines across 64 files. A Python generator consuming JSON replaced the same
+kind of work with something much easier to customize.
+
+The Objective-C transition was even more explicit.
+[`00875ef5`](https://github.com/ricomariani/CG-SQL-author/commit/00875ef52dc983f46c4dba29f490b22c3ec8b1cb)
+said `cqlobjc.py` was a complete replacement for `--rt objc`. A week later,
+[`003d37a9`](https://github.com/ricomariani/CG-SQL-author/commit/003d37a91bc6a8f4092f0c6c3c143b0a01bfac75)
+deleted the C backend and 4,185 lines of Objective-C golden output. The commit
+message explains why:
+
+> ObjC is now on the same footing as all the other ABI wrappers and indeed the
+> python is a lot easier for most people to work with.
+
+That is exactly what happened internally at Meta a few years earlier. JSON
+made the extraction possible.
+
+The Python tools do not all have the same status. `cqljson.py` still says that
+its diagrams and generated database are sample outputs while the JSON input is
+the stable contract:
+
+```python
+# NB: This code should be considered SAMPLE code, not production code.
+# Which is to say you can reasonably expect that the specifics of the diagrams
+# and the database produced here are likely to change at whim.  If you need
+# a particular output, you are enouraged to FORK this sample into something
+# stable.  The JSON format itself is the contract and it evolves in a backwards
+# compatible way.  This script is likely to change to make different pretty
+# pictures at various times.
+```
+
+The Java, C#, full Objective-C, and SQLite-extension generators are useful
+examples that applications can fork. `cqlobjc.py` is different because it
+actually replaced an integrated compiler backend. Its copied sample-code
+header no longer describes its real role particularly well.
+
+The quality standard changed as the role changed.
+[`ec3da9eb`](https://github.com/ricomariani/CG-SQL-author/commit/ec3da9eb020d7a80d438e3c1ec83ac070ab0f3b2)
+explicitly said that `cqljson.py` was sample code and manual testing was
+enough. By
+[`eaa48be3`](https://github.com/ricomariani/CG-SQL-author/commit/eaa48be31c4a44b37a0a80c2abead5f58aeec70b)
+in 2026, its SQL output had a focused escaping regression that executed the
+generated SQL against SQLite. The output format could still evolve, but
+malformed output, unsafe quoting, and crashes were no longer acceptable
+sample-code behavior.
+
+This is another reason raw bug counts need context. A fix in a promoted example
+can mean that a once-optional tool acquired a real compatibility or safety
+contract. The code did not necessarily get sloppier. The standard of
+excellence moved because the tool became important.
+
+There is a testing lesson too. When a Python consumer replaces a C backend, the
+old backend's coverage should not simply disappear with the deleted code. The
+replacement needs its own direct regression surface. JSON provides an
+excellent intermediate contract, but the contract does not test every consumer
+by itself.
+
+---
+
+### 8. The tests are unusually layered; independence matters more than volume
 
 The current corpus is large:
 
@@ -2486,6 +2924,100 @@ The key testing point is:
 > change, but not necessarily correctness. Independent oracles increase
 > correctness.
 
+#### Short-circuit logic needed more than a complete truth table
+
+`AND` and `OR` had a similar history on a smaller scale.
+
+The public import already contains the mature C design, so Git cannot show the
+many internal iterations that produced it. By October 2020 the suite covered
+all nine false/true/`NULL` combinations for each operator. It checked both the
+result and observable call counts, including the asymmetric cases:
+
+- `false AND NULL` skips the right side;
+- `NULL AND false` must evaluate the right side;
+- `true OR NULL` skips the right side;
+- `NULL OR true` must evaluate the right side.
+
+It also used divide-by-zero expressions to prove that a skipped operand really
+was not evaluated:
+
+```sql
+EXPECT_SQL_TOO!(not (0 and 1/zero));
+EXPECT_SQL_TOO!(1 or 1 / zero);
+```
+
+Those tests were comprehensive across the value and evaluation-count model.
+They were not comprehensive across every execution mechanism needed to
+implement that model.
+
+In October 2021,
+[`c2cb6af4`](https://github.com/ricomariani/CG-SQL-author/commit/c2cb6af4d646e602f1045e711a19a013b4b6be13)
+found a temporary-lifetime dimension. The generator traversed the deferred
+right operand before the left operand but emitted the left first. Nested
+nullable logical expressions could therefore reuse a temporary that was still
+live.
+
+The fix made traversal follow emitted evaluation order:
+
+```diff
+   CG_RESERVE_RESULT_VAR(ast, sem_type_result);
+-
++  CG_PUSH_EVAL(l, pri_new);
+   CHARBUF_OPEN(right_eval);
+```
+
+The added regressions used nested `AND`/`OR` directly as branch conditions and
+required every live Boolean temporary to remain distinct. The original 3x3
+matrix could not reveal that failure because each case contained one top-level
+logical operation.
+
+Lua added another missing dimension. The initial backend deferred a
+statement-producing right side inside an anonymous function. That preserved
+values and side-effect counts, and the golden output approved it. It did not
+preserve the error continuation when a procedure-as-function needed to transfer
+control to the enclosing procedure's cleanup path.
+
+Issue 131 and commit
+[`e10a25e8`](https://github.com/ricomariani/CG-SQL-author/commit/e10a25e839d4baa4eba53082b57cc26b2870654b)
+split the implementation:
+
+- an expression-only right side can still use the lazy helper;
+- a statement-producing right side is open-coded in the enclosing procedure so
+  cleanup and error transfer remain legal.
+
+Conceptually the generated form changed from:
+
+```text
+cql_shortcircuit_op(left, function()
+  right-side statements
+  return right
+end)
+```
+
+to:
+
+```text
+if left is decisive then
+  result = decisive value
+else
+  right-side statements
+  result = logical_op(left, right)
+end
+```
+
+The durable lesson is compact:
+
+> A complete truth table is not a complete execution model.
+
+Result value, left/right evaluation count, nullable versus non-null paths,
+value versus branch context, nesting, temporary lifetime, and cleanup
+continuation are separate semantic dimensions. Coverage can execute the same
+generator lines while missing one of those dimensions entirely.
+
+SQLite independently checks value and precedence semantics. It cannot validate
+generated C or Lua temporary lifetime or cleanup continuation. Those require
+backend execution and focused structural or failure-path tests.
+
 #### Coverage is part of the compiler design
 
 Project documentation says line coverage is maintained at 100%, with any dip
@@ -2628,6 +3160,256 @@ it marks them as replacements for platform or C runtime behavior.
 Regular naming buys back some of the navigability lost to file size. A
 27,000-line file is much less hostile when symbol names form a searchable
 taxonomy.
+
+### Comments: the WHY is part of the implementation
+
+The commenting goal was simple:
+
+> The goal was that every important step or transformation be described,
+> especially whenever the WHY was not self-evident.
+
+This was never a target percentage and it was never a request to narrate
+obvious C. Regular mechanics can be light. Transformations, invariants,
+ordering, ownership exceptions, representation boundaries, and phase
+transitions should explain why the code has to be the way it is.
+
+That distinction matters. A comment that says "increment `i`" has almost no
+value. A comment that says an ordinal is reverse dependency order, that a
+target cannot be released before evaluating a create call, or that a child
+setter must also repair the parent link is part of the implementation. It is
+design memory placed where the tempting wrong change would otherwise happen.
+
+This is close to the distinction in
+[Google's documentation guidance](https://google.github.io/styleguide/docguide/best_practices.html):
+API documentation describes the contract, while inline comments carry
+information the code cannot contain, especially why it exists. The
+[Google C++ guidance](https://google.github.io/styleguide/cppguide.html#Comments)
+calls for comments on tricky, non-obvious, important implementation details
+and invariants while allowing obvious code to stand on its own. The
+[Linux kernel guidance](https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting)
+allows what/why explanations and pointed warnings, but discourages narrating
+how the code works or adding boilerplate that repeats the signature.
+
+I wanted to answer three questions directly:
+
+1. Was that commenting goal achieved?
+2. Did it help prevent bugs?
+3. Do bugs cluster where comments were light or missing?
+
+The short answers are **substantially yes as knowledge organization**,
+**sometimes locally but not provably as a density effect**, and **no at file
+level**. The details are more useful than the short answers.
+
+#### How much commentary is actually there?
+
+The core C/header surface has 57 files, excluding unit tests, and 82,838
+physical line records:
+
+| Physical line class | Count |
+|---|---:|
+| Blank | 12,378 |
+| Code-only | 51,311 |
+| Comment-only | 17,952 |
+| Mixed code/comment | 1,197 |
+| Nonblank | 70,460 |
+| Comment-bearing | 19,149 |
+
+For comparison with Oliver Arafat and Dirk Riehle's
+[OOPSLA 2009 study of open-source commenting](https://dirkriehle.com/wp-content/uploads/2009/08/oni0017-arafat.pdf),
+I used the closest compatible physical-line definition:
+
+```text
+comment-only / (comment-only + code-only + mixed)
+```
+
+Blank lines are excluded and mixed lines count as source. On that basis CQL is
+**25.48%**. After heuristically excluding license text and generated or
+pro-forma blocks, it is **24.70%**.
+
+The narrow boilerplate-like set is only 724 comment-bearing lines, or **3.78%**
+of all comment-bearing volume. Removing it changes density by only **0.77
+percentage points**. So the large comment corpus is not mostly licenses,
+generated headers, or template text.
+
+Function and API header comments are substantial, but even many of those are
+not public API boilerplate. They document internal compiler protocols,
+transformations, phase obligations, ordering rules, and constraints on future
+changes.
+
+Arafat and Riehle used 2007 data from 1,621 C/C++ open-source projects. Their
+C/C++ mean was **17.60%**, median **16.52%**, and standard deviation **8.32
+percentage points**. CQL is **7.88 points above the mean**, **8.96 points above
+the median**, and about **0.95 standard deviations above the mean**. The
+adjusted CQL number remains **7.10 points above the mean**.
+
+That is an old descriptive reference population. It is not an industry target,
+an optimum, or a quality grade. I use it only to establish that CQL carries an
+unusually large physical comment corpus for C/C++.
+
+Coverage gives another useful scale, but it is a different measurement.
+`cov.sh` reports **39,386 executable lines**, all covered at 100%. The exact
+matched 32-file coverage scope contains 84,521 physical line records, including
+17,375 comment-only lines, 1,106 mixed lines, and 18,481 comment-bearing lines.
+That works out to:
+
+- **44.1 comment-only physical lines per 100 executable lines**; or
+- **46.9 comment-bearing physical lines per 100 executable lines**.
+
+I want to be emphatic about the denominator: those are contextual ratios, not
+conventional comment density and certainly not coverage percentages. The
+57-file C/header surface and its 25.48% physical density are the right numbers
+for the industry comparison. Mixing the two scopes would produce a
+meaningless statistic.
+
+#### Where the comments live
+
+The top six files contain about **77.0%** of comment-bearing lines and **75.7%**
+of physical lines. In absolute terms the concentration mostly follows module
+size. `rewrite.c` is the true density outlier among the large modules;
+`flow.c` is similarly dense but much smaller and almost entirely about a
+protocol.
+
+Here is the compact file view using the same Arafat-style physical density:
+
+| File | Physical comment density |
+|---|---:|
+| `rewrite.c` | 51.24% |
+| `flow.c` | 49.18% |
+| `cg_lua.c` | 27.84% |
+| `cg_c.c` | 27.36% |
+| `ast.c` | 25.94% |
+| `sem.c` | 21.97% |
+| `cqlrt_common.c` | 20.16% |
+| `gen_sql.c` | 19.51% |
+| `cg_schema.c` | 14.29% |
+| `cg_json_schema.c` | 14.24% |
+| `cql.y` | 7.92% |
+
+`cql.y` is shown for orientation; it is not part of the 57-file C/header
+comparison surface.
+
+The interesting result is localization, not the file ranking:
+
+- `cg_schema.c` is light overall, but becomes dense around comparators and
+  create/drop order.
+- the grammar is light except where stack use, resource behavior, or temporary
+  AST invariants need explanation;
+- the runtime is light in ordinary getters and switches, but dense around
+  ownership, canonical serialization, offset tables, and durability;
+- rewrite and flow code explain transformations because the before/after
+  protocol cannot be recovered from one assignment.
+
+The same contrast appears inside functions. These are representative
+Arafat-style physical densities restricted to function bodies:
+
+| Function body | Comment density |
+|---|---:|
+| `_flow_pop_context_jump` | 67.3% |
+| `_flow_pop_context_branch` | 62.7% |
+| `rewrite_child_partition_creation` | 55.3% |
+| `rewrite_one_param` | 50.9% |
+| `rewrite_insert_statement_for_backed_table` | 40.2% |
+| `bupdatekey` | 24.9% |
+| `gen_init` | 0% |
+| `cql_multibind_v` | 0% |
+| `cg_json_col_key_list` | 0% |
+| `cg_c_init` | 2.1% |
+
+This matches the intended style. Important or non-self-evident steps are dense.
+Regular registration, copying, dispatch, and emission are often intentionally
+light.
+
+The comments are also placed at the rule they protect. In `sources/ast.c`,
+around `ast_set_right`, the helper and the reason to use it are inseparable:
+
+```c
+// Sets the right node but also sets the parent node of the node on the right to
+// the new parent.  Always use this helper because code invariably forgets to
+// set the parent causing a broken tree otherwise.
+cql_noexport void ast_set_right(ast_node *parent, ast_node *right)  {
+  parent->right = right;
+  if (right) {
+    right->parent = parent;
+  }
+}
+```
+
+That is exactly the kind of comment I wanted: it records the local invariant,
+the historical failure mode, and the required abstraction.
+
+Another `sources/cg_c.c` comment preserves why an apparently simpler design was
+removed:
+
+```c
+// If no code gen in the main buffer, don't add a comment, that will force a
+// global proc We used to have all kinds of special cases to detect the
+// statements that don't generate code and that was a bug farm.  So now
+// instead we just look to see if it made code.  If it didn't make code we
+// will not force the global proc to exist because of the stupid comment...
+skip_comment |= (out == cg_main_output && tmp_main.used == 1);
+```
+
+The comment explains both the old failure mode and the less obvious replacement:
+observe whether code was produced instead of maintaining another list of
+statement-specific exceptions.
+
+#### Did the comments prevent bugs?
+
+The history cannot prove that a density prevented defects. I used the 21
+representative patch-inspected fixes in this chapter for a cautious
+cross-tabulation against the current source:
+
+| Current file measure versus representative fix touches | Pearson | Spearman |
+|---|---:|---:|
+| Physical comment density | -0.177 | -0.225 |
+| Rationale-signal density | -0.085 | -0.025 |
+| Code-bearing file size | +0.816 | +0.763 |
+
+File size, not low current comment density, tracks raw fix touches. That is the
+result I would expect after looking at the patches. Larger files expose more
+behavior, current comments postdate many fixes, complex code attracts both
+comments and bugs, commits overlap files, and the 21 fixes are representative
+rather than a random sample.
+
+So file-level density does not show bugs clustering in lightly commented files.
+The lexer/parser subsystem is the coarse exception: its density is about
+**9.63%** and it has a high normalized representative touch rate. But narrow
+token and grammar rules carry disproportionate behavior. That is not enough
+evidence to say that more prose would have prevented those bugs.
+
+The stronger result is local:
+
+- **13 of 21** representative fixes added at least one source comment;
+- **12 of 21** added a rationale-signal comment;
+- about **16 of 21** are protocol or invariant categories.
+
+The patches repeatedly expose one local WHY that was absent, incomplete, stale,
+wrong, or documented but unfinished, even inside heavily commented files:
+
+- The old `substr` comment stated the same incorrect first-argument model as
+  the code. The repair corrected both the comment and the flag-lattice rule.
+- The schema create/drop/comparator sequence turned lightly explained order
+  domains into explicit WHY comments. Recurrence continued because create,
+  drop, dependency, declaration, and backend orders are distinct protocols.
+- The shared-fragment TODO predicted the later re-entry bug almost exactly.
+  The comment preserved the design obligation, but it did not finish the
+  implementation.
+- The created-reference repair added a helper and an explicit warning for the
+  next maintainer not to release the target before evaluating the create call.
+- `cql_multinull` is the useful counterexample: it was a missing regular switch
+  case and the durable fix was mostly mechanical. Broad new rationale would
+  not have improved that dispatch.
+
+My conclusion is straightforward. The goal was substantially achieved as
+knowledge organization. The history cannot prove that a particular density
+prevented defects, and bugs did not generally cluster in lightly commented
+files. They clustered at local protocol boundaries where the specific WHY was
+missing, incorrect, incomplete, stale, or not yet implemented.
+
+Comments work best when they are coupled with a helper, contract, fail-fast
+invariant, or focused test. Accurate placement matters more than volume. A
+wrong comment can preserve the wrong model just as effectively as a good
+comment preserves the right one.
 
 ### Macros: CQL created a small language inside C
 
@@ -2862,12 +3644,22 @@ a design property.
 Contracts catch violations close to their source. They are especially valuable
 with the intentionally weakly typed AST representation.
 
-### 4. Generated and table-driven regularity
+### 4. Rationale comments at non-obvious boundaries
+
+The intent was to describe every important step or transformation when the WHY
+was not self-evident. Warnings and preserved design history make subtle
+ordering, ownership, representation, and phase rules conspicuous at the point
+where somebody is most likely to violate them.
+
+The history says these comments are strongest when the same rule is also
+encoded in a helper, contract, or focused test.
+
+### 5. Generated and table-driven regularity
 
 AST predicates, constructors, dispatch initialization, and test directives
 keep a large language surface regular.
 
-### 5. Layered and independent tests
+### 6. Layered and independent tests
 
 Pattern assertions, goldens, generated-code compilation, runtime execution,
 differential checks, reference balancing, sanitizer/compiler diversity, and
@@ -2875,12 +3667,18 @@ repeated invocation cover different failure modes. SQLite execution is
 especially valuable because it can reject semantics on which parsing, semantic
 analysis, code generation, and goldens all agree.
 
-### 6. Helper functions that encode ownership
+### 7. A stable machine-readable intermediate format
+
+JSON let language bindings and analysis tools move out of the compiler without
+giving each one a new C backend. The stable format made Python replacement
+practical and deleted thousands of lines of specialized C and golden output.
+
+### 8. Helper functions that encode ownership
 
 `cql_set_*_ref` and `cql_set_created_*_ref` put the retain/release contract in
 one place instead of relying on memory at every call site.
 
-### 7. Exact regression and invariant tests
+### 9. Exact regression and invariant tests
 
 The best test forces the failed or newly enforced invariant rather than merely
 executing the affected code.
@@ -2894,6 +3692,12 @@ executing the affected code.
 Coverage forces reachable shapes through fail-fast machinery, and goldens
 detect textual changes. Neither independently proves handler semantics, feature
 combinations, or the correctness of expected output.
+
+The short-circuit history makes this concrete. The same covered generator path
+has distinct obligations for three-valued results, evaluation count,
+nullability, branch versus value context, nesting, temporary lifetime, and
+cleanup continuation. A golden can faithfully preserve the wrong generated
+control-flow shape.
 
 ### 2. Net leak checks
 
@@ -2913,6 +3717,22 @@ or two symbol tables or scopes.
 creation plus matching cleanup remain vulnerable while the pairing is spread
 across multiple operations.
 
+### 5. Comments are not executable
+
+The old `substr` comment accurately described the same wrong model implemented
+by the code: it copied nullability and sensitivity from the first argument.
+The shared-fragment TODO accurately described the missing re-entry work, but
+the work remained missing until a nested `SELECT` reached the path.
+
+Comments preserve reasoning and unfinished obligations. They cannot substitute
+for helpers, contracts, or focused tests that make the rule executable.
+
+### 6. A stable intermediate format does not validate every consumer
+
+The JSON grammar can be stable and well tested while a Python generator still
+has its own identifier, escaping, or ABI mistake. Each promoted consumer needs
+direct tests for the contract it adds.
+
 ---
 
 ## A compact historical catalogue
@@ -2929,20 +3749,31 @@ These examples cover the range; they are not ranked by severity.
 | 2021-03-20 | [`6a686760`](https://github.com/ricomariani/CG-SQL-author/commit/6a6867609f672616106e8fff690dbcd78ea39100) | Generators | Symbol tables were nulled without delete | Reset and destruction are different operations |
 | 2021-07-20 | [`1c95bbdb`](https://github.com/ricomariani/CG-SQL-author/commit/1c95bbdb8e20dbf6a02e479245dce03dbde95fd9) | Parser | Right recursion exhausted parser stack | Grammar shape is a resource-use decision |
 | 2021-07-20 | [`5084c83c`](https://github.com/ricomariani/CG-SQL-author/commit/5084c83c1f751dcfd436253c88bad3fbf1bb85f7) | Semantics | Diagnostic target and propagated error state diverged | Reporting and state mutation should be one protocol |
+| 2021-10-11 | [`c2cb6af4`](https://github.com/ricomariani/CG-SQL-author/commit/c2cb6af4d646e602f1045e711a19a013b4b6be13) | C expression codegen | Deferred short-circuit RHS traversal allowed nested expressions to reuse live temporaries | Test emitted evaluation order and temporary lifetime, not only result values |
 | 2021-12-10 | [`39551d17`](https://github.com/ricomariani/CG-SQL-author/commit/39551d179f77ce34c0a6678fa9e1a89ae14db156) | Schema codegen | Reused drop order as create order | Name distinct order domains |
 | 2021-12-22 | [`d17a3506`](https://github.com/ricomariani/CG-SQL-author/commit/d17a350684151871d4ed78b1126f8d6e1a86cbf9) | Flow | Empty branch had no representation | Semantic absence is still a semantic case |
+| 2021-12-27 | [`f1d3ece0`](https://github.com/ricomariani/CG-SQL-author/commit/f1d3ece04c69153af313eb34d3d31fdf3f396178) | JSON | High-bit text was not emitted as valid JSON | Machine-readable output is a compatibility boundary |
+| 2022-01-25 | [`c5b3bb92`](https://github.com/ricomariani/CG-SQL-author/commit/c5b3bb9221715a4cd06ab578549c774cc79371e3) | Schema state model | Historical replay could resurrect deleted zombie tables while the deletion facet remained clean | Reconcile terminal desired state instead of trusting a transition ledger |
+| 2022-03-18 | [`89660734`](https://github.com/ricomariani/CG-SQL-author/commit/896607347de1cbafd999ebd3b1f519ad2af015f0) | Schema housekeeping | Removed or manually repaired schema could leave stale version facets that suppressed later work | Housekeeping must be reconciled with observable state |
 | 2022-05-25 | [`3a9f41f2`](https://github.com/ricomariani/CG-SQL-author/commit/3a9f41f21a266ab5377d23d9df3594c9a2a2f9c7) | C codegen | Semantic-only AST kind missing its backend no-op | Fail-fast catches the miss; deliberate no-op cases still need explicit registration |
 | 2022-08-02 | [`673ec88c`](https://github.com/ricomariani/CG-SQL-author/commit/673ec88c56ce44c44204b31f77b81db6202cbcb3) | Runtime parser | Used `sizeof(pointer)` as string length | C array/pointer decay remains a routine hazard |
+| 2022-10-10 | [`fe921eac`](https://github.com/ricomariani/CG-SQL-author/commit/fe921eac81c4000b690c4c4a8cec54dbbd56109a) | Schema housekeeping | A version CRC said column work had run although the physical column was absent | Observable physical state should outrank cached completion metadata |
+| 2022-10-26 | [`ddd4335d`](https://github.com/ricomariani/CG-SQL-author/commit/ddd4335d0cad57742814498d1ed5ebbb00e63627) | Recreate-group ordering | Comparator direction let child groups run before parents that could later drop them | Distinguish decision order from drop order inside each group |
 | 2022-10-27 | [`0ad05ef6`](https://github.com/ricomariani/CG-SQL-author/commit/0ad05ef61eb964ba4ee2aa94f487ede020e0f145) | Semantics | Primary-key column ordinal was not incremented | Index bookkeeping needs direct shape assertions |
+| 2022-11-07 | [`27f0cb64`](https://github.com/ricomariani/CG-SQL-author/commit/27f0cb649e33ed04d37a0172ccbc146c66427194) | Schema semantics | Historical unsubscribe/resubscribe playback created excessive transition states | Delete unnecessary states instead of adding reconciliation rules |
+| 2022-12-01 | [`c5df0113`](https://github.com/ricomariani/CG-SQL-author/commit/c5df01133b43502042c9d7c799f24821a5329e96), [`4c11a8a2`](https://github.com/ricomariani/CG-SQL-author/commit/4c11a8a2c3fc5dc8089579dd9d868474de3f2527) | Recreate-group dependencies | Create order was not topological group order; dropped children also needed state invalidation | A mature physical-schema oracle turns graph counterexamples into bounded regressions |
 | 2022-12-05 | [`315a202c`](https://github.com/ricomariani/CG-SQL-author/commit/315a202c89ee4634416e1a7eb66a63b10b8a082b) | Rewrite | Overwrote an AST node and displaced owned primitive data | Transparent wrappers preserve ownership better than shape copying |
+| 2023-02 to 2023-03 | [`3b597671`](https://github.com/ricomariani/CG-SQL-author/commit/3b597671509042abf95c568848efd05fbb0659be), [`6f2c9498`](https://github.com/ricomariani/CG-SQL-author/commit/6f2c9498d19d5cdee8268fcd90e553658d018930) | Schema runtime backends | Deleted tables needed reverse order; the first Lua correction produced a zero-iteration loop | Treat backend follow-ups as one correction chain, not extra incidents |
 | 2023-08-11 | [`9e9a4e09`](https://github.com/ricomariani/CG-SQL-author/commit/9e9a4e099897cbeb0bb45cccb447b542e7b9f22e) | Serialization | Emitted variable fields in update order, not canonical order | Equivalent logical keys need canonical bytes |
 | 2023-08-22 | [`67b29643`](https://github.com/ricomariani/CG-SQL-author/commit/67b2964335bdda089ce9733be9a3aec6dca22907) | SQL generation | Dot expressions bypassed shared-fragment rename callback | Every syntax form must pass through the same name-resolution hook |
 | 2023-12-21 | [`7933769f`](https://github.com/ricomariani/CG-SQL-author/commit/7933769f72b4a7d18e73895eac150fa200378c76) | Semantics/tests | Missing error record hidden by batched tests | Exact per-case diagnostics beat aggregate counts |
+| 2024-11-17 | [`d94eded9`](https://github.com/ricomariani/CG-SQL-author/commit/d94eded92d63eed26952b6149d5a9136682e75b1) | Cursor serialization | C and Lua agreed on types but not bytes; nullable Boolean indexing was wrong | Cross-runtime canonical bytes expose shared round-trip mistakes |
 | 2024-11-20 | [`0001945b`](https://github.com/ricomariani/CG-SQL-author/commit/0001945b26ad1b50b80f439ce57f2b9fbe89f523) | Generated ownership | Released destination before evaluating aliasing call | Encode ownership variants in helper APIs |
+| 2024-12-07 | [`e10a25e8`](https://github.com/ricomariani/CG-SQL-author/commit/e10a25e839d4baa4eba53082b57cc26b2870654b) | Lua expression codegen | A golden-approved lazy thunk could not preserve cleanup transfer from a statement-producing RHS | Lazy evaluation must preserve the enclosing continuation and error context |
 | 2024-12-24 | [`3163e93e`](https://github.com/ricomariani/CG-SQL-author/commit/3163e93e7f01) | SQLite syntax | All internal goldens agreed on invalid `RETURNING` syntax | Independent execution is stronger than consistent output |
 | 2024-12-25 | [`cf546d7e`](https://github.com/ricomariani/CG-SQL-author/commit/cf546d7ed13edb2642abb75addcd6d5b48479c53) | Rewrites | Backed-table/upsert/returning features composed incorrectly | Cross-product tests matter for interacting rewrites |
 | 2025-03-28 | [`7dadf83a`](https://github.com/ricomariani/CG-SQL-author/commit/7dadf83af8d84f3d5d7450769e5520b80efb65cf) | Reentrant codegen | Nested `SELECT` clobbered shared-fragment generator state | Finish documented re-entry protocols; use a focused helper for the exceptional wider context |
-| 2026-08 to 2026-10 | [`eaa48be3`](https://github.com/ricomariani/CG-SQL-author/commit/eaa48be31c4a44b37a0a80c2abead5f58aeec70b), [`25f48ef5`](https://github.com/ricomariani/CG-SQL-author/commit/25f48ef5985a15b805f2dda66347c7c33bb71ef9), [`14b0eaa7`](https://github.com/ricomariani/CG-SQL-author/commit/14b0eaa75cba729abe3e16bacbbca417990a6c13), and related audit commits | AI-assisted correctness audit | Mix of latent functional issues, defensive validation, and theoretical invariant hardening | Classify separately from reported or observed operational bugs |
+| 2026-08 to 2026-10 | [`eaa48be3`](https://github.com/ricomariani/CG-SQL-author/commit/eaa48be31c4a44b37a0a80c2abead5f58aeec70b), [`25f48ef5`](https://github.com/ricomariani/CG-SQL-author/commit/25f48ef5985a15b805f2dda66347c7c33bb71ef9), [`14b0eaa7`](https://github.com/ricomariani/CG-SQL-author/commit/14b0eaa75cba729abe3e16bacbbca417990a6c13), [`8500516b`](https://github.com/ricomariani/CG-SQL-author/commit/8500516b9efa7f35e9406210600adb8efce4fb9a), and related audit commits | AI-assisted correctness audit | Mix of latent functional issues, defensive validation, and theoretical invariant hardening | Classify separately from reported or observed operational bugs |
 
 ---
 
@@ -2980,6 +3811,11 @@ current bug exists.
    Ordinary reachable AST kinds fail immediately under covered dispatch. The
    narrower residual risk is a shape that a phase intentionally ignores, or a
    shape whose lifetime ends during semantic rewriting.
+
+7. **An example or optional output that becomes infrastructure without a
+   matching test promotion.**
+   JSON and the Python generators show how quickly a convenient integration can
+   become a contract.
 
 ---
 
@@ -3021,6 +3857,11 @@ Use vocabulary such as:
 Avoid a generic "ordinal" or a comparator whose direction has to be
 rediscovered from context.
 
+For schema migration, explicit order is still not enough. Make each ordinary
+operation conditional on the observable physical schema where possible, and
+keep an end-to-end assertion that every staged path converges on the same
+canonical desired schema.
+
 ### 3. Add a focused shared-fragment context helper
 
 Most recursion already saves exactly what it needs: often one or two symbol
@@ -3050,7 +3891,34 @@ SQLite execution, C/Lua comparison, independent serialization, post-failure
 reinvocation, multiple C compilers, and ASAN. More goldens improve change
 detection, not semantic independence.
 
-### 7. Preserve a defect taxonomy in commit or issue metadata
+For migration this means executing real upgrade paths and comparing the final
+`sqlite_master` state. For short-circuit codegen it means separately testing
+values, side effects, temporary lifetime, and failure continuation.
+
+### 7. Preserve WHY comments as part of protocol changes
+
+Every important step or transformation should be described when the reason is
+not self-evident. This especially applies to invariants, ordering, ownership
+exceptions, representation boundaries, and phase transitions. Regular
+mechanics do not need narration.
+
+When a fix exposes an invariant, update the rationale comment, the helper or
+contract, and the focused test together. Review old comments for accuracy while
+doing the work. Stale rationale can be worse than silence because it preserves
+the wrong model with authority.
+
+### 8. Promote the test contract when sample code becomes infrastructure
+
+When a Python consumer replaces a compiler backend or becomes part of a normal
+delivery path, move its tests at the same time. Run the replacement directly
+in the standard suite, preserve the old backend's important compatibility
+cases, and state which output is stable.
+
+The JSON intermediate format makes these extractions much cheaper. It does not
+make consumer-specific identifier handling, escaping, or ABI conventions
+correct automatically.
+
+### 9. Preserve a defect taxonomy in commit or issue metadata
 
 Knuth's *The Errors of TeX* gained much of its value from a maintained error
 log and classification. CQL's future history would be easier to analyze if
@@ -3078,31 +3946,27 @@ Primary evidence comes from:
 
 - the full Git history of `ricomariani/CG-SQL-author`;
 - production patches linked throughout this chapter;
+- first-party compiler and runtime sources directly under `sources`:
+  `sources/*.c`, `sources/*.h`, `sources/*.l`, and `sources/*.y`;
 - `sources/test.sh`;
+- `sources/cov.sh`;
 - `sources/common/test_helpers.sh`;
 - `sources/cql-verify/README.md`;
 - `sources/test/run_test.sql`;
 - `sources/test/amalgam_test.c`;
-- `sources/unit_tests.c`;
 - `sources/lua_demo/prepare_run_test.sh` and `sources/lua_demo/run_test.sh`;
-- `sources/upgrade/upgrade_validate.sql` and `sources/upgrade/upgrade_test.c`;
-- `sources/cql.h`;
-- `sources/ast.h` and `sources/ast.c`;
-- `sources/flow.c`;
-- `sources/sem.c`;
-- `sources/cg_c.c`;
-- `sources/cg_lua.c`;
-- `sources/cg_schema.c`;
-- `sources/gen_sql.c`;
-- `sources/rewrite.c`;
-- `sources/cqlrt_common.c`;
+- `sources/upgrade/upgrade_test.sh`, `sources/upgrade/upgrade_validate.sql`,
+  and `sources/upgrade/upgrade_test.c`;
 - `sources/cqlrt.lua`;
-- `sources/minipool.c`;
-- `sources/charbuf.h` and `sources/charbuf.c`;
-- `sources/bytebuf.c`;
-- `sources/encoders.c`;
+- `sources/cqljson/cqljson.py`;
+- `sources/cqlrt_cf/cqlobjc.py`;
 - `docs/developer_guide/01_building_the_ast.md`;
-- `docs/developer_guide/04_testing.md`.
+- `docs/developer_guide/04_testing.md`;
+- `docs/user_guide/16_advanced_blob_features.md`;
+- `docs/user_guide/appendices/13_python_json_utilities.md`;
+- `website/blog/2022-11-07-schema-notes-2022.md`;
+- deleted `sources/cg_java.c` and `sources/cg_objc.c` retrieved from their
+  parent commits.
 
 ### External comparison sources
 
@@ -3110,9 +3974,24 @@ Primary evidence comes from:
   *Software: Practice and Experience*, 1989. Knuth classified more than 850
   logged changes over ten years and used the history as a study of program
   evolution.
-- [Linux kernel coding style, section 6: Functions](https://www.kernel.org/doc/html/latest/process/coding-style.html#functions),
-  for common guidance on short, single-purpose functions and limited local
-  state.
+- [Google Documentation Best Practices](https://google.github.io/styleguide/docguide/best_practices.html),
+  for the distinction between API documentation and implementation rationale,
+  and especially the guidance that inline comments should carry information
+  the code cannot contain, such as why it exists.
+- [Google C++ Style Guide: Comments](https://google.github.io/styleguide/cppguide.html#Comments),
+  for comments on tricky implementations, invariants, lifetime constraints,
+  and design alternatives, while omitting commentary on simple and obvious
+  code.
+- Oliver Arafat and Dirk Riehle,
+  ["The Commenting Practice of Open Source"](https://dirkriehle.com/wp-content/uploads/2009/08/oni0017-arafat.pdf),
+  OOPSLA 2009. Their 2007 C/C++ sample contained 1,621 projects and used
+  comment lines divided by comment plus source lines. The C/C++ mean was
+  17.60%, median 16.52%, and standard deviation 8.32 percentage points. I use
+  this as an old descriptive reference, not a target or quality grade.
+- [Linux kernel coding style, sections 6 and 8](https://www.kernel.org/doc/html/latest/process/coding-style.html),
+  for common guidance on short, single-purpose functions and comments that
+  explain what or why while discouraging narration of how and boilerplate that
+  merely repeats an obvious signature.
 - [SEI CERT C Coding Standard](https://wiki.sei.cmu.edu/confluence/display/c),
   for the standard categories of C risk: integers, arrays, strings, memory,
   I/O, error handling, and undefined behavior.
@@ -3134,6 +4013,39 @@ Primary evidence comes from:
 
 - File counts use tracked files. Generated release/beta distributions and
   vendored SQLite are excluded unless explicitly stated.
+- The production source in the current checkout is equivalent to analyzed
+  endpoint `957db34` for this study. The only later repository change is the
+  addition of this chapter, so the current source measurements and the
+  historical endpoint refer to the same production source.
+- The initial open-source release already contains a tested JSON generator, but
+  public Git does show its subsequent expansion into a much richer downstream
+  contract. Downstream usage moving from light consumption to Meta build
+  phasing and secondary-artifact planning is maintainer context; later public
+  `isEmitted` metadata independently shows the same build-planning direction.
+- The existence and role of a separate hardened internal backed-blob
+  implementation are maintainer context that public Git cannot independently
+  reconstruct.
+- Meta's actual-versus-desired recreate implementation, customer-visible full
+  resets and redownloads, and the absence of released recreate-group incidents
+  are also maintainer context. Public Git independently shows the CRC model
+  change, the operational frequency reports, the physical-schema integration
+  oracle, the pre-`v1.0.0` recreate-group corrections, and no later targeted
+  functional correction.
+- Comment measurements use a character-by-character lexical scan with states
+  for normal text, string literals, character literals, `//` comments, and
+  `/* ... */` comments. Comment markers inside literals are ignored. Each
+  physical line is classified as blank, code-only, comment-only, or mixed;
+  mixed lines are disclosed separately and count as source in the
+  Arafat/Riehle-compatible density.
+- The boilerplate adjustment is heuristic. It removes narrow license,
+  generated, and pro-forma patterns; it cannot decide whether every header
+  sentence is valuable design content. The rationale-signal classifier is
+  likewise heuristic: it looks for explanatory, constraint, warning,
+  transformation, and design-history signals and will miss some rationale
+  while admitting some ordinary description.
+- Function-body comment densities use the same lexical classification
+  restricted to the body. Generated or conditional code and macro boundaries
+  can make body attribution approximate.
 - Function counts and lengths come from a lightweight C lexical scan. It
   removes comments, strings, and preprocessor directives before identifying
   top-level brace-delimited functions. Macro-generated and conditionally
@@ -3150,4 +4062,10 @@ Primary evidence comes from:
   history; I am not presenting it as a count derived from Git alone.
 - Generated-reference churn can greatly inflate changed-file and changed-line
   counts for a small production correction.
+- Current comments may have arrived after the defects they now explain. Raw
+  comment density says nothing by itself about correctness, comment accuracy,
+  causal prevention, or the quality of the underlying design.
+- Correlations against the 21 patch-inspected fixes are descriptive only. The
+  fixes are representative rather than random, commits can touch several
+  files, and current file measurements are later than many of the patches.
 - I make no conclusion about defect severity or exploitability.

@@ -5127,6 +5127,63 @@ begin
   EXPECT_EQ!(h1, h2);
 end);
 
+[[blob_storage]]
+create table serialization_growth_blob(
+  large_text text!, required_flag bool!, nullable_int int,
+  nullable_long long, nullable_real real, nullable_flag bool,
+  nullable_text text, final_flag bool!, nullable_blob blob,
+  final_nullable_flag bool
+);
+
+TEST!(blob_serialization_survives_buffer_growth,
+begin
+  -- Serialization visits fields in declared order. The first text's 1,025
+  -- bytes plus its terminator exceed the initial 1,024-byte buffer, so every
+  -- following presence/boolean bit write must use the relocated bit vector.
+  -- The 4,097-byte text and 8,193-byte blob force two further reallocations;
+  -- final_nullable_flag exercises another bit write after the blob append.
+  declare C cursor like serialization_growth_blob;
+  fetch C from values(
+    printf("%1025s", "x"), true, 22, 33L, 3.14, true,
+    printf("%4097s", "y"), false, blob_from_string(printf("%8193s", "z")), true
+  );
+  let encoded := C:to_blob;
+  declare D cursor like serialization_growth_blob;
+  D:from_blob(encoded);
+
+  EXPECT!(D);
+  EXPECT_EQ!(D.large_text, C.large_text);
+  EXPECT_EQ!(D.required_flag, C.required_flag);
+  EXPECT_EQ!(D.nullable_int, C.nullable_int);
+  EXPECT_EQ!(D.nullable_long, C.nullable_long);
+  EXPECT_EQ!(D.nullable_real, C.nullable_real);
+  EXPECT_EQ!(D.nullable_flag, C.nullable_flag);
+  EXPECT_EQ!(D.nullable_text, C.nullable_text);
+  EXPECT_EQ!(D.final_flag, C.final_flag);
+  EXPECT_EQ!(D.nullable_blob, C.nullable_blob);
+  EXPECT_EQ!(D.final_nullable_flag, C.final_nullable_flag);
+
+  -- Growth with absent nullable fields must leave their presence bits clear,
+  -- while the later non-null boolean still writes into the current allocation.
+  fetch C from values(
+    printf("%1025s", "x"), false, null, null, null, null, null, true, null, null
+  );
+  encoded := C:to_blob;
+  D:from_blob(encoded);
+
+  EXPECT!(D);
+  EXPECT_EQ!(D.large_text, C.large_text);
+  EXPECT!(not D.required_flag);
+  EXPECT_EQ!(D.nullable_int, null);
+  EXPECT_EQ!(D.nullable_long, null);
+  EXPECT_EQ!(D.nullable_real, null);
+  EXPECT_EQ!(D.nullable_flag, null);
+  EXPECT_EQ!(D.nullable_text, null);
+  EXPECT!(D.final_flag);
+  EXPECT_EQ!(D.nullable_blob, null);
+  EXPECT_EQ!(D.final_nullable_flag, null);
+end);
+
 const group long_constants (
   long_const_1 = -9223372036854775807L,
   long_const_2 = -9223372036854775808L,

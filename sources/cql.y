@@ -113,9 +113,7 @@ static void cql_add_define(CSTR name);
 
 int yylex();
 void yyerror(const char *s, ...);
-void yyset_in(FILE *);
 void yyset_lineno(int);
-void yyrestart(FILE *);
 
 #ifndef _MSC_VER
 #pragma clang diagnostic push
@@ -3067,16 +3065,7 @@ static void parse_cmd(int argc, char **argv) {
         cql_error("unable to open '%s' for read\n", argv[a]);
         cql_cleanup_and_exit(1);
       }
-      yyset_in(f);
-      // reset the scanner to point to the newly input file (yyset_in(f)). Otherwise the scanner
-      // might continue to point to the input file from the previous run in case there are still
-      // a stream to read.
-      // Usually when the parser encouter a syntax error, it stops reading the input file.
-      // On the next run the scanner will want to continue and finish from where it stops
-      // before moving to the file of the current run.
-      // Therefore it's important to always do this because we're in a new run and should ignore
-      // previous run because a result were already produced for that prevous run.
-      yyrestart(f);
+      cql_set_input_file(f);
 
       current_file = argv[a];
     }
@@ -3557,12 +3546,14 @@ int cql_main(int argc, char **argv) {
   cql_ifdef_state = NULL;
 
   if (!setjmp(cql_for_exit)) {
+    // Capture any borrowed scanner buffer before --in or an argument error can
+    // change the input state. Cleanup must honor that ownership on every exit.
+    cql_reset_open_includes();
     parse_cmd(argc, argv);
     ast_init();
 
     // add the builtin declares before we process the real input
     cql_setup_defines();
-    cql_reset_open_includes();
     cql_setup_for_builtins();
 
     if (options.run_unit_tests) {

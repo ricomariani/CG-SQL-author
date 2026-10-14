@@ -125,6 +125,12 @@ void go_for_it(const char *your_buffer) {
 }
 ```
 
+Caller-installed Flex buffers, such as `my_string_buffer` above, remain borrowed
+through both successful and failed compilations; the caller still deletes them.
+The compiler releases only the buffers it creates. Likewise, files opened by
+`--in` and `@include` are compiler-owned and closed during compilation cleanup,
+while stdin and caller-provided streams remain borrowed and are not closed.
+
 General pattern:
 
 - Predefine the options you want to use (see below).

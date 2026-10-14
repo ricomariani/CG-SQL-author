@@ -1,6 +1,6 @@
 ---
-title: "Part 12: The Bugs of CQL"
-weight: 12
+title: "Appendix 2: The Bugs of CQL"
+weight: 2
 ---
 <!---
 -- Copyright (c) Rico Mariani
@@ -19,7 +19,7 @@ weight: 12
 
 **Repository:** `ricomariani/CG-SQL-author`
 
-### How to read this chapter
+### How to read this appendix
 
 Read this as a historical snapshot. It is not a live quality dashboard. The
 counts, file sizes, examples, and conclusions describe the public repository
@@ -28,10 +28,10 @@ architectural changes back into the results.
 
 The public history also begins with an already mature compiler. It does not
 contain CQL's earlier internal development, when the architecture and defect
-profile would have been substantially different. This chapter is about the
+profile would have been substantially different. This appendix is about the
 maintenance history of the mature, open-source codebase.
 
-### How I made this chapter
+### How I made this appendix
 
 I used an AI coding agent to mine the complete public Git history, screen
 candidate fix commits, measure the source and test corpus, retrieve historical
@@ -60,7 +60,7 @@ That changed several conclusions:
   setup, operation, or test evidence.
 
 So the agent did a lot of the research and drafting. I checked and rewrote the
-result, and I own it. The chapter is in my voice and these are my conclusions.
+result, and I own it. The appendix is in my voice and these are my conclusions.
 
 Use this as an engineering study. There is no authoritative incident ledger
 behind these numbers, so read them with the limits stated below.
@@ -3051,7 +3051,7 @@ project convention is doing the enforcement work in practice.
 Common C guidance emphasizes small functions, small modules, limited global
 state, restrained macro use, explicit ownership, portable integer and string
 handling, and tests that exercise failure paths. Sources used for comparison
-are listed at the end of this chapter.
+are listed at the end of this appendix.
 
 That advice is useful, but the details matter here. A compiler can violate the
 surface rule while still preserving the property the rule was trying to buy.
@@ -3356,7 +3356,7 @@ statement-specific exceptions.
 #### Did the comments prevent bugs?
 
 The history cannot prove that a density prevented defects. I used the 21
-representative patch-inspected fixes in this chapter for a cautious
+representative patch-inspected fixes in this appendix for a cautious
 cross-tabulation against the current source:
 
 | Current file measure versus representative fix touches | Pearson | Spearman |
@@ -3945,7 +3945,7 @@ That would make repeat families visible sooner.
 Primary evidence comes from:
 
 - the full Git history of `ricomariani/CG-SQL-author`;
-- production patches linked throughout this chapter;
+- production patches linked throughout this appendix;
 - first-party compiler and runtime sources directly under `sources`:
   `sources/*.c`, `sources/*.h`, `sources/*.l`, and `sources/*.y`;
 - `sources/test.sh`;
@@ -4015,7 +4015,7 @@ Primary evidence comes from:
   vendored SQLite are excluded unless explicitly stated.
 - The production source in the current checkout is equivalent to analyzed
   endpoint `957db34` for this study. The only later repository change is the
-  addition of this chapter, so the current source measurements and the
+  addition of this appendix, so the current source measurements and the
   historical endpoint refer to the same production source.
 - The initial open-source release already contains a tested JSON generator, but
   public Git does show its subsequent expansion into a much richer downstream

@@ -140,6 +140,11 @@ expand correctly.
 
 Any errors are reported on the lines of the macro not where the macro is used.
 
+At most 256 macro bodies may be active at once; deeper expansion, including
+direct or indirect recursion, reports a nesting-limit error. Arguments are
+expanded before entering the called macro's body, so finite
+nested calls to the same macro, such as `identity!(identity!(1))`, remain valid.
+
 ### Types of Macros and Macro Arguments
 
 The example in the introduction is a macro that produces a statement list. It

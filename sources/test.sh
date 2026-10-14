@@ -324,6 +324,41 @@ basic_test() {
   on_diff_exit include_empty.out
 }
 
+check_macro_recursion() {
+  local status
+  ${CQL} --exp --in "$T/macro_recursion_test.sql" >"$O/macro_recursion.tmp" 2>&1
+  status=$?
+  test "$status" -eq 3 &&
+    grep -F "macro expansion nesting limit exceeded (expr) 'direct'" "$O/macro_recursion.tmp" &&
+    grep -F "macro expansion nesting limit exceeded (expr) 'cycle_a'" "$O/macro_recursion.tmp"
+}
+
+generate_macro_depth_input() {
+  python3 - "$1" <<'PY'
+import sys
+
+depth = int(sys.argv[1])
+for i in range(depth):
+    body = f"m{i + 1}!()" if i + 1 < depth else "1"
+    print(f"@macro(expr) m{i}!() begin {body} end;")
+print("let depth_result := m0!();")
+print("@macro(expr) identity!(x! expr) begin x! end;")
+print("let nested_result := identity!(identity!(1));")
+print("let sibling_result := identity!(2) + identity!(3);")
+PY
+}
+
+check_macro_depth_limit() {
+  local status
+  generate_macro_depth_input 256 >"$O/macro_depth.sql" &&
+    ${CQL} --exp --sem --in "$O/macro_depth.sql" || return 1
+  generate_macro_depth_input 257 >"$O/macro_depth.sql" || return 1
+  ${CQL} --exp --in "$O/macro_depth.sql" >"$O/macro_depth.tmp" 2>&1
+  status=$?
+  test "$status" -eq 3 &&
+    grep -F 'macro expansion nesting limit exceeded' "$O/macro_depth.tmp"
+}
+
 macro_test() {
   echo '--------------------------------- STAGE 3 -- MACRO TEST'
   TEST_NAME="macro_test"
@@ -344,6 +379,16 @@ macro_test() {
 
   echo "  computing diffs (empty if none)"
   on_diff_exit macro_exp_errors.err
+
+  TEST_NAME="macro_recursion"
+  TEST_DESC="Bounding direct and indirect recursive macro expansion"
+  TEST_CMD="check_macro_recursion"
+  run_test_expect_success
+
+  TEST_NAME="macro_depth"
+  TEST_DESC="Checking the exact macro expansion depth limit and finite repeated calls"
+  TEST_CMD="check_macro_depth_limit"
+  run_test_expect_success
 
   TEST_NAME="macro_test_dup"
   TEST_DESC="Running macro expansion duplicate name"

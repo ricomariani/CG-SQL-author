@@ -1335,6 +1335,11 @@ cql_noexport void print_ast(
     return;
   }
 
+  if ((uint32_t)pad + 2 >= sizeof(padbuffer)) {
+    cql_output("%s{AST print depth limit reached}\n", padbuffer);
+    return;
+  }
+
 // Verifies that the parent pointer is correct
 #ifdef EMIT_BROKEN_AST_WARNING
   if (ast_has_right(node) && node->right->parent != node) {

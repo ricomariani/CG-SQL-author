@@ -236,6 +236,12 @@ create_unwritable_file() {
   chmod -rw "$1"
 }
 
+check_ast_depth_limit() {
+  python3 -c 'print("select " + "not " * 2100 + "1;")' >"$O/ast_depth.sql" &&
+    ${CQL} --ast_no_echo --hide_builtins --in "$O/ast_depth.sql" >"$O/ast_depth.txt" &&
+    grep -F 'AST print depth limit reached' "$O/ast_depth.txt"
+}
+
 basic_test() {
   echo '--------------------------------- STAGE 2 -- BASIC PARSING TEST'
   TEST_NAME="test"
@@ -251,6 +257,11 @@ basic_test() {
   TEST_NAME="test_ast"
   TEST_DESC="Creating basic AST for test.sql"
   TEST_CMD="${CQL} --ast_no_echo --dev --include_paths test2 --in \"$T/test.sql\""
+  run_test_expect_success
+
+  TEST_NAME="ast_depth_limit"
+  TEST_DESC="Testing bounded AST printing for deeply nested expressions"
+  TEST_CMD="check_ast_depth_limit"
   run_test_expect_success
 
   echo "  computing diffs (empty if none)"

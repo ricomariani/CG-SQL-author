@@ -81,6 +81,8 @@ cql_noexport char *Dirname(char *path) {
 void yyerror(const char *s, ...);
 void line_directive(const char *);
 char *Strdup(const char *);
+int yylex_destroy(void);
+void yyrestart(FILE *);
 static CSTR last_doc_comment = NULL;
 
 static bool_t cql_already_processed_file(CSTR);
@@ -118,8 +120,13 @@ cql_noexport CSTR get_last_doc_comment() {
 }
 
 static bool cql_builtins_processing = false;
+// A caller-installed Flex buffer is borrowed. Buffers created for --in or
+// stdin are ours, independently of whether the underlying FILE is borrowed.
 static bool cql_delete_main_buffer = false;
 static YY_BUFFER_STATE cql_main_buffer;
+// Only files opened by --in transfer ownership here; never close yyin blindly,
+// since it may be stdin, a caller's stream, or the most recent include stream.
+static FILE *cql_owned_main_file;
 
 // this remembers the directory in which we found the most recent file
 // later paths are relative to this by default.  It points into the string
@@ -135,14 +142,13 @@ static CSTR ambient_path;
 // economical to process those as text than to record the various ast fragments
 // we would need (and they might change over time).
 cql_noexport void cql_setup_for_builtins() {
-  // stash a buffer for the main input, note that we might already have a buffer
-  // in the amalgam case, if we do then use that.
+  // Preserve the ownership captured before command parsing: an existing buffer
+  // may be borrowed from the caller or owned because --in created it.
   if (YY_CURRENT_BUFFER) {
     cql_main_buffer = YY_CURRENT_BUFFER;
-    cql_delete_main_buffer = false;
   }
   else {
-    // if we don't already have a buffer make one using yyin or stdin
+    // The FILE is borrowed, but this newly allocated Flex buffer is ours.
     cql_main_buffer = yy_create_buffer(yyin ? yyin : stdin, YY_BUF_SIZE);
     cql_delete_main_buffer = true;
   }
@@ -164,7 +170,10 @@ cql_noexport void cql_setup_for_builtins() {
 #define MAX_INCLUDES 10
 
 typedef struct {
+  // buf is the suspended parent; file is the owned child stream, not buf's
+  // stream. Keep both so an early exit can release the entire include chain.
   YY_BUFFER_STATE buf;
+  FILE *file;
   int32_t line_saved;
   char *filename_saved;
   CSTR ambient_saved;
@@ -175,12 +184,17 @@ static int cql_include_index = 0;
 
 static symtab *processed_files;
 
-// set things up for start of a new compile.  All memory
-// of previously processed files is removed.  The include stack
-// is cleared.
+// Called before command parsing so even a bad command line preserves a
+// caller-installed buffer. With no --in, that buffer must remain borrowed.
+// Cleanup also calls this after detaching/releasing the scanner buffers.
 cql_noexport void cql_reset_open_includes() {
   ambient_path = NULL;
   cql_include_index = 0;
+  cql_builtins_processing = false;
+  cql_main_buffer = YY_CURRENT_BUFFER;
+  cql_delete_main_buffer = false;
+  // This points into the previous compilation's string pool.
+  last_doc_comment = NULL;
   memset(cql_includes, 0, sizeof(cql_includes));
   if (processed_files) {
     symtab_delete(processed_files);
@@ -188,14 +202,89 @@ cql_noexport void cql_reset_open_includes() {
   }
 }
 
-// cleanup the memory associated with any pending files
-// in the include stack.
+// Includes and builtins suspend buffers outside Flex's own stack. Consequently
+// yylex_destroy alone leaks those parents, while blindly deleting every buffer
+// would free the caller's borrowed input. Account for each role explicitly.
 cql_noexport void cql_cleanup_open_includes() {
+  YY_BUFFER_STATE current_buffer = YY_CURRENT_BUFFER;
+  YY_BUFFER_STATE borrowed_buffer = cql_delete_main_buffer ? NULL : cql_main_buffer;
+
+  // Detach the active buffer first. We delete owned buffers ourselves below;
+  // this prevents Flex from deleting either a borrowed buffer or an owned one
+  // a second time when we destroy its bookkeeping.
+  if (current_buffer) {
+    YY_CURRENT_BUFFER_LVALUE = NULL;
+  }
+
   for (int32_t i = 0; i < cql_include_index; i++) {
      cql_include_state *inc = &cql_includes[i];
-     yy_delete_buffer(inc->buf);
+     // A failed include open leaves its saved parent as the current buffer.
+     // Skip that alias and any borrowed main buffer; neither is ours to free
+     // here. All other suspended parents were created by this compilation.
+     if (inc->buf && inc->buf != current_buffer && inc->buf != borrowed_buffer) {
+       if (inc->buf == cql_main_buffer) {
+         // The main buffer can also be an include's parent. Consume that role
+         // now so the separate main-buffer cleanup cannot delete it again.
+         cql_main_buffer = NULL;
+       }
+       yy_delete_buffer(inc->buf);
+     }
+  }
+
+  // Unit-test mode can exit while reading builtins, before main input was
+  // activated. That owned main buffer is not necessarily an include parent.
+  if (cql_delete_main_buffer && cql_main_buffer && cql_main_buffer != current_buffer) {
+    yy_delete_buffer(cql_main_buffer);
+  }
+  cql_main_buffer = NULL;
+
+  // The current buffer may be an include, builtins, or main input. Only the
+  // caller-installed main buffer survives; its caller can still delete it.
+  if (current_buffer && current_buffer != borrowed_buffer) {
+    yy_delete_buffer(current_buffer);
+  }
+
+  // No buffers remain on Flex's active stack. Release its stack allocation and
+  // reset lexer state (including an interrupted @include start condition).
+  yylex_destroy();
+
+  // EOF already closed completed includes. Only interrupted child streams
+  // remain in these frames; their buffers have now all been released.
+  for (int32_t i = 0; i < cql_include_index; i++) {
+    cql_include_state *inc = &cql_includes[i];
+    if (inc->file) {
+      fclose(inc->file);
+      inc->file = NULL;
+    }
+  }
+
+  if (cql_owned_main_file) {
+    // This is separate from yyin, which may have changed during include lookup.
+    fclose(cql_owned_main_file);
+    cql_owned_main_file = NULL;
   }
   cql_reset_open_includes();
+}
+
+// --in transfers the opened FILE to the scanner, but does not transfer an
+// already-installed caller buffer. yyrestart reuses that buffer when present.
+cql_noexport void cql_set_input_file(FILE *file) {
+  FILE *previous_file = cql_owned_main_file;
+  if (!YY_CURRENT_BUFFER) {
+    // yyrestart will create a buffer, so this compilation must release it.
+    cql_delete_main_buffer = true;
+  }
+  // Restart before closing the previous stream so Flex cannot retain it as the
+  // input backing the reused buffer. Repeated --in must not leak earlier files.
+  yyrestart(file);
+  cql_main_buffer = YY_CURRENT_BUFFER;
+  cql_owned_main_file = file;
+
+  // Replacing a stream ends our ownership of the old one. Reinstalling the
+  // same stream must not close the file we have just selected.
+  if (previous_file && previous_file != file) {
+    fclose(previous_file);
+  }
 }
 
 // Set the ambient path (the directory used to resolve later relative
@@ -226,6 +315,9 @@ static void cql_setup_for_include(CSTR str) {
   cql_include_state *inc = &cql_includes[cql_include_index];
 
   inc->buf = YY_CURRENT_BUFFER;
+  // Include lookup can fail or skip an already-processed file before opening
+  // anything. Those frames must never inherit a FILE from an earlier include.
+  inc->file = NULL;
   inc->line_saved = yylineno;
   inc->filename_saved = current_file;
   inc->ambient_saved = ambient_path;
@@ -301,6 +393,9 @@ static void cql_setup_for_include(CSTR str) {
 
   // we have a file and path now, so mark it as processed and make the buffer
   cql_record_processed_file(abspath);
+  // Record ownership before switching buffers so cleanup can find this stream
+  // independently of Flex's mutable yyin and the saved parent buffer.
+  inc->file = yyin;
   yy_switch_to_buffer(yy_create_buffer(yyin, YY_BUF_SIZE));
 
 done:
@@ -698,15 +793,20 @@ X'({hex}{hex})*'                 { yylval.sval = Strdup(yytext); return BLOBLIT;
                                      cql_finish_builtin_stream();
                                    }
                                    else if (!cql_include_index) {
-                                     if (cql_delete_main_buffer) {
-                                        yy_delete_buffer(YY_CURRENT_BUFFER);
-                                        cql_delete_main_buffer = false;
-                                     }
+                                     // Defer main-buffer disposal to cleanup,
+                                     // which knows whether it is owned or borrowed.
                                      yyterminate();
                                    }
                                    else {
                                      yy_delete_buffer(YY_CURRENT_BUFFER);
                                      cql_include_state *inc = &cql_includes[--cql_include_index];
+                                     // The child buffer is gone, so close its
+                                     // owned stream before restoring the parent.
+                                     // Skipped duplicate includes have no FILE.
+                                     if (inc->file) {
+                                       fclose(inc->file);
+                                       inc->file = NULL;
+                                     }
                                      yy_switch_to_buffer(inc->buf);
                                      yylineno = inc->line_saved;
                                      current_file = inc->filename_saved;

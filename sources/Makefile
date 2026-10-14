@@ -284,3 +284,7 @@ amalgam_test:
 	bash make_amalgam.sh
 	$(CC) $(CFLAGS) -o $O/amalgam_test.o -c $T/amalgam_test.c
 	$(CC) $(CFLAGS) -o $O/amalgam_test $O/amalgam_test.o
+
+$O/scanner_cleanup_test: $T/scanner_cleanup_test.c $O/cql_amalgam.c
+	$(CC) $(CFLAGS) -o $O/scanner_cleanup_test.o -c $T/scanner_cleanup_test.c
+	$(CC) $(CFLAGS) -o $O/scanner_cleanup_test $O/scanner_cleanup_test.o

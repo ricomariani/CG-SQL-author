@@ -1125,6 +1125,16 @@ stats_test() {
   on_diff_exit stats.csv
 }
 
+check_scanner_cleanup() {
+  printf '@include "../test/cql_amalgam_test_syntax_error.sql"\n' >"$O/scanner_cleanup_syntax.sql" &&
+    printf '@include "../test/test_include_file_not_found.sql"\n' >"$O/scanner_cleanup_missing.sql" &&
+    (
+      ulimit -n 32 &&
+        ./$O/scanner_cleanup_test "$T/scanner_cleanup_main.sql" \
+          "$O/scanner_cleanup_syntax.sql" "$O/scanner_cleanup_missing.sql"
+    )
+}
+
 amalgam_test() {
   echo '--------------------------------- STAGE 16 -- TEST AMALGAM'
 
@@ -1135,6 +1145,23 @@ amalgam_test() {
 
   on_diff_exit cql_amalgam_test.out
   on_diff_exit cql_amalgam_test.err
+}
+
+scanner_cleanup_test() {
+  TEST_NAME="scanner_cleanup_build"
+  TEST_DESC="Building separate scanner ownership test"
+  TEST_CMD="do_make $O/scanner_cleanup_test"
+  run_test_expect_success
+
+  TEST_NAME="scanner_input_replacement"
+  TEST_DESC="Checking replacement of an owned --in stream"
+  TEST_CMD="${CQL} --in \"$T/scanner_cleanup_main.sql\" --in \"$T/scanner_cleanup_main.sql\" --sem"
+  run_test_expect_success
+
+  TEST_NAME="scanner_cleanup"
+  TEST_DESC="Checking borrowed and owned scanner inputs with limited descriptors"
+  TEST_CMD="check_scanner_cleanup"
+  run_test_expect_success
 }
 
 # add other stages before this one
@@ -1277,6 +1304,7 @@ if [ -n "$SPECIFIC_TEST" ]; then
     echo "  line_number_test"
     echo "  stats_test"
     echo "  amalgam_test"
+    echo "  scanner_cleanup_test"
     echo "  signatures_test"
     echo "  code_gen_lua_test"
     echo "  dot_test"
@@ -1303,6 +1331,7 @@ else
   line_number_test
   stats_test
   amalgam_test
+  scanner_cleanup_test
   signatures_test
   comment_safety_test
   code_gen_lua_test

@@ -2605,13 +2605,12 @@ cql_bool cql_facet_upsert(
 
 #define cql_append_value(b, var) cql_bytebuf_append(b, &var, sizeof(var))
 
-#define cql_append_nullable_value(b, var) \
-  if (!var.is_null) { \
-    cql_setbit(bits, nullable_index); \
-    cql_append_value(b, var.value); \
-  }
-
-static void cql_setbit(uint8_t *_Nonnull bytes, uint16_t index) {
+// The bit vector precedes the payloads, whose appends can grow the byte buffer
+// and free its old allocation. Accept the buffer and offset rather than an
+// interior pointer so every bit write finds the current allocation; retaining
+// the original bit-vector pointer across appends would cause a use-after-free.
+static void cql_setbit(cql_bytebuf *_Nonnull b, uint32_t bits_offset, uint16_t index) {
+  uint8_t *bytes = (uint8_t *)b->ptr + bits_offset;
   bytes[index / 8] |= (1 << (index % 8));
 }
 
@@ -2822,8 +2821,11 @@ void cql_cursor_to_bytebuf(
   cql_append_value(b, code);
 
   uint16_t bitvector_bytes_needed = (nullable_count + bool_count + 7) / 8;
-  uint8_t *bits = cql_bytebuf_alloc(b, bitvector_bytes_needed);
-  memset(bits, 0, bitvector_bytes_needed);
+  // Appending field payloads below can grow b and free its previous allocation.
+  // Keep the bit vector's offset, not an interior pointer; each later bit write
+  // must derive its address from the current b->ptr after any intervening growth.
+  uint32_t bits_offset = b->used;
+  memset(cql_bytebuf_alloc(b, bitvector_bytes_needed), 0, bitvector_bytes_needed);
   uint16_t nullable_index = 0;
   uint16_t bool_index = 0;
 
@@ -2856,7 +2858,7 @@ void cql_cursor_to_bytebuf(
         case CQL_DATA_TYPE_BOOL: {
           cql_bool bool_data = *(cql_bool *)(cursor + offset);
           if (bool_data) {
-            cql_setbit(bits, nullable_count + bool_index);
+            cql_setbit(b, bits_offset, nullable_count + bool_index);
           }
           bool_index++;
           break;
@@ -2883,7 +2885,7 @@ void cql_cursor_to_bytebuf(
         case CQL_DATA_TYPE_INT32: {
           cql_nullable_int32 int32_data = *(cql_nullable_int32 *)(cursor + offset);
           if (!int32_data.is_null) {
-            cql_setbit(bits, nullable_index);
+            cql_setbit(b, bits_offset, nullable_index);
             cql_write_varint_32(b, int32_data.value);
           }
           break;
@@ -2891,7 +2893,7 @@ void cql_cursor_to_bytebuf(
         case CQL_DATA_TYPE_INT64: {
           cql_nullable_int64 int64_data = *(cql_nullable_int64 *)(cursor + offset);
           if (!int64_data.is_null) {
-            cql_setbit(bits, nullable_index);
+            cql_setbit(b, bits_offset, nullable_index);
             cql_write_varint_64(b, int64_data.value);
           }
           break;
@@ -2901,15 +2903,18 @@ void cql_cursor_to_bytebuf(
           // good enough for SQLite so it's good enough for us. We're punting on
           // their ARM7 mixed endian support, we don't care about ARM7
           cql_nullable_double double_data = *(cql_nullable_double *)(cursor + offset);
-          cql_append_nullable_value(b, double_data);
+          if (!double_data.is_null) {
+            cql_setbit(b, bits_offset, nullable_index);
+            cql_append_value(b, double_data.value);
+          }
           break;
         }
         case CQL_DATA_TYPE_BOOL: {
           cql_nullable_bool bool_data = *(cql_nullable_bool *)(cursor + offset);
           if (!bool_data.is_null) {
-            cql_setbit(bits, nullable_index);
+            cql_setbit(b, bits_offset, nullable_index);
             if (bool_data.value) {
-              cql_setbit(bits, nullable_count + bool_index);
+              cql_setbit(b, bits_offset, nullable_count + bool_index);
             }
           }
           bool_index++;
@@ -2918,7 +2923,7 @@ void cql_cursor_to_bytebuf(
         case CQL_DATA_TYPE_STRING: {
           cql_string_ref str_ref = *(cql_string_ref *)(cursor + offset);
           if (str_ref) {
-            cql_setbit(bits, nullable_index);
+            cql_setbit(b, bits_offset, nullable_index);
             cql_alloc_cstr(temp, str_ref);
             cql_bytebuf_append(b, temp, (uint32_t)(strlen(temp) + 1));
             cql_free_cstr(temp, str_ref);
@@ -2928,7 +2933,7 @@ void cql_cursor_to_bytebuf(
         case CQL_DATA_TYPE_BLOB: {
           cql_blob_ref blob_ref = *(cql_blob_ref *)(cursor + offset);
           if (blob_ref) {
-            cql_setbit(bits, nullable_index);
+            cql_setbit(b, bits_offset, nullable_index);
             const void *bytes = cql_get_blob_bytes(blob_ref);
             cql_int32 size = cql_get_blob_size(blob_ref);
             cql_write_varint_32(b, size);

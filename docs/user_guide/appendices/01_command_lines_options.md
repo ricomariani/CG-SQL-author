@@ -169,6 +169,9 @@ These are the various outputs the compiler can produce.
 
 ##### --min_schema_version n
 * the schema upgrade script will not include upgrade steps for schema older than the version specified
+* `n` must contain decimal digits only and be in `0..2147483647` (`INT32_MAX`);
+  zero retains all versions. Empty values, signs, whitespace, trailing characters,
+  and values outside this range are errors.
 
 ##### --schema_exclusive
 * the schema upgrade script assumes it owns all the schema in the database, it aggressively removes other things

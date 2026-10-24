@@ -62,6 +62,7 @@ Result Types (--rt *) These are the various outputs the compiler can produce.
   used with --rt schema_upgrade
 --min_schema_version n
   the schema upgrade script will not include upgrade steps for schema older than the version specified
+  n must contain decimal digits only, in the range 0..2147483647
   used with --rt schema_upgrade
 --schema_exclusive
   the schema upgrade script assumes it owns all the schema in the database, it aggressively removes other things

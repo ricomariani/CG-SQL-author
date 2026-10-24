@@ -16536,6 +16536,44 @@ enum three_things integer (
   _count = 3
 );
 
+-- A single hidden member is enough to leave the ALL VALUES coverage set empty.
+-- One is the ordinary first enum value, not an arithmetic boundary; matching it
+-- in WHEN proves that the leading underscore, not a numeric mismatch, excludes it.
+-- Assignments below merely provide the real statement SWITCH requires; their
+-- assigned value has no bearing on enum coverage.
+enum hidden_things_only integer (
+  _sentinel = 1
+);
+
+-- TEST: an all-hidden enum rejects even a WHEN matching its sole numeric value
+-- The empty public set used to underflow the deduplication bound and read past
+-- its buffer. This must diagnose the extra value, not crash or accept the switch.
+-- + error: % a value exists in the switch that is not present in the enum '1'
+-- + {switch_stmt}: err
+-- +1 error:
+switch hidden_things_only._sentinel all values
+  when 1 then set x := 1;
+end;
+
+-- TEST: naming the hidden member does not make it public for ALL VALUES
+-- This uses the same value through its enum name so name resolution cannot
+-- accidentally bypass the public-value exclusion.
+-- + error: % a value exists in the switch that is not present in the enum '1'
+-- + {switch_stmt}: err
+-- +1 error:
+switch hidden_things_only._sentinel all values
+  when hidden_things_only._sentinel then set x := 1;
+end;
+
+-- TEST: ordinary SWITCH may still use the hidden enum member
+-- Hidden means excluded from exhaustive coverage, not forbidden as a value.
+-- Rejecting this would broaden the fix into an unintended language restriction.
+-- + {switch_stmt}: ok
+-- - error:
+switch hidden_things_only._sentinel
+  when hidden_things_only._sentinel then set x := 1;
+end;
+
 -- TEST: switch with all values test: all good here
 -- + {switch_stmt}: ok
 -- +1 {expr_list}: ok

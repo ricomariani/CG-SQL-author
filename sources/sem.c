@@ -22543,28 +22543,33 @@ static void sem_check_all_values_condition(ast_node *expr, bytebuf *case_buffer)
 
   size_t enum_count = enum_buffer->used / sizeof(case_val);
   case_val *enum_vals = (case_val *)enum_buffer->ptr;
-  qsort(enum_vals, enum_count, sizeof(case_val), case_val_comparator);
-
-  // dedupe the enumeration cases, there are sometimes aliases
-  // e.g. declare enum integer ( x = 1, another_name_for_x = 1);
 
   uint32_t i = 0;
   uint32_t j = 0;
 
-  for (i = 0; i < enum_count - 1; i++) {
-    Invariant(j <= i);
-    if (enum_vals[i].value == enum_vals[i+1].value) {
-      continue;
+  // An all-hidden enum leaves an empty, possibly null buffer. Skip sorting
+  // and deduplication (including enum_count - 1); the extra-case check below
+  // will report the first WHEN value because no public values exist.
+  if (enum_count) {
+    qsort(enum_vals, enum_count, sizeof(case_val), case_val_comparator);
+
+    // dedupe the enumeration cases, there are sometimes aliases
+    // e.g. declare enum integer ( x = 1, another_name_for_x = 1);
+    for (i = 0; i < enum_count - 1; i++) {
+      Invariant(j <= i);
+      if (enum_vals[i].value == enum_vals[i+1].value) {
+        continue;
+      }
+      enum_vals[j++] = enum_vals[i];
     }
+
+    Invariant(j < enum_count);
     enum_vals[j++] = enum_vals[i];
+    enum_count = j;
   }
 
   // Now do a merge to find the differences
   // NOTE: we only need one index since we stop at the first difference
-
-  Invariant(j < enum_count);
-  enum_vals[j++] = enum_vals[i];
-  enum_count = j;
 
   i = 0;
   while (i < case_count && i < enum_count) {

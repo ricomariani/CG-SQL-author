@@ -3494,7 +3494,7 @@ declare enum some_reals real (
 
 -- TEST: make a long enum
 declare enum some_longs long (
-  foo = 87363537363847643647937,
+  foo = 9223372036854775807,
   bar = 3
 );
 
@@ -4882,11 +4882,14 @@ end;
 -- time checks for this are in run_test.sql because this is subtle
 --
 -- +  big1 = _64(0x7fffffffffffffff);
--- +  big2 = _64(0x8000000000000000);
+-- +  big2 = (_64(-9223372036854775807) - 1);
 -- +  big3 = (_64(-9223372036854775807) - 1);
 -- +  big4 = (_64(-9223372036854775807) - 1);
 -- +  big5 = _64(9223372036854775807);
 -- +  big6 = _64(9223372036854775807);
+-- +  big7 = _64(-1);
+-- +  big8 = (_64(-9223372036854775807) - 1);
+-- +  big9 = _64(-1);
 proc bigstuff()
 begin
   let big1 := 0x7fffffffffffffffL;
@@ -4895,6 +4898,9 @@ begin
   let big4 := -9223372036854775808;
   let big5 := 9223372036854775807L;
   let big6 := 9223372036854775807;
+  let big7 := const(0xffffffffffffffff);
+  let big8 := const(0x8000000000000000);
+  let big9 := 0xffffffffffffffffL;
 end;
 
 const group big_constants(
@@ -6235,4 +6241,3 @@ proc end_proc() begin end;
 -- + cql_code cql_startup(sqlite3 *_Nonnull _db_)
 declare end_marker int;
 --------------------------------------------------------------------
-

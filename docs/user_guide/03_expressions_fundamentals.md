@@ -260,16 +260,23 @@ These are as follows:
 
 #### Numeric Literals
 
-* All numeric literals are considered to be positive; negative numbers are
-  actually a positive literal combined with unary minus (the negation operator).
+* Decimal integer literals are nonnegative magnitudes; negative numbers combine
+  a magnitude with unary minus (the negation operator).
 * Base 10 and hexadecimal literals are supported.
 * Literals with a decimal point are of type `REAL` and stored as the C type
   `double`.
-* Literals that can fit in a signed integer without loss and do not end in the
-  letter `L` are integer literals.
+* Literals representing nonnegative values at most `2147483647` and not ending
+  in the letter `L` are integer literals.
 * Larger literals, or those ending with the letter `L`, are long integer
   literals.
 * Literals that begin with 0x are interpreted as hex.
+* Decimal integers must fit in a signed 64-bit integer. The exceptional magnitude
+  `9223372036854775808` is allowed only as the direct operand of unary minus,
+  spelling `-9223372036854775808` (`INT64_MIN`), optionally with `L`.
+  Negating this minimum again is rejected, including after macro expansion.
+* Hexadecimal integers may use all 64 bits and are interpreted as signed
+  two's-complement bit patterns: `0x8000000000000000` is `INT64_MIN`, and
+  `0xffffffffffffffff` is `-1`. Values exceeding 64 bits are rejected.
 
 Examples:
 

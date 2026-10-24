@@ -9063,6 +9063,16 @@
 
     {
       "name" : "another_group",
+      "attributes" : [
+        {
+          "name" : "hex_min",
+          "value" : -9223372036854775808
+        },
+        {
+          "name" : "hex_minus_two",
+          "value" : -2
+        }
+      ],
       "isEmitted" : 1,
       "variables" : [
         {

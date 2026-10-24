@@ -8205,6 +8205,9 @@ BEGIN
   LET big4 := -9223372036854775808L;
   LET big5 := 9223372036854775807L;
   LET big6 := 9223372036854775807L;
+  LET big7 := -1L;
+  LET big8 := -9223372036854775808L;
+  LET big9 := 0xffffffffffffffffL;
 END;
 --]]
 
@@ -8215,6 +8218,9 @@ function bigstuff()
   local big4 = 0
   local big5 = 0
   local big6 = 0
+  local big7 = 0
+  local big8 = 0
+  local big9 = 0
 
   big1 = 0x7fffffffffffffff
   big2 = 0x8000000000000000
@@ -8222,6 +8228,9 @@ function bigstuff()
   big4 = (-9223372036854775807 - 1)
   big5 = 9223372036854775807
   big6 = 9223372036854775807
+  big7 = -1
+  big8 = (-9223372036854775807 - 1)
+  big9 = 0xffffffffffffffff
 
 end
 

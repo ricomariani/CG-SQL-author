@@ -15,6 +15,7 @@
 // the code flex generates from it.
 
 #include "cql.y.h"
+#include <stdint.h>
 #include <stdarg.h>
 #include <string.h>
 #include <stdio.h>
@@ -428,6 +429,60 @@ static bool_t cql_already_processed_file(CSTR str) {
   return !!symtab_find(processed_files, str);
 }
 
+#define INTEGER_LITERAL_DEFAULT    0
+#define INTEGER_LITERAL_HEX        1
+#define INTEGER_LITERAL_FORCE_LONG 2
+
+// Decimal INT64_MAX+1 is retained so semantic analysis can recognize INT64_MIN.
+// Hexadecimal literals describe unsigned 64-bit patterns, not magnitudes.
+static int32_t cql_integer_literal_token(char *text, uint32_t flags) {
+  bool_t is_hex = !!(flags & INTEGER_LITERAL_HEX);
+  bool_t force_long = !!(flags & INTEGER_LITERAL_FORCE_LONG);
+
+  if (force_long) {
+    text[strlen(text) - 1] = 0;
+  }
+
+  uint64_t value = 0;
+  uint32_t base = is_hex ? 16 : 10;
+  CSTR digits = is_hex ? text + 2 : text;
+
+  for (CSTR p = digits; *p; p++) {
+    uint32_t digit;
+    if (*p >= '0' && *p <= '9') {
+      digit = (uint32_t)(*p - '0');
+    }
+    else if (*p >= 'a' && *p <= 'f') {
+      digit = (uint32_t)(*p - 'a' + 10);
+    }
+    else {
+      Contract(*p >= 'A' && *p <= 'F');
+      digit = (uint32_t)(*p - 'A' + 10);
+    }
+
+    if (value > (UINT64_MAX - digit) / base) {
+      yylval.sval = text;
+      yyerror("integer literal out of range");
+      return LONGLIT;
+    }
+    value = value * base + digit;
+  }
+
+  if (!is_hex && value > (uint64_t)INT64_MAX + 1) {
+    yylval.sval = text;
+    yyerror("integer literal out of range");
+    return LONGLIT;
+  }
+
+  if (!is_hex && value == (uint64_t)INT64_MAX + 1) {
+    // The existing unary-minus handlers recognize this exact spelling.
+    text = Strdup("9223372036854775808");
+  }
+
+  yylval.sval = text;
+  return !force_long && value <= INT32_MAX ? INTLIT : LONGLIT;
+}
+
 %}
 
 stop [^A-Z_0-9]
@@ -721,25 +776,13 @@ WITHOUT                          { return WITHOUT; }
 "|="                             { return OR_EQ; }
 "||"                             { return CONCAT; }
 
-0x{hex}+                         { char *s = Strdup(yytext);
-                                   yylval.sval = s;
-                                   errno = 0;
-                                   return (strtoll(s+2, NULL, 16) <= 0x7fffffff  && errno == 0) ? INTLIT: LONGLIT; }
+0x{hex}+                         { return cql_integer_literal_token(Strdup(yytext), INTEGER_LITERAL_HEX); }
 
-0x{hex}+L                        { char *s = Strdup(yytext);
-                                   s[strlen(s)-1] = 0; /* remove the L */
-                                   yylval.sval = s;
-                                   return LONGLIT; }
+0x{hex}+L                        { return cql_integer_literal_token(Strdup(yytext), INTEGER_LITERAL_HEX | INTEGER_LITERAL_FORCE_LONG); }
 
-{d}+                             { char *s = Strdup(yytext);
-                                   yylval.sval = s;
-                                   errno = 0;
-                                   return (strtoll(s, NULL, 10) <= 0x7fffffff  && errno == 0) ? INTLIT: LONGLIT; }
+{d}+                             { return cql_integer_literal_token(Strdup(yytext), INTEGER_LITERAL_DEFAULT); }
 
-{d}+L                            { char *s = Strdup(yytext);
-                                   s[strlen(s)-1] = 0; /* remove the L */
-                                   yylval.sval = s;
-                                   return LONGLIT; }
+{d}+L                            { return cql_integer_literal_token(Strdup(yytext), INTEGER_LITERAL_FORCE_LONG); }
 
 {reallit}                        { yylval.sval = Strdup(yytext); return REALLIT; }
 {qid}                            { yylval.sval = Strdup(yytext); return QID; }

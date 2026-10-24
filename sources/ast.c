@@ -750,6 +750,14 @@ cql_noexport ast_node *new_ast_str(CSTR value) {
   return (ast_node *)sast;
 }
 
+cql_noexport int64_t ast_int64_from_literal(CSTR literal) {
+  uint64_t bits = strtoull(literal, NULL, has_hex_prefix(literal) ? 16 : 10);
+  int64_t value;
+  // Avoid signed-parser saturation and implementation-defined unsigned casts.
+  memcpy(&value, &bits, sizeof(value));
+  return value;
+}
+
 // Create a new numeric node.  As discussed above the numeric is encoded in
 // string form.  We do not even try to normalize it.  This is especially
 // important for floating point literals.  We do not want to lose anything

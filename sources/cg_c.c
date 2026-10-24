@@ -2827,6 +2827,16 @@ static void cg_expr_num(ast_node *expr, CSTR op, charbuf *is_null, charbuf *valu
   // a numeric literal
   bprintf(is_null, "0");
 
+  if (num_type == NUM_LONG && has_hex_prefix(lit)) {
+    eval_node result = EVAL_NIL;
+    eval(expr, &result);
+    if (result.int64_value < 0) {
+      // C otherwise treats high-bit hex literals as unsigned expressions.
+      eval_format_number(&result, EVAL_FORMAT_FOR_C, value);
+      return;
+    }
+  }
+
   if (num_type == NUM_LONG) {
     // add long suffix if needed
     bprintf(value, "_64(%s)", lit);

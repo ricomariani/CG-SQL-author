@@ -5312,6 +5312,33 @@ begin
   EXPECT_EQ!(z, C.v);
 end);
 
+const group hex_long_constants (
+  hex_long_min = 0x8000000000000000,
+  hex_long_minus_one = 0xffffffffffffffffL
+);
+
+TEST!(integer_literal_bit_patterns,
+begin
+  EXPECT_SQL_TOO!(0x7fffffff = 2147483647);
+  EXPECT_SQL_TOO!(0x80000000 = 2147483648);
+  EXPECT_SQL_TOO!(0x7fffffffffffffff = 9223372036854775807);
+  EXPECT_SQL_TOO!(0x8000000000000000 = -9223372036854775808);
+  EXPECT_SQL_TOO!(0x8000000000000001L = -9223372036854775807L);
+  EXPECT_SQL_TOO!(0xfffffffffffffffe = -2L);
+  EXPECT_SQL_TOO!(0XFFFFFFFFFFFFFFFFL = -1L);
+  EXPECT_SQL_TOO!(0xffffffffffffffff < 0L);
+  EXPECT_SQL_TOO!(0xffffffffffffffffL / 2 = 0L);
+  EXPECT_SQL_TOO!(0x8000000000000000 / 2 = -4611686018427387904L);
+
+  EXPECT_SQL_TOO!(const(0x8000000000000000) = -9223372036854775808);
+  EXPECT_SQL_TOO!(const(0xffffffffffffffff) = -1L);
+  EXPECT_SQL_TOO!(const(0XFFFFFFFFFFFFFFFEL) = -2L);
+  EXPECT_SQL_TOO!(const(0x7fffffffffffffff) = 9223372036854775807);
+  EXPECT_SQL_TOO!(hex_long_min = -9223372036854775808);
+  EXPECT_SQL_TOO!(hex_long_minus_one = -1L);
+  EXPECT_SQL_TOO!(-09223372036854775808L = -9223372036854775808);
+end);
+
 TEST!(serialization_tricky_values,
 begin
   round_trip_int(0);

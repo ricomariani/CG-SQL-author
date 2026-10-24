@@ -1325,7 +1325,7 @@ static void gen_expr_num(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(val);
 
   if (has_hex_prefix(val) && gen_callbacks && gen_callbacks->convert_hex) {
-    int64_t v = strtol(val, NULL, 16);
+    int64_t v = ast_int64_from_literal(val);
     gen_printf("%lld", (llint_t)v);
   }
   else {

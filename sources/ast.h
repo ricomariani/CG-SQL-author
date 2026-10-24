@@ -333,6 +333,9 @@ cql_noexport CSTR _Nonnull get_compound_operator_name(int32_t compound_operator)
 
 #define has_hex_prefix(s) (s[0] == '0' && (s[1] == 'x' || s[1] == 'X'))
 
+// Decode an already range-checked integer literal, preserving hex bit patterns.
+cql_noexport int64_t ast_int64_from_literal(CSTR _Nonnull literal);
+
 #define EXPR_PRI_ROOT -999
 #define EXPR_PRI_ASSIGN 0
 #define EXPR_PRI_OR 1

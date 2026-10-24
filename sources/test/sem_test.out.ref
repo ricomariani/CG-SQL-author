@@ -30160,7 +30160,7 @@ CREATE TABLE misc_attr_table(
   |     | {misc_attr}
   |       | {name num}
   |       | {uminus}: ok
-  |         | {int 9}
+  |         | {int 9}: integer notnull
   | {create_table_stmt}: misc_attr_table: { id: integer notnull }
     | {create_table_name_flags}
     | | {table_flags_attrs}

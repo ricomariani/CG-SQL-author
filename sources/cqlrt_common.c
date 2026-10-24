@@ -2609,12 +2609,13 @@ cql_bool cql_facet_upsert(
 // and free its old allocation. Accept the buffer and offset rather than an
 // interior pointer so every bit write finds the current allocation; retaining
 // the original bit-vector pointer across appends would cause a use-after-free.
-static void cql_setbit(cql_bytebuf *_Nonnull b, uint32_t bits_offset, uint16_t index) {
+// Each of up to UINT16_MAX fields can contribute both a presence and a value bit.
+static void cql_setbit(cql_bytebuf *_Nonnull b, uint32_t bits_offset, uint32_t index) {
   uint8_t *bytes = (uint8_t *)b->ptr + bits_offset;
   bytes[index / 8] |= (1 << (index % 8));
 }
 
-static cql_bool cql_getbit(const uint8_t *_Nonnull bytes, uint16_t index) {
+static cql_bool cql_getbit(const uint8_t *_Nonnull bytes, uint32_t index) {
   return !!(bytes[index / 8] & (1 << (index % 8)));
 }
 
@@ -3122,6 +3123,12 @@ cql_code cql_cursor_from_bytes(
 
     if (!code) {
       break;
+    }
+
+    // Reject oversized headers before any 16-bit counter can wrap and cause
+    // extra fields to be checked against metadata beyond the destination.
+    if (actual_count == UINT16_MAX) {
+      goto error;
     }
 
     bool nullable_code = (code >= 'a' && code <= 'z');

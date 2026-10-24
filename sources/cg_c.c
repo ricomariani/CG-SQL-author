@@ -3563,6 +3563,8 @@ static int32_t refs_count_sptr(sem_struct *sptr) {
 // Emit the offsets for the given struct type into the output with the given name
 static void cg_col_offsets(charbuf *output, sem_struct *sptr, CSTR sym_name, CSTR struct_name) {
   uint32_t count = sptr->count;
+  // The runtime field count must fit before it is narrowed into the metadata.
+  Contract(count <= UINT16_MAX);
 
   CSTR prefix = in_var_group_emit ? "" : "static ";
 

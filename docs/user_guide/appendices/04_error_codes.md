@@ -6740,6 +6740,12 @@ CALL some_proc(t, t);
 CALL some_proc(some_other_proc(t), t);
 ```
 
+This restriction applies to the resolved variable or field, not its spelling.
+Changing identifier case does not create a different variable. An argument-bundle
+field and its underscore-separated parameter name (for example, `C.value` and
+`C_value`) also refer to the same storage. Distinct fields remain distinct even
+when they have the same type or belong to different cursors or argument bundles.
+
 ----
 
 ### CQL0427: LIKE CTE form may only be used inside a shared fragment at the top level i.e. [[shared_fragment]] 'procedure_name'

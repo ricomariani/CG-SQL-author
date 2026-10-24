@@ -9849,6 +9849,758 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0426: OUT or INOUT argument cannot 
 
 The statement ending at line XXXX
 
+CALL proc_with_output(1, X, x);
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0426: OUT or INOUT argument cannot be used again in same call 'X'
+
+  {call_stmt}: err
+  | {name proc_with_output}: ok
+  | {arg_list}: ok
+    | {int 1}: integer notnull
+    | {arg_list}
+      | {name X}: X: integer variable was_set
+      | {arg_list}
+        | {name x}: X: integer variable was_set
+
+The statement ending at line XXXX
+
+PROC dotted_out_arguments_may_not_alias (C_arg1 INT, INOUT C_arg2 INT, OUT C_arg3 INT)
+BEGIN
+  CALL proc_with_output(1, C.arg2, C.arg2);
+END;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0426: OUT or INOUT argument cannot be used again in same call 'C.arg2'
+
+  {create_proc_stmt}: err
+  | {name dotted_out_arguments_may_not_alias}: err
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: C_arg1: integer variable in
+    | | | {param_detail}: C_arg1: integer variable in
+    | |   | {name C_arg1}: C_arg1: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: C_arg2: integer variable in out was_set
+    |   | | {inout}
+    |   | | {param_detail}: C_arg2: integer variable in out was_set
+    |   |   | {name C_arg2}: C_arg2: integer variable in out was_set
+    |   |   | {type_int}: integer
+    |   | {params}
+    |     | {param}: C_arg3: integer variable out
+    |       | {out}
+    |       | {param_detail}: C_arg3: integer variable out
+    |         | {name C_arg3}: C_arg3: integer variable out
+    |         | {type_int}: integer
+    | {stmt_list}: err
+      | {call_stmt}: err
+        | {name proc_with_output}: ok
+        | {arg_list}: ok
+          | {int 1}: integer notnull
+          | {arg_list}
+            | {dot}: C_arg2: integer variable in out
+            | | {name C}
+            | | {name arg2}
+            | {arg_list}
+              | {dot}: C_arg2: integer variable in out was_set
+                | {name C}
+                | {name arg2}
+
+The statement ending at line XXXX
+
+CALL proc_with_output(1, x, X);
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0426: OUT or INOUT argument cannot be used again in same call 'x'
+
+  {call_stmt}: err
+  | {name proc_with_output}: ok
+  | {arg_list}: ok
+    | {int 1}: integer notnull
+    | {arg_list}
+      | {name x}: X: integer variable was_set
+      | {arg_list}
+        | {name X}: X: integer variable was_set
+
+The statement ending at line XXXX
+
+CALL proc_with_output(x, X, Y);
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0426: OUT or INOUT argument cannot be used again in same call 'x'
+
+  {call_stmt}: err
+  | {name proc_with_output}: ok
+  | {arg_list}: ok
+    | {name x}: X: integer variable was_set
+    | {arg_list}
+      | {name X}: X: integer variable was_set
+      | {arg_list}
+        | {name Y}: Y: integer variable was_set
+
+The statement ending at line XXXX
+
+CALL proc_with_output(X, Y, x);
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0426: OUT or INOUT argument cannot be used again in same call 'X'
+
+  {call_stmt}: err
+  | {name proc_with_output}: ok
+  | {arg_list}: ok
+    | {name X}: X: integer variable was_set
+    | {arg_list}
+      | {name Y}: Y: integer variable was_set
+      | {arg_list}
+        | {name x}: X: integer variable was_set
+
+The statement ending at line XXXX
+
+PROC dotted_case_variants_may_not_alias (C_arg1 INT, INOUT C_arg2 INT, OUT C_arg3 INT)
+BEGIN
+  CALL proc_with_output(1, C.arg2, c.ArG2);
+END;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0426: OUT or INOUT argument cannot be used again in same call 'C.arg2'
+
+  {create_proc_stmt}: err
+  | {name dotted_case_variants_may_not_alias}: err
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: C_arg1: integer variable in
+    | | | {param_detail}: C_arg1: integer variable in
+    | |   | {name C_arg1}: C_arg1: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: C_arg2: integer variable in out was_set
+    |   | | {inout}
+    |   | | {param_detail}: C_arg2: integer variable in out was_set
+    |   |   | {name C_arg2}: C_arg2: integer variable in out was_set
+    |   |   | {type_int}: integer
+    |   | {params}
+    |     | {param}: C_arg3: integer variable out
+    |       | {out}
+    |       | {param_detail}: C_arg3: integer variable out
+    |         | {name C_arg3}: C_arg3: integer variable out
+    |         | {type_int}: integer
+    | {stmt_list}: err
+      | {call_stmt}: err
+        | {name proc_with_output}: ok
+        | {arg_list}: ok
+          | {int 1}: integer notnull
+          | {arg_list}
+            | {dot}: C_arg2: integer variable in out
+            | | {name C}
+            | | {name arg2}
+            | {arg_list}
+              | {dot}: C_arg2: integer variable in out was_set
+                | {name c}
+                | {name ArG2}
+
+The statement ending at line XXXX
+
+PROC bundle_spellings_may_not_alias (C_arg1 INT, INOUT C_arg2 INT, OUT C_arg3 INT)
+BEGIN
+  CALL proc_with_output(1, C.arg2, C_arg2);
+  CALL proc_with_output(1, C_arg2, C.arg2);
+END;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0426: OUT or INOUT argument cannot be used again in same call 'C.arg2'
+test/sem_test.sql:XXXX:1: error: in str : CQL0426: OUT or INOUT argument cannot be used again in same call 'C_arg2'
+
+  {create_proc_stmt}: err
+  | {name bundle_spellings_may_not_alias}: err
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: C_arg1: integer variable in
+    | | | {param_detail}: C_arg1: integer variable in
+    | |   | {name C_arg1}: C_arg1: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: C_arg2: integer variable in out was_set
+    |   | | {inout}
+    |   | | {param_detail}: C_arg2: integer variable in out was_set
+    |   |   | {name C_arg2}: C_arg2: integer variable in out was_set
+    |   |   | {type_int}: integer
+    |   | {params}
+    |     | {param}: C_arg3: integer variable out
+    |       | {out}
+    |       | {param_detail}: C_arg3: integer variable out
+    |         | {name C_arg3}: C_arg3: integer variable out
+    |         | {type_int}: integer
+    | {stmt_list}: err
+      | {call_stmt}: err
+      | | {name proc_with_output}: ok
+      | | {arg_list}: ok
+      |   | {int 1}: integer notnull
+      |   | {arg_list}
+      |     | {dot}: C_arg2: integer variable in out
+      |     | | {name C}
+      |     | | {name arg2}
+      |     | {arg_list}
+      |       | {name C_arg2}: C_arg2: integer variable in out was_set
+      | {call_stmt}: err
+        | {name proc_with_output}: ok
+        | {arg_list}: ok
+          | {int 1}: integer notnull
+          | {arg_list}
+            | {name C_arg2}: C_arg2: integer variable in out was_set
+            | {arg_list}
+              | {dot}: C_arg2: integer variable in out was_set
+                | {name C}
+                | {name arg2}
+
+The statement ending at line XXXX
+
+PROC distinct_bundle_fields_do_not_alias (C_arg1 INT, INOUT C_arg2 INT, OUT C_arg3 INT, D_arg1 INT, INOUT D_arg2 INT, OUT D_arg3 INT)
+BEGIN
+  CALL proc_with_output(1, C.arg2, C.arg3);
+  CALL proc_with_output(1, C.arg2, D.arg2);
+END;
+
+  {create_proc_stmt}: ok
+  | {name distinct_bundle_fields_do_not_alias}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: C_arg1: integer variable in
+    | | | {param_detail}: C_arg1: integer variable in
+    | |   | {name C_arg1}: C_arg1: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: C_arg2: integer variable in out was_set
+    |   | | {inout}
+    |   | | {param_detail}: C_arg2: integer variable in out was_set
+    |   |   | {name C_arg2}: C_arg2: integer variable in out was_set
+    |   |   | {type_int}: integer
+    |   | {params}
+    |     | {param}: C_arg3: integer variable out was_set
+    |     | | {out}
+    |     | | {param_detail}: C_arg3: integer variable out was_set
+    |     |   | {name C_arg3}: C_arg3: integer variable out was_set
+    |     |   | {type_int}: integer
+    |     | {params}
+    |       | {param}: D_arg1: integer variable in
+    |       | | {param_detail}: D_arg1: integer variable in
+    |       |   | {name D_arg1}: D_arg1: integer variable in
+    |       |   | {type_int}: integer
+    |       | {params}
+    |         | {param}: D_arg2: integer variable in out was_set
+    |         | | {inout}
+    |         | | {param_detail}: D_arg2: integer variable in out was_set
+    |         |   | {name D_arg2}: D_arg2: integer variable in out was_set
+    |         |   | {type_int}: integer
+    |         | {params}
+    |           | {param}: D_arg3: integer variable out
+    |             | {out}
+    |             | {param_detail}: D_arg3: integer variable out
+    |               | {name D_arg3}: D_arg3: integer variable out
+    |               | {type_int}: integer
+    | {stmt_list}: ok
+      | {call_stmt}: ok
+      | | {name proc_with_output}: ok
+      | | {arg_list}: ok
+      |   | {int 1}: integer notnull
+      |   | {arg_list}
+      |     | {dot}: C_arg2: integer variable in out
+      |     | | {name C}
+      |     | | {name arg2}
+      |     | {arg_list}
+      |       | {dot}: C_arg3: integer variable out
+      |         | {name C}
+      |         | {name arg3}
+      | {call_stmt}: ok
+        | {name proc_with_output}: ok
+        | {arg_list}: ok
+          | {int 1}: integer notnull
+          | {arg_list}
+            | {dot}: C_arg2: integer variable in out was_set
+            | | {name C}
+            | | {name arg2}
+            | {arg_list}
+              | {dot}: D_arg2: integer variable in out
+                | {name D}
+                | {name arg2}
+
+The statement ending at line XXXX
+
+PROC bundle_input_expressions_do_not_alias (C_arg1 INT, INOUT C_arg2 INT, OUT C_arg3 INT)
+BEGIN
+  CALL proc_with_output(C.arg2 + 1, C.arg2, C.arg3);
+END;
+
+  {create_proc_stmt}: ok
+  | {name bundle_input_expressions_do_not_alias}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: C_arg1: integer variable in
+    | | | {param_detail}: C_arg1: integer variable in
+    | |   | {name C_arg1}: C_arg1: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: C_arg2: integer variable in out was_set
+    |   | | {inout}
+    |   | | {param_detail}: C_arg2: integer variable in out was_set
+    |   |   | {name C_arg2}: C_arg2: integer variable in out was_set
+    |   |   | {type_int}: integer
+    |   | {params}
+    |     | {param}: C_arg3: integer variable out was_set
+    |       | {out}
+    |       | {param_detail}: C_arg3: integer variable out was_set
+    |         | {name C_arg3}: C_arg3: integer variable out was_set
+    |         | {type_int}: integer
+    | {stmt_list}: ok
+      | {call_stmt}: ok
+        | {name proc_with_output}: ok
+        | {arg_list}: ok
+          | {add}: integer
+          | | {dot}: C_arg2: integer variable in out
+          | | | {name C}
+          | | | {name arg2}
+          | | {int 1}: integer notnull
+          | {arg_list}
+            | {dot}: C_arg2: integer variable in out
+            | | {name C}
+            | | {name arg2}
+            | {arg_list}
+              | {dot}: C_arg3: integer variable out
+                | {name C}
+                | {name arg3}
+
+The statement ending at line XXXX
+
+PROC cursor_field_aliases_are_rejected ()
+BEGIN
+  CURSOR C LIKE SELECT nullable(1) AS value, nullable(2) AS other;
+  CALL proc_with_output(1, C.value, c.VALUE);
+END;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0426: OUT or INOUT argument cannot be used again in same call 'C.value'
+
+  {create_proc_stmt}: err
+  | {name cursor_field_aliases_are_rejected}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_cursor_like_select}: C: _select_: { value: integer, other: integer } variable shape_storage value_cursor
+      | | {name C}: C: _select_: { value: integer, other: integer } variable shape_storage value_cursor
+      | | {select_stmt}: _select_: { value: integer, other: integer }
+      |   | {select_core_list}: _select_: { value: integer, other: integer }
+      |   | | {select_core}: _select_: { value: integer, other: integer }
+      |   |   | {select_expr_list_con}: _select_: { value: integer, other: integer }
+      |   |     | {select_expr_list}: _select_: { value: integer, other: integer }
+      |   |     | | {select_expr}: value: integer
+      |   |     | | | {call}: integer
+      |   |     | | | | {name nullable}: integer
+      |   |     | | | | {call_arg_list}
+      |   |     | | |   | {call_filter_clause}
+      |   |     | | |   | {arg_list}: ok
+      |   |     | | |     | {int 1}: integer notnull
+      |   |     | | | {opt_as_alias}
+      |   |     | |   | {name value}
+      |   |     | | {select_expr_list}
+      |   |     |   | {select_expr}: other: integer
+      |   |     |     | {call}: integer
+      |   |     |     | | {name nullable}: integer
+      |   |     |     | | {call_arg_list}
+      |   |     |     |   | {call_filter_clause}
+      |   |     |     |   | {arg_list}: ok
+      |   |     |     |     | {int 2}: integer notnull
+      |   |     |     | {opt_as_alias}
+      |   |     |       | {name other}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {call_stmt}: err
+        | {name proc_with_output}: ok
+        | {arg_list}: ok
+          | {int 1}: integer notnull
+          | {arg_list}
+            | {dot}: C.value: integer variable
+            | | {name C}
+            | | {name value}
+            | {arg_list}
+              | {dot}: C.value: integer variable
+                | {name c}
+                | {name VALUE}
+
+The statement ending at line XXXX
+
+PROC distinct_cursor_fields_do_not_alias ()
+BEGIN
+  CURSOR C LIKE SELECT nullable(1) AS value, nullable(2) AS other;
+  CURSOR D LIKE C;
+  DECLARE value INT;
+  CALL proc_with_output(1, C.value, C.other);
+  CALL proc_with_output(1, C.value, D.value);
+  CALL proc_with_output(1, C.value, value);
+END;
+
+  {create_proc_stmt}: ok
+  | {name distinct_cursor_fields_do_not_alias}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_cursor_like_select}: C: _select_: { value: integer, other: integer } variable shape_storage value_cursor
+      | | {name C}: C: _select_: { value: integer, other: integer } variable shape_storage value_cursor
+      | | {select_stmt}: _select_: { value: integer, other: integer }
+      |   | {select_core_list}: _select_: { value: integer, other: integer }
+      |   | | {select_core}: _select_: { value: integer, other: integer }
+      |   |   | {select_expr_list_con}: _select_: { value: integer, other: integer }
+      |   |     | {select_expr_list}: _select_: { value: integer, other: integer }
+      |   |     | | {select_expr}: value: integer
+      |   |     | | | {call}: integer
+      |   |     | | | | {name nullable}: integer
+      |   |     | | | | {call_arg_list}
+      |   |     | | |   | {call_filter_clause}
+      |   |     | | |   | {arg_list}: ok
+      |   |     | | |     | {int 1}: integer notnull
+      |   |     | | | {opt_as_alias}
+      |   |     | |   | {name value}
+      |   |     | | {select_expr_list}
+      |   |     |   | {select_expr}: other: integer
+      |   |     |     | {call}: integer
+      |   |     |     | | {name nullable}: integer
+      |   |     |     | | {call_arg_list}
+      |   |     |     |   | {call_filter_clause}
+      |   |     |     |   | {arg_list}: ok
+      |   |     |     |     | {int 2}: integer notnull
+      |   |     |     | {opt_as_alias}
+      |   |     |       | {name other}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {declare_cursor_like_name}: D: _select_: { value: integer, other: integer } variable shape_storage value_cursor
+      | | {name D}: D: _select_: { value: integer, other: integer } variable shape_storage value_cursor
+      | | {shape_def}: C: _select_: { value: integer, other: integer } variable shape_storage value_cursor
+      |   | {like}: ok
+      |     | {name C}
+      | {declare_vars_type}: integer
+      | | {name_list}: value: integer variable was_set
+      | | | {name value}: value: integer variable was_set
+      | | {type_int}: integer
+      | {call_stmt}: ok
+      | | {name proc_with_output}: ok
+      | | {arg_list}: ok
+      |   | {int 1}: integer notnull
+      |   | {arg_list}
+      |     | {dot}: C.value: integer variable
+      |     | | {name C}
+      |     | | {name value}
+      |     | {arg_list}
+      |       | {dot}: C.other: integer variable
+      |         | {name C}
+      |         | {name other}
+      | {call_stmt}: ok
+      | | {name proc_with_output}: ok
+      | | {arg_list}: ok
+      |   | {int 1}: integer notnull
+      |   | {arg_list}
+      |     | {dot}: C.value: integer variable
+      |     | | {name C}
+      |     | | {name value}
+      |     | {arg_list}
+      |       | {dot}: D.value: integer variable
+      |         | {name D}
+      |         | {name value}
+      | {call_stmt}: ok
+        | {name proc_with_output}: ok
+        | {arg_list}: ok
+          | {int 1}: integer notnull
+          | {arg_list}
+            | {dot}: C.value: integer variable
+            | | {name C}
+            | | {name value}
+            | {arg_list}
+              | {name value}: value: integer variable
+
+The statement ending at line XXXX
+
+DECLARE PROC alias_input_pair (a INT, b INT, INOUT result INT);
+
+  {declare_proc_stmt}: ok
+  | {proc_name_type}
+  | | {name alias_input_pair}: ok
+  | | {detail 0} {no_flags}
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: a: integer variable in
+      | | {param_detail}: a: integer variable in
+      |   | {name a}: a: integer variable in
+      |   | {type_int}: integer
+      | {params}
+        | {param}: b: integer variable in
+        | | {param_detail}: b: integer variable in
+        |   | {name b}: b: integer variable in
+        |   | {type_int}: integer
+        | {params}
+          | {param}: result: integer variable in out
+            | {inout}
+            | {param_detail}: result: integer variable in out
+              | {name result}: result: integer variable in out
+              | {type_int}: integer
+
+The statement ending at line XXXX
+
+PROC repeated_inputs_are_not_output_aliases (x INT, y INT)
+BEGIN
+  CALL alias_input_pair(x, X, y);
+  CALL alias_input_pair(-1, -1, y);
+  CALL alias_input_pair(x + 1, x + 1, x);
+END;
+
+  {create_proc_stmt}: ok
+  | {name repeated_inputs_are_not_output_aliases}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: x: integer variable in was_set
+    | | | {param_detail}: x: integer variable in was_set
+    | |   | {name x}: x: integer variable in was_set
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: y: integer variable in was_set
+    |     | {param_detail}: y: integer variable in was_set
+    |       | {name y}: y: integer variable in was_set
+    |       | {type_int}: integer
+    | {stmt_list}: ok
+      | {call_stmt}: ok
+      | | {name alias_input_pair}: ok
+      | | {arg_list}: ok
+      |   | {name x}: x: integer variable in
+      |   | {arg_list}
+      |     | {name X}: x: integer variable in
+      |     | {arg_list}
+      |       | {name y}: y: integer variable in
+      | {call_stmt}: ok
+      | | {name alias_input_pair}: ok
+      | | {arg_list}: ok
+      |   | {int -1}: integer<ints> notnull
+      |   | {arg_list}
+      |     | {int -1}: integer<ints> notnull
+      |     | {arg_list}
+      |       | {name y}: y: integer variable in was_set
+      | {call_stmt}: ok
+        | {name alias_input_pair}: ok
+        | {arg_list}: ok
+          | {add}: integer
+          | | {name x}: x: integer variable in
+          | | {int 1}: integer notnull
+          | {arg_list}
+            | {add}: integer
+            | | {name x}: x: integer variable in
+            | | {int 1}: integer notnull
+            | {arg_list}
+              | {name x}: x: integer variable in
+
+The statement ending at line XXXX
+
+CALL alias_input_pair(x, X, X);
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0426: OUT or INOUT argument cannot be used again in same call 'x'
+
+  {call_stmt}: err
+  | {name alias_input_pair}: ok
+  | {arg_list}: ok
+    | {name x}: X: integer variable was_set
+    | {arg_list}
+      | {name X}: X: integer variable was_set
+      | {arg_list}
+        | {name X}: X: integer variable was_set
+
+The statement ending at line XXXX
+
+DECLARE PROC alias_output_pairs (a INT, b INT, INOUT a_result INT, INOUT b_result INT);
+
+  {declare_proc_stmt}: ok
+  | {proc_name_type}
+  | | {name alias_output_pairs}: ok
+  | | {detail 0} {no_flags}
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: a: integer variable in
+      | | {param_detail}: a: integer variable in
+      |   | {name a}: a: integer variable in
+      |   | {type_int}: integer
+      | {params}
+        | {param}: b: integer variable in
+        | | {param_detail}: b: integer variable in
+        |   | {name b}: b: integer variable in
+        |   | {type_int}: integer
+        | {params}
+          | {param}: a_result: integer variable in out
+          | | {inout}
+          | | {param_detail}: a_result: integer variable in out
+          |   | {name a_result}: a_result: integer variable in out
+          |   | {type_int}: integer
+          | {params}
+            | {param}: b_result: integer variable in out
+              | {inout}
+              | {param_detail}: b_result: integer variable in out
+                | {name b_result}: b_result: integer variable in out
+                | {type_int}: integer
+
+The statement ending at line XXXX
+
+PROC multiple_alias_groups_report_first_source_use ()
+BEGIN
+  CALL alias_output_pairs(Y, X, y, x);
+  CALL alias_output_pairs(X, Y, x, y);
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0426: OUT or INOUT argument cannot be used again in same call 'Y'
+test/sem_test.sql:XXXX:1: error: in str : CQL0426: OUT or INOUT argument cannot be used again in same call 'X'
+
+  {create_proc_stmt}: err
+  | {name multiple_alias_groups_report_first_source_use}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {call_stmt}: err
+      | | {name alias_output_pairs}: ok
+      | | {arg_list}: ok
+      |   | {name Y}: Y: integer variable was_set
+      |   | {arg_list}
+      |     | {name X}: X: integer variable was_set
+      |     | {arg_list}
+      |       | {name y}: Y: integer variable was_set
+      |       | {arg_list}
+      |         | {name x}: X: integer variable was_set
+      | {call_stmt}: err
+        | {name alias_output_pairs}: ok
+        | {arg_list}: ok
+          | {name X}: X: integer variable was_set
+          | {arg_list}
+            | {name Y}: Y: integer variable was_set
+            | {arg_list}
+              | {name x}: X: integer variable was_set
+              | {arg_list}
+                | {name y}: Y: integer variable was_set
+
+The statement ending at line XXXX
+
+PROC quoted_output_aliases_are_rejected (`out value` INT)
+BEGIN
+  CALL proc_with_output(1, `out value`, `out value`);
+  CALL proc_with_output(1, `out value`, `OUT VALUE`);
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0426: OUT or INOUT argument cannot be used again in same call '`out value`'
+test/sem_test.sql:XXXX:1: error: in str : CQL0426: OUT or INOUT argument cannot be used again in same call '`out value`'
+
+  {create_proc_stmt}: err
+  | {name quoted_output_aliases_are_rejected}: err
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: `out value`: integer variable in was_set
+    |   | {param_detail}: `out value`: integer variable in was_set
+    |     | {name `out value`}: `out value`: integer variable in was_set
+    |     | {type_int}: integer
+    | {stmt_list}: err
+      | {call_stmt}: err
+      | | {name proc_with_output}: ok
+      | | {arg_list}: ok
+      |   | {int 1}: integer notnull
+      |   | {arg_list}
+      |     | {name `out value`}: `out value`: integer variable in
+      |     | {arg_list}
+      |       | {name `out value`}: `out value`: integer variable in was_set
+      | {call_stmt}: err
+        | {name proc_with_output}: ok
+        | {arg_list}: ok
+          | {int 1}: integer notnull
+          | {arg_list}
+            | {name `out value`}: `out value`: integer variable in was_set
+            | {arg_list}
+              | {name `OUT VALUE`}: `out value`: integer variable in was_set
+
+The statement ending at line XXXX
+
+DECLARE PROC alias_cursor_flag (flag BOOL!, INOUT value INT, OUT result INT);
+
+  {declare_proc_stmt}: ok
+  | {proc_name_type}
+  | | {name alias_cursor_flag}: ok
+  | | {detail 0} {no_flags}
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: flag: bool notnull variable in
+      | | {param_detail}: flag: bool notnull variable in
+      |   | {name flag}: flag: bool notnull variable in
+      |   | {notnull}: bool notnull
+      |     | {type_bool}: bool
+      | {params}
+        | {param}: value: integer variable in out
+        | | {inout}
+        | | {param_detail}: value: integer variable in out
+        |   | {name value}: value: integer variable in out
+        |   | {type_int}: integer
+        | {params}
+          | {param}: result: integer variable out
+            | {out}
+            | {param_detail}: result: integer variable out
+              | {name result}: result: integer variable out
+              | {type_int}: integer
+
+The statement ending at line XXXX
+
+PROC cursor_boolean_is_not_output_storage ()
+BEGIN
+  CURSOR C LIKE SELECT nullable(1) AS value, nullable(2) AS other;
+  CALL alias_cursor_flag(C, C.value, C.other);
+END;
+
+  {create_proc_stmt}: ok
+  | {name cursor_boolean_is_not_output_storage}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_cursor_like_select}: C: _select_: { value: integer, other: integer } variable shape_storage value_cursor
+      | | {name C}: C: _select_: { value: integer, other: integer } variable shape_storage value_cursor
+      | | {select_stmt}: _select_: { value: integer, other: integer }
+      |   | {select_core_list}: _select_: { value: integer, other: integer }
+      |   | | {select_core}: _select_: { value: integer, other: integer }
+      |   |   | {select_expr_list_con}: _select_: { value: integer, other: integer }
+      |   |     | {select_expr_list}: _select_: { value: integer, other: integer }
+      |   |     | | {select_expr}: value: integer
+      |   |     | | | {call}: integer
+      |   |     | | | | {name nullable}: integer
+      |   |     | | | | {call_arg_list}
+      |   |     | | |   | {call_filter_clause}
+      |   |     | | |   | {arg_list}: ok
+      |   |     | | |     | {int 1}: integer notnull
+      |   |     | | | {opt_as_alias}
+      |   |     | |   | {name value}
+      |   |     | | {select_expr_list}
+      |   |     |   | {select_expr}: other: integer
+      |   |     |     | {call}: integer
+      |   |     |     | | {name nullable}: integer
+      |   |     |     | | {call_arg_list}
+      |   |     |     |   | {call_filter_clause}
+      |   |     |     |   | {arg_list}: ok
+      |   |     |     |     | {int 2}: integer notnull
+      |   |     |     | {opt_as_alias}
+      |   |     |       | {name other}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {call_stmt}: ok
+        | {name alias_cursor_flag}: ok
+        | {arg_list}: ok
+          | {name C}: C._has_row_: bool notnull variable
+          | {arg_list}
+            | {dot}: C.value: integer variable
+            | | {name C}
+            | | {name value}
+            | {arg_list}
+              | {dot}: C.other: integer variable
+                | {name C}
+                | {name other}
+
+The statement ending at line XXXX
+
 CALL proc_with_output(X, X, Y);
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0426: OUT or INOUT argument cannot be used again in same call 'X'
@@ -62825,6 +63577,29 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0426: OUT or INOUT argument cannot 
         | {name u}: u: integer notnull variable implicit was_set
         | {arg_list}
           | {name u}: u: integer notnull variable implicit was_set
+
+The statement ending at line XXXX
+
+PROC implicit_out_case_aliases_are_rejected ()
+BEGIN
+  DECLARE OUT CALL out2_proc(1, slot, SLOT);
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0426: OUT or INOUT argument cannot be used again in same call 'slot'
+
+  {create_proc_stmt}: err
+  | {name implicit_out_case_aliases_are_rejected}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_out_call_stmt}: err
+        | {call_stmt}: err
+          | {name out2_proc}: ok
+          | {arg_list}: ok
+            | {int 1}: integer notnull
+            | {arg_list}
+              | {name slot}: slot: integer notnull variable implicit
+              | {arg_list}
+                | {name SLOT}: slot: integer notnull variable implicit was_set
 
 The statement ending at line XXXX
 

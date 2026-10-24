@@ -80,6 +80,13 @@ approximately 150 such tokens, but the following points are of general interest:
 * line directives `^#line\ [0-9]+\ \"[^"]*\".*` or `^#\ [0-9]+\ \"[^"]*\".*` get
   special processing so that pre-processed input does not lose file and line
   number fidelity
+  * directive line numbers must be decimal integers in `1..1073741823`
+    (`INT32_MAX / 2`); zero and larger values are errors
+  * this conservative upper bound leaves over a billion subsequent scanner
+    increments before signed overflow, rather than letting a directive place
+    the counter next to `INT32_MAX`
+  * an invalid number is rejected before changing the current line or filename;
+    the next source line of a valid directive receives the specified number
 
 ### Parsing and the Abstract Syntax Tree
 

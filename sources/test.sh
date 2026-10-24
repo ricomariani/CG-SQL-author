@@ -269,6 +269,11 @@ basic_test() {
   TEST_CMD="python3 \"$T/integer_literals_test.py\" \"$CQL\" \"$O\""
   run_test_expect_success
 
+  TEST_NAME="numeric_inputs"
+  TEST_DESC="Checking numeric CLI options and line directive bounds"
+  TEST_CMD="python3 \"$T/numeric_inputs_test.py\" \"$CQL\" \"$O\""
+  run_test_expect_success
+
   echo "  computing diffs (empty if none)"
   on_diff_exit test.out
   on_diff_exit test_ast.out

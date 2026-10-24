@@ -102,6 +102,8 @@ static ast_node *make_statement_node(ast_node *misc_attrs, ast_node *any_stmt);
 static ast_node *make_coldef_node(ast_node *col_def_tye_attrs, ast_node *misc_attrs);
 static ast_node *reduce_str_chain(ast_node *str_chain);
 static ast_node *new_simple_call_from_name(ast_node *name);
+static bool_t parse_decimal_int32_prefix(CSTR text, int32_t min_value, int32_t max_value, int32_t *result, CSTR *end);
+static bool_t parse_decimal_int32(CSTR text, int32_t min_value, int32_t max_value, int32_t *result);
 
 // Set to true upon a call to `yyerror`.
 static bool_t parse_error_occurred;
@@ -3071,7 +3073,10 @@ static void parse_cmd(int argc, char **argv) {
     }
     else if (strcmp(arg, "--min_schema_version") == 0) {
       a = gather_arg_param(a, argc, argv, NULL, "for the minimum schema version");
-      options.min_schema_version = atoi(argv[a]);
+      if (!parse_decimal_int32(argv[a], 0, INT32_MAX, &options.min_schema_version)) {
+        cql_error("invalid minimum schema version '%s'\n", argv[a]);
+        cql_cleanup_and_exit(1);
+      }
     }
     else if (strcmp(arg, "--global_proc") == 0) {
       a = gather_arg_param(a, argc, argv, NULL,  "for the global proc name");
@@ -3636,12 +3641,74 @@ static int32_t gather_arg_param(int32_t a, int32_t argc, char **argv, char **out
 
 extern int yylineno;
 
+// Both callers require unsigned decimal spelling, not atoi's optional sign,
+// whitespace, or silently ignored suffix. The prefix form leaves the delimiter
+// for #line to check; the CLI form below requires the entire argument.
+static bool_t parse_decimal_int32_prefix(
+  CSTR text,
+  int32_t min_value,
+  int32_t max_value,
+  int32_t *result,
+  CSTR *end) {
+  if (text[0] < '0' || text[0] > '9') {
+    return false;
+  }
+
+  int32_t value = 0;
+  CSTR p = text;
+  for (; *p >= '0' && *p <= '9'; p++) {
+    int32_t digit = *p - '0';
+    // Prove the next multiply/add fits before performing it, including when
+    // max_value is INT32_MAX and the input is longer than any integer type.
+    if (value > max_value / 10 ||
+        (value == max_value / 10 && digit > max_value % 10)) {
+      return false;
+    }
+    value = value * 10 + digit;
+  }
+
+  if (value < min_value) {
+    return false;
+  }
+
+  *result = value;
+  *end = p;
+  return true;
+}
+
+static bool_t parse_decimal_int32(
+  CSTR text,
+  int32_t min_value,
+  int32_t max_value,
+  int32_t *result) {
+  int32_t value;
+  CSTR end;
+  if (!parse_decimal_int32_prefix(text, min_value, max_value, &value, &end) || *end) {
+    return false;
+  }
+  *result = value;
+  return true;
+}
+
+// A directive must not put the scanner next to signed overflow: reserve over
+// a billion subsequent line increments rather than allowing INT32_MAX itself.
+#define MAX_LINE_DIRECTIVE_NUMBER (INT32_MAX / 2)
+
 void line_directive(const char *directive) {
   char *directive_start = strchr(directive, '#');
   Invariant(directive_start != NULL);
   char *line_start = strchr(directive_start + 1, ' ');
   Invariant(line_start != NULL);
-  int line = atoi(line_start + 1);
+  int32_t line;
+  CSTR line_end;
+  if (!parse_decimal_int32_prefix(
+        line_start + 1, 1, MAX_LINE_DIRECTIVE_NUMBER, &line, &line_end) ||
+      *line_end != ' ') {
+    // Keep the existing line/file state on failure so later tokens cannot
+    // inherit a zero, wrapped, or nearly overflowing scanner line number.
+    yyerror("invalid #line directive line number");
+    return;
+  }
   yyset_lineno(line -1);  // we are about to process the linefeed
 
   char *q1 = strchr(directive_start +1, '"');
@@ -3861,6 +3928,7 @@ static void cql_usage() {
     "  used with --rt schema_upgrade\n"
     "--min_schema_version n\n"
     "  the schema upgrade script will not include upgrade steps for schema older than the version specified\n"
+    "  n must contain decimal digits only, in the range 0..2147483647\n"
     "  used with --rt schema_upgrade\n"
     "--schema_exclusive\n"
     "  the schema upgrade script assumes it owns all the schema in the database, it aggressively removes other things\n"

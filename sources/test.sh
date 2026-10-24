@@ -264,6 +264,11 @@ basic_test() {
   TEST_CMD="check_ast_depth_limit"
   run_test_expect_success
 
+  TEST_NAME="integer_literals"
+  TEST_DESC="Checking integer literal ranges and macro-expanded minimum values"
+  TEST_CMD="python3 \"$T/integer_literals_test.py\" \"$CQL\" \"$O\""
+  run_test_expect_success
+
   echo "  computing diffs (empty if none)"
   on_diff_exit test.out
   on_diff_exit test_ast.out

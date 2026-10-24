@@ -2150,6 +2150,16 @@ end;
 -- TEST: declare another variable group to emit
 -- + {
 -- +  "name" : "another_group",
+-- +  "attributes" : [
+-- +    {
+-- +      "name" : "hex_min",
+-- +      "value" : -9223372036854775808
+-- +    },
+-- +    {
+-- +      "name" : "hex_minus_two",
+-- +      "value" : -2
+-- +    }
+-- +  ],
 -- +  "isEmitted" : 1,
 -- +  "variables" : [
 -- +    {
@@ -2159,6 +2169,8 @@ end;
 -- +    }
 -- +  ]
 -- +}
+@attribute(hex_min=0x8000000000000000)
+@attribute(hex_minus_two=0xfffffffffffffffe)
 declare group another_group
 begin
   declare x integer;

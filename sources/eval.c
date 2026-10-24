@@ -60,18 +60,13 @@ static void eval_num_str(CSTR lit, int32_t num_type, eval_node *result) {
     break;
 
   case NUM_INT:
-    // strtol/strtoll with an explicit radix determined by has_hex_prefix keeps
-    // the integer parsing branch centralized; overflow checking for constants
-    // is deferred to later semantic phases so we don't duplicate it here.
+    // The scanner has already checked the literal's range.
     result->int32_value = (int32_t)strtol(lit, NULL, has_hex_prefix(lit) ? 16 : 10);
     result->sem_type = SEM_TYPE_INTEGER;
     break;
 
   case NUM_LONG:
-    // 64-bit path mirrors the 32-bit logic; we rely on the host C library's
-    // parsing so platform-specific edge nuances (e.g. leading +) are consistent
-    // everywhere rather than re-specifying integer grammar in the evaluator.
-    result->int64_value = (int64_t)strtoll(lit, NULL, has_hex_prefix(lit) ? 16 : 10);
+    result->int64_value = ast_int64_from_literal(lit);
     result->sem_type = SEM_TYPE_LONG_INTEGER;
     break;
 

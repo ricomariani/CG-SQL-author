@@ -21298,7 +21298,12 @@ static void sem_declare_enum_stmt(ast_node *ast) {
        expr = left ? parent->left : parent->right;
 
        // we're ready to evaluate constants having replaced enums and consts
-       eval(expr, &result);
+       if (is_error(expr)) {
+         result.sem_type = SEM_TYPE_ERROR;
+       }
+       else {
+         eval(expr, &result);
+       }
 
        if (result.sem_type == SEM_TYPE_ERROR || result.sem_type == SEM_TYPE_NULL) {
          report_error(enum_value, "CQL0355: evaluation failed", enum_name);
@@ -24708,10 +24713,8 @@ cql_noexport void sem_one_stmt(ast_node *stmt) {
   CHARBUF_CLOSE(errbuf);
 }
 
-// We're just going to walk the tree of attribute values here
-// looking for any CONST expressions.  If we find one, we evaluate
-// that.  Anything that's not a CONST express is known to be a literal
-// or just a name.
+// Validate numeric literals and evaluate CONST expressions while walking the
+// attribute values. Names and other literals do not require expression analysis.
 static void sem_misc_attr_value(ast_node *ast) {
   // nested attributes, we just recurse on those
   if (is_ast_misc_attr_value_list(ast)) {
@@ -24724,7 +24727,7 @@ static void sem_misc_attr_value(ast_node *ast) {
       }
     }
   }
-  else if (is_ast_const(ast)) {
+  else if (is_ast_const(ast) || is_ast_num(ast) || is_ast_uminus(ast)) {
     // if the ast is bad the error will prop, this evaluates the const
     sem_root_expr(ast, SEM_EXPR_CONTEXT_NONE);
     if (is_error(ast)) {
@@ -24736,8 +24739,8 @@ static void sem_misc_attr_value(ast_node *ast) {
 }
 
 // This is the basic checking of misc attributes we always do.
-// The point of this is to find any constant expressions and replace
-// them with actual literals and reveal any errors in those expressions.
+// The point is to validate numeric literals and replace constant expressions
+// with actual literals, revealing any errors in those expressions.
 // Most attributes don't need any processing because they are arbitrary names
 // or regular literals.
 static void sem_misc_attrs_basic(ast_node *ast) {
@@ -24911,6 +24914,23 @@ static void sem_expr_num(ast_node *ast, CSTR cstr) {
     break;
 
   case NUM_LONG:
+    {
+      EXTRACT_NUM_VALUE(value, ast);
+      if (!strcmp(value, "9223372036854775808")) {
+        // This exceptional decimal magnitude only represents INT64_MIN when
+        // directly negated. Macro expansion has already established its parent.
+        ast_node *parent = ast->parent;
+        bool_t valid = parent &&
+          is_ast_uminus(parent) &&
+          parent->left == ast &&
+          !(parent->parent && is_ast_uminus(parent->parent));
+        if (!valid) {
+          report_error(ast, "CQL0505: integer literal out of range", NULL);
+          record_error(ast);
+          return;
+        }
+      }
+    }
     ast->sem = new_sem(SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL);
     break;
 

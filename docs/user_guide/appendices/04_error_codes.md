@@ -8255,7 +8255,19 @@ LET value := j->0;  -- OK: integer index
 
 ----
 
-### CQL0505 available for re-use
+### CQL0505: integer literal out of range
+
+The decimal magnitude `9223372036854775808` is one greater than `INT64_MAX`.
+It is valid only as the direct operand of unary minus to spell `INT64_MIN`.
+Using it as a positive value or negating that minimum again is rejected during
+semantic analysis, after macro expansion. Larger decimal magnitudes and
+hexadecimal values exceeding 64 bits are rejected by the scanner.
+
+```sql
+let minimum := -9223372036854775808;  -- OK
+let too_large := 9223372036854775808; -- Error
+let negated_minimum := -(-9223372036854775808); -- Error
+```
 
 ----
 

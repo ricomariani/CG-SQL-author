@@ -3586,7 +3586,7 @@ enum some_reals real (
 
 -- TEST: make a long enum
 enum some_longs long (
-  foo = 87363537363847643647937,
+  foo = 9223372036854775807,
   bar = 3
 );
 
@@ -4871,6 +4871,9 @@ end;
 -- + big4 = (-9223372036854775807 - 1)
 -- + big5 = 9223372036854775807
 -- + big6 = 9223372036854775807
+-- + big7 = -1
+-- + big8 = (-9223372036854775807 - 1)
+-- + big9 = 0xffffffffffffffff
 proc bigstuff()
 begin
   let big1 := 0x7fffffffffffffffL;
@@ -4879,6 +4882,9 @@ begin
   let big4 := -9223372036854775808;
   let big5 := 9223372036854775807L;
   let big6 := 9223372036854775807;
+  let big7 := const(0xffffffffffffffff);
+  let big8 := const(0x8000000000000000);
+  let big9 := 0xffffffffffffffffL;
 end;
 
 const group big_constants(

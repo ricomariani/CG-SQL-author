@@ -26,6 +26,10 @@ different endian order).  Blob storage allows limited extension of the
 blob shape over time, allowing you to add new nullable columns at the
 end of your shape and still recover your data from older blobs.
 
+Blob storage supports at most 65,535 fields per row, including any extra fields
+from a newer version of the shape. Serialization requires the shape to fit this
+limit as a contract; deserialization rejects blobs whose type header exceeds it.
+
 #### Defining a shape for Blob Storage
 
 In SQL/CQL, the main way you define structures, especially those that you

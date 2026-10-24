@@ -4909,6 +4909,71 @@ begin
   @echo lua, "cql_disable_tracing = false\n";
 end);
 
+[[blob_storage]]
+create table field_limit_blob(x bool, y bool);
+
+TEST!(blob_deserialization_field_limit,
+begin
+  @echo lua, "cql_disable_tracing = true\n";
+
+  declare C cursor like field_limit_blob;
+
+  -- Bytes 0..65534 are 'f' (nullable bool); byte 65535 terminates the header.
+  -- The 16,384-byte bit vector starts at 65536: 65,535 presence bits followed
+  -- by 65,535 boolean value bits, least-significant bit first within each byte.
+  -- Relative byte 0 is 03 (x/y present), byte 8191 is 80 (x true), and all
+  -- other bytes are zero (y false, remaining fields null). There is no payload.
+  -- In particular, y's value bit is index 65536 and must not wrap to bit 0.
+  let header := (select replace(printf("%65535s", ""), " ", "f"));
+  declare b blob<field_limit_blob>;
+  b := (select cast(header || cast(x'0003' as text) ||
+                    cast(zeroblob(8190) as text) || cast(x'80' as text) ||
+                    cast(zeroblob(8192) as text) as blob));
+  EXPECT_EQ!(cql_get_blob_size(b), 81920);
+  cql_cursor_from_blob(C, b);
+  EXPECT!(C);
+  EXPECT_EQ!(C.x, true);
+  EXPECT_EQ!(C.y, false);
+
+  -- The same maximum-sized header still requires the entire bit vector.
+  declare truncated blob<field_limit_blob>;
+  truncated := create_truncated_blob(b, 81919);
+  let caught := false;
+  try
+    cql_cursor_from_blob(C, truncated);
+  catch
+    EXPECT!(not C);
+    caught := true;
+  end;
+  EXPECT!(caught);
+
+  -- For 65,536 and 65,537 nullable bool fields, the header alone is already
+  -- too large. Each fixture has that many 'f' bytes followed by a single 00
+  -- terminator and ceil(2 * field_count / 8) zero bit-vector bytes; no payload
+  -- is needed because every presence bit is clear. Both must fail, not wrap
+  -- the field count and resume checking against C's two-element type array.
+  let field_count := 65536;
+  for field_count <= 65537; field_count += 1;
+  begin
+    declare oversized blob<field_limit_blob>;
+    oversized := (select cast(
+      replace(printf("%*s", field_count, ""), " ", "f") ||
+      cast(x'00' as text) ||
+      cast(zeroblob((2 * field_count + 7) / 8) as text) as blob));
+    fetch C from values(true, true);
+    caught := false;
+    try
+      cql_cursor_from_blob(C, oversized);
+    catch
+      EXPECT!(not C);
+      caught := true;
+    end;
+    EXPECT!(caught);
+  end;
+
+  @echo lua, "cql_disable_tracing = false\n";
+end);
+
 TEST!(bogus_var_int,
 begin
   @echo lua, "cql_disable_tracing = true\n";

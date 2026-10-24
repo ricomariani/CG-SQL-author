@@ -1404,6 +1404,7 @@ function cql_int_encode_64(x)
 end
 
 function cql_cursor_to_blob(db, C, C_types, C_fields)
+  assert(#C_types <= 0xffff)
   local bool_count = 0
   local var_encoding_count = 0
   local nullable_count = 0
@@ -1650,7 +1651,7 @@ function cql_cursor_from_blob(db, C, C_types, C_fields, buffer)
 
   local pos = 1
   local types, pos = cql_unpack_z(buffer, pos)
-  if types == nil then
+  if types == nil or #types > 0xffff then
     return -104
   end
 

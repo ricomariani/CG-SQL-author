@@ -1387,6 +1387,12 @@ test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'requires_not
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'some_undefined_variable'
 test/sem_test.sql:XXXX:1: error: in str : CQL0013: cannot assign/copy possibly null expression to not null target 'a'
 test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'requires_int_notnull' argument #1 intended for parameter 'a' has the problem
+test/sem_test.sql:XXXX:1: error: in str : CQL0013: cannot assign/copy possibly null expression to not null target 'a'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'requires_int_notnull' argument #1 intended for parameter 'a' has the problem
+test/sem_test.sql:XXXX:1: error: in str : CQL0013: cannot assign/copy possibly null expression to not null target 'a'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'requires_int_notnull' argument #1 intended for parameter 'a' has the problem
+test/sem_test.sql:XXXX:1: error: in str : CQL0013: cannot assign/copy possibly null expression to not null target 'a'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'requires_int_notnull' argument #1 intended for parameter 'a' has the problem
 test/sem_test.sql:XXXX:1: error: in str : CQL0438: variable possibly used before initialization 'a'
 test/sem_test.sql:XXXX:1: error: in str : CQL0438: variable possibly used before initialization 'b'
 test/sem_test.sql:XXXX:1: error: in str : CQL0438: variable possibly used before initialization 'c'

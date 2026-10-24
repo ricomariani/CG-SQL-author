@@ -68566,6 +68566,671 @@ DECLARE PROC requires_int_notnull (a INT!);
 
 The statement ending at line XXXX
 
+PROC jumping_branch_does_not_contribute_inherited_improvements (a INT, b BOOL!)
+BEGIN
+  IF a IS NULL THEN
+    SET b := TRUE;
+  ELSE IF b THEN
+    RETURN;
+  ELSE
+    SET b := FALSE;
+  END;
+  CALL requires_int_notnull(a);
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0013: cannot assign/copy possibly null expression to not null target 'a'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'requires_int_notnull' argument #1 intended for parameter 'a' has the problem
+
+  {create_proc_stmt}: err
+  | {name jumping_branch_does_not_contribute_inherited_improvements}: err
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a: integer variable in
+    | | | {param_detail}: a: integer variable in
+    | |   | {name a}: a: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: b: bool notnull variable in was_set
+    |     | {param_detail}: b: bool notnull variable in was_set
+    |       | {name b}: b: bool notnull variable in was_set
+    |       | {notnull}: bool notnull
+    |         | {type_bool}: bool
+    | {stmt_list}: err
+      | {if_stmt}: bool notnull
+      | | {cond_action}: bool notnull
+      | | | {is}: bool notnull
+      | | | | {name a}: a: integer variable in
+      | | | | {null}: null
+      | | | {stmt_list}: ok
+      | |   | {assign}: b: bool notnull variable in was_set
+      | |     | {name b}: b: bool notnull variable in was_set
+      | |     | {bool 1}: bool notnull
+      | | {if_alt}: ok
+      |   | {elseif}: b: bool notnull variable in was_set
+      |   | | {cond_action}: b: bool notnull variable in was_set
+      |   |   | {name b}: b: bool notnull variable in was_set
+      |   |   | {stmt_list}: ok
+      |   |     | {return_stmt}: ok
+      |   | {else}: ok
+      |     | {stmt_list}: ok
+      |       | {assign}: b: bool notnull variable in was_set
+      |         | {name b}: b: bool notnull variable in was_set
+      |         | {bool 0}: bool notnull
+      | {call_stmt}: err
+        | {name requires_int_notnull}: ok
+        | {arg_list}: ok
+          | {name a}: a: integer variable in
+
+The statement ending at line XXXX
+
+PROC continuing_branches_retain_inherited_improvements (a INT, b BOOL!)
+BEGIN
+  IF a IS NULL THEN
+    SET a := 1;
+  ELSE IF b THEN
+    RETURN;
+  ELSE
+    SET b := FALSE;
+  END;
+  LET x := a;
+  CALL requires_int_notnull(a);
+END;
+
+  {create_proc_stmt}: ok
+  | {name continuing_branches_retain_inherited_improvements}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a: integer variable in was_set
+    | | | {param_detail}: a: integer variable in was_set
+    | |   | {name a}: a: integer variable in was_set
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: b: bool notnull variable in was_set
+    |     | {param_detail}: b: bool notnull variable in was_set
+    |       | {name b}: b: bool notnull variable in was_set
+    |       | {notnull}: bool notnull
+    |         | {type_bool}: bool
+    | {stmt_list}: ok
+      | {if_stmt}: bool notnull
+      | | {cond_action}: bool notnull
+      | | | {is}: bool notnull
+      | | | | {name a}: a: integer variable in
+      | | | | {null}: null
+      | | | {stmt_list}: ok
+      | |   | {assign}: a: integer variable in was_set
+      | |     | {name a}: a: integer variable in was_set
+      | |     | {int 1}: integer notnull
+      | | {if_alt}: ok
+      |   | {elseif}: b: bool notnull variable in
+      |   | | {cond_action}: b: bool notnull variable in
+      |   |   | {name b}: b: bool notnull variable in
+      |   |   | {stmt_list}: ok
+      |   |     | {return_stmt}: ok
+      |   | {else}: ok
+      |     | {stmt_list}: ok
+      |       | {assign}: b: bool notnull variable in was_set
+      |         | {name b}: b: bool notnull variable in was_set
+      |         | {bool 0}: bool notnull
+      | {let_stmt}: x: integer notnull variable
+      | | {name x}: x: integer notnull variable
+      | | {call}: a: integer notnull variable in was_set
+      |   | {name cql_inferred_notnull}: a: integer notnull variable in was_set
+      |   | {call_arg_list}
+      |     | {call_filter_clause}
+      |     | {arg_list}: ok
+      |       | {name a}: a: integer inferred_notnull variable in was_set
+      | {call_stmt}: ok
+        | {name requires_int_notnull}: ok
+        | {arg_list}: ok
+          | {call}: a: integer notnull variable in was_set
+            | {name cql_inferred_notnull}: a: integer notnull variable in was_set
+            | {call_arg_list}
+              | {call_filter_clause}
+              | {arg_list}: ok
+                | {name a}: a: integer inferred_notnull variable in was_set
+
+The statement ending at line XXXX
+
+PROC continuing_branch_can_unset_inherited_improvement (a INT, b BOOL!)
+BEGIN
+  IF a IS NULL THEN
+    SET a := 1;
+  ELSE IF b THEN
+    RETURN;
+  ELSE
+    SET a := NULL;
+  END;
+  CALL requires_int_notnull(a);
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0013: cannot assign/copy possibly null expression to not null target 'a'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'requires_int_notnull' argument #1 intended for parameter 'a' has the problem
+
+  {create_proc_stmt}: err
+  | {name continuing_branch_can_unset_inherited_improvement}: err
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a: integer variable in was_set
+    | | | {param_detail}: a: integer variable in was_set
+    | |   | {name a}: a: integer variable in was_set
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: b: bool notnull variable in
+    |     | {param_detail}: b: bool notnull variable in
+    |       | {name b}: b: bool notnull variable in
+    |       | {notnull}: bool notnull
+    |         | {type_bool}: bool
+    | {stmt_list}: err
+      | {if_stmt}: bool notnull
+      | | {cond_action}: bool notnull
+      | | | {is}: bool notnull
+      | | | | {name a}: a: integer variable in
+      | | | | {null}: null
+      | | | {stmt_list}: ok
+      | |   | {assign}: a: integer variable in was_set
+      | |     | {name a}: a: integer variable in was_set
+      | |     | {int 1}: integer notnull
+      | | {if_alt}: ok
+      |   | {elseif}: b: bool notnull variable in
+      |   | | {cond_action}: b: bool notnull variable in
+      |   |   | {name b}: b: bool notnull variable in
+      |   |   | {stmt_list}: ok
+      |   |     | {return_stmt}: ok
+      |   | {else}: ok
+      |     | {stmt_list}: ok
+      |       | {assign}: a: integer variable in was_set
+      |         | {name a}: a: integer variable in was_set
+      |         | {null}: null
+      | {call_stmt}: err
+        | {name requires_int_notnull}: ok
+        | {arg_list}: ok
+          | {name a}: a: integer variable in was_set
+
+The statement ending at line XXXX
+
+PROC empty_branches_do_not_contribute_inherited_improvements (a INT, b BOOL!)
+BEGIN
+  IF a IS NULL THEN
+    SET a := 1;
+  ELSE IF b THEN
+  ELSE
+  END;
+  CALL requires_int_notnull(a);
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0013: cannot assign/copy possibly null expression to not null target 'a'
+test/sem_test.sql:XXXX:1: error: in str : additional info: calling 'requires_int_notnull' argument #1 intended for parameter 'a' has the problem
+
+  {create_proc_stmt}: err
+  | {name empty_branches_do_not_contribute_inherited_improvements}: err
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a: integer variable in was_set
+    | | | {param_detail}: a: integer variable in was_set
+    | |   | {name a}: a: integer variable in was_set
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: b: bool notnull variable in
+    |     | {param_detail}: b: bool notnull variable in
+    |       | {name b}: b: bool notnull variable in
+    |       | {notnull}: bool notnull
+    |         | {type_bool}: bool
+    | {stmt_list}: err
+      | {if_stmt}: bool notnull
+      | | {cond_action}: bool notnull
+      | | | {is}: bool notnull
+      | | | | {name a}: a: integer variable in
+      | | | | {null}: null
+      | | | {stmt_list}: ok
+      | |   | {assign}: a: integer variable in was_set
+      | |     | {name a}: a: integer variable in was_set
+      | |     | {int 1}: integer notnull
+      | | {if_alt}: ok
+      |   | {elseif}: b: bool notnull variable in
+      |   | | {cond_action}: b: bool notnull variable in
+      |   |   | {name b}: b: bool notnull variable in
+      |   | {else}: ok
+      | {call_stmt}: err
+        | {name requires_int_notnull}: ok
+        | {arg_list}: ok
+          | {name a}: a: integer variable in was_set
+
+The statement ending at line XXXX
+
+PROC inherited_improvements_without_jumps_are_preserved (a INT, b BOOL!)
+BEGIN
+  IF a IS NULL THEN
+    SET a := 1;
+  ELSE IF b THEN
+    SET b := FALSE;
+  ELSE
+    SET b := TRUE;
+  END;
+  LET x := a;
+  CALL requires_int_notnull(a);
+END;
+
+  {create_proc_stmt}: ok
+  | {name inherited_improvements_without_jumps_are_preserved}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a: integer variable in was_set
+    | | | {param_detail}: a: integer variable in was_set
+    | |   | {name a}: a: integer variable in was_set
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: b: bool notnull variable in was_set
+    |     | {param_detail}: b: bool notnull variable in was_set
+    |       | {name b}: b: bool notnull variable in was_set
+    |       | {notnull}: bool notnull
+    |         | {type_bool}: bool
+    | {stmt_list}: ok
+      | {if_stmt}: bool notnull
+      | | {cond_action}: bool notnull
+      | | | {is}: bool notnull
+      | | | | {name a}: a: integer variable in
+      | | | | {null}: null
+      | | | {stmt_list}: ok
+      | |   | {assign}: a: integer variable in was_set
+      | |     | {name a}: a: integer variable in was_set
+      | |     | {int 1}: integer notnull
+      | | {if_alt}: ok
+      |   | {elseif}: b: bool notnull variable in
+      |   | | {cond_action}: b: bool notnull variable in
+      |   |   | {name b}: b: bool notnull variable in
+      |   |   | {stmt_list}: ok
+      |   |     | {assign}: b: bool notnull variable in was_set
+      |   |       | {name b}: b: bool notnull variable in was_set
+      |   |       | {bool 0}: bool notnull
+      |   | {else}: ok
+      |     | {stmt_list}: ok
+      |       | {assign}: b: bool notnull variable in was_set
+      |         | {name b}: b: bool notnull variable in was_set
+      |         | {bool 1}: bool notnull
+      | {let_stmt}: x: integer notnull variable
+      | | {name x}: x: integer notnull variable
+      | | {call}: a: integer notnull variable in was_set
+      |   | {name cql_inferred_notnull}: a: integer notnull variable in was_set
+      |   | {call_arg_list}
+      |     | {call_filter_clause}
+      |     | {arg_list}: ok
+      |       | {name a}: a: integer inferred_notnull variable in was_set
+      | {call_stmt}: ok
+        | {name requires_int_notnull}: ok
+        | {arg_list}: ok
+          | {call}: a: integer notnull variable in was_set
+            | {name cql_inferred_notnull}: a: integer notnull variable in was_set
+            | {call_arg_list}
+              | {call_filter_clause}
+              | {arg_list}: ok
+                | {name a}: a: integer inferred_notnull variable in was_set
+
+The statement ending at line XXXX
+
+PROC nested_merges_preserve_inherited_improvements (a INT, b BOOL!, c BOOL!)
+BEGIN
+  IF a IS NULL THEN
+    SET a := 1;
+  ELSE IF b THEN
+    RETURN;
+  ELSE
+    IF c THEN
+      SET a := NULL;
+      SET a := 1;
+    ELSE
+      SET b := FALSE;
+    END;
+  END;
+  LET x := a;
+  CALL requires_int_notnull(a);
+END;
+
+  {create_proc_stmt}: ok
+  | {name nested_merges_preserve_inherited_improvements}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a: integer variable in was_set
+    | | | {param_detail}: a: integer variable in was_set
+    | |   | {name a}: a: integer variable in was_set
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: b: bool notnull variable in was_set
+    |   | | {param_detail}: b: bool notnull variable in was_set
+    |   |   | {name b}: b: bool notnull variable in was_set
+    |   |   | {notnull}: bool notnull
+    |   |     | {type_bool}: bool
+    |   | {params}
+    |     | {param}: c: bool notnull variable in
+    |       | {param_detail}: c: bool notnull variable in
+    |         | {name c}: c: bool notnull variable in
+    |         | {notnull}: bool notnull
+    |           | {type_bool}: bool
+    | {stmt_list}: ok
+      | {if_stmt}: bool notnull
+      | | {cond_action}: bool notnull
+      | | | {is}: bool notnull
+      | | | | {name a}: a: integer variable in
+      | | | | {null}: null
+      | | | {stmt_list}: ok
+      | |   | {assign}: a: integer variable in was_set
+      | |     | {name a}: a: integer variable in was_set
+      | |     | {int 1}: integer notnull
+      | | {if_alt}: ok
+      |   | {elseif}: b: bool notnull variable in
+      |   | | {cond_action}: b: bool notnull variable in
+      |   |   | {name b}: b: bool notnull variable in
+      |   |   | {stmt_list}: ok
+      |   |     | {return_stmt}: ok
+      |   | {else}: ok
+      |     | {stmt_list}: ok
+      |       | {if_stmt}: c: bool notnull variable in
+      |         | {cond_action}: c: bool notnull variable in
+      |         | | {name c}: c: bool notnull variable in
+      |         | | {stmt_list}: ok
+      |         |   | {assign}: a: integer variable in was_set
+      |         |   | | {name a}: a: integer variable in was_set
+      |         |   | | {null}: null
+      |         |   | {assign}: a: integer variable in was_set
+      |         |     | {name a}: a: integer variable in was_set
+      |         |     | {int 1}: integer notnull
+      |         | {if_alt}: ok
+      |           | {else}: ok
+      |             | {stmt_list}: ok
+      |               | {assign}: b: bool notnull variable in was_set
+      |                 | {name b}: b: bool notnull variable in was_set
+      |                 | {bool 0}: bool notnull
+      | {let_stmt}: x: integer notnull variable
+      | | {name x}: x: integer notnull variable
+      | | {call}: a: integer notnull variable in was_set
+      |   | {name cql_inferred_notnull}: a: integer notnull variable in was_set
+      |   | {call_arg_list}
+      |     | {call_filter_clause}
+      |     | {arg_list}: ok
+      |       | {name a}: a: integer inferred_notnull variable in was_set
+      | {call_stmt}: ok
+        | {name requires_int_notnull}: ok
+        | {arg_list}: ok
+          | {call}: a: integer notnull variable in was_set
+            | {name cql_inferred_notnull}: a: integer notnull variable in was_set
+            | {call_arg_list}
+              | {call_filter_clause}
+              | {arg_list}: ok
+                | {name a}: a: integer inferred_notnull variable in was_set
+
+The statement ending at line XXXX
+
+PROC inherited_improvements_do_not_make_an_if_exhaustive (a INT, b BOOL!)
+BEGIN
+  IF a IS NULL THEN
+    SET a := 1;
+  ELSE IF b THEN
+    RETURN;
+  END;
+  LET x := a;
+END;
+
+  {create_proc_stmt}: ok
+  | {name inherited_improvements_do_not_make_an_if_exhaustive}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a: integer variable in was_set
+    | | | {param_detail}: a: integer variable in was_set
+    | |   | {name a}: a: integer variable in was_set
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: b: bool notnull variable in
+    |     | {param_detail}: b: bool notnull variable in
+    |       | {name b}: b: bool notnull variable in
+    |       | {notnull}: bool notnull
+    |         | {type_bool}: bool
+    | {stmt_list}: ok
+      | {if_stmt}: bool notnull
+      | | {cond_action}: bool notnull
+      | | | {is}: bool notnull
+      | | | | {name a}: a: integer variable in
+      | | | | {null}: null
+      | | | {stmt_list}: ok
+      | |   | {assign}: a: integer variable in was_set
+      | |     | {name a}: a: integer variable in was_set
+      | |     | {int 1}: integer notnull
+      | | {if_alt}: ok
+      |   | {elseif}: b: bool notnull variable in
+      |     | {cond_action}: b: bool notnull variable in
+      |       | {name b}: b: bool notnull variable in
+      |       | {stmt_list}: ok
+      |         | {return_stmt}: ok
+      | {let_stmt}: x: integer variable
+        | {name x}: x: integer variable
+        | {name a}: a: integer variable in was_set
+
+The statement ending at line XXXX
+
+PROC all_jumping_branches_discard_inherited_improvements (a INT, b BOOL!)
+BEGIN
+  IF a IS NULL THEN
+    RETURN;
+  ELSE IF b THEN
+    RETURN;
+  ELSE
+    THROW;
+  END;
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name all_jumping_branches_discard_inherited_improvements}: ok dml_proc
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a: integer variable in
+    | | | {param_detail}: a: integer variable in
+    | |   | {name a}: a: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: b: bool notnull variable in
+    |     | {param_detail}: b: bool notnull variable in
+    |       | {name b}: b: bool notnull variable in
+    |       | {notnull}: bool notnull
+    |         | {type_bool}: bool
+    | {stmt_list}: ok
+      | {if_stmt}: bool notnull
+        | {cond_action}: bool notnull
+        | | {is}: bool notnull
+        | | | {name a}: a: integer variable in
+        | | | {null}: null
+        | | {stmt_list}: ok
+        |   | {return_stmt}: ok
+        | {if_alt}: ok
+          | {elseif}: b: bool notnull variable in
+          | | {cond_action}: b: bool notnull variable in
+          |   | {name b}: b: bool notnull variable in
+          |   | {stmt_list}: ok
+          |     | {return_stmt}: ok
+          | {else}: ok
+            | {stmt_list}: ok
+              | {throw_stmt}: ok
+
+The statement ending at line XXXX
+
+PROC loop_jumps_discard_inherited_improvements (a INT, b BOOL!, c BOOL!)
+BEGIN
+  WHILE b
+  BEGIN
+    IF a IS NULL THEN
+      SET c := TRUE;
+    ELSE IF c THEN
+      LEAVE;
+    ELSE
+      SET c := FALSE;
+    END;
+    LET x_leave := a;
+    IF a IS NULL THEN
+      SET c := TRUE;
+    ELSE IF c THEN
+      CONTINUE;
+    ELSE
+      SET c := FALSE;
+    END;
+    LET x_continue := a;
+  END;
+END;
+
+  {create_proc_stmt}: ok
+  | {name loop_jumps_discard_inherited_improvements}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a: integer variable in
+    | | | {param_detail}: a: integer variable in
+    | |   | {name a}: a: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: b: bool notnull variable in
+    |   | | {param_detail}: b: bool notnull variable in
+    |   |   | {name b}: b: bool notnull variable in
+    |   |   | {notnull}: bool notnull
+    |   |     | {type_bool}: bool
+    |   | {params}
+    |     | {param}: c: bool notnull variable in was_set
+    |       | {param_detail}: c: bool notnull variable in was_set
+    |         | {name c}: c: bool notnull variable in was_set
+    |         | {notnull}: bool notnull
+    |           | {type_bool}: bool
+    | {stmt_list}: ok
+      | {while_stmt}: ok
+        | {name b}: b: bool notnull variable in
+        | {stmt_list}: ok
+          | {if_stmt}: bool notnull
+          | | {cond_action}: bool notnull
+          | | | {is}: bool notnull
+          | | | | {name a}: a: integer variable in
+          | | | | {null}: null
+          | | | {stmt_list}: ok
+          | |   | {assign}: c: bool notnull variable in was_set
+          | |     | {name c}: c: bool notnull variable in was_set
+          | |     | {bool 1}: bool notnull
+          | | {if_alt}: ok
+          |   | {elseif}: c: bool notnull variable in was_set
+          |   | | {cond_action}: c: bool notnull variable in was_set
+          |   |   | {name c}: c: bool notnull variable in was_set
+          |   |   | {stmt_list}: ok
+          |   |     | {leave_stmt}: ok
+          |   | {else}: ok
+          |     | {stmt_list}: ok
+          |       | {assign}: c: bool notnull variable in was_set
+          |         | {name c}: c: bool notnull variable in was_set
+          |         | {bool 0}: bool notnull
+          | {let_stmt}: x_leave: integer variable
+          | | {name x_leave}: x_leave: integer variable
+          | | {name a}: a: integer variable in
+          | {if_stmt}: bool notnull
+          | | {cond_action}: bool notnull
+          | | | {is}: bool notnull
+          | | | | {name a}: a: integer variable in
+          | | | | {null}: null
+          | | | {stmt_list}: ok
+          | |   | {assign}: c: bool notnull variable in was_set
+          | |     | {name c}: c: bool notnull variable in was_set
+          | |     | {bool 1}: bool notnull
+          | | {if_alt}: ok
+          |   | {elseif}: c: bool notnull variable in was_set
+          |   | | {cond_action}: c: bool notnull variable in was_set
+          |   |   | {name c}: c: bool notnull variable in was_set
+          |   |   | {stmt_list}: ok
+          |   |     | {continue_stmt}: ok
+          |   | {else}: ok
+          |     | {stmt_list}: ok
+          |       | {assign}: c: bool notnull variable in was_set
+          |         | {name c}: c: bool notnull variable in was_set
+          |         | {bool 0}: bool notnull
+          | {let_stmt}: x_continue: integer variable
+            | {name x_continue}: x_continue: integer variable
+            | {name a}: a: integer variable in
+
+The statement ending at line XXXX
+
+PROC throwing_branch_preserves_jump_context_unsets (b BOOL!, c INT)
+BEGIN
+  DECLARE a INT;
+  SET a := 1;
+  TRY
+    IF c IS NULL THEN
+      SET b := TRUE;
+    ELSE IF b THEN
+      SET a := NULL;
+      THROW;
+    ELSE
+      SET b := FALSE;
+    END;
+    LET x_inside := a;
+  CATCH
+    LET x_catch := a;
+  END;
+  LET x_after := a;
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name throwing_branch_preserves_jump_context_unsets}: ok dml_proc
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: b: bool notnull variable in was_set
+    | | | {param_detail}: b: bool notnull variable in was_set
+    | |   | {name b}: b: bool notnull variable in was_set
+    | |   | {notnull}: bool notnull
+    | |     | {type_bool}: bool
+    | | {params}
+    |   | {param}: c: integer variable in
+    |     | {param_detail}: c: integer variable in
+    |       | {name c}: c: integer variable in
+    |       | {type_int}: integer
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable was_set
+      | | | {name a}: a: integer variable was_set
+      | | {type_int}: integer
+      | {assign}: a: integer variable was_set
+      | | {name a}: a: integer variable was_set
+      | | {int 1}: integer notnull
+      | {trycatch_stmt}: ok
+      | | {stmt_list}: ok
+      | | | {if_stmt}: bool notnull
+      | | | | {cond_action}: bool notnull
+      | | | | | {is}: bool notnull
+      | | | | | | {name c}: c: integer variable in
+      | | | | | | {null}: null
+      | | | | | {stmt_list}: ok
+      | | | |   | {assign}: b: bool notnull variable in was_set
+      | | | |     | {name b}: b: bool notnull variable in was_set
+      | | | |     | {bool 1}: bool notnull
+      | | | | {if_alt}: ok
+      | | |   | {elseif}: b: bool notnull variable in was_set
+      | | |   | | {cond_action}: b: bool notnull variable in was_set
+      | | |   |   | {name b}: b: bool notnull variable in was_set
+      | | |   |   | {stmt_list}: ok
+      | | |   |     | {assign}: a: integer variable was_set
+      | | |   |     | | {name a}: a: integer variable was_set
+      | | |   |     | | {null}: null
+      | | |   |     | {throw_stmt}: ok
+      | | |   | {else}: ok
+      | | |     | {stmt_list}: ok
+      | | |       | {assign}: b: bool notnull variable in was_set
+      | | |         | {name b}: b: bool notnull variable in was_set
+      | | |         | {bool 0}: bool notnull
+      | | | {let_stmt}: x_inside: integer notnull variable
+      | |   | {name x_inside}: x_inside: integer notnull variable
+      | |   | {call}: a: integer notnull variable was_set
+      | |     | {name cql_inferred_notnull}: a: integer notnull variable was_set
+      | |     | {call_arg_list}
+      | |       | {call_filter_clause}
+      | |       | {arg_list}: ok
+      | |         | {name a}: a: integer inferred_notnull variable was_set
+      | | {stmt_list}: ok
+      |   | {let_stmt}: x_catch: integer variable
+      |     | {name x_catch}: x_catch: integer variable
+      |     | {name a}: a: integer variable was_set
+      | {let_stmt}: x_after: integer variable
+        | {name x_after}: x_after: integer variable
+        | {name a}: a: integer variable was_set
+
+The statement ending at line XXXX
+
 PROC unimprovements_in_loops_affect_earlier_statements ()
 BEGIN
   DECLARE a INT;

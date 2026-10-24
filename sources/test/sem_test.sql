@@ -18259,6 +18259,250 @@ end;
 -- Used in the following tests.
 declare proc requires_int_notnull(a int!);
 
+-- TEST: Removing a returning branch from the merge must also discard its
+-- inherited nonnull facts. Otherwise its contribution combines with ELSE's
+-- to hide the path where the first branch leaves a null.
+-- The writes to b deliberately keep the other branches nonempty without
+-- improving a; empty branches take a different, conservative analysis path.
+-- RETURN and ELSE each inherit +1 for a, but RETURN is not a continuing path.
+-- Only ELSE's +1 may count against the two continuing branches, so a stays
+-- nullable. The old stale +1 incorrectly made this two out of two.
+-- + error: % cannot assign/copy possibly null expression to not null target 'a'
+-- + error: % additional info: calling 'requires_int_notnull' argument #1 intended for parameter 'a' has the problem
+-- + {create_proc_stmt}: err
+-- + {call_stmt}: err
+-- +2 error:
+proc jumping_branch_does_not_contribute_inherited_improvements(a int, b bool!)
+begin
+  if a is null then
+    set b := true;
+  else if b then
+    return;
+  else
+    set b := false;
+  end if;
+
+  call requires_int_notnull(a);
+end;
+
+-- TEST: Discarding a jumping branch must retain inherited facts for continuing
+-- branches. The first branch repairs a null; ELSE inherits a nonnull a from
+-- the false first condition, so every path reaching the call has a nonnull a.
+-- The value 1 is simply a nonnull repair. ELSE's otherwise irrelevant write
+-- keeps it nonempty, so its inherited +1 must join the repair's +1 to cover
+-- both continuing branches. Dropping all inherited history would lose this
+-- valid improvement; keeping RETURN's history would overcount it.
+-- + {name x}: x: integer notnull variable
+-- - error:
+proc continuing_branches_retain_inherited_improvements(a int, b bool!)
+begin
+  if a is null then
+    set a := 1;
+  else if b then
+    return;
+  else
+    set b := false;
+  end if;
+
+  let x := a;
+  call requires_int_notnull(a);
+end;
+
+-- TEST: A local unset must cancel an inherited fact when merging a continuing
+-- branch. ELSE starts with a nonnull a but overwrites it with null; neither
+-- its inherited fact nor the discarded returning branch may hide that write.
+-- The first branch's 1 is just a nonnull repair. ELSE's inherited +1 and
+-- local -1 must cancel, leaving only one improvement for two continuing paths.
+-- + error: % cannot assign/copy possibly null expression to not null target 'a'
+-- + error: % additional info: calling 'requires_int_notnull' argument #1 intended for parameter 'a' has the problem
+-- + {create_proc_stmt}: err
+-- + {call_stmt}: err
+-- +2 error:
+proc continuing_branch_can_unset_inherited_improvement(a int, b bool!)
+begin
+  if a is null then
+    set a := 1;
+  else if b then
+    return;
+  else
+    set a := null;
+  end if;
+
+  call requires_int_notnull(a);
+end;
+
+-- TEST: Preserve the existing conservative treatment of empty branches.
+-- Although the first branch repairs a null and its false condition implies a
+-- nonnull a, empty branches contribute no inherited facts to the merge.
+-- This program is actually safe, but intentionally remains rejected: this
+-- extraction must not introduce a separate precision change for empty branches.
+-- The repair value 1 matters only because it is nonnull.
+-- + error: % cannot assign/copy possibly null expression to not null target 'a'
+-- + error: % additional info: calling 'requires_int_notnull' argument #1 intended for parameter 'a' has the problem
+-- + {create_proc_stmt}: err
+-- + {call_stmt}: err
+-- +2 error:
+proc empty_branches_do_not_contribute_inherited_improvements(a int, b bool!)
+begin
+  if a is null then
+    set a := 1;
+  else if b then
+    -- empty
+  else
+    -- empty
+  end if;
+
+  call requires_int_notnull(a);
+end;
+
+-- TEST: Without jumps, moving the snapshot from branch entry to exit must
+-- leave the result unchanged. The nonnull repair (1) contributes +1, and each
+-- later nonempty branch inherits +1, for three improvements in three paths.
+-- Writes to b force real branch contexts without changing a.
+-- + {name x}: x: integer notnull variable
+-- - error:
+proc inherited_improvements_without_jumps_are_preserved(a int, b bool!)
+begin
+  if a is null then
+    set a := 1;
+  else if b then
+    set b := false;
+  else
+    set b := true;
+  end if;
+
+  let x := a;
+  call requires_int_notnull(a);
+end;
+
+-- TEST: Nested merges must reduce their local histories before the enclosing
+-- branch adds its inherited facts. In ELSE, a is initially nonnull; the nested
+-- branch temporarily unsets then repairs it (1 is any nonnull value).
+-- That net-zero local history must neither lose nor double-count ELSE's
+-- inherited +1. The outer repair and ELSE then cover both continuing paths.
+-- + {name x}: x: integer notnull variable
+-- - error:
+proc nested_merges_preserve_inherited_improvements(a int, b bool!, c bool!)
+begin
+  if a is null then
+    set a := 1;
+  else if b then
+    return;
+  else
+    if c then
+      set a := null;
+      set a := 1;
+    else
+      set b := false;
+    end if;
+  end if;
+
+  let x := a;
+  call requires_int_notnull(a);
+end;
+
+-- TEST: Removing returning branches must not turn an incomplete IF into an
+-- exhaustive branch group. Even though this particular program repairs every
+-- null (using the arbitrary nonnull value 1), preserve the existing conservative
+-- nullable result when there is no ELSE. This guards covers_all_cases handling,
+-- rather than asking this fix to infer additional safe programs.
+-- + {name x}: x: integer variable
+-- - error:
+proc inherited_improvements_do_not_make_an_if_exhaustive(a int, b bool!)
+begin
+  if a is null then
+    set a := 1;
+  else if b then
+    return;
+  end if;
+
+  let x := a;
+end;
+
+-- TEST: All branches may jump even after earlier false conditions establish
+-- inherited facts. There are no continuing paths and therefore no branch
+-- histories to merge. The latter two branches inherit nonnull a, but neither
+-- may leave a contribution behind after all three branches are discarded.
+-- This is a valid terminating procedure, not a deliberate contract failure.
+-- - error:
+proc all_jumping_branches_discard_inherited_improvements(a int, b bool!)
+begin
+  if a is null then
+    return;
+  else if b then
+    return;
+  else
+    throw;
+  end if;
+end;
+
+-- TEST: LEAVE and CONTINUE must discard inherited facts just like RETURN,
+-- even though they target a loop rather than the procedure. Both IFs retain
+-- a path where a is null, so their following reads must remain nullable.
+-- Writes to c keep the continuing branches nonempty without repairing a;
+-- the loop condition b is independent so these branches are not constant.
+-- + {name x_leave}: x_leave: integer variable
+-- + {name x_continue}: x_continue: integer variable
+-- - error:
+proc loop_jumps_discard_inherited_improvements(a int, b bool!, c bool!)
+begin
+  while b
+  begin
+    if a is null then
+      set c := true;
+    else if c then
+      leave;
+    else
+      set c := false;
+    end if;
+
+    let x_leave := a;
+
+    if a is null then
+      set c := true;
+    else if c then
+      continue;
+    else
+      set c := false;
+    end if;
+
+    let x_continue := a;
+  end;
+end;
+
+-- TEST: Discarding a throwing branch's merge history must NOT discard its
+-- unsets from the enclosing TRY's jump history. a starts nonnull (1 is any
+-- nonnull value), but the throwing branch sets it null before reaching CATCH.
+-- Only normal paths reach x_inside, where a remains nonnull; CATCH and the
+-- following code must see a as nullable. The false first condition supplies
+-- an inherited fact for c, so this also exercises delayed history accounting.
+-- + {name x_inside}: x_inside: integer notnull variable
+-- + {name x_catch}: x_catch: integer variable
+-- + {name x_after}: x_after: integer variable
+-- - error:
+proc throwing_branch_preserves_jump_context_unsets(b bool!, c int)
+begin
+  declare a int;
+  set a := 1;
+
+  try
+    if c is null then
+      set b := true;
+    else if b then
+      set a := null;
+      throw;
+    else
+      set b := false;
+    end if;
+
+    let x_inside := a;
+  catch
+    let x_catch := a;
+  end;
+
+  let x_after := a;
+end;
+
 -- TEST: Improvements that are unset within a loop affect all preceding
 -- statements within the loop.
 -- + error: % cannot assign/copy possibly null expression to not null target 'a'

@@ -476,9 +476,8 @@ cql_noexport void flow_set_context_branch_group_covers_all_cases(bool_t covers_a
   current_context->branch_group.covers_all_cases = covers_all_cases;
 }
 
-// Records the presence of an empty branch within the branch group. This is
-// equivalent to calling `_flow_push_context_branch` immediately followed by
-// `_flow_pop_context_branch` and exists only for the sake of convenience.
+// Records an empty branch as neutral: it counts against improvements persisting
+// after the group, without contributing inherited facts from earlier conditions.
 cql_noexport void flow_context_branch_group_add_empty_branch() {
   Contract(current_context);
   Contract(current_context->kind == FLOW_CONTEXT_KIND_BRANCH_GROUP);
@@ -518,8 +517,8 @@ cql_noexport void _flow_pop_context_branch_group() {
 }
 
 // Pushes a new branch context. This must only be done within a branch group
-// context. It is critical that this be done for ALL branches of a given
-// conditional, including any "else" or catch-all branch, otherwise
+// context. ALL branches, including any "else" or catch-all branch, must be
+// represented here or by flow_context_branch_group_add_empty_branch; otherwise
 // `_flow_pop_context_branch_group` may improve something too optimistically due
 // to a lack of sufficient information.
 cql_noexport void _flow_push_context_branch() {
@@ -529,34 +528,6 @@ cql_noexport void _flow_push_context_branch() {
   push_context_with_kind(FLOW_CONTEXT_KIND_BRANCH);
 
   current_context->branch.always_jumps = false;
-
-  // Clone the current history of (typically negative) improvements within the
-  // branch group itself and add it to the accumulated history of its branches.
-  // The reason we do this is so that we can calculate the correct delta sum
-  // later on.
-  //
-  // Consider the following code:
-  //
-  // IF x IS NULL THEN
-  //   SET x := 42;
-  // ELSE IF y THEN
-  //   -- do nothing
-  // ELSE
-  //   -- do nothing
-  // END IF;
-  //
-  // Here, even though the second and third branches have not improved the type
-  // of `x` to be nonnull themselves, it is still the case that x is nonnull
-  // at the end of the second and third branches due to the condition of the
-  // first branch. It is therefore safe and appropriate to treat the branches as
-  // though they each made the improvement themselves so that x can be treated
-  // as nonnull after END IF.
-  //
-  // To put it more plainly, we want a delta sum of 3 for the improvement to x.
-  // If we didn't perform this step, it would only be 1.
-  flow_history branch_group_history = clone_history(current_context->parent->history);
-  append_history(&branch_group_history, current_context->parent->branch_group.branch_histories);
-  current_context->parent->branch_group.branch_histories = branch_group_history;
 
   // Increment the branch count of the parent branch group so that it can be
   // later compared against delta sums.
@@ -646,8 +617,23 @@ cql_noexport void _flow_pop_context_branch() {
     current_context->parent->branch_group.branch_count--;
   }
   else {
-    // Add the history of the branch to the total set of branch histories for
-    // the current branch group.
+    // A continuing branch inherits improvements from the false conditions of
+    // earlier branches. Its local history records changes relative to those
+    // improvements, so both histories must contribute to the merge. For example,
+    // assigning NULL locally must cancel an inherited nonnull improvement.
+    //
+    // Include inherited facts only after we know the branch does not always
+    // jump. Recording them at push time leaves stale contributions when a
+    // jumping branch is removed from branch_count, potentially making a fact
+    // appear true on every continuing path when it is not.
+    //
+    // The parent's history is unchanged while this branch runs, so delaying
+    // the snapshot preserves continuing-branch contributions. Append only after
+    // rollback: inherited improvements belong to the parent and must not be
+    // undone as branch-local changes. Clone rather than splice the original
+    // because the parent still needs its own history when the group is popped.
+    append_history(&current_context->history, clone_history(current_context->parent->history));
+
     append_history(&current_context->history, current_context->parent->branch_group.branch_histories);
     current_context->parent->branch_group.branch_histories = current_context->history;
   }

@@ -23152,45 +23152,56 @@ static bool_t sem_validate_arg_vs_formal(ast_node *arg, ast_node *param) {
   return true;
 }
 
-// Pointer tag indicating an id that is passed as an OUT or INOUT argument.
-static const uintptr_t id_out_tag_bit = 0x1;
-
-// Given a (possibly) tagged id, return an untagged, deferencable pointer.
-static ast_node *id_from_out_tagged_id(ast_node *tagged_id) {
-  return (ast_node *)((uintptr_t)tagged_id & ~id_out_tag_bit);
-}
-
-// Given an id, return the tagged version.
-static ast_node *out_tagged_id_from_id(ast_node *id) {
- return (ast_node *)((uintptr_t)id | id_out_tag_bit);
-}
-
-// Returns true if `id` is tagged, else false.
-static bool_t is_id_out_tagged(ast_node *id) {
-  return !!((uintptr_t)id & id_out_tag_bit);
-}
-
 cql_noexport bool_t is_alias_ast(ast_node *_Nonnull ast) {
  Contract(ast);
  return ast->sem && (ast->sem->sem_type & SEM_TYPE_ALIAS);
 }
 
-// Compares the names of two (possibly) tagged ids in a manner such that
-// `out_tagged_id_comparator` can be used as a comparator for `qsort`. If the
-// names match, we then compare by line number so that, if we later report an
-// error, we can easily point to the first use.
-static int out_tagged_id_comparator(const void *a, const void *b) {
-  ast_node *id_a = id_from_out_tagged_id(*(ast_node **)a);
-  ast_node *id_b = id_from_out_tagged_id(*(ast_node **)b);
-  EXTRACT_STRING(a_name, id_a);
-  EXTRACT_STRING(b_name, id_b);
+typedef struct call_arg_binding {
+  ast_node *arg;
+  sem_t *type;
+  uint32_t ordinal;
+  bool_t is_out;
+} call_arg_binding;
 
-  int result = strcmp(a_name, b_name);
-  if (!result) {
-    return id_a->lineno > id_b->lineno ? 1 : id_a->lineno < id_b->lineno ? -1 : 0;
+// Only top-level mutable bindings alias: an IN expression that reads an output
+// variable is an evaluated value, not another reference to its storage.
+static sem_t *sem_find_call_arg_binding(ast_node *arg) {
+  if (!is_id_or_dot(arg) || !is_variable(arg->sem->sem_type)) {
+    return NULL;
   }
 
-  return result;
+  if (is_id(arg)) {
+    // Use the already-resolved name rather than repeating expression lookup,
+    // which can involve SQL column scopes. Bare cursor expressions instead
+    // denote synthetic has-row values, which have no corresponding variable.
+    ast_node *variable = find_local_or_global_variable(arg->sem->name);
+    return variable ? &variable->sem->sem_type : NULL;
+  }
+
+  // Cursor fields have distinct type slots; argument-bundle dot and underscore
+  // spellings deliberately share one slot. Neither source text nor the type
+  // value itself distinguishes these identities.
+  EXTRACT_NAME_AND_SCOPE(arg);
+  return find_mutable_type(name, scope);
+}
+
+// Group by storage identity, not spelling. Within each group, preserve source
+// argument order even when several arguments occur on the same source line.
+static int call_arg_binding_comparator(const void *a, const void *b) {
+  const call_arg_binding *binding_a = (const call_arg_binding *)a;
+  const call_arg_binding *binding_b = (const call_arg_binding *)b;
+  uintptr_t type_a = (uintptr_t)binding_a->type;
+  uintptr_t type_b = (uintptr_t)binding_b->type;
+
+  if (type_a < type_b) {
+    return -1;
+  }
+  if (type_a > type_b) {
+    return 1;
+  }
+  return (binding_a->ordinal > binding_b->ordinal) -
+         (binding_a->ordinal < binding_b->ordinal);
 }
 
 // Returns true if all OUT and INOUT arguments in `arg_list` are unique with
@@ -23202,27 +23213,18 @@ static bool_t sem_validate_out_args_are_unique(ast_node *arg_list, ast_node *par
   Contract(!arg_list || is_ast_arg_list(arg_list) || is_ast_expr_list(arg_list));
   Contract(!params || is_ast_params(params));
 
-  // Count up the ids passed as arguments so that we can allocate an array of
-  // the correct size to hold all of them. As a minor optimization, we also
-  // check whether we have at least one OUT or INOUT argument so we can bail out
-  // early if we don't.
-  //
-  // NOTE: Technically, we only count ids with an associated parameter. If this
-  // procedure is called after checking that the correct number of arguments
-  // were provided, we'll always have enough parameters to count all of the ids
-  // and will check all of the arguments for aliasing. If not, we'll check just
-  // the arguments that have parameters and the caller can then fail due to
-  // excess arguments later on. The caller decides which behavior it prefers.
-  uint32_t ids_count = 0;
+  // Argument types and counts have already been checked. Count an upper bound
+  // without resolving bindings yet, preserving the fast exit for input-only
+  // calls. Computed cursor booleans can later reduce the actual binding count.
+  uint32_t binding_capacity = 0;
   bool_t has_out_argument = false;
   ast_node *arg_item = arg_list;
   ast_node *param_item = params;
   for (; arg_item && param_item; arg_item = arg_item->right, param_item = param_item->right) {
     EXTRACT_ANY_NOTNULL(arg, arg_item->left);
-    if (!is_id(arg)) {
-      continue;
+    if (is_id_or_dot(arg) && is_variable(arg->sem->sem_type)) {
+      binding_capacity++;
     }
-    ids_count++;
     EXTRACT_NOTNULL(param, param_item->left);
     if (is_out_parameter(param->sem->sem_type)) {
       has_out_argument = true;
@@ -23230,50 +23232,58 @@ static bool_t sem_validate_out_args_are_unique(ast_node *arg_list, ast_node *par
   }
 
   // If there isn't at least one OUT or INOUT argument, or if we don't have at
-  // least two ids, there can be no aliasing.
-  if (!has_out_argument || ids_count < 2) {
+  // least two possible bindings, there can be no aliasing.
+  if (!has_out_argument || binding_capacity < 2) {
     return true;
   }
 
-  // Put all of the ids into an array, tagging the ones that were used for OUT
-  // or INOUT arguments. We do this because the arguments themselves do not
-  // contain whether or not they were used as OUT or INOUT arguments in their
-  // sem nodes: That information is only present in the associated parameter.
-  // Tagging ids gives us an easy way to track OUT/INOUT usage without having to
-  // later unset anything on the ids themselves.
-  ast_node **ids = _ast_pool_new_array(ast_node *, ids_count);
-  ast_node **ids_ptr = ids;
+  // OUT/INOUT mode belongs to the formal, not the argument's semantic type.
+  // Keep it alongside the binding without tagging pointers or modifying ASTs.
+  call_arg_binding *bindings = _ast_pool_new_array(call_arg_binding, binding_capacity);
+  uint32_t binding_count = 0;
   arg_item = arg_list;
   param_item = params;
-  for (; arg_item && param_item; arg_item = arg_item->right, param_item = param_item->right) {
+  uint32_t ordinal = 0;
+  for (; arg_item && param_item; arg_item = arg_item->right, param_item = param_item->right, ordinal++) {
     EXTRACT_ANY_NOTNULL(arg, arg_item->left);
-    if (!is_id(arg)) {
+    sem_t *type = sem_find_call_arg_binding(arg);
+    if (!type) {
       continue;
     }
     EXTRACT_NOTNULL(param, param_item->left);
-    *ids_ptr++ = is_out_parameter(param->sem->sem_type) ? out_tagged_id_from_id(arg) : arg;
+    Invariant(binding_count < binding_capacity);
+    call_arg_binding *binding = &bindings[binding_count++];
+    binding->arg = arg;
+    binding->type = type;
+    binding->ordinal = ordinal;
+    binding->is_out = is_out_parameter(param->sem->sem_type);
   }
 
-  // Sort them by name, then by line number.
-  qsort(ids, ids_count, sizeof(ast_node *), out_tagged_id_comparator);
+  qsort(bindings, binding_count, sizeof(call_arg_binding), call_arg_binding_comparator);
 
-  // Look for duplicates involving an OUT or INOUT usage.
-  for (uint32_t i = 1; i < ids_count; i++) {
-    // If either the current id or previous id is tagged, and if their names
-    // match, it must be the case that an OUT or INOUT argument is aliased.
-    if (is_id_out_tagged(ids[i - 1]) || is_id_out_tagged(ids[i])) {
-      ast_node *previous_id = id_from_out_tagged_id(ids[i - 1]);
-      ast_node *id = id_from_out_tagged_id(ids[i]);
-      EXTRACT_STRING(previous_id_name, previous_id);
-      EXTRACT_STRING(id_name, id);
-      if (!strcmp(previous_id_name, id_name)) {
-        // We sorted by name and then by line number, so `previous_id` is
-        // guaranteed to contain the earliest line number we could report.
-        CSTR msg = "CQL0426: OUT or INOUT argument cannot be used again in same call";
-        report_error(previous_id, msg, id_name);
-        return false;
+  // Repeated IN uses are allowed; any OUT/INOUT use makes the group an alias.
+  // Report the earliest source use across all aliased groups, even when several
+  // IN uses precede an output. Pointer order must not choose the diagnostic.
+  call_arg_binding *aliased = NULL;
+  uint32_t first = 0;
+  for (uint32_t i = 1; i < binding_count; i++) {
+    if (bindings[first].type != bindings[i].type) {
+      first = i;
+    }
+    else if (bindings[first].is_out || bindings[i].is_out) {
+      if (!aliased || bindings[first].ordinal < aliased->ordinal) {
+        aliased = &bindings[first];
       }
     }
+  }
+
+  if (aliased) {
+    ast_node *arg = aliased->arg;
+    EXTRACT_NAME_AND_SCOPE(arg);
+    CSTR arg_name = scope ? dup_printf("%s.%s", scope, name) : name;
+    CSTR msg = "CQL0426: OUT or INOUT argument cannot be used again in same call";
+    report_error(arg, msg, arg_name);
+    return false;
   }
 
   return true;

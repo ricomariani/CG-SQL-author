@@ -3012,6 +3012,201 @@ end;
 -- +1 error:
 call proc_with_output(1, X, X);
 
+-- TEST: Identifier lookup is case-insensitive, so X and x are the same
+-- writable variable, not two independent output destinations. The literal 1
+-- is an unrelated IN value; the alias is between the INOUT and OUT arguments.
+-- + error: % OUT or INOUT argument cannot be used again in same call 'X'
+-- + {call_stmt}: err
+-- +1 error:
+call proc_with_output(1, X, x);
+
+-- TEST: Dotted argument-bundle fields are writable bindings too. Repeating
+-- C.arg2 passes one parameter's storage to both INOUT and OUT positions;
+-- ignoring dotted arguments would miss the alias entirely.
+-- + error: % OUT or INOUT argument cannot be used again in same call 'C.arg2'
+-- + {create_proc_stmt}: err
+-- + {call_stmt}: err
+-- +1 error:
+proc dotted_out_arguments_may_not_alias(C like proc_with_output arguments)
+begin
+  call proc_with_output(1, C.arg2, C.arg2);
+end;
+
+-- TEST: Report the first source spelling, not a canonicalized name or whichever
+-- OUT argument happens to sort first. All arguments are on one line, so line
+-- numbers cannot establish their order.
+-- + error: % OUT or INOUT argument cannot be used again in same call 'x'
+-- + {call_stmt}: err
+-- +1 error:
+call proc_with_output(1, x, X);
+
+-- TEST: The alias rule includes IN versus INOUT, not just two output slots.
+-- Lowercase x is the same global as X; Y is a separate output destination.
+-- + error: % OUT or INOUT argument cannot be used again in same call 'x'
+-- + {call_stmt}: err
+-- +1 error:
+call proc_with_output(x, X, Y);
+
+-- TEST: The alias rule also includes IN versus OUT. The intervening INOUT
+-- argument Y must neither hide the alias nor be mistaken for the same storage.
+-- + error: % OUT or INOUT argument cannot be used again in same call 'X'
+-- + {call_stmt}: err
+-- +1 error:
+call proc_with_output(X, Y, x);
+
+-- TEST: Argument-bundle lookup is case-insensitive in both scope and field.
+-- These two dotted spellings resolve to one slot, not just equal type values.
+-- + error: % OUT or INOUT argument cannot be used again in same call 'C.arg2'
+-- + {create_proc_stmt}: err
+-- + {call_stmt}: err
+-- +1 error:
+proc dotted_case_variants_may_not_alias(C like proc_with_output arguments)
+begin
+  call proc_with_output(1, C.arg2, c.ArG2);
+end;
+
+-- TEST: The dot and underscore forms of a bundle parameter name the same
+-- variable. Reject both argument orders so the result cannot depend on which
+-- spelling or argument mode was seen first.
+-- + error: % OUT or INOUT argument cannot be used again in same call 'C.arg2'
+-- + error: % OUT or INOUT argument cannot be used again in same call 'C_arg2'
+-- + {create_proc_stmt}: err
+-- +2 {call_stmt}: err
+-- +2 error:
+proc bundle_spellings_may_not_alias(C like proc_with_output arguments)
+begin
+  call proc_with_output(1, C.arg2, C_arg2);
+  call proc_with_output(1, C_arg2, C.arg2);
+end;
+
+-- TEST: Equal types do not imply equal storage. The first call writes two
+-- fields of one bundle; the second writes identically named fields of two
+-- bundles. Neither combination aliases.
+-- + {create_proc_stmt}: ok
+-- +2 {call_stmt}: ok
+-- - error:
+proc distinct_bundle_fields_do_not_alias(
+  C like proc_with_output arguments,
+  D like proc_with_output arguments)
+begin
+  call proc_with_output(1, C.arg2, C.arg3);
+  call proc_with_output(1, C.arg2, D.arg2);
+end;
+
+-- TEST: A computed IN value is evaluated before the call, even when it reads
+-- an output binding. Adding 1 deliberately makes this a subexpression rather
+-- than a bare alias; extending the check recursively would reject valid code.
+-- + {create_proc_stmt}: ok
+-- + {call_stmt}: ok
+-- - error:
+proc bundle_input_expressions_do_not_alias(C like proc_with_output arguments)
+begin
+  call proc_with_output(C.arg2 + 1, C.arg2, C.arg3);
+end;
+
+-- TEST: Cursor fields, like bundle fields, have mutable storage. Changing the
+-- cursor/field case does not make another destination. The fields are nullable
+-- integers so an unfetched shape cursor needs no has-row initialization check.
+-- The constants 1 and 2 establish two fields of the same nullable integer type;
+-- their values are immaterial to aliasing.
+-- + error: % OUT or INOUT argument cannot be used again in same call 'C.value'
+-- + {create_proc_stmt}: err
+-- + {call_stmt}: err
+-- +1 error:
+proc cursor_field_aliases_are_rejected()
+begin
+  cursor C like select nullable(1) value, nullable(2) other;
+  call proc_with_output(1, C.value, c.VALUE);
+end;
+
+-- TEST: Distinguish slots within a cursor, the same field in another cursor,
+-- and a local variable with that field name. All have the same nullable integer
+-- type, but each is a different writable binding. The shape constants only
+-- establish those types and names; no cursor rows need to be fetched.
+-- + {create_proc_stmt}: ok
+-- +3 {call_stmt}: ok
+-- - error:
+proc distinct_cursor_fields_do_not_alias()
+begin
+  cursor C like select nullable(1) value, nullable(2) other;
+  cursor D like C;
+  declare value int;
+  call proc_with_output(1, C.value, C.other);
+  call proc_with_output(1, C.value, D.value);
+  call proc_with_output(1, C.value, value);
+end;
+
+-- Used below to distinguish repeated IN bindings from writable aliases.
+declare proc alias_input_pair(a int, b int, inout result int);
+
+-- TEST: Repeated IN uses are legal even when another binding is writable.
+-- Repeated enum constants are values, not mutable bindings. The final call
+-- reads the output through an evaluated expression, which must remain legal.
+-- The added 1 matters only because it makes the input a computed value.
+-- + {create_proc_stmt}: ok
+-- +3 {call_stmt}: ok
+-- - error:
+proc repeated_inputs_are_not_output_aliases(x int, y int)
+begin
+  call alias_input_pair(x, X, y);
+  call alias_input_pair(ints.negative_one, ints.negative_one, y);
+  call alias_input_pair(x + 1, x + 1, x);
+end;
+
+-- TEST: An output after several equivalent IN uses must be rejected at the
+-- first source use, including on a single line. Reporting canonical X or the
+-- second use instead of lowercase x would lose the intended diagnostic anchor.
+-- + error: % OUT or INOUT argument cannot be used again in same call 'x'
+-- + {call_stmt}: err
+-- +1 error:
+call alias_input_pair(x, X, X);
+
+-- Used below to create two independent alias groups within a single call.
+declare proc alias_output_pairs(a int, b int, inout a_result int, inout b_result int);
+
+-- TEST: The chosen diagnostic must follow source argument order, not the
+-- addresses used to group bindings or alphabetical variable order. Both calls
+-- alias both X and Y, but their first offending arguments are different.
+-- + error: % OUT or INOUT argument cannot be used again in same call 'Y'
+-- + error: % OUT or INOUT argument cannot be used again in same call 'X'
+-- + {create_proc_stmt}: err
+-- +2 {call_stmt}: err
+-- +2 error:
+proc multiple_alias_groups_report_first_source_use()
+begin
+  call alias_output_pairs(Y, X, y, x);
+  call alias_output_pairs(X, Y, x, y);
+end;
+
+-- TEST: Preserve the stored source spelling, including backticks, in quoted
+-- identifier diagnostics. Both an exact repeat and a case variant name the
+-- same local destination; neither should be reported with canonicalized case.
+-- +2 error: % OUT or INOUT argument cannot be used again in same call '`out value`'
+-- + {create_proc_stmt}: err
+-- +2 {call_stmt}: err
+-- +2 error:
+proc quoted_output_aliases_are_rejected(`out value` int)
+begin
+  call proc_with_output(1, `out value`, `out value`);
+  call proc_with_output(1, `out value`, `OUT VALUE`);
+end;
+
+-- Used below to pass a cursor's computed has-row boolean as an IN value.
+declare proc alias_cursor_flag(flag bool!, inout value int, out result int);
+
+-- TEST: A bare cursor used as an expression denotes its computed has-row
+-- boolean, not writable scalar storage. Its synthetic name must not be looked
+-- up as an ordinary field or confused with either output field. Nullable
+-- integer shapes avoid an unrelated has-row requirement on the field reads.
+-- + {create_proc_stmt}: ok
+-- + {call_stmt}: ok
+-- - error:
+proc cursor_boolean_is_not_output_storage()
+begin
+  cursor C like select nullable(1) value, nullable(2) other;
+  call alias_cursor_flag(C, C.value, C.other);
+end;
+
 -- TEST: a variable may not be passed as both an IN and INOUT argument
 -- + error: % OUT or INOUT argument cannot be used again in same call 'X'
 -- + {call_stmt}: err
@@ -16692,6 +16887,20 @@ declare out call out2_proc(u, u, v);
 -- + {call_stmt}: err
 -- +1 error:
 declare out call out2_proc(1, u, u);
+
+-- TEST: DECLARE OUT creates one implicit destination for these two
+-- case-insensitive spellings. Reject the alias during ordinary call checking,
+-- before the declaration's implicit-variable bookkeeping is finalized.
+-- The literal 1 is unrelated input; both remaining arguments are OUT.
+-- + error: % OUT or INOUT argument cannot be used again in same call 'slot'
+-- + {create_proc_stmt}: err
+-- + {declare_out_call_stmt}: err
+-- + {call_stmt}: err
+-- +1 error:
+proc implicit_out_case_aliases_are_rejected()
+begin
+  declare out call out2_proc(1, slot, SLOT);
+end;
 
 -- TEST: non-variable out arg in declare out
 -- + error: % expected a variable name for OUT or INOUT argument 'y'

@@ -351,6 +351,10 @@ the C code. Hence, that choice is better/clearer than `when brush then leave;`.
 Note that the presence of `_count` in the enum will not cause an error in the
 above because it starts with `_`.
 
+An enum containing only `_`-prefixed members has no values eligible for
+`ALL VALUES`. Every `WHEN` value is therefore extra, even if it names one of
+those members. Use an ordinary `SWITCH` when matching such pseudo-members.
+
 The `C` output for this statement will be a `C` switch statement.
 
 ### The TRY, CATCH, and THROW Statements

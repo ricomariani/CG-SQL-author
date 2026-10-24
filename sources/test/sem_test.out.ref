@@ -62366,6 +62366,85 @@ ENUM three_things INT (
 
 The statement ending at line XXXX
 
+ENUM hidden_things_only INT (
+  _sentinel = 1
+);
+
+  {declare_enum_stmt}: hidden_things_only: integer<hidden_things_only> notnull
+  | {typed_name}: hidden_things_only: integer<hidden_things_only> notnull
+  | | {name hidden_things_only}
+  | | {type_int}: hidden_things_only: integer<hidden_things_only> notnull
+  | {enum_values}
+    | {enum_value}
+      | {name _sentinel}: integer = 1 notnull
+      | {int 1}: integer notnull
+
+The statement ending at line XXXX
+
+SWITCH 1 ALL VALUES
+  WHEN 1 THEN
+    SET x := 1;
+END;
+
+test/sem_test.sql:XXXX:1: error: in num : CQL0388: a value exists in the switch that is not present in the enum '1'
+
+  {switch_stmt}: err
+  | {detail 1} {switch_all_values}
+  | {switch_body}
+    | {int 1}: integer<hidden_things_only> notnull
+    | {switch_case}: err
+      | {connector}
+        | {expr_list}: ok
+        | | {int 1}: integer notnull
+        | {stmt_list}: ok
+          | {assign}: X: integer variable was_set
+            | {name x}: X: integer variable was_set
+            | {int 1}: integer notnull
+
+The statement ending at line XXXX
+
+SWITCH 1 ALL VALUES
+  WHEN 1 THEN
+    SET x := 1;
+END;
+
+test/sem_test.sql:XXXX:1: error: in num : CQL0388: a value exists in the switch that is not present in the enum '1'
+
+  {switch_stmt}: err
+  | {detail 1} {switch_all_values}
+  | {switch_body}
+    | {int 1}: integer<hidden_things_only> notnull
+    | {switch_case}: err
+      | {connector}
+        | {expr_list}: ok
+        | | {int 1}: integer<hidden_things_only> notnull
+        | {stmt_list}: ok
+          | {assign}: X: integer variable was_set
+            | {name x}: X: integer variable was_set
+            | {int 1}: integer notnull
+
+The statement ending at line XXXX
+
+SWITCH 1
+  WHEN 1 THEN
+    SET x := 1;
+END;
+
+  {switch_stmt}: ok
+  | {detail 0} {switch_normal}
+  | {switch_body}
+    | {int 1}: integer<hidden_things_only> notnull
+    | {switch_case}: ok
+      | {connector}
+        | {expr_list}: ok
+        | | {int 1}: integer<hidden_things_only> notnull
+        | {stmt_list}: ok
+          | {assign}: X: integer variable was_set
+            | {name x}: X: integer variable was_set
+            | {int 1}: integer notnull
+
+The statement ending at line XXXX
+
 SWITCH 0 ALL VALUES
   WHEN 0, 1, 2 THEN
     SET x := 1;

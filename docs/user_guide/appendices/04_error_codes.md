@@ -6154,6 +6154,9 @@ enum.  Note that enum members that begin with '_' are ignored as they are, by
 convention, considered to be pseudo-members. For instance, in `declare enum v integer (v0
 = 0, v1 =1, v2 =2, _count = 3)` the member `_count` is a pseudo-member.
 
+If all enum members begin with '_', the public-value set is empty and every
+`WHEN` value triggers this error, including values naming those pseudo-members.
+
 The errant entry should probably be removed. Alternatively, `ALL VALUES` isn't
 appropriate as the domain of the switch is actually bigger than the domain of
 the enumeration.  One of these changes must happen.

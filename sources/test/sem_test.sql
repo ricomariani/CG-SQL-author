@@ -8176,6 +8176,103 @@ select T1.rowid from foo T2, foo T3;
 -- +1 error:
 select rowid from foo T1, foo T2;
 
+-- TEST: all implicit rowid spellings inherit the nullable side of a left join
+-- The preserved side is the control: only the unmatched side may become NULL.
+-- + {select_stmt}: _select_: { preserved: longint notnull, nullable_rowid: longint, nullable_oid: longint, nullable_hidden: longint }
+-- - error:
+select T1.rowid preserved, T2.rowid nullable_rowid,
+       T2.oid nullable_oid, T2._rowid_ nullable_hidden
+  from foo T1 left join bar T2;
+
+-- TEST: right joins make the opposite side's rowid nullable
+-- + {select_stmt}: _select_: { nullable_rowid: longint, preserved: longint notnull }
+-- - error:
+select T1.rowid nullable_rowid, T2.rowid preserved
+  from foo T1 right join bar T2;
+
+-- TEST: later joins must not restore an earlier nullable rowid
+-- + {select_stmt}: _select_: { rowid: longint }
+-- - error:
+select T2.rowid from foo T1 left join bar T2 inner join foo T3;
+
+-- TEST: WITHOUT ROWID sources must not fabricate an implicit rowid
+-- - error:
+create table rowidless_table_for_resolution(id integer primary key) without rowid;
+
+-- TEST: qualified rowid is absent on a WITHOUT ROWID table
+-- + error: % name not found 'R.rowid'
+-- + {select_stmt}: err
+-- +1 error:
+select R.rowid from rowidless_table_for_resolution R;
+
+-- TEST: unqualified rowid is absent too, rather than ambiguous
+-- + error: % name not found 'rowid'
+-- + {select_stmt}: err
+-- +1 error:
+select rowid from rowidless_table_for_resolution;
+
+-- TEST: a rowidless source does not make the other source's rowid ambiguous
+-- + {select_stmt}: _select_: { rowid: longint notnull }
+-- - error:
+select rowid from foo, rowidless_table_for_resolution;
+
+-- TEST: no implicit rowid candidates is not an ambiguity
+-- + error: % name not found 'oid'
+-- + {select_stmt}: err
+-- +1 error:
+select oid from rowidless_table_for_resolution R1, rowidless_table_for_resolution R2;
+
+-- TEST: view results do not inherit their underlying table's implicit rowid
+-- - error:
+create view rowid_view_for_resolution as select id from foo;
+
+-- TEST: a view cannot synthesize an implicit rowid
+-- + error: % name not found 'V.rowid'
+-- + {select_stmt}: err
+-- +1 error:
+select V.rowid from rowid_view_for_resolution V;
+
+-- TEST: CTEs cannot synthesize an implicit rowid
+-- + error: % name not found 'C.rowid'
+-- + {select_stmt}: err
+-- +1 error:
+with C(id) as (select id from foo)
+select C.rowid from C;
+
+-- TEST: derived tables cannot synthesize an implicit rowid alias
+-- + error: % name not found 'S._rowid_'
+-- + {select_stmt}: err
+-- +1 error:
+select S._rowid_ from (select id from foo) S;
+
+-- TEST: an explicitly projected rowid remains a normal column
+-- + {select_stmt}: _select_: { rowid: longint notnull }
+-- - error:
+select S.rowid from (select rowid from foo) S;
+
+-- TEST: WITHOUT ROWID does not hide explicit columns named like rowid aliases
+-- These nullable text columns distinguish real column resolution from the
+-- fabricated NOT NULL long-integer type used by implicit rowids.
+-- - error:
+create table explicit_rowid_columns(
+  id integer primary key, rowid text, oid text, _rowid_ text
+) without rowid;
+
+-- TEST: explicit rowid spellings retain their declared types
+-- + {select_stmt}: _select_: { rowid: text, oid: text, _rowid_: text }
+-- - error:
+select rowid, oid, _rowid_ from explicit_rowid_columns;
+
+-- TEST: implicit rowid resolution can cross an empty correlated scope
+-- + {select_stmt}: _select_: { correlated: longint notnull }
+-- - error:
+select (select rowid) correlated from foo;
+
+-- TEST: qualified correlated rowid retains outer-join nullability
+-- + {select_stmt}: _select_: { correlated: longint }
+-- - error:
+select (select T2.rowid) correlated from foo T1 left join bar T2;
+
 -- TEST: read the result of a non-dml proc;  we must not become a dml proc for doing so
 -- - dml_proc
 -- + {create_proc_stmt}: ok
@@ -9048,6 +9145,12 @@ begin
   update bar set id = 8 where rowid = old.rowid or rowid = new.rowid;
   insert into bar values (7, 'goo', 17L);
 end;
+
+-- TEST: the trigger's OLD/NEW rowid capability must not leak into view queries
+-- + error: % name not found 'V.rowid'
+-- + {select_stmt}: err
+-- +1 error:
+select V.rowid from ViewShape V;
 
 -- TEST: exact duplicate trigger is ok
 -- + {create_trigger_stmt}: ok alias

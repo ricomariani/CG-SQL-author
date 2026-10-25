@@ -30877,6 +30877,658 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0066: identifier is ambiguous 'rowi
 
 The statement ending at line XXXX
 
+SELECT
+    T1.rowid AS preserved,
+    T2.rowid AS nullable_rowid,
+    T2.oid AS nullable_oid,
+    T2._rowid_ AS nullable_hidden
+  FROM foo AS T1
+    LEFT JOIN bar AS T2;
+
+  {select_stmt}: _select_: { preserved: longint notnull, nullable_rowid: longint, nullable_oid: longint, nullable_hidden: longint }
+  | {select_core_list}: _select_: { preserved: longint notnull, nullable_rowid: longint, nullable_oid: longint, nullable_hidden: longint }
+  | | {select_core}: _select_: { preserved: longint notnull, nullable_rowid: longint, nullable_oid: longint, nullable_hidden: longint }
+  |   | {select_expr_list_con}: _select_: { preserved: longint notnull, nullable_rowid: longint, nullable_oid: longint, nullable_hidden: longint }
+  |     | {select_expr_list}: _select_: { preserved: longint notnull, nullable_rowid: longint, nullable_oid: longint, nullable_hidden: longint }
+  |     | | {select_expr}: preserved: longint notnull
+  |     | | | {dot}: rowid: longint notnull
+  |     | | | | {name T1}
+  |     | | | | {name rowid}
+  |     | | | {opt_as_alias}
+  |     | |   | {name preserved}
+  |     | | {select_expr_list}
+  |     |   | {select_expr}: nullable_rowid: longint
+  |     |   | | {dot}: rowid: longint
+  |     |   | | | {name T2}
+  |     |   | | | {name rowid}
+  |     |   | | {opt_as_alias}
+  |     |   |   | {name nullable_rowid}
+  |     |   | {select_expr_list}
+  |     |     | {select_expr}: nullable_oid: longint
+  |     |     | | {dot}: oid: longint
+  |     |     | | | {name T2}
+  |     |     | | | {name oid}
+  |     |     | | {opt_as_alias}
+  |     |     |   | {name nullable_oid}
+  |     |     | {select_expr_list}
+  |     |       | {select_expr}: nullable_hidden: longint
+  |     |         | {dot}: _rowid_: longint
+  |     |         | | {name T2}
+  |     |         | | {name _rowid_}
+  |     |         | {opt_as_alias}
+  |     |           | {name nullable_hidden}
+  |     | {select_from_etc}: JOIN { T1: foo, T2: bar }
+  |       | {join_clause}: JOIN { T1: foo, T2: bar }
+  |       | | {table_or_subquery}: TABLE { T1: foo }
+  |       | | | {name foo}: TABLE { T1: foo }
+  |       | | | {opt_as_alias}
+  |       | |   | {name T1}
+  |       | | {join_target_list}
+  |       |   | {join_target}: JOIN { T1: foo, T2: bar }
+  |       |     | {detail 5} {join_left}
+  |       |     | {table_join}
+  |       |       | {table_or_subquery}: TABLE { T2: bar }
+  |       |         | {name bar}: TABLE { T2: bar }
+  |       |         | {opt_as_alias}
+  |       |           | {name T2}
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT T1.rowid AS nullable_rowid, T2.rowid AS preserved
+  FROM foo AS T1
+    RIGHT JOIN bar AS T2;
+
+  {select_stmt}: _select_: { nullable_rowid: longint, preserved: longint notnull }
+  | {select_core_list}: _select_: { nullable_rowid: longint, preserved: longint notnull }
+  | | {select_core}: _select_: { nullable_rowid: longint, preserved: longint notnull }
+  |   | {select_expr_list_con}: _select_: { nullable_rowid: longint, preserved: longint notnull }
+  |     | {select_expr_list}: _select_: { nullable_rowid: longint, preserved: longint notnull }
+  |     | | {select_expr}: nullable_rowid: longint
+  |     | | | {dot}: rowid: longint
+  |     | | | | {name T1}
+  |     | | | | {name rowid}
+  |     | | | {opt_as_alias}
+  |     | |   | {name nullable_rowid}
+  |     | | {select_expr_list}
+  |     |   | {select_expr}: preserved: longint notnull
+  |     |     | {dot}: rowid: longint notnull
+  |     |     | | {name T2}
+  |     |     | | {name rowid}
+  |     |     | {opt_as_alias}
+  |     |       | {name preserved}
+  |     | {select_from_etc}: JOIN { T1: foo, T2: bar }
+  |       | {join_clause}: JOIN { T1: foo, T2: bar }
+  |       | | {table_or_subquery}: TABLE { T1: foo }
+  |       | | | {name foo}: TABLE { T1: foo }
+  |       | | | {opt_as_alias}
+  |       | |   | {name T1}
+  |       | | {join_target_list}
+  |       |   | {join_target}: JOIN { T1: foo, T2: bar }
+  |       |     | {detail 6} {join_right}
+  |       |     | {table_join}
+  |       |       | {table_or_subquery}: TABLE { T2: bar }
+  |       |         | {name bar}: TABLE { T2: bar }
+  |       |         | {opt_as_alias}
+  |       |           | {name T2}
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT T2.rowid
+  FROM foo AS T1
+    LEFT JOIN bar AS T2
+    INNER JOIN foo AS T3;
+
+  {select_stmt}: _select_: { rowid: longint }
+  | {select_core_list}: _select_: { rowid: longint }
+  | | {select_core}: _select_: { rowid: longint }
+  |   | {select_expr_list_con}: _select_: { rowid: longint }
+  |     | {select_expr_list}: _select_: { rowid: longint }
+  |     | | {select_expr}: rowid: longint
+  |     |   | {dot}: rowid: longint
+  |     |     | {name T2}
+  |     |     | {name rowid}
+  |     | {select_from_etc}: JOIN { T1: foo, T2: bar, T3: foo }
+  |       | {join_clause}: JOIN { T1: foo, T2: bar, T3: foo }
+  |       | | {table_or_subquery}: TABLE { T1: foo }
+  |       | | | {name foo}: TABLE { T1: foo }
+  |       | | | {opt_as_alias}
+  |       | |   | {name T1}
+  |       | | {join_target_list}
+  |       |   | {join_target}: JOIN { T1: foo, T2: bar }
+  |       |   | | {detail 5} {join_left}
+  |       |   | | {table_join}
+  |       |   |   | {table_or_subquery}: TABLE { T2: bar }
+  |       |   |     | {name bar}: TABLE { T2: bar }
+  |       |   |     | {opt_as_alias}
+  |       |   |       | {name T2}
+  |       |   | {join_target_list}
+  |       |     | {join_target}: JOIN { T1: foo, T2: bar, T3: foo }
+  |       |       | {detail 1} {join_inner}
+  |       |       | {table_join}
+  |       |         | {table_or_subquery}: TABLE { T3: foo }
+  |       |           | {name foo}: TABLE { T3: foo }
+  |       |           | {opt_as_alias}
+  |       |             | {name T3}
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE TABLE rowidless_table_for_resolution(
+  id INT PRIMARY KEY
+) WITHOUT ROWID;
+
+  {create_table_stmt}: rowidless_table_for_resolution: { id: integer notnull primary_key }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {detail 4} {without_rowid}
+  | | {name rowidless_table_for_resolution}
+  | {col_key_list}
+    | {col_def}: id: integer notnull primary_key
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+        | | {name id}
+        | | {type_int}: integer
+        | {col_attrs_pk}: ok
+          | {autoinc_and_conflict_clause}
+
+The statement ending at line XXXX
+
+SELECT R.rowid
+  FROM rowidless_table_for_resolution AS R;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'R.rowid'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {dot}: err
+  |     |     | {name R}
+  |     |     | {name rowid}
+  |     | {select_from_etc}: TABLE { R: rowidless_table_for_resolution }
+  |       | {table_or_subquery_list}: TABLE { R: rowidless_table_for_resolution }
+  |       | | {table_or_subquery}: TABLE { R: rowidless_table_for_resolution }
+  |       |   | {name rowidless_table_for_resolution}: TABLE { R: rowidless_table_for_resolution }
+  |       |   | {opt_as_alias}
+  |       |     | {name R}
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT rowid
+  FROM rowidless_table_for_resolution;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'rowid'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {name rowid}: err
+  |     | {select_from_etc}: TABLE { rowidless_table_for_resolution: rowidless_table_for_resolution }
+  |       | {table_or_subquery_list}: TABLE { rowidless_table_for_resolution: rowidless_table_for_resolution }
+  |       | | {table_or_subquery}: TABLE { rowidless_table_for_resolution: rowidless_table_for_resolution }
+  |       |   | {name rowidless_table_for_resolution}: TABLE { rowidless_table_for_resolution: rowidless_table_for_resolution }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT rowid
+  FROM foo,
+    rowidless_table_for_resolution;
+
+  {select_stmt}: _select_: { rowid: longint notnull }
+  | {select_core_list}: _select_: { rowid: longint notnull }
+  | | {select_core}: _select_: { rowid: longint notnull }
+  |   | {select_expr_list_con}: _select_: { rowid: longint notnull }
+  |     | {select_expr_list}: _select_: { rowid: longint notnull }
+  |     | | {select_expr}: rowid: longint notnull
+  |     |   | {name rowid}: rowid: longint notnull
+  |     | {select_from_etc}: JOIN { foo: foo, rowidless_table_for_resolution: rowidless_table_for_resolution }
+  |       | {table_or_subquery_list}: JOIN { foo: foo, rowidless_table_for_resolution: rowidless_table_for_resolution }
+  |       | | {table_or_subquery}: TABLE { foo: foo }
+  |       | | | {name foo}: TABLE { foo: foo }
+  |       | | {table_or_subquery_list}: TABLE { rowidless_table_for_resolution: rowidless_table_for_resolution }
+  |       |   | {table_or_subquery}: TABLE { rowidless_table_for_resolution: rowidless_table_for_resolution }
+  |       |     | {name rowidless_table_for_resolution}: TABLE { rowidless_table_for_resolution: rowidless_table_for_resolution }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT oid
+  FROM rowidless_table_for_resolution AS R1,
+    rowidless_table_for_resolution AS R2;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'oid'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {name oid}: err
+  |     | {select_from_etc}: JOIN { R1: rowidless_table_for_resolution, R2: rowidless_table_for_resolution }
+  |       | {table_or_subquery_list}: JOIN { R1: rowidless_table_for_resolution, R2: rowidless_table_for_resolution }
+  |       | | {table_or_subquery}: TABLE { R1: rowidless_table_for_resolution }
+  |       | | | {name rowidless_table_for_resolution}: TABLE { R1: rowidless_table_for_resolution }
+  |       | | | {opt_as_alias}
+  |       | |   | {name R1}
+  |       | | {table_or_subquery_list}: TABLE { R2: rowidless_table_for_resolution }
+  |       |   | {table_or_subquery}: TABLE { R2: rowidless_table_for_resolution }
+  |       |     | {name rowidless_table_for_resolution}: TABLE { R2: rowidless_table_for_resolution }
+  |       |     | {opt_as_alias}
+  |       |       | {name R2}
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE VIEW rowid_view_for_resolution AS
+  SELECT id
+    FROM foo;
+
+  {create_view_stmt}: rowid_view_for_resolution: { id: integer notnull }
+  | {detail 0} {no_flags}
+  | {view_and_attrs}
+    | {view_details_select}
+      | {view_details}
+      | | {name rowid_view_for_resolution}
+      | {select_stmt}: rowid_view_for_resolution: { id: integer notnull }
+        | {select_core_list}: rowid_view_for_resolution: { id: integer notnull }
+        | | {select_core}: rowid_view_for_resolution: { id: integer notnull }
+        |   | {select_expr_list_con}: rowid_view_for_resolution: { id: integer notnull }
+        |     | {select_expr_list}: rowid_view_for_resolution: { id: integer notnull }
+        |     | | {select_expr}: id: integer notnull
+        |     |   | {name id}: id: integer notnull
+        |     | {select_from_etc}: TABLE { foo: foo }
+        |       | {table_or_subquery_list}: TABLE { foo: foo }
+        |       | | {table_or_subquery}: TABLE { foo: foo }
+        |       |   | {name foo}: TABLE { foo: foo }
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT V.rowid
+  FROM rowid_view_for_resolution AS V;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'V.rowid'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {dot}: err
+  |     |     | {name V}
+  |     |     | {name rowid}
+  |     | {select_from_etc}: TABLE { V: rowid_view_for_resolution }
+  |       | {table_or_subquery_list}: TABLE { V: rowid_view_for_resolution }
+  |       | | {table_or_subquery}: TABLE { V: rowid_view_for_resolution }
+  |       |   | {name rowid_view_for_resolution}: TABLE { V: rowid_view_for_resolution }
+  |       |   | {opt_as_alias}
+  |       |     | {name V}
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+WITH
+  C (id) AS (
+    SELECT id
+      FROM foo
+  )
+SELECT C.rowid
+  FROM C;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'C.rowid'
+
+  {with_select_stmt}: err
+  | {with}
+  | | {cte_tables}: ok
+  |   | {cte_table}: C: { id: integer notnull }
+  |     | {cte_decl}: C: { id: integer notnull }
+  |     | | {name C}
+  |     | | {name_list}
+  |     |   | {name id}
+  |     | {select_stmt}: _select_: { id: integer notnull }
+  |       | {select_core_list}: _select_: { id: integer notnull }
+  |       | | {select_core}: _select_: { id: integer notnull }
+  |       |   | {select_expr_list_con}: _select_: { id: integer notnull }
+  |       |     | {select_expr_list}: _select_: { id: integer notnull }
+  |       |     | | {select_expr}: id: integer notnull
+  |       |     |   | {name id}: id: integer notnull
+  |       |     | {select_from_etc}: TABLE { foo: foo }
+  |       |       | {table_or_subquery_list}: TABLE { foo: foo }
+  |       |       | | {table_or_subquery}: TABLE { foo: foo }
+  |       |       |   | {name foo}: TABLE { foo: foo }
+  |       |       | {select_where}
+  |       |         | {select_groupby}
+  |       |           | {select_having}
+  |       | {select_orderby}
+  |         | {select_limit}
+  |           | {select_offset}
+  | {select_stmt}: err
+    | {select_core_list}: err
+    | | {select_core}: err
+    |   | {select_expr_list_con}: err
+    |     | {select_expr_list}: err
+    |     | | {select_expr}: err
+    |     |   | {dot}: err
+    |     |     | {name C}
+    |     |     | {name rowid}
+    |     | {select_from_etc}: TABLE { C: C }
+    |       | {table_or_subquery_list}: TABLE { C: C }
+    |       | | {table_or_subquery}: TABLE { C: C }
+    |       |   | {name C}: TABLE { C: C }
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT S._rowid_
+  FROM (SELECT id
+        FROM foo) AS S;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'S._rowid_'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {dot}: err
+  |     |     | {name S}
+  |     |     | {name _rowid_}
+  |     | {select_from_etc}: TABLE { S: _select_ }
+  |       | {table_or_subquery_list}: TABLE { S: _select_ }
+  |       | | {table_or_subquery}: TABLE { S: _select_ }
+  |       |   | {select_stmt}: _select_: { id: integer notnull }
+  |       |   | | {select_core_list}: _select_: { id: integer notnull }
+  |       |   | | | {select_core}: _select_: { id: integer notnull }
+  |       |   | |   | {select_expr_list_con}: _select_: { id: integer notnull }
+  |       |   | |     | {select_expr_list}: _select_: { id: integer notnull }
+  |       |   | |     | | {select_expr}: id: integer notnull
+  |       |   | |     |   | {name id}: id: integer notnull
+  |       |   | |     | {select_from_etc}: TABLE { foo: foo }
+  |       |   | |       | {table_or_subquery_list}: TABLE { foo: foo }
+  |       |   | |       | | {table_or_subquery}: TABLE { foo: foo }
+  |       |   | |       |   | {name foo}: TABLE { foo: foo }
+  |       |   | |       | {select_where}
+  |       |   | |         | {select_groupby}
+  |       |   | |           | {select_having}
+  |       |   | | {select_orderby}
+  |       |   |   | {select_limit}
+  |       |   |     | {select_offset}
+  |       |   | {opt_as_alias}
+  |       |     | {name S}
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT S.rowid
+  FROM (SELECT rowid
+        FROM foo) AS S;
+
+  {select_stmt}: _select_: { rowid: longint notnull }
+  | {select_core_list}: _select_: { rowid: longint notnull }
+  | | {select_core}: _select_: { rowid: longint notnull }
+  |   | {select_expr_list_con}: _select_: { rowid: longint notnull }
+  |     | {select_expr_list}: _select_: { rowid: longint notnull }
+  |     | | {select_expr}: rowid: longint notnull
+  |     |   | {dot}: rowid: longint notnull
+  |     |     | {name S}
+  |     |     | {name rowid}
+  |     | {select_from_etc}: TABLE { S: _select_ }
+  |       | {table_or_subquery_list}: TABLE { S: _select_ }
+  |       | | {table_or_subquery}: TABLE { S: _select_ }
+  |       |   | {select_stmt}: _select_: { rowid: longint notnull }
+  |       |   | | {select_core_list}: _select_: { rowid: longint notnull }
+  |       |   | | | {select_core}: _select_: { rowid: longint notnull }
+  |       |   | |   | {select_expr_list_con}: _select_: { rowid: longint notnull }
+  |       |   | |     | {select_expr_list}: _select_: { rowid: longint notnull }
+  |       |   | |     | | {select_expr}: rowid: longint notnull
+  |       |   | |     |   | {name rowid}: rowid: longint notnull
+  |       |   | |     | {select_from_etc}: TABLE { foo: foo }
+  |       |   | |       | {table_or_subquery_list}: TABLE { foo: foo }
+  |       |   | |       | | {table_or_subquery}: TABLE { foo: foo }
+  |       |   | |       |   | {name foo}: TABLE { foo: foo }
+  |       |   | |       | {select_where}
+  |       |   | |         | {select_groupby}
+  |       |   | |           | {select_having}
+  |       |   | | {select_orderby}
+  |       |   |   | {select_limit}
+  |       |   |     | {select_offset}
+  |       |   | {opt_as_alias}
+  |       |     | {name S}
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE TABLE explicit_rowid_columns(
+  id INT PRIMARY KEY,
+  rowid TEXT,
+  oid TEXT,
+  _rowid_ TEXT
+) WITHOUT ROWID;
+
+  {create_table_stmt}: explicit_rowid_columns: { id: integer notnull primary_key, rowid: text, oid: text, _rowid_: text }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {detail 4} {without_rowid}
+  | | {name explicit_rowid_columns}
+  | {col_key_list}
+    | {col_def}: id: integer notnull primary_key
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |   | | {name id}
+    |   | | {type_int}: integer
+    |   | {col_attrs_pk}: ok
+    |     | {autoinc_and_conflict_clause}
+    | {col_key_list}
+      | {col_def}: rowid: text
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |     | {name rowid}
+      |     | {type_text}: text
+      | {col_key_list}
+        | {col_def}: oid: text
+        | | {col_def_type_attrs}: ok
+        |   | {col_def_name_type}
+        |     | {name oid}
+        |     | {type_text}: text
+        | {col_key_list}
+          | {col_def}: _rowid_: text
+            | {col_def_type_attrs}: ok
+              | {col_def_name_type}
+                | {name _rowid_}
+                | {type_text}: text
+
+The statement ending at line XXXX
+
+SELECT rowid, oid, _rowid_
+  FROM explicit_rowid_columns;
+
+  {select_stmt}: _select_: { rowid: text, oid: text, _rowid_: text }
+  | {select_core_list}: _select_: { rowid: text, oid: text, _rowid_: text }
+  | | {select_core}: _select_: { rowid: text, oid: text, _rowid_: text }
+  |   | {select_expr_list_con}: _select_: { rowid: text, oid: text, _rowid_: text }
+  |     | {select_expr_list}: _select_: { rowid: text, oid: text, _rowid_: text }
+  |     | | {select_expr}: rowid: text
+  |     | | | {name rowid}: rowid: text
+  |     | | {select_expr_list}
+  |     |   | {select_expr}: oid: text
+  |     |   | | {name oid}: oid: text
+  |     |   | {select_expr_list}
+  |     |     | {select_expr}: _rowid_: text
+  |     |       | {name _rowid_}: _rowid_: text
+  |     | {select_from_etc}: TABLE { explicit_rowid_columns: explicit_rowid_columns }
+  |       | {table_or_subquery_list}: TABLE { explicit_rowid_columns: explicit_rowid_columns }
+  |       | | {table_or_subquery}: TABLE { explicit_rowid_columns: explicit_rowid_columns }
+  |       |   | {name explicit_rowid_columns}: TABLE { explicit_rowid_columns: explicit_rowid_columns }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT ( SELECT rowid ) AS correlated
+  FROM foo;
+
+  {select_stmt}: _select_: { correlated: longint notnull }
+  | {select_core_list}: _select_: { correlated: longint notnull }
+  | | {select_core}: _select_: { correlated: longint notnull }
+  |   | {select_expr_list_con}: _select_: { correlated: longint notnull }
+  |     | {select_expr_list}: _select_: { correlated: longint notnull }
+  |     | | {select_expr}: correlated: longint notnull
+  |     |   | {select_stmt}: rowid: longint notnull
+  |     |   | | {select_core_list}: _select_: { rowid: longint notnull }
+  |     |   | | | {select_core}: _select_: { rowid: longint notnull }
+  |     |   | |   | {select_expr_list_con}: _select_: { rowid: longint notnull }
+  |     |   | |     | {select_expr_list}: _select_: { rowid: longint notnull }
+  |     |   | |     | | {select_expr}: rowid: longint notnull
+  |     |   | |     |   | {name rowid}: rowid: longint notnull
+  |     |   | |     | {select_from_etc}: ok
+  |     |   | |       | {select_where}
+  |     |   | |         | {select_groupby}
+  |     |   | |           | {select_having}
+  |     |   | | {select_orderby}
+  |     |   |   | {select_limit}
+  |     |   |     | {select_offset}
+  |     |   | {opt_as_alias}
+  |     |     | {name correlated}
+  |     | {select_from_etc}: TABLE { foo: foo }
+  |       | {table_or_subquery_list}: TABLE { foo: foo }
+  |       | | {table_or_subquery}: TABLE { foo: foo }
+  |       |   | {name foo}: TABLE { foo: foo }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT ( SELECT T2.rowid ) AS correlated
+  FROM foo AS T1
+    LEFT JOIN bar AS T2;
+
+  {select_stmt}: _select_: { correlated: longint }
+  | {select_core_list}: _select_: { correlated: longint }
+  | | {select_core}: _select_: { correlated: longint }
+  |   | {select_expr_list_con}: _select_: { correlated: longint }
+  |     | {select_expr_list}: _select_: { correlated: longint }
+  |     | | {select_expr}: correlated: longint
+  |     |   | {select_stmt}: rowid: longint
+  |     |   | | {select_core_list}: _select_: { rowid: longint }
+  |     |   | | | {select_core}: _select_: { rowid: longint }
+  |     |   | |   | {select_expr_list_con}: _select_: { rowid: longint }
+  |     |   | |     | {select_expr_list}: _select_: { rowid: longint }
+  |     |   | |     | | {select_expr}: rowid: longint
+  |     |   | |     |   | {dot}: rowid: longint
+  |     |   | |     |     | {name T2}
+  |     |   | |     |     | {name rowid}
+  |     |   | |     | {select_from_etc}: ok
+  |     |   | |       | {select_where}
+  |     |   | |         | {select_groupby}
+  |     |   | |           | {select_having}
+  |     |   | | {select_orderby}
+  |     |   |   | {select_limit}
+  |     |   |     | {select_offset}
+  |     |   | {opt_as_alias}
+  |     |     | {name correlated}
+  |     | {select_from_etc}: JOIN { T1: foo, T2: bar }
+  |       | {join_clause}: JOIN { T1: foo, T2: bar }
+  |       | | {table_or_subquery}: TABLE { T1: foo }
+  |       | | | {name foo}: TABLE { T1: foo }
+  |       | | | {opt_as_alias}
+  |       | |   | {name T1}
+  |       | | {join_target_list}
+  |       |   | {join_target}: JOIN { T1: foo, T2: bar }
+  |       |     | {detail 5} {join_left}
+  |       |     | {table_join}
+  |       |       | {table_or_subquery}: TABLE { T2: bar }
+  |       |         | {name bar}: TABLE { T2: bar }
+  |       |         | {opt_as_alias}
+  |       |           | {name T2}
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
 PROC value_result_reader ()
 BEGIN
   CURSOR C FETCH FROM CALL declare_cursor_like_select();
@@ -34327,6 +34979,35 @@ END;
                           | {select_orderby}
                             | {select_limit}
                               | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT V.rowid
+  FROM ViewShape AS V;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'V.rowid'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {dot}: err
+  |     |     | {name V}
+  |     |     | {name rowid}
+  |     | {select_from_etc}: TABLE { V: ViewShape }
+  |       | {table_or_subquery_list}: TABLE { V: ViewShape }
+  |       | | {table_or_subquery}: TABLE { V: ViewShape }
+  |       |   | {name ViewShape}: TABLE { V: ViewShape }
+  |       |   | {opt_as_alias}
+  |       |     | {name V}
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
 
 The statement ending at line XXXX
 

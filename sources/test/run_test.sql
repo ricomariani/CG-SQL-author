@@ -1989,6 +1989,38 @@ begin
   end;
 end);
 
+TEST!(outer_join_rowid,
+begin
+  create table rowid_join_left(id integer not null);
+  create table rowid_join_right(id integer not null);
+  -- One matching key and one missing key distinguish a real rowid from the
+  -- NULL supplied by the outer join.  Fresh tables assign rowids 1 and 2.
+  insert into rowid_join_left values (1), (2);
+  insert into rowid_join_right values (1);
+  cursor C for
+    select L.rowid preserved, R.rowid nullable_rowid,
+           R.oid nullable_oid, R._rowid_ nullable_hidden_rowid
+      from rowid_join_left L left join rowid_join_right R on L.id = R.id
+      order by L.id;
+
+  fetch C;
+  EXPECT!(C);
+  EXPECT_EQ!(C.preserved, 1L);
+  EXPECT_EQ!(C.nullable_rowid, 1L);
+  EXPECT_EQ!(C.nullable_oid, 1L);
+  EXPECT_EQ!(C.nullable_hidden_rowid, 1L);
+
+  -- A nonnullable fetch would turn these SQL NULLs into zero in C.
+  fetch C;
+  EXPECT!(C);
+  EXPECT_EQ!(C.preserved, 2L);
+  EXPECT_EQ!(C.nullable_rowid, null);
+  EXPECT_EQ!(C.nullable_oid, null);
+  EXPECT_EQ!(C.nullable_hidden_rowid, null);
+  fetch C;
+  EXPECT!(not C);
+end);
+
 TEST!(bind_and_fetch_all_types,
 begin
   let i := 10;

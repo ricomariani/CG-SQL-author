@@ -764,6 +764,12 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 test/sem_test.sql:XXXX:1: error: in declare_cursor_like_select : CQL0197: duplicate variable name in the same scope 'X'
 test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'T1.rowid'
 test/sem_test.sql:XXXX:1: error: in str : CQL0066: identifier is ambiguous 'rowid'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'R.rowid'
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'rowid'
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'oid'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'V.rowid'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'C.rowid'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'S._rowid_'
 test/sem_test.sql:XXXX:1: error: in name_list : CQL0272: columns referenced in the foreign key statement should match exactly a unique key in the parent table 'bar'
 test/sem_test.sql:XXXX:1: error: in str : CQL0154: table in update statement does not exist 'This_Table_Does_Not_Exist'
 test/sem_test.sql:XXXX:1: error: in col_def : CQL0028: FK reference must be exactly one column with the correct type 'fk_src'
@@ -809,6 +815,7 @@ test/sem_test.sql:XXXX:1: error: in bin_and : CQL0001: operands must be an integ
 test/sem_test.sql:XXXX:1: error: in tilde : CQL0001: operands must be an integer type, not real '~'
 test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'new.id'
 test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'old.id'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'V.rowid'
 Incompatible declarations found
 test/sem_test.sql:XXXX:1: error: in create_trigger_stmt : CREATE TRIGGER trigger3
   INSTEAD OF UPDATE ON ViewShape

@@ -2592,6 +2592,7 @@ static sem_struct * new_sem_struct(CSTR name, uint32_t count) {
   sptr->names = _ast_pool_new_array(CSTR, count);
   sptr->kinds = _ast_pool_new_array(CSTR, count);
   sptr->semtypes = _ast_pool_new_array(sem_t, count);
+  sptr->rowid_type = 0;
   sptr->is_backed = false;
 
   for (uint32_t i = 0; i < count; i++) {
@@ -2629,6 +2630,7 @@ static sem_join * new_sem_join(uint32_t count) {
 // with the indicated removals.
 static sem_struct *sem_clone_struct_strip_flags(sem_struct *sptr, sem_t strip) {
   sem_struct *result = new_sem_struct(sptr->struct_name, sptr->count);
+  result->rowid_type = sptr->rowid_type & sem_not(strip);
   for (uint32_t i = 0; i < sptr->count; i++) {
     result->names[i] = sptr->names[i];
     result->kinds[i] = sptr->kinds[i];
@@ -6377,7 +6379,7 @@ static sem_resolve sem_try_resolve_column(
   return SEM_RESOLVE_STOP;
 }
 
-// rowid is a special name (with 2 aliases) that exists in every table.
+// Implicit rowid (with 2 aliases) exists only on rowid-capable sources.
 static sem_resolve sem_try_resolve_rowid(
   ast_node *ast,
   CSTR name,
@@ -6401,56 +6403,46 @@ static sem_resolve sem_try_resolve_rowid(
     return SEM_RESOLVE_CONTINUE;
   }
 
-  // Now we have to make sure it is a specific rowid that we can infer, directly or indirectly.
+  // Follow the ordinary column scope chain, considering only sources with an
+  // implicit rowid.  Its type already reflects outer-join null extension.
+  for (sem_joinscope *jscp = current_joinscope; jscp; jscp = jscp->parent) {
+    sem_join *jptr = jscp->jptr;
 
-  sem_join *jptr = current_joinscope->jptr;
-  if (scope == NULL && jptr && jptr->count == 1) {
-    // if only one table then that's the rowid
-    col = name;
-    sem_type = SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL;
-  }
-  else if (scope != NULL) {
-    // We walk the chain of scopes until we find a stop frame or else we run out
-    // this allows nested joins to see their parent scopes.
-    for (sem_joinscope *jscp = current_joinscope; jscp; jscp = jscp->parent) {
-      jptr = jscp->jptr;
+    if (!jptr) {
+      continue;
+    }
 
-      // an empty jptr has no names, skip it
-      if (!jptr) {
-        continue;
-      }
+    if (jptr == &join_block) {
+      break;
+    }
 
-      // stop if we find the sentinel
-      if (jptr == &join_block) {
-        break;
-      }
-
-      // more than one table but the name is scoped, still have a chance
-      for (uint32_t i = 0; i < jptr->count; i++) {
-        if (!StrCaseCmp(scope, jptr->names[i])) {
-          col = name;
-          kind = NULL;
-          sem_type = SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL;
-
-          // Insert table alias name override if enabled.
-          if (keep_table_name_in_aliases && !in_trigger && !in_trigger_when_expr && ast && scope) {
-            Invariant(is_ast_dot(ast));
-            insert_table_alias_string_overide(ast->left, jptr->tables[i]->struct_name);
-          }
-
-          break;
-        }
-      }
-
-      if (col) {
-        break;
+    uint32_t candidates = 0;
+    uint32_t candidate_index = 0;
+    for (uint32_t i = 0; i < jptr->count; i++) {
+      if ((scope == NULL || !StrCaseCmp(scope, jptr->names[i])) &&
+          jptr->tables[i]->rowid_type) {
+        candidates++;
+        candidate_index = i;
       }
     }
-  }
-  else {
-    report_resolve_error(ast, "CQL0066: identifier is ambiguous", name);
-    record_resolve_error(ast);
-    return SEM_RESOLVE_STOP;
+
+    if (candidates > 1) {
+      report_resolve_error(ast, "CQL0066: identifier is ambiguous", name);
+      record_resolve_error(ast);
+      return SEM_RESOLVE_STOP;
+    }
+
+    if (candidates == 1) {
+      sem_struct *table = jptr->tables[candidate_index];
+      col = name;
+      sem_type = table->rowid_type;
+
+      if (keep_table_name_in_aliases && !in_trigger && !in_trigger_when_expr && ast && scope) {
+        Invariant(is_ast_dot(ast));
+        insert_table_alias_string_overide(ast->left, table->struct_name);
+      }
+      break;
+    }
   }
 
   if (!col) {
@@ -15065,6 +15057,13 @@ static void sem_create_trigger_stmt(ast_node *ast) {
   sem_join *jptr;
   sem_struct *sptr = target->sem->sptr;
 
+  // Preserve OLD/NEW rowid compatibility for INSTEAD OF triggers without
+  // giving ordinary queries on the view an implicit rowid.
+  if (is_ast_create_view_stmt(target)) {
+    sptr = sem_clone_struct_strip_flags(sptr, 0);
+    sptr->rowid_type = SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL;
+  }
+
   if (flags & TRIGGER_INSERT) {
     jptr = new_sem_join(1);
     jptr->names[0] = "new";
@@ -16013,6 +16012,9 @@ static void sem_create_table_stmt(ast_node *ast) {
   // the types have already been computed so all we have to do is
   // check for duplicates
   sem_struct *sptr = new_sem_struct(name, cols);
+  if (!no_rowid) {
+    sptr->rowid_type = SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL;
+  }
 
   symtab *columns = symtab_new();
 

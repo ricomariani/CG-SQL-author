@@ -1440,8 +1440,6 @@ static void cg_schema_manage_recreate_tables(
       }
     }
     table_crc ^= crc_charbuf(&make_table);
-    table_crc ^= crc_charbuf(&delete_tables);
-    table_crc ^= crc_charbuf(&update_indices);
 
     bprintf(&pending_table_creates, "%s", make_table.ptr);
     CHARBUF_CLOSE(make_table);
@@ -1453,6 +1451,12 @@ static void cg_schema_manage_recreate_tables(
     if (i + 1 < count && gname[0] && !StrCaseCmp(gname, (note+1)->group_name)) {
       continue;
     }
+
+    // These buffers accumulate across the whole group, so hash them only once.
+    // Hashing after each table can cancel earlier SQL when a later table adds
+    // none, hiding an index-only change in a two-table group.
+    table_crc ^= crc_charbuf(&delete_tables);
+    table_crc ^= crc_charbuf(&update_indices);
 
     bprintf(&update_tables, "%s", pending_table_creates.ptr);
     bclear(&pending_table_creates);

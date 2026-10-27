@@ -28,6 +28,13 @@ CREATE TABLE g1(
   id INTEGER PRIMARY KEY,
   name TEXT)
 
+----- [g1_name] -----
+
+type: index
+tbl_name: [g1]
+CREATE UNIQUE INDEX g1_name ON g1 (
+  name)
+
 ----- [sqlite_autoindex_test_cql_schema_facets_1] -----
 
 type: index

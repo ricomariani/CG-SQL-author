@@ -44,6 +44,10 @@ CREATE TABLE `use g1`(
   name2 TEXT
 ) @recreate(gr1);
 
+-- Only g1 gains an index; "use g1" adds no index SQL. Hashing the cumulative
+-- buffer once per table would cancel this addition and skip the group update.
+CREATE UNIQUE INDEX g1_name ON g1(name);
+
 -- this table changes to the create plan (note table contents changed)
 CREATE TABLE test_this_table_will_become_create(
   id integer primary key

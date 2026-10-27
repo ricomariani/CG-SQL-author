@@ -145,6 +145,16 @@ with the migration proc taking these essential steps in this order:
 * the above process is repeated for all schema versions up to the current version
 * all tables that are marked with `@recreate` are re-created if necessary
   * i.e. if the checksum of the table definition has changed for any  table (or group) then `drop` it and create the new version.
+  * A group's accumulated index and explicit-drop SQL is hashed once, after all
+    member tables. Older compilers hashed these buffers once per table, allowing
+    repeated hashes to cancel and hide required updates. Corrected checksums can
+    cause a one-time group recreate even when its SQL is unchanged, once a
+    schema change opens the outer whole-schema checksum gate. Recompiling an
+    identical complete schema does not bypass that gate. Single-table checksums
+    are unchanged. Maintenance recreates are permitted by `@recreate`, including
+    for compiler maintenance, but we try to avoid unnecessary recreates. The
+    bundled runtime drops and recreates the group, discarding its data, rather
+    than comparing the existing schema for a no-op.
 * all indices that changed and were not marked with `@delete` are re-created
 * all views not marked with `@delete` are re-created
 * all triggers not marked with `@delete` are re-installed

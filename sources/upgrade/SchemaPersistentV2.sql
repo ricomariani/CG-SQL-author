@@ -45,6 +45,9 @@ CREATE TABLE g1(
   name TEXT
 ) @recreate(gr1);
 
+-- Keep the v1 index unchanged so unrelated upgrades must preserve this group.
+CREATE UNIQUE INDEX g1_name ON g1(name);
+
 CREATE TABLE `use g1`(
   id INTEGER PRIMARY KEY REFERENCES g1(id),
   name2 TEXT

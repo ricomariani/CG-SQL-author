@@ -28,6 +28,13 @@ CREATE TABLE g1(
   id INTEGER PRIMARY KEY,
   name TEXT)
 
+----- [g1_name] -----
+
+type: index
+tbl_name: [g1]
+CREATE UNIQUE INDEX g1_name ON g1 (
+  name)
+
 ----- [recreate_test_for_unsub] -----
 
 type: table

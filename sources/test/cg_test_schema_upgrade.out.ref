@@ -829,7 +829,7 @@ END;
 [[private]]
 PROC test_cql_recreate_non_virtual_tables()
 BEGIN
-  IF cql_facet_find(test_facets, 'all_nonvirtual_tables_crc') == 1767267850535997412 RETURN; 
+  IF cql_facet_find(test_facets, 'all_nonvirtual_tables_crc') == -7497220947388251822 RETURN; 
   IF cql_facet_find(test_facets, 'foo_group_crc') != -5376428347335479627 THEN
     LET foo_result := cql_rebuild_recreate_group(cql_compressed(
         "CREATE TABLE recreate_backing( "
@@ -891,7 +891,7 @@ BEGIN
     END IF;
     CALL test_cql_set_facet_version('table_to_recreate_table_crc', -3890192064319085571);
   END IF;
-  IF cql_facet_find(test_facets, 'gr1_group_crc') != -9144808864074209466 THEN
+  IF cql_facet_find(test_facets, 'gr1_group_crc') != -4827225474924844074 THEN
     LET gr1_result := cql_rebuild_recreate_group(cql_compressed(
         "CREATE TABLE g1( "
           "[an id] INTEGER PRIMARY KEY, "
@@ -915,9 +915,9 @@ BEGIN
     IF gr1_result THEN 
       CALL test_rebuilt_tables_insert_helper("gr1_group_crc");
     END IF;
-    CALL test_cql_set_facet_version('gr1_group_crc', -9144808864074209466);
+    CALL test_cql_set_facet_version('gr1_group_crc', -4827225474924844074);
   END IF;
-  CALL test_cql_set_facet_version('all_nonvirtual_tables_crc', 1767267850535997412);
+  CALL test_cql_set_facet_version('all_nonvirtual_tables_crc', -7497220947388251822);
 END;
 
 -- recreate all the virtual @recreate tables that might have changed

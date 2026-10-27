@@ -56,6 +56,9 @@ CREATE TABLE `use g1`(
   name2 TEXT
 ) @recreate(gr1);
 
+-- Retain the v1 index while this version adds another table to gr1.
+CREATE UNIQUE INDEX g1_name ON g1(name);
+
 CREATE TABLE gParent(
   id INTEGER PRIMARY KEY,
   name TEXT

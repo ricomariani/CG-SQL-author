@@ -29,6 +29,44 @@ create table sqlite_master (
 
 create table identifier_host (value int);
 
+create table g1(id integer primary key, name text);
+
+create proc prepare_recreate_crc_test(old_version long!)
+begin
+  if old_version >= 0 then
+    -- One probe row distinguishes a real recreate from a checksum-only check.
+    -- Every upgrader invocation removes its probe after verification.
+    insert into g1 values (1, 'recreate checksum probe');
+  end if;
+end;
+
+create proc verify_recreate_crc_test(old_version long!, new_version long!)
+begin
+  -- The only gr1 change in v1 is an index on its first of two tables.
+  -- The old cumulative-buffer XOR lost it, leaving upgraded databases without
+  -- uniqueness enforcement even though fresh databases had the index.
+  let has_index := (select exists(select 1 from sqlite_master where name = 'g1_name'));
+  if has_index != (new_version >= 1) then
+    printf_stderr("ERROR! recreate-group index missing or unexpected in v%lld\n", new_version);
+    throw;
+  end if;
+
+  if old_version >= 0 then
+    -- v1-v3 have identical gr1 definitions; unrelated changes and repeat runs
+    -- must retain data. v0->v1 adds the index, and v4 adds a group member:
+    -- those changes really recreate the group with the bundled runtime.
+    let unchanged := old_version == new_version or
+      (old_version >= 1 and new_version <= 3);
+    let has_probe := (select exists(select 1 from g1 where id = 1));
+    if has_probe != unchanged then
+      printf_stderr("ERROR! unexpected recreate-group data preservation from v%lld to v%lld\n",
+        old_version, new_version);
+      throw;
+    end if;
+    delete from g1 where id = 1;
+  end if;
+end;
+
 -- ']' breaks the old bracket quoting; '"' exercises doubling in the new form.
 create proc verify_quoted_table_drops()
 begin

@@ -83899,7 +83899,7 @@ BEGIN
   LET z := ( SELECT cql_blob_update(b, 1, basic_table.id, 2, 1 + 2) );
 END;
 
-test/sem_test.sql:XXXX:1: error: in add : CQL0257: argument must be table.column where table is a backed table 'cql_blob_update'
+test/sem_test.sql:XXXX:1: error: in add : CQL0490: argument must be table.column where table is a backed table 'cql_blob_update'
 
   {create_proc_stmt}: err
   | {name blob_update_not_dot_operator_later_arg}: err
@@ -84162,7 +84162,7 @@ BEGIN
   LET z := ( SELECT cql_blob_update(b, "x", basic_table.id) );
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'TEXT' not compatible with found 'INT' context 'cql_blob_update value'
+test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'INT' not compatible with found 'TEXT' context 'cql_blob_update value'
 
   {create_proc_stmt}: err
   | {name blob_update_column_wrong_arg_type}: err
@@ -84541,7 +84541,7 @@ DO NOTHING;
     |       |     |             | | {name V}
     |       |     |             | | {name name}
     |       |     |             | {arg_list}
-    |       |     |               | {dot}: text
+    |       |     |               | {dot}: text<cool_text>
     |       |     |                 | {name basic_table}
     |       |     |                 | {name name}
     |       |     | {select_from_etc}: TABLE { V: _vals }
@@ -84675,7 +84675,7 @@ DO UPDATE
     |       |     |             | | {name V}
     |       |     |             | | {name name}
     |       |     |             | {arg_list}
-    |       |     |               | {dot}: text
+    |       |     |               | {dot}: text<cool_text>
     |       |     |                 | {name basic_table}
     |       |     |                 | {name name}
     |       |     | {select_from_etc}: TABLE { V: _vals }
@@ -84914,7 +84914,7 @@ DO UPDATE
     |       |     |             | | {name V}
     |       |     |             | | {name name}
     |       |     |             | {arg_list}
-    |       |     |               | {dot}: text
+    |       |     |               | {dot}: text<cool_text>
     |       |     |                 | {name basic_table}
     |       |     |                 | {name name}
     |       |     | {select_from_etc}: TABLE { V: _vals }
@@ -85349,7 +85349,7 @@ BEGIN
   LET z := ( SELECT cql_blob_create(basic_table, "x", basic_table.id) );
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'TEXT' not compatible with found 'INT' context 'cql_blob_create'
+test/sem_test.sql:XXXX:1: error: in str : CQL0009: required 'INT' not compatible with found 'TEXT' context 'cql_blob_create'
 
   {create_proc_stmt}: err
   | {name blob_create_column_wrong_arg_type}: err
@@ -85458,6 +85458,1234 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0488: the indicated t
           |     |             | {dot}
           |     |               | {name simple_backing_table}
           |     |               | {name k}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+[[backed_by=simple_backing_table]]
+CREATE TABLE blob_call_columns(
+  pk1 INT,
+  pk2 INT,
+  required_value INT!,
+  optional_value INT,
+  secret TEXT @SENSITIVE,
+  wide LONG,
+  PRIMARY KEY (pk2, pk1)
+);
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name backed_by}
+  |   | {name simple_backing_table}: ok
+  | {create_table_stmt}: blob_call_columns: { pk1: integer notnull partial_pk, pk2: integer notnull partial_pk, required_value: integer notnull, optional_value: integer, secret: text sensitive, wide: longint } backed
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {detail 0} {no_flags}
+    | | {name blob_call_columns}
+    | {col_key_list}
+      | {col_def}: pk1: integer notnull partial_pk
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |     | {name pk1}
+      |     | {type_int}: integer
+      | {col_key_list}
+        | {col_def}: pk2: integer notnull partial_pk
+        | | {col_def_type_attrs}: ok
+        |   | {col_def_name_type}
+        |     | {name pk2}
+        |     | {type_int}: integer
+        | {col_key_list}
+          | {col_def}: required_value: integer notnull
+          | | {col_def_type_attrs}: ok
+          |   | {col_def_name_type}
+          |   | | {name required_value}
+          |   | | {type_int}: integer
+          |   | {col_attrs_not_null}: ok
+          | {col_key_list}
+            | {col_def}: optional_value: integer
+            | | {col_def_type_attrs}: ok
+            |   | {col_def_name_type}
+            |     | {name optional_value}
+            |     | {type_int}: integer
+            | {col_key_list}
+              | {col_def}: secret: text sensitive
+              | | {col_def_type_attrs}: ok
+              |   | {col_def_name_type}
+              |   | | {name secret}
+              |   | | {type_text}: text
+              |   | {sensitive_attr}: ok
+              | {col_key_list}
+                | {col_def}: wide: longint
+                | | {col_def_type_attrs}: ok
+                |   | {col_def_name_type}
+                |     | {name wide}
+                |     | {type_long}: longint
+                | {col_key_list}
+                  | {pk_def}
+                    | {indexed_columns_conflict_clause}
+                      | {indexed_columns}
+                        | {indexed_column}
+                        | | {name pk2}: pk2: integer
+                        | {indexed_columns}
+                          | {indexed_column}
+                            | {name pk1}: pk1: integer
+
+The statement ending at line XXXX
+
+PROC blob_create_mixed_partitions ()
+BEGIN
+  LET z := ( SELECT cql_blob_create(basic_table, 1, basic_table.id, 'x', basic_table.name) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0488: key and value columns may not be mixed in cql_blob_create 'name'
+
+  {create_proc_stmt}: err
+  | {name blob_create_mixed_partitions}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_create}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name basic_table}
+          |     |         | {arg_list}
+          |     |           | {int 1}: integer notnull
+          |     |           | {arg_list}
+          |     |             | {dot}: integer notnull primary_key
+          |     |             | | {name basic_table}
+          |     |             | | {name id}
+          |     |             | {arg_list}
+          |     |               | {strlit 'x'}: text notnull
+          |     |               | {arg_list}
+          |     |                 | {dot}
+          |     |                   | {name basic_table}
+          |     |                   | {name name}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+PROC blob_create_value_then_key ()
+BEGIN
+  LET z := ( SELECT cql_blob_create(basic_table, 'x', basic_table.name, 1, basic_table.id) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0488: key and value columns may not be mixed in cql_blob_create 'id'
+
+  {create_proc_stmt}: err
+  | {name blob_create_value_then_key}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_create}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name basic_table}
+          |     |         | {arg_list}
+          |     |           | {strlit 'x'}: text notnull
+          |     |           | {arg_list}
+          |     |             | {dot}: text<cool_text>
+          |     |             | | {name basic_table}
+          |     |             | | {name name}
+          |     |             | {arg_list}
+          |     |               | {int 1}: integer notnull
+          |     |               | {arg_list}
+          |     |                 | {dot}
+          |     |                   | {name basic_table}
+          |     |                   | {name id}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+PROC blob_update_mixed_partitions ()
+BEGIN
+  DECLARE b BLOB;
+  LET z := ( SELECT cql_blob_update(b, 1, basic_table.id, 'x', basic_table.name) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0488: key and value columns may not be mixed in cql_blob_update 'name'
+
+  {create_proc_stmt}: err
+  | {name blob_update_mixed_partitions}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_vars_type}: blob
+      | | {name_list}: b: blob variable
+      | | | {name b}: b: blob variable
+      | | {type_blob}: blob
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_update}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name b}: b: blob variable
+          |     |         | {arg_list}
+          |     |           | {int 1}: integer notnull
+          |     |           | {arg_list}
+          |     |             | {dot}: integer notnull primary_key
+          |     |             | | {name basic_table}
+          |     |             | | {name id}
+          |     |             | {arg_list}
+          |     |               | {strlit 'x'}: text notnull
+          |     |               | {arg_list}
+          |     |                 | {dot}
+          |     |                   | {name basic_table}
+          |     |                   | {name name}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+PROC blob_update_value_then_key ()
+BEGIN
+  DECLARE b BLOB;
+  LET z := ( SELECT cql_blob_update(b, 'x', basic_table.name, 1, basic_table.id) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0488: key and value columns may not be mixed in cql_blob_update 'id'
+
+  {create_proc_stmt}: err
+  | {name blob_update_value_then_key}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_vars_type}: blob
+      | | {name_list}: b: blob variable
+      | | | {name b}: b: blob variable
+      | | {type_blob}: blob
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_update}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name b}: b: blob variable
+          |     |         | {arg_list}
+          |     |           | {strlit 'x'}: text notnull
+          |     |           | {arg_list}
+          |     |             | {dot}: text<cool_text>
+          |     |             | | {name basic_table}
+          |     |             | | {name name}
+          |     |             | {arg_list}
+          |     |               | {int 1}: integer notnull
+          |     |               | {arg_list}
+          |     |                 | {dot}
+          |     |                   | {name basic_table}
+          |     |                   | {name id}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+PROC blob_create_incomplete_key ()
+BEGIN
+  LET z := ( SELECT cql_blob_create(blob_call_columns, 1, blob_call_columns.pk2) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0488: all key columns must appear exactly once in primary key order in cql_blob_create 'blob_call_columns'
+
+  {create_proc_stmt}: err
+  | {name blob_create_incomplete_key}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_create}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name blob_call_columns}
+          |     |         | {arg_list}
+          |     |           | {int 1}: integer notnull
+          |     |           | {arg_list}
+          |     |             | {dot}: integer notnull partial_pk
+          |     |               | {name blob_call_columns}
+          |     |               | {name pk2}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+PROC blob_create_key_out_of_order ()
+BEGIN
+  LET z := ( SELECT cql_blob_create(blob_call_columns, 1, blob_call_columns.pk1, 2, blob_call_columns.pk2) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0488: key columns must appear exactly once in primary key order in cql_blob_create 'pk1'
+
+  {create_proc_stmt}: err
+  | {name blob_create_key_out_of_order}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_create}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name blob_call_columns}
+          |     |         | {arg_list}
+          |     |           | {int 1}: integer notnull
+          |     |           | {arg_list}
+          |     |             | {dot}
+          |     |             | | {name blob_call_columns}
+          |     |             | | {name pk1}
+          |     |             | {arg_list}
+          |     |               | {int 2}
+          |     |               | {arg_list}
+          |     |                 | {dot}
+          |     |                   | {name blob_call_columns}
+          |     |                   | {name pk2}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+PROC blob_create_duplicate_column ()
+BEGIN
+  LET z := ( SELECT cql_blob_create(basic_table, 'x', basic_table.name, 'y', basic_table.NAME) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0206: duplicate name in list 'NAME'
+
+  {create_proc_stmt}: err
+  | {name blob_create_duplicate_column}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_create}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name basic_table}
+          |     |         | {arg_list}
+          |     |           | {strlit 'x'}: text notnull
+          |     |           | {arg_list}
+          |     |             | {dot}: text<cool_text>
+          |     |             | | {name basic_table}
+          |     |             | | {name name}
+          |     |             | {arg_list}
+          |     |               | {strlit 'y'}: text notnull
+          |     |               | {arg_list}
+          |     |                 | {dot}
+          |     |                   | {name basic_table}
+          |     |                   | {name NAME}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+PROC blob_create_duplicate_key ()
+BEGIN
+  LET z := ( SELECT cql_blob_create(blob_call_columns, 1, blob_call_columns.pk2, 2, blob_call_columns.pk2) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0206: duplicate name in list 'pk2'
+
+  {create_proc_stmt}: err
+  | {name blob_create_duplicate_key}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_create}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name blob_call_columns}
+          |     |         | {arg_list}
+          |     |           | {int 1}: integer notnull
+          |     |           | {arg_list}
+          |     |             | {dot}: integer notnull partial_pk
+          |     |             | | {name blob_call_columns}
+          |     |             | | {name pk2}
+          |     |             | {arg_list}
+          |     |               | {int 2}: integer notnull
+          |     |               | {arg_list}
+          |     |                 | {dot}
+          |     |                   | {name blob_call_columns}
+          |     |                   | {name pk2}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+PROC blob_update_duplicate_column ()
+BEGIN
+  DECLARE b BLOB;
+  LET z := ( SELECT cql_blob_update(b, 1, basic_table.id, 2, basic_table.ID) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0206: duplicate name in list 'ID'
+
+  {create_proc_stmt}: err
+  | {name blob_update_duplicate_column}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_vars_type}: blob
+      | | {name_list}: b: blob variable
+      | | | {name b}: b: blob variable
+      | | {type_blob}: blob
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_update}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name b}: b: blob variable
+          |     |         | {arg_list}
+          |     |           | {int 1}: integer notnull
+          |     |           | {arg_list}
+          |     |             | {dot}: integer notnull primary_key
+          |     |             | | {name basic_table}
+          |     |             | | {name id}
+          |     |             | {arg_list}
+          |     |               | {int 2}: integer notnull
+          |     |               | {arg_list}
+          |     |                 | {dot}
+          |     |                   | {name basic_table}
+          |     |                   | {name ID}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+PROC blob_update_duplicate_value ()
+BEGIN
+  DECLARE b BLOB;
+  LET z := ( SELECT cql_blob_update(b, 'x', basic_table.name, 'y', basic_table.name) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0206: duplicate name in list 'name'
+
+  {create_proc_stmt}: err
+  | {name blob_update_duplicate_value}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_vars_type}: blob
+      | | {name_list}: b: blob variable
+      | | | {name b}: b: blob variable
+      | | {type_blob}: blob
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_update}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name b}: b: blob variable
+          |     |         | {arg_list}
+          |     |           | {strlit 'x'}: text notnull
+          |     |           | {arg_list}
+          |     |             | {dot}: text<cool_text>
+          |     |             | | {name basic_table}
+          |     |             | | {name name}
+          |     |             | {arg_list}
+          |     |               | {strlit 'y'}: text notnull
+          |     |               | {arg_list}
+          |     |                 | {dot}
+          |     |                   | {name basic_table}
+          |     |                   | {name name}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+PROC blob_create_nullable_notnull_column ()
+BEGIN
+  LET z := ( SELECT cql_blob_create(blob_call_columns, nullable(1), blob_call_columns.required_value) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0013: cannot assign/copy possibly null expression to not null target 'cql_blob_create'
+
+  {create_proc_stmt}: err
+  | {name blob_create_nullable_notnull_column}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_create}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name blob_call_columns}
+          |     |         | {arg_list}
+          |     |           | {call}: integer
+          |     |           | | {name nullable}: integer
+          |     |           | | {call_arg_list}
+          |     |           |   | {call_filter_clause}
+          |     |           |   | {arg_list}: ok
+          |     |           |     | {int 1}: integer notnull
+          |     |           | {arg_list}
+          |     |             | {dot}
+          |     |               | {name blob_call_columns}
+          |     |               | {name required_value}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+PROC blob_update_nullable_notnull_column ()
+BEGIN
+  DECLARE b BLOB;
+  LET z := ( SELECT cql_blob_update(b, nullable(1), blob_call_columns.required_value) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0013: cannot assign/copy possibly null expression to not null target 'cql_blob_update value'
+
+  {create_proc_stmt}: err
+  | {name blob_update_nullable_notnull_column}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_vars_type}: blob
+      | | {name_list}: b: blob variable
+      | | | {name b}: b: blob variable
+      | | {type_blob}: blob
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_update}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name b}: b: blob variable
+          |     |         | {arg_list}
+          |     |           | {call}: integer
+          |     |           | | {name nullable}: integer
+          |     |           | | {call_arg_list}
+          |     |           |   | {call_filter_clause}
+          |     |           |   | {arg_list}: ok
+          |     |           |     | {int 1}: integer notnull
+          |     |           | {arg_list}
+          |     |             | {dot}
+          |     |               | {name blob_call_columns}
+          |     |               | {name required_value}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+PROC blob_create_sensitive_nonsensitive_column ()
+BEGIN
+  LET z := ( SELECT cql_blob_create(basic_table, sensitive(1), basic_table.id) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 'cql_blob_create'
+
+  {create_proc_stmt}: err
+  | {name blob_create_sensitive_nonsensitive_column}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_create}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name basic_table}
+          |     |         | {arg_list}
+          |     |           | {call}: integer notnull sensitive
+          |     |           | | {name sensitive}: integer notnull sensitive
+          |     |           | | {call_arg_list}
+          |     |           |   | {call_filter_clause}
+          |     |           |   | {arg_list}: ok
+          |     |           |     | {int 1}: integer notnull
+          |     |           | {arg_list}
+          |     |             | {dot}
+          |     |               | {name basic_table}
+          |     |               | {name id}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+PROC blob_update_sensitive_nonsensitive_column ()
+BEGIN
+  DECLARE b BLOB;
+  LET z := ( SELECT cql_blob_update(b, sensitive(1), basic_table.id) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 'cql_blob_update value'
+
+  {create_proc_stmt}: err
+  | {name blob_update_sensitive_nonsensitive_column}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_vars_type}: blob
+      | | {name_list}: b: blob variable
+      | | | {name b}: b: blob variable
+      | | {type_blob}: blob
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_update}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name b}: b: blob variable
+          |     |         | {arg_list}
+          |     |           | {call}: integer notnull sensitive
+          |     |           | | {name sensitive}: integer notnull sensitive
+          |     |           | | {call_arg_list}
+          |     |           |   | {call_filter_clause}
+          |     |           |   | {arg_list}: ok
+          |     |           |     | {int 1}: integer notnull
+          |     |           | {arg_list}
+          |     |             | {dot}
+          |     |               | {name basic_table}
+          |     |               | {name id}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+PROC blob_create_incompatible_kind ()
+BEGIN
+  LET z := ( SELECT cql_blob_create(basic_table, kind_string, basic_table.name) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0070: expressions of different kinds can't be mixed: 'cool_text' vs. 'surname'
+
+  {create_proc_stmt}: err
+  | {name blob_create_incompatible_kind}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_create}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name basic_table}
+          |     |         | {arg_list}
+          |     |           | {name kind_string}: err
+          |     |           | {arg_list}
+          |     |             | {dot}
+          |     |               | {name basic_table}
+          |     |               | {name name}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+PROC blob_update_incompatible_kind ()
+BEGIN
+  DECLARE b BLOB;
+  LET z := ( SELECT cql_blob_update(b, kind_string, basic_table.name) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0070: expressions of different kinds can't be mixed: 'cool_text' vs. 'surname'
+
+  {create_proc_stmt}: err
+  | {name blob_update_incompatible_kind}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_vars_type}: blob
+      | | {name_list}: b: blob variable
+      | | | {name b}: b: blob variable
+      | | {type_blob}: blob
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_update}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name b}: b: blob variable
+          |     |         | {arg_list}
+          |     |           | {name kind_string}: err
+          |     |           | {arg_list}
+          |     |             | {dot}
+          |     |               | {name basic_table}
+          |     |               | {name name}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+PROC blob_create_lossy_long ()
+BEGIN
+  LET z := ( SELECT cql_blob_create(basic_table, 1L, basic_table.id) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in num : CQL0242: lossy conversion from type 'LONG' in 1L
+
+  {create_proc_stmt}: err
+  | {name blob_create_lossy_long}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_create}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name basic_table}
+          |     |         | {arg_list}
+          |     |           | {longint 1}: longint notnull
+          |     |           | {arg_list}
+          |     |             | {dot}
+          |     |               | {name basic_table}
+          |     |               | {name id}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+PROC blob_update_lossy_real ()
+BEGIN
+  DECLARE b BLOB;
+  LET z := ( SELECT cql_blob_update(b, 1.5, basic_table.id) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in num : CQL0242: lossy conversion from type 'REAL' in 1.5
+
+  {create_proc_stmt}: err
+  | {name blob_update_lossy_real}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_vars_type}: blob
+      | | {name_list}: b: blob variable
+      | | | {name b}: b: blob variable
+      | | {type_blob}: blob
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_update}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name b}: b: blob variable
+          |     |         | {arg_list}
+          |     |           | {dbl 1.5}: real notnull
+          |     |           | {arg_list}
+          |     |             | {dot}
+          |     |               | {name basic_table}
+          |     |               | {name id}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+PROC blob_call_valid_keys ()
+BEGIN
+  LET b := ( SELECT cql_blob_create(blob_call_columns, 2, blob_call_columns.pk2, 1, blob_call_columns.pk1) );
+  SET b := ( SELECT cql_blob_update(b, 3, blob_call_columns.pk1) );
+  SET b := ( SELECT cql_blob_update(b, 4, blob_call_columns.pk1, 5, blob_call_columns.pk2) );
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name blob_call_valid_keys}: ok dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {let_stmt}: b: blob notnull variable was_set
+      | | {name b}: b: blob notnull variable was_set
+      | | {select_stmt}: _anon: blob notnull
+      |   | {select_core_list}: _select_: { _anon: blob notnull }
+      |   | | {select_core}: _select_: { _anon: blob notnull }
+      |   |   | {select_expr_list_con}: _select_: { _anon: blob notnull }
+      |   |     | {select_expr_list}: _select_: { _anon: blob notnull }
+      |   |     | | {select_expr}: blob notnull
+      |   |     |   | {call}: blob notnull
+      |   |     |     | {name cql_blob_create}: blob notnull
+      |   |     |     | {call_arg_list}
+      |   |     |       | {call_filter_clause}
+      |   |     |       | {arg_list}: ok
+      |   |     |         | {name blob_call_columns}
+      |   |     |         | {arg_list}
+      |   |     |           | {int 2}: integer notnull
+      |   |     |           | {arg_list}
+      |   |     |             | {dot}: integer notnull partial_pk
+      |   |     |             | | {name blob_call_columns}
+      |   |     |             | | {name pk2}
+      |   |     |             | {arg_list}
+      |   |     |               | {int 1}: integer notnull
+      |   |     |               | {arg_list}
+      |   |     |                 | {dot}: integer notnull partial_pk
+      |   |     |                   | {name blob_call_columns}
+      |   |     |                   | {name pk1}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {assign}: b: blob notnull variable was_set
+      | | {name b}: b: blob notnull variable was_set
+      | | {select_stmt}: _anon: blob notnull
+      |   | {select_core_list}: _select_: { _anon: blob notnull }
+      |   | | {select_core}: _select_: { _anon: blob notnull }
+      |   |   | {select_expr_list_con}: _select_: { _anon: blob notnull }
+      |   |     | {select_expr_list}: _select_: { _anon: blob notnull }
+      |   |     | | {select_expr}: blob notnull
+      |   |     |   | {call}: blob notnull
+      |   |     |     | {name cql_blob_update}: blob notnull
+      |   |     |     | {call_arg_list}
+      |   |     |       | {call_filter_clause}
+      |   |     |       | {arg_list}: ok
+      |   |     |         | {name b}: b: blob notnull variable
+      |   |     |         | {arg_list}
+      |   |     |           | {int 3}: integer notnull
+      |   |     |           | {arg_list}
+      |   |     |             | {dot}: integer notnull partial_pk
+      |   |     |               | {name blob_call_columns}
+      |   |     |               | {name pk1}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {assign}: b: blob notnull variable was_set
+        | {name b}: b: blob notnull variable was_set
+        | {select_stmt}: _anon: blob notnull
+          | {select_core_list}: _select_: { _anon: blob notnull }
+          | | {select_core}: _select_: { _anon: blob notnull }
+          |   | {select_expr_list_con}: _select_: { _anon: blob notnull }
+          |     | {select_expr_list}: _select_: { _anon: blob notnull }
+          |     | | {select_expr}: blob notnull
+          |     |   | {call}: blob notnull
+          |     |     | {name cql_blob_update}: blob notnull
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name b}: b: blob notnull variable was_set
+          |     |         | {arg_list}
+          |     |           | {int 4}: integer notnull
+          |     |           | {arg_list}
+          |     |             | {dot}: integer notnull partial_pk
+          |     |             | | {name blob_call_columns}
+          |     |             | | {name pk1}
+          |     |             | {arg_list}
+          |     |               | {int 5}: integer notnull
+          |     |               | {arg_list}
+          |     |                 | {dot}: integer notnull partial_pk
+          |     |                   | {name blob_call_columns}
+          |     |                   | {name pk2}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+PROC blob_call_valid_values ()
+BEGIN
+  LET b := ( SELECT cql_blob_create(blob_call_columns) );
+  SET b := ( SELECT cql_blob_create(blob_call_columns, NULL, blob_call_columns.optional_value, sensitive('secret'), blob_call_columns.secret, 1, blob_call_columns.wide) );
+  SET b := ( SELECT cql_blob_update(b, NULL, blob_call_columns.optional_value, sensitive('new secret'), blob_call_columns.secret, 2, blob_call_columns.wide) );
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name blob_call_valid_values}: ok dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {let_stmt}: b: blob notnull variable was_set
+      | | {name b}: b: blob notnull variable was_set
+      | | {select_stmt}: _anon: blob notnull
+      |   | {select_core_list}: _select_: { _anon: blob notnull }
+      |   | | {select_core}: _select_: { _anon: blob notnull }
+      |   |   | {select_expr_list_con}: _select_: { _anon: blob notnull }
+      |   |     | {select_expr_list}: _select_: { _anon: blob notnull }
+      |   |     | | {select_expr}: blob notnull
+      |   |     |   | {call}: blob notnull
+      |   |     |     | {name cql_blob_create}: blob notnull
+      |   |     |     | {call_arg_list}
+      |   |     |       | {call_filter_clause}
+      |   |     |       | {arg_list}: ok
+      |   |     |         | {name blob_call_columns}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {assign}: b: blob notnull variable was_set
+      | | {name b}: b: blob notnull variable was_set
+      | | {select_stmt}: _anon: blob notnull
+      |   | {select_core_list}: _select_: { _anon: blob notnull }
+      |   | | {select_core}: _select_: { _anon: blob notnull }
+      |   |   | {select_expr_list_con}: _select_: { _anon: blob notnull }
+      |   |     | {select_expr_list}: _select_: { _anon: blob notnull }
+      |   |     | | {select_expr}: blob notnull
+      |   |     |   | {call}: blob notnull
+      |   |     |     | {name cql_blob_create}: blob notnull
+      |   |     |     | {call_arg_list}
+      |   |     |       | {call_filter_clause}
+      |   |     |       | {arg_list}: ok
+      |   |     |         | {name blob_call_columns}
+      |   |     |         | {arg_list}
+      |   |     |           | {null}: null
+      |   |     |           | {arg_list}
+      |   |     |             | {dot}: integer
+      |   |     |             | | {name blob_call_columns}
+      |   |     |             | | {name optional_value}
+      |   |     |             | {arg_list}
+      |   |     |               | {call}: text notnull sensitive
+      |   |     |               | | {name sensitive}: text notnull sensitive
+      |   |     |               | | {call_arg_list}
+      |   |     |               |   | {call_filter_clause}
+      |   |     |               |   | {arg_list}: ok
+      |   |     |               |     | {strlit 'secret'}: text notnull
+      |   |     |               | {arg_list}
+      |   |     |                 | {dot}: text sensitive
+      |   |     |                 | | {name blob_call_columns}
+      |   |     |                 | | {name secret}
+      |   |     |                 | {arg_list}
+      |   |     |                   | {int 1}: integer notnull
+      |   |     |                   | {arg_list}
+      |   |     |                     | {dot}: longint
+      |   |     |                       | {name blob_call_columns}
+      |   |     |                       | {name wide}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {assign}: b: blob notnull variable was_set
+        | {name b}: b: blob notnull variable was_set
+        | {select_stmt}: _anon: blob notnull
+          | {select_core_list}: _select_: { _anon: blob notnull }
+          | | {select_core}: _select_: { _anon: blob notnull }
+          |   | {select_expr_list_con}: _select_: { _anon: blob notnull }
+          |     | {select_expr_list}: _select_: { _anon: blob notnull }
+          |     | | {select_expr}: blob notnull
+          |     |   | {call}: blob notnull
+          |     |     | {name cql_blob_update}: blob notnull
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name b}: b: blob notnull variable was_set
+          |     |         | {arg_list}
+          |     |           | {null}: null
+          |     |           | {arg_list}
+          |     |             | {dot}: integer
+          |     |             | | {name blob_call_columns}
+          |     |             | | {name optional_value}
+          |     |             | {arg_list}
+          |     |               | {call}: text notnull sensitive
+          |     |               | | {name sensitive}: text notnull sensitive
+          |     |               | | {call_arg_list}
+          |     |               |   | {call_filter_clause}
+          |     |               |   | {arg_list}: ok
+          |     |               |     | {strlit 'new secret'}: text notnull
+          |     |               | {arg_list}
+          |     |                 | {dot}: text sensitive
+          |     |                 | | {name blob_call_columns}
+          |     |                 | | {name secret}
+          |     |                 | {arg_list}
+          |     |                   | {int 2}: integer notnull
+          |     |                   | {arg_list}
+          |     |                     | {dot}: longint
+          |     |                       | {name blob_call_columns}
+          |     |                       | {name wide}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+PROC blob_call_matching_kinds ()
+BEGIN
+  DECLARE matching_name TEXT<cool_text>;
+  LET b := ( SELECT cql_blob_create(basic_table, matching_name, basic_table.name) );
+  SET b := ( SELECT cql_blob_update(b, matching_name, basic_table.name) );
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name blob_call_matching_kinds}: ok dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: text<cool_text>
+      | | {name_list}: matching_name: text<cool_text> variable
+      | | | {name matching_name}: matching_name: text<cool_text> variable
+      | | {type_text}: text<cool_text>
+      |   | {name cool_text}
+      | {let_stmt}: b: blob notnull variable was_set
+      | | {name b}: b: blob notnull variable was_set
+      | | {select_stmt}: _anon: blob notnull
+      |   | {select_core_list}: _select_: { _anon: blob notnull }
+      |   | | {select_core}: _select_: { _anon: blob notnull }
+      |   |   | {select_expr_list_con}: _select_: { _anon: blob notnull }
+      |   |     | {select_expr_list}: _select_: { _anon: blob notnull }
+      |   |     | | {select_expr}: blob notnull
+      |   |     |   | {call}: blob notnull
+      |   |     |     | {name cql_blob_create}: blob notnull
+      |   |     |     | {call_arg_list}
+      |   |     |       | {call_filter_clause}
+      |   |     |       | {arg_list}: ok
+      |   |     |         | {name basic_table}
+      |   |     |         | {arg_list}
+      |   |     |           | {name matching_name}: matching_name: text<cool_text> variable
+      |   |     |           | {arg_list}
+      |   |     |             | {dot}: text<cool_text>
+      |   |     |               | {name basic_table}
+      |   |     |               | {name name}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {assign}: b: blob notnull variable was_set
+        | {name b}: b: blob notnull variable was_set
+        | {select_stmt}: _anon: blob notnull
+          | {select_core_list}: _select_: { _anon: blob notnull }
+          | | {select_core}: _select_: { _anon: blob notnull }
+          |   | {select_expr_list_con}: _select_: { _anon: blob notnull }
+          |     | {select_expr_list}: _select_: { _anon: blob notnull }
+          |     | | {select_expr}: blob notnull
+          |     |   | {call}: blob notnull
+          |     |     | {name cql_blob_update}: blob notnull
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name b}: b: blob notnull variable
+          |     |         | {arg_list}
+          |     |           | {name matching_name}: matching_name: text<cool_text> variable
+          |     |           | {arg_list}
+          |     |             | {dot}: text<cool_text>
+          |     |               | {name basic_table}
+          |     |               | {name name}
           |     | {select_from_etc}: ok
           |       | {select_where}
           |         | {select_groupby}

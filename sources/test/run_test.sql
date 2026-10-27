@@ -7416,6 +7416,35 @@ begin
   EXPECT!(not C);
 end);
 
+TEST!(backed_blob_direct_calls,
+begin
+  -- Distinct key values make field swaps visible. Creation must supply the
+  -- complete key, but updates may change one field or use a different order.
+  let k := (select cql_blob_create(backed_table_with_defaults,
+    1, backed_table_with_defaults.pk1, 2, backed_table_with_defaults.pk2));
+  EXPECT_EQ!((select cql_blob_get(k, backed_table_with_defaults.pk1)), 1);
+  EXPECT_EQ!((select cql_blob_get(k, backed_table_with_defaults.pk2)), 2);
+  k := (select cql_blob_update(k, 3, backed_table_with_defaults.pk2));
+  EXPECT_EQ!((select cql_blob_get(k, backed_table_with_defaults.pk1)), 1);
+  EXPECT_EQ!((select cql_blob_get(k, backed_table_with_defaults.pk2)), 3);
+  k := (select cql_blob_update(k,
+    4, backed_table_with_defaults.pk2, 5, backed_table_with_defaults.pk1));
+  EXPECT_EQ!((select cql_blob_get(k, backed_table_with_defaults.pk1)), 5);
+  EXPECT_EQ!((select cql_blob_get(k, backed_table_with_defaults.pk2)), 4);
+
+  -- Value blobs remain sparse. Direct creation does not fill column defaults,
+  -- so an absent x must stay NULL through creation and a later partial update.
+  let v := (select cql_blob_create(backed_table_with_defaults));
+  EXPECT_EQ!((select cql_blob_get(v, backed_table_with_defaults.x)), null);
+  v := (select cql_blob_create(backed_table_with_defaults, 11, backed_table_with_defaults.y));
+  EXPECT_EQ!((select cql_blob_get(v, backed_table_with_defaults.x)), null);
+  EXPECT_EQ!((select cql_blob_get(v, backed_table_with_defaults.y)), 11);
+  v := (select cql_blob_update(v,
+    null, backed_table_with_defaults.x, 12, backed_table_with_defaults.y));
+  EXPECT_EQ!((select cql_blob_get(v, backed_table_with_defaults.x)), null);
+  EXPECT_EQ!((select cql_blob_get(v, backed_table_with_defaults.y)), 12);
+end);
+
 -- the backing table was defined above already
 [[backed_by=backing]]
 create table mixed_backed(

@@ -4153,16 +4153,7 @@ Example:
 
 -----
 
-### CQL0257: argument must be a string or numeric in 'function'
-
-The indicated function (usually min or max) only works on strings and numerics.
-`NULL` literals, blobs, or objects are not allowed in this context.
-
-Example:
-```sql
-DECLARE obj OBJECT;
-SELECT MAX(obj) FROM foo;  -- Error: MAX doesn't work with objects
-```
+### CQL0257 available for re-use
 
 -----
 
@@ -7984,6 +7975,12 @@ backed_by attributes applies extra checks to tables to ensure they are suitable
 candidates.
 
 This error indicates that the named table is not marked as a backed table.
+
+For direct `cql_blob_create` and `cql_blob_update` calls, this code also reports
+inconsistent backed tables or mixing key and value columns in one call.
+Key creation additionally requires every primary-key column exactly once, in
+declared primary-key order, because positional storage assumes that layout.
+Partial-key updates and sparse or empty value-blob creation remain valid.
 
 -----
 

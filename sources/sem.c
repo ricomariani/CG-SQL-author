@@ -8788,6 +8788,8 @@ static void sem_func_jsonb_array(ast_node *ast, uint32_t arg_count) {
 static void sem_func_json_item_path_helper(ast_node *ast, uint32_t arg_count, sem_t sem_type_result) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
 
   // json functions can only appear inside of SQL, they are rewritten if elsewhere
   Contract(sem_validate_appear_inside_sql_stmt(ast));
@@ -8796,12 +8798,15 @@ static void sem_func_json_item_path_helper(ast_node *ast, uint32_t arg_count, se
     return;
   }
 
-  if (arg_count == 1) {
-    sem_type_result |= SEM_TYPE_NOTNULL;
-  }
+  // Kind is not preserved: the result is a length or type name, not a value
+  // of the JSON input's kind.
+  name_ast->sem = ast->sem = new_sem_std(sem_type_result, arg_list);
 
-  // kind is not preserved
-  name_ast->sem = ast->sem = new_sem(sem_type_result);
+  // A missing path can return NULL even with nonnull arguments, so clear the
+  // NOT NULL flag inferred by new_sem_std for path forms, retaining sensitivity.
+  if (arg_count == 2) {
+    copy_nullability(ast, 0);
+  }
 }
 
 static void sem_func_json_array_length(ast_node *ast, uint32_t arg_count) {
@@ -8826,8 +8831,9 @@ static void sem_func_json_error_position(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
-  // kind is not preserved, there is normally more than one
-  name_ast->sem = ast->sem = new_sem(SEM_TYPE_INTEGER | SEM_TYPE_NOTNULL);
+  // Kind is not preserved: an error offset is not a value of the input's kind.
+  // NULL input stays NULL; valid JSON instead returns error position zero.
+  name_ast->sem = ast->sem = new_sem_std(SEM_TYPE_INTEGER, arg_list);
 }
 
 // helper for json_extract() jsonb_extract() as well as json_remove() and jsonb_remove()

@@ -29,6 +29,10 @@ create table sqlite_master (
 
 create table identifier_host (value int);
 
+-- This ordinary SQL name deliberately matches a quoted table's internal name.
+-- A raw-name DROP must not remove it instead of `deleted recreate table`.
+create table X_deletedX20recreateX20table (value int);
+
 create table g1(id integer primary key, name text);
 
 create proc prepare_recreate_crc_test(old_version long!)
@@ -89,6 +93,24 @@ begin
   -- Seed unmanaged objects before an exclusive upgrade; verification runs after it.
   create table identifier_host (value int);
   insert into identifier_host values (42);
+  create table X_deletedX20recreateX20table (value int);
+  insert into X_deletedX20recreateX20table values (42);
+
+  -- The V4 tombstones/unsubscriptions must remove these exact physical names.
+  -- Seed them explicitly so a wrong DROP cannot pass just because they are absent.
+  declare tables cursor for select 'deleted recreate table' name
+    union all select 'unsub recreate table' name
+    union all select 'select' name
+    union all select 'from' name
+    union all select 'deleted recreate]bracket' name
+    union all select 'unsub recreate"quote' name
+    union all select 'deleted recreate`tick' name;
+  loop fetch tables
+  begin
+    call cql_exec_internal(printf('CREATE TABLE "%s"(value)',
+      replace(tables.name, '"', '""')));
+  end;
+
   declare names cursor for select ']bracket' suffix
     union all select '"quote' suffix;
   loop fetch names
@@ -108,6 +130,13 @@ end;
 
 create proc verify_quoted_schema_drops()
 begin
+  if (select exists(select 1 from sqlite_master where name in (
+    'deleted recreate table', 'unsub recreate table', 'select', 'from',
+    'deleted recreate]bracket', 'unsub recreate"quote', 'deleted recreate`tick'))) then
+    printf_stderr("ERROR! quoted deleted/unsubscribed recreate tables were not dropped\n");
+    throw;
+  end if;
+
   if (select exists(select 1 from sqlite_master
     where name in ('identifier_view]bracket', 'identifier_view"quote',
       'identifier_trigger]bracket', 'identifier_trigger"quote',
@@ -115,7 +144,14 @@ begin
     printf_stderr("ERROR! quoted schema objects were not dropped\n");
     throw;
   end if;
-  -- This table is intentionally outside the managed schema and must survive.
+  -- These tables are outside the managed schema and must survive. In particular,
+  -- the encoded lookalike catches a DROP that targets the compiler's internal name.
+  if (select count(*) from X_deletedX20recreateX20table) != 1 or
+     (select value from X_deletedX20recreateX20table) != 42 then
+    printf_stderr("ERROR! recreate drops modified the encoded-name lookalike\n");
+    throw;
+  end if;
+  drop table X_deletedX20recreateX20table;
   if (select count(*) from identifier_host) != 1 or
      (select value from identifier_host) != 42 then
     printf_stderr("ERROR! schema drops modified unrelated data\n");

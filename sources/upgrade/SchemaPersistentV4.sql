@@ -101,6 +101,22 @@ CREATE TABLE g6(
   id INTEGER PRIMARY KEY REFERENCES g2(id)
 ) @recreate(gr6);
 
+-- Spaces/punctuation require decoding the internal identifier; bare keywords
+-- need quoting even when their internal spelling has no encoded characters.
+-- Cover standalone deletion/unsubscription as well as a shared recreate group.
+CREATE TABLE `deleted recreate table`(id INTEGER) @recreate @delete;
+CREATE TABLE `unsub recreate table`(id INTEGER) @recreate;
+@unsub(`unsub recreate table`);
+
+CREATE TABLE `select`(id INTEGER) @recreate(quoted_recreate_group) @delete;
+CREATE TABLE `from`(id INTEGER) @recreate(quoted_recreate_group);
+@unsub(`from`);
+
+CREATE TABLE `deleted recreate]bracket`(id INTEGER) @recreate(quoted_recreate_group) @delete;
+CREATE TABLE `unsub recreate"quote`(id INTEGER) @recreate(quoted_recreate_group);
+@unsub(`unsub recreate"quote`);
+CREATE TABLE `deleted recreate``tick`(id INTEGER) @recreate(quoted_recreate_group) @delete;
+
 -- deleted in version 3
 CREATE TABLE test_this_table_will_become_create(
   id integer primary key

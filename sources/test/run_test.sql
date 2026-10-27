@@ -7866,6 +7866,42 @@ begin
   EXPECT!(not D);
 end);
 
+-- Use bundled SQLite so JSON availability does not depend on the system library.
+TEST_MODERN_ONLY!(json_scalar_nullability,
+begin
+  declare document text;
+  cursor C for select json_array_length(document) array_length,
+                      json_type(document) value_type,
+                      json_error_position(document) error_position;
+  fetch C;
+  EXPECT!(C);
+  -- nullable() lets the regression execute even with the old, incorrect
+  -- NOT NULL types, exposing integer NULLs fetched as zero rather than NULL.
+  EXPECT_EQ!(nullable(C.array_length), null);
+  EXPECT_EQ!(nullable(C.value_type), null);
+  EXPECT_EQ!(nullable(C.error_position), null);
+
+  -- A one-element array supplies non-NULL controls: length 1, type "array",
+  -- and error position 0, which means valid JSON rather than SQL NULL.
+  cursor D for select json_array_length('[1]') array_length,
+                      json_type('[1]') value_type,
+                      json_error_position('[1]') error_position;
+  fetch D;
+  EXPECT!(D);
+  EXPECT_EQ!(D.array_length, 1);
+  EXPECT_EQ!(D.value_type, 'array');
+  EXPECT_EQ!(D.error_position, 0);
+
+  -- Non-NULL document and path do not guarantee a result: a missing member
+  -- produces SQL NULL for both path-taking functions.
+  cursor P for select json_array_length('{}', '$.missing') array_length,
+                      json_type('{}', '$.missing') value_type;
+  fetch P;
+  EXPECT!(P);
+  EXPECT_EQ!(P.array_length, null);
+  EXPECT_EQ!(P.value_type, null);
+end);
+
 proc make_json_backed_schema()
 begin
   [[backing_table]]

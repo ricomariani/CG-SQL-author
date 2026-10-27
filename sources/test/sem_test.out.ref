@@ -95764,6 +95764,160 @@ SELECT json_array_length('', '$.x');
 
 The statement ending at line XXXX
 
+SELECT json_array_length(nullable('[]'));
+
+  {select_stmt}: _select_: { _anon: integer }
+  | {select_core_list}: _select_: { _anon: integer }
+  | | {select_core}: _select_: { _anon: integer }
+  |   | {select_expr_list_con}: _select_: { _anon: integer }
+  |     | {select_expr_list}: _select_: { _anon: integer }
+  |     | | {select_expr}: integer
+  |     |   | {call}: integer
+  |     |     | {name json_array_length}: integer
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {call}: text
+  |     |           | {name nullable}: text
+  |     |           | {call_arg_list}
+  |     |             | {call_filter_clause}
+  |     |             | {arg_list}: ok
+  |     |               | {strlit '[]'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT json_array_length(sensitive('[]'));
+
+  {select_stmt}: _select_: { _anon: integer notnull sensitive }
+  | {select_core_list}: _select_: { _anon: integer notnull sensitive }
+  | | {select_core}: _select_: { _anon: integer notnull sensitive }
+  |   | {select_expr_list_con}: _select_: { _anon: integer notnull sensitive }
+  |     | {select_expr_list}: _select_: { _anon: integer notnull sensitive }
+  |     | | {select_expr}: integer notnull sensitive
+  |     |   | {call}: integer notnull sensitive
+  |     |     | {name json_array_length}: integer notnull sensitive
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {call}: text notnull sensitive
+  |     |           | {name sensitive}: text notnull sensitive
+  |     |           | {call_arg_list}
+  |     |             | {call_filter_clause}
+  |     |             | {arg_list}: ok
+  |     |               | {strlit '[]'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT json_array_length(sensitive(nullable('[]')));
+
+  {select_stmt}: _select_: { _anon: integer sensitive }
+  | {select_core_list}: _select_: { _anon: integer sensitive }
+  | | {select_core}: _select_: { _anon: integer sensitive }
+  |   | {select_expr_list_con}: _select_: { _anon: integer sensitive }
+  |     | {select_expr_list}: _select_: { _anon: integer sensitive }
+  |     | | {select_expr}: integer sensitive
+  |     |   | {call}: integer sensitive
+  |     |     | {name json_array_length}: integer sensitive
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {call}: text sensitive
+  |     |           | {name sensitive}: text sensitive
+  |     |           | {call_arg_list}
+  |     |             | {call_filter_clause}
+  |     |             | {arg_list}: ok
+  |     |               | {call}: text
+  |     |                 | {name nullable}: text
+  |     |                 | {call_arg_list}
+  |     |                   | {call_filter_clause}
+  |     |                   | {arg_list}: ok
+  |     |                     | {strlit '[]'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT json_array_length(sensitive('{}'), '$.missing');
+
+  {select_stmt}: _select_: { _anon: integer sensitive }
+  | {select_core_list}: _select_: { _anon: integer sensitive }
+  | | {select_core}: _select_: { _anon: integer sensitive }
+  |   | {select_expr_list_con}: _select_: { _anon: integer sensitive }
+  |     | {select_expr_list}: _select_: { _anon: integer sensitive }
+  |     | | {select_expr}: integer sensitive
+  |     |   | {call}: integer sensitive
+  |     |     | {name json_array_length}: integer sensitive
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {call}: text notnull sensitive
+  |     |         | | {name sensitive}: text notnull sensitive
+  |     |         | | {call_arg_list}
+  |     |         |   | {call_filter_clause}
+  |     |         |   | {arg_list}: ok
+  |     |         |     | {strlit '{}'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {strlit '$.missing'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT json_array_length('{}', sensitive('$.missing'));
+
+  {select_stmt}: _select_: { _anon: integer sensitive }
+  | {select_core_list}: _select_: { _anon: integer sensitive }
+  | | {select_core}: _select_: { _anon: integer sensitive }
+  |   | {select_expr_list_con}: _select_: { _anon: integer sensitive }
+  |     | {select_expr_list}: _select_: { _anon: integer sensitive }
+  |     | | {select_expr}: integer sensitive
+  |     |   | {call}: integer sensitive
+  |     |     | {name json_array_length}: integer sensitive
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '{}'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {call}: text notnull sensitive
+  |     |             | {name sensitive}: text notnull sensitive
+  |     |             | {call_arg_list}
+  |     |               | {call_filter_clause}
+  |     |               | {arg_list}: ok
+  |     |                 | {strlit '$.missing'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
 SELECT json_array_length('', '$.x', '');
 
 test/sem_test.sql:XXXX:1: error: in call : CQL0079: too many arguments in function 'json_array_length'
@@ -95889,6 +96043,98 @@ SELECT json_error_position('');
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
   |     |         | {strlit ''}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT json_error_position(nullable('{}'));
+
+  {select_stmt}: _select_: { _anon: integer }
+  | {select_core_list}: _select_: { _anon: integer }
+  | | {select_core}: _select_: { _anon: integer }
+  |   | {select_expr_list_con}: _select_: { _anon: integer }
+  |     | {select_expr_list}: _select_: { _anon: integer }
+  |     | | {select_expr}: integer
+  |     |   | {call}: integer
+  |     |     | {name json_error_position}: integer
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {call}: text
+  |     |           | {name nullable}: text
+  |     |           | {call_arg_list}
+  |     |             | {call_filter_clause}
+  |     |             | {arg_list}: ok
+  |     |               | {strlit '{}'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT json_error_position(sensitive('{}'));
+
+  {select_stmt}: _select_: { _anon: integer notnull sensitive }
+  | {select_core_list}: _select_: { _anon: integer notnull sensitive }
+  | | {select_core}: _select_: { _anon: integer notnull sensitive }
+  |   | {select_expr_list_con}: _select_: { _anon: integer notnull sensitive }
+  |     | {select_expr_list}: _select_: { _anon: integer notnull sensitive }
+  |     | | {select_expr}: integer notnull sensitive
+  |     |   | {call}: integer notnull sensitive
+  |     |     | {name json_error_position}: integer notnull sensitive
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {call}: text notnull sensitive
+  |     |           | {name sensitive}: text notnull sensitive
+  |     |           | {call_arg_list}
+  |     |             | {call_filter_clause}
+  |     |             | {arg_list}: ok
+  |     |               | {strlit '{}'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT json_error_position(sensitive(nullable('{}')));
+
+  {select_stmt}: _select_: { _anon: integer sensitive }
+  | {select_core_list}: _select_: { _anon: integer sensitive }
+  | | {select_core}: _select_: { _anon: integer sensitive }
+  |   | {select_expr_list_con}: _select_: { _anon: integer sensitive }
+  |     | {select_expr_list}: _select_: { _anon: integer sensitive }
+  |     | | {select_expr}: integer sensitive
+  |     |   | {call}: integer sensitive
+  |     |     | {name json_error_position}: integer sensitive
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {call}: text sensitive
+  |     |           | {name sensitive}: text sensitive
+  |     |           | {call_arg_list}
+  |     |             | {call_filter_clause}
+  |     |             | {arg_list}: ok
+  |     |               | {call}: text
+  |     |                 | {name nullable}: text
+  |     |                 | {call_arg_list}
+  |     |                   | {call_filter_clause}
+  |     |                   | {arg_list}: ok
+  |     |                     | {strlit '{}'}: text notnull
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -97052,6 +97298,160 @@ SELECT json_type('[]', '$.x');
   |     |         | {strlit '[]'}: text notnull
   |     |         | {arg_list}
   |     |           | {strlit '$.x'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT json_type(nullable('[]'));
+
+  {select_stmt}: _select_: { _anon: text }
+  | {select_core_list}: _select_: { _anon: text }
+  | | {select_core}: _select_: { _anon: text }
+  |   | {select_expr_list_con}: _select_: { _anon: text }
+  |     | {select_expr_list}: _select_: { _anon: text }
+  |     | | {select_expr}: text
+  |     |   | {call}: text
+  |     |     | {name json_type}: text
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {call}: text
+  |     |           | {name nullable}: text
+  |     |           | {call_arg_list}
+  |     |             | {call_filter_clause}
+  |     |             | {arg_list}: ok
+  |     |               | {strlit '[]'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT json_type(sensitive('[]'));
+
+  {select_stmt}: _select_: { _anon: text notnull sensitive }
+  | {select_core_list}: _select_: { _anon: text notnull sensitive }
+  | | {select_core}: _select_: { _anon: text notnull sensitive }
+  |   | {select_expr_list_con}: _select_: { _anon: text notnull sensitive }
+  |     | {select_expr_list}: _select_: { _anon: text notnull sensitive }
+  |     | | {select_expr}: text notnull sensitive
+  |     |   | {call}: text notnull sensitive
+  |     |     | {name json_type}: text notnull sensitive
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {call}: text notnull sensitive
+  |     |           | {name sensitive}: text notnull sensitive
+  |     |           | {call_arg_list}
+  |     |             | {call_filter_clause}
+  |     |             | {arg_list}: ok
+  |     |               | {strlit '[]'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT json_type(sensitive(nullable('[]')));
+
+  {select_stmt}: _select_: { _anon: text sensitive }
+  | {select_core_list}: _select_: { _anon: text sensitive }
+  | | {select_core}: _select_: { _anon: text sensitive }
+  |   | {select_expr_list_con}: _select_: { _anon: text sensitive }
+  |     | {select_expr_list}: _select_: { _anon: text sensitive }
+  |     | | {select_expr}: text sensitive
+  |     |   | {call}: text sensitive
+  |     |     | {name json_type}: text sensitive
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {call}: text sensitive
+  |     |           | {name sensitive}: text sensitive
+  |     |           | {call_arg_list}
+  |     |             | {call_filter_clause}
+  |     |             | {arg_list}: ok
+  |     |               | {call}: text
+  |     |                 | {name nullable}: text
+  |     |                 | {call_arg_list}
+  |     |                   | {call_filter_clause}
+  |     |                   | {arg_list}: ok
+  |     |                     | {strlit '[]'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT json_type(sensitive('{}'), '$.missing');
+
+  {select_stmt}: _select_: { _anon: text sensitive }
+  | {select_core_list}: _select_: { _anon: text sensitive }
+  | | {select_core}: _select_: { _anon: text sensitive }
+  |   | {select_expr_list_con}: _select_: { _anon: text sensitive }
+  |     | {select_expr_list}: _select_: { _anon: text sensitive }
+  |     | | {select_expr}: text sensitive
+  |     |   | {call}: text sensitive
+  |     |     | {name json_type}: text sensitive
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {call}: text notnull sensitive
+  |     |         | | {name sensitive}: text notnull sensitive
+  |     |         | | {call_arg_list}
+  |     |         |   | {call_filter_clause}
+  |     |         |   | {arg_list}: ok
+  |     |         |     | {strlit '{}'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {strlit '$.missing'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT json_type('{}', sensitive('$.missing'));
+
+  {select_stmt}: _select_: { _anon: text sensitive }
+  | {select_core_list}: _select_: { _anon: text sensitive }
+  | | {select_core}: _select_: { _anon: text sensitive }
+  |   | {select_expr_list_con}: _select_: { _anon: text sensitive }
+  |     | {select_expr_list}: _select_: { _anon: text sensitive }
+  |     | | {select_expr}: text sensitive
+  |     |   | {call}: text sensitive
+  |     |     | {name json_type}: text sensitive
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '{}'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {call}: text notnull sensitive
+  |     |             | {name sensitive}: text notnull sensitive
+  |     |             | {call_arg_list}
+  |     |               | {call_filter_clause}
+  |     |               | {arg_list}: ok
+  |     |                 | {strlit '$.missing'}: text notnull
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}

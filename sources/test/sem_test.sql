@@ -25143,6 +25143,38 @@ select json_array_length('');
 -- - error:
 select json_array_length('', '$.x');
 
+-- TEST: one-argument json_array_length can return NULL with nullable input
+-- + {call}: integer
+-- - {call}: integer notnull
+-- + {name json_array_length}: integer
+-- - error:
+select json_array_length(nullable('[]'));
+
+-- TEST: array length can reveal sensitive JSON contents even when nonnull
+-- + {call}: integer notnull sensitive
+-- + {name json_array_length}: integer notnull sensitive
+-- - error:
+select json_array_length(sensitive('[]'));
+
+-- TEST: json_array_length preserves nullability and sensitivity together
+-- + {call}: integer sensitive
+-- + {name json_array_length}: integer sensitive
+-- - error:
+select json_array_length(sensitive(nullable('[]')));
+
+-- TEST: path-taking array length preserves sensitivity from the JSON input
+-- Missing members can yield NULL even though both arguments are nonnull.
+-- + {call}: integer sensitive
+-- + {name json_array_length}: integer sensitive
+-- - error:
+select json_array_length(sensitive('{}'), '$.missing');
+
+-- TEST: array length also reveals which sensitive path was requested
+-- + {call}: integer sensitive
+-- + {name json_array_length}: integer sensitive
+-- - error:
+select json_array_length('{}', sensitive('$.missing'));
+
 -- TEST: json function for JSON array_length with too many args
 -- + error: % too many arguments in function 'json_array_length'
 -- + {call}: err
@@ -25173,6 +25205,25 @@ select json_array_length('x', 1);
 -- + {name json_error_position}: integer notnull
 -- - error:
 select json_error_position('');
+
+-- TEST: json_error_position preserves NULL input rather than promising zero
+-- + {call}: integer
+-- - {call}: integer notnull
+-- + {name json_error_position}: integer
+-- - error:
+select json_error_position(nullable('{}'));
+
+-- TEST: error positions reveal information about sensitive JSON contents
+-- + {call}: integer notnull sensitive
+-- + {name json_error_position}: integer notnull sensitive
+-- - error:
+select json_error_position(sensitive('{}'));
+
+-- TEST: json_error_position preserves nullability and sensitivity together
+-- + {call}: integer sensitive
+-- + {name json_error_position}: integer sensitive
+-- - error:
+select json_error_position(sensitive(nullable('{}')));
 
 -- TEST: json function for JSON error_position with too many args
 -- + error: % too many arguments in function 'json_error_position'
@@ -25434,6 +25485,38 @@ select json_type('[]');
 -- + {name json_type}: text
 -- - error:
 select json_type('[]', '$.x');
+
+-- TEST: one-argument json_type preserves NULL input
+-- + {call}: text
+-- - {call}: text notnull
+-- + {name json_type}: text
+-- - error:
+select json_type(nullable('[]'));
+
+-- TEST: a nonnull JSON type still reveals information about sensitive input
+-- + {call}: text notnull sensitive
+-- + {name json_type}: text notnull sensitive
+-- - error:
+select json_type(sensitive('[]'));
+
+-- TEST: json_type preserves nullability and sensitivity together
+-- + {call}: text sensitive
+-- + {name json_type}: text sensitive
+-- - error:
+select json_type(sensitive(nullable('[]')));
+
+-- TEST: path-taking json_type preserves sensitivity from the JSON input
+-- Missing members can yield NULL even though both arguments are nonnull.
+-- + {call}: text sensitive
+-- + {name json_type}: text sensitive
+-- - error:
+select json_type(sensitive('{}'), '$.missing');
+
+-- TEST: json_type also reveals which sensitive path was requested
+-- + {call}: text sensitive
+-- + {name json_type}: text sensitive
+-- - error:
+select json_type('{}', sensitive('$.missing'));
 
 -- TEST: json function for json_valid()
 -- + {select_stmt}: _select_: { _anon: bool notnull }

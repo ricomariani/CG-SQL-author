@@ -820,6 +820,37 @@ Looking closely at the above we see a few things:
 * `_vals` once again just has the exact unchanged insert clause
 * the `insert into backing(k, v)` part is identical, the same recipe always works
 
+#### Direct Blob Creation and Update Calls
+
+The compiler normally generates `cql_blob_create` and `cql_blob_update` when
+rewriting backed-table DML, but they can also be called directly inside SQL.
+Both forms enforce the following rules before expanding to the configured
+`b*` helpers (or JSON/JSONB operations):
+
+* Each value must be assignment-compatible with its column, including domain
+  kind, nullability, sensitivity, and safe numeric conversion. Nullable values
+  cannot populate `NOT NULL` columns; sensitive values require sensitive
+  columns. Numeric narrowing requires an explicit conversion.
+* All column specifications must name the same backed table and the same
+  partition: either primary-key columns or value columns, never both. The first
+  column selects the operation, so mixing partitions would address the wrong
+  blob layout.
+* A column may appear only once per call. Column names are case-insensitive.
+* Key creation must supply **every primary-key column in declared primary-key
+  order**, which may differ from physical column order. Positional key storage
+  assumes that layout; missing or reordered fields would create the wrong key.
+
+Value-blob creation remains sparse: it may supply any subset of value columns,
+in any order, or no columns (`cql_blob_create(backed_table)`). Direct creation
+does not supply omitted column defaults. Updates must supply at least one
+value/column pair, but may update any subset of either partition in any order;
+they need not supply a complete key because each updated field has an explicit
+offset or hash. The existing blob argument must correspond to that partition;
+these compile-time checks do not inspect arbitrary blob contents.
+
+These are compiler-side checks on the wrappers, not changes to the blob format
+or the runtime `b*` function interfaces.
+
 #### Deleting From a Backed Table
 
 Again, we begin with a simple example:

@@ -7934,6 +7934,125 @@ static void sem_special_func_cql_blob_get_type(ast_node *ast, uint32_t arg_count
   name_ast->sem = ast->sem = new_sem_std(SEM_TYPE_LONG_INTEGER, arg_list->right);
 }
 
+enum {
+  BLOB_COLUMNS_UPDATE = 0,
+  BLOB_COLUMNS_CREATE = 1,
+};
+
+// Direct calls must enforce the same column assignments as rewritten DML:
+// nullability, sensitivity, safe numeric conversion, and domain kinds, not
+// merely broad type compatibility.
+// One call addresses one key/value partition: code generation selects the
+// operation from the first column and assumes every later column belongs there.
+// Duplicate fields would give the blob an ambiguous layout or repeated updates.
+static bool_t sem_validate_blob_columns(
+  ast_node *ast,
+  ast_node *backed_table_ast,
+  ast_node *args,
+  uint32_t flags)
+{
+  bool_t creating = flags & BLOB_COLUMNS_CREATE;
+  CSTR function_name = creating ? "cql_blob_create" : "cql_blob_update";
+  CSTR assignment_subject = creating ? "cql_blob_create" : "cql_blob_update value";
+  sem_struct *sptr = backed_table_ast->sem->sptr;
+  table_node *table_info = backed_table_ast->sem->table_info;
+  Invariant(table_info);
+  symtab *seen_columns = symtab_new();
+  uint32_t column_count = 0;
+  bool_t key_partition = false;
+
+  // Both callers have checked the argument count, so value/column pairs exist.
+  for (ast_node *next_arg = args; next_arg; next_arg = next_arg->right->right) {
+    EXTRACT_ANY_NOTNULL(val_expr, next_arg->left);
+    EXTRACT_ANY_NOTNULL(table_expr, next_arg->right->left);
+
+    sem_expr(val_expr);
+    if (is_error(val_expr)) {
+      goto error;
+    }
+
+    if (!is_ast_dot(table_expr) || !is_ast_str(table_expr->left) || !is_ast_str(table_expr->right)) {
+      report_error(table_expr, "CQL0490: argument must be table.column where table is a backed table", function_name);
+      goto error;
+    }
+
+    EXTRACT_STRING(t_name, table_expr->left);
+    EXTRACT_STRING(c_name, table_expr->right);
+    ast_node *table_ast = find_usable_and_not_deleted_table_or_view(
+      t_name, table_expr->left, "CQL0095: table/view not defined");
+    if (!table_ast) {
+      goto error;
+    }
+
+    if (backed_table_ast != table_ast) {
+      CSTR message = dup_printf(
+        "CQL0488: the indicated table is not consistently used through all of %s", function_name);
+      report_error(table_expr, message, t_name);
+      goto error;
+    }
+
+    int32_t column_index = find_col_in_sptr(sptr, c_name);
+    if (column_index < 0) {
+      report_error(table_expr, "CQL0489: the indicated column is not present in the named backed storage",
+        dup_printf("%s.%s", t_name, c_name));
+      goto error;
+    }
+
+    sem_t sem_type = sptr->semtypes[column_index];
+    bool_t is_key = is_primary_key(sem_type) || is_partial_pk(sem_type);
+    if (!column_count) {
+      key_partition = is_key;
+    }
+    else if (key_partition != is_key) {
+      CSTR message = dup_printf("CQL0488: key and value columns may not be mixed in %s", function_name);
+      report_error(table_expr, message, c_name);
+      goto error;
+    }
+
+    if (!symtab_add(seen_columns, c_name, NULL)) {
+      report_error(table_expr, "CQL0206: duplicate name in list", c_name);
+      goto error;
+    }
+
+    // Key creation is positional, unlike sparse value creation and updates:
+    // enforce declared primary-key order so fields cannot be silently swapped.
+    if (creating && key_partition &&
+        (column_count >= (uint32_t)table_info->key_count || table_info->key_cols[column_count] != column_index)) {
+      report_error(table_expr,
+        "CQL0488: key columns must appear exactly once in primary key order in cql_blob_create", c_name);
+      goto error;
+    }
+
+    if (!sem_verify_assignment(val_expr, sem_type, val_expr->sem->sem_type, assignment_subject)) {
+      goto error;
+    }
+    sem_combine_kinds(val_expr, sptr->kinds[column_index]);
+    if (is_error(val_expr)) {
+      goto error;
+    }
+
+    table_expr->sem = new_sem(sem_type);
+    table_expr->sem->kind = sptr->kinds[column_index];
+    column_count++;
+  }
+
+  // A positional key must also be complete; an empty/partial value blob or
+  // a partial-key update is valid and must not acquire this restriction.
+  if (creating && key_partition && column_count != (uint32_t)table_info->key_count) {
+    report_error(ast,
+      "CQL0488: all key columns must appear exactly once in primary key order in cql_blob_create", sptr->struct_name);
+    goto error;
+  }
+
+  symtab_delete(seen_columns);
+  return true;
+
+error:
+  symtab_delete(seen_columns);
+  record_error(ast);
+  return false;
+}
+
 // cql_blob_create(backed_type, value, backed_type.col, value2, backed_type.col, ...),
 // this will ultimately expand into something like
 //
@@ -7941,12 +8060,11 @@ static void sem_special_func_cql_blob_get_type(ast_node *ast, uint32_t arg_count
 // or
 // blob_create(12345 /* blob type */, value, 12345 /* field hash*/, 5 /* field type */, etc.)
 //
-// All we have to do here is ensure that count of columns is 2n+1
-// All the types are from the same backed type
-// all the values are type compatible with the indicated column type
-// normally this is generated by an automatic rewrite so that basically always happens
+// Require 2n+1 arguments and validate the pairs with sem_validate_blob_columns,
+// including complete ordered keys. Value blobs may be empty or sparse.
+// Normally this is generated by an automatic rewrite so that basically always happens
 // but it is possible to call the function directly -- the rewrite is only sugar after all
-// we we have to check even if it's usually redundant.
+// so we have to check even if it's usually redundant.
 //
 static void sem_special_func_cql_blob_create(ast_node *ast, uint32_t arg_count, bool_t *is_aggregate) {
   Contract(is_ast_call(ast));
@@ -7994,56 +8112,8 @@ static void sem_special_func_cql_blob_create(ast_node *ast, uint32_t arg_count, 
     return;
   }
 
-  // already verified 2n + 1 args so this is safe!
-  for (ast_node *next_arg = arg_list->right; next_arg; next_arg = next_arg->right->right) {
-    EXTRACT_ANY_NOTNULL(val_expr, next_arg->left);
-    EXTRACT_ANY_NOTNULL(table_expr, next_arg->right->left);
-
-    sem_expr(val_expr);
-    if (is_error(val_expr)) {
-      record_error(ast);
-      return;
-    }
-
-    if (!is_ast_dot(table_expr) || !is_ast_str(table_expr->left) || !is_ast_str(table_expr->right)) {
-      report_error(table_expr, "CQL0490: argument must be table.column where table is a backed table", "cql_blob_create");
-      record_error(ast);
-      return;
-    }
-
-    EXTRACT_STRING(t_name, table_expr->left);
-    EXTRACT_STRING(c_name, table_expr->right);
-
-    // give a better error if the table is not found
-    ast_node *table_ast = find_usable_and_not_deleted_table_or_view(
-        t_name,
-        table_expr->left,
-        "CQL0095: table/view not defined");
-    if (!table_ast) {
-      record_error(ast);
-      return;
-    }
-
-    if (backed_table_ast != table_ast) {
-      report_error(table_expr, "CQL0488: the indicated table is not consistently used through all of cql_blob_create", t_name);
-      record_error(ast);
-      return;
-    }
-
-    sem_t sem_type = find_column_type(t_name, c_name);
-    if (!sem_type) {
-      CSTR err_data = dup_printf("%s.%s", t_name, c_name);
-      report_error(table_expr, "CQL0489: the indicated column is not present in the named backed storage", err_data);
-      record_error(ast);
-      return;
-    }
-
-    if (!sem_verify_compat(val_expr, val_expr->sem->sem_type, sem_type, "cql_blob_create")) {
-      record_error(ast);
-      return;
-    }
-
-    table_expr->sem = new_sem(sem_type);
+  if (!sem_validate_blob_columns(ast, backed_table_ast, arg_list->right, BLOB_COLUMNS_CREATE)) {
+    return;
   }
 
   name_ast->sem = ast->sem = new_sem(SEM_TYPE_BLOB | SEM_TYPE_NOTNULL);
@@ -8056,12 +8126,11 @@ static void sem_special_func_cql_blob_create(ast_node *ast, uint32_t arg_count, 
 // or
 // blob_update(blob, value, 12345 /* field hash*/, 5 /* field type */, etc.)
 //
-// All we have to do here is ensure that count of columns is 2n+1
-// All the types are from the same backed type
-// all the values are type compatible with the indicated column type
-// normally this is generated by an automatic rewrite so that basically always happens
+// Require 2n+1 arguments and validate the pairs with sem_validate_blob_columns.
+// Partial updates are valid because each field's offset/hash is explicit.
+// Normally this is generated by an automatic rewrite so that basically always happens
 // but it is possible to call the function directly -- the rewrite is only sugar after all
-// we we have to check even if it's usually redundant.
+// so we have to check even if it's usually redundant.
 //
 static void sem_special_func_cql_blob_update(ast_node *ast, uint32_t arg_count, bool_t *is_aggregate) {
   Contract(is_ast_call(ast));
@@ -8125,56 +8194,8 @@ static void sem_special_func_cql_blob_update(ast_node *ast, uint32_t arg_count, 
     return;
   }
 
-  // already verified 2n + 1 args so this is safe!
-  for (ast_node *next_arg = arg_list->right; next_arg; next_arg = next_arg->right->right) {
-    EXTRACT_ANY_NOTNULL(val_expr, next_arg->left);
-    EXTRACT_ANY_NOTNULL(table_expr, next_arg->right->left);
-
-    sem_expr(val_expr);
-    if (is_error(val_expr)) {
-      record_error(ast);
-      return;
-    }
-
-    if (!is_ast_dot(table_expr) || !is_ast_str(table_expr->left) || !is_ast_str(table_expr->right)) {
-      report_error(table_expr, "CQL0257: argument must be table.column where table is a backed table", "cql_blob_update");
-      record_error(ast);
-      return;
-    }
-
-    EXTRACT_STRING(t_name, table_expr->left);
-    EXTRACT_STRING(c_name, table_expr->right);
-
-    // give a better error if the table is not found
-    ast_node *table_ast = find_usable_and_not_deleted_table_or_view(
-        t_name,
-        table_expr->left,
-        "CQL0095: table/view not defined");
-    if (!table_ast) {
-      record_error(ast);
-      return;
-    }
-
-    if (backed_table_ast != table_ast) {
-      report_error(table_expr, "CQL0488: the indicated table is not consistently used through all of cql_blob_update", t_name);
-      record_error(ast);
-      return;
-    }
-
-    sem_t sem_type = find_column_type(t_name, c_name);
-    if (!sem_type) {
-      CSTR err_data = dup_printf("%s.%s", t_name, c_name);
-      report_error(table_expr, "CQL0489: the indicated column is not present in the named backed storage", err_data);
-      record_error(ast);
-      return;
-    }
-
-    if (!sem_verify_compat(val_expr, val_expr->sem->sem_type, sem_type, "cql_blob_update value")) {
-      record_error(ast);
-      return;
-    }
-
-    table_expr->sem = new_sem(sem_type);
+  if (!sem_validate_blob_columns(ast, backed_table_ast, arg_list->right, BLOB_COLUMNS_UPDATE)) {
+    return;
   }
 
   name_ast->sem = ast->sem = new_sem(SEM_TYPE_BLOB | SEM_TYPE_NOTNULL);

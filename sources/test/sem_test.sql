@@ -22000,7 +22000,8 @@ begin
 end;
 
 -- TEST: blob update not using a table.column in a later arg
--- + error: % argument must be table.column where table is a backed table
+-- Use the same diagnostic as the first column and the other blob wrappers.
+-- + error: % CQL0490: argument must be table.column where table is a backed table
 -- + {call}: err
 -- +1 error:
 proc blob_update_not_dot_operator_later_arg()
@@ -22060,7 +22061,7 @@ begin
 end;
 
 -- TEST: blob update wrong argument type
--- + error: % required 'TEXT' not compatible with found 'INT' context 'cql_blob_update value'
+-- + error: % required 'INT' not compatible with found 'TEXT' context 'cql_blob_update value'
 -- + {call}: err
 -- +1 error:
 proc blob_update_column_wrong_arg_type()
@@ -22267,7 +22268,7 @@ begin
 end;
 
 -- TEST: blob create wrong argument type
--- + error: % required 'TEXT' not compatible with found 'INT' context 'cql_blob_create'
+-- + error: % required 'INT' not compatible with found 'TEXT' context 'cql_blob_create'
 -- + {call}: err
 -- +1 error:
 proc blob_create_column_wrong_arg_type()
@@ -22291,6 +22292,230 @@ end;
 proc blob_create_not_backed_table()
 begin
   let z := (select cql_blob_create(simple_backing_table, x, simple_backing_table.k));
+end;
+
+-- TEST: direct blob calls must use primary-key order, not physical column order
+-- Reversing the key declaration makes these orders distinguishable. The other
+-- columns exercise assignment rules independently of the key layout.
+-- - error:
+[[backed_by=simple_backing_table]]
+create table blob_call_columns(
+  pk1 int,
+  pk2 int,
+  required_value int!,
+  optional_value int,
+  secret text @sensitive,
+  wide long,
+  primary key (pk2, pk1)
+);
+
+-- TEST: create cannot mix key and value fields in a key blob
+-- The first field selects the key operation; the second has no key offset.
+-- + error: % key and value columns may not be mixed in cql_blob_create 'name'
+-- + {call}: err
+-- +1 error:
+proc blob_create_mixed_partitions()
+begin
+  let z := (select cql_blob_create(basic_table, 1, basic_table.id, 'x', basic_table.name));
+end;
+
+-- TEST: create cannot mix partitions when the value field comes first either
+-- + error: % key and value columns may not be mixed in cql_blob_create 'id'
+-- + {call}: err
+-- +1 error:
+proc blob_create_value_then_key()
+begin
+  let z := (select cql_blob_create(basic_table, 'x', basic_table.name, 1, basic_table.id));
+end;
+
+-- TEST: update cannot mix key and value fields selected for different blobs
+-- + error: % key and value columns may not be mixed in cql_blob_update 'name'
+-- + {call}: err
+-- +1 error:
+proc blob_update_mixed_partitions()
+begin
+  declare b blob;
+  let z := (select cql_blob_update(b, 1, basic_table.id, 'x', basic_table.name));
+end;
+
+-- TEST: update cannot mix partitions in the opposite order either
+-- + error: % key and value columns may not be mixed in cql_blob_update 'id'
+-- + {call}: err
+-- +1 error:
+proc blob_update_value_then_key()
+begin
+  declare b blob;
+  let z := (select cql_blob_update(b, 'x', basic_table.name, 1, basic_table.id));
+end;
+
+-- TEST: incomplete keys would give positional storage fewer fields than expected
+-- + error: % all key columns must appear exactly once in primary key order in cql_blob_create 'blob_call_columns'
+-- + {call}: err
+-- +1 error:
+proc blob_create_incomplete_key()
+begin
+  let z := (select cql_blob_create(blob_call_columns, 1, blob_call_columns.pk2));
+end;
+
+-- TEST: physical column order is invalid when it differs from primary-key order
+-- + error: % key columns must appear exactly once in primary key order in cql_blob_create 'pk1'
+-- + {call}: err
+-- +1 error:
+proc blob_create_key_out_of_order()
+begin
+  let z := (select cql_blob_create(blob_call_columns, 1, blob_call_columns.pk1, 2, blob_call_columns.pk2));
+end;
+
+-- TEST: duplicate value fields are not independent storage, regardless of case
+-- + error: % duplicate name in list 'NAME'
+-- + {call}: err
+-- +1 error:
+proc blob_create_duplicate_column()
+begin
+  let z := (select cql_blob_create(basic_table, 'x', basic_table.name, 'y', basic_table.NAME));
+end;
+
+-- TEST: duplicate key fields cannot substitute for a missing composite-key field
+-- + error: % duplicate name in list 'pk2'
+-- + {call}: err
+-- +1 error:
+proc blob_create_duplicate_key()
+begin
+  let z := (select cql_blob_create(blob_call_columns, 1, blob_call_columns.pk2, 2, blob_call_columns.pk2));
+end;
+
+-- TEST: updating the same key field twice is not a valid partial-key update
+-- + error: % duplicate name in list 'ID'
+-- + {call}: err
+-- +1 error:
+proc blob_update_duplicate_column()
+begin
+  declare b blob;
+  let z := (select cql_blob_update(b, 1, basic_table.id, 2, basic_table.ID));
+end;
+
+-- TEST: duplicate value updates are also rejected, not just duplicate keys
+-- + error: % duplicate name in list 'name'
+-- + {call}: err
+-- +1 error:
+proc blob_update_duplicate_value()
+begin
+  declare b blob;
+  let z := (select cql_blob_update(b, 'x', basic_table.name, 'y', basic_table.name));
+end;
+
+-- TEST: nullable data must not bypass a backed column's NOT NULL declaration
+-- + error: % cannot assign/copy possibly null expression to not null target 'cql_blob_create'
+-- + {call}: err
+-- +1 error:
+proc blob_create_nullable_notnull_column()
+begin
+  let z := (select cql_blob_create(blob_call_columns, nullable(1), blob_call_columns.required_value));
+end;
+
+-- TEST: the same NOT NULL enforcement applies to updates
+-- + error: % cannot assign/copy possibly null expression to not null target 'cql_blob_update value'
+-- + {call}: err
+-- +1 error:
+proc blob_update_nullable_notnull_column()
+begin
+  declare b blob;
+  let z := (select cql_blob_update(b, nullable(1), blob_call_columns.required_value));
+end;
+
+-- TEST: direct creates cannot remove sensitivity by storing into a plain column
+-- + error: % cannot assign/copy sensitive expression to non-sensitive target 'cql_blob_create'
+-- + {call}: err
+-- +1 error:
+proc blob_create_sensitive_nonsensitive_column()
+begin
+  let z := (select cql_blob_create(basic_table, sensitive(1), basic_table.id));
+end;
+
+-- TEST: direct updates cannot remove sensitivity either
+-- + error: % cannot assign/copy sensitive expression to non-sensitive target 'cql_blob_update value'
+-- + {call}: err
+-- +1 error:
+proc blob_update_sensitive_nonsensitive_column()
+begin
+  declare b blob;
+  let z := (select cql_blob_update(b, sensitive(1), basic_table.id));
+end;
+
+-- TEST: a blob field must retain the column's domain-kind constraint
+-- + error: % expressions of different kinds can't be mixed: 'cool_text' vs. 'surname'
+-- + {call}: err
+-- +1 error:
+proc blob_create_incompatible_kind()
+begin
+  let z := (select cql_blob_create(basic_table, kind_string, basic_table.name));
+end;
+
+-- TEST: updates enforce domain kinds just like creates
+-- + error: % expressions of different kinds can't be mixed: 'cool_text' vs. 'surname'
+-- + {call}: err
+-- +1 error:
+proc blob_update_incompatible_kind()
+begin
+  declare b blob;
+  let z := (select cql_blob_update(b, kind_string, basic_table.name));
+end;
+
+-- TEST: broad numeric compatibility is insufficient for a narrowing assignment
+-- A long integer must not be silently stored in a 32-bit integer field.
+-- + error: % lossy conversion from type 'LONG'
+-- + {call}: err
+-- +1 error:
+proc blob_create_lossy_long()
+begin
+  let z := (select cql_blob_create(basic_table, 1L, basic_table.id));
+end;
+
+-- TEST: a real-to-integer update likewise requires an explicit conversion
+-- + error: % lossy conversion from type 'REAL'
+-- + {call}: err
+-- +1 error:
+proc blob_update_lossy_real()
+begin
+  declare b blob;
+  let z := (select cql_blob_update(b, 1.5, basic_table.id));
+end;
+
+-- TEST: complete keys in declared key order and partial updates remain valid
+-- Distinct values make both fields explicit; updates need not follow key order.
+-- +3 {call}: blob notnull
+-- - error:
+proc blob_call_valid_keys()
+begin
+  let b := (select cql_blob_create(blob_call_columns, 2, blob_call_columns.pk2, 1, blob_call_columns.pk1));
+  b := (select cql_blob_update(b, 3, blob_call_columns.pk1));
+  b := (select cql_blob_update(b, 4, blob_call_columns.pk1, 5, blob_call_columns.pk2));
+end;
+
+-- TEST: nullable values, sensitive targets, and safe widening remain legal
+-- This is intentionally a partial value blob, with no required_value supplied;
+-- value blobs are sparse, unlike key blobs. Empty value blobs are legal too.
+-- +3 {call}: blob notnull
+-- - error:
+proc blob_call_valid_values()
+begin
+  let b := (select cql_blob_create(blob_call_columns));
+  b := (select cql_blob_create(blob_call_columns,
+    null, blob_call_columns.optional_value,
+    sensitive('secret'), blob_call_columns.secret,
+    1, blob_call_columns.wide));
+  b := (select cql_blob_update(b, null, blob_call_columns.optional_value,
+    sensitive('new secret'), blob_call_columns.secret, 2, blob_call_columns.wide));
+end;
+
+-- TEST: matching domain kinds are accepted by both operations
+-- +2 {call}: blob notnull
+-- - error:
+proc blob_call_matching_kinds()
+begin
+  declare matching_name text<cool_text>;
+  let b := (select cql_blob_create(basic_table, matching_name, basic_table.name));
+  b := (select cql_blob_update(b, matching_name, basic_table.name));
 end;
 
 -- TEST: verify type check on columns

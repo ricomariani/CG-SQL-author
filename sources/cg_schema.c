@@ -1397,7 +1397,8 @@ static void cg_schema_manage_recreate_tables(
 
     EXTRACT_NOTNULL(create_table_name_flags, ast->left);
     EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
-    EXTRACT_STRING(table_name, create_table_name_flags->right);
+    EXTRACT_NAME_AST(table_name_ast, create_table_name_flags->right);
+    EXTRACT_STRING(table_name, table_name_ast);
 
     // recreate if needed
 
@@ -1415,7 +1416,11 @@ static void cg_schema_manage_recreate_tables(
       // explicitly drop only tables that are unsubscribed or deleted
       // others dropped inside cql_rebuild_recreate_group
       if (strlen(delete_tables.ptr) != 0) bprintf(&delete_tables, "\n");
-      bprintf(&delete_tables, "DROP TABLE IF EXISTS %s;", table_name);
+      // Restore quoted SQL spelling: the internal name can target a different
+      // table, and even an unencoded name may be a keyword requiring quotes.
+      bprintf(&delete_tables, "DROP TABLE IF EXISTS ");
+      cg_schema_name_as_cql_string(&delete_tables, table_name_ast);
+      bprintf(&delete_tables, ";");
     }
 
     // if the table is deleted or unsubscribed don't restore its indices

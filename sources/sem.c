@@ -2084,6 +2084,9 @@ CSTR create_group_id(CSTR group_name, CSTR table_name) {
 // Helper function to walk the graph stored in recreate_group_deps from a
 // starting group name to an ending group name. We perform a simple depth first
 // search.
+// Duplicate foreign keys cause repeated traversals, but they are infrequent
+// and dependency depth is short, so tracking visited groups is not worthwhile.
+// If that changes, a per-search visited set can be added here.
 static bool_t walk_recreate_group_deps (CSTR start, CSTR end) {
   if (!StrCaseCmp(start, end)) {
     return true;

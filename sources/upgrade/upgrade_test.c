@@ -192,6 +192,11 @@ int main(int argc, char *argv[]) {
     return SQLITE_ERROR;
   }
 
+  if (prepare_recreate_crc_test(db, current_version) != SQLITE_OK) {
+    fprintf(stderr, "Unable to prepare recreate-group checksum regression.\n");
+    return SQLITE_ERROR;
+  }
+
   if (upgrade(db, should_use_virtual_tables)) {
     fprintf(stderr, "Unable to upgrade DB.\n");
     return SQLITE_ERROR;
@@ -199,6 +204,11 @@ int main(int argc, char *argv[]) {
 
   if (check_identifiers && verify_quoted_schema_drops(db) != SQLITE_OK) {
     fprintf(stderr, "Quoted schema-drop regression failed.\n");
+    return SQLITE_ERROR;
+  }
+
+  if (verify_recreate_crc_test(db, current_version, proposed_version) != SQLITE_OK) {
+    fprintf(stderr, "Recreate-group checksum regression failed.\n");
     return SQLITE_ERROR;
   }
 

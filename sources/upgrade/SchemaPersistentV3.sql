@@ -55,6 +55,9 @@ CREATE TABLE `use g1`(
   name2 TEXT
 ) @recreate(gr1);
 
+-- Keep the v1 index unchanged so unrelated upgrades must preserve this group.
+CREATE UNIQUE INDEX g1_name ON g1(name);
+
 CREATE TABLE gParent(
   id INTEGER PRIMARY KEY
 ) @recreate(grParent);

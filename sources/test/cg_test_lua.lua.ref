@@ -5177,6 +5177,188 @@ end
 -- The statement ending at line XXXX
 
 --[[
+PROC lua_canonical_assignment (Flag BOOL!, OUT CaseValue INT!)
+BEGIN
+  SET cASEvALUE := CASE
+    WHEN Flag THEN 1
+    ELSE 2
+  END;
+END;
+--]]
+
+function lua_canonical_assignment(Flag)
+  cql_contract_argument_notnull(Flag, 1)
+
+  local CaseValue = 0
+
+  repeat
+    if Flag then
+      CaseValue = 1
+      break
+    end
+    CaseValue = 2
+  until true
+
+  return CaseValue
+end
+
+-- The statement ending at line XXXX
+
+--[[
+PROC lua_canonical_fetch_into (OUT CaseValue INT)
+BEGIN
+  CURSOR CaseCursor FOR
+    SELECT 1 AS CaseField;
+  FETCH cASEcURSOR INTO cASEvALUE;
+END;
+--]]
+
+function lua_canonical_fetch_into(_db_)
+  local _rc_ = CQL_OK
+  local CaseValue
+  local CaseCursor_stmt = nil
+  local CaseCursor = { _has_row_ = false }
+  local CaseCursor_fields_ = { "CaseField" }
+  local CaseCursor_types_ = "I"
+
+  _rc_, CaseCursor_stmt = cql_prepare(_db_, 
+    "SELECT 1")
+  if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+  -- step and fetch
+  _rc_ = cql_multifetch(CaseCursor_stmt, CaseCursor, CaseCursor_types_, CaseCursor_fields_)
+  if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+  CaseValue = CaseCursor.CaseField
+  _rc_ = CQL_OK
+
+::cql_cleanup::
+  cql_finalize_stmt(CaseCursor_stmt)
+  CaseCursor_stmt = nil
+  return _rc_, CaseValue
+end
+
+-- The statement ending at line XXXX
+
+--[[
+PROC lua_canonical_cursor ()
+BEGIN
+  CURSOR CaseCursor FOR
+    SELECT 1 AS CaseField;
+  FETCH cASEcURSOR;
+  UPDATE CURSOR cASEcURSOR(cASEfIELD) FROM VALUES (2);
+  CLOSE cASEcURSOR;
+END;
+--]]
+
+function lua_canonical_cursor(_db_)
+  local _rc_ = CQL_OK
+  local CaseCursor_stmt = nil
+  local CaseCursor = { _has_row_ = false }
+  local CaseCursor_fields_ = { "CaseField" }
+  local CaseCursor_types_ = "I"
+
+  _rc_, CaseCursor_stmt = cql_prepare(_db_, 
+    "SELECT 1")
+  if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+  -- step and fetch
+  _rc_ = cql_multifetch(CaseCursor_stmt, CaseCursor, CaseCursor_types_, CaseCursor_fields_)
+  if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+  if CaseCursor._has_row_ then
+    CaseCursor.CaseField = 2
+  end
+  cql_finalize_stmt(CaseCursor_stmt)
+  CaseCursor_stmt = nil
+  CaseCursor = { _has_row_ = false }
+  _rc_ = CQL_OK
+
+::cql_cleanup::
+  cql_finalize_stmt(CaseCursor_stmt)
+  CaseCursor_stmt = nil
+  return _rc_
+end
+
+-- The statement ending at line XXXX
+
+--[[
+PROC lua_canonical_fetch_values ()
+BEGIN
+  CURSOR CaseCursor LIKE SELECT 1 AS CaseField;
+  FETCH cASEcURSOR(cASEfIELD) FROM VALUES (3);
+END;
+--]]
+
+function lua_canonical_fetch_values()
+  local CaseCursor = { _has_row_ = false }
+  local CaseCursor_fields_ = { "CaseField" }
+  local CaseCursor_types_ = "I"
+
+  CaseCursor._has_row_ = true
+  CaseCursor.CaseField = 3
+
+end
+
+-- The statement ending at line XXXX
+
+--[[
+PROC lua_canonical_boxing (OUT CaseBox OBJECT<bar CURSOR>)
+BEGIN
+  CURSOR CaseCursor FOR
+    SELECT
+        bar.id,
+        bar.name,
+        bar.rate,
+        bar.type,
+        bar.size
+      FROM bar;
+  SET cASEbOX FROM CURSOR cASEcURSOR;
+END;
+--]]
+
+function lua_canonical_boxing(_db_)
+  local _rc_ = CQL_OK
+  local CaseBox
+  local CaseCursor_stmt = nil
+  local CaseCursor = { _has_row_ = false }
+  local CaseCursor_fields_ = { "id", "name", "rate", "type", "size" }
+  local CaseCursor_types_ = "Islid"
+
+  CaseCursor_stmt = nil
+  _rc_, CaseCursor_stmt = cql_prepare(_db_, 
+    "SELECT bar.id, bar.name, bar.rate, bar.type, bar.size FROM bar")
+  if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+  CaseBox = CaseCursor_stmt
+  _rc_ = CQL_OK
+
+::cql_cleanup::
+  return _rc_, CaseBox
+end
+
+-- The statement ending at line XXXX
+
+--[[
+PROC lua_canonical_fetch_call ()
+BEGIN
+  CURSOR CaseCursor LIKE out_cursor_proc;
+  FETCH cASEcURSOR FROM CALL out_cursor_proc();
+END;
+--]]
+
+function lua_canonical_fetch_call(_db_)
+  local _rc_ = CQL_OK
+  local CaseCursor = { _has_row_ = false }
+  local CaseCursor_fields_ = { "id", "name", "rate", "type", "size", "extra1", "extra2" }
+  local CaseCursor_types_ = "IslidSS"
+
+  _rc_, CaseCursor = out_cursor_proc(_db_)
+  if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+  _rc_ = CQL_OK
+
+::cql_cleanup::
+  return _rc_
+end
+
+-- The statement ending at line XXXX
+
+--[[
 PROC local_cast_real_notnull ()
 BEGIN
   DECLARE x REAL!;

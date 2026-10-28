@@ -763,7 +763,7 @@ static void cg_scratch_var(ast_node *ast, sem_t sem_type, charbuf *var, charbuf 
   if (is_assignment_target_reusable(ast, sem_type)) {
     Invariant(ast && ast->parent && ast->parent->left);
     EXTRACT_NAME_AST(name_ast, ast->parent->left);
-    EXTRACT_STRING(name, name_ast);
+    CSTR name = name_ast->sem->name;
     if (is_out_parameter(name_ast->sem->sem_type)) {
       bprintf(var, "*%s", name);
     }
@@ -6076,8 +6076,8 @@ static void cg_set_from_cursor(ast_node *ast) {
   Contract(is_ast_set_from_cursor(ast));
   EXTRACT_ANY_NOTNULL(variable, ast->left);
   EXTRACT_ANY_NOTNULL(cursor, ast->right);
-  EXTRACT_STRING(cursor_name, cursor);
-  EXTRACT_STRING(var_name, variable);
+  CSTR cursor_name = cursor->sem->name;
+  CSTR var_name = variable->sem->name;
 
   CHARBUF_OPEN(value);
   bprintf(&value, "%s_object_", cursor_name);
@@ -6175,7 +6175,7 @@ static void cg_fetch_values_stmt(ast_node *ast) {
   for (ast_node *item = name_list ; item; item = item->right, value = value->right) {
     EXTRACT_ANY_NOTNULL(expr, value->left);
     EXTRACT_ANY_NOTNULL(col, item->left);
-    EXTRACT_STRING(var, col);
+    CSTR var = col->sem->name;
 
     CG_PUSH_EVAL(expr, C_EXPR_PRI_ROOT);
     CHARBUF_OPEN(temp);
@@ -6261,7 +6261,7 @@ static void cg_fetch_stmt(ast_node *ast) {
 
     for (ast_node *item = name_list; item; item = item->right, i++) {
       EXTRACT_NAME_AST(name_ast, item->left);
-      EXTRACT_STRING(var, name_ast);
+      CSTR var = name_ast->sem->name;
       sem_t sem_type_var = name_ast->sem->sem_type;
       bprintf(cg_main_output, "%s", newline);
       cg_fetch_column(sem_type_var, var);
@@ -6284,7 +6284,7 @@ static void cg_fetch_stmt(ast_node *ast) {
 
 static void cg_fetch_call_stmt(ast_node *ast) {
   Contract(is_ast_fetch_call_stmt(ast));
-  EXTRACT_STRING(cursor_name, ast->left);
+  CSTR cursor_name = ast->left->sem->name;
   EXTRACT_ANY_NOTNULL(call_stmt, ast->right);
 
   cg_call_stmt_with_cursor(call_stmt, cursor_name);
@@ -6301,7 +6301,7 @@ static void cg_fetch_call_stmt(ast_node *ast) {
 static void cg_update_cursor_stmt(ast_node *ast) {
   Contract(is_ast_update_cursor_stmt(ast));
   EXTRACT_ANY(cursor, ast->left);
-  EXTRACT_STRING(name, cursor);
+  CSTR name = cursor->sem->name;
   EXTRACT_NOTNULL(columns_values, ast->right);
   EXTRACT_NOTNULL(column_spec, columns_values->left);
   EXTRACT_ANY_NOTNULL(name_list, column_spec->left);
@@ -6646,7 +6646,7 @@ static void cg_commit_return_stmt(ast_node *ast) {
 static void cg_close_stmt(ast_node *ast) {
   Contract(is_ast_close_stmt(ast));
   EXTRACT_ANY_NOTNULL(cursor_ast, ast->left);
-  EXTRACT_STRING(name, cursor_ast);
+  CSTR name = cursor_ast->sem->name;
 
   // CLOSE [name]
 

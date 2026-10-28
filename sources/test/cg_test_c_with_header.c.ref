@@ -8303,6 +8303,262 @@ void local_cast_long(void) {
 // The statement ending at line XXXX
 
 /*
+PROC c_canonical_assignment (Flag BOOL!, OUT CaseValue INT!)
+BEGIN
+  SET cASEvALUE := CASE
+    WHEN Flag THEN 1
+    ELSE 2
+  END;
+END;
+*/
+
+#define _PROC_ "c_canonical_assignment"
+/*
+export:
+DECLARE PROC c_canonical_assignment (Flag BOOL!, OUT CaseValue INT!);
+*/
+void c_canonical_assignment(cql_bool Flag, cql_int32 *_Nonnull CaseValue) {
+  cql_contract_argument_notnull((void *)CaseValue, 2);
+
+  *CaseValue = 0; // set out arg to non-garbage
+  do {
+    if (Flag) {
+      *CaseValue = 1;
+      break;
+    }
+    *CaseValue = 2;
+  } while (0);
+
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+PROC c_canonical_fetch_into (OUT CaseValue INT)
+BEGIN
+  CURSOR CaseCursor FOR
+    SELECT 1 AS CaseField;
+  FETCH cASEcURSOR INTO cASEvALUE;
+END;
+*/
+
+#define _PROC_ "c_canonical_fetch_into"
+/*
+export:
+DECLARE PROC c_canonical_fetch_into (OUT CaseValue INT) USING TRANSACTION;
+*/
+CQL_WARN_UNUSED cql_code c_canonical_fetch_into(sqlite3 *_Nonnull _db_, cql_nullable_int32 *_Nonnull CaseValue) {
+  cql_contract_argument_notnull((void *)CaseValue, 1);
+
+  cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
+  sqlite3_stmt *CaseCursor_stmt = NULL;
+  cql_bool _CaseCursor_has_row_ = 0;
+
+  cql_set_null(*CaseValue); // set out arg to non-garbage
+  _rc_ = cql_prepare(_db_, &CaseCursor_stmt,
+    "SELECT 1");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = sqlite3_step(CaseCursor_stmt);
+  _CaseCursor_has_row_ = _rc_ == SQLITE_ROW;
+  cql_multifetch(_rc_, CaseCursor_stmt, 1,
+                 CQL_DATA_TYPE_INT32, CaseValue);
+  if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_error_report();
+  cql_finalize_stmt(&CaseCursor_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+PROC c_canonical_cursor ()
+BEGIN
+  CURSOR CaseCursor FOR
+    SELECT 1 AS CaseField;
+  FETCH cASEcURSOR;
+  UPDATE CURSOR cASEcURSOR(cASEfIELD) FROM VALUES (2);
+  CLOSE cASEcURSOR;
+END;
+*/
+
+#define _PROC_ "c_canonical_cursor"
+/*
+export:
+DECLARE PROC c_canonical_cursor () USING TRANSACTION;
+*/
+
+typedef struct c_canonical_cursor_CaseCursor_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 CaseField;
+} c_canonical_cursor_CaseCursor_row;
+CQL_WARN_UNUSED cql_code c_canonical_cursor(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
+  sqlite3_stmt *CaseCursor_stmt = NULL;
+  c_canonical_cursor_CaseCursor_row CaseCursor = { 0 };
+
+  _rc_ = cql_prepare(_db_, &CaseCursor_stmt,
+    "SELECT 1");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = sqlite3_step(CaseCursor_stmt);
+  CaseCursor._has_row_ = _rc_ == SQLITE_ROW;
+  cql_multifetch(_rc_, CaseCursor_stmt, 1,
+                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &CaseCursor.CaseField);
+  if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+  if (CaseCursor._has_row_) {
+    CaseCursor.CaseField = 2;
+  }
+  cql_finalize_stmt(&CaseCursor_stmt);
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_error_report();
+  cql_finalize_stmt(&CaseCursor_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+PROC c_canonical_fetch_values ()
+BEGIN
+  CURSOR CaseCursor LIKE SELECT 1 AS CaseField;
+  FETCH cASEcURSOR(cASEfIELD) FROM VALUES (3);
+END;
+*/
+
+#define _PROC_ "c_canonical_fetch_values"
+/*
+export:
+DECLARE PROC c_canonical_fetch_values ();
+*/
+
+typedef struct c_canonical_fetch_values_CaseCursor_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 CaseField;
+} c_canonical_fetch_values_CaseCursor_row;
+void c_canonical_fetch_values(void) {
+  c_canonical_fetch_values_CaseCursor_row CaseCursor = { 0 };
+
+  CaseCursor._has_row_ = 1;
+  CaseCursor.CaseField = 3;
+
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+PROC c_canonical_boxing (OUT CaseBox OBJECT<bar CURSOR>)
+BEGIN
+  CURSOR CaseCursor FOR
+    SELECT
+        bar.id,
+        bar.name,
+        bar.rate,
+        bar.type,
+        bar.size
+      FROM bar;
+  SET cASEbOX FROM CURSOR cASEcURSOR;
+END;
+*/
+
+#define _PROC_ "c_canonical_boxing"
+/*
+export:
+DECLARE PROC c_canonical_boxing (OUT CaseBox OBJECT<bar CURSOR>) USING TRANSACTION;
+*/
+CQL_WARN_UNUSED cql_code c_canonical_boxing(sqlite3 *_Nonnull _db_, cql_object_ref _Nullable *_Nonnull CaseBox) {
+  cql_contract_argument_notnull((void *)CaseBox, 1);
+
+  cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
+  sqlite3_stmt *CaseCursor_stmt = NULL;
+  cql_object_ref CaseCursor_object_ = NULL;
+
+  *(void **)CaseBox = NULL; // set out arg to non-garbage
+  CaseCursor_stmt = NULL;
+  _rc_ = cql_prepare(_db_, &CaseCursor_stmt,
+    "SELECT "
+        "bar.id, "
+        "bar.name, "
+        "bar.rate, "
+        "bar.type, "
+        "bar.size "
+      "FROM bar");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  cql_set_created_object_ref(&CaseCursor_object_, cql_box_stmt(CaseCursor_stmt));
+  cql_set_object_ref(CaseBox, CaseCursor_object_);
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_error_report();
+  cql_object_release(CaseCursor_object_);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+PROC c_canonical_fetch_call ()
+BEGIN
+  CURSOR CaseCursor LIKE out_cursor_proc;
+  FETCH cASEcURSOR FROM CALL out_cursor_proc();
+END;
+*/
+
+#define _PROC_ "c_canonical_fetch_call"
+/*
+export:
+DECLARE PROC c_canonical_fetch_call () USING TRANSACTION;
+*/
+
+typedef struct c_canonical_fetch_call_CaseCursor_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 id;
+  cql_nullable_int64 rate;
+  cql_nullable_int32 type;
+  cql_nullable_double size;
+  cql_string_ref _Nullable name;
+  cql_string_ref _Nonnull extra1;
+  cql_string_ref _Nonnull extra2;
+} c_canonical_fetch_call_CaseCursor_row;
+
+#define c_canonical_fetch_call_CaseCursor_refs_offset cql_offsetof(c_canonical_fetch_call_CaseCursor_row, name) // count = 3
+CQL_WARN_UNUSED cql_code c_canonical_fetch_call(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
+  c_canonical_fetch_call_CaseCursor_row CaseCursor = { ._refs_count_ = 3, ._refs_offset_ = c_canonical_fetch_call_CaseCursor_refs_offset };
+
+  cql_teardown_row(CaseCursor);
+  _rc_ = out_cursor_proc(_db_, (out_cursor_proc_row *)&CaseCursor); // out_cursor_proc_row identical to cursor type
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_error_report();
+  cql_teardown_row(CaseCursor);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
 PROC local_cast_real_notnull ()
 BEGIN
   DECLARE x REAL!;

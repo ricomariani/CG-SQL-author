@@ -725,6 +725,20 @@ DECLARE PROC cql_cursor_from_blob (C CURSOR, b BLOB) USING TRANSACTION;
 [[builtin]]
 DECLARE PROC cql_cursor_from_blob_stream (C CURSOR, b BLOB, i INT!) USING TRANSACTION;
 */
+
+// The statement ending at line XXXX
+
+/*
+@ECHO c, '
+#include <stdio.h>
+#undef cql_error_trace
+#define cql_error_trace() fprintf(stderr, "Error in %s: %d\n", _PROC_, _rc_)
+';
+*/
+
+#include <stdio.h>
+#undef cql_error_trace
+#define cql_error_trace() fprintf(stderr, "Error in %s: %d\n", _PROC_, _rc_)
 cql_int32 c_runtime_generation = 0;
 cql_int32 c_runtime_generation_on_else = 0;
 
@@ -17836,7 +17850,7 @@ void end_proc(void) {
 DECLARE end_marker INT;
 */
 cql_nullable_int32 end_marker = { .is_null = 1 };
-#define _PROC_ cql_startup
+#define _PROC_ "cql_startup"
 
 cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;

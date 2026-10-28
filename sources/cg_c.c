@@ -8762,7 +8762,7 @@ cql_noexport void cg_c_main(ast_node *head) {
   if (global_proc_needed) {
     exit_on_no_global_proc();
 
-    bprintf(&body_file, "#define _PROC_ %s\n", global_proc_name);
+    bprintf(&body_file, "#define _PROC_ \"%s\"\n", global_proc_name);
 
     bindent(&indent, cg_scratch_vars_output, 2);
     bprintf(&body_file, "\ncql_code %s(sqlite3 *_Nonnull _db_) {\n", global_proc_name);

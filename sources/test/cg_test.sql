@@ -8,6 +8,15 @@
 declare proc printf no check;
 declare proc puts no check;
 
+-- Default tracing ignores _PROC_, hiding a bare identifier in global startup.
+-- Compile string-consuming tracing so ordinary and global procedure names must
+-- both be strings, rather than silently accepting a function pointer.
+@echo c, '
+#include <stdio.h>
+#undef cql_error_trace
+#define cql_error_trace() fprintf(stderr, "Error in %s: %d\n", _PROC_, _rc_)
+';
+
 -- TEST: test rt selection in C
 -- + c_runtime_generation = 1;
 @ifdef __rt__c

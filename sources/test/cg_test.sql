@@ -2998,6 +2998,63 @@ begin
   set x := cast(r as long);
 end;
 
+-- TEST: a reusable CASE result must use the declared assignment target's case
+-- CASE writes directly into its target. A differently cased reference must
+-- still write through the declared OUT parameter, in either branch.
+-- + *CaseValue = 1;
+-- + *CaseValue = 2;
+proc c_canonical_assignment(Flag bool!, out CaseValue int!)
+begin
+  set cASEvALUE := case when Flag then 1 else 2 end;
+end;
+
+-- TEST: FETCH INTO must use the declared OUT parameter's case
+-- + CQL_DATA_TYPE_INT32, CaseValue);
+proc c_canonical_fetch_into(out CaseValue int)
+begin
+  declare CaseCursor cursor for select 1 CaseField;
+  fetch cASEcURSOR into cASEvALUE;
+end;
+
+-- TEST: UPDATE CURSOR and CLOSE preserve the declared cursor's case
+-- FETCH enables row storage; subsequent references must update and finalize
+-- that same cursor rather than emit unrelated C identifiers.
+-- + if (CaseCursor._has_row_) {
+-- + CaseCursor.CaseField = 2;
+-- + cql_finalize_stmt(&CaseCursor_stmt);
+proc c_canonical_cursor()
+begin
+  declare CaseCursor cursor for select 1 CaseField;
+  fetch cASEcURSOR;
+  update cursor cASEcURSOR(cASEfIELD) from values (2);
+  close cASEcURSOR;
+end;
+
+-- TEST: FETCH VALUES must use the declared field, not a second C member name
+-- The value differs from UPDATE CURSOR above to distinguish the two paths.
+-- + CaseCursor.CaseField = 3;
+proc c_canonical_fetch_values()
+begin
+  declare CaseCursor cursor like select 1 CaseField;
+  fetch cASEcURSOR(cASEfIELD) from values (3);
+end;
+
+-- TEST: cursor boxing must use canonical names for both source and destination
+-- + cql_set_object_ref(CaseBox, CaseCursor_object_);
+proc c_canonical_boxing(out CaseBox object<bar cursor>)
+begin
+  declare CaseCursor cursor for select * from bar;
+  set cASEbOX from cursor cASEcURSOR;
+end;
+
+-- TEST: FETCH FROM CALL must return the row into the declared value cursor
+-- + _rc_ = out_cursor_proc(_db_, (out_cursor_proc_row *)&CaseCursor);
+proc c_canonical_fetch_call()
+begin
+  declare CaseCursor cursor like out_cursor_proc;
+  fetch cASEcURSOR from call out_cursor_proc();
+end;
+
 -- TEST: numeric cast operation real
 -- + x = ((cql_double)(3));
 proc local_cast_real_notnull()

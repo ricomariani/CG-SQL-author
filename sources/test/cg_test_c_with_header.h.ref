@@ -4073,6 +4073,24 @@ extern void local_cast_long_notnull(void);
 extern void local_cast_long(void);
 
 // The statement ending at line XXXX
+extern void c_canonical_assignment(cql_bool Flag, cql_int32 *_Nonnull CaseValue);
+
+// The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code c_canonical_fetch_into(sqlite3 *_Nonnull _db_, cql_nullable_int32 *_Nonnull CaseValue);
+
+// The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code c_canonical_cursor(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+extern void c_canonical_fetch_values(void);
+
+// The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code c_canonical_boxing(sqlite3 *_Nonnull _db_, cql_object_ref _Nullable *_Nonnull CaseBox);
+
+// The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code c_canonical_fetch_call(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
 extern void local_cast_real_notnull(void);
 
 // The statement ending at line XXXX

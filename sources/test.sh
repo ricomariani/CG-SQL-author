@@ -1234,6 +1234,23 @@ code_gen_lua_test() {
   echo Validating codegen
   cql_verify "$T/cg_test_lua.sql" "$O/cg_test_lua.lua"
 
+  # cql_verify uses case-insensitive LIKE; these regressions require exact case.
+  # The statement suffix never occurs in the CQL source comments, so rejecting
+  # its reference spelling also checks CLOSE's finalization and cursor boxing.
+  TEST_NAME="lua_canonical_identifiers"
+  TEST_DESC="Verifying case-sensitive Lua references use canonical identifiers"
+  TEST_CMD="grep -F '  CaseValue = 1' \"$O/cg_test_lua.lua\" &&
+    grep -F '  CaseValue = 2' \"$O/cg_test_lua.lua\" &&
+    grep -F 'CaseValue = CaseCursor.CaseField' \"$O/cg_test_lua.lua\" &&
+    grep -F 'if CaseCursor._has_row_ then' \"$O/cg_test_lua.lua\" &&
+    grep -F 'CaseCursor.CaseField = 2' \"$O/cg_test_lua.lua\" &&
+    grep -F '  CaseCursor = { _has_row_ = false }' \"$O/cg_test_lua.lua\" &&
+    grep -F 'CaseCursor.CaseField = 3' \"$O/cg_test_lua.lua\" &&
+    grep -F 'CaseBox = CaseCursor_stmt' \"$O/cg_test_lua.lua\" &&
+    grep -F '_rc_, CaseCursor = out_cursor_proc(_db_)' \"$O/cg_test_lua.lua\" &&
+    ! grep -F 'cASEcURSOR_stmt' \"$O/cg_test_lua.lua\""
+  run_test_expect_success
+
   #  echo testing for successful compilation of generated lua
   #  if ! lua out/cg_test_lua.lua
   #  then

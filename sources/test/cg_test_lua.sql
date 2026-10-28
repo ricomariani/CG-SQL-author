@@ -3083,6 +3083,65 @@ begin
   set x := cast(r as long);
 end;
 
+-- TEST: a reusable CASE result must use the declared assignment target's case
+-- CASE writes directly into its target; either branch must update CaseValue,
+-- not create a Lua global with the spelling used at the assignment.
+-- + CaseValue = 1
+-- + CaseValue = 2
+proc lua_canonical_assignment(Flag bool!, out CaseValue int!)
+begin
+  set cASEvALUE := case when Flag then 1 else 2 end;
+end;
+
+-- TEST: FETCH INTO must update the declared output, not create a Lua global
+-- + CaseValue = CaseCursor.CaseField
+proc lua_canonical_fetch_into(out CaseValue int)
+begin
+  declare CaseCursor cursor for select 1 CaseField;
+  fetch cASEcURSOR into cASEvALUE;
+end;
+
+-- TEST: UPDATE CURSOR and CLOSE preserve the declared cursor's case
+-- FETCH enables row storage; subsequent references must update, close, and
+-- clear that same cursor rather than refer to an unrelated Lua global.
+-- + if CaseCursor._has_row_ then
+-- + CaseCursor.CaseField = 2
+-- + cql_finalize_stmt(CaseCursor_stmt)
+-- + CaseCursor = { _has_row_ = false }
+proc lua_canonical_cursor()
+begin
+  declare CaseCursor cursor for select 1 CaseField;
+  fetch cASEcURSOR;
+  update cursor cASEcURSOR(cASEfIELD) from values (2);
+  close cASEcURSOR;
+end;
+
+-- TEST: FETCH VALUES must store into the declared field, not a second Lua key
+-- The value differs from UPDATE CURSOR above so exact-case checks distinguish
+-- the two field-writing paths.
+-- + CaseCursor.CaseField = 3
+proc lua_canonical_fetch_values()
+begin
+  declare CaseCursor cursor like select 1 CaseField;
+  fetch cASEcURSOR(cASEfIELD) from values (3);
+end;
+
+-- TEST: cursor boxing must use canonical names for both source and destination
+-- + CaseBox = CaseCursor_stmt
+proc lua_canonical_boxing(out CaseBox object<bar cursor>)
+begin
+  declare CaseCursor cursor for select * from bar;
+  set cASEbOX from cursor cASEcURSOR;
+end;
+
+-- TEST: FETCH FROM CALL must return the row into the declared value cursor
+-- + _rc_, CaseCursor = out_cursor_proc(_db_)
+proc lua_canonical_fetch_call()
+begin
+  declare CaseCursor cursor like out_cursor_proc;
+  fetch cASEcURSOR from call out_cursor_proc();
+end;
+
 -- TEST: numeric cast operation real
 -- + x = cql_to_float(3)
 proc local_cast_real_notnull()

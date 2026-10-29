@@ -656,7 +656,9 @@ set b0_nullable := 'b' not between null and 'c';
 -- + "SELECT bar.id, bar.name, bar.rate, bar.type, bar.size FROM bar"
 -- + if _rc_ == CQL_OK and _result_stmt == nil then _rc_, _result_stmt = cql_no_rows_stmt(_db_) end
 -- + function with_result_set_fetch_results(_db_)
--- + _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
+-- The statement belongs to this invocation, not to a shared Lua global.
+-- + local _rc_, _stmt_ = with_result_set(_db_)
+-- + _rc_, result_set = cql_fetch_all_rows(_stmt_, "Islid", { "id", "name", "rate", "type", "size" })
 procedure with_result_set()
 begin
   select * from bar;
@@ -668,7 +670,7 @@ end;
 -- + if _rc_ == CQL_OK and _result_stmt == nil then _rc_, _result_stmt = cql_no_rows_stmt(_db_) end
 -- + return _rc_, _result_stmt
 -- + function select_from_view_fetch_results(_db_)
--- + _rc_, result_set = cql_fetch_all_rows(stmt, "Ii", { "id", "type" })
+-- + _rc_, result_set = cql_fetch_all_rows(_stmt_, "Ii", { "id", "type" })
 -- + return _rc_, result_set
 proc select_from_view()
 begin
@@ -692,8 +694,8 @@ end;
 -- TEST: create a proc with reader logic with more than one arg
 -- + function get_data(_db_, name_, id_)
 -- + function get_data_fetch_results(_db_, name_, id_)
--- + _rc_, stmt = get_data(_db_, name_, id_)
--- + _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
+-- + _rc_, _stmt_ = get_data(_db_, name_, id_)
+-- + _rc_, result_set = cql_fetch_all_rows(_stmt_, "Islid", { "id", "name", "rate", "type", "size" })
 procedure get_data(name_ text not null, id_ integer not null)
 begin
   select * from bar where id = id_ and name = name_;
@@ -825,7 +827,7 @@ declare proc plugh(id integer);
 
 -- TEST: create a proc that returns a mix of possible types in a select
 -- + "SELECT 1, 2, CAST(3 AS LONG_INT), 3.0, 'xyz', NULL")
--- + _rc_, result_set = cql_fetch_all_rows(stmt, "FILDSf", { "_bool", "_integer", "_longint", "_real", "_text", "_nullable_bool" })
+-- + _rc_, result_set = cql_fetch_all_rows(_stmt_, "FILDSf", { "_bool", "_integer", "_longint", "_real", "_text", "_nullable_bool" })
 proc complex_return()
 begin
   select TRUE as _bool,
@@ -839,7 +841,7 @@ end;
 -- TEST: create a proc with a nested select within an in statement for hierarchical queries
 proc hierarchical_query(rate_ long integer not null, limit_ integer not null, offset_ integer not null)
 -- + "SELECT foo.id FROM foo WHERE id IN (SELECT id FROM bar WHERE rate = ? ORDER BY name LIMIT ? OFFSET ?) ORDER BY id")
--- + _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "id" })
+-- + _rc_, result_set = cql_fetch_all_rows(_stmt_, "I", { "id" })
 begin
   select *
   from foo
@@ -856,7 +858,7 @@ end;
 
 -- TEST: create a proc with a nested select within a not in statement for hierarchical queries
 -- + "SELECT foo.id FROM foo WHERE id NOT IN (SELECT id FROM bar WHERE rate = ? ORDER BY name LIMIT ? OFFSET ?) ORDER BY id")
--- + _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "id" })
+-- + _rc_, result_set = cql_fetch_all_rows(_stmt_, "I", { "id" })
 proc hierarchical_unmatched_query(rate_ long integer not null, limit_ integer not null, offset_ integer not null)
 begin
   select *
@@ -874,7 +876,7 @@ end;
 
 -- TEST: create a proc with a compound select union form
 -- +  "SELECT 1 UNION SELECT 2"
--- +  _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "A" })
+-- +  _rc_, result_set = cql_fetch_all_rows(_stmt_, "I", { "A" })
 proc union_select()
 begin
  select 1 as A union select 2 as A;
@@ -882,7 +884,7 @@ end;
 
 -- TEST: create a proc with a compound select union all form
 -- + "SELECT 1 UNION ALL SELECT 2")
--- + _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "A" })
+-- + _rc_, result_set = cql_fetch_all_rows(_stmt_, "I", { "A" })
 proc union_all_select()
 begin
  select 1 as A union all select 2 as A;
@@ -890,7 +892,7 @@ end;
 
 -- TEST: create a valid union using not null columns and nullable matching
 -- + "SELECT 'foo' UNION ALL SELECT name FROM bar")
--- + _rc_, result_set = cql_fetch_all_rows(stmt, "s", { "name" })
+-- + _rc_, result_set = cql_fetch_all_rows(_stmt_, "s", { "name" })
 proc union_all_with_nullable()
 begin
   select nullable('foo') as name
@@ -914,7 +916,7 @@ end;
 
 -- TEST: with statement top level
 -- + "WITH X (a, b, c) AS ( SELECT 1, 2, 3 ) SELECT X.a, X.b, X.c FROM X")
--- + _rc_, result_set = cql_fetch_all_rows(stmt, "III", { "a", "b", "c" })
+-- + _rc_, result_set = cql_fetch_all_rows(_stmt_, "III", { "a", "b", "c" })
 proc with_stmt()
 begin
   with X(a,b,c) as (select 1,2,3) select * from X;
@@ -922,7 +924,7 @@ end;
 
 -- TEST: with recursive statement top level
 -- + "WITH RECURSIVE X (a, b, c) AS ( SELECT 1, 2, 3 UNION ALL SELECT 4, 5, 6 ) SELECT X.a, X.b, X.c FROM X"
--- + _rc_, result_set = cql_fetch_all_rows(stmt, "III", { "a", "b", "c" })
+-- + _rc_, result_set = cql_fetch_all_rows(_stmt_, "III", { "a", "b", "c" })
 proc with_recursive_stmt()
 begin
   with recursive X(a,b,c) as (select 1,2,3 union all select 4,5,6) select * from X;
@@ -930,7 +932,7 @@ end;
 
 -- TEST: parent procedure
 -- + "SELECT 1, 2, 3"
--- + _rc_, result_set = cql_fetch_all_rows(stmt, "III", { "one", "two", "three" })
+-- + _rc_, result_set = cql_fetch_all_rows(_stmt_, "III", { "one", "two", "three" })
 proc parent_proc()
 begin
   select 1 as one, 2 as two, 3 as three;
@@ -938,7 +940,7 @@ end;
 
 -- TEST: child procedure
 -- +  "SELECT 4, 5, 6"
--- +  _rc_, result_set = cql_fetch_all_rows(stmt, "III", { "four", "five", "six" })
+-- +  _rc_, result_set = cql_fetch_all_rows(_stmt_, "III", { "four", "five", "six" })
 proc parent_proc_child()
 begin
   select 4 as four, 5 as five, 6 as six;
@@ -1208,7 +1210,7 @@ end;
 -- + _rc_, _result_stmt = with_result_set(_db_)
 -- + return _rc_, _result_stmt
 -- + function uses_proc_for_result_fetch_results(_db_)
--- + _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
+-- + _rc_, result_set = cql_fetch_all_rows(_stmt_, "Islid", { "id", "name", "rate", "type", "size" })
 -- + return _rc_, result_set
 procedure uses_proc_for_result()
 begin
@@ -1432,7 +1434,7 @@ insert into blob_table(blob_id, b_nullable, b_notnull) values (0, blob_var, blob
 
 -- TEST: a result set that includes blobs
 -- +  "SELECT blob_table.blob_id, blob_table.b_notnull, blob_table.b_nullable FROM blob_table
--- + _rc_, result_set = cql_fetch_all_rows(stmt, "IBb", { "blob_id", "b_notnull", "b_nullable" })
+-- + _rc_, result_set = cql_fetch_all_rows(_stmt_, "IBb", { "blob_id", "b_notnull", "b_nullable" })
 proc blob_returner()
 begin
   select * from blob_table;
@@ -1470,7 +1472,8 @@ end;
 --
 -- wrap the one row in a table so it looks like an normal result set
 -- + function out_cursor_proc_fetch_results(_db_)
--- + _rc_, _result_ = out_cursor_proc(_db_)
+-- The returned row must also be local in wrappers that return a status code.
+-- + local _rc_, _result_ = out_cursor_proc(_db_)
 -- + result_set = { _result_ }
 -- + return _rc_, result_set
 proc out_cursor_proc()
@@ -1547,8 +1550,8 @@ create table threads (
 -- +  if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
 -- +  return _rc_, _result_stmt
 -- + function thread_theme_info_list_fetch_results(_db_, thread_key_)
--- + _rc_, stmt = thread_theme_info_list(_db_, thread_key_)
--- + _rc_, result_set = cql_fetch_all_rows(stmt, "L", { "thread_key" })
+-- + _rc_, _stmt_ = thread_theme_info_list(_db_, thread_key_)
+-- + _rc_, result_set = cql_fetch_all_rows(_stmt_, "L", { "thread_key" })
 procedure thread_theme_info_list(thread_key_ LONG INT!)
 begin
   select * from (select thread_key from threads) T;
@@ -1649,6 +1652,8 @@ end;
 -- + end
 --
 -- + function out_no_db_fetch_results()
+-- A non-DML OUT wrapper must not publish its row as a Lua global either.
+-- + local _result_ = out_no_db()
 -- + ::cql_cleanup::
 -- +   return result_set
 -- + end
@@ -2189,7 +2194,7 @@ end;
 -- + _rc_, _result_stmt = cql_prepare(_db_,
 -- +    "SELECT 1, 2")
 -- + function simple_identity_fetch_results(_db_)
--- + _rc_, result_set = cql_fetch_all_rows(stmt, "II", { "id", "data" })
+-- + _rc_, result_set = cql_fetch_all_rows(_stmt_, "II", { "id", "data" })
 -- TODO, identity was only interesting for partial compare on the rowset
 -- this really doesn't make much sense in the LUA world but some thinking
 -- could be needed here.
@@ -2203,8 +2208,8 @@ end;
 -- + function complex_identity(_db_)
 -- + "SELECT 1, 2, 3")
 -- + function complex_identity_fetch_results(_db_)
--- +  _rc_, stmt = complex_identity(_db_)
--- +  _rc_, result_set = cql_fetch_all_rows(stmt, "III", { "col1", "col2", "data" })
+-- +  _rc_, _stmt_ = complex_identity(_db_)
+-- +  _rc_, result_set = cql_fetch_all_rows(_stmt_, "III", { "col1", "col2", "data" })
 [[identity=(col1, col2)]]
 proc complex_identity()
 begin
@@ -2236,7 +2241,7 @@ create table radioactive(
 -- + function radioactive_proc(_db_)
 -- + "SELECT radioactive.id, radioactive.data FROM radioactive"
 -- + function radioactive_proc_fetch_results(_db_)
--- +  _rc_, result_set = cql_fetch_all_rows(stmt, "Is", { "id", "data" })
+-- +  _rc_, result_set = cql_fetch_all_rows(_stmt_, "Is", { "id", "data" })
 [[vault_sensitive]]
 proc radioactive_proc()
 begin
@@ -2735,7 +2740,7 @@ end;
 
 -- TEST: no getters generated for this function
 -- lua has no getters but we can verify that there are no errors for using the form
--- + _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
+-- + _rc_, result_set = cql_fetch_all_rows(_stmt_, "Islid", { "id", "name", "rate", "type", "size" })
 [[suppress_getters]]
 proc lotsa_columns_no_getters()
 begin
@@ -2747,7 +2752,7 @@ end;
 -- + function sproc_with_copy(_db_)
 -- + "SELECT bar.id, bar.name, bar.rate, bar.type, bar.size FROM bar"
 -- + function sproc_with_copy_fetch_results(_db_)
--- + _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
+-- + _rc_, result_set = cql_fetch_all_rows(_stmt_, "Islid", { "id", "name", "rate", "type", "size" })
 [[generate_copy]]
 proc sproc_with_copy()
 begin
@@ -2833,7 +2838,7 @@ end;
 -- + "SELECT bar.id, bar.name, bar.rate, bar.type, bar.size FROM bar"
 -- + return _rc_, _result_stmt
 -- + function no_out_with_setters_fetch_results(_db_)
--- + _rc_, stmt = no_out_with_setters(_db_)
+-- + _rc_, _stmt_ = no_out_with_setters(_db_)
 [[emit_setters]]
 proc no_out_with_setters()
 begin
@@ -2894,8 +2899,8 @@ create table vault_non_sensitive(
 -- +    "SELECT vault_mixed_sensitive.id, vault_mixed_sensitive.name, vault_mixed_sensitive.title, vault_mixed_sensitive.type FROM vault_mixed_sensitive"
 -- +  return _rc_, _result_stmt
 -- + function vault_sensitive_with_values_proc_fetch_results(_db_)
--- +  _rc_, stmt = vault_sensitive_with_values_proc(_db_)
--- +  _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
+-- +  _rc_, _stmt_ = vault_sensitive_with_values_proc(_db_)
+-- +  _rc_, result_set = cql_fetch_all_rows(_stmt_, "Issl", { "id", "name", "title", "type" })
 -- +  return _rc_, result_set
 [[vault_sensitive=(id, name)]]
 [[custom_type_for_encoded_column]]
@@ -2909,7 +2914,7 @@ end;
 -- +  "SELECT vault_mixed_not_nullable_sensitive.id, vault_mixed_not_nullable_sensitive.name, vault_mixed_not_nullable_sensitive.title, vault_mixed_not_nullable_sensitive.type FROM vault_mixed_not_nullable_sensitive"
 -- +  return _rc_, _result_stmt
 -- + function vault_not_nullable_sensitive_with_values_proc_fetch_results(_db_)
--- +  _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
+-- +  _rc_, result_set = cql_fetch_all_rows(_stmt_, "Issl", { "id", "name", "title", "type" })
 -- +  return _rc_, result_set
 [[vault_sensitive=(id, name)]]
 [[custom_type_for_encoded_column]]
@@ -2923,7 +2928,7 @@ end;
 -- +    "SELECT vault_mixed_sensitive.id, vault_mixed_sensitive.name, vault_mixed_sensitive.title, vault_mixed_sensitive.type FROM vault_mixed_sensitive"
 -- +  return _rc_, _result_stmt
 -- + function vault_sensitive_mixed_proc_fetch_results(_db_)
--- +  _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
+-- +  _rc_, result_set = cql_fetch_all_rows(_stmt_, "Issl", { "id", "name", "title", "type" })
 -- +  return _rc_, result_set
 [[vault_sensitive]]
 proc vault_sensitive_mixed_proc()
@@ -2936,7 +2941,7 @@ end;
 -- + "SELECT vault_mixed_sensitive.id, vault_mixed_sensitive.name, vault_mixed_sensitive.title, vault_mixed_sensitive.type FROM vault_mixed_sensitive UNION ALL SELECT vault_non_sensitive.id, vault_non_sensitive.name, vault_non_sensitive.title, vault_non_sensitive.type FROM vault_non_sensitive"
 -- + return _rc_, _result_stmt
 -- + function vault_union_all_table_proc_fetch_results(_db_)
--- + _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
+-- + _rc_, result_set = cql_fetch_all_rows(_stmt_, "Issl", { "id", "name", "title", "type" })
 -- + return _rc_, result_set
 [[vault_sensitive]]
 proc vault_union_all_table_proc()
@@ -2951,8 +2956,8 @@ end;
 -- + "SELECT name FROM vault_mixed_sensitive"
 -- + return _rc_, _result_stmt
 -- + function vault_alias_column_proc_fetch_results(_db_)
--- + _rc_, stmt = vault_alias_column_proc(_db_)
--- + _rc_, result_set = cql_fetch_all_rows(stmt, "s", { "alias_name" })
+-- + _rc_, _stmt_ = vault_alias_column_proc(_db_)
+-- + _rc_, result_set = cql_fetch_all_rows(_stmt_, "s", { "alias_name" })
 -- + return _rc_, result_set
 [[vault_sensitive=alias_name]]
 proc vault_alias_column_proc()
@@ -2964,8 +2969,8 @@ end;
 -- + function vault_alias_column_name_proc(_db_)
 -- + "SELECT name FROM vault_mixed_sensitive")
 -- + function vault_alias_column_name_proc_fetch_results(_db_)
--- + _rc_, stmt = vault_alias_column_name_proc(_db_)
--- + _rc_, result_set = cql_fetch_all_rows(stmt, "s", { "alias_name" })
+-- + _rc_, _stmt_ = vault_alias_column_name_proc(_db_)
+-- + _rc_, result_set = cql_fetch_all_rows(_stmt_, "s", { "alias_name" })
 -- + return _rc_, result_set
 [[vault_sensitive=alias_name]]
 proc vault_alias_column_name_proc()
@@ -2991,7 +2996,7 @@ end;
 -- + function vault_sensitive_with_context_and_sensitive_columns_proc(_db_)
 -- + "SELECT vault_mixed_sensitive.id, vault_mixed_sensitive.name, vault_mixed_sensitive.title, vault_mixed_sensitive.type FROM vault_mixed_sensitive"
 -- + function vault_sensitive_with_context_and_sensitive_columns_proc_fetch_results(_db_)
--- + _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
+-- + _rc_, result_set = cql_fetch_all_rows(_stmt_, "Issl", { "id", "name", "title", "type" })
 [[vault_sensitive=(title, (id, name))]]
 proc vault_sensitive_with_context_and_sensitive_columns_proc()
 begin
@@ -3002,7 +3007,7 @@ end;
 -- + function vault_sensitive_with_no_context_and_sensitive_columns_proc(_db_)
 -- + "SELECT vault_mixed_sensitive.id, vault_mixed_sensitive.name, vault_mixed_sensitive.title, vault_mixed_sensitive.type FROM vault_mixed_sensitive"
 -- + function vault_sensitive_with_no_context_and_sensitive_columns_proc_fetch_results(_db_)
--- + _rc_, stmt = vault_sensitive_with_no_context_and_sensitive_columns_proc(_db_)
+-- + _rc_, _stmt_ = vault_sensitive_with_no_context_and_sensitive_columns_proc(_db_)
 [[vault_sensitive=((id, name))]]
 proc vault_sensitive_with_no_context_and_sensitive_columns_proc()
 begin
@@ -3011,7 +3016,7 @@ end;
 
 -- TEST: vault_sensitive attribute includes encode context column (title) and no sensitive column
 -- + function vault_sensitive_with_context_and_no_sensitive_columns_proc_fetch_results(_db_)
--- + _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
+-- + _rc_, result_set = cql_fetch_all_rows(_stmt_, "Issl", { "id", "name", "title", "type" })
 [[vault_sensitive=(title, (id, name))]]
 proc vault_sensitive_with_context_and_no_sensitive_columns_proc()
 begin
@@ -5378,7 +5383,7 @@ end;
 -- + "INSERT INTO insert_returning_test(ix, iy) VALUES (1, 2) RETURNING ix + iy AS xy, ix, iy")
 -- + return _rc_, _result_stmt
 -- + function insert_returning_resultset_fetch_results(_db_)
--- + _rc_, result_set = cql_fetch_all_rows(stmt, "iii", { "xy", "ix", "iy" })
+-- + _rc_, result_set = cql_fetch_all_rows(_stmt_, "iii", { "xy", "ix", "iy" })
 proc insert_returning_resultset()
 begin
   insert into insert_returning_test(ix,iy) values (1,2)
@@ -5401,8 +5406,8 @@ end;
 -- + _rc_, _result_stmt = cql_prepare(_db_,
 -- + "DELETE FROM insert_returning_test RETURNING ix + iy AS xy, ix, iy")
 -- + function delete_returning_resultset_fetch_results(_db_)
--- + _rc_, stmt = delete_returning_resultset(_db_)
--- + _rc_, result_set = cql_fetch_all_rows(stmt, "iii", { "xy", "ix", "iy" })
+-- + _rc_, _stmt_ = delete_returning_resultset(_db_)
+-- + _rc_, result_set = cql_fetch_all_rows(_stmt_, "iii", { "xy", "ix", "iy" })
 proc delete_returning_resultset()
 begin
   delete from insert_returning_test
@@ -5560,6 +5565,18 @@ proc case_bool_numeric(b bool, n real, out bool_case int!, out numeric_case int!
 begin
   set bool_case := case b when 0 then 10 when 1 then 11 when 2 then 12 else 13 end;
   set numeric_case := case n when b then 20 when false then 21 when true then 22 else 23 end;
+end;
+
+-- TEST: wrapper locals must not shadow input arguments before forwarding them
+-- stmt and rc keep their public spellings while the internal temporaries change.
+-- Declaring the returned tuple at the call preserves the INOUT argument too.
+-- + function wrapper_param_forwarding_fetch_results(_db_, stmt, rc, forwarded)
+-- + local _rc_, _stmt_, forwarded = wrapper_param_forwarding(_db_, stmt, rc, forwarded)
+-- + return _rc_, result_set, forwarded
+proc wrapper_param_forwarding(stmt int!, rc int!, inout forwarded int!)
+begin
+  set forwarded := forwarded + 1;
+  select stmt as value, rc as code, forwarded as forwarded;
 end;
 
 --------------------------------------------------------------------

@@ -7772,6 +7772,60 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
   row2)
 
 // The statement ending at line XXXX
+#define CRC_wrapper_param_forwarding 3148352030026893475L
+
+extern cql_string_ref _Nonnull wrapper_param_forwarding_stored_procedure_name;
+
+#define wrapper_param_forwarding_data_types_count 3
+
+extern uint8_t wrapper_param_forwarding_data_types[wrapper_param_forwarding_data_types_count];
+
+#ifndef result_set_type_decl_wrapper_param_forwarding_result_set
+#define result_set_type_decl_wrapper_param_forwarding_result_set 1
+cql_result_set_type_decl(wrapper_param_forwarding_result_set, wrapper_param_forwarding_result_set_ref);
+#endif
+#ifndef _wrapper_param_forwarding_get_value_inline_
+#define _wrapper_param_forwarding_get_value_inline_
+
+
+static inline cql_int32 wrapper_param_forwarding_get_value(wrapper_param_forwarding_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 0);
+}
+
+#endif
+
+#ifndef _wrapper_param_forwarding_get_code_inline_
+#define _wrapper_param_forwarding_get_code_inline_
+
+
+static inline cql_int32 wrapper_param_forwarding_get_code(wrapper_param_forwarding_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 1);
+}
+
+#endif
+
+#ifndef _wrapper_param_forwarding_get_forwarded_inline_
+#define _wrapper_param_forwarding_get_forwarded_inline_
+
+
+static inline cql_int32 wrapper_param_forwarding_get_forwarded(wrapper_param_forwarding_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 2);
+}
+
+#endif
+
+
+extern cql_int32 wrapper_param_forwarding_result_count(wrapper_param_forwarding_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code wrapper_param_forwarding_fetch_results(sqlite3 *_Nonnull _db_, wrapper_param_forwarding_result_set_ref _Nullable *_Nonnull result_set, cql_int32 stmt, cql_int32 rc, cql_int32 *_Nonnull forwarded);
+#define wrapper_param_forwarding_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define wrapper_param_forwarding_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
 extern cql_int32 this_is_the_end;
 
 // The statement ending at line XXXX

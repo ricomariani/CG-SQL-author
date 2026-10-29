@@ -343,14 +343,13 @@ end
 
 function with_result_set_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = with_result_set(_db_)
+  local _rc_, _stmt_ = with_result_set(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "Islid", { "id", "name", "rate", "type", "size" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -380,14 +379,13 @@ end
 
 function select_from_view_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = select_from_view(_db_)
+  local _rc_, _stmt_ = select_from_view(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "Ii", { "id", "type" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "Ii", { "id", "type" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -469,14 +467,13 @@ end
 
 function get_data_fetch_results(_db_, name_, id_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = get_data(_db_, name_, id_)
+  local _rc_, _stmt_ = get_data(_db_, name_, id_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "Islid", { "id", "name", "rate", "type", "size" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -675,14 +672,13 @@ end
 
 function complex_return_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = complex_return(_db_)
+  local _rc_, _stmt_ = complex_return(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "FILDSf", { "_bool", "_integer", "_longint", "_real", "_text", "_nullable_bool" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "FILDSf", { "_bool", "_integer", "_longint", "_real", "_text", "_nullable_bool" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -725,14 +721,13 @@ end
 
 function hierarchical_query_fetch_results(_db_, rate_, limit_, offset_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = hierarchical_query(_db_, rate_, limit_, offset_)
+  local _rc_, _stmt_ = hierarchical_query(_db_, rate_, limit_, offset_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "id" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "I", { "id" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -775,14 +770,13 @@ end
 
 function hierarchical_unmatched_query_fetch_results(_db_, rate_, limit_, offset_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = hierarchical_unmatched_query(_db_, rate_, limit_, offset_)
+  local _rc_, _stmt_ = hierarchical_unmatched_query(_db_, rate_, limit_, offset_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "id" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "I", { "id" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -813,14 +807,13 @@ end
 
 function union_select_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = union_select(_db_)
+  local _rc_, _stmt_ = union_select(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "A" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "I", { "A" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -851,14 +844,13 @@ end
 
 function union_all_select_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = union_all_select(_db_)
+  local _rc_, _stmt_ = union_all_select(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "A" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "I", { "A" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -890,14 +882,13 @@ end
 
 function union_all_with_nullable_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = union_all_with_nullable(_db_)
+  local _rc_, _stmt_ = union_all_with_nullable(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "s", { "name" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "s", { "name" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -968,14 +959,13 @@ end
 
 function with_stmt_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = with_stmt(_db_)
+  local _rc_, _stmt_ = with_stmt(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "III", { "a", "b", "c" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "III", { "a", "b", "c" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -1011,14 +1001,13 @@ end
 
 function with_recursive_stmt_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = with_recursive_stmt(_db_)
+  local _rc_, _stmt_ = with_recursive_stmt(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "III", { "a", "b", "c" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "III", { "a", "b", "c" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -1047,14 +1036,13 @@ end
 
 function parent_proc_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = parent_proc(_db_)
+  local _rc_, _stmt_ = parent_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "III", { "one", "two", "three" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "III", { "one", "two", "three" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -1083,14 +1071,13 @@ end
 
 function parent_proc_child_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = parent_proc_child(_db_)
+  local _rc_, _stmt_ = parent_proc_child(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "III", { "four", "five", "six" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "III", { "four", "five", "six" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -1234,7 +1221,7 @@ end
 
 function cursor_with_object_fetch_results(object_)
   local result_set = nil
-  _result_ = cursor_with_object(object_)
+  local _result_ = cursor_with_object(object_)
   result_set = { _result_ }
 
 ::cql_cleanup::
@@ -1398,14 +1385,13 @@ end
 
 function uses_proc_for_result_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = uses_proc_for_result(_db_)
+  local _rc_, _stmt_ = uses_proc_for_result(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "Islid", { "id", "name", "rate", "type", "size" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -1609,14 +1595,13 @@ end
 
 function blob_returner_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = blob_returner(_db_)
+  local _rc_, _stmt_ = blob_returner(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "IBb", { "blob_id", "b_notnull", "b_nullable" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "IBb", { "blob_id", "b_notnull", "b_nullable" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -1681,8 +1666,7 @@ end
 
 function out_cursor_proc_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, _result_ = out_cursor_proc(_db_)
+  local _rc_, _result_ = out_cursor_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
 result_set = { _result_ }
 
@@ -1811,14 +1795,13 @@ end
 
 function thread_theme_info_list_fetch_results(_db_, thread_key_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = thread_theme_info_list(_db_, thread_key_)
+  local _rc_, _stmt_ = thread_theme_info_list(_db_, thread_key_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "L", { "thread_key" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "L", { "thread_key" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -2012,7 +1995,7 @@ end
 
 function out_no_db_fetch_results()
   local result_set = nil
-  _result_ = out_no_db()
+  local _result_ = out_no_db()
   result_set = { _result_ }
 
 ::cql_cleanup::
@@ -2051,7 +2034,7 @@ end
 
 function declare_cursor_like_cursor_fetch_results()
   local result_set = nil
-  _result_ = declare_cursor_like_cursor()
+  local _result_ = declare_cursor_like_cursor()
   result_set = { _result_ }
 
 ::cql_cleanup::
@@ -2082,7 +2065,7 @@ end
 
 function declare_cursor_like_proc_fetch_results()
   local result_set = nil
-  _result_ = declare_cursor_like_proc()
+  local _result_ = declare_cursor_like_proc()
   result_set = { _result_ }
 
 ::cql_cleanup::
@@ -2113,7 +2096,7 @@ end
 
 function declare_cursor_like_table_fetch_results()
   local result_set = nil
-  _result_ = declare_cursor_like_table()
+  local _result_ = declare_cursor_like_table()
   result_set = { _result_ }
 
 ::cql_cleanup::
@@ -2144,7 +2127,7 @@ end
 
 function declare_cursor_like_view_fetch_results()
   local result_set = nil
-  _result_ = declare_cursor_like_view()
+  local _result_ = declare_cursor_like_view()
   result_set = { _result_ }
 
 ::cql_cleanup::
@@ -2376,7 +2359,7 @@ end
 
 function fetch_to_cursor_from_cursor_fetch_results()
   local result_set = nil
-  _result_ = fetch_to_cursor_from_cursor()
+  local _result_ = fetch_to_cursor_from_cursor()
   result_set = { _result_ }
 
 ::cql_cleanup::
@@ -2999,14 +2982,13 @@ end
 
 function simple_identity_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = simple_identity(_db_)
+  local _rc_, _stmt_ = simple_identity(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "II", { "id", "data" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "II", { "id", "data" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -3036,14 +3018,13 @@ end
 
 function complex_identity_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = complex_identity(_db_)
+  local _rc_, _stmt_ = complex_identity(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "III", { "col1", "col2", "data" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "III", { "col1", "col2", "data" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -3086,8 +3067,7 @@ end
 
 function out_cursor_identity_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, _result_ = out_cursor_identity(_db_)
+  local _rc_, _result_ = out_cursor_identity(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
 result_set = { _result_ }
 
@@ -3122,14 +3102,13 @@ end
 
 function radioactive_proc_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = radioactive_proc(_db_)
+  local _rc_, _stmt_ = radioactive_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "Is", { "id", "data" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "Is", { "id", "data" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -3211,14 +3190,13 @@ end
 
 function autodropper_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = autodropper(_db_)
+  local _rc_, _stmt_ = autodropper(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "II", { "a", "b" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "II", { "a", "b" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   cql_autodrop(_db_, {"table1", "table2"})
   return _rc_, result_set
 end
@@ -3250,7 +3228,7 @@ end
 
 function simple_cursor_proc_fetch_results()
   local result_set = nil
-  _result_ = simple_cursor_proc()
+  local _result_ = simple_cursor_proc()
   result_set = { _result_ }
 
 ::cql_cleanup::
@@ -3283,14 +3261,13 @@ end
 
 function redundant_cast_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = redundant_cast(_db_)
+  local _rc_, _stmt_ = redundant_cast(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "II", { "plugh", "five" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "II", { "plugh", "five" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -3377,14 +3354,13 @@ end
 
 function top_level_select_alias_unused_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = top_level_select_alias_unused(_db_)
+  local _rc_, _stmt_ = top_level_select_alias_unused(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "II", { "id", "x" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "II", { "id", "x" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -3417,14 +3393,13 @@ end
 
 function top_level_select_alias_used_in_orderby_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = top_level_select_alias_used_in_orderby(_db_)
+  local _rc_, _stmt_ = top_level_select_alias_used_in_orderby(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "II", { "id", "x" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "II", { "id", "x" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -4043,14 +4018,13 @@ end
 
 function window_function_invocation_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = window_function_invocation(_db_)
+  local _rc_, _stmt_ = window_function_invocation(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "II", { "id", "row_num" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "II", { "id", "row_num" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -4130,14 +4104,13 @@ end
 
 function use_return_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = use_return(_db_)
+  local _rc_, _stmt_ = use_return(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "x" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "I", { "x" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -4362,14 +4335,13 @@ end
 
 function lotsa_columns_no_getters_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = lotsa_columns_no_getters(_db_)
+  local _rc_, _stmt_ = lotsa_columns_no_getters(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "Islid", { "id", "name", "rate", "type", "size" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -4405,14 +4377,13 @@ end
 
 function sproc_with_copy_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = sproc_with_copy(_db_)
+  local _rc_, _stmt_ = sproc_with_copy(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "Islid", { "id", "name", "rate", "type", "size" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -4460,7 +4431,7 @@ end
 
 function emit_object_with_setters_fetch_results(o, x, i, l, b, d, t, bl)
   local result_set = nil
-  _result_ = emit_object_with_setters(o, x, i, l, b, d, t, bl)
+  local _result_ = emit_object_with_setters(o, x, i, l, b, d, t, bl)
   result_set = { _result_ }
 
 ::cql_cleanup::
@@ -4502,7 +4473,7 @@ end
 
 function emit_setters_with_nullables_fetch_results(o, x, i, l, b, d, t, bl)
   local result_set = nil
-  _result_ = emit_setters_with_nullables(o, x, i, l, b, d, t, bl)
+  local _result_ = emit_setters_with_nullables(o, x, i, l, b, d, t, bl)
   result_set = { _result_ }
 
 ::cql_cleanup::
@@ -4541,14 +4512,13 @@ end
 
 function no_out_with_setters_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = no_out_with_setters(_db_)
+  local _rc_, _stmt_ = no_out_with_setters(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "Islid", { "id", "name", "rate", "type", "size" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -4653,14 +4623,13 @@ end
 
 function vault_sensitive_with_values_proc_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = vault_sensitive_with_values_proc(_db_)
+  local _rc_, _stmt_ = vault_sensitive_with_values_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "Issl", { "id", "name", "title", "type" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -4696,14 +4665,13 @@ end
 
 function vault_not_nullable_sensitive_with_values_proc_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = vault_not_nullable_sensitive_with_values_proc(_db_)
+  local _rc_, _stmt_ = vault_not_nullable_sensitive_with_values_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "ISSL", { "id", "name", "title", "type" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "ISSL", { "id", "name", "title", "type" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -4738,14 +4706,13 @@ end
 
 function vault_sensitive_mixed_proc_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = vault_sensitive_mixed_proc(_db_)
+  local _rc_, _stmt_ = vault_sensitive_mixed_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "Issl", { "id", "name", "title", "type" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -4787,14 +4754,13 @@ end
 
 function vault_union_all_table_proc_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = vault_union_all_table_proc(_db_)
+  local _rc_, _stmt_ = vault_union_all_table_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "Issl", { "id", "name", "title", "type" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -4825,14 +4791,13 @@ end
 
 function vault_alias_column_proc_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = vault_alias_column_proc(_db_)
+  local _rc_, _stmt_ = vault_alias_column_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "s", { "alias_name" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "s", { "alias_name" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -4863,14 +4828,13 @@ end
 
 function vault_alias_column_name_proc_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = vault_alias_column_name_proc(_db_)
+  local _rc_, _stmt_ = vault_alias_column_name_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "s", { "alias_name" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "s", { "alias_name" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -4939,14 +4903,13 @@ end
 
 function vault_sensitive_with_context_and_sensitive_columns_proc_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = vault_sensitive_with_context_and_sensitive_columns_proc(_db_)
+  local _rc_, _stmt_ = vault_sensitive_with_context_and_sensitive_columns_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "Issl", { "id", "name", "title", "type" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -4981,14 +4944,13 @@ end
 
 function vault_sensitive_with_no_context_and_sensitive_columns_proc_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = vault_sensitive_with_no_context_and_sensitive_columns_proc(_db_)
+  local _rc_, _stmt_ = vault_sensitive_with_no_context_and_sensitive_columns_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "Issl", { "id", "name", "title", "type" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -5023,14 +4985,13 @@ end
 
 function vault_sensitive_with_context_and_no_sensitive_columns_proc_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = vault_sensitive_with_context_and_no_sensitive_columns_proc(_db_)
+  local _rc_, _stmt_ = vault_sensitive_with_context_and_no_sensitive_columns_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "Issl", { "id", "name", "title", "type" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -5707,14 +5668,13 @@ end
 
 function window1_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = window1(_db_)
+  local _rc_, _stmt_ = window1(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "idd", { "month", "amount", "SalesMovingAverage" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -5745,14 +5705,13 @@ end
 
 function window2_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = window2(_db_)
+  local _rc_, _stmt_ = window2(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "RunningTotal" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "idd", { "month", "amount", "RunningTotal" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -5783,14 +5742,13 @@ end
 
 function window3_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = window3(_db_)
+  local _rc_, _stmt_ = window3(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "idd", { "month", "amount", "SalesMovingAverage" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -5821,14 +5779,13 @@ end
 
 function window4_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = window4(_db_)
+  local _rc_, _stmt_ = window4(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "idd", { "month", "amount", "SalesMovingAverage" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -5859,14 +5816,13 @@ end
 
 function window5_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = window5(_db_)
+  local _rc_, _stmt_ = window5(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "idd", { "month", "amount", "SalesMovingAverage" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -5897,14 +5853,13 @@ end
 
 function window6_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = window6(_db_)
+  local _rc_, _stmt_ = window6(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "idd", { "month", "amount", "SalesMovingAverage" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -5935,14 +5890,13 @@ end
 
 function window7_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = window7(_db_)
+  local _rc_, _stmt_ = window7(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "idd", { "month", "amount", "SalesMovingAverage" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -5973,14 +5927,13 @@ end
 
 function window8_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = window8(_db_)
+  local _rc_, _stmt_ = window8(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "idd", { "month", "amount", "SalesMovingAverage" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -6011,14 +5964,13 @@ end
 
 function window9_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = window9(_db_)
+  local _rc_, _stmt_ = window9(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "idd", { "month", "amount", "SalesMovingAverage" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -6049,14 +6001,13 @@ end
 
 function window10_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = window10(_db_)
+  local _rc_, _stmt_ = window10(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "idd", { "month", "amount", "SalesMovingAverage" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -6087,14 +6038,13 @@ end
 
 function window11_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = window11(_db_)
+  local _rc_, _stmt_ = window11(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "idd", { "month", "amount", "SalesMovingAverage" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -6125,14 +6075,13 @@ end
 
 function window12_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = window12(_db_)
+  local _rc_, _stmt_ = window12(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "idd", { "month", "amount", "SalesMovingAverage" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -6163,14 +6112,13 @@ end
 
 function window13_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = window13(_db_)
+  local _rc_, _stmt_ = window13(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "idd", { "month", "amount", "SalesMovingAverage" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -6201,14 +6149,13 @@ end
 
 function window14_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = window14(_db_)
+  local _rc_, _stmt_ = window14(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "idd", { "month", "amount", "SalesMovingAverage" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -6239,14 +6186,13 @@ end
 
 function window15_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = window15(_db_)
+  local _rc_, _stmt_ = window15(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "idd", { "month", "amount", "SalesMovingAverage" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -6277,14 +6223,13 @@ end
 
 function window16_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = window16(_db_)
+  local _rc_, _stmt_ = window16(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "idd", { "month", "amount", "SalesMovingAverage" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -6631,14 +6576,13 @@ end
 
 function virtual1_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = virtual1(_db_)
+  local _rc_, _stmt_ = virtual1(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "i", { "vy" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "i", { "vy" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -6669,14 +6613,13 @@ end
 
 function virtual2_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = virtual2(_db_)
+  local _rc_, _stmt_ = virtual2(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "Ii", { "vx", "vy" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "Ii", { "vx", "vy" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -7328,7 +7271,7 @@ end
 
 function out_object_fetch_results(o)
   local result_set = nil
-  _result_ = out_object(o)
+  local _result_ = out_object(o)
   result_set = { _result_ }
 
 ::cql_cleanup::
@@ -7422,14 +7365,13 @@ end
 
 function result_set_proc_with_contract_in_fetch_results_fetch_results(_db_, t)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = result_set_proc_with_contract_in_fetch_results(_db_, t)
+  local _rc_, _stmt_ = result_set_proc_with_contract_in_fetch_results(_db_, t)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "Islid", { "id", "name", "rate", "type", "size" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -7459,7 +7401,7 @@ end
 
 function out_proc_with_contract_in_fetch_results_fetch_results(t)
   local result_set = nil
-  _result_ = out_proc_with_contract_in_fetch_results(t)
+  local _result_ = out_proc_with_contract_in_fetch_results(t)
   result_set = { _result_ }
 
 ::cql_cleanup::
@@ -7500,14 +7442,13 @@ end
 
 function nullability_improvements_are_erased_for_sql_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = nullability_improvements_are_erased_for_sql(_db_)
+  local _rc_, _stmt_ = nullability_improvements_are_erased_for_sql(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "b" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "I", { "b" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -7905,14 +7846,13 @@ end
 
 function sensitive_function_is_a_no_op_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = sensitive_function_is_a_no_op(_db_)
+  local _rc_, _stmt_ = sensitive_function_is_a_no_op(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "S", { "y" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "S", { "y" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -7986,14 +7926,13 @@ end
 
 function foo_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = foo(_db_)
+  local _rc_, _stmt_ = foo(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "shared_something" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "I", { "shared_something" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -8072,14 +8011,13 @@ end
 
 function shared_conditional_user_fetch_results(_db_, x)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = shared_conditional_user(_db_, x)
+  local _rc_, _stmt_ = shared_conditional_user(_db_, x)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "Islid", { "id", "name", "rate", "type", "size" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -8148,14 +8086,13 @@ end
 
 function shared_numeric_condition_user_fetch_results(_db_, x, y, flag)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = shared_numeric_condition_user(_db_, x, y, flag)
+  local _rc_, _stmt_ = shared_numeric_condition_user(_db_, x, y, flag)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "value" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "I", { "value" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -8234,14 +8171,13 @@ end
 
 function nested_shared_stuff_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = nested_shared_stuff(_db_)
+  local _rc_, _stmt_ = nested_shared_stuff(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "x" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "I", { "x" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -8322,14 +8258,13 @@ end
 
 function use_nested_select_shared_frag_form_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = use_nested_select_shared_frag_form(_db_)
+  local _rc_, _stmt_ = use_nested_select_shared_frag_form(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "x" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "I", { "x" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -8586,8 +8521,7 @@ end
 
 function some_redeclared_out_proc_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, _result_ = some_redeclared_out_proc(_db_)
+  local _rc_, _result_ = some_redeclared_out_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
 result_set = { _result_ }
 
@@ -8799,14 +8733,13 @@ end
 
 function simple_child_proc_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = simple_child_proc(_db_)
+  local _rc_, _stmt_ = simple_child_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "II", { "x", "y" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "II", { "x", "y" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -9326,14 +9259,13 @@ end
 
 function insert_returning_resultset_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = insert_returning_resultset(_db_)
+  local _rc_, _stmt_ = insert_returning_resultset(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "iii", { "xy", "ix", "iy" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "iii", { "xy", "ix", "iy" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -9392,14 +9324,13 @@ end
 
 function delete_returning_resultset_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = delete_returning_resultset(_db_)
+  local _rc_, _stmt_ = delete_returning_resultset(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "iii", { "xy", "ix", "iy" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "iii", { "xy", "ix", "iy" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -9605,14 +9536,13 @@ end
 
 function get_xy_fetch_results(_db_)
   local result_set = nil
-  local _rc_
-  _rc_, stmt = get_xy(_db_)
+  local _rc_, _stmt_ = get_xy(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, "LL", { "x", "y" })
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "LL", { "x", "y" })
 
 ::cql_cleanup::
-  cql_finalize_stmt(stmt)
-  stmt = nil
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
   return _rc_, result_set
 end
 
@@ -9682,6 +9612,49 @@ function case_bool_numeric(b, n)
 
   return bool_case, numeric_case
 end
+
+-- The statement ending at line XXXX
+
+--[[
+PROC wrapper_param_forwarding (stmt INT!, rc INT!, INOUT forwarded INT!)
+BEGIN
+  SET forwarded := forwarded + 1;
+  SELECT stmt AS value, rc AS code, forwarded AS forwarded;
+END;
+--]]
+
+function wrapper_param_forwarding(_db_, stmt, rc, forwarded)
+  cql_contract_argument_notnull(stmt, 1)
+  cql_contract_argument_notnull(rc, 2)
+  cql_contract_argument_notnull(forwarded, 3)
+
+  local _rc_ = CQL_OK
+  local _result_stmt = nil
+  forwarded = forwarded + 1
+  _rc_, _result_stmt = cql_prepare(_db_, 
+    "SELECT ?, ?, ?")
+  if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+  _rc_ = cql_multibind(_db_, _result_stmt, "III", stmt, rc, forwarded)
+  if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+  _rc_ = CQL_OK
+
+::cql_cleanup::
+  if _rc_ == CQL_OK and _result_stmt == nil then _rc_, _result_stmt = cql_no_rows_stmt(_db_) end
+  return _rc_, _result_stmt, forwarded
+end
+
+function wrapper_param_forwarding_fetch_results(_db_, stmt, rc, forwarded)
+  local result_set = nil
+  local _rc_, _stmt_, forwarded = wrapper_param_forwarding(_db_, stmt, rc, forwarded)
+  if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+  _rc_, result_set = cql_fetch_all_rows(_stmt_, "III", { "value", "code", "forwarded" })
+
+::cql_cleanup::
+  cql_finalize_stmt(_stmt_)
+  _stmt_ = nil
+  return _rc_, result_set, forwarded
+end
+
 local this_is_the_end = 0
 
 -- The statement ending at line XXXX

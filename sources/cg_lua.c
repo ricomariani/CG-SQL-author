@@ -5533,7 +5533,8 @@ static void cg_lua_proc_result_set(ast_node *ast) {
   // but it is hiding the cql_result_set implementation detail from the API of the generated
   // code by providing a proc-scoped function for it with the typedef for the result set.
 
-  // Generate fetch result function
+  // Declare returned tuples at the call: Lua evaluates forwarded arguments before
+  // these locals shadow any parameter names.
   if (uses_out) {
     // Emit foo_fetch_results, it has the same signature as foo only with a result set
     // instead of a statement.
@@ -5548,7 +5549,6 @@ static void cg_lua_proc_result_set(ast_node *ast) {
 
     // optional db arg and return code
     if (dml_proc) {
-      bprintf(d, "  local _rc_\n");
       bprintf(&args, "_db_");
       bprintf(&returns, "_rc_, _result_");
     }
@@ -5560,7 +5560,7 @@ static void cg_lua_proc_result_set(ast_node *ast) {
       cg_lua_params(params, &args, &returns);
     }
 
-    bprintf(d, "  %s = %s(%s)\n", returns.ptr, proc_sym.ptr, args.ptr);
+    bprintf(d, "  local %s = %s(%s)\n", returns.ptr, proc_sym.ptr, args.ptr);
     bprintf(d, "  ");
     if (dml_proc) {
       cg_lua_error_on_not_sqlite_ok();
@@ -5598,24 +5598,23 @@ static void cg_lua_proc_result_set(ast_node *ast) {
       cg_lua_emit_fetch_results_prototype(dml_proc, params, name, d);
 
       bprintf(d, "  local result_set = nil\n");
-      bprintf(d, "  local _rc_\n");
 
       CHARBUF_OPEN(args);
       CHARBUF_OPEN(returns);
 
       // fixed db arg and return code
       bprintf(&args, "_db_");
-      bprintf(&returns, "_rc_, stmt");
+      bprintf(&returns, "_rc_, _stmt_");
 
       if (params) {
         cg_lua_params(params, &args, &returns);
       }
 
-      bprintf(d, "  %s = %s(%s)\n", returns.ptr, proc_sym.ptr, args.ptr);
+      bprintf(d, "  local %s = %s(%s)\n", returns.ptr, proc_sym.ptr, args.ptr);
       bprintf(d, "  ");
       cg_lua_error_on_not_sqlite_ok();
 
-      bprintf(d, "  _rc_, result_set = cql_fetch_all_rows(stmt, ");
+      bprintf(d, "  _rc_, result_set = cql_fetch_all_rows(_stmt_, ");
       cg_lua_emit_field_types(d, ast->sem->sptr);
       bprintf(d, ", ");
       cg_lua_emit_field_names(d, ast->sem->sptr);
@@ -5630,8 +5629,8 @@ static void cg_lua_proc_result_set(ast_node *ast) {
       }
 
       bprintf(d, "\n::cql_cleanup::\n");
-      bprintf(d, "  cql_finalize_stmt(stmt)\n");
-      bprintf(d, "  stmt = nil\n");
+      bprintf(d, "  cql_finalize_stmt(_stmt_)\n");
+      bprintf(d, "  _stmt_ = nil\n");
 
       cg_lua_emit_autodrops(d, misc_attrs);
 

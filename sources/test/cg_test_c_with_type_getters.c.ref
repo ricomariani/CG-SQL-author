@@ -251,13 +251,13 @@ cql_int32 selector_result_count(selector_result_set_ref _Nonnull result_set) {
 }
 
 CQL_WARN_UNUSED cql_code selector_fetch_results(sqlite3 *_Nonnull _db_, selector_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_selector, &selector_perf_index);
-  cql_code rc = selector(_db_, &stmt);
+  cql_code _rc_ = selector(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = selector_data_types,
     .col_offsets = selector_col_offsets,
     .refs_count = 4,
@@ -456,13 +456,13 @@ cql_int32 sproc_copy_func_result_count(sproc_copy_func_result_set_ref _Nonnull r
 }
 
 CQL_WARN_UNUSED cql_code sproc_copy_func_fetch_results(sqlite3 *_Nonnull _db_, sproc_copy_func_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_sproc_copy_func, &sproc_copy_func_perf_index);
-  cql_code rc = sproc_copy_func(_db_, &stmt);
+  cql_code _rc_ = sproc_copy_func(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = sproc_copy_func_data_types,
     .col_offsets = sproc_copy_func_col_offsets,
     .refs_count = 4,
@@ -621,13 +621,13 @@ cql_int32 simple_child_proc_result_count(simple_child_proc_result_set_ref _Nonnu
 }
 
 CQL_WARN_UNUSED cql_code simple_child_proc_fetch_results(sqlite3 *_Nonnull _db_, simple_child_proc_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_simple_child_proc, &simple_child_proc_perf_index);
-  cql_code rc = simple_child_proc(_db_, &stmt);
+  cql_code _rc_ = simple_child_proc(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = simple_child_proc_data_types,
     .col_offsets = simple_child_proc_col_offsets,
     .rowsize = sizeof(simple_child_proc_row),

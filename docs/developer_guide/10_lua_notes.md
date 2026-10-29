@@ -976,6 +976,25 @@ The Lua runtime functions abstract the FFI/binding layer. They handle:
 
 This makes the generated Lua code cleaner and more idiomatic.
 
+### Fetch-Results Wrapper Locals
+
+Generated C and Lua fetch-results wrappers use `_rc_` and `_stmt_` for their
+return-code and statement temporaries, where needed. The C runtime metadata
+fields remain `.rc` and `.stmt`; these are not renamed.
+
+Lua wrappers declare the returned tuple locally at the underlying procedure call.
+For a procedure with an `INOUT` argument, this has the form:
+
+```lua
+local _rc_, _stmt_, value = read_rows(_db_, value)
+```
+
+Lua evaluates the arguments using the incoming `value` before the new locals enter
+scope. This preserves argument forwarding while keeping the returned values local
+to the wrapper. Single-row `OUT` wrappers likewise declare `_result_` locally.
+Without these local declarations, assignments can overwrite application globals,
+and nested wrapper calls can replace the statement an outer call needs to finalize.
+
 ## Expression Evaluation
 
 ### C Expression Evaluation

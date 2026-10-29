@@ -671,6 +671,7 @@ extern CQL_WARN_UNUSED cql_code a_backed_join(sqlite3 *_Nonnull _db_, sqlite3_st
 extern CQL_WARN_UNUSED cql_code insert_returning_resultset(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code delete_returning_resultset(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code get_xy(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+extern CQL_WARN_UNUSED cql_code wrapper_param_forwarding(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_int32 stmt, cql_int32 rc, cql_int32 *_Nonnull forwarded);
 cql_string_literal(_literal_1_text_, "text");
 cql_string_literal(_literal_2_This_is_a_test_, "This is a \" \\ test '' \n \" ");
 cql_string_literal(_literal_3_b_, "b");
@@ -1101,13 +1102,13 @@ cql_int32 with_result_set_result_count(with_result_set_result_set_ref _Nonnull r
 }
 
 CQL_WARN_UNUSED cql_code with_result_set_fetch_results(sqlite3 *_Nonnull _db_, with_result_set_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_with_result_set, &with_result_set_perf_index);
-  cql_code rc = with_result_set(_db_, &stmt);
+  cql_code _rc_ = with_result_set(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = with_result_set_data_types,
     .col_offsets = with_result_set_col_offsets,
     .refs_count = 1,
@@ -1181,13 +1182,13 @@ cql_int32 select_from_view_result_count(select_from_view_result_set_ref _Nonnull
 }
 
 CQL_WARN_UNUSED cql_code select_from_view_fetch_results(sqlite3 *_Nonnull _db_, select_from_view_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_select_from_view, &select_from_view_perf_index);
-  cql_code rc = select_from_view(_db_, &stmt);
+  cql_code _rc_ = select_from_view(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = select_from_view_data_types,
     .col_offsets = select_from_view_col_offsets,
     .rowsize = sizeof(select_from_view_row),
@@ -1331,13 +1332,13 @@ cql_int32 get_data_result_count(get_data_result_set_ref _Nonnull result_set) {
 }
 
 CQL_WARN_UNUSED cql_code get_data_fetch_results(sqlite3 *_Nonnull _db_, get_data_result_set_ref _Nullable *_Nonnull result_set, cql_string_ref _Nonnull name_, cql_int32 id_) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_get_data, &get_data_perf_index);
-  cql_code rc = get_data(_db_, &stmt, name_, id_);
+  cql_code _rc_ = get_data(_db_, &_stmt_, name_, id_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = get_data_data_types,
     .col_offsets = get_data_col_offsets,
     .refs_count = 1,
@@ -1567,13 +1568,13 @@ cql_int32 complex_return_result_count(complex_return_result_set_ref _Nonnull res
 }
 
 CQL_WARN_UNUSED cql_code complex_return_fetch_results(sqlite3 *_Nonnull _db_, complex_return_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_complex_return, &complex_return_perf_index);
-  cql_code rc = complex_return(_db_, &stmt);
+  cql_code _rc_ = complex_return(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = complex_return_data_types,
     .col_offsets = complex_return_col_offsets,
     .refs_count = 1,
@@ -1651,13 +1652,13 @@ cql_int32 hierarchical_query_result_count(hierarchical_query_result_set_ref _Non
 }
 
 CQL_WARN_UNUSED cql_code hierarchical_query_fetch_results(sqlite3 *_Nonnull _db_, hierarchical_query_result_set_ref _Nullable *_Nonnull result_set, cql_int64 rate_, cql_int32 limit_, cql_int32 offset_) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_hierarchical_query, &hierarchical_query_perf_index);
-  cql_code rc = hierarchical_query(_db_, &stmt, rate_, limit_, offset_);
+  cql_code _rc_ = hierarchical_query(_db_, &_stmt_, rate_, limit_, offset_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = hierarchical_query_data_types,
     .col_offsets = hierarchical_query_col_offsets,
     .rowsize = sizeof(hierarchical_query_row),
@@ -1739,13 +1740,13 @@ cql_int32 hierarchical_unmatched_query_result_count(hierarchical_unmatched_query
 }
 
 CQL_WARN_UNUSED cql_code hierarchical_unmatched_query_fetch_results(sqlite3 *_Nonnull _db_, hierarchical_unmatched_query_result_set_ref _Nullable *_Nonnull result_set, cql_int64 rate_, cql_int32 limit_, cql_int32 offset_) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_hierarchical_unmatched_query, &hierarchical_unmatched_query_perf_index);
-  cql_code rc = hierarchical_unmatched_query(_db_, &stmt, rate_, limit_, offset_);
+  cql_code _rc_ = hierarchical_unmatched_query(_db_, &_stmt_, rate_, limit_, offset_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = hierarchical_unmatched_query_data_types,
     .col_offsets = hierarchical_unmatched_query_col_offsets,
     .rowsize = sizeof(hierarchical_unmatched_query_row),
@@ -1821,13 +1822,13 @@ cql_int32 union_select_result_count(union_select_result_set_ref _Nonnull result_
 }
 
 CQL_WARN_UNUSED cql_code union_select_fetch_results(sqlite3 *_Nonnull _db_, union_select_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_union_select, &union_select_perf_index);
-  cql_code rc = union_select(_db_, &stmt);
+  cql_code _rc_ = union_select(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = union_select_data_types,
     .col_offsets = union_select_col_offsets,
     .rowsize = sizeof(union_select_row),
@@ -1893,13 +1894,13 @@ cql_int32 union_all_select_result_count(union_all_select_result_set_ref _Nonnull
 }
 
 CQL_WARN_UNUSED cql_code union_all_select_fetch_results(sqlite3 *_Nonnull _db_, union_all_select_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_union_all_select, &union_all_select_perf_index);
-  cql_code rc = union_all_select(_db_, &stmt);
+  cql_code _rc_ = union_all_select(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = union_all_select_data_types,
     .col_offsets = union_all_select_col_offsets,
     .rowsize = sizeof(union_all_select_row),
@@ -1968,13 +1969,13 @@ cql_int32 union_all_with_nullable_result_count(union_all_with_nullable_result_se
 }
 
 CQL_WARN_UNUSED cql_code union_all_with_nullable_fetch_results(sqlite3 *_Nonnull _db_, union_all_with_nullable_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_union_all_with_nullable, &union_all_with_nullable_perf_index);
-  cql_code rc = union_all_with_nullable(_db_, &stmt);
+  cql_code _rc_ = union_all_with_nullable(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = union_all_with_nullable_data_types,
     .col_offsets = union_all_with_nullable_col_offsets,
     .refs_count = 1,
@@ -2112,13 +2113,13 @@ cql_int32 with_stmt_result_count(with_stmt_result_set_ref _Nonnull result_set) {
 }
 
 CQL_WARN_UNUSED cql_code with_stmt_fetch_results(sqlite3 *_Nonnull _db_, with_stmt_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_with_stmt, &with_stmt_perf_index);
-  cql_code rc = with_stmt(_db_, &stmt);
+  cql_code _rc_ = with_stmt(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = with_stmt_data_types,
     .col_offsets = with_stmt_col_offsets,
     .rowsize = sizeof(with_stmt_row),
@@ -2198,13 +2199,13 @@ cql_int32 with_recursive_stmt_result_count(with_recursive_stmt_result_set_ref _N
 }
 
 CQL_WARN_UNUSED cql_code with_recursive_stmt_fetch_results(sqlite3 *_Nonnull _db_, with_recursive_stmt_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_with_recursive_stmt, &with_recursive_stmt_perf_index);
-  cql_code rc = with_recursive_stmt(_db_, &stmt);
+  cql_code _rc_ = with_recursive_stmt(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = with_recursive_stmt_data_types,
     .col_offsets = with_recursive_stmt_col_offsets,
     .rowsize = sizeof(with_recursive_stmt_row),
@@ -2279,13 +2280,13 @@ cql_int32 parent_proc_result_count(parent_proc_result_set_ref _Nonnull result_se
 }
 
 CQL_WARN_UNUSED cql_code parent_proc_fetch_results(sqlite3 *_Nonnull _db_, parent_proc_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_parent_proc, &parent_proc_perf_index);
-  cql_code rc = parent_proc(_db_, &stmt);
+  cql_code _rc_ = parent_proc(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = parent_proc_data_types,
     .col_offsets = parent_proc_col_offsets,
     .rowsize = sizeof(parent_proc_row),
@@ -2353,13 +2354,13 @@ cql_int32 parent_proc_child_result_count(parent_proc_child_result_set_ref _Nonnu
 }
 
 CQL_WARN_UNUSED cql_code parent_proc_child_fetch_results(sqlite3 *_Nonnull _db_, parent_proc_child_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_parent_proc_child, &parent_proc_child_perf_index);
-  cql_code rc = parent_proc_child(_db_, &stmt);
+  cql_code _rc_ = parent_proc_child(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = parent_proc_child_data_types,
     .col_offsets = parent_proc_child_col_offsets,
     .rowsize = sizeof(parent_proc_child_row),
@@ -2816,13 +2817,13 @@ cql_int32 uses_proc_for_result_result_count(uses_proc_for_result_result_set_ref 
 }
 
 CQL_WARN_UNUSED cql_code uses_proc_for_result_fetch_results(sqlite3 *_Nonnull _db_, uses_proc_for_result_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_uses_proc_for_result, &uses_proc_for_result_perf_index);
-  cql_code rc = uses_proc_for_result(_db_, &stmt);
+  cql_code _rc_ = uses_proc_for_result(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = uses_proc_for_result_data_types,
     .col_offsets = uses_proc_for_result_col_offsets,
     .refs_count = 1,
@@ -3119,13 +3120,13 @@ cql_int32 blob_returner_result_count(blob_returner_result_set_ref _Nonnull resul
 }
 
 CQL_WARN_UNUSED cql_code blob_returner_fetch_results(sqlite3 *_Nonnull _db_, blob_returner_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_blob_returner, &blob_returner_perf_index);
-  cql_code rc = blob_returner(_db_, &stmt);
+  cql_code _rc_ = blob_returner(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = blob_returner_data_types,
     .col_offsets = blob_returner_col_offsets,
     .refs_count = 2,
@@ -3235,9 +3236,9 @@ CQL_WARN_UNUSED cql_code out_cursor_proc_fetch_results(sqlite3 *_Nonnull _db_, o
   cql_profile_start(CRC_out_cursor_proc, &out_cursor_proc_perf_index);
   *result_set = NULL;
   out_cursor_proc_row *row = (out_cursor_proc_row *)calloc(1, sizeof(out_cursor_proc_row));
-  cql_code rc = out_cursor_proc(_db_, row);
+  cql_code _rc_ = out_cursor_proc(_db_, row);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
     .data_types = out_cursor_proc_data_types,
     .col_offsets = out_cursor_proc_col_offsets,
@@ -3499,13 +3500,13 @@ cql_int32 thread_theme_info_list_result_count(thread_theme_info_list_result_set_
 }
 
 CQL_WARN_UNUSED cql_code thread_theme_info_list_fetch_results(sqlite3 *_Nonnull _db_, thread_theme_info_list_result_set_ref _Nullable *_Nonnull result_set, cql_int64 thread_key_) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_thread_theme_info_list, &thread_theme_info_list_perf_index);
-  cql_code rc = thread_theme_info_list(_db_, &stmt, thread_key_);
+  cql_code _rc_ = thread_theme_info_list(_db_, &_stmt_, thread_key_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = thread_theme_info_list_data_types,
     .col_offsets = thread_theme_info_list_col_offsets,
     .rowsize = sizeof(thread_theme_info_list_row),
@@ -5469,13 +5470,13 @@ cql_int32 simple_identity_result_count(simple_identity_result_set_ref _Nonnull r
 }
 
 CQL_WARN_UNUSED cql_code simple_identity_fetch_results(sqlite3 *_Nonnull _db_, simple_identity_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_simple_identity, &simple_identity_perf_index);
-  cql_code rc = simple_identity(_db_, &stmt);
+  cql_code _rc_ = simple_identity(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = simple_identity_data_types,
     .col_offsets = simple_identity_col_offsets,
     .identity_columns = simple_identity_identity_columns,
@@ -5550,13 +5551,13 @@ cql_int32 complex_identity_result_count(complex_identity_result_set_ref _Nonnull
 }
 
 CQL_WARN_UNUSED cql_code complex_identity_fetch_results(sqlite3 *_Nonnull _db_, complex_identity_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_complex_identity, &complex_identity_perf_index);
-  cql_code rc = complex_identity(_db_, &stmt);
+  cql_code _rc_ = complex_identity(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = complex_identity_data_types,
     .col_offsets = complex_identity_col_offsets,
     .identity_columns = complex_identity_identity_columns,
@@ -5628,9 +5629,9 @@ CQL_WARN_UNUSED cql_code out_cursor_identity_fetch_results(sqlite3 *_Nonnull _db
   cql_profile_start(CRC_out_cursor_identity, &out_cursor_identity_perf_index);
   *result_set = NULL;
   out_cursor_identity_row *row = (out_cursor_identity_row *)calloc(1, sizeof(out_cursor_identity_row));
-  cql_code rc = out_cursor_identity(_db_, row);
+  cql_code _rc_ = out_cursor_identity(_db_, row);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
     .data_types = out_cursor_identity_data_types,
     .col_offsets = out_cursor_identity_col_offsets,
@@ -5799,13 +5800,13 @@ cql_int32 autodropper_result_count(autodropper_result_set_ref _Nonnull result_se
 }
 
 CQL_WARN_UNUSED cql_code autodropper_fetch_results(sqlite3 *_Nonnull _db_, autodropper_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_autodropper, &autodropper_perf_index);
-  cql_code rc = autodropper(_db_, &stmt);
+  cql_code _rc_ = autodropper(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = autodropper_data_types,
     .col_offsets = autodropper_col_offsets,
     .rowsize = sizeof(autodropper_row),
@@ -5939,13 +5940,13 @@ cql_int32 redundant_cast_result_count(redundant_cast_result_set_ref _Nonnull res
 }
 
 CQL_WARN_UNUSED cql_code redundant_cast_fetch_results(sqlite3 *_Nonnull _db_, redundant_cast_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_redundant_cast, &redundant_cast_perf_index);
-  cql_code rc = redundant_cast(_db_, &stmt);
+  cql_code _rc_ = redundant_cast(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = redundant_cast_data_types,
     .col_offsets = redundant_cast_col_offsets,
     .rowsize = sizeof(redundant_cast_row),
@@ -6089,13 +6090,13 @@ cql_int32 top_level_select_alias_unused_result_count(top_level_select_alias_unus
 }
 
 CQL_WARN_UNUSED cql_code top_level_select_alias_unused_fetch_results(sqlite3 *_Nonnull _db_, top_level_select_alias_unused_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_top_level_select_alias_unused, &top_level_select_alias_unused_perf_index);
-  cql_code rc = top_level_select_alias_unused(_db_, &stmt);
+  cql_code _rc_ = top_level_select_alias_unused(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = top_level_select_alias_unused_data_types,
     .col_offsets = top_level_select_alias_unused_col_offsets,
     .rowsize = sizeof(top_level_select_alias_unused_row),
@@ -6167,13 +6168,13 @@ cql_int32 top_level_select_alias_used_in_orderby_result_count(top_level_select_a
 }
 
 CQL_WARN_UNUSED cql_code top_level_select_alias_used_in_orderby_fetch_results(sqlite3 *_Nonnull _db_, top_level_select_alias_used_in_orderby_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_top_level_select_alias_used_in_orderby, &top_level_select_alias_used_in_orderby_perf_index);
-  cql_code rc = top_level_select_alias_used_in_orderby(_db_, &stmt);
+  cql_code _rc_ = top_level_select_alias_used_in_orderby(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = top_level_select_alias_used_in_orderby_data_types,
     .col_offsets = top_level_select_alias_used_in_orderby_col_offsets,
     .rowsize = sizeof(top_level_select_alias_used_in_orderby_row),
@@ -7062,13 +7063,13 @@ cql_int32 window_function_invocation_result_count(window_function_invocation_res
 }
 
 CQL_WARN_UNUSED cql_code window_function_invocation_fetch_results(sqlite3 *_Nonnull _db_, window_function_invocation_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_window_function_invocation, &window_function_invocation_perf_index);
-  cql_code rc = window_function_invocation(_db_, &stmt);
+  cql_code _rc_ = window_function_invocation(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = window_function_invocation_data_types,
     .col_offsets = window_function_invocation_col_offsets,
     .rowsize = sizeof(window_function_invocation_row),
@@ -7186,13 +7187,13 @@ cql_int32 use_return_result_count(use_return_result_set_ref _Nonnull result_set)
 }
 
 CQL_WARN_UNUSED cql_code use_return_fetch_results(sqlite3 *_Nonnull _db_, use_return_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_use_return, &use_return_perf_index);
-  cql_code rc = use_return(_db_, &stmt);
+  cql_code _rc_ = use_return(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = use_return_data_types,
     .col_offsets = use_return_col_offsets,
     .rowsize = sizeof(use_return_row),
@@ -7524,13 +7525,13 @@ cql_int32 lotsa_columns_no_getters_result_count(lotsa_columns_no_getters_result_
 }
 
 CQL_WARN_UNUSED cql_code lotsa_columns_no_getters_fetch_results(sqlite3 *_Nonnull _db_, lotsa_columns_no_getters_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_lotsa_columns_no_getters, &lotsa_columns_no_getters_perf_index);
-  cql_code rc = lotsa_columns_no_getters(_db_, &stmt);
+  cql_code _rc_ = lotsa_columns_no_getters(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = lotsa_columns_no_getters_data_types,
     .col_offsets = lotsa_columns_no_getters_col_offsets,
     .refs_count = 1,
@@ -7621,13 +7622,13 @@ cql_int32 sproc_with_copy_result_count(sproc_with_copy_result_set_ref _Nonnull r
 }
 
 CQL_WARN_UNUSED cql_code sproc_with_copy_fetch_results(sqlite3 *_Nonnull _db_, sproc_with_copy_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_sproc_with_copy, &sproc_with_copy_perf_index);
-  cql_code rc = sproc_with_copy(_db_, &stmt);
+  cql_code _rc_ = sproc_with_copy(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = sproc_with_copy_data_types,
     .col_offsets = sproc_with_copy_col_offsets,
     .refs_count = 1,
@@ -7947,13 +7948,13 @@ cql_int32 no_out_with_setters_result_count(no_out_with_setters_result_set_ref _N
 }
 
 CQL_WARN_UNUSED cql_code no_out_with_setters_fetch_results(sqlite3 *_Nonnull _db_, no_out_with_setters_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_no_out_with_setters, &no_out_with_setters_perf_index);
-  cql_code rc = no_out_with_setters(_db_, &stmt);
+  cql_code _rc_ = no_out_with_setters(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = no_out_with_setters_data_types,
     .col_offsets = no_out_with_setters_col_offsets,
     .refs_count = 1,
@@ -8984,13 +8985,13 @@ cql_int32 window1_result_count(window1_result_set_ref _Nonnull result_set) {
 }
 
 CQL_WARN_UNUSED cql_code window1_fetch_results(sqlite3 *_Nonnull _db_, window1_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_window1, &window1_perf_index);
-  cql_code rc = window1(_db_, &stmt);
+  cql_code _rc_ = window1(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = window1_data_types,
     .col_offsets = window1_col_offsets,
     .rowsize = sizeof(window1_row),
@@ -9062,13 +9063,13 @@ cql_int32 window2_result_count(window2_result_set_ref _Nonnull result_set) {
 }
 
 CQL_WARN_UNUSED cql_code window2_fetch_results(sqlite3 *_Nonnull _db_, window2_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_window2, &window2_perf_index);
-  cql_code rc = window2(_db_, &stmt);
+  cql_code _rc_ = window2(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = window2_data_types,
     .col_offsets = window2_col_offsets,
     .rowsize = sizeof(window2_row),
@@ -9140,13 +9141,13 @@ cql_int32 window3_result_count(window3_result_set_ref _Nonnull result_set) {
 }
 
 CQL_WARN_UNUSED cql_code window3_fetch_results(sqlite3 *_Nonnull _db_, window3_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_window3, &window3_perf_index);
-  cql_code rc = window3(_db_, &stmt);
+  cql_code _rc_ = window3(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = window3_data_types,
     .col_offsets = window3_col_offsets,
     .rowsize = sizeof(window3_row),
@@ -9218,13 +9219,13 @@ cql_int32 window4_result_count(window4_result_set_ref _Nonnull result_set) {
 }
 
 CQL_WARN_UNUSED cql_code window4_fetch_results(sqlite3 *_Nonnull _db_, window4_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_window4, &window4_perf_index);
-  cql_code rc = window4(_db_, &stmt);
+  cql_code _rc_ = window4(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = window4_data_types,
     .col_offsets = window4_col_offsets,
     .rowsize = sizeof(window4_row),
@@ -9296,13 +9297,13 @@ cql_int32 window5_result_count(window5_result_set_ref _Nonnull result_set) {
 }
 
 CQL_WARN_UNUSED cql_code window5_fetch_results(sqlite3 *_Nonnull _db_, window5_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_window5, &window5_perf_index);
-  cql_code rc = window5(_db_, &stmt);
+  cql_code _rc_ = window5(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = window5_data_types,
     .col_offsets = window5_col_offsets,
     .rowsize = sizeof(window5_row),
@@ -9374,13 +9375,13 @@ cql_int32 window6_result_count(window6_result_set_ref _Nonnull result_set) {
 }
 
 CQL_WARN_UNUSED cql_code window6_fetch_results(sqlite3 *_Nonnull _db_, window6_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_window6, &window6_perf_index);
-  cql_code rc = window6(_db_, &stmt);
+  cql_code _rc_ = window6(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = window6_data_types,
     .col_offsets = window6_col_offsets,
     .rowsize = sizeof(window6_row),
@@ -9452,13 +9453,13 @@ cql_int32 window7_result_count(window7_result_set_ref _Nonnull result_set) {
 }
 
 CQL_WARN_UNUSED cql_code window7_fetch_results(sqlite3 *_Nonnull _db_, window7_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_window7, &window7_perf_index);
-  cql_code rc = window7(_db_, &stmt);
+  cql_code _rc_ = window7(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = window7_data_types,
     .col_offsets = window7_col_offsets,
     .rowsize = sizeof(window7_row),
@@ -9530,13 +9531,13 @@ cql_int32 window8_result_count(window8_result_set_ref _Nonnull result_set) {
 }
 
 CQL_WARN_UNUSED cql_code window8_fetch_results(sqlite3 *_Nonnull _db_, window8_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_window8, &window8_perf_index);
-  cql_code rc = window8(_db_, &stmt);
+  cql_code _rc_ = window8(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = window8_data_types,
     .col_offsets = window8_col_offsets,
     .rowsize = sizeof(window8_row),
@@ -9608,13 +9609,13 @@ cql_int32 window9_result_count(window9_result_set_ref _Nonnull result_set) {
 }
 
 CQL_WARN_UNUSED cql_code window9_fetch_results(sqlite3 *_Nonnull _db_, window9_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_window9, &window9_perf_index);
-  cql_code rc = window9(_db_, &stmt);
+  cql_code _rc_ = window9(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = window9_data_types,
     .col_offsets = window9_col_offsets,
     .rowsize = sizeof(window9_row),
@@ -9686,13 +9687,13 @@ cql_int32 window10_result_count(window10_result_set_ref _Nonnull result_set) {
 }
 
 CQL_WARN_UNUSED cql_code window10_fetch_results(sqlite3 *_Nonnull _db_, window10_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_window10, &window10_perf_index);
-  cql_code rc = window10(_db_, &stmt);
+  cql_code _rc_ = window10(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = window10_data_types,
     .col_offsets = window10_col_offsets,
     .rowsize = sizeof(window10_row),
@@ -9764,13 +9765,13 @@ cql_int32 window11_result_count(window11_result_set_ref _Nonnull result_set) {
 }
 
 CQL_WARN_UNUSED cql_code window11_fetch_results(sqlite3 *_Nonnull _db_, window11_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_window11, &window11_perf_index);
-  cql_code rc = window11(_db_, &stmt);
+  cql_code _rc_ = window11(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = window11_data_types,
     .col_offsets = window11_col_offsets,
     .rowsize = sizeof(window11_row),
@@ -9842,13 +9843,13 @@ cql_int32 window12_result_count(window12_result_set_ref _Nonnull result_set) {
 }
 
 CQL_WARN_UNUSED cql_code window12_fetch_results(sqlite3 *_Nonnull _db_, window12_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_window12, &window12_perf_index);
-  cql_code rc = window12(_db_, &stmt);
+  cql_code _rc_ = window12(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = window12_data_types,
     .col_offsets = window12_col_offsets,
     .rowsize = sizeof(window12_row),
@@ -9920,13 +9921,13 @@ cql_int32 window13_result_count(window13_result_set_ref _Nonnull result_set) {
 }
 
 CQL_WARN_UNUSED cql_code window13_fetch_results(sqlite3 *_Nonnull _db_, window13_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_window13, &window13_perf_index);
-  cql_code rc = window13(_db_, &stmt);
+  cql_code _rc_ = window13(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = window13_data_types,
     .col_offsets = window13_col_offsets,
     .rowsize = sizeof(window13_row),
@@ -9998,13 +9999,13 @@ cql_int32 window14_result_count(window14_result_set_ref _Nonnull result_set) {
 }
 
 CQL_WARN_UNUSED cql_code window14_fetch_results(sqlite3 *_Nonnull _db_, window14_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_window14, &window14_perf_index);
-  cql_code rc = window14(_db_, &stmt);
+  cql_code _rc_ = window14(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = window14_data_types,
     .col_offsets = window14_col_offsets,
     .rowsize = sizeof(window14_row),
@@ -10076,13 +10077,13 @@ cql_int32 window15_result_count(window15_result_set_ref _Nonnull result_set) {
 }
 
 CQL_WARN_UNUSED cql_code window15_fetch_results(sqlite3 *_Nonnull _db_, window15_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_window15, &window15_perf_index);
-  cql_code rc = window15(_db_, &stmt);
+  cql_code _rc_ = window15(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = window15_data_types,
     .col_offsets = window15_col_offsets,
     .rowsize = sizeof(window15_row),
@@ -10154,13 +10155,13 @@ cql_int32 window16_result_count(window16_result_set_ref _Nonnull result_set) {
 }
 
 CQL_WARN_UNUSED cql_code window16_fetch_results(sqlite3 *_Nonnull _db_, window16_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_window16, &window16_perf_index);
-  cql_code rc = window16(_db_, &stmt);
+  cql_code _rc_ = window16(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = window16_data_types,
     .col_offsets = window16_col_offsets,
     .rowsize = sizeof(window16_row),
@@ -10607,13 +10608,13 @@ cql_int32 virtual1_result_count(virtual1_result_set_ref _Nonnull result_set) {
 }
 
 CQL_WARN_UNUSED cql_code virtual1_fetch_results(sqlite3 *_Nonnull _db_, virtual1_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_virtual1, &virtual1_perf_index);
-  cql_code rc = virtual1(_db_, &stmt);
+  cql_code _rc_ = virtual1(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = virtual1_data_types,
     .col_offsets = virtual1_col_offsets,
     .rowsize = sizeof(virtual1_row),
@@ -10684,13 +10685,13 @@ cql_int32 virtual2_result_count(virtual2_result_set_ref _Nonnull result_set) {
 }
 
 CQL_WARN_UNUSED cql_code virtual2_fetch_results(sqlite3 *_Nonnull _db_, virtual2_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_virtual2, &virtual2_perf_index);
-  cql_code rc = virtual2(_db_, &stmt);
+  cql_code _rc_ = virtual2(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = virtual2_data_types,
     .col_offsets = virtual2_col_offsets,
     .rowsize = sizeof(virtual2_row),
@@ -11807,13 +11808,13 @@ cql_int32 result_set_proc_with_contract_in_fetch_results_result_count(result_set
 }
 
 CQL_WARN_UNUSED cql_code result_set_proc_with_contract_in_fetch_results_fetch_results(sqlite3 *_Nonnull _db_, result_set_proc_with_contract_in_fetch_results_result_set_ref _Nullable *_Nonnull result_set, cql_string_ref _Nonnull t) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_result_set_proc_with_contract_in_fetch_results, &result_set_proc_with_contract_in_fetch_results_perf_index);
-  cql_code rc = result_set_proc_with_contract_in_fetch_results(_db_, &stmt, t);
+  cql_code _rc_ = result_set_proc_with_contract_in_fetch_results(_db_, &_stmt_, t);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = result_set_proc_with_contract_in_fetch_results_data_types,
     .col_offsets = result_set_proc_with_contract_in_fetch_results_col_offsets,
     .refs_count = 1,
@@ -11979,13 +11980,13 @@ cql_int32 nullability_improvements_are_erased_for_sql_result_count(nullability_i
 }
 
 CQL_WARN_UNUSED cql_code nullability_improvements_are_erased_for_sql_fetch_results(sqlite3 *_Nonnull _db_, nullability_improvements_are_erased_for_sql_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_nullability_improvements_are_erased_for_sql, &nullability_improvements_are_erased_for_sql_perf_index);
-  cql_code rc = nullability_improvements_are_erased_for_sql(_db_, &stmt);
+  cql_code _rc_ = nullability_improvements_are_erased_for_sql(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = nullability_improvements_are_erased_for_sql_data_types,
     .col_offsets = nullability_improvements_are_erased_for_sql_col_offsets,
     .rowsize = sizeof(nullability_improvements_are_erased_for_sql_row),
@@ -12984,13 +12985,13 @@ cql_int32 sensitive_function_is_a_no_op_result_count(sensitive_function_is_a_no_
 }
 
 CQL_WARN_UNUSED cql_code sensitive_function_is_a_no_op_fetch_results(sqlite3 *_Nonnull _db_, sensitive_function_is_a_no_op_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_sensitive_function_is_a_no_op, &sensitive_function_is_a_no_op_perf_index);
-  cql_code rc = sensitive_function_is_a_no_op(_db_, &stmt);
+  cql_code _rc_ = sensitive_function_is_a_no_op(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = sensitive_function_is_a_no_op_data_types,
     .col_offsets = sensitive_function_is_a_no_op_col_offsets,
     .refs_count = 1,
@@ -13178,13 +13179,13 @@ cql_int32 foo_result_count(foo_result_set_ref _Nonnull result_set) {
 }
 
 CQL_WARN_UNUSED cql_code foo_fetch_results(sqlite3 *_Nonnull _db_, foo_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_foo, &foo_perf_index);
-  cql_code rc = foo(_db_, &stmt);
+  cql_code _rc_ = foo(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = foo_data_types,
     .col_offsets = foo_col_offsets,
     .rowsize = sizeof(foo_row),
@@ -13295,13 +13296,13 @@ cql_int32 shared_conditional_user_result_count(shared_conditional_user_result_se
 }
 
 CQL_WARN_UNUSED cql_code shared_conditional_user_fetch_results(sqlite3 *_Nonnull _db_, shared_conditional_user_result_set_ref _Nullable *_Nonnull result_set, cql_int32 x) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_shared_conditional_user, &shared_conditional_user_perf_index);
-  cql_code rc = shared_conditional_user(_db_, &stmt, x);
+  cql_code _rc_ = shared_conditional_user(_db_, &_stmt_, x);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = shared_conditional_user_data_types,
     .col_offsets = shared_conditional_user_col_offsets,
     .refs_count = 1,
@@ -13440,13 +13441,13 @@ cql_int32 nested_shared_stuff_result_count(nested_shared_stuff_result_set_ref _N
 }
 
 CQL_WARN_UNUSED cql_code nested_shared_stuff_fetch_results(sqlite3 *_Nonnull _db_, nested_shared_stuff_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_nested_shared_stuff, &nested_shared_stuff_perf_index);
-  cql_code rc = nested_shared_stuff(_db_, &stmt);
+  cql_code _rc_ = nested_shared_stuff(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = nested_shared_stuff_data_types,
     .col_offsets = nested_shared_stuff_col_offsets,
     .rowsize = sizeof(nested_shared_stuff_row),
@@ -13570,13 +13571,13 @@ cql_int32 use_nested_select_shared_frag_form_result_count(use_nested_select_shar
 }
 
 CQL_WARN_UNUSED cql_code use_nested_select_shared_frag_form_fetch_results(sqlite3 *_Nonnull _db_, use_nested_select_shared_frag_form_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_use_nested_select_shared_frag_form, &use_nested_select_shared_frag_form_perf_index);
-  cql_code rc = use_nested_select_shared_frag_form(_db_, &stmt);
+  cql_code _rc_ = use_nested_select_shared_frag_form(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = use_nested_select_shared_frag_form_data_types,
     .col_offsets = use_nested_select_shared_frag_form_col_offsets,
     .rowsize = sizeof(use_nested_select_shared_frag_form_row),
@@ -13758,13 +13759,13 @@ cql_int32 shared_frag_else_nothing_test_result_count(shared_frag_else_nothing_te
 }
 
 CQL_WARN_UNUSED cql_code shared_frag_else_nothing_test_fetch_results(sqlite3 *_Nonnull _db_, shared_frag_else_nothing_test_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_shared_frag_else_nothing_test, &shared_frag_else_nothing_test_perf_index);
-  cql_code rc = shared_frag_else_nothing_test(_db_, &stmt);
+  cql_code _rc_ = shared_frag_else_nothing_test(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = shared_frag_else_nothing_test_data_types,
     .col_offsets = shared_frag_else_nothing_test_col_offsets,
     .rowsize = sizeof(shared_frag_else_nothing_test_row),
@@ -13859,13 +13860,13 @@ cql_int32 shared_frag_else_nothing_in_from_clause_test_result_count(shared_frag_
 }
 
 CQL_WARN_UNUSED cql_code shared_frag_else_nothing_in_from_clause_test_fetch_results(sqlite3 *_Nonnull _db_, shared_frag_else_nothing_in_from_clause_test_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_shared_frag_else_nothing_in_from_clause_test, &shared_frag_else_nothing_in_from_clause_test_perf_index);
-  cql_code rc = shared_frag_else_nothing_in_from_clause_test(_db_, &stmt);
+  cql_code _rc_ = shared_frag_else_nothing_in_from_clause_test(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = shared_frag_else_nothing_in_from_clause_test_data_types,
     .col_offsets = shared_frag_else_nothing_in_from_clause_test_col_offsets,
     .refs_count = 1,
@@ -14318,9 +14319,9 @@ CQL_WARN_UNUSED cql_code some_redeclared_out_proc_fetch_results(sqlite3 *_Nonnul
   cql_profile_start(CRC_some_redeclared_out_proc, &some_redeclared_out_proc_perf_index);
   *result_set = NULL;
   some_redeclared_out_proc_row *row = (some_redeclared_out_proc_row *)calloc(1, sizeof(some_redeclared_out_proc_row));
-  cql_code rc = some_redeclared_out_proc(_db_, row);
+  cql_code _rc_ = some_redeclared_out_proc(_db_, row);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
     .data_types = some_redeclared_out_proc_data_types,
     .col_offsets = some_redeclared_out_proc_col_offsets,
@@ -14827,13 +14828,13 @@ cql_int32 simple_child_proc_result_count(simple_child_proc_result_set_ref _Nonnu
 }
 
 CQL_WARN_UNUSED cql_code simple_child_proc_fetch_results(sqlite3 *_Nonnull _db_, simple_child_proc_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_simple_child_proc, &simple_child_proc_perf_index);
-  cql_code rc = simple_child_proc(_db_, &stmt);
+  cql_code _rc_ = simple_child_proc(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = simple_child_proc_data_types,
     .col_offsets = simple_child_proc_col_offsets,
     .rowsize = sizeof(simple_child_proc_row),
@@ -15201,13 +15202,13 @@ cql_int32 use_generated_fragment_result_count(use_generated_fragment_result_set_
 }
 
 CQL_WARN_UNUSED cql_code use_generated_fragment_fetch_results(sqlite3 *_Nonnull _db_, use_generated_fragment_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_use_generated_fragment, &use_generated_fragment_perf_index);
-  cql_code rc = use_generated_fragment(_db_, &stmt);
+  cql_code _rc_ = use_generated_fragment(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = use_generated_fragment_data_types,
     .col_offsets = use_generated_fragment_col_offsets,
     .refs_count = 2,
@@ -15319,13 +15320,13 @@ cql_int32 use_backed_table_directly_result_count(use_backed_table_directly_resul
 }
 
 CQL_WARN_UNUSED cql_code use_backed_table_directly_fetch_results(sqlite3 *_Nonnull _db_, use_backed_table_directly_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_use_backed_table_directly, &use_backed_table_directly_perf_index);
-  cql_code rc = use_backed_table_directly(_db_, &stmt);
+  cql_code _rc_ = use_backed_table_directly(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = use_backed_table_directly_data_types,
     .col_offsets = use_backed_table_directly_col_offsets,
     .refs_count = 2,
@@ -15506,13 +15507,13 @@ cql_int32 use_backed_table_directly_in_with_select_result_count(use_backed_table
 }
 
 CQL_WARN_UNUSED cql_code use_backed_table_directly_in_with_select_fetch_results(sqlite3 *_Nonnull _db_, use_backed_table_directly_in_with_select_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_use_backed_table_directly_in_with_select, &use_backed_table_directly_in_with_select_perf_index);
-  cql_code rc = use_backed_table_directly_in_with_select(_db_, &stmt);
+  cql_code _rc_ = use_backed_table_directly_in_with_select(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = use_backed_table_directly_in_with_select_data_types,
     .col_offsets = use_backed_table_directly_in_with_select_col_offsets,
     .refs_count = 2,
@@ -17527,13 +17528,13 @@ cql_int32 a_backed_join_result_count(a_backed_join_result_set_ref _Nonnull resul
 }
 
 CQL_WARN_UNUSED cql_code a_backed_join_fetch_results(sqlite3 *_Nonnull _db_, a_backed_join_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_a_backed_join, &a_backed_join_perf_index);
-  cql_code rc = a_backed_join(_db_, &stmt);
+  cql_code _rc_ = a_backed_join(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = a_backed_join_data_types,
     .col_offsets = a_backed_join_col_offsets,
     .refs_count = 2,
@@ -17668,13 +17669,13 @@ cql_int32 insert_returning_resultset_result_count(insert_returning_resultset_res
 }
 
 CQL_WARN_UNUSED cql_code insert_returning_resultset_fetch_results(sqlite3 *_Nonnull _db_, insert_returning_resultset_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_insert_returning_resultset, &insert_returning_resultset_perf_index);
-  cql_code rc = insert_returning_resultset(_db_, &stmt);
+  cql_code _rc_ = insert_returning_resultset(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = insert_returning_resultset_data_types,
     .col_offsets = insert_returning_resultset_col_offsets,
     .rowsize = sizeof(insert_returning_resultset_row),
@@ -17779,13 +17780,13 @@ cql_int32 delete_returning_resultset_result_count(delete_returning_resultset_res
 }
 
 CQL_WARN_UNUSED cql_code delete_returning_resultset_fetch_results(sqlite3 *_Nonnull _db_, delete_returning_resultset_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_delete_returning_resultset, &delete_returning_resultset_perf_index);
-  cql_code rc = delete_returning_resultset(_db_, &stmt);
+  cql_code _rc_ = delete_returning_resultset(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = delete_returning_resultset_data_types,
     .col_offsets = delete_returning_resultset_col_offsets,
     .rowsize = sizeof(delete_returning_resultset_row),
@@ -18004,13 +18005,13 @@ cql_int32 get_xy_result_count(get_xy_result_set_ref _Nonnull result_set) {
 }
 
 CQL_WARN_UNUSED cql_code get_xy_fetch_results(sqlite3 *_Nonnull _db_, get_xy_result_set_ref _Nullable *_Nonnull result_set) {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_get_xy, &get_xy_perf_index);
-  cql_code rc = get_xy(_db_, &stmt);
+  cql_code _rc_ = get_xy(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = get_xy_data_types,
     .col_offsets = get_xy_col_offsets,
     .rowsize = sizeof(get_xy_row),
@@ -18076,6 +18077,88 @@ CQL_WARN_UNUSED cql_code get_xy(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable 
 cql_cleanup:
   cql_error_report();
   cql_finalize_stmt(&_temp_stmt);
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+PROC wrapper_param_forwarding (stmt INT!, rc INT!, INOUT forwarded INT!)
+BEGIN
+  SET forwarded := forwarded + 1;
+  SELECT stmt AS value, rc AS code, forwarded AS forwarded;
+END;
+*/
+
+#define _PROC_ "wrapper_param_forwarding"
+static int32_t wrapper_param_forwarding_perf_index;
+
+cql_string_proc_name(wrapper_param_forwarding_stored_procedure_name, "wrapper_param_forwarding");
+
+typedef struct wrapper_param_forwarding_row {
+  cql_int32 value;
+  cql_int32 code;
+  cql_int32 forwarded;
+} wrapper_param_forwarding_row;
+
+uint8_t wrapper_param_forwarding_data_types[wrapper_param_forwarding_data_types_count] = {
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // value
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // code
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // forwarded
+};
+
+static cql_uint16 wrapper_param_forwarding_col_offsets[] = { 3,
+  cql_offsetof(wrapper_param_forwarding_row, value),
+  cql_offsetof(wrapper_param_forwarding_row, code),
+  cql_offsetof(wrapper_param_forwarding_row, forwarded)
+};
+
+cql_int32 wrapper_param_forwarding_result_count(wrapper_param_forwarding_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code wrapper_param_forwarding_fetch_results(sqlite3 *_Nonnull _db_, wrapper_param_forwarding_result_set_ref _Nullable *_Nonnull result_set, cql_int32 stmt, cql_int32 rc, cql_int32 *_Nonnull forwarded) {
+  sqlite3_stmt *_stmt_ = NULL;
+  cql_profile_start(CRC_wrapper_param_forwarding, &wrapper_param_forwarding_perf_index);
+  cql_code _rc_ = wrapper_param_forwarding(_db_, &_stmt_, stmt, rc, forwarded);
+  cql_fetch_info info = {
+    .rc = _rc_,
+    .db = _db_,
+    .stmt = _stmt_,
+    .data_types = wrapper_param_forwarding_data_types,
+    .col_offsets = wrapper_param_forwarding_col_offsets,
+    .rowsize = sizeof(wrapper_param_forwarding_row),
+    .crc = CRC_wrapper_param_forwarding,
+    .perf_index = &wrapper_param_forwarding_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+/*
+export:
+DECLARE PROC wrapper_param_forwarding (stmt INT!, rc INT!, INOUT forwarded INT!) (value INT!, code INT!, forwarded INT!);
+*/
+CQL_WARN_UNUSED cql_code wrapper_param_forwarding(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_int32 stmt, cql_int32 rc, cql_int32 *_Nonnull forwarded) {
+  cql_contract_argument_notnull((void *)forwarded, 3);
+
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  cql_error_prepare();
+
+  *forwarded = (*forwarded) + 1;
+  _rc_ = cql_prepare(_db_, _result_stmt,
+    "SELECT ?, ?, ?");
+  cql_multibind(&_rc_, _db_, _result_stmt, 3,
+                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, stmt,
+                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, rc,
+                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, *forwarded);
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_error_report();
   if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
   return _rc_;
 }

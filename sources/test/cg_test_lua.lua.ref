@@ -8087,6 +8087,82 @@ end
 -- The statement ending at line XXXX
 
 --[[
+PROC shared_numeric_condition_user (x INT!, y REAL, flag BOOL)
+BEGIN
+  WITH
+    shared_numeric_condition (value) AS (CALL shared_numeric_condition(x, y, flag))
+  SELECT shared_numeric_condition.value
+    FROM shared_numeric_condition;
+END;
+--]]
+
+function shared_numeric_condition_user(_db_, x, y, flag)
+  cql_contract_argument_notnull(x, 1)
+
+  local _rc_ = CQL_OK
+  local _result_stmt = nil
+  local _p1_x_ = 0
+  local _p1_y_
+  local _p1_flag_
+  local _preds_1  -- 6 possible fragments
+  local _vpreds_1 -- 0 possible bindings
+
+  _preds_1 = {}
+  _vpreds_1 = {}
+  _p1_x_ = x
+  _p1_y_ = y
+  _p1_flag_ = flag
+  _preds_1[0] = true
+  if cql_to_bool(_p1_x_) then
+    _preds_1[1] = true
+  else
+    if cql_to_bool(_p1_y_) then
+      _preds_1[2] = true
+    else
+      if _p1_flag_ then
+        _preds_1[3] = true
+      else
+        _preds_1[4] = true
+      end
+    end
+  end
+  _preds_1[5] = true
+  _rc_, _result_stmt = cql_prepare_var(_db_, 
+    6, _preds_1,
+    {
+    "WITH shared_numeric_condition (value) AS (",
+    "SELECT 10",
+    "SELECT 20",
+    "SELECT 30",
+    "SELECT 40",
+    ") SELECT shared_numeric_condition.value FROM shared_numeric_condition"
+    }
+  )
+  if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+  _rc_ = CQL_OK
+
+::cql_cleanup::
+  if _rc_ == CQL_OK and _result_stmt == nil then _rc_, _result_stmt = cql_no_rows_stmt(_db_) end
+  return _rc_, _result_stmt
+end
+
+function shared_numeric_condition_user_fetch_results(_db_, x, y, flag)
+  local result_set = nil
+  local _rc_
+  _rc_, stmt = shared_numeric_condition_user(_db_, x, y, flag)
+  if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+  _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "value" })
+
+::cql_cleanup::
+  cql_finalize_stmt(stmt)
+  stmt = nil
+  return _rc_, result_set
+end
+
+
+-- The statement ending at line XXXX
+
+--[[
 PROC nested_shared_stuff ()
 BEGIN
   WITH
@@ -9540,6 +9616,72 @@ function get_xy_fetch_results(_db_)
   return _rc_, result_set
 end
 
+
+-- The statement ending at line XXXX
+
+--[[
+PROC case_bool_numeric (b BOOL, n REAL, OUT bool_case INT!, OUT numeric_case INT!)
+BEGIN
+  SET bool_case := CASE b
+    WHEN 0 THEN 10
+    WHEN 1 THEN 11
+    WHEN 2 THEN 12
+    ELSE 13
+  END;
+  SET numeric_case := CASE n
+    WHEN b THEN 20
+    WHEN FALSE THEN 21
+    WHEN TRUE THEN 22
+    ELSE 23
+  END;
+END;
+--]]
+
+function case_bool_numeric(b, n)
+  local bool_case = 0
+  local numeric_case = 0
+  local _tmp_n_bool_1
+  local _tmp_n_double_1
+
+  repeat
+    _tmp_n_bool_1 = b
+    if _tmp_n_bool_1 == nil then goto case_else_4 end
+    if cql_to_num(_tmp_n_bool_1) == 0 then
+      bool_case = 10
+      break
+    end
+    if cql_to_num(_tmp_n_bool_1) == 1 then
+      bool_case = 11
+      break
+    end
+    if cql_to_num(_tmp_n_bool_1) == 2 then
+      bool_case = 12
+      break
+    end
+    ::case_else_4::
+    bool_case = 13
+  until true
+  repeat
+    _tmp_n_double_1 = n
+    if _tmp_n_double_1 == nil then goto case_else_5 end
+    if _tmp_n_double_1 == cql_to_num(b) then
+      numeric_case = 20
+      break
+    end
+    if _tmp_n_double_1 == 0 then
+      numeric_case = 21
+      break
+    end
+    if _tmp_n_double_1 == 1 then
+      numeric_case = 22
+      break
+    end
+    ::case_else_5::
+    numeric_case = 23
+  until true
+
+  return bool_case, numeric_case
+end
 local this_is_the_end = 0
 
 -- The statement ending at line XXXX

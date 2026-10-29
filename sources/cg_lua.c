@@ -1190,7 +1190,7 @@ static void cg_lua_expr_in_pred_or_not_in(
 // expression the temporary holding the expression is in expr.  Expr has
 // already been tested for null if that was a possibility so we only need its
 // value at this point.
-static void cg_lua_case_list(ast_node *head, CSTR expr, CSTR result, sem_t sem_type_result) {
+static void cg_lua_case_list(ast_node *head, CSTR expr, sem_t sem_type_expr, CSTR result, sem_t sem_type_result) {
   Contract(is_ast_case_list(head));
 
   for (ast_node *ast = head; ast; ast = ast->right) {
@@ -1207,7 +1207,13 @@ static void cg_lua_case_list(ast_node *head, CSTR expr, CSTR result, sem_t sem_t
     CG_LUA_PUSH_EVAL(case_expr, LUA_EXPR_PRI_EQ_NE);
 
     if (expr) {
-      bprintf(cg_main_output, "if %s == %s then\n", expr, case_expr_value.ptr);
+      // SQL compares BOOL as 0/1; Lua equality keeps booleans and numbers distinct.
+      CHARBUF_OPEN(expr_comparable);
+      bprintf(&expr_comparable, "%s", expr);
+      cg_lua_to_num(sem_type_expr, &expr_comparable);
+      cg_lua_to_num(sem_type_case_expr, &case_expr_value);
+      bprintf(cg_main_output, "if %s == %s then\n", expr_comparable.ptr, case_expr_value.ptr);
+      CHARBUF_CLOSE(expr_comparable);
     }
     else {
       cg_lua_to_bool(sem_type_case_expr, &case_expr_value);
@@ -1313,14 +1319,14 @@ static void cg_lua_expr_case(ast_node *case_expr, CSTR str, charbuf *value, int3
       bprintf(cg_main_output, "goto case_else_%d end\n", else_label_number);
     }
 
-    cg_lua_case_list(case_list, temp_value.ptr, result_var.ptr, sem_type_result);
+    cg_lua_case_list(case_list, temp_value.ptr, sem_type_expr, result_var.ptr, sem_type_result);
 
     CG_LUA_POP_EVAL(expr);
     CG_LUA_POP_TEMP(temp);
   }
   else {
     // Otherwise do the case list with no expression...
-    cg_lua_case_list(case_list, NULL, result_var.ptr, sem_type_result);
+    cg_lua_case_list(case_list, NULL, 0, result_var.ptr, sem_type_result);
   }
 
   if (else_label_number >= 0) {
@@ -2944,6 +2950,7 @@ static void cg_lua_fragment_cond_action(ast_node *ast, charbuf *buffer) {
 
   CG_LUA_PUSH_EVAL(expr, LUA_EXPR_PRI_ROOT);
 
+  cg_lua_to_bool(expr->sem->sem_type, &expr_value);
   bprintf(cg_main_output, "if %s then\n", expr_value.ptr);
 
   CG_LUA_POP_EVAL(expr);

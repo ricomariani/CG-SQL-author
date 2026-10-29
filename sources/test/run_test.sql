@@ -1202,6 +1202,28 @@ begin
   end;
 end;
 
+TEST!(bool_numeric_case,
+begin
+  let t := nullable(true);
+  let f := nullable(false);
+  declare unknown bool;
+  set unknown := null;
+
+  -- Compare in both directions: Lua equality alone never matches BOOL to 0/1.
+  EXPECT_SQL_TOO!((case t when 1 then 10 else 20 end) = 10);
+  EXPECT_SQL_TOO!((case f when 0 then 10 else 20 end) = 10);
+  EXPECT_SQL_TOO!((case 1 when t then 10 else 20 end) = 10);
+  EXPECT_SQL_TOO!((case 0.0 when f then 10 else 20 end) = 10);
+
+  -- Coercing numbers to BOOL would incorrectly match true to every nonzero value.
+  EXPECT_SQL_TOO!((case t when 2 then 10 else 20 end) = 20);
+  EXPECT_SQL_TOO!((case 0.5 when t then 10 else 20 end) = 20);
+
+  -- NULL must never match, even when both the selector and WHEN are NULL.
+  EXPECT_SQL_TOO!((case unknown when unknown then 10 else 20 end) = 20);
+  EXPECT_SQL_TOO!((case 1 when unknown then 10 else 20 end) = 20);
+end);
+
 TEST!(string_case_test,
 begin
   let result := string_case_tester1("1");
@@ -4324,6 +4346,40 @@ begin
   declare Y cursor for select * from (call select_nothing_user(false));
   fetch Y;
   EXPECT!(not Y);
+end);
+
+[[shared_fragment]]
+proc numeric_fragment(x int!, y real, flag bool)
+begin
+  if x then
+    select 10 as value;
+  else if y then
+    select 20 as value;
+  else if flag then
+    select 30 as value;
+  else
+    select 40 as value;
+  end if;
+end;
+
+[[private]]
+proc numeric_fragment_result(x int!, y real, flag bool, out result int!)
+begin
+  cursor C for select * from (call numeric_fragment(x, y, flag));
+  fetch C;
+  result := C.value;
+end;
+
+TEST!(numeric_fragment_conditions,
+begin
+  -- Neither integer nor real zero may select a branch; NULL also falls through.
+  EXPECT_EQ!(numeric_fragment_result(0, 0.0, false), 40);
+  EXPECT_EQ!(numeric_fragment_result(0, null, null), 40);
+  EXPECT_EQ!(numeric_fragment_result(0, 0.0, true), 30);
+
+  -- Negative integers and fractional reals are true, not just the value 1.
+  EXPECT_EQ!(numeric_fragment_result(-1, 0.0, false), 10);
+  EXPECT_EQ!(numeric_fragment_result(0, 0.5, false), 20);
 end);
 
 [[shared_fragment]]

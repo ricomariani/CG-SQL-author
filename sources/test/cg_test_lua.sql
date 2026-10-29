@@ -4694,6 +4694,32 @@ begin
   select bar.* from bar join some_cte on x = 5;
 end;
 
+-- Numeric zero is false in SQL but true in Lua, including 0.0. NULL must
+-- also fall through, while negative and fractional nonzero values are true.
+[[shared_fragment]]
+proc shared_numeric_condition(x int!, y real, flag bool)
+begin
+  if x then
+    select 10 as value;
+  else if y then
+    select 20 as value;
+  else if flag then
+    select 30 as value;
+  else
+    select 40 as value;
+  end if;
+end;
+
+-- TEST: fragment IF and ELSE IF convert numeric predicates, preserving BOOL
+-- + if cql_to_bool(_p1_x_) then
+-- + if cql_to_bool(_p1_y_) then
+-- + if _p1_flag_ then
+proc shared_numeric_condition_user(x int!, y real, flag bool)
+begin
+  with (call shared_numeric_condition(x, y, flag))
+  select * from shared_numeric_condition;
+end;
+
 
 -- used in the following test, this is silly fragment
 -- but it forces complex push and pop of variable state
@@ -5519,6 +5545,21 @@ end;
 proc get_xy()
 begin
  select * from (call mapped_xy(1));
+end;
+
+-- TEST: simple CASE compares BOOL and numeric values in the same numeric domain
+-- SQL matches false/true with 0/1, not with every false/truthy Lua value.
+-- The 2 arm must not match true, and NULL must reach ELSE even against NULL.
+-- + if cql_to_num(_tmp_n_bool_1) == 0 then
+-- + if cql_to_num(_tmp_n_bool_1) == 1 then
+-- + if cql_to_num(_tmp_n_bool_1) == 2 then
+-- + if _tmp_n_double_1 == cql_to_num(b) then
+-- + if _tmp_n_double_1 == 0 then
+-- + if _tmp_n_double_1 == 1 then
+proc case_bool_numeric(b bool, n real, out bool_case int!, out numeric_case int!)
+begin
+  set bool_case := case b when 0 then 10 when 1 then 11 when 2 then 12 else 13 end;
+  set numeric_case := case n when b then 20 when false then 21 when true then 22 else 23 end;
 end;
 
 --------------------------------------------------------------------

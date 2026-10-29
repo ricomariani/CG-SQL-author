@@ -8155,14 +8155,14 @@ static void cg_fetch_info(fetch_result_info *info, charbuf *output)
       bprintf(&tmp, "cql_fetch_info info = {\n");
     }
     if (info->dml_proc) {
-      bprintf(&tmp, "  .rc = rc,\n");
+      bprintf(&tmp, "  .rc = _rc_,\n");
       bprintf(&tmp, "  .db = _db_,\n");
     }
     else {
       bprintf(&tmp, "  .rc = SQLITE_OK,\n"); // this case can't fail, there are no db ops
     }
     if (info->use_stmt) {
-      bprintf(&tmp, "  .stmt = stmt,\n");
+      bprintf(&tmp, "  .stmt = _stmt_,\n");
     }
     bprintf(&tmp, "  .data_types = %s,\n", info->data_types_sym);
     bprintf(&tmp, "  .col_offsets = %s,\n", info->col_offsets_sym);
@@ -8430,7 +8430,7 @@ static void cg_proc_result_set(ast_node *ast) {
 
     // optional db arg and return code
     if (dml_proc) {
-      bprintf(d, "cql_code rc = %s(_db_, ", proc_sym.ptr);
+      bprintf(d, "cql_code _rc_ = %s(_db_, ", proc_sym.ptr);
     }
     else {
       bprintf(d, "%s(", proc_sym.ptr);
@@ -8481,13 +8481,13 @@ static void cg_proc_result_set(ast_node *ast) {
     // object of course has exactly the right type for each column.
     bprintf(h, "%s%s);\n", rt->symbol_visibility, temp.ptr);
     bprintf(d, "\n%s) {\n", temp.ptr);
-    bprintf(d, "  sqlite3_stmt *stmt = NULL;\n");
+    bprintf(d, "  sqlite3_stmt *_stmt_ = NULL;\n");
 
     // emit profiling start signal
     bprintf(d, "  cql_profile_start(CRC_%s, &%s);\n", proc_sym.ptr, perf_index.ptr);
 
     // Invoke the base proc to get the statement
-    bprintf(d, "  cql_code rc = %s(_db_, &stmt", proc_sym.ptr);
+    bprintf(d, "  cql_code _rc_ = %s(_db_, &_stmt_", proc_sym.ptr);
     if (params) {
       bprintf(d, ", ");
       cg_param_names(params, d);

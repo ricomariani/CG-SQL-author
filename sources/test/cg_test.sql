@@ -6295,6 +6295,18 @@ begin
  select * from (call mapped_xy(1));
 end;
 
+-- TEST: wrapper temporaries must not collide with stmt or rc parameters
+-- Inputs keep their public spellings; only the internal handle and status change.
+-- + sqlite3_stmt *_stmt_ = NULL;
+-- + cql_code _rc_ = wrapper_param_forwarding(_db_, &_stmt_, stmt, rc, forwarded);
+-- + .rc = _rc_,
+-- + .stmt = _stmt_,
+proc wrapper_param_forwarding(stmt int!, rc int!, inout forwarded int!)
+begin
+  set forwarded := forwarded + 1;
+  select stmt as value, rc as code, forwarded as forwarded;
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

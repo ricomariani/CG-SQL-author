@@ -179,17 +179,17 @@ read_foo_fetch_results(
   read_foo_result_set_ref _Nullable *_Nonnull result_set,
   cql_int32 id_)
 {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_read_foo, &read_foo_perf_index);
 
   // we call the original procedure, it gives us a prepared statement
-  cql_code rc = read_foo(_db_, &stmt, id_);
+  cql_code _rc_ = read_foo(_db_, &_stmt_, id_);
 
   // this is everything you need to know to fetch the result
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = read_foo_data_types,
     .col_offsets = read_foo_col_offsets,
     .refs_count = 1,

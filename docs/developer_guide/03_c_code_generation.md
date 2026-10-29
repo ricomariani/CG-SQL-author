@@ -2407,13 +2407,13 @@ CQL_WARN_UNUSED cql_code p_fetch_results(
   sqlite3 *_Nonnull _db_,
   p_result_set_ref _Nullable *_Nonnull result_set)
 {
-  sqlite3_stmt *stmt = NULL;
+  sqlite3_stmt *_stmt_ = NULL;
   cql_profile_start(CRC_p, &p_perf_index);
-  cql_code rc = p(_db_, &stmt);
+  cql_code _rc_ = p(_db_, &_stmt_);
   cql_fetch_info info = {
-    .rc = rc,
+    .rc = _rc_,
     .db = _db_,
-    .stmt = stmt,
+    .stmt = _stmt_,
     .data_types = p_data_types,
     .col_offsets = p_col_offsets,
     .refs_count = 1,
@@ -2429,7 +2429,7 @@ CQL_WARN_UNUSED cql_code p_fetch_results(
 
 `p_fetch_results` does two main things:
 
-* `cql_code rc = p(_db_, &stmt)` : it calls the underlying function to get the statement
+* `cql_code _rc_ = p(_db_, &_stmt_)` : it calls the underlying function to get the statement
 * `cql_fetch_all_results` : it calls a standard helper to read all the results from the statement and put them into `result_set`
   * to do the fetch, it sets up a `cql_fetch_info` for this result set, this has all the information needed to do the fetch
   * the intent here is that even a complex fetch with lots of columns can be done economically, and

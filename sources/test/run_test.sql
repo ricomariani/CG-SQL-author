@@ -3534,6 +3534,11 @@ begin
   EXPECT_EQ!(i, 1);
   l := cast(12.9 as long);
   EXPECT_EQ!(l, 12);
+  -- Negative REAL casts truncate toward zero, not down to the next integer.
+  i := cast(-1.9 as int);
+  EXPECT_EQ!(i, -1);
+  l := cast(-12.9 as long);
+  EXPECT_EQ!(l, -12);
   r := cast(12 as real);
   EXPECT_EQ!(r, 12.0);
 
@@ -3554,6 +3559,16 @@ begin
   x := 12.9;
   l0 := cast(x as long);
   EXPECT_EQ!(l0, 12);
+  -- A negative fraction between -1 and 0 becomes zero for both integer widths.
+  x := -0.5;
+  i0 := cast(x as int);
+  EXPECT_EQ!(i0, 0);
+  l0 := cast(x as long);
+  EXPECT_EQ!(l0, 0);
+  -- REAL NULL must survive the same conversion helper without becoming zero.
+  x := null;
+  EXPECT_EQ!(cast(x as int), null);
+  EXPECT_EQ!(cast(x as long), null);
   x := 12.0;
   r0 := cast(x as real);
   EXPECT_EQ!(r0, 12.0);

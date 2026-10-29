@@ -677,7 +677,8 @@ function cql_to_integer(num)
   if num == true then return 1 end
   if num == false then return 0 end
   if num == nil then return nil end
-  return math.floor(num);
+  -- CQL/SQLite truncate toward zero; floor alone rounds negative fractions away.
+  return num < 0 and math.ceil(num) or math.floor(num);
 end;
 
 function cql_to_float(num)

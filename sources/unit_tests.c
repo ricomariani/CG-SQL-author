@@ -258,7 +258,8 @@ static bool test_badly_formed_utf8() {
   cg_encode_json_string_literal("\x81", &temp);
   result &= !strcmp(temp.ptr, "\"\\u0081\"");
 
-  // case 2: overlong sequence
+  // case 2: a valid prefix followed by an extra continuation byte. The January
+  // 2026 correction deliberately escapes the entire malformed run.
   bclear(&temp);
   cg_encode_json_string_literal(" \xe2\x80\xa2\xa2 ", &temp);
   result &= !strcmp(temp.ptr, "\" \\u00e2\\u0080\\u00a2\\u00a2 \"");
@@ -271,6 +272,68 @@ static bool test_badly_formed_utf8() {
   CHARBUF_CLOSE(temp);
 
   return result;
+}
+
+static void test_json_pretty_utf8() {
+  const struct {
+    CSTR name;
+    CSTR input;
+    CSTR expected;
+  } cases[] = {
+    // Printable text, quoting, and named control escapes must not change.
+    { "ASCII and controls", "'\"\\\b\f\n\r\t\a\v'",
+      "\"'\\\"\\\\\\b\\f\\n\\r\\t\\u0007\\u000b'\"" },
+    // C0 still needs escaping, but DEL is legal raw JSON text. Do not expand
+    // the fix into an output-spelling change for otherwise valid ASCII.
+    { "ASCII escape boundary", "'\x1f\x7f'", "\"'\\u001f\x7f'\"" },
+    // All UTF-8 widths must survive as the original bytes, not Latin-1 escapes.
+    { "two-byte UTF-8", "'\xc3\xa9'", "\"'\xc3\xa9'\"" },
+    { "three-byte UTF-8", "'\xe2\x80\xa2'", "\"'\xe2\x80\xa2'\"" },
+    { "four-byte UTF-8", "'\xf0\x9f\x98\x80'", "\"'\xf0\x9f\x98\x80'\"" },
+    // Codepoint boundaries catch validators that accept only common examples.
+    { "lowest two-byte codepoint", "'\xc2\x80'", "\"'\xc2\x80'\"" },
+    { "lowest three-byte codepoint", "'\xe0\xa0\x80'", "\"'\xe0\xa0\x80'\"" },
+    { "lowest four-byte codepoint", "'\xf0\x90\x80\x80'", "\"'\xf0\x90\x80\x80'\"" },
+    { "highest Unicode codepoint", "'\xf4\x8f\xbf\xbf'", "\"'\xf4\x8f\xbf\xbf'\"" },
+    // The fallback intentionally maps malformed bytes to \u00xx, not to
+    // replacement characters or unchecked raw bytes. Preserve ASCII around them.
+    { "isolated continuation", "'a\x81z'", "\"'a\\u0081z'\"" },
+    { "invalid lead byte", "'\xff'", "\"'\\u00ff'\"" },
+    // Preserve the January 2026 rule: an extra continuation invalidates the
+    // preceding sequence too, even when that prefix alone would be valid.
+    { "extra continuation", "'\xe2\x80\xa2\xa2'",
+      "\"'\\u00e2\\u0080\\u00a2\\u00a2'\"" },
+    // Each sequence width can be truncated at the terminating zero. These
+    // fixtures end there, rather than supplying a quote as an accidental sentinel.
+    { "truncated two-byte sequence", "\xc2", "\"\\u00c2\"" },
+    { "truncated three-byte sequence", "\xe2\x80", "\"\\u00e2\\u0080\"" },
+    { "truncated four-byte sequence", "\xf0\x9f\x98", "\"\\u00f0\\u009f\\u0098\"" },
+    // Overlong forms, surrogate codepoints, and values above Unicode's maximum
+    // must stay on the malformed-byte path rather than pass as valid UTF-8.
+    { "overlong two-byte sequence", "'\xc0\xaf'", "\"'\\u00c0\\u00af'\"" },
+    { "overlong three-byte sequence", "'\xe0\x80\xaf'", "\"'\\u00e0\\u0080\\u00af'\"" },
+    { "overlong four-byte sequence", "'\xf0\x80\x80\xaf'", "\"'\\u00f0\\u0080\\u0080\\u00af'\"" },
+    { "surrogate codepoint", "'\xed\xa0\x80'", "\"'\\u00ed\\u00a0\\u0080'\"" },
+    { "above Unicode maximum", "'\xf4\x90\x80\x80'", "\"'\\u00f4\\u0090\\u0080\\u0080'\"" },
+    // Consecutive valid sequences must advance by their full widths; following
+    // quote/backslash/newline characters must still go through JSON escaping.
+    { "mixed UTF-8 and escapes", "'\xc3\xa9\xe2\x80\xa2\xf0\x9f\x98\x80\"\\\n'",
+      "\"'\xc3\xa9\xe2\x80\xa2\xf0\x9f\x98\x80\\\"\\\\\\n'\"" },
+  };
+
+  CHARBUF_OPEN(encoded);
+  for (uint32_t i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
+    printf("Checking JSON UTF-8 case: %s\n", cases[i].name);
+    // Assertion failure aborts without flushing redirected stdout.
+    fflush(stdout);
+    bclear(&encoded);
+    cg_encode_json_string_literal(cases[i].input, &encoded);
+    TEST_ASSERT(!strcmp(encoded.ptr, cases[i].expected));
+    bclear(&encoded);
+    cg_pretty_quote_plaintext(cases[i].input, &encoded, PRETTY_QUOTE_JSON);
+    TEST_ASSERT(!strcmp(encoded.ptr, cases[i].expected));
+  }
+  CHARBUF_CLOSE(encoded);
 }
 
 static bool test_c_hex_escape_boundaries() {
@@ -545,6 +608,9 @@ cql_noexport void run_unit_tests() {
   // Invalid UTF-8 must be escaped into valid JSON rather than copied as malformed
   // output or read past truncated byte sequences.
   TEST_ASSERT(test_badly_formed_utf8());
+  // Both JSON paths must preserve valid codepoints and the established malformed
+  // byte policy; syntactically valid JSON alone does not prove string fidelity.
+  test_json_pretty_utf8();
 
   // Generated C must delimit greedy hex escapes without changing CQL/Lua output.
   TEST_ASSERT(test_c_hex_escape_boundaries());

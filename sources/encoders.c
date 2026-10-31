@@ -124,24 +124,35 @@ cql_noexport void cg_encode_char_as_lua_string_literal(char c, charbuf *output) 
   }
 }
 
-// This converts from a plain string to json string literal (fewer escapes available/needed)
+// JSON escaping history and policy:
 //
-// From the spec, the valid single escape characters are
-// SingleEscapeCharacter :: one of
-//      ' " \ b f n r t v
+// In December 2021 (f1d3ece0), escaping high bytes fixed invalid JSON, but it
+// treated every UTF-8 byte as a separate Unicode codepoint and assumed signed
+// char. JSON \u00e2\u0080\u00a2 is three characters, not the bullet U+2022
+// represented by UTF-8 bytes E2 80 A2.
 //
-// \v should be legal but it is avoided because the python validator
-// doesn't support it. We generate all of the others if needed
-// but \' is never needed as we always use double quotes.
+// In December 2025 (8818eb45, #195), the full-string encoder learned to validate
+// and preserve complete UTF-8 sequences. The JSON pretty-quoting path still
+// called this byte encoder directly, so SQL fragments retained that corruption.
+// In January 2026 (7306a9bc), malformed-input tests established the fallback:
+// escape invalid bytes individually as \u00xx, including an entire sequence
+// followed by an extra continuation byte. Do not reinterpret or replace them.
 //
-// likewise the spec says:
+// Both string paths must apply the same validator before this byte fallback.
+// Valid UTF-8 remains byte-for-byte unchanged; ASCII keeps its existing escapes.
+// The fallback tests unsigned byte values explicitly, so its output does not
+// depend on the implementation-defined signedness of plain char. This does not
+// change the malformed-input policy or C/CQL/Lua escaping.
 //
-// UnicodexEscapeSequence ::
-//      u HexDigit HexDigit HexDigit HexDigit
-//
+// This converts one ASCII or invalid byte to JSON string literal text.
+// JSON permits \", \\, \b, \f, \n, \r, \t, and four-digit \u escapes.
+// Unlike C/Lua, JSON has no \a or \v: these controls require \u0007/\u000b.
+// Single quotes need no JSON escaping. Other ASCII bytes at or above 32,
+// including DEL, retain their existing literal spelling.
 cql_noexport void cg_encode_char_as_json_string_literal(char c, charbuf *output) {
   const char quote = '"';
   const char backslash = '\\';
+  uint32_t ch = (uint32_t)(unsigned char)c;
 
   switch (c) {
     case '\"':  bputc(output, backslash); bputc(output, quote); break;
@@ -152,10 +163,7 @@ cql_noexport void cg_encode_char_as_json_string_literal(char c, charbuf *output)
     case '\r':  bputc(output, backslash); bputc(output, 'r'); break;
     case '\t':  bputc(output, backslash); bputc(output, 't'); break;
     default  :
-      // note: 0x80 - 0xff will be negative and are hence covered by this test
-      if (c < 32) {
-        uint32_t ch = (uint32_t)c;
-        ch &= 0xff;
+      if (ch < 32 || ch >= 0x80) {
         bprintf(output, "\\u00");
         emit_hex_digit(ch >> 4, output);
         emit_hex_digit(ch & 0xf, output);
@@ -475,6 +483,20 @@ cql_noexport void cg_pretty_quote_plaintext(CSTR str, charbuf *output, uint32_t 
     }
     else {
       if (for_json) {
+        // Pretty-quoted SQL must preserve whole UTF-8 sequences just like the
+        // full-string JSON encoder. They cannot contain ASCII quotes or line
+        // breaks, so consuming the whole sequence does not change SQL formatting.
+        const unsigned char *utf8 = (const unsigned char *)p;
+        if (*utf8 >= 0x80) {
+          int32_t seq_len = valid_utf8_sequence(utf8);
+          if (seq_len > 1) {
+            for (int32_t i = 0; i < seq_len; i++) {
+              bputc(output, (char)utf8[i]);
+            }
+            p += seq_len - 1;
+            continue;
+          }
+        }
         cg_encode_char_as_json_string_literal(p[0], output);
       }
       else if (for_c) {

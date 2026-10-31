@@ -878,6 +878,15 @@ json_validate() {
   run_test_expect_success
 }
 
+# This can run alone with CFLAGS=-funsigned-char. It checks real JSON output,
+# independently of --test's echoed CQL and its separate string-quoting rules.
+json_utf8_test() {
+  TEST_NAME="json_utf8"
+  TEST_DESC="Checking decoded JSON text preserves Unicode and malformed-byte policy"
+  TEST_CMD="python3 \"$T/json_utf8_test.py\" \"$CQL\" \"$O\""
+  run_test_expect_success
+}
+
 json_schema_test() {
   echo '--------------------------------- STAGE 9 -- JSON SCHEMA TEST'
   TEST_NAME="cg_test_json_schema"
@@ -889,6 +898,8 @@ json_schema_test() {
   cql_verify "$T/cg_test_json_schema.sql" "$O/cg_test_json_schema.out"
 
   json_validate "$T/cg_test_json_schema.sql"
+
+  json_utf8_test
 
   echo "Running JSON codegen test for an empty file"
   echo "" >"$O/__temp"
@@ -1324,6 +1335,7 @@ if [ -n "$SPECIFIC_TEST" ]; then
     echo "  schema_migration_test"
     echo "  misc_cases"
     echo "  json_schema_test"
+    echo "  json_utf8_test"
     echo "  test_helpers_test"
     echo "  run_test"
     echo "  upgrade_test"

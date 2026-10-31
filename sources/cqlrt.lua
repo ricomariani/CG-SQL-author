@@ -712,13 +712,65 @@ function cql_partition_create()
   return {};
 end;
 
+-- Encode cursor field VALUES, in the order given by fields, as a Lua table key.
+-- cql_partition_cursor uses this key to group child rows, and
+-- cql_extract_partition uses it to find the group for a parent's key cursor.
+-- These calls appear in compiler-generated parent/child result-set assembly
+-- and can also be made explicitly by CQL code. cql_cursor_hash shares the
+-- encoding as input to its hash; this is not a persisted serialization format.
+--
+-- Partition tables use the encoded string directly, without a subsequent
+-- cursor-equality check. An encoding collision would therefore merge unrelated
+-- groups and give a parent another parent's children. Hash collisions are
+-- permissible for cql_cursor_hash, but encoding collisions are not permissible
+-- for partition lookup.
+--
+-- The inputs are application/database values, not identifier spellings. TEXT
+-- and BLOB values can contain colons, digits, marker-looking text, and zero
+-- bytes, so no chosen separator alone can establish field boundaries. For
+-- example, joining with ":" makes ("a:b", "c") and ("a", "b:c") identical.
+-- Instead, each non-NULL field is byte_length:value. The length determines
+-- exactly where its payload ends and the next field begins, regardless of
+-- payload contents. Lua string lengths count bytes, including embedded zeroes.
+-- There is no need to escape or otherwise change TEXT/BLOB payload bytes.
+--
+-- NULL is the standalone marker N, where a non-NULL field starts with decimal
+-- length digits. Thus NULL, empty text (0:), and literal "nil" (3:nil) remain
+-- distinct. Literal "N" is also unambiguous (1:N).
+--
+-- Callers compare keys of the same cursor shape: corresponding fields have
+-- the same declared CQL types and order, though their names may differ.
+-- Consequently this encoding needs no type tags or field names; it is not a
+-- general cross-schema value encoding. Numeric spellings must still preserve
+-- distinct values and agree for equal Lua integer/float representations.
 function cql_make_str_key(key_table, fields)
   local key = ""
   for i = 1, #fields
   do
-    k = fields[i]
-    v = key_table[k]
-    key = key .. ":" .. tostring(v)
+    local value = key_table[fields[i]]
+    if value == nil then
+      -- Non-NULL fields start with a byte length, so this marker is distinct.
+      key = key .. "N"
+    else
+      if type(value) == "number" then
+        -- A CQL REAL can arrive as either a Lua integer or float. Equal values
+        -- such as 1 and 1.0 must select the same partition and hash identically.
+        -- math.tointeger succeeds only for exactly representable integers in
+        -- range; tostring then preserves every digit of a full-width LONG.
+        -- Converting all numbers to floats would collapse adjacent LONGs above
+        -- 2^53. For other doubles, 17 significant digits preserve distinct
+        -- finite values that Lua's default tostring rounding could collapse.
+        local integer = math.tointeger(value)
+        if integer ~= nil then
+          value = tostring(integer)
+        else
+          value = string.format("%.17g", value)
+        end
+      else
+        value = tostring(value)
+      end
+      key = key .. #value .. ":" .. value
+    end
   end
   return key
 end

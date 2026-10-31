@@ -291,4 +291,6 @@ DECLARE PROC upsert_returning_with_backing () USING TRANSACTION;
 DECLARE PROC get_xy () (x LONG!, y LONG!);
 DECLARE PROC wrapper_param_forwarding (stmt INT!, rc INT!, INOUT forwarded INT!) (value INT!, code INT!, forwarded INT!);
 DECLARE PROC hex_boundary_quote () USING TRANSACTION;
+DECLARE PROC right_nested_json_concat () (cc TEXT!, cj TEXT, ct TEXT, jc TEXT, jj TEXT, jt TEXT, tc INT, tj INT, tt INT);
+DECLARE PROC left_nested_json_concat () (cc TEXT!, cj TEXT, ct INT, jc TEXT, jj TEXT, jt INT, tc TEXT, tj TEXT, tt INT);
 DECLARE PROC end_proc ();

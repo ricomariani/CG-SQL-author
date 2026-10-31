@@ -2184,6 +2184,36 @@ begin
   EXPECT_EQ!(-1, (select -CAST(0||1 as INTEGER)));
 end);
 
+TEST_MODERN_ONLY!(json_concat_grouping,
+begin
+  -- Each right-nested operator pair must execute with the grouping in the AST.
+  -- Pure concat has the same value either way; mixed pairs expose NULL results,
+  -- malformed JSON, or the wrong path if the emitter flattens the expression.
+  EXPECT_EQ!('abc', (select 'a' || ('b' || 'c')));
+  EXPECT_EQ!('prefix:"v"', (select 'prefix:' || ('{"k":"v"}' -> '$.k')));
+  EXPECT_EQ!('prefix:v', (select 'prefix:' || ('{"k":"v"}' ->> ~text~ '$.k')));
+  EXPECT_EQ!('7', (select '{"ab":7}' -> ('a' || 'b')));
+  -- -> returns the text 'null', not SQL NULL, so it can name an object key.
+  -- Avoid numeric-text paths: SQLite versions differ on interpreting those.
+  EXPECT_EQ!('7', (select '{"null":7}' -> ('{"k":null}' -> '$.k')));
+  EXPECT_EQ!('7', (select '{"ab":7}' -> ('{"k":"ab"}' ->> ~text~ '$.k')));
+  EXPECT_EQ!(7, (select '{"ab":7}' ->> ~int~ ('a' || 'b')));
+  EXPECT_EQ!(7, (select '{"null":7}' ->> ~int~ ('{"k":null}' -> '$.k')));
+  EXPECT_EQ!(7, (select '{"ab":7}' ->> ~int~ ('{"k":"ab"}' ->> ~text~ '$.k')));
+
+  -- The nine left-nested pairs are controls: their redundant parentheses may
+  -- disappear without changing results. JSON objects remain text under ->>.
+  EXPECT_EQ!('abc', (select ('a' || 'b') || 'c'));
+  EXPECT_EQ!('7', (select ('{"a":' || '7}') -> '$.a'));
+  EXPECT_EQ!(7, (select ('{"a":' || '7}') ->> ~int~ '$.a'));
+  EXPECT_EQ!('"v"suffix', (select ('{"k":"v"}' -> '$.k') || 'suffix'));
+  EXPECT_EQ!('7', (select ('{"k":{"x":7}}' -> '$.k') -> '$.x'));
+  EXPECT_EQ!(7, (select ('{"k":{"x":7}}' -> '$.k') ->> ~int~ '$.x'));
+  EXPECT_EQ!('vsuffix', (select ('{"k":"v"}' ->> ~text~ '$.k') || 'suffix'));
+  EXPECT_EQ!('7', (select ('{"k":{"x":7}}' ->> ~text~ '$.k') -> '$.x'));
+  EXPECT_EQ!(7, (select ('{"k":{"x":7}}' ->> ~text~ '$.k') ->> ~int~ '$.x'));
+end);
+
 -- Test precedence of multiply with (* / %) with add (+ -)
 TEST!(multiply_pri,
 begin

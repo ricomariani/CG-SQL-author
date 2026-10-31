@@ -672,6 +672,8 @@ extern CQL_WARN_UNUSED cql_code insert_returning_resultset(sqlite3 *_Nonnull _db
 extern CQL_WARN_UNUSED cql_code delete_returning_resultset(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code get_xy(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code wrapper_param_forwarding(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_int32 stmt, cql_int32 rc, cql_int32 *_Nonnull forwarded);
+extern CQL_WARN_UNUSED cql_code right_nested_json_concat(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+extern CQL_WARN_UNUSED cql_code left_nested_json_concat(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 cql_string_literal(_literal_1_text_, "text");
 cql_string_literal(_literal_2_This_is_a_test_, "This is a \" \\ test '' \n \" ");
 cql_string_literal(_literal_3_b_, "b");
@@ -18196,6 +18198,234 @@ CQL_WARN_UNUSED cql_code hex_boundary_quote(sqlite3 *_Nonnull _db_) {
 cql_cleanup:
   cql_error_report();
   cql_string_release(bytes);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+PROC right_nested_json_concat ()
+BEGIN
+  SELECT
+      'a' || ('b' || 'c') AS cc,
+      'prefix:' || ('{"k":"v"}' -> '$.k') AS cj,
+      'prefix:' || ('{"k":"v"}' ->> ~TEXT~ '$.k') AS ct,
+      '{"ab":7}' -> ('a' || 'b') AS jc,
+      '{"null":7}' -> ('{"k":null}' -> '$.k') AS jj,
+      '{"ab":7}' -> ('{"k":"ab"}' ->> ~TEXT~ '$.k') AS jt,
+      '{"ab":7}' ->> ~INT~ ('a' || 'b') AS tc,
+      '{"null":7}' ->> ~INT~ ('{"k":null}' -> '$.k') AS tj,
+      '{"ab":7}' ->> ~INT~ ('{"k":"ab"}' ->> ~TEXT~ '$.k') AS tt;
+END;
+*/
+
+#define _PROC_ "right_nested_json_concat"
+static int32_t right_nested_json_concat_perf_index;
+
+cql_string_proc_name(right_nested_json_concat_stored_procedure_name, "right_nested_json_concat");
+
+typedef struct right_nested_json_concat_row {
+  cql_nullable_int32 tc;
+  cql_nullable_int32 tj;
+  cql_nullable_int32 tt;
+  cql_string_ref _Nonnull cc;
+  cql_string_ref _Nullable cj;
+  cql_string_ref _Nullable ct;
+  cql_string_ref _Nullable jc;
+  cql_string_ref _Nullable jj;
+  cql_string_ref _Nullable jt;
+} right_nested_json_concat_row;
+
+uint8_t right_nested_json_concat_data_types[right_nested_json_concat_data_types_count] = {
+  CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_NOT_NULL, // cc
+  CQL_DATA_TYPE_STRING, // cj
+  CQL_DATA_TYPE_STRING, // ct
+  CQL_DATA_TYPE_STRING, // jc
+  CQL_DATA_TYPE_STRING, // jj
+  CQL_DATA_TYPE_STRING, // jt
+  CQL_DATA_TYPE_INT32, // tc
+  CQL_DATA_TYPE_INT32, // tj
+  CQL_DATA_TYPE_INT32, // tt
+};
+
+#define right_nested_json_concat_refs_offset cql_offsetof(right_nested_json_concat_row, cc) // count = 6
+
+static cql_uint16 right_nested_json_concat_col_offsets[] = { 9,
+  cql_offsetof(right_nested_json_concat_row, cc),
+  cql_offsetof(right_nested_json_concat_row, cj),
+  cql_offsetof(right_nested_json_concat_row, ct),
+  cql_offsetof(right_nested_json_concat_row, jc),
+  cql_offsetof(right_nested_json_concat_row, jj),
+  cql_offsetof(right_nested_json_concat_row, jt),
+  cql_offsetof(right_nested_json_concat_row, tc),
+  cql_offsetof(right_nested_json_concat_row, tj),
+  cql_offsetof(right_nested_json_concat_row, tt)
+};
+
+cql_int32 right_nested_json_concat_result_count(right_nested_json_concat_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code right_nested_json_concat_fetch_results(sqlite3 *_Nonnull _db_, right_nested_json_concat_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *_stmt_ = NULL;
+  cql_profile_start(CRC_right_nested_json_concat, &right_nested_json_concat_perf_index);
+  cql_code _rc_ = right_nested_json_concat(_db_, &_stmt_);
+  cql_fetch_info info = {
+    .rc = _rc_,
+    .db = _db_,
+    .stmt = _stmt_,
+    .data_types = right_nested_json_concat_data_types,
+    .col_offsets = right_nested_json_concat_col_offsets,
+    .refs_count = 6,
+    .refs_offset = right_nested_json_concat_refs_offset,
+    .rowsize = sizeof(right_nested_json_concat_row),
+    .crc = CRC_right_nested_json_concat,
+    .perf_index = &right_nested_json_concat_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+/*
+export:
+DECLARE PROC right_nested_json_concat () (cc TEXT!, cj TEXT, ct TEXT, jc TEXT, jj TEXT, jt TEXT, tc INT, tj INT, tt INT);
+*/
+CQL_WARN_UNUSED cql_code right_nested_json_concat(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  cql_error_prepare();
+
+  _rc_ = cql_prepare(_db_, _result_stmt,
+    "SELECT "
+        "'a' || ('b' || 'c'), "
+        "'prefix:' || ('{\"k\":\"v\"}' -> '$.k'), "
+        "'prefix:' || ('{\"k\":\"v\"}' ->> '$.k'), "
+        "'{\"ab\":7}' -> ('a' || 'b'), "
+        "'{\"null\":7}' -> ('{\"k\":null}' -> '$.k'), "
+        "'{\"ab\":7}' -> ('{\"k\":\"ab\"}' ->> '$.k'), "
+        "'{\"ab\":7}' ->> ('a' || 'b'), "
+        "'{\"null\":7}' ->> ('{\"k\":null}' -> '$.k'), "
+        "'{\"ab\":7}' ->> ('{\"k\":\"ab\"}' ->> '$.k')");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_error_report();
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+PROC left_nested_json_concat ()
+BEGIN
+  SELECT
+      'a' || 'b' || 'c' AS cc,
+      '{"a":' || '7}' -> '$.a' AS cj,
+      '{"a":' || '7}' ->> ~INT~ '$.a' AS ct,
+      '{"k":"v"}' -> '$.k' || 'suffix' AS jc,
+      '{"k":{"x":7}}' -> '$.k' -> '$.x' AS jj,
+      '{"k":{"x":7}}' -> '$.k' ->> ~INT~ '$.x' AS jt,
+      '{"k":"v"}' ->> ~TEXT~ '$.k' || 'suffix' AS tc,
+      '{"k":{"x":7}}' ->> ~TEXT~ '$.k' -> '$.x' AS tj,
+      '{"k":{"x":7}}' ->> ~TEXT~ '$.k' ->> ~INT~ '$.x' AS tt;
+END;
+*/
+
+#define _PROC_ "left_nested_json_concat"
+static int32_t left_nested_json_concat_perf_index;
+
+cql_string_proc_name(left_nested_json_concat_stored_procedure_name, "left_nested_json_concat");
+
+typedef struct left_nested_json_concat_row {
+  cql_nullable_int32 ct;
+  cql_nullable_int32 jt;
+  cql_nullable_int32 tt;
+  cql_string_ref _Nonnull cc;
+  cql_string_ref _Nullable cj;
+  cql_string_ref _Nullable jc;
+  cql_string_ref _Nullable jj;
+  cql_string_ref _Nullable tc;
+  cql_string_ref _Nullable tj;
+} left_nested_json_concat_row;
+
+uint8_t left_nested_json_concat_data_types[left_nested_json_concat_data_types_count] = {
+  CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_NOT_NULL, // cc
+  CQL_DATA_TYPE_STRING, // cj
+  CQL_DATA_TYPE_INT32, // ct
+  CQL_DATA_TYPE_STRING, // jc
+  CQL_DATA_TYPE_STRING, // jj
+  CQL_DATA_TYPE_INT32, // jt
+  CQL_DATA_TYPE_STRING, // tc
+  CQL_DATA_TYPE_STRING, // tj
+  CQL_DATA_TYPE_INT32, // tt
+};
+
+#define left_nested_json_concat_refs_offset cql_offsetof(left_nested_json_concat_row, cc) // count = 6
+
+static cql_uint16 left_nested_json_concat_col_offsets[] = { 9,
+  cql_offsetof(left_nested_json_concat_row, cc),
+  cql_offsetof(left_nested_json_concat_row, cj),
+  cql_offsetof(left_nested_json_concat_row, ct),
+  cql_offsetof(left_nested_json_concat_row, jc),
+  cql_offsetof(left_nested_json_concat_row, jj),
+  cql_offsetof(left_nested_json_concat_row, jt),
+  cql_offsetof(left_nested_json_concat_row, tc),
+  cql_offsetof(left_nested_json_concat_row, tj),
+  cql_offsetof(left_nested_json_concat_row, tt)
+};
+
+cql_int32 left_nested_json_concat_result_count(left_nested_json_concat_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code left_nested_json_concat_fetch_results(sqlite3 *_Nonnull _db_, left_nested_json_concat_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *_stmt_ = NULL;
+  cql_profile_start(CRC_left_nested_json_concat, &left_nested_json_concat_perf_index);
+  cql_code _rc_ = left_nested_json_concat(_db_, &_stmt_);
+  cql_fetch_info info = {
+    .rc = _rc_,
+    .db = _db_,
+    .stmt = _stmt_,
+    .data_types = left_nested_json_concat_data_types,
+    .col_offsets = left_nested_json_concat_col_offsets,
+    .refs_count = 6,
+    .refs_offset = left_nested_json_concat_refs_offset,
+    .rowsize = sizeof(left_nested_json_concat_row),
+    .crc = CRC_left_nested_json_concat,
+    .perf_index = &left_nested_json_concat_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+/*
+export:
+DECLARE PROC left_nested_json_concat () (cc TEXT!, cj TEXT, ct INT, jc TEXT, jj TEXT, jt INT, tc TEXT, tj TEXT, tt INT);
+*/
+CQL_WARN_UNUSED cql_code left_nested_json_concat(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  cql_error_prepare();
+
+  _rc_ = cql_prepare(_db_, _result_stmt,
+    "SELECT "
+        "'a' || 'b' || 'c', "
+        "'{\"a\":' || '7}' -> '$.a', "
+        "'{\"a\":' || '7}' ->> '$.a', "
+        "'{\"k\":\"v\"}' -> '$.k' || 'suffix', "
+        "'{\"k\":{\"x\":7}}' -> '$.k' -> '$.x', "
+        "'{\"k\":{\"x\":7}}' -> '$.k' ->> '$.x', "
+        "'{\"k\":\"v\"}' ->> '$.k' || 'suffix', "
+        "'{\"k\":{\"x\":7}}' ->> '$.k' -> '$.x', "
+        "'{\"k\":{\"x\":7}}' ->> '$.k' ->> '$.x'");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_error_report();
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
   return _rc_;
 }
 #undef _PROC_

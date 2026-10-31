@@ -6323,6 +6323,76 @@ begin
   insert into bar(id, name) values (1, "\x01f\x029\xa1A");
 end;
 
+-- TEST: preserve right-nested grouping for every pair of ||, ->, and ->>
+-- These patterns match echoed CQL, including ->> type annotations and aliases.
+-- All three operators have the same left-associative precedence.
+-- + 'a' || ('b' || 'c') AS cc
+-- + 'prefix:' || ('{"k":"v"}' -> '$.k') AS cj
+-- + 'prefix:' || ('{"k":"v"}' ->> ~TEXT~ '$.k') AS ct
+-- + '{"ab":7}' -> ('a' || 'b') AS jc
+-- + '{"null":7}' -> ('{"k":null}' -> '$.k') AS jj
+-- + '{"ab":7}' -> ('{"k":"ab"}' ->> ~TEXT~ '$.k') AS jt
+-- + '{"ab":7}' ->> ~INT~ ('a' || 'b') AS tc
+-- + '{"null":7}' ->> ~INT~ ('{"k":null}' -> '$.k') AS tj
+-- + '{"ab":7}' ->> ~INT~ ('{"k":"ab"}' ->> ~TEXT~ '$.k') AS tt
+-- These patterns match executable C string contents, not the echoed CQL.
+-- SQL has no type annotations; JSON quotes are escaped for the surrounding C.
+-- + "'a' || ('b' || 'c'), "
+-- + 'prefix:' || ('{\"k\":\"v\"}' -> '$.k')
+-- + 'prefix:' || ('{\"k\":\"v\"}' ->> '$.k')
+-- + '{\"ab\":7}' -> ('a' || 'b')
+-- + '{\"null\":7}' -> ('{\"k\":null}' -> '$.k')
+-- + '{\"ab\":7}' -> ('{\"k\":\"ab\"}' ->> '$.k')
+-- + '{\"ab\":7}' ->> ('a' || 'b')
+-- + '{\"null\":7}' ->> ('{\"k\":null}' -> '$.k')
+-- + '{\"ab\":7}' ->> ('{\"k\":\"ab\"}' ->> '$.k')
+proc right_nested_json_concat()
+begin
+  select 'a' || ('b' || 'c') as cc,
+         'prefix:' || ('{"k":"v"}' -> '$.k') as cj,
+         'prefix:' || ('{"k":"v"}' ->> ~text~ '$.k') as ct,
+         '{"ab":7}' -> ('a' || 'b') as jc,
+         '{"null":7}' -> ('{"k":null}' -> '$.k') as jj,
+         '{"ab":7}' -> ('{"k":"ab"}' ->> ~text~ '$.k') as jt,
+         '{"ab":7}' ->> ~int~ ('a' || 'b') as tc,
+         '{"null":7}' ->> ~int~ ('{"k":null}' -> '$.k') as tj,
+         '{"ab":7}' ->> ~int~ ('{"k":"ab"}' ->> ~text~ '$.k') as tt;
+end;
+
+-- TEST: left-nested operator pairs retain their naturally left-associated spelling
+-- Echoed CQL may drop these redundant parentheses, but must keep annotations.
+-- + 'a' || 'b' || 'c' AS cc
+-- + '{"a":' || '7}' -> '$.a' AS cj
+-- + '{"a":' || '7}' ->> ~INT~ '$.a' AS ct
+-- + '{"k":"v"}' -> '$.k' || 'suffix' AS jc
+-- + '{"k":{"x":7}}' -> '$.k' -> '$.x' AS jj
+-- + '{"k":{"x":7}}' -> '$.k' ->> ~INT~ '$.x' AS jt
+-- + '{"k":"v"}' ->> ~TEXT~ '$.k' || 'suffix' AS tc
+-- + '{"k":{"x":7}}' ->> ~TEXT~ '$.k' -> '$.x' AS tj
+-- + '{"k":{"x":7}}' ->> ~TEXT~ '$.k' ->> ~INT~ '$.x' AS tt
+-- Executable C SQL must likewise remain left-associated without annotations.
+-- + "'a' || 'b' || 'c', "
+-- + '{\"a\":' || '7}' -> '$.a'
+-- + '{\"a\":' || '7}' ->> '$.a'
+-- + '{\"k\":\"v\"}' -> '$.k' || 'suffix'
+-- + '{\"k\":{\"x\":7}}' -> '$.k' -> '$.x'
+-- + '{\"k\":{\"x\":7}}' -> '$.k' ->> '$.x'
+-- + '{\"k\":\"v\"}' ->> '$.k' || 'suffix'
+-- + '{\"k\":{\"x\":7}}' ->> '$.k' -> '$.x'
+-- + '{\"k\":{\"x\":7}}' ->> '$.k' ->> '$.x'
+proc left_nested_json_concat()
+begin
+  select ('a' || 'b') || 'c' as cc,
+         ('{"a":' || '7}') -> '$.a' as cj,
+         ('{"a":' || '7}') ->> ~int~ '$.a' as ct,
+         ('{"k":"v"}' -> '$.k') || 'suffix' as jc,
+         ('{"k":{"x":7}}' -> '$.k') -> '$.x' as jj,
+         ('{"k":{"x":7}}' -> '$.k') ->> ~int~ '$.x' as jt,
+         ('{"k":"v"}' ->> ~text~ '$.k') || 'suffix' as tc,
+         ('{"k":{"x":7}}' ->> ~text~ '$.k') -> '$.x' as tj,
+         ('{"k":{"x":7}}' ->> ~text~ '$.k') ->> ~int~ '$.x' as tt;
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

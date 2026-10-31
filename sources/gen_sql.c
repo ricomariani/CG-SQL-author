@@ -1165,13 +1165,18 @@ static void gen_uminus(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
 // {concat}
 //   | {expr}                     -- left operand
 //   | {expr}                     -- right operand (||)
+// ||, ->, and ->> share left-associative precedence. The JSON emitters added in
+// September 2024 copied concat's equal-priority right emission, but mixed pairs
+// are not associative: json ->> ('a' || 'b') must not become json ->> 'a' || 'b'.
+// All three use gen_binary's stronger right-child priority to preserve grouping,
+// including harmless parentheses around right-nested pure concatenation.
 static void gen_concat(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_concat(ast));
 
   if (pri_new < pri) gen_printf("(");
   gen_expr(ast->left, pri_new);
   gen_printf(" %s ", op);
-  gen_expr(ast->right, pri_new);
+  gen_expr(ast->right, pri_new + 1);
   if (pri_new < pri) gen_printf(")");
 }
 
@@ -1184,7 +1189,7 @@ static void gen_jex1(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   if (pri_new < pri) gen_printf("(");
   gen_expr(ast->left, pri_new);
   gen_printf(" %s ", op);
-  gen_expr(ast->right, pri_new);
+  gen_expr(ast->right, pri_new + 1);
   if (pri_new < pri) gen_printf(")");
 }
 
@@ -1204,7 +1209,7 @@ static void gen_jex2(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
     gen_data_type(ast->right->left);
     gen_printf("~ ");
   }
-  gen_expr(ast->right->right, pri_new);
+  gen_expr(ast->right->right, pri_new + 1);
   if (pri_new < pri) gen_printf(")");
 }
 

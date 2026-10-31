@@ -7829,6 +7829,294 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
 extern CQL_WARN_UNUSED cql_code hex_boundary_quote(sqlite3 *_Nonnull _db_);
 
 // The statement ending at line XXXX
+#define CRC_right_nested_json_concat 8234952638405218335L
+
+extern cql_string_ref _Nonnull right_nested_json_concat_stored_procedure_name;
+
+#define right_nested_json_concat_data_types_count 9
+
+extern uint8_t right_nested_json_concat_data_types[right_nested_json_concat_data_types_count];
+
+#ifndef result_set_type_decl_right_nested_json_concat_result_set
+#define result_set_type_decl_right_nested_json_concat_result_set 1
+cql_result_set_type_decl(right_nested_json_concat_result_set, right_nested_json_concat_result_set_ref);
+#endif
+#ifndef _right_nested_json_concat_get_cc_inline_
+#define _right_nested_json_concat_get_cc_inline_
+
+
+static inline cql_string_ref _Nonnull right_nested_json_concat_get_cc(right_nested_json_concat_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_string_col((cql_result_set_ref)result_set, row, 0);
+}
+
+#endif
+
+#ifndef _right_nested_json_concat_get_cj_inline_
+#define _right_nested_json_concat_get_cj_inline_
+
+
+static inline cql_string_ref _Nullable right_nested_json_concat_get_cj(right_nested_json_concat_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 1) ? NULL : cql_result_set_get_string_col((cql_result_set_ref)result_set, row, 1);
+}
+
+#endif
+
+#ifndef _right_nested_json_concat_get_ct_inline_
+#define _right_nested_json_concat_get_ct_inline_
+
+
+static inline cql_string_ref _Nullable right_nested_json_concat_get_ct(right_nested_json_concat_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 2) ? NULL : cql_result_set_get_string_col((cql_result_set_ref)result_set, row, 2);
+}
+
+#endif
+
+#ifndef _right_nested_json_concat_get_jc_inline_
+#define _right_nested_json_concat_get_jc_inline_
+
+
+static inline cql_string_ref _Nullable right_nested_json_concat_get_jc(right_nested_json_concat_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 3) ? NULL : cql_result_set_get_string_col((cql_result_set_ref)result_set, row, 3);
+}
+
+#endif
+
+#ifndef _right_nested_json_concat_get_jj_inline_
+#define _right_nested_json_concat_get_jj_inline_
+
+
+static inline cql_string_ref _Nullable right_nested_json_concat_get_jj(right_nested_json_concat_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 4) ? NULL : cql_result_set_get_string_col((cql_result_set_ref)result_set, row, 4);
+}
+
+#endif
+
+#ifndef _right_nested_json_concat_get_jt_inline_
+#define _right_nested_json_concat_get_jt_inline_
+
+
+static inline cql_string_ref _Nullable right_nested_json_concat_get_jt(right_nested_json_concat_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 5) ? NULL : cql_result_set_get_string_col((cql_result_set_ref)result_set, row, 5);
+}
+
+#endif
+
+#ifndef _right_nested_json_concat_get_tc_is_null_inline_
+#define _right_nested_json_concat_get_tc_is_null_inline_
+
+
+static inline cql_bool right_nested_json_concat_get_tc_is_null(right_nested_json_concat_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 6);
+}
+
+#endif
+
+#ifndef _right_nested_json_concat_get_tc_value_inline_
+#define _right_nested_json_concat_get_tc_value_inline_
+
+
+static inline cql_int32 right_nested_json_concat_get_tc_value(right_nested_json_concat_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 6);
+}
+
+#endif
+
+#ifndef _right_nested_json_concat_get_tj_is_null_inline_
+#define _right_nested_json_concat_get_tj_is_null_inline_
+
+
+static inline cql_bool right_nested_json_concat_get_tj_is_null(right_nested_json_concat_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 7);
+}
+
+#endif
+
+#ifndef _right_nested_json_concat_get_tj_value_inline_
+#define _right_nested_json_concat_get_tj_value_inline_
+
+
+static inline cql_int32 right_nested_json_concat_get_tj_value(right_nested_json_concat_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 7);
+}
+
+#endif
+
+#ifndef _right_nested_json_concat_get_tt_is_null_inline_
+#define _right_nested_json_concat_get_tt_is_null_inline_
+
+
+static inline cql_bool right_nested_json_concat_get_tt_is_null(right_nested_json_concat_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 8);
+}
+
+#endif
+
+#ifndef _right_nested_json_concat_get_tt_value_inline_
+#define _right_nested_json_concat_get_tt_value_inline_
+
+
+static inline cql_int32 right_nested_json_concat_get_tt_value(right_nested_json_concat_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 8);
+}
+
+#endif
+
+
+extern cql_int32 right_nested_json_concat_result_count(right_nested_json_concat_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code right_nested_json_concat_fetch_results(sqlite3 *_Nonnull _db_, right_nested_json_concat_result_set_ref _Nullable *_Nonnull result_set);
+#define right_nested_json_concat_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define right_nested_json_concat_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
+#define CRC_left_nested_json_concat 6846516872061597472L
+
+extern cql_string_ref _Nonnull left_nested_json_concat_stored_procedure_name;
+
+#define left_nested_json_concat_data_types_count 9
+
+extern uint8_t left_nested_json_concat_data_types[left_nested_json_concat_data_types_count];
+
+#ifndef result_set_type_decl_left_nested_json_concat_result_set
+#define result_set_type_decl_left_nested_json_concat_result_set 1
+cql_result_set_type_decl(left_nested_json_concat_result_set, left_nested_json_concat_result_set_ref);
+#endif
+#ifndef _left_nested_json_concat_get_cc_inline_
+#define _left_nested_json_concat_get_cc_inline_
+
+
+static inline cql_string_ref _Nonnull left_nested_json_concat_get_cc(left_nested_json_concat_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_string_col((cql_result_set_ref)result_set, row, 0);
+}
+
+#endif
+
+#ifndef _left_nested_json_concat_get_cj_inline_
+#define _left_nested_json_concat_get_cj_inline_
+
+
+static inline cql_string_ref _Nullable left_nested_json_concat_get_cj(left_nested_json_concat_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 1) ? NULL : cql_result_set_get_string_col((cql_result_set_ref)result_set, row, 1);
+}
+
+#endif
+
+#ifndef _left_nested_json_concat_get_ct_is_null_inline_
+#define _left_nested_json_concat_get_ct_is_null_inline_
+
+
+static inline cql_bool left_nested_json_concat_get_ct_is_null(left_nested_json_concat_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 2);
+}
+
+#endif
+
+#ifndef _left_nested_json_concat_get_ct_value_inline_
+#define _left_nested_json_concat_get_ct_value_inline_
+
+
+static inline cql_int32 left_nested_json_concat_get_ct_value(left_nested_json_concat_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 2);
+}
+
+#endif
+
+#ifndef _left_nested_json_concat_get_jc_inline_
+#define _left_nested_json_concat_get_jc_inline_
+
+
+static inline cql_string_ref _Nullable left_nested_json_concat_get_jc(left_nested_json_concat_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 3) ? NULL : cql_result_set_get_string_col((cql_result_set_ref)result_set, row, 3);
+}
+
+#endif
+
+#ifndef _left_nested_json_concat_get_jj_inline_
+#define _left_nested_json_concat_get_jj_inline_
+
+
+static inline cql_string_ref _Nullable left_nested_json_concat_get_jj(left_nested_json_concat_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 4) ? NULL : cql_result_set_get_string_col((cql_result_set_ref)result_set, row, 4);
+}
+
+#endif
+
+#ifndef _left_nested_json_concat_get_jt_is_null_inline_
+#define _left_nested_json_concat_get_jt_is_null_inline_
+
+
+static inline cql_bool left_nested_json_concat_get_jt_is_null(left_nested_json_concat_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 5);
+}
+
+#endif
+
+#ifndef _left_nested_json_concat_get_jt_value_inline_
+#define _left_nested_json_concat_get_jt_value_inline_
+
+
+static inline cql_int32 left_nested_json_concat_get_jt_value(left_nested_json_concat_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 5);
+}
+
+#endif
+
+#ifndef _left_nested_json_concat_get_tc_inline_
+#define _left_nested_json_concat_get_tc_inline_
+
+
+static inline cql_string_ref _Nullable left_nested_json_concat_get_tc(left_nested_json_concat_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 6) ? NULL : cql_result_set_get_string_col((cql_result_set_ref)result_set, row, 6);
+}
+
+#endif
+
+#ifndef _left_nested_json_concat_get_tj_inline_
+#define _left_nested_json_concat_get_tj_inline_
+
+
+static inline cql_string_ref _Nullable left_nested_json_concat_get_tj(left_nested_json_concat_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 7) ? NULL : cql_result_set_get_string_col((cql_result_set_ref)result_set, row, 7);
+}
+
+#endif
+
+#ifndef _left_nested_json_concat_get_tt_is_null_inline_
+#define _left_nested_json_concat_get_tt_is_null_inline_
+
+
+static inline cql_bool left_nested_json_concat_get_tt_is_null(left_nested_json_concat_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 8);
+}
+
+#endif
+
+#ifndef _left_nested_json_concat_get_tt_value_inline_
+#define _left_nested_json_concat_get_tt_value_inline_
+
+
+static inline cql_int32 left_nested_json_concat_get_tt_value(left_nested_json_concat_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 8);
+}
+
+#endif
+
+
+extern cql_int32 left_nested_json_concat_result_count(left_nested_json_concat_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code left_nested_json_concat_fetch_results(sqlite3 *_Nonnull _db_, left_nested_json_concat_result_set_ref _Nullable *_Nonnull result_set);
+#define left_nested_json_concat_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define left_nested_json_concat_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
 extern cql_int32 this_is_the_end;
 
 // The statement ending at line XXXX

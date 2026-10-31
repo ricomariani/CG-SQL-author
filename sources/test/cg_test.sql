@@ -6307,6 +6307,22 @@ begin
   select stmt as value, rc as code, forwarded as forwarded;
 end;
 
+-- TEST: C hex escapes must stop before following hex characters
+-- These first patterns match echoed CQL in the generated procedure comment.
+-- CQL consumes exactly two hex digits, so its literals must remain unsplit.
+-- + LET bytes := "\x01f\x029\xa1A";
+-- + VALUES (1, "\x01f\x029\xa1A");
+-- These patterns match executable generated C, not the echoed CQL. The SQL
+-- statement is itself a C string: adjacent literal tokens prevent the C compiler
+-- from absorbing f, 9, or A into a hex escape before SQLite receives the SQL.
+-- + cql_set_string_ref(&bytes, _literal_%_f_A_hex_boundary_quote);
+-- + "VALUES (1, '\x01" "f\x02" "9\xa1" "A')");
+proc hex_boundary_quote()
+begin
+  let bytes := "\x01f\x029\xa1A";
+  insert into bar(id, name) values (1, "\x01f\x029\xa1A");
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

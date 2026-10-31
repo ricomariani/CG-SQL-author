@@ -877,6 +877,16 @@ begin
   EXPECT!(result);
 end);
 
+TEST!(c_hex_escape_boundaries,
+begin
+  -- Verify actual bytes rather than comparing two equally miscompiled literals.
+  -- The f, 9, and A must not be swallowed by the preceding C hex escape. These
+  -- checks cover local string constants and SQL text, including compressed SQL.
+  let bytes := "\x01f\x029\xa1A";
+  EXPECT_EQ!((select hex(bytes)), '01660239A141');
+  EXPECT_EQ!((select hex("\x01f\x029\xa1A")), '01660239A141');
+end);
+
 -- try out some string comparisons
 TEST!(string_comparisons,
 begin

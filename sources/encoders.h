@@ -11,16 +11,21 @@
 
 #define PRETTY_QUOTE_SINGLE_LINE 0
 #define PRETTY_QUOTE_MULTI_LINE 1
-#define PRETTY_QUOTE_C 0
 #define PRETTY_QUOTE_JSON 2
+#define PRETTY_QUOTE_C 4
+#define PRETTY_QUOTE_LUA 8
+#define PRETTY_QUOTE_CQL 16
 
 cql_noexport void cg_decode_string_literal(CSTR _Nonnull str, charbuf *_Nonnull output);
 cql_noexport void cg_encode_string_literal(CSTR _Nonnull str, charbuf *_Nonnull output);
-cql_noexport void cg_encode_char_as_c_string_literal(char c, charbuf *_Nonnull output);
+cql_noexport void cg_encode_char_as_c_string_literal(char c, char next, charbuf *_Nonnull output);
+cql_noexport void cg_encode_char_as_lua_string_literal(char c, charbuf *_Nonnull output);
 cql_noexport void cg_encode_char_as_json_string_literal(char c, charbuf *_Nonnull output);
 
 cql_noexport void cg_encode_json_string_literal(CSTR _Nonnull str, charbuf *_Nonnull output);
 cql_noexport void cg_encode_c_string_literal(CSTR _Nonnull str, charbuf *_Nonnull output);
+cql_noexport void cg_encode_lua_string_literal(CSTR _Nonnull str, charbuf *_Nonnull output);
+cql_noexport void cg_encode_cql_string_literal(CSTR _Nonnull str, charbuf *_Nonnull output);
 // Append text safe for a generated C "//" or Lua "--" line comment.
 cql_noexport void cg_encode_comment_text(CSTR _Nonnull str, charbuf *_Nonnull output);
 cql_noexport void cg_decode_c_string_literal(CSTR _Nonnull str, charbuf *_Nonnull output);

@@ -698,6 +698,7 @@ cql_string_literal(_literal_23_slash_star_and_star_slash, "/*  */");
 cql_string_literal(_literal_24_hi_mutated_in_param_ref, "hi");
 cql_string_literal(_literal_25_xyzzy_clobber1, "xyzzy");
 cql_string_literal(_literal_26_abc_my_proc_check_type, "abc");
+cql_string_literal(_literal_27_f_A_hex_boundary_quote, "\x01" "f\x02" "9\xa1" "A");
 
 // The statement ending at line XXXX
 
@@ -18160,6 +18161,41 @@ CQL_WARN_UNUSED cql_code wrapper_param_forwarding(sqlite3 *_Nonnull _db_, sqlite
 cql_cleanup:
   cql_error_report();
   if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+PROC hex_boundary_quote ()
+BEGIN
+  LET bytes := "\x01f\x029\xa1A";
+  INSERT INTO bar(id, name)
+    VALUES (1, "\x01f\x029\xa1A");
+END;
+*/
+
+#define _PROC_ "hex_boundary_quote"
+/*
+export:
+DECLARE PROC hex_boundary_quote () USING TRANSACTION;
+*/
+CQL_WARN_UNUSED cql_code hex_boundary_quote(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
+  cql_string_ref bytes = NULL;
+
+  cql_set_string_ref(&bytes, _literal_27_f_A_hex_boundary_quote);
+  _rc_ = cql_exec(_db_,
+    "INSERT INTO bar(id, name) "
+      "VALUES (1, '\x01" "f\x02" "9\xa1" "A')");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_error_report();
+  cql_string_release(bytes);
   return _rc_;
 }
 #undef _PROC_

@@ -238,7 +238,8 @@ static void cg_line_directive(CSTR filename, int32_t lineno, charbuf *output) {
   }
 
   CHARBUF_OPEN(tmp);
-  cg_encode_c_string_literal(filename, &tmp);
+  // #line requires a single literal token, not adjacent C string literals.
+  cg_encode_cql_string_literal(filename, &tmp);
   bprintf(output, "#line %d %s\n", lineno, tmp.ptr);
   CHARBUF_CLOSE(tmp);
 }
@@ -4678,7 +4679,7 @@ static void cg_flush_piece(CSTR start, CSTR cur, charbuf *output) {
   int32_t len = (int32_t)(cur - start);
 
   while (start < cur) {
-    cg_encode_char_as_c_string_literal(*start, &temp);
+    cg_encode_char_as_c_string_literal(*start, start + 1 < cur ? start[1] : '\0', &temp);
     start++;
   }
 

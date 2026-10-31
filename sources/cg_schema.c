@@ -72,7 +72,7 @@ static void cg_schema_name_as_cql_string(charbuf *output, ast_node *ast) {
   }
 }
 
-// we're converting an identifier to a quoted C string literal
+// we're converting an identifier to a quoted CQL string literal
 // it could be a quoted identifier or a normal one (i.e. `foo bar` or foo_bar)
 static void cg_schema_name_quoted(charbuf *output, ast_node *ast) {
   EXTRACT_STRING(name, ast);
@@ -85,8 +85,8 @@ static void cg_schema_name_quoted(charbuf *output, ast_node *ast) {
     bprintf(&tmp, "%s", name);
   }
 
-  // the raw text is now ready for quoting and C escaping.
-  cg_encode_c_string_literal(tmp.ptr, output);
+  // The upgrader is CQL source, not C, so retain CQL's two-digit byte escapes.
+  cg_encode_cql_string_literal(tmp.ptr, output);
   CHARBUF_CLOSE(tmp);
 }
 

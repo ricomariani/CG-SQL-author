@@ -6554,6 +6554,46 @@ end
 -- The statement ending at line XXXX
 
 --[[
+PROC make_quoted_virtual_tables ()
+BEGIN
+  CREATE VIRTUAL TABLE `quoted_virtual` USING m1 AS (
+    id INT
+  );
+  CREATE VIRTUAL TABLE IF NOT EXISTS `virtual table spaces` USING m2 (id) AS (
+    id INT
+  );
+  CREATE VIRTUAL TABLE `virtual-table.punct` USING m2 (ARGUMENTS FOLLOWING) AS (
+    id INT
+  );
+  CREATE VIRTUAL TABLE `select` USING m2 (id) AS (
+    id INT
+  );
+END;
+--]]
+
+function make_quoted_virtual_tables(_db_)
+  local _rc_ = CQL_OK
+  _rc_ = cql_exec(_db_,
+    "CREATE VIRTUAL TABLE [quoted_virtual] USING m1")
+  if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+  _rc_ = cql_exec(_db_,
+    "CREATE VIRTUAL TABLE IF NOT EXISTS [virtual table spaces] USING m2 (id)")
+  if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+  _rc_ = cql_exec(_db_,
+    "CREATE VIRTUAL TABLE [virtual-table.punct] USING m2 ( id INTEGER)")
+  if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+  _rc_ = cql_exec(_db_,
+    "CREATE VIRTUAL TABLE [select] USING m2 (id)")
+  if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+  _rc_ = CQL_OK
+
+::cql_cleanup::
+  return _rc_
+end
+
+-- The statement ending at line XXXX
+
+--[[
 PROC virtual1 ()
 BEGIN
   SELECT virtual_with_hidden.vy

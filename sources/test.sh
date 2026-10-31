@@ -616,8 +616,17 @@ assorted_errors_test() {
   on_diff_exit c_include_namespace_missing.err
 }
 
+quoted_virtual_table_test() {
+  TEST_NAME="quoted_virtual_table"
+  TEST_DESC="Checking virtual-table names survive schema emission and SQLite execution"
+  TEST_ERROR_MSG="Virtual-table identifier preservation failed"
+  TEST_CMD="python3 \"$T/quoted_virtual_table_test.py\" \"$CQL\" \"$O\""
+  run_test_expect_success
+}
+
 schema_migration_test() {
   echo '--------------------------------- STAGE 7 -- SCHEMA MIGRATION TESTS'
+  quoted_virtual_table_test
   TEST_NAME="sem_test_migrate"
   TEST_DESC="Running semantic analysis for migration test"
   TEST_CMD="sem_check --sem --ast --in \"$T/sem_test_migrate.sql\""
@@ -1333,6 +1342,7 @@ if [ -n "$SPECIFIC_TEST" ]; then
     echo "  code_gen_c_test"
     echo "  assorted_errors_test"
     echo "  schema_migration_test"
+    echo "  quoted_virtual_table_test"
     echo "  misc_cases"
     echo "  json_schema_test"
     echo "  json_utf8_test"

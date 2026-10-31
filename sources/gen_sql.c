@@ -3898,7 +3898,7 @@ static void gen_create_virtual_table_stmt(ast_node *ast) {
   EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
   EXTRACT_DETAIL(flags, table_flags_attrs->left);
   EXTRACT_ANY(table_attrs, table_flags_attrs->right);
-  EXTRACT_STRING(name, create_table_name_flags->right);
+  EXTRACT_NAME_AST(table_name_ast, create_table_name_flags->right);
   EXTRACT_NOTNULL(col_key_list, create_table_stmt->right);
   EXTRACT_STRING(module_name, module_info->left);
   EXTRACT_ANY(module_args, module_info->right);
@@ -3909,7 +3909,11 @@ static void gen_create_virtual_table_stmt(ast_node *ast) {
   gen_printf("CREATE VIRTUAL TABLE ");
   gen_if_not_exists(ast, if_not_exist);
   gen_eponymous(ast, is_eponymous);
-  gen_printf("%s USING %s", name, module_name);
+  // QID support in 2023 updated the grammar but missed this emitter. The stored
+  // name may be encoded (e.g. X_docX20store), or need quoting without encoding.
+  // Use the same identifier emitter as ordinary tables in both CQL and SQLite.
+  gen_name(table_name_ast);
+  gen_printf(" USING %s", module_name);
 
   if (!for_sqlite()) {
     if (is_ast_following(module_args)) {

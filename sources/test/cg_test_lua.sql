@@ -3715,6 +3715,25 @@ end;
 -- TEST: declaration of a named type
 declare my_name_type type text not null;
 
+-- TEST: virtual-table names must use identifier spelling, not internal QID encoding
+-- Echoed CQL retains backticks, separately from executable Lua's bracketed SQL.
+-- + CREATE VIRTUAL TABLE `quoted_virtual` USING m1 AS (
+-- + CREATE VIRTUAL TABLE IF NOT EXISTS `virtual table spaces` USING m2 (id) AS (
+-- + CREATE VIRTUAL TABLE `virtual-table.punct` USING m2 (ARGUMENTS FOLLOWING) AS (
+-- + CREATE VIRTUAL TABLE `select` USING m2 (id) AS (
+-- Executable SQL must preserve the module name and all module-argument forms.
+-- + "CREATE VIRTUAL TABLE [quoted_virtual] USING m1"
+-- + "CREATE VIRTUAL TABLE IF NOT EXISTS [virtual table spaces] USING m2 (id)"
+-- + "CREATE VIRTUAL TABLE [virtual-table.punct] USING m2 ( id INTEGER)"
+-- + "CREATE VIRTUAL TABLE [select] USING m2 (id)"
+proc make_quoted_virtual_tables()
+begin
+  create virtual table `quoted_virtual` using m1 as (id integer);
+  create virtual table if not exists `virtual table spaces` using m2(id) as (id integer);
+  create virtual table `virtual-table.punct` using m2(arguments following) as (id integer);
+  create virtual table `select` using m2(id) as (id integer);
+end;
+
 -- make a virtual table with a hidden column for use in the next tests
 create virtual table virtual_with_hidden using module_name as (
   vx integer hidden not null,

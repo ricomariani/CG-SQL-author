@@ -3610,6 +3610,27 @@ end;
 -- TEST: declaration of a named type
 declare my_name_type type text!;
 
+-- TEST: virtual-table names must use identifier spelling, not internal QID encoding
+-- These patterns match echoed CQL, which retains backtick quoting.
+-- + CREATE VIRTUAL TABLE `quoted_virtual` USING m1 AS (
+-- + CREATE VIRTUAL TABLE IF NOT EXISTS `virtual table spaces` USING m2 (id) AS (
+-- + CREATE VIRTUAL TABLE `virtual-table.punct` USING m2 (ARGUMENTS FOLLOWING) AS (
+-- + CREATE VIRTUAL TABLE `select` USING m2 (id) AS (
+-- These patterns match executable C SQL: SQLite identifiers use brackets.
+-- The module name and all three module-argument forms retain their spelling.
+-- + "CREATE VIRTUAL TABLE [quoted_virtual] USING m1");
+-- + "CREATE VIRTUAL TABLE IF NOT EXISTS [virtual table spaces] USING m2 (id)");
+-- + "CREATE VIRTUAL TABLE [virtual-table.punct] USING m2 ( "
+-- + "id INTEGER)");
+-- + "CREATE VIRTUAL TABLE [select] USING m2 (id)");
+proc make_quoted_virtual_tables()
+begin
+  create virtual table `quoted_virtual` using m1 as (id int);
+  create virtual table if not exists `virtual table spaces` using m2(id) as (id int);
+  create virtual table `virtual-table.punct` using m2(arguments following) as (id int);
+  create virtual table `select` using m2(id) as (id int);
+end;
+
 -- make a virtual table with a hidden column for use in the next tests
 create virtual table virtual_with_hidden using module_name as (
   vx int hidden!,

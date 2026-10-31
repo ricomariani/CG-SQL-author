@@ -1413,14 +1413,14 @@ static void cg_lua_expr_type_check(ast_node *type_check_expr, CSTR str, charbuf 
   CG_LUA_POP_EVAL(expr);
 }
 
-// This converts from SQL string literal format to C literal format.
+// This converts from SQL string literal format to Lua literal format.
 //  * the single quotes around the string become double quotes
 //  * escaped single quote becomes just single quote
 //  * backslash escapes are preserved
 static void cg_lua_requote_literal(CSTR str, charbuf *output) {
   CHARBUF_OPEN(plaintext);
   cg_decode_string_literal(str, &plaintext);
-  cg_encode_c_string_literal(plaintext.ptr, output);
+  cg_encode_lua_string_literal(plaintext.ptr, output);
   CHARBUF_CLOSE(plaintext);
 }
 
@@ -3500,7 +3500,7 @@ static int32_t cg_lua_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_
     }
 
     if (!lua_has_shared_fragments) {
-      cg_pretty_quote_plaintext(sql.ptr, cg_main_output, PRETTY_QUOTE_C);
+      cg_pretty_quote_plaintext(sql.ptr, cg_main_output, PRETTY_QUOTE_LUA);
     }
     else {
       uint32_t scount = cg_lua_fragment_count();
@@ -3521,7 +3521,7 @@ static int32_t cg_lua_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_
       CSTR *strs = (CSTR *)(lua_shared_fragment_strings.ptr);
       for (size_t i = 0; i < scount; i++) {
         bprintf(cg_main_output, "  ");
-        cg_pretty_quote_plaintext(strs[i], cg_main_output, PRETTY_QUOTE_C);
+        cg_pretty_quote_plaintext(strs[i], cg_main_output, PRETTY_QUOTE_LUA);
         if (i + 1 < scount) {
           bprintf(cg_main_output, ",\n");
         }

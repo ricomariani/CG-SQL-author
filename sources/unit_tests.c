@@ -273,6 +273,49 @@ static bool test_badly_formed_utf8() {
   return result;
 }
 
+static bool test_c_hex_escape_boundaries() {
+  bool result = true;
+  CHARBUF_OPEN(temp);
+  CSTR bytes = "\x01" "f\x02" "9\xa1" "A";
+
+  // Lowercase/uppercase hex letters and digits all extend C's hex escapes.
+  // Adjacent literal tokens must stop the scan while preserving the byte values.
+  cg_encode_c_string_literal(bytes, &temp);
+  result &= !strcmp(temp.ptr, "\"\\x01\" \"f\\x02\" \"9\\xa1\" \"A\"");
+
+  // Do not split before non-hex characters, after named escapes, inside text
+  // spelling a literal backslash-x, or after an escape at the end of the string.
+  bclear(&temp);
+  cg_encode_c_string_literal("\x01" "g\nf\\x01f\x02", &temp);
+  result &= !strcmp(temp.ptr, "\"\\x01g\\nf\\\\x01f\\x02\"");
+
+  // The Lua encoder must keep its existing spelling; in particular,
+  // Lua cannot concatenate adjacent literals by the C syntax.
+  bclear(&temp);
+  cg_encode_lua_string_literal(bytes, &temp);
+  result &= !strcmp(temp.ptr, "\"\\x01f\\x029\\xa1A\"");
+
+  // Forking the encoders must preserve named escapes and quote/backslash
+  // handling, rather than treating these characters as generic byte escapes.
+  bclear(&temp);
+  cg_encode_lua_string_literal("\"\\\a\b\f\n\r\t\v", &temp);
+  result &= !strcmp(temp.ptr, "\"\\\"\\\\\\a\\b\\f\\n\\r\\t\\v\"");
+  bclear(&temp);
+  cg_encode_c_string_literal("\"\\\a\b\f\n\r\t\v", &temp);
+  result &= !strcmp(temp.ptr, "\"\\\"\\\\\\a\\b\\f\\n\\r\\t\\v\"");
+
+  // SQL text is quoted through a separate path and needs the same C boundaries.
+  bclear(&temp);
+  cg_pretty_quote_plaintext("SELECT '\x01" "f'", &temp, PRETTY_QUOTE_C);
+  result &= !strcmp(temp.ptr, "\"SELECT '\\x01\" \"f'\"");
+  bclear(&temp);
+  cg_pretty_quote_plaintext("SELECT '\x01" "f'", &temp, PRETTY_QUOTE_LUA);
+  result &= !strcmp(temp.ptr, "\"SELECT '\\x01f'\"");
+
+  CHARBUF_CLOSE(temp);
+  return result;
+}
+
 static bool test_comment_text_encoding() {
   bool result = true;
   CHARBUF_OPEN(temp);
@@ -502,6 +545,9 @@ cql_noexport void run_unit_tests() {
   // Invalid UTF-8 must be escaped into valid JSON rather than copied as malformed
   // output or read past truncated byte sequences.
   TEST_ASSERT(test_badly_formed_utf8());
+
+  // Generated C must delimit greedy hex escapes without changing CQL/Lua output.
+  TEST_ASSERT(test_c_hex_escape_boundaries());
 
   // Source-controlled provenance text must remain inside generated line
   // comments while preserving printable and UTF-8 content.

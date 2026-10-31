@@ -58,8 +58,44 @@ static void emit_hex_digit(uint32_t ch, charbuf *output) {
   }
 }
 
-// This converts from a plain string to C string literal
-cql_noexport void cg_encode_char_as_c_string_literal(char c, charbuf *output) {
+// C hex escapes consume all following hex digits. Callers are already inside
+// quotes; close and reopen the literal when the next character would be absorbed.
+// Adjacent C literals preserve the bytes without runtime concatenation.
+cql_noexport void cg_encode_char_as_c_string_literal(char c, char next, charbuf *output) {
+  const char quote = '"';
+  const char backslash = '\\';
+
+  switch (c) {
+    case '\"':  bputc(output, backslash); bputc(output, quote); break;
+    case '\a':  bputc(output, backslash); bputc(output, 'a'); break;
+    case '\b':  bputc(output, backslash); bputc(output, 'b'); break;
+    case '\f':  bputc(output, backslash); bputc(output, 'f'); break;
+    case '\n':  bputc(output, backslash); bputc(output, 'n'); break;
+    case '\r':  bputc(output, backslash); bputc(output, 'r'); break;
+    case '\t':  bputc(output, backslash); bputc(output, 't'); break;
+    case '\v':  bputc(output, backslash); bputc(output, 'v'); break;
+    case '\\':  bputc(output, c); bputc(output, c); break;
+    default  :
+      // note: 0x80 - 0xff will be negative and are hence covered by this test
+      if (c < 32) {
+        uint32_t ch = (uint32_t)c;
+        ch &= 0xff;
+        bprintf(output, "\\x");
+        emit_hex_digit(ch >> 4, output);
+        emit_hex_digit(ch & 0xf, output);
+        if (IsXDigit(next)) {
+          bprintf(output, "\" \"");
+        }
+      }
+      else {
+        bputc(output, c);
+      }
+  }
+}
+
+// Lua consumes exactly two hex digits, so no lookahead or literal boundary is
+// needed. CQL's double-quoted literals accept the same escape spelling.
+cql_noexport void cg_encode_char_as_lua_string_literal(char c, charbuf *output) {
   const char quote = '"';
   const char backslash = '\\';
 
@@ -130,7 +166,7 @@ cql_noexport void cg_encode_char_as_json_string_literal(char c, charbuf *output)
   }
 }
 
-// This converts from a plain string to C string literal
+// Generated C needs literal boundaries after hex escapes before hex digits.
 cql_noexport void cg_encode_c_string_literal(CSTR str, charbuf *output) {
   const char quote = '"';
   const char *p = str;
@@ -138,7 +174,34 @@ cql_noexport void cg_encode_c_string_literal(CSTR str, charbuf *output) {
   bputc(output, quote);
 
   for ( ;p[0]; p++) {
-    cg_encode_char_as_c_string_literal(p[0], output);
+    cg_encode_char_as_c_string_literal(p[0], p[1], output);
+  }
+  bputc(output, quote);
+}
+
+// Lua does not accept C's adjacent-literal syntax.
+cql_noexport void cg_encode_lua_string_literal(CSTR str, charbuf *output) {
+  const char quote = '"';
+  const char *p = str;
+
+  bputc(output, quote);
+
+  for ( ;p[0]; p++) {
+    cg_encode_char_as_lua_string_literal(p[0], output);
+  }
+  bputc(output, quote);
+}
+
+// CQL double-quoted strings use the same byte escapes as Lua. This single-token
+// spelling also preserves #line filenames, where adjacent tokens are not legal.
+cql_noexport void cg_encode_cql_string_literal(CSTR str, charbuf *output) {
+  const char quote = '"';
+  const char *p = str;
+
+  bputc(output, quote);
+
+  for ( ;p[0]; p++) {
+    cg_encode_char_as_lua_string_literal(p[0], output);
   }
   bputc(output, quote);
 }
@@ -362,6 +425,7 @@ cql_noexport void cg_pretty_quote_plaintext(CSTR str, charbuf *output, uint32_t 
   bool_t inQuote = 0;
   bool_t multi_line = !!(flags & PRETTY_QUOTE_MULTI_LINE);
   bool_t for_json = !!(flags & PRETTY_QUOTE_JSON);
+  bool_t for_c = !!(flags & PRETTY_QUOTE_C);
 
   bputc(output, '"');
   for (CSTR p = str; p[0]; p++) {
@@ -413,8 +477,11 @@ cql_noexport void cg_pretty_quote_plaintext(CSTR str, charbuf *output, uint32_t 
       if (for_json) {
         cg_encode_char_as_json_string_literal(p[0], output);
       }
+      else if (for_c) {
+        cg_encode_char_as_c_string_literal(p[0], p[1], output);
+      }
       else {
-        cg_encode_char_as_c_string_literal(p[0], output);
+        cg_encode_char_as_lua_string_literal(p[0], output);
       }
     }
   }
@@ -453,14 +520,14 @@ cql_noexport void cg_pretty_quote_compressed_text(CSTR _Nonnull str, charbuf *_N
   // In the case of an empty compressed string - cql_compressed("") we do not want
   // extra newlines
   if (strlen(str) == 0) {
-    cg_pretty_quote_plaintext(str, output, PRETTY_QUOTE_C | PRETTY_QUOTE_MULTI_LINE);
+    cg_pretty_quote_plaintext(str, output, PRETTY_QUOTE_CQL | PRETTY_QUOTE_MULTI_LINE);
     return;
   }
 
   // Otherwise, we want the SQL string to be new-line separated and indented for readability
   CHARBUF_OPEN(temp_output);
   bprintf(&temp_output, "\n  ");
-  cg_pretty_quote_plaintext(str, &temp_output, PRETTY_QUOTE_C | PRETTY_QUOTE_MULTI_LINE);
+  cg_pretty_quote_plaintext(str, &temp_output, PRETTY_QUOTE_CQL | PRETTY_QUOTE_MULTI_LINE);
   bindent(output, &temp_output, 6);
   bclear(&temp_output);
   bprintf(&temp_output, "\n      ");

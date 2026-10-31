@@ -300,7 +300,8 @@ static void cg_qp_explain_query_stmt(ast_node *stmt) {
   bprintf(&c_str, "\"");
   for (uint32_t i = 1; i < json_str.used - 2; i++) {
     // json_str can have no control characters, but it might have quotes and backslashes
-    cg_encode_char_as_c_string_literal(json_str.ptr[i], &c_str);
+    // This is generated CQL, whose two-digit byte escapes match Lua's.
+    cg_encode_char_as_lua_string_literal(json_str.ptr[i], &c_str);
   }
   bprintf(&c_str, "\"");
 

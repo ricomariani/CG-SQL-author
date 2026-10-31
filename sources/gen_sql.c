@@ -1500,7 +1500,7 @@ static void gen_expr_str(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
       CHARBUF_OPEN(decoded);
       CHARBUF_OPEN(encoded);
       cg_decode_string_literal(str, &decoded);
-      cg_encode_c_string_literal(decoded.ptr, &encoded);
+      cg_encode_cql_string_literal(decoded.ptr, &encoded);
 
       gen_literal(encoded.ptr);
       CHARBUF_CLOSE(encoded);

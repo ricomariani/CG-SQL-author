@@ -6180,6 +6180,73 @@ begin
   end;
 end);
 
+declare proc partition_key_rows(result object!) out union (id int!);
+
+[[shared_fragment]]
+proc partition_key_cases()
+begin
+  -- Only id is payload. Within each pair, every other key column is identical,
+  -- so a serialization collision incorrectly combines the two child rows.
+  select 1 id, 'a:b' a, 'c' b, null bl1, null bl2, 0.0 r, 0L l
+  union all select 2 id, 'a' a, 'b:c' b, null bl1, null bl2, 0.0 r, 0L l
+  -- Doubling colons alone cannot distinguish which field owns the colon.
+  union all select 3 id, 'a:' a, 'b' b, null bl1, null bl2, 0.0 r, 0L l
+  union all select 4 id, 'a' a, ':b' b, null bl1, null bl2, 0.0 r, 0L l
+  -- Prefix-looking text must remain data, not optional length metadata.
+  union all select 5 id, '(6)a' a, 'x:y' b, null bl1, null bl2, 0.0 r, 0L l
+  union all select 6 id, 'a:(3)x' a, 'y' b, null bl1, null bl2, 0.0 r, 0L l
+  -- NULL, the text "nil", and empty text must be three distinct keys.
+  union all select 7 id, null a, '' b, null bl1, null bl2, 0.0 r, 0L l
+  union all select 8 id, 'nil' a, '' b, null bl1, null bl2, 0.0 r, 0L l
+  union all select 9 id, '' a, '' b, null bl1, null bl2, 0.0 r, 0L l
+  -- The BLOB pairs are ("a:\0b", "c") and ("a", "\0b:c"). Their raw
+  -- colon-joined bytes collide; embedded 00 also requires byte-exact lengths.
+  union all select 10 id, null a, null b, x'613a0062' bl1, x'63' bl2, 0.0 r, 0L l
+  union all select 11 id, null a, null b, x'61' bl1, x'00623a63' bl2, 0.0 r, 0L l
+  -- Lua's default tostring rounds these distinct doubles to the same text.
+  union all select 12 id, null a, null b, null bl1, null bl2, 1.0000000000000002 r, 0L l
+  union all select 13 id, null a, null b, null bl1, null bl2, 1.0000000000000004 r, 0L l
+  -- Formatting integers through double would merge this pair above 2^53.
+  union all select 14 id, null a, null b, null bl1, null bl2, 0.0 r, 9007199254740992L l
+  union all select 15 id, null a, null b, null bl1, null bl2, 0.0 r, 9007199254740993L l
+  union all select 16 id, null a, null b, null bl1, null bl2, 1.0 r, 0L l;
+end;
+
+TEST!(partition_key_encoding,
+begin
+  let p := cql_partition_create();
+  cursor Cases for select * from (call partition_key_cases());
+  cursor K like Cases(a, b, bl1, bl2, r, l);
+  cursor V like Cases(id);
+  loop fetch Cases
+  begin
+    fetch K from Cases(like K);
+    fetch V from Cases(like V);
+    EXPECT!(cql_partition_cursor(p, K, V));
+  end;
+
+  cursor Lookups for select * from (call partition_key_cases());
+  loop fetch Lookups
+  begin
+    fetch K from Lookups(like K);
+    if Lookups.id == 16 then
+      -- The scalar query has CQL type REAL but SQLite returns integer 1.
+      -- It must find the same key as the floating 1.0 inserted above.
+      update cursor K using (select case when 1 then 1 else 1.0 end) as r;
+    end if;
+    declare rs object<partition_key_rows set>;
+    rs := cql_extract_partition(p, K);
+    cursor Actual for rs;
+    let count_ := 0;
+    loop fetch Actual
+    begin
+      EXPECT_EQ!(Actual.id, Lookups.id);
+      count_ += 1;
+    end;
+    EXPECT_EQ!(count_, 1);
+  end;
+end);
+
 proc ch1()
 begin
   let base := 500;

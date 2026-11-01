@@ -896,6 +896,14 @@ json_utf8_test() {
   run_test_expect_success
 }
 
+json_schema_metadata_test() {
+  TEST_NAME="json_schema_metadata"
+  TEST_DESC="Checking decoded JSON constraint names and expression text"
+  TEST_ERROR_MSG="JSON schema metadata fidelity failed"
+  TEST_CMD="python3 \"$T/json_schema_metadata_test.py\" \"$CQL\" \"$O\""
+  run_test_expect_success
+}
+
 json_schema_test() {
   echo '--------------------------------- STAGE 9 -- JSON SCHEMA TEST'
   TEST_NAME="cg_test_json_schema"
@@ -909,6 +917,7 @@ json_schema_test() {
   json_validate "$T/cg_test_json_schema.sql"
 
   json_utf8_test
+  json_schema_metadata_test
 
   echo "Running JSON codegen test for an empty file"
   echo "" >"$O/__temp"
@@ -1346,6 +1355,7 @@ if [ -n "$SPECIFIC_TEST" ]; then
     echo "  misc_cases"
     echo "  json_schema_test"
     echo "  json_utf8_test"
+    echo "  json_schema_metadata_test"
     echo "  test_helpers_test"
     echo "  run_test"
     echo "  upgrade_test"

@@ -866,7 +866,9 @@ static void cg_json_col_attrs(charbuf *output, col_info *info) {
       }
       bprintf(output, "{\n");
       BEGIN_INDENT(fk, 2)
-      bprintf(output, "\"columns\" : [ \"%s\" ]", name);
+      bprintf(output, "\"columns\" : [ ");
+      cg_json_sql_name_ex(output, name, !!(sem_type & SEM_TYPE_QID));
+      bprintf(output, " ]");
       cg_json_fk_target_options(output, attr->left);
       END_INDENT(fk);
       bprintf(output,"\n}");
@@ -983,36 +985,50 @@ static void cg_json_name_list(charbuf *output, ast_node *list) {
   Contract(is_ast_name_list(list));
 
   for (ast_node *item = list; item; item = item->right) {
-    bprintf(output, "\"");
-    cg_json_name(output, item->left);
-    bprintf(output, "\"");
+    cg_json_sql_name(output, item->left);
     if (item->right) {
       bprintf(output, ", ");
     }
   }
 }
 
-// This is useful for expressions known to have no parameters (e.g. constraint expressions)
-// variables are illegal in such things so there can be no binding needed
+// Expressions have no parameters here, but their echoed text still needs JSON
+// escaping. The 2021 expression support wrapped raw text in quotes: '\t' silently
+// became a tab on JSON parsing, and a double quote could make invalid JSON.
+// Preserve the expression spelling, then use the established UTF-8/byte policy.
 static void cg_json_vanilla_expr(charbuf *output, ast_node *expr) {
+  CHARBUF_OPEN(sql);
   gen_sql_callbacks callbacks;
   init_gen_sql_callbacks(&callbacks);
   callbacks.mode = gen_mode_echo; // we want all the text, unexpanded, so NOT for sqlite output (this is raw echo)
-  gen_set_output_buffer(output);
+  gen_set_output_buffer(&sql);
   gen_with_callbacks(expr, gen_root_expr, &callbacks);
+  cg_encode_json_string_literal(sql.ptr, output);
+  gen_set_output_buffer(output);
+  CHARBUF_CLOSE(sql);
 }
+
+typedef enum {
+  JSON_PRESERVE_EXPRESSION_SPELLING = 0,
+  JSON_NORMALIZE_COLUMN_NAMES = 1
+} json_name_mode;
 
 // Similar to the above, this is also a list of names but we emit two arrays
 // one array for the names and another array for the sort orders specified if any.
 // Note unspecified sort orders are emitted as "".
-static void cg_json_indexed_columns(charbuf *cols, charbuf *orders, ast_node *list) {
+static void cg_json_indexed_columns(charbuf *cols, charbuf *orders, ast_node *list, json_name_mode name_mode) {
   for (ast_node *item = list; item; item = item->right) {
     Contract(is_ast_indexed_columns(list));
     EXTRACT_NOTNULL(indexed_column, item->left);
 
-    bprintf(cols, "\"");
-    cg_json_vanilla_expr(cols, indexed_column->left);
-    bprintf(cols, "\"");
+    // PK/unique metadata names must match column declarations. Index entries,
+    // and nontrivial constraint expressions, retain their existing CQL spelling.
+    if (name_mode == JSON_NORMALIZE_COLUMN_NAMES && is_id(indexed_column->left)) {
+      cg_json_sql_name(cols, indexed_column->left);
+    }
+    else {
+      cg_json_vanilla_expr(cols, indexed_column->left);
+    }
 
     if (is_ast_asc(indexed_column->right)) {
       bprintf(orders, "\"asc\"");
@@ -1040,7 +1056,7 @@ static void cg_json_pk_def(charbuf *output, ast_node *def) {
   CHARBUF_OPEN(cols);
   CHARBUF_OPEN(orders);
 
-  cg_json_indexed_columns(&cols, &orders, indexed_columns);
+  cg_json_indexed_columns(&cols, &orders, indexed_columns, JSON_NORMALIZE_COLUMN_NAMES);
 
   bprintf(output, "\"primaryKey\" : [ %s ]", cols.ptr);
   bprintf(output, ",\n\"primaryKeySortOrders\" : [ %s ],\n", orders.ptr);
@@ -1092,10 +1108,13 @@ static void cg_json_fk_target_options(charbuf *output, ast_node *ast) {
 
   EXTRACT_NOTNULL(fk_target, ast->left);
   EXTRACT_DETAIL(flags, ast->right);
-  EXTRACT_STRING(table_name, fk_target->left);
+  EXTRACT_NAME_AST(table_name_ast, fk_target->left);
   EXTRACT_NAMED_NOTNULL(ref_list, name_list, fk_target->right);
 
-  bprintf(output, ",\n\"referenceTable\" : \"%s\"", table_name);
+  // QID support in 2023 added the name helper, but FK and PK-name metadata
+  // retained raw internal names. Use the same decoded names as declarations.
+  bprintf(output, ",\n\"referenceTable\" : ");
+  cg_json_sql_name(output, table_name_ast);
 
   bprintf(output, ",\n\"referenceColumns\" : [ ");
   cg_json_name_list(output, ref_list);
@@ -1145,7 +1164,7 @@ static void cg_json_unq_def(charbuf *output, ast_node *def) {
   CHARBUF_OPEN(cols);
   CHARBUF_OPEN(orders);
 
-  cg_json_indexed_columns(&cols, &orders, indexed_columns);
+  cg_json_indexed_columns(&cols, &orders, indexed_columns, JSON_NORMALIZE_COLUMN_NAMES);
 
   bprintf(output, "\"columns\" : [ %s ]", cols.ptr);
   bprintf(output, ",\n\"sortOrders\" : [ %s ]", orders.ptr);
@@ -1235,8 +1254,10 @@ static void cg_json_col_key_list(charbuf *output, ast_node *ast) {
 
 
   if (pk_def && pk_def->left) {
-    EXTRACT_STRING(pk_name, pk_def->left);
-    bprintf(output, "\"primaryKeyName\" : \"%s\",\n", pk_name);
+    EXTRACT_NAME_AST(pk_name_ast, pk_def->left);
+    bprintf(output, "\"primaryKeyName\" : ");
+    cg_json_sql_name(output, pk_name_ast);
+    bprintf(output, ",\n");
   }
 
   {
@@ -1359,9 +1380,8 @@ static void cg_json_indices(charbuf *output) {
     }
 
     if (opt_where) {
-      bprintf(output, ",\n\"where\" : \"");
+      bprintf(output, ",\n\"where\" : ");
       cg_json_vanilla_expr(output, opt_where->left);
-      bprintf(output, "\"");
     }
 
     if (misc_attrs) {
@@ -1372,7 +1392,7 @@ static void cg_json_indices(charbuf *output) {
     CHARBUF_OPEN(cols);
     CHARBUF_OPEN(orders);
 
-    cg_json_indexed_columns(&cols, &orders, indexed_columns);
+    cg_json_indexed_columns(&cols, &orders, indexed_columns, JSON_PRESERVE_EXPRESSION_SPELLING);
 
     bprintf(output, ",\n\"columns\" : [ %s ]", cols.ptr);
     bprintf(output, ",\n\"sortOrders\" : [ %s ]", orders.ptr);

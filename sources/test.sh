@@ -1306,8 +1306,8 @@ cqlrt_contract_test() {
 
 cqljson_test() {
   TEST_NAME="cqljson_sql_literals"
-  TEST_DESC="Testing cqljson SQL literal encoding"
-  TEST_CMD="python3 cqljson/cqljson_test.py"
+  TEST_DESC="Testing cqljson metadata and CQL attribute round trips"
+  TEST_CMD="python3 cqljson/cqljson_test.py $CQL $O"
   run_test_expect_success
 }
 

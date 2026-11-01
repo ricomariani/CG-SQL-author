@@ -1008,17 +1008,22 @@ static void cg_json_vanilla_expr(charbuf *output, ast_node *expr) {
   CHARBUF_CLOSE(sql);
 }
 
+typedef enum {
+  JSON_PRESERVE_EXPRESSION_SPELLING = 0,
+  JSON_NORMALIZE_COLUMN_NAMES = 1
+} json_name_mode;
+
 // Similar to the above, this is also a list of names but we emit two arrays
 // one array for the names and another array for the sort orders specified if any.
 // Note unspecified sort orders are emitted as "".
-static void cg_json_indexed_columns(charbuf *cols, charbuf *orders, ast_node *list, bool_t normalize_names) {
+static void cg_json_indexed_columns(charbuf *cols, charbuf *orders, ast_node *list, json_name_mode name_mode) {
   for (ast_node *item = list; item; item = item->right) {
     Contract(is_ast_indexed_columns(list));
     EXTRACT_NOTNULL(indexed_column, item->left);
 
     // PK/unique metadata names must match column declarations. Index entries,
     // and nontrivial constraint expressions, retain their existing CQL spelling.
-    if (normalize_names && is_id(indexed_column->left)) {
+    if (name_mode == JSON_NORMALIZE_COLUMN_NAMES && is_id(indexed_column->left)) {
       cg_json_sql_name(cols, indexed_column->left);
     }
     else {
@@ -1051,7 +1056,7 @@ static void cg_json_pk_def(charbuf *output, ast_node *def) {
   CHARBUF_OPEN(cols);
   CHARBUF_OPEN(orders);
 
-  cg_json_indexed_columns(&cols, &orders, indexed_columns, true);
+  cg_json_indexed_columns(&cols, &orders, indexed_columns, JSON_NORMALIZE_COLUMN_NAMES);
 
   bprintf(output, "\"primaryKey\" : [ %s ]", cols.ptr);
   bprintf(output, ",\n\"primaryKeySortOrders\" : [ %s ],\n", orders.ptr);
@@ -1159,7 +1164,7 @@ static void cg_json_unq_def(charbuf *output, ast_node *def) {
   CHARBUF_OPEN(cols);
   CHARBUF_OPEN(orders);
 
-  cg_json_indexed_columns(&cols, &orders, indexed_columns, true);
+  cg_json_indexed_columns(&cols, &orders, indexed_columns, JSON_NORMALIZE_COLUMN_NAMES);
 
   bprintf(output, "\"columns\" : [ %s ]", cols.ptr);
   bprintf(output, ",\n\"sortOrders\" : [ %s ]", orders.ptr);
@@ -1387,7 +1392,7 @@ static void cg_json_indices(charbuf *output) {
     CHARBUF_OPEN(cols);
     CHARBUF_OPEN(orders);
 
-    cg_json_indexed_columns(&cols, &orders, indexed_columns, false);
+    cg_json_indexed_columns(&cols, &orders, indexed_columns, JSON_PRESERVE_EXPRESSION_SPELLING);
 
     bprintf(output, ",\n\"columns\" : [ %s ]", cols.ptr);
     bprintf(output, ",\n\"sortOrders\" : [ %s ]", orders.ptr);

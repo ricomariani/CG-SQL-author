@@ -189,6 +189,9 @@ $O/query_plan_test.o: $T/query_plan_test.c
 $O/query_plan_encoding_test.o: $T/query_plan_encoding_test.c
 	$(CC) $(CFLAGS) -c -o $O/query_plan_encoding_test.o $T/query_plan_encoding_test.c
 
+$O/query_plan_statistics_test.o: $T/query_plan_statistics_test.c
+	$(CC) $(CFLAGS) -c -o $O/query_plan_statistics_test.o $T/query_plan_statistics_test.c
+
 $O/query_plan.o: $O/query_plan.c
 
 $O/test_helpers.o: $O/test_helpers.c
@@ -258,6 +261,9 @@ query_plan_test: $O/query_plan_test.o $O/cqlrt.o $O/query_plan.o
 
 query_plan_encoding_test: $O/query_plan_encoding_test.o $O/cqlrt.o $O/query_plan.o
 	$(CC) $(CFLAGS) -o $O/query_plan_encoding_test $O/query_plan_encoding_test.o $O/cqlrt.o $O/query_plan.o $(SQLITE_LINK)
+
+query_plan_statistics_test: $O/query_plan_statistics_test.o $O/cqlrt.o $O/query_plan.o
+	$(CC) $(CFLAGS) -o $O/query_plan_statistics_test $O/query_plan_statistics_test.o $O/cqlrt.o $O/query_plan.o $(SQLITE_LINK)
 
 test_helpers_test: $O/test_helpers_test.o $O/cqlrt.o $O/test_helpers.o
 	$(CC) $(CFLAGS) -o $O/test_helpers_test $O/test_helpers_test.o $O/cqlrt.o $O/test_helpers.o $(SQLITE_LINK)

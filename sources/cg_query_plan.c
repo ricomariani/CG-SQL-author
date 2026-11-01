@@ -775,7 +775,7 @@ static void emit_print_query_plan_stat_proc(charbuf *output) {
     "        WHERE zdetail LIKE '%search%' AND iselectid NOT IN (\n"
     "          SELECT iselectid \n"
     "          FROM plan_temp \n"
-    "          WHERE zdetail LIKE '%search%using%covering%'\n"
+    "          WHERE zdetail LIKE '%search%using%covering%' AND sql_id = id_\n"
     "        ) AND sql_id = id_\n"
     "    ),\n"
     "    search_fast(name, count, priority) AS (\n"

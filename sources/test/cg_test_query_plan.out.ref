@@ -1082,7 +1082,7 @@ BEGIN
         WHERE zdetail LIKE '%search%' AND iselectid NOT IN (
           SELECT iselectid 
           FROM plan_temp 
-          WHERE zdetail LIKE '%search%using%covering%'
+          WHERE zdetail LIKE '%search%using%covering%' AND sql_id = id_
         ) AND sql_id = id_
     ),
     search_fast(name, count, priority) AS (

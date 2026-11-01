@@ -399,13 +399,43 @@ def emit_procinfo(section, s_name):
             print(f"insert into proc_view_deps values({sql_literal(p_name)}, {sql_literal(vdep)});")
 
 
+# JSON decoding removes the source escapes. Reconstruct CQL literals, not JSON
+# literals: CQL uses two-digit hex escapes and does not interpret JSON \u escapes.
+def cql_string_literal(value):
+    if "\0" in value:
+        raise ValueError("CQL string literals cannot contain NUL")
+    escapes = {
+        '"': '\\"',
+        "\\": "\\\\",
+        "\a": "\\a",
+        "\b": "\\b",
+        "\f": "\\f",
+        "\n": "\\n",
+        "\r": "\\r",
+        "\t": "\\t",
+        "\v": "\\v",
+    }
+    result = ['"']
+    for ch in value:
+        if ch in escapes:
+            result.append(escapes[ch])
+        elif ord(ch) < 32:
+            result.append(f"\\x{ord(ch):02x}")
+        else:
+            result.append(ch)
+    result.append('"')
+    return "".join(result)
+
+
 # Formats a single attribute value. Lists are comma-separated recursively and
 # strings retain the double-quoted CQL attribute representation.
 def format_attr_value(attr):
     if isinstance(attr, list):
         return "(" + ", ".join(format_attr_value(a) for a in attr) + ")"
     elif isinstance(attr, str):
-        return f'"{attr}"'
+        return cql_string_literal(attr)
+    elif attr is None:
+        return "NULL"
     else:
         return f"{attr}"
 

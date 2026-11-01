@@ -3,6 +3,8 @@ declare proc printf no check;
 @keep_table_name_in_aliases;
 declare proc cql_create_udf_stub(name TEXT!) using transaction;
 
+declare func cql_create_json_escaped_str(value_ TEXT!) create TEXT!;
+
 proc trivial_object()
 begin
   select 1 x;
@@ -1035,7 +1037,7 @@ BEGIN
     IF C2.info_list IS NOT NULL THEN
       CALL printf("%s", IIF(first, "", ",\n"));
       CALL printf("  \"%s\" : ", C2.key);
-      CALL printf("\"%s\"", C2.info_list);
+      CALL printf("\"%s\"", cql_create_json_escaped_str(C2.info_list));
       SET first := false;
     END IF;
   END;
@@ -1135,7 +1137,7 @@ BEGIN
   CALL printf("   \"plan\" : \"");
   LOOP FETCH C
   BEGIN
-    CALL printf("%s%s", IIF(C.level, "\\n", ""), C.graph_line);
+    CALL printf("%s%s", IIF(C.level, "\\n", ""), cql_create_json_escaped_str(C.graph_line));
   END;
   CALL printf("\"\n");
 END;

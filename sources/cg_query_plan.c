@@ -527,6 +527,7 @@ static void cg_qp_stmt_list(ast_node *head) {
 // We use the multi-value form of insert to load all the rows we need.
 static void emit_populate_no_table_scan_proc(charbuf *output) {
   CHARBUF_OPEN(no_scan_tables_buf);
+  CHARBUF_OPEN(table_name);
 
   for (list_item *item = all_tables_list; item; item = item->next) {
     if (is_ast_create_table_stmt(item->ast)) {
@@ -541,14 +542,17 @@ static void emit_populate_no_table_scan_proc(charbuf *output) {
           if (no_scan_tables_buf.used > 1) {
             bprintf(&no_scan_tables_buf, ",\n");
           }
-          bprintf(&no_scan_tables_buf, "    (\"");
+          bclear(&table_name);
           if (is_qid(name_ast)) {
-            cg_unquote_encoded_qstr(&no_scan_tables_buf, name);
+            cg_unquote_encoded_qstr(&table_name, name);
           }
           else {
-             bprintf(&no_scan_tables_buf, "%s", name);
+            bprintf(&table_name, "%s", name);
           }
-          bprintf(&no_scan_tables_buf, "\")");
+          bprintf(&no_scan_tables_buf, "    (");
+          // QID decoding alone does not make the name safe inside a CQL literal.
+          cg_encode_cql_string_literal(table_name.ptr, &no_scan_tables_buf);
+          bprintf(&no_scan_tables_buf, ")");
         }
       }
     }
@@ -563,6 +567,7 @@ static void emit_populate_no_table_scan_proc(charbuf *output) {
 
   bprintf(output, "END;\n");
 
+  CHARBUF_CLOSE(table_name);
   CHARBUF_CLOSE(no_scan_tables_buf);
 }
 
@@ -726,7 +731,7 @@ static void emit_print_query_violation_proc(charbuf *output) {
     "    IF C2.info_list IS NOT NULL THEN\n"
     "      CALL printf(\"%s\", IIF(first, \"\", \",\\n\"));\n"
     "      CALL printf(\"  \\\"%s\\\" : \", C2.key);\n"
-    "      CALL printf(\"\\\"%s\\\"\", C2.info_list);\n"
+    "      CALL printf(\"\\\"%s\\\"\", cql_create_json_escaped_str(C2.info_list));\n"
     "      SET first := false;\n"
     "    END IF;\n"
     "  END;\n"
@@ -831,7 +836,7 @@ static void emit_print_query_plan_graph_proc(charbuf *output) {
     "  CALL printf(\"   \\\"plan\\\" : \\\"\");\n"
     "  LOOP FETCH C\n"
     "  BEGIN\n"
-    "    CALL printf(\"%s%s\", IIF(C.level, \"\\\\n\", \"\"), C.graph_line);\n"
+    "    CALL printf(\"%s%s\", IIF(C.level, \"\\\\n\", \"\"), cql_create_json_escaped_str(C.graph_line));\n"
     "  END;\n"
     "  CALL printf(\"\\\"\\n\");\n"
     "END;\n"
@@ -949,6 +954,7 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
   }
 
   bprintf(&output_buf, "declare proc cql_create_udf_stub(name TEXT!) using transaction;\n\n");
+  bprintf(&output_buf, "declare func cql_create_json_escaped_str(value_ TEXT!) create TEXT!;\n\n");
 
   bprintf(&output_buf,
     "proc trivial_object()\n"

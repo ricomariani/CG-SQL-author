@@ -317,7 +317,7 @@
 -- +   CALL printf("   \"plan\" : \"");
 -- +   LOOP FETCH C
 -- +   BEGIN
--- +     CALL printf("%s%s", IIF(C.level, "\\n", ""), C.graph_line);
+-- +     CALL printf("%s%s", IIF(C.level, "\\n", ""), cql_create_json_escaped_str(C.graph_line));
 -- +   END;
 -- +   CALL printf("\"\n");
 -- + END;

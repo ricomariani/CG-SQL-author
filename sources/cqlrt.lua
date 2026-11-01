@@ -452,6 +452,63 @@ function cql_clone_row(row)
   return result
 end
 
+local function cql_valid_utf8_sequence(str, i)
+  local c = str:byte(i)
+  local len
+  if c >= 0xc0 and c <= 0xdf then len = 2
+  elseif c >= 0xe0 and c <= 0xef then len = 3
+  elseif c >= 0xf0 and c <= 0xf7 then len = 4
+  else return 0 end
+
+  if i + len - 1 > #str then return 0 end
+  local codepoint = c & (0x7f >> len)
+  for j = i + 1, i + len - 1 do
+    local next_byte = str:byte(j)
+    if next_byte < 0x80 or next_byte > 0xbf then return 0 end
+    codepoint = (codepoint << 6) | (next_byte & 0x3f)
+  end
+  local next_byte = str:byte(i + len)
+  if next_byte and next_byte >= 0x80 and next_byte <= 0xbf then return 0 end
+
+  if len == 2 and codepoint < 0x80 then return 0 end
+  if len == 3 and (codepoint < 0x800 or (codepoint >= 0xd800 and codepoint <= 0xdfff)) then return 0 end
+  if len == 4 and (codepoint < 0x10000 or codepoint > 0x10ffff) then return 0 end
+  return len
+end
+
+local cql_json_escapes = {
+  [34] = '\\\"',
+  [92] = '\\\\',
+  [8] = '\\b',
+  [12] = '\\f',
+  [10] = '\\n',
+  [13] = '\\r',
+  [9] = '\\t',
+}
+
+function cql_create_json_escaped_str(value)
+  local result = {}
+  local i = 1
+  while i <= #value do
+    local c = value:byte(i)
+    local len = c >= 0x80 and cql_valid_utf8_sequence(value, i) or 0
+    if len > 1 then
+      result[#result + 1] = value:sub(i, i + len - 1)
+      i = i + len
+    else
+      if cql_json_escapes[c] then
+        result[#result + 1] = cql_json_escapes[c]
+      elseif c < 32 or c >= 0x80 then
+        result[#result + 1] = string.format("\\u%04x", c)
+      else
+        result[#result + 1] = string.char(c)
+      end
+      i = i + 1
+    end
+  end
+  return table.concat(result)
+end
+
 function cql_get_blob_size(blob)
   return #blob
 end

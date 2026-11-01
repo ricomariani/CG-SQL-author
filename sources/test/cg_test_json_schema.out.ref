@@ -2504,6 +2504,131 @@
       ],
       "checkExpressions" : [
       ]
+    },
+
+    The statement ending at line XXXX
+
+    CREATE TABLE `metadata parent`(
+      `parent id` INT!,
+      CONSTRAINT `parent pk` PRIMARY KEY (`parent id` DESC)
+    )
+
+    {
+      "name" : "metadata parent",
+      "schema" : "CREATE TABLE [metadata parent](\n  [parent id] INTEGER NOT NULL,\n  CONSTRAINT [parent pk] PRIMARY KEY ([parent id] DESC)\n)",
+      "CRC" : "-7565783944559977599",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "columns" : [
+        {
+          "name" : "parent id",
+          "type" : "integer",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [ "parent id" ],
+      "primaryKeySortOrders" : [ "desc" ],
+      "primaryKeyName" : "parent pk",
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
+      ]
+    },
+
+    The statement ending at line XXXX
+
+    CREATE TABLE `metadata child`(
+      `inline child` INT REFERENCES `metadata parent` (`parent id`),
+      `table child` INT,
+      `unique child` TEXT,
+      CONSTRAINT `child fk` FOREIGN KEY (`table child`) REFERENCES `metadata parent` (`parent id`),
+      CONSTRAINT `child uk` UNIQUE (`unique child` DESC, length(`unique child`) ASC)
+    )
+
+    {
+      "name" : "metadata child",
+      "schema" : "CREATE TABLE [metadata child](\n  [inline child] INTEGER REFERENCES [metadata parent] ([parent id]),\n  [table child] INTEGER,\n  [unique child] TEXT,\n  CONSTRAINT [child fk] FOREIGN KEY ([table child]) REFERENCES [metadata parent] ([parent id]),\n  CONSTRAINT [child uk] UNIQUE ([unique child] DESC, length([unique child]) ASC)\n)",
+      "CRC" : "7946167641757805855",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "indices" : [ "metadata_expression_index" ],
+      "columns" : [
+        {
+          "name" : "inline child",
+          "type" : "integer",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "table child",
+          "type" : "integer",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "unique child",
+          "type" : "text",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [  ],
+      "primaryKeySortOrders" : [  ],
+      "foreignKeys" : [
+        {
+          "columns" : [ "inline child" ],
+          "referenceTable" : "metadata parent",
+          "referenceColumns" : [ "parent id" ],
+          "onUpdate" : "NO ACTION",
+          "onDelete" : "NO ACTION",
+          "isDeferred" : 0
+        },
+        {
+          "name" : "child fk",
+          "columns" : [ "table child" ],
+          "referenceTable" : "metadata parent",
+          "referenceColumns" : [ "parent id" ],
+          "onUpdate" : "NO ACTION",
+          "onDelete" : "NO ACTION",
+          "isDeferred" : 0
+        }
+      ],
+      "uniqueKeys" : [
+        {
+          "name" : "child uk",
+          "columns" : [ "unique child", "length(`unique child`)" ],
+          "sortOrders" : [ "desc", "asc" ]
+        }
+      ],
+      "checkExpressions" : [
+      ]
     }
   ],
   "virtualTables" : [
@@ -3237,6 +3362,23 @@
       "isDeleted" : 0,
       "columns" : [ "`a b`" ],
       "sortOrders" : [ "asc" ]
+    }
+    The statement ending at line XXXX
+
+    CREATE INDEX metadata_expression_index ON `metadata child` (`unique child` || '\t"')
+    WHERE `unique child` <> '\t"'
+
+    ,
+    {
+      "name" : "metadata_expression_index",
+      "CRC" : "1119399995182743091",
+      "table" : "metadata child",
+      "isUnique" : 0,
+      "ifNotExists" : 0,
+      "isDeleted" : 0,
+      "where" : "`unique child` <> '\\t\"'",
+      "columns" : [ "`unique child` || '\\t\"'" ],
+      "sortOrders" : [ "" ]
     }
   ],
   "triggers" : [

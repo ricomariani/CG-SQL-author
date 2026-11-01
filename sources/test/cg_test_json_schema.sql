@@ -2185,6 +2185,43 @@ end;
 -- TEST: emit specific variable group
 @emit_group test_group;
 
+-- TEST: table-level primary keys use the same bare names as column metadata
+-- + "name" : "metadata parent",
+-- + "primaryKey" : [ "parent id" ],
+-- + "primaryKeySortOrders" : [ "desc" ],
+-- + "primaryKeyName" : "parent pk",
+create table `metadata parent` (
+  `parent id` int!,
+  constraint `parent pk` primary key (`parent id` desc)
+);
+
+-- TEST: both foreign-key forms decode table and column names, as do unique keys
+-- + "name" : "metadata child",
+-- + "columns" : [ "inline child" ],
+-- + "name" : "child fk",
+-- + "columns" : [ "table child" ],
+-- +2 "referenceTable" : "metadata parent",
+-- +2 "referenceColumns" : [ "parent id" ],
+-- + "name" : "child uk",
+-- + "columns" : [ "unique child", "length(`unique child`)" ],
+-- + "sortOrders" : [ "desc", "asc" ]
+create table `metadata child` (
+  `inline child` int references `metadata parent`(`parent id`),
+  `table child` int,
+  `unique child` text,
+  constraint `child fk` foreign key (`table child`)
+    references `metadata parent`(`parent id`),
+  constraint `child uk` unique (`unique child` desc, length(`unique child`) asc)
+);
+
+-- TEST: index expression spelling stays CQL text, but its JSON string is escaped
+-- SQL single-quoted \t is a literal backslash followed by t, not a tab.
+-- Match JSON serialization here; the parsed-JSON driver checks decoded text.
+-- + "where" : "`unique child` <> '\\t\"'",
+-- + "columns" : [ "`unique child` || '\\t\"'" ],
+create index metadata_expression_index on `metadata child` (`unique child` || '\t"')
+  where `unique child` <> '\t"';
+
 -- TEST: emit another enum and constant
 @emit_enums another_enum;
 @emit_constants more_constants;

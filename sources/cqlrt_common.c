@@ -4594,6 +4594,102 @@ static void cql_format_one_cursor_column(
   }
 }
 
+static int32_t cql_utf8_sequence_length(unsigned char lead_byte) {
+  if ((lead_byte & 0x80) == 0x00) return 1;
+  if ((lead_byte & 0xE0) == 0xC0) return 2;
+  if ((lead_byte & 0xF0) == 0xE0) return 3;
+  if ((lead_byte & 0xF8) == 0xF0) return 4;
+  return 0;
+}
+
+static bool cql_is_utf8_continuation(unsigned char byte) {
+  return (byte & 0xC0) == 0x80;
+}
+
+// Deliberately copy encoders.c's validator rather than add a runtime distribution
+// dependency. Preserve its malformed-byte and extra-continuation policy.
+static int32_t cql_valid_utf8_sequence(const unsigned char *_Nonnull p) {
+  int32_t len = cql_utf8_sequence_length(p[0]);
+  if (len == 0) return 0;
+  if (len == 1) return 1;
+
+  for (int32_t i = 1; i < len; i++) {
+    if (!p[i] || !cql_is_utf8_continuation(p[i])) {
+      return 0;
+    }
+  }
+
+  if (cql_is_utf8_continuation(p[len])) {
+    return 0;
+  }
+
+  uint32_t codepoint = 0;
+  switch (len) {
+    case 2:
+      codepoint = (uint32_t)(((p[0] & 0x1F) << 6) | (p[1] & 0x3F));
+      if (codepoint < 0x80) return 0;
+      break;
+    case 3:
+      codepoint = (uint32_t)(((p[0] & 0x0F) << 12) | ((p[1] & 0x3F) << 6) | (p[2] & 0x3F));
+      if (codepoint < 0x800) return 0;
+      if (codepoint >= 0xD800 && codepoint <= 0xDFFF) return 0;
+      break;
+    case 4:
+      codepoint = (uint32_t)(((p[0] & 0x07) << 18) | ((p[1] & 0x3F) << 12) | ((p[2] & 0x3F) << 6) | (p[3] & 0x3F));
+      if (codepoint < 0x10000) return 0;
+      if (codepoint > 0x10FFFF) return 0;
+      break;
+  }
+
+  return len;
+}
+
+// CQLABI
+cql_string_ref _Nonnull cql_create_json_escaped_str(cql_string_ref _Nonnull value) {
+  cql_contract(value);
+  cql_alloc_cstr(str, value);
+  const unsigned char *p = (const unsigned char *)str;
+  cql_bytebuf b;
+  cql_bytebuf_open(&b);
+
+  while (*p) {
+    uint32_t c = *p;
+    if (c >= 0x80) {
+      int32_t len = cql_valid_utf8_sequence(p);
+      if (len > 1) {
+        cql_bytebuf_append(&b, p, (cql_uint32)len);
+        p += len;
+        continue;
+      }
+    }
+
+    switch (c) {
+      case '"': cql_bytebuf_append(&b, "\\\"", 2); break;
+      case '\\': cql_bytebuf_append(&b, "\\\\", 2); break;
+      case '\b': cql_bytebuf_append(&b, "\\b", 2); break;
+      case '\f': cql_bytebuf_append(&b, "\\f", 2); break;
+      case '\n': cql_bytebuf_append(&b, "\\n", 2); break;
+      case '\r': cql_bytebuf_append(&b, "\\r", 2); break;
+      case '\t': cql_bytebuf_append(&b, "\\t", 2); break;
+      default:
+        if (c < 32 || c >= 0x80) {
+          cql_bprintf(&b, "\\u%04x", c);
+        }
+        else {
+          cql_bytebuf_append(&b, p, 1);
+        }
+        break;
+    }
+    p++;
+  }
+
+  cql_bytebuf_append_null(&b);
+  cql_string_ref result = cql_string_ref_new(b.ptr);
+  cql_bytebuf_close(&b);
+  cql_free_cstr(str, value);
+  return result;
+}
+
 // The cursor formatting logic is really super simple
 // * we use the bprintf growable buffer format
 // * we use the usual dynamic cursor info to find the fields

@@ -1028,6 +1028,52 @@ upgrade_test() {
   run_test_expect_success
 }
 
+query_plan_encoding_test() {
+  TEST_NAME="query_plan_encoding_prepare"
+  TEST_DESC="Preparing query plan encoding fixtures"
+  TEST_CMD="python3 \"$T/query_plan_encoding_test.py\" prepare \"$CQL\" \"$O\""
+  run_test_expect_success
+
+  TEST_NAME="query_plan_encoding_codegen"
+  TEST_DESC="Generating query plan encoding test C code"
+  TEST_CMD="${CQL} --dev --cg \"$O/query_plan.h\" \"$O/query_plan.c\" --in \"$O/query_plan_encoding.cql\""
+  run_test_expect_success
+
+  TEST_NAME="query_plan_encoding_compile"
+  TEST_DESC="Compiling query plan encoding test"
+  TEST_CMD="do_make query_plan_encoding_test"
+  run_test_expect_success
+
+  TEST_NAME="query_plan_encoding_run"
+  TEST_DESC="Running query plan encoding test without JSON functions"
+  TEST_CMD="./$O/query_plan_encoding_test"
+  run_test_expect_success
+
+  TEST_NAME="query_plan_encoding_check"
+  TEST_DESC="Checking decoded query plan strings in C"
+  TEST_CMD="python3 \"$T/query_plan_encoding_test.py\" check \"$O/query_plan_encoding_run.out\""
+  run_test_expect_success
+
+  TEST_NAME="query_plan_encoding_lua_codegen"
+  TEST_DESC="Generating query plan encoding test Lua code"
+  TEST_CMD="${CQL} --dev --rt lua --cg \"$O/query_plan_encoding.lua\" --in \"$O/query_plan_encoding.cql\""
+  run_test_expect_success
+}
+
+query_plan_encoding_lua_test() {
+  query_plan_encoding_test
+
+  TEST_NAME="query_plan_encoding_lua_run"
+  TEST_DESC="Running query plan encoding test in Lua"
+  TEST_CMD="lua -e 'dofile(\"$O/query_plan_encoding.lua\"); local db = sqlite3.open_memory(); assert(query_plan_encoding_test(db) == CQL_OK); assert(db:close() == CQL_OK)'"
+  run_test_expect_success
+
+  TEST_NAME="query_plan_encoding_lua_check"
+  TEST_DESC="Checking decoded query plan strings in Lua"
+  TEST_CMD="python3 \"$T/query_plan_encoding_test.py\" check \"$O/query_plan_encoding_lua_run.out\""
+  run_test_expect_success
+}
+
 query_plan_test() {
   echo '--------------------------------- STAGE 13 -- TEST QUERY PLAN'
 
@@ -1110,6 +1156,7 @@ query_plan_test() {
   echo "Validating query plan empty result (this is stable)"
   echo "  computing diffs (empty if none)"
   on_diff_exit query_plan_empty_run.out
+  query_plan_encoding_test
 }
 
 line_number_test() {
@@ -1360,6 +1407,8 @@ if [ -n "$SPECIFIC_TEST" ]; then
     echo "  run_test"
     echo "  upgrade_test"
     echo "  query_plan_test"
+    echo "  query_plan_encoding_test"
+    echo "  query_plan_encoding_lua_test"
     echo "  line_number_test"
     echo "  stats_test"
     echo "  amalgam_test"

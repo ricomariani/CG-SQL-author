@@ -386,6 +386,9 @@ CQL_EXPORT void cql_bprintf(
 
 CQL_EXPORT void cql_bytebuf_append_null(cql_bytebuf *_Nonnull buffer);
 
+// CQLABI: returns created JSON string contents, without surrounding quotes.
+CQL_EXPORT cql_string_ref _Nonnull cql_create_json_escaped_str(cql_string_ref _Nonnull value);
+
 // CQLABI
 CQL_EXPORT cql_string_ref _Nonnull cql_cursor_format(cql_dynamic_cursor *_Nonnull dyn_cursor);
 

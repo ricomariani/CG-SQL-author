@@ -1048,9 +1048,11 @@ Its regression used the kind of interleaving that declaration order could not
 solve: one group contained a table that depended on another group, followed by
 another table from the first group.
 
-Every recreate-group correction I found predates the first public version tag,
+Every recreate-group correction I found within this human-found window
+predates the first public version tag,
 `v1.0.0`, on February 25, 2024. I found no later functional recreate-group fix
-and no public issue or commit describing a released recreate-group incident.
+within the window and no public issue or commit describing a released
+recreate-group incident.
 That absence cannot prove private deployment history, but it corroborates my
 recollection that the issues were found before release and that the feature
 produced no customer incident.

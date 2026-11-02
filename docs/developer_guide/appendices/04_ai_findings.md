@@ -161,8 +161,7 @@ Several things kept coming up:
    tested them extensively, but missed some places identifiers could appear.
 4. **Missing validation.** I'd meant to check at another level, then ended
    up forgetting to check at all.
-5. **Wrong assumptions.** The C hex-escape rules surprised me. Lua's truthiness
-   and numeric conversions supplied a few more examples.
+5. **Wrong assumptions.** The C hex-escape rules surprised me.
 6. **Basic error handling in test drivers.** We were ignoring some errors
    that could make a test result misleading.
 7. **Checking the result.** JSON can parse and still contain the wrong string.
@@ -986,12 +985,12 @@ before their first real use.
 
 ---
 
-## Sometimes I was wrong about the language
+## Target-language rules and missed conversions
 
-Some of the missing cases came from a wrong model of the implementation
-language. Once you believe an encoder or conversion has the right rule,
-it's easy to make the golden output agree with it. An independent execution
-check has a better chance of challenging that belief.
+The compiler already handles many differences between CQL, C, and Lua.
+Some failures missed a conversion in one path; others came from a rule I
+had wrong. Golden output can preserve either mistake unless the test checks
+what the generated program does.
 
 ### C escape syntax surprised the C programmer
 
@@ -1094,14 +1093,52 @@ fractions becoming zero, and NULL preservation. Both C and Lua can run the
 same CQL cases. A collection of positive fractions adds little after the
 first; crossing zero tests the rule we had actually missed.
 
-### CQL Boolean rules don't come from Lua
+### Existing Lua conversions still had missing callers
 
-In Lua, `true == 1` is false and numeric zero is truthy. CQL permits Boolean
-and numeric comparisons and uses SQL-style numeric conditions. The
-translation has to implement those rules explicitly.
+Lua's truthiness is well known. The backend is full of conversions between
+CQL's numeric and Boolean values: assignments, arithmetic, comparisons,
+`IN`, ordinary `IF`, and loops all use them. We already had
+`cg_lua_to_bool` and `cg_lua_to_num`. It's easy to miss one place that needs
+them.
 
-The runtime test in
-[#233](https://github.com/ricomariani/CG-SQL-author/pull/233) includes:
+For example, the ordinary IF emitter already did this:
+
+```c
+cg_lua_to_bool(sem_type_expr, &expr_value);
+bprintf(cg_main_output, "if %s then\n", expr_value.ptr);
+```
+
+The two gaps in
+[#233](https://github.com/ricomariani/CG-SQL-author/pull/233) needed the
+same existing helpers.
+
+#### Simple CASE had its own comparison emitter
+
+The ordinary comparison path normalized Boolean operands to numbers, but
+simple CASE emitted equality directly. Lua's `true == 1` is false, whereas
+CQL's `CASE true WHEN 1` must match.
+
+The CASE-list emitter now receives the selector's semantic type and converts
+both operands before printing the comparison. Here is the relevant change,
+with the source comment omitted and the long output line wrapped:
+
+```diff
+-bprintf(cg_main_output, "if %s == %s then\n", expr, case_expr_value.ptr);
++CHARBUF_OPEN(expr_comparable);
++bprintf(&expr_comparable, "%s", expr);
++cg_lua_to_num(sem_type_expr, &expr_comparable);
++cg_lua_to_num(sem_type_case_expr, &case_expr_value);
++bprintf(cg_main_output, "if %s == %s then\n",
++  expr_comparable.ptr, case_expr_value.ptr);
++CHARBUF_CLOSE(expr_comparable);
+```
+
+For a Boolean selector, the emitted comparison changes from
+`if selector == 1 then` to `if cql_to_num(selector) == 1 then`.
+The helper leaves numeric operands alone. The surrounding CASE code retains
+its NULL guard.
+
+The runtime regression includes:
 
 ```sql
 TEST!(bool_numeric_case,
@@ -1127,12 +1164,49 @@ end);
 `EXPECT_SQL_TOO!` checks the CQL expression and its SQLite evaluation.
 The middle cases prevent an overcorrection: converting every operand to a
 Boolean would make true equal to 2 or 0.5. CASE needs Boolean-to-number
-normalization. A fragment's IF predicate needs number-to-Boolean
-normalization so zero selects the false branch.
+normalization.
+
+#### Fragment selection had its own IF emitter
+
+A conditional shared fragment chooses which SQL text to include.
+Its IF emitter was separate from the ordinary statement emitter and had
+missed the same normalization step:
+
+```diff
+ CG_LUA_PUSH_EVAL(expr, LUA_EXPR_PRI_ROOT);
+
++cg_lua_to_bool(expr->sem->sem_type, &expr_value);
+ bprintf(cg_main_output, "if %s then\n", expr_value.ptr);
+```
+
+This regression fragment makes the effect visible:
+
+```sql
+[[shared_fragment]]
+proc numeric_fragment(x int!, y real, flag bool)
+begin
+  if x then
+    select 10 as value;
+  else if y then
+    select 20 as value;
+  else if flag then
+    select 30 as value;
+  else
+    select 40 as value;
+  end if;
+end;
+```
+
+With `(x, y, flag) = (0, 0.0, false)`, the old Lua selected 10 because zero
+is truthy. CQL requires 40. The existing helper converts numeric zero to
+false, preserves NULL, and leaves Boolean predicates alone. Negative integers
+and nonzero fractions must still select their branches; the tests include
+those controls too.
 
 The normal harness checked generated Lua text without executing its runtime
 suite. Running these cases in Lua exposed results the goldens had approved.
-For backend work, generation and execution have to be separate checks.
+The rule was already understood and implemented in many other places.
+The tests and review needed to reach these two emitters as well.
 
 ### A readable tuple isn't necessarily an unambiguous key
 
@@ -1216,9 +1290,36 @@ continuing branches while leaving its inherited nonnull contribution in
 the accumulated history. The stale contribution made the nonnull fact
 appear to cover both remaining branches.
 
-The repair delays inherited-history accumulation until a branch is known
-to continue. Simply discarding all inherited history would reject this
-valid counterpart:
+The old branch-entry code had already recorded that contribution. Here are
+the three operations, with long lines wrapped:
+
+```c
+flow_history branch_group_history =
+  clone_history(current_context->parent->history);
+append_history(&branch_group_history,
+  current_context->parent->branch_group.branch_histories);
+current_context->parent->branch_group.branch_histories = branch_group_history;
+```
+
+The repair removes those operations from branch entry. At branch exit,
+after rolling back branch-local changes, it records inherited facts only
+for a continuing branch. With the source comments omitted, that part becomes:
+
+```c
+if (current_context->branch.always_jumps) {
+  current_context->parent->branch_group.branch_count--;
+}
+else {
+  append_history(&current_context->history,
+    clone_history(current_context->parent->history));
+  append_history(&current_context->history,
+    current_context->parent->branch_group.branch_histories);
+  current_context->parent->branch_group.branch_histories = current_context->history;
+}
+```
+
+The branch count and its contributions now exclude the same returning path.
+Simply discarding all inherited history would reject this valid counterpart:
 
 ```sql
 proc continuing_branches_retain_inherited_improvements(a int, b bool!)
@@ -1553,8 +1654,17 @@ cursor, as an ordinary nested-loop join can do.
 [#235](https://github.com/ricomariani/CG-SQL-author/pull/235) found a related
 problem in generated Lua fetch-results wrappers. Tuple assignments lacked
 `local`, so nested calls could overwrite the outer statement and lose its
-cleanup. A one-call test has nothing to overwrite. The regression exercises
-nested calls, checks application globals, and verifies input/INOUT forwarding.
+cleanup. The core emitter correction is one keyword:
+
+```diff
+-bprintf(d, "  %s = %s(%s)\n", returns.ptr, proc_sym.ptr, args.ptr);
++bprintf(d, "  local %s = %s(%s)\n", returns.ptr, proc_sym.ptr, args.ptr);
+```
+
+The returned tuple now belongs to this invocation. Lua evaluates forwarded
+arguments before the newly declared locals can shadow parameter names.
+A one-call test has nothing to overwrite. The regression exercises nested
+calls, checks application globals, and verifies input/INOUT forwarding.
 
 Scanner ownership needed repeated calls too.
 
@@ -1807,6 +1917,21 @@ portability assumption: it allocated a byte array and read it through an
 byte view, preserving the bytes while guaranteeing alignment and the right
 object type. A convenient stack address on the machines we happened to use
 had hidden that requirement.
+
+The code change shows both obligations:
+
+```diff
+-SHA256_BYTE hash_bytes[64];
+-sha256_final(&ctx, hash_bytes);
+-int64_t *h = (int64_t *)hash_bytes;
+-int64_t hash = h[0] ^ h[1] ^h[2] ^ h[3];
++int64_t words[SHA256_BLOCK_SIZE / sizeof(int64_t)];
++sha256_final(&ctx, (SHA256_BYTE *)words);
++int64_t hash = words[0] ^ words[1] ^ words[2] ^ words[3];
+```
+
+Writing through a byte view of the words is allowed. Reading a byte array
+as though it had been allocated as aligned integer objects wasn't justified.
 
 ### Bound the actual operation without building a new subsystem
 

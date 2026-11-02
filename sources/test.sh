@@ -1318,6 +1318,23 @@ binding_accessors_test() {
   run_test_expect_success
 }
 
+dotnet_blob_test() {
+  TEST_NAME="dotnet_blob_prepare"
+  TEST_DESC="Generating .NET blob round-trip fixtures"
+  TEST_CMD="python3 test/dotnet_blob_test.py --prepare $CQL $O/dotnet_blob"
+  run_test_expect_success
+
+  TEST_NAME="dotnet_blob_build"
+  TEST_DESC="Building real native .NET blob interop"
+  TEST_CMD="do_make $O/dotnet_blob/cql_interop.dll"
+  run_test_expect_success
+
+  TEST_NAME="dotnet_blob_run"
+  TEST_DESC="Testing .NET/native blob bytes and NULL presence"
+  TEST_CMD="python3 test/dotnet_blob_test.py $O/dotnet_blob"
+  run_test_expect_success
+}
+
 comment_safety_test() {
   TEST_NAME="comment_safety_c"
   TEST_DESC="Generating C with hostile provenance text"
@@ -1428,6 +1445,7 @@ if [ -n "$SPECIFIC_TEST" ]; then
     echo "  cqlrt_contract_test"
     echo "  cqljson_test"
     echo "  binding_accessors_test"
+    echo "  dotnet_blob_test"
     echo "  comment_safety_test"
     echo "  macro_test"
     echo "  semantic_test"
@@ -1463,6 +1481,7 @@ else
   cqlrt_contract_test
   cqljson_test
   binding_accessors_test
+  dotnet_blob_test
   macro_test
   semantic_test
   code_gen_c_test

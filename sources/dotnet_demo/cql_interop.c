@@ -65,11 +65,20 @@ void *getBlob(cql_int64 rs, cql_int32 row, cql_int32 col, cql_int32 *size_out) {
   cql_result_set_ref ref = (cql_result_set_ref)(rs);
 
   cql_blob_ref blob = cql_result_set_get_blob_col(ref, row, col);
+  // A negative size denotes SQL NULL; zero is a present, empty blob.
+  if (!blob) {
+    *size_out = -1;
+    return NULL;
+  }
   cql_uint32 size = cql_get_blob_size(blob);
+  *size_out = (cql_int32)size;
+  if (!size) {
+    return NULL;
+  }
   const void *bytes = cql_get_blob_bytes(blob);
   void *ret = malloc(size);
+  cql_invariant(ret != NULL);
   memcpy(ret, bytes, size);
-  *size_out = (cql_int32)size;
   return ret;
 }
 

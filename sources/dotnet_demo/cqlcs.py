@@ -31,6 +31,10 @@
 
 import json
 import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "common"))
+from projection_names import projection_member_names
 
 
 def usage():
@@ -620,8 +624,10 @@ def emit_result_set_projection(proc, attributes):
     p_name = proc["name"]
     projection = proc["projection"]
     col = 0
-    for p in projection:
-        c_name = p["name"]
+    # Resolve names across the projection before pairing them with the columns.
+    # The Count property implicitly declares get_Count, so reserve that name too.
+    for p, c_name in zip(projection,
+                         projection_member_names(projection, ("Count", ))):
         c_type = p["type"]
         kind = p.get("kind", "")
         isSensitive = p.get("isSensitive", 0)

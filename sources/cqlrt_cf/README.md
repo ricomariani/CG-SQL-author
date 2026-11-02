@@ -14,6 +14,21 @@ The necessary comparisons and so forth are included such the `cqlrt_common` can 
 * `make.sh` -- builds the system and runs it
 * `min.sh` -- minimal build-only, use where CF is missing (e.g. on Linux) but you want to to try to catch build errors
 
+# Accessor naming
+
+Projection accessors use the shared customizable sample policy in
+`sources/common/projection_names.py`: ordinary names are preserved, exotic names
+use CQL-style `X_`/`Xhh` UTF-8 encoding, and collisions receive ordinal suffixes.
+Bodies call the compiler-generated column-specific public getters, including
+their NULL/value helpers for boxed scalars. Wrapper-name collision suffixes do
+not change the native getter names.
+
+Run `./test.sh --test binding_accessors_test --non_interactive` from `sources`.
+With Clang and GNUstep, the regression compiles both Objective-C wrappers against
+actual generated C headers and executes them using ordinal API test doubles.
+This Linux check does not replace Apple ARC/CoreFoundation integration testing.
+Without those tools, the additional native checks are explicitly skipped.
+
 # License
 
 This source code is licensed under the MIT license found in the

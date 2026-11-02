@@ -80,6 +80,19 @@ create a unitary output for all the input files.
 
 * `./cqlcs.py`
 
+### Accessor naming
+
+Projection getters use the shared sample policy in
+`sources/common/projection_names.py`: ordinary names are preserved, exotic names
+use CQL-style `X_`/`Xhh` UTF-8 encoding, and collisions receive an ordinal suffix.
+`Count` is reserved because the generated property already creates `get_Count`.
+Getters still read by ordinal; compiler JSON and the native ABI are unchanged.
+This is a customizable sample convention, not a requirement on JSON consumers.
+
+From `sources`, run `./test.sh --test binding_accessors_test --non_interactive`.
+With a .NET SDK, it compiles against the real managed API and executes getters
+using a row/ordinal test double; without an SDK, that check is explicitly skipped.
+
 ## Building Tools
 
 Use `make.sh` to build and execute the Interop demo.  Use `clean.sh` to clean up the

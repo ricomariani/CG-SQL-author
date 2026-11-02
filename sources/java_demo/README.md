@@ -75,6 +75,26 @@ create a unitary output for all the input files.
 
 * `./cqljava.py`
 
+### Accessor naming
+
+This sample preserves ordinary result-column names in `get_<name>` accessors.
+Other names use CQL-style `X_`/`Xhh` UTF-8 byte encoding: for example,
+`foo\bar` becomes `get_X_fooX5cbar`. If names collide, the sample appends the
+column ordinal and, if necessary, underscores. Getters still read columns by
+ordinal; compiler JSON and the native ABI are unchanged.
+
+This is one naming policy, not a requirement on other JSON consumers. Forks can
+choose another convention or reject names they do not support.
+
+The default naming helper is shared with the C# and Objective-C samples in
+`sources/common/projection_names.py`; forks can customize or replace it.
+
+From `sources`, run `./test.sh --test binding_accessors_test --non_interactive`
+for the combined accessor regression. It uses real compiler JSON and checks
+exact getter names and column bindings. When a JDK is available, it also compiles
+against the real Java runtime API and executes getters with a row/ordinal test
+double. Without a JDK, that additional check is explicitly reported as skipped.
+
 ## Building Tools
 
 Use `make.sh` to build and execute the JNI demo.  Use `clean.sh` to clean up the

@@ -31,6 +31,10 @@
 
 import json
 import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "common"))
+from projection_names import projection_member_names
 
 
 def usage():
@@ -682,8 +686,7 @@ def emit_result_set_projection(proc, attributes):
     p_name = proc["name"]
     projection = proc["projection"]
     col = 0
-    for p in projection:
-        c_name = p["name"]
+    for p, member_name in zip(projection, projection_member_names(projection)):
         c_type = p["type"]
         kind = p.get("kind", "")
         isSensitive = p.get("isSensitive", 0)
@@ -713,7 +716,7 @@ def emit_result_set_projection(proc, attributes):
         row_formal = "0" if hasOutResult else "row"
 
         # we're done, we're ready to emit the function name and its body
-        print(f"    public {c_type} get_{c_name}({row_arg}) {{")
+        print(f"    public {c_type} get_{member_name}({row_arg}) {{")
         print(
             f"      return mResultSet.get{nullable}{getter}({row_formal}, {col});"
         )

@@ -349,7 +349,12 @@ def emit_proc_c_func_body(proc, meta_results, attributes):
             if needsComma:
                 comma = ",\n"
 
-            if not isNotNull and split_types[arg["type"]]:
+            if type == "blob":
+                print(f"{comma}  {xtype} {a_name},")
+                print(
+                    f"  cql_int32 {a_name}_size, cql_bool {a_name}_has_value",
+                    end="")
+            elif not isNotNull and split_types[arg["type"]]:
                 xtype = dotnet_notnull_types[type]
                 print(f"{comma}  bool {a_name}_has_value,")
                 print(f"  {xtype} {a_name}_value", end="")
@@ -492,16 +497,15 @@ def emit_proc_c_func_body(proc, meta_results, attributes):
             cleanup += f"  cql_string_release(str_ref_{a_name});\n"
             call += f"str_ref_{a_name}"
         elif a_type == "blob":
-            # Text is a byte in C#.  We need to "unbox" it into a
-            # cql_blob_ref.  We need to release the blob ref after the call. So
-            # we emit a temporary blob ref, we initialize it from the C# blob
-            # and then use it in the call.  For "inout" args, after the call
-            # copy the blob reference to the output row.
+            # Empty arrays may marshal as NULL pointers. Presence is separate
+            # from byte length so empty blobs cannot become SQL NULL.
             preamble += f"  cql_blob_ref blob_ref_{a_name} = NULL;\n"
-            preamble += f"  if ({a_name}) {{\n"
-            preamble += f"    void *bytes_{a_name} = \"xx\";\n"
-            preamble += f"    int len_{a_name} = 2;\n"
-            preamble += f"    blob_ref_{a_name} = cql_blob_ref_new(bytes_{a_name}, (cql_uint32)len_{a_name});\n"
+            preamble += f"  cql_contract({a_name}_size >= 0);\n"
+            if isNotNull:
+                preamble += f"  cql_contract({a_name}_has_value);\n"
+            preamble += f"  if ({a_name}_has_value) {{\n"
+            preamble += f"    cql_contract(!{a_name}_size || {a_name});\n"
+            preamble += f"    blob_ref_{a_name} = cql_blob_ref_new({a_name}_size ? {a_name} : \"\", (cql_uint32){a_name}_size);\n"
             preamble += f"  }}\n"
             cleanup += f"  cql_set_blob_ref(&row->{a_name}, blob_ref_{a_name});\n" if inout else ""
             cleanup += f"  cql_blob_release(blob_ref_{a_name});\n"
@@ -650,7 +654,7 @@ def emit_result_set_projection(proc, attributes):
         else:
             if getter == "String" or getter == "Blob" or getter == "ChildResultSet":
                 nullable = ""
-                q = ""
+                q = "?" if getter == "Blob" else ""
             else:
                 nullable = "Nullable"
                 q = "?"
@@ -773,6 +777,7 @@ def emit_proc_csharp_interop(proc, attributes):
     c_params = ""
     call_args = ""
     needs_wrapper = False
+    blob_checks = []
 
     # if usesDatabase then we need the db argument, in c# it goes in __db
     if usesDatabase:
@@ -805,7 +810,15 @@ def emit_proc_csharp_interop(proc, attributes):
                 c_params += ", "
                 call_args += ", "
 
-            if not isNotNull and split_types[type]:
+            if type == "blob":
+                params += f"{xtype} {a_name}"
+                c_params += f"[In] {xtype} {a_name}, int {a_name}_size, byte {a_name}_has_value"
+                call_args += f"{a_name}, {a_name}?.Length ?? 0, (byte)({a_name} != null ? 1 : 0)"
+                if isNotNull:
+                    blob_checks.append(
+                        f"    if ({a_name} == null) throw new ArgumentNullException(nameof({a_name}));"
+                    )
+            elif not isNotNull and split_types[type]:
                 call_args += f"{a_name}.HasValue, {a_name}.GetValueOrDefault()"
                 params += f"{xtype} {a_name}"
                 xtype = notnull_types[type]
@@ -841,12 +854,16 @@ def emit_proc_csharp_interop(proc, attributes):
     if needs_return_type:
         return_type = "long"
         print(f"  public static {p_name}ReturnType {p_name}({params}) {{")
+        for check in blob_checks:
+            print(check)
         print(
             f"     return new {p_name}ReturnType(new CQLResultSet({class_name}_{p_name}({call_args})));"
         )
         print("  }\n")
     else:
         print(f"  public static {return_type} {p_name}({params}) {{")
+        for check in blob_checks:
+            print(check)
         if return_type != "void":
             print(f"     return {class_name}_{p_name}({call_args});")
         else:

@@ -93,6 +93,24 @@ From `sources`, run `./test.sh --test binding_accessors_test --non_interactive`.
 With a .NET SDK, it compiles against the real managed API and executes getters
 using a row/ordinal test double; without an SDK, that check is explicitly skipped.
 
+### Blob marshalling
+
+Generated blob input and inout parameters pass the actual byte array, its byte
+length, and a one-byte presence flag. Presence is separate because a zero-length
+array may marshal as a null pointer but must remain distinct from SQL NULL.
+The public managed method keeps its `byte[]`/`byte[]?` signature; regenerate the
+C and C# interop together because the native entry-point signatures have changed.
+Nonnull blob arguments reject managed null before entering native code.
+
+The native blob reader returns size `-1` for NULL and size `0` for an empty blob.
+The managed reader returns null or an empty array accordingly and always frees
+native copy storage, including if managed allocation or copying throws.
+
+From `sources`, run `./test.sh --test dotnet_blob_test --non_interactive` for
+actual .NET/native round trips, including embedded zero bytes, differing lengths,
+NULL versus empty, inout replacement, and projected results. The native fixtures
+always build; managed execution is explicitly skipped without a .NET SDK.
+
 ## Building Tools
 
 Use `make.sh` to build and execute the Interop demo.  Use `clean.sh` to clean up the

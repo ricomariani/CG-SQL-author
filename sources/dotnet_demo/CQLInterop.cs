@@ -106,15 +106,18 @@ public sealed class CQLResultSet {
     return getDouble(result_set_ref, row, column);
   }
 
-  public byte[] getBlob(int row, int column) {
+  public byte[]? getBlob(int row, int column) {
     int size;
     IntPtr ptr = CQLResultSet.getBlob(result_set_ref, row, column, out size);
-    byte[] blob = new byte[size];
-
-    // Copy the unmanaged blob to the managed byte array
-    Marshal.Copy(ptr, blob, 0, size);
-    CQLResultSet.freeBlob(ptr);
-    return blob;
+    try {
+      if (size == -1) return null;
+      if (size == 0) return Array.Empty<byte>();
+      byte[] blob = new byte[size];
+      Marshal.Copy(ptr, blob, 0, size);
+      return blob;
+    } finally {
+      CQLResultSet.freeBlob(ptr);
+    }
   }
 
   public CQLResultSet getChildResultSet(int row, int column) {

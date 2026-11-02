@@ -208,6 +208,9 @@ $O/cqlrt_diag.o: cqlrt.c cqlrt.h cqlrt_common.c cqlrt_common.h
 $O/cqlrt_contract_test: $T/cqlrt_contract_test.c cqlrt.c cqlrt.h cqlrt_common.c cqlrt_common.h
 	$(CC) $(CFLAGS:--coverage=) -DNDEBUG -o $@ $T/cqlrt_contract_test.c cqlrt.c $(SQLITE_LINK)
 
+$O/dotnet_blob/cql_interop.dll: $O/dotnet_blob/blobs.c $O/dotnet_blob/BlobInterop.c dotnet_demo/cql_interop.c cqlrt.c cqlrt.h cqlrt_common.c cqlrt_common.h $(SQLITE_OBJ)
+	$(CC) $(CFLAGS:--coverage=) -fPIC -shared -I$O/dotnet_blob -o $@ dotnet_demo/cql_interop.c cqlrt.c $O/dotnet_blob/blobs.c $O/dotnet_blob/BlobInterop.c $(SQLITE_LINK)
+
 $O/cqlrt_cf_contract_test.o: $T/cqlrt_cf_contract_test.c cqlrt_cf/cqlrt_cf.h
 	$(CC) $(CFLAGS:--coverage=) -DNDEBUG -c -o $@ $T/cqlrt_cf_contract_test.c
 

@@ -336,6 +336,39 @@ static void test_json_pretty_utf8() {
   CHARBUF_CLOSE(encoded);
 }
 
+static void test_identifier_encoding() {
+  static const struct {
+    CSTR input;
+    CSTR encoded;
+  } cases[] = {
+    { "`XName`", "XName" },
+    { "`aXb`", "aXb" },
+    { "`X`", "X" },
+    { "`X_Name`", "X_X58_Name" },
+    { "`X_X58Name`", "X_X58_X5858Name" },
+    { "`aX b`", "X_aX58X20b" },
+    { "`1field`", "X_1field" },
+    { "`a``b`", "X_aX60b" },
+    { "`caf\xc3\xa9`", "X_cafXc3Xa9" },
+    { "`safe_123`", "safe_123" },
+  };
+  CHARBUF_OPEN(encoded);
+  CHARBUF_OPEN(decoded);
+  for (uint32_t i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
+    bclear(&encoded);
+    bclear(&decoded);
+    // The encoder appends into existing output; prefix insertion must preserve it.
+    bprintf(&encoded, "prefix:");
+    cg_encode_qstr(&encoded, cases[i].input);
+    TEST_ASSERT(!strncmp(encoded.ptr, "prefix:", 7));
+    TEST_ASSERT(!strcmp(encoded.ptr + 7, cases[i].encoded));
+    cg_decode_qstr(&decoded, encoded.ptr + 7);
+    TEST_ASSERT(!strcmp(decoded.ptr, cases[i].input));
+  }
+  CHARBUF_CLOSE(decoded);
+  CHARBUF_CLOSE(encoded);
+}
+
 static bool test_c_hex_escape_boundaries() {
   bool result = true;
   CHARBUF_OPEN(temp);
@@ -611,6 +644,7 @@ cql_noexport void run_unit_tests() {
   // Both JSON paths must preserve valid codepoints and the established malformed
   // byte policy; syntactically valid JSON alone does not prove string fidelity.
   test_json_pretty_utf8();
+  test_identifier_encoding();
 
   // Generated C must delimit greedy hex escapes without changing CQL/Lua output.
   TEST_ASSERT(test_c_hex_escape_boundaries());

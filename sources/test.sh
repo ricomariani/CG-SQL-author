@@ -1311,6 +1311,13 @@ cqljson_test() {
   run_test_expect_success
 }
 
+binding_accessors_test() {
+  TEST_NAME="binding_projection_accessors"
+  TEST_DESC="Testing Java, C#, and Objective-C projection names and column bindings"
+  TEST_CMD="python3 test/binding_accessors_test.py $CQL $O"
+  run_test_expect_success
+}
+
 comment_safety_test() {
   TEST_NAME="comment_safety_c"
   TEST_DESC="Generating C with hostile provenance text"
@@ -1420,6 +1427,7 @@ if [ -n "$SPECIFIC_TEST" ]; then
     echo "  unit_tests"
     echo "  cqlrt_contract_test"
     echo "  cqljson_test"
+    echo "  binding_accessors_test"
     echo "  comment_safety_test"
     echo "  macro_test"
     echo "  semantic_test"
@@ -1454,6 +1462,7 @@ else
   unit_tests
   cqlrt_contract_test
   cqljson_test
+  binding_accessors_test
   macro_test
   semantic_test
   code_gen_c_test

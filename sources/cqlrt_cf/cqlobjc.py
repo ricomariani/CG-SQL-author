@@ -22,6 +22,10 @@
 
 import json
 import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "common"))
+from projection_names import cql_identifier, projection_member_names
 
 
 def usage():
@@ -90,9 +94,9 @@ def emit_result_set_projection(proc, attributes):
     # the procedure is already known to have a projection or we wouldn't be here
     p_name = proc["name"]
     projection = proc["projection"]
-    col = 0
-    for p in projection:
-        c_name = p["name"]
+    for p, c_name in zip(projection, projection_member_names(projection)):
+        # Wrapper collision suffixes do not change the compiler's getter names.
+        native_name = cql_identifier(p["name"])
         c_type = p["type"]
         kind = p.get("kind", "")
         isNotNull = p["isNotNull"]
@@ -119,11 +123,11 @@ def emit_result_set_projection(proc, attributes):
 
         if conv == "@":
             print(
-                f"  return {p_name}_get_{c_name}_is_null(cResultSet{row_arg}) ? nil : @({p_name}_get_{c_name}_value(cResultSet{row_arg}));"
+                f"  return {p_name}_get_{native_name}_is_null(cResultSet{row_arg}) ? nil : @({p_name}_get_{native_name}_value(cResultSet{row_arg}));"
             )
         else:
             print(
-                f"  return {conv}{p_name}_get_{c_name}(cResultSet{row_arg}){bool_fix};"
+                f"  return {conv}{p_name}_get_{native_name}(cResultSet{row_arg}){bool_fix};"
             )
         print("}")
         print("")

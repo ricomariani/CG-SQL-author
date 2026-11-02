@@ -26,6 +26,10 @@
 
 import json
 import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "common"))
+from projection_names import cql_identifier, objc_projection_names
 
 
 def usage():
@@ -237,8 +241,9 @@ def emit_proc_objc_projection_impl(proc, attributes):
     print(f"  {p_name}_result_set_ref _result_set_ref;")
     print("}")
 
-    for p in projection:
-        c_name = p["name"]
+    for p, c_name in zip(projection, objc_projection_names(proc)):
+        # Property/selector disambiguation is local to the wrapper, not the C API.
+        native_name = cql_identifier(p["name"])
         c_type = p["type"]
         kind = p.get("kind", "")
         isSensitive = p.get("isSensitive", 0)
@@ -257,7 +262,7 @@ def emit_proc_objc_projection_impl(proc, attributes):
         conv = notnull_conv[c_type] if isNotNull else nullable_conv[c_type]
         bool_fix = "" if objc_type != "cql_bool" else " ? YES : NO"
         row_arg = "" if hasOutResult else ", row"
-        row_param = "" if hasOutResult else ", cql_int32 row"
+        getter = f"{p_name}_get_{native_name}(_result_set_ref{row_arg})"
 
         # the getter body is one of three forms
         # 1. For reference types we convert the value to NSString, NSData etc.
@@ -268,26 +273,20 @@ def emit_proc_objc_projection_impl(proc, attributes):
 
         if conv == "@":
             print(
-                f"  return {p_name}_get_{c_name}_is_null(_result_set_ref{row_arg}) ? nil : @({p_name}_get_{c_name}_value(_result_set_ref{row_arg}));"
+                f"  return {p_name}_get_{native_name}_is_null(_result_set_ref{row_arg}) ? nil : @({p_name}_get_{native_name}_value(_result_set_ref{row_arg}));"
             )
         elif conv == "bridge":
             if objc_type.endswith("RS *_Nullable"):
                 cls = objc_type[:-11]
                 print(f"  // make child result")
                 print(f"  {objc_type} rs = [{cls} new];")
-                print(
-                    f"  rs.result_set_ref = {p_name}_get_{c_name}(_result_set_ref{row_arg});"
-                )
+                print(f"  rs.result_set_ref = {getter};")
                 print(f"  cql_retain((cql_type_ref)rs.result_set_ref);")
                 print(f"  return rs;")
             else:
-                print(
-                    f"  return (__bridge {objc_type}){p_name}_get_{c_name}(_result_set_ref{row_arg}){bool_fix};"
-                )
+                print(f"  return (__bridge {objc_type}){getter}{bool_fix};")
         else:
-            print(
-                f"  return {p_name}_get_{c_name}(_result_set_ref{row_arg}){bool_fix};"
-            )
+            print(f"  return {getter}{bool_fix};")
 
         print("}")
 
@@ -596,8 +595,7 @@ def emit_result_set_projection_header(proc, attributes):
     # the procedure is already known to have a projection or we wouldn't be here
     p_name = proc["name"]
     projection = proc["projection"]
-    for p in projection:
-        c_name = p["name"]
+    for p, c_name in zip(projection, objc_projection_names(proc)):
         c_type = p["type"]
         kind = p.get("kind", "")
         isSensitive = p.get("isSensitive", 0)
@@ -723,8 +721,7 @@ def emit_proc_objc_projection_header(proc, attributes):
 
     p_name = proc["name"]
     projection = proc["projection"]
-    for p in projection:
-        c_name = p["name"]
+    for p, c_name in zip(projection, objc_projection_names(proc)):
         c_type = p["type"]
         kind = p.get("kind", "")
         isSensitive = p.get("isSensitive", 0)

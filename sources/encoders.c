@@ -557,11 +557,11 @@ cql_noexport void cg_pretty_quote_compressed_text(CSTR _Nonnull str, charbuf *_N
   CHARBUF_CLOSE(temp_output);
 }
 
-// Preserve back-quoted identifiers while making them SQL-safe: allowed chars
-// pass through, disallowed bytes become Xhh, and we synthesize the X_ prefix
-// in-place to keep already-emitted text contiguous without extra buffers.
+// Preserve ordinary identifiers, including capital X. Encoding is needed only
+// for non-identifiers or the reserved X_ prefix. Once encoding is needed, escape
+// every literal X so it cannot be confused with an Xhh byte escape.
 //
-// For instance "X_helloX20worldX21" becomes "`hello world!`"
+// For instance "`hello world!`" becomes "X_helloX20worldX21".
 cql_noexport void cg_encode_qstr(charbuf *_Nonnull output, CSTR _Nonnull qstr) {
   Contract(qstr);
   Contract(qstr[0] == '`');
@@ -570,14 +570,26 @@ cql_noexport void cg_encode_qstr(charbuf *_Nonnull output, CSTR _Nonnull qstr) {
   Contract(qstr[len-1] == '`');
   uint32_t used = output->used;
 
-  bool_t used_hex = false;
+  bool_t needs_encoding = (qstr[1] == 'X' && qstr[2] == '_') ||
+    (qstr[1] >= '0' && qstr[1] <= '9');
+  for (uint32_t i = 1; i < len - 1; i++) {
+    uint8_t ch = (uint8_t)qstr[i];
+    if (!(
+      (ch >= 'a' && ch <= 'z') ||
+      (ch >= 'A' && ch <= 'Z') ||
+      (ch >= '0' && ch <= '9') ||
+      ch == '_')) {
+        needs_encoding = true;
+    }
+  }
+
   len--;
   uint32_t i;
   for (i = 1; i < len; i++) {
     uint8_t ch = (uint8_t)qstr[i];
     if (
       (ch >= 'a' && ch <= 'z') ||
-      (ch >= 'A' && ch <= 'Z' && ch != 'X') ||
+      (ch >= 'A' && ch <= 'Z' && (ch != 'X' || !needs_encoding)) ||
       (ch >= '0' && ch <= '9') ||
       ch == '_') {
         bputc(output, qstr[i]);
@@ -594,10 +606,9 @@ cql_noexport void cg_encode_qstr(charbuf *_Nonnull output, CSTR _Nonnull qstr) {
     bputc(output, 'X');
     emit_hex_digit(ch >> 4, output);
     emit_hex_digit(ch & 0xf, output);
-    used_hex = true;
   }
 
-  if (used_hex) {
+  if (needs_encoding) {
     // place holders to make space
     bputc(output, '$');
     bputc(output, '$');

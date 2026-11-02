@@ -27,6 +27,22 @@ The CQL compiler is used to generated JSON to describe the exact contents of
 
 * `./cql_objc_full.py`
 
+### Accessor naming
+
+Headers and implementations use the same customizable naming policy from
+`sources/common/projection_names.py`. Exotic names use CQL-style `X_`/`Xhh`
+UTF-8 encoding; collisions receive ordinal suffixes. Single-row properties also
+avoid C keywords and this wrapper's own methods/properties, such as `count`.
+Bodies call the compiler-generated column-specific public getters, preserving
+NULL checks, boxing, and reference conversions. Wrapper-name collision suffixes
+and keyword escaping do not change the native getter names.
+Ordinary accessor names and the compiler JSON format remain unchanged.
+
+Run `./test.sh --test binding_accessors_test --non_interactive` from `sources`.
+With Clang and GNUstep, it compiles against actual generated C headers and runs
+getter checks with ordinal API test doubles. Those checks are explicitly skipped
+when the tools are absent; they do not replace Apple ARC/CoreFoundation testing.
+
 
 ## The applicaton
 

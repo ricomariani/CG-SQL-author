@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#include <stdio.h>
 #include "cqlrt.h"
 
 extern cql_code cql_startup(sqlite3 *db);
@@ -27,7 +28,13 @@ int main(int argc, char **argv) {
   if (rc == SQLITE_OK) {
     rc = run_client(db);
   }
-  sqlite3_close(db);
+  cql_code close_rc = sqlite3_close(db);
+  if (close_rc != SQLITE_OK) {
+    fprintf(stderr, "sqlite close error: code = %d, msg = %s\n", close_rc, sqlite3_errmsg(db));
+    if (rc == SQLITE_OK) {
+      rc = close_rc;
+    }
+  }
   if (rc) exit(rc);
 
   // now try again using the stored procs and a clean db
@@ -36,6 +43,12 @@ int main(int argc, char **argv) {
     rc = cql_startup(db);
   }
 
-  sqlite3_close(db);
+  close_rc = sqlite3_close(db);
+  if (close_rc != SQLITE_OK) {
+    fprintf(stderr, "sqlite close error: code = %d, msg = %s\n", close_rc, sqlite3_errmsg(db));
+    if (rc == SQLITE_OK) {
+      rc = close_rc;
+    }
+  }
   exit(rc);
 }

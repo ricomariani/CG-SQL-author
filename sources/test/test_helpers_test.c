@@ -81,6 +81,12 @@ int main(int argc, char **argv) {
     rc = test_test_child_blob_primary_key_drop_tables(db);
   }
 
-  sqlite3_close(db);
+  cql_code close_rc = sqlite3_close(db);
+  if (close_rc != SQLITE_OK) {
+    fprintf(stderr, "sqlite close error: code = %d, msg = %s\n", close_rc, sqlite3_errmsg(db));
+    if (rc == SQLITE_OK) {
+      rc = close_rc;
+    }
+  }
   return rc;
 }

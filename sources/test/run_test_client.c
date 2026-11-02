@@ -1102,7 +1102,7 @@ cql_blob_ref create_truncated_blob(cql_blob_ref b, cql_int32 new_size) {
   return cql_blob_ref_new(cql_get_blob_bytes(b), (cql_uint32)new_size);
 }
 
-static int32_t rand_state = 0;
+static uint32_t rand_state = 0;
 
 // to ensure we can get the same series again (this is public)
 void rand_reset() {
@@ -1115,9 +1115,11 @@ void rand_reset() {
 // integers in linear congruence math. So for this lame thing I picked my
 // own constants out of thin air and I have no idea if they are any good
 // but they are my own and really we just don't care that much.
+// Unsigned arithmetic defines the wraparound; the mask preserves the existing
+// nonnegative 31-bit sequence so blob corruption remains reproducible.
 static int32_t seriously_lousy_rand() {
-  rand_state = (rand_state * 1302475243 + 21493) & 0x7fffffff;
-  return rand_state;
+  rand_state = (rand_state * UINT32_C(1302475243) + UINT32_C(21493)) & UINT32_C(0x7fffffff);
+  return (int32_t)rand_state;
 }
 
 // We are about to break all the rules to corrupt this blob
@@ -1155,8 +1157,11 @@ cql_code test_cql_rebuild_recreate_group(sqlite3 *db) {
   E(rc == SQLITE_OK, "expected succesful table creates\n");
   rc = cql_exec_internal(db, indices);
   E(rc == SQLITE_OK, "expected succesful index create\n");
+  SQL_E(seed_recreate_group_test(db));
   rc = cql_rebuild_recreate_group(db, tables, indices, deletes, &result);
   E(rc == SQLITE_OK, "expected succesful recreate group upgrade\n");
+  E(!result, "expected recreate rather than rebuild\n");
+  SQL_E(verify_recreate_group_test(db));
   cql_string_release(tables);
   cql_string_release(indices);
   cql_string_release(deletes);
@@ -1189,37 +1194,52 @@ cql_code test_cql_parent_child(sqlite3 *db) {
   cql_int32 count = TestParentChild_result_count(parent);
   E(count == 2, "expected two rows\n");
 
+  // TestParentChildInit supplies these exact rows, ordered by parent name.
+  // TestChild has no ORDER BY, so require complete, unique child membership
+  // rather than assuming an order within each child result set.
+  static const cql_int32 expected_room_ids[] = { 2, 1 };
+  static const char *expected_names[] = { "bar", "foo" };
+  static const cql_int32 expected_child_counts[] = { 1, 2 };
+  static const cql_int32 expected_tasks[][2] = { { 200 }, { 100, 101 } };
+
   for (int i = 0; i < count; i++) {
     cql_int32 roomID = TestParentChild_get_roomID(parent, i);
-     cql_string_ref name_ref = TestParentChild_get_name(parent, i);
+    cql_string_ref name_ref = TestParentChild_get_name(parent, i);
 
-     cql_alloc_cstr(cstr, name_ref);
+    E(roomID == expected_room_ids[i], "unexpected parent room id\n");
 
-     if (roomID == 1) {
-       E(!strcmp(cstr, "foo"), "expected room to be 'foo'");
-     }
-     else {
-       E(!strcmp(cstr, "bar"), "expected room to be 'bar'");
-     }
+    cql_alloc_cstr(cstr, name_ref);
+    cql_bool name_matches = !strcmp(cstr, expected_names[i]);
+    cql_free_cstr(cstr, name_ref);
+    E(name_matches, "unexpected parent room name\n");
 
-     cql_free_cstr(cstr, name_ref);
+    // note that the shape of the result set from the Parent/Child will be
+    // slightly different than the shape of child if you call it directly
+    // because the partitioning logic will add the columns `has_row`,
+    // `refs_count` and `refs_offset`.  But this is supposed to be no problem.
+    // We verify the accessors work in this case with the code below
 
-     // note that the shape of the result set from the Parent/Child will be
-     // slightly different than the shape of child if you call it directly
-     // because the partitioning logic will add the columns `has_row`,
-     // `refs_count` and `refs_offset`.  But this is supposed to be no problem.
-     // We verify the accessors work in this case with the code below
+    TestChild_result_set_ref child = TestParentChild_get_test_tasks(parent, i);
+    cql_int32 children = TestChild_result_count(child);
+    E(children == expected_child_counts[i], "unexpected child count\n");
+    cql_bool seen[2] = { false, false };
 
-     TestChild_result_set_ref child = TestParentChild_get_test_tasks(parent, i);
-     cql_int32 children = TestChild_result_count(child);
+    for (int j = 0; j < children; j++) {
+      cql_int32 child_room = TestChild_get_roomID(child, j);
+      cql_int32 child_task = TestChild_get_thisIsATask(child, j);
 
-     for (int j = 0; j < children; j++) {
-       cql_int32 child_room = TestChild_get_roomID(child, j);
-       cql_int32 child_task = TestChild_get_thisIsATask(child, j);
+      E(child_room == roomID, "expected matching parent and child room id\n");
 
-       E(child_room == roomID, "expected matching parent and child room id\n");
-       E(child_task == 100*roomID + j, "child task did not match expected formula\n");
-     }
+      cql_bool found = false;
+      for (int k = 0; k < expected_child_counts[i]; k++) {
+        if (!seen[k] && child_task == expected_tasks[i][k]) {
+          seen[k] = true;
+          found = true;
+          break;
+        }
+      }
+      E(found, "unexpected or duplicate child task\n");
+    }
   }
   cql_result_set_release(parent);
 

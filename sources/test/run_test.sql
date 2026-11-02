@@ -8665,12 +8665,51 @@ end;
 
 @emit_enums;
 
+@ifndef __rt__lua
+
+-- These declarations describe the native fixture and SQLite's catalog;
+-- the native fixture, not this loose DDL, creates g1.
+create table g1(id integer primary key, name text);
+create table sqlite_master (
+  type text not null,
+  name text not null,
+  tbl_name text not null,
+  rootpage integer not null,
+  sql text
+);
+
+proc seed_recreate_group_test()
+begin
+  -- This row distinguishes recreation from a successful no-op.
+  insert into g1 values (1, 'recreate group probe');
+end;
+
+proc verify_recreate_group_test()
+begin
+  -- The bundled runtime recreates rather than preserving data with a rebuild.
+  if (select count(*) from g1) != 0 then
+    printf("Recreate group preserved the probe row\n");
+    throw;
+  end if;
+
+  -- Data loss alone could mean the tables were only dropped. Check the tables
+  -- and index from the native fixture were restored, including its quoted name.
+  if (select count(*) from sqlite_master where type = 'table' and
+      name in ('g1', 'use g1', 'foo', 'g2', 'use_g2')) != 5 then
+    printf("Recreate group did not restore all tables\n");
+    throw;
+  end if;
+  if (select count(*) from sqlite_master where type = 'index' and
+      name = 'extra_index' and tbl_name = 'g1') != 1 then
+    printf("Recreate group did not restore its index\n");
+    throw;
+  end if;
+end;
+
 -- parent child test case, this code is exercised from run_test_client.c
 -- Lua has no such test case at this time, though in fairness this test
 -- is trivial for Lua because "everything in an object".  The code is
 -- in an ifdef as a reminder that it is not a Lua test case.
-
-@ifndef __rt__lua
 
 -- make our schema and add a few dummy rows
 proc TestParentChildInit()

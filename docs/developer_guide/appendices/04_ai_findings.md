@@ -97,7 +97,7 @@ failure mechanism.
 
 ### Bugs per KLOC
 
-For density, I use a matching source surface: the root `sources/*.c` and
+For physical-line density, I use a matching source surface: the root `sources/*.c` and
 `*.h` files except `unit_tests.c`, plus the grammar, lexer, and Lua runtime.
 This excludes tests, generated distributions, vendored SQLite, Python
 bindings, and the extension bridge. Counts are physical lines, including
@@ -111,13 +111,43 @@ comments and blanks, consistent with the earlier appendix's measurements.
 | Of those, security groups | 7 |
 | Of those, other correctness groups | 38 |
 | Additional preventive groups within that surface | 6 |
-| Core bugs found per pre-audit KLOC | **0.50** |
-| Core security bugs per pre-audit KLOC | **0.08** |
-| Core other correctness bugs per pre-audit KLOC | **0.42** |
+| Core bugs found per pre-audit physical KLOC | **0.50** |
+| Core security bugs per pre-audit physical KLOC | **0.08** |
+| Core other correctness bugs per pre-audit physical KLOC | **0.42** |
 
 The other seven correctness groups belong to samples and tools outside that
 denominator. Dividing all 68 findings by the compiler's size would mix
 different code populations and count preventive work as bugs.
+
+We also have counts that distinguish code from physical file length. At the
+pre-audit endpoint, **52,289 C/header lines carry code**: 51,092 code-only
+lines plus 1,197 mixed code/comment lines. The earlier appendix gives the
+lexical counting method.
+
+Coverage gives another useful measure. The November 2 coverage report
+records:
+
+| Coverage-report measure | Lines |
+|---|---:|
+| All instrumented lines | 39,789 |
+| Of those, `unit_tests.c` | 291 |
+| Production instrumented C lines, including grammar/lexer actions and counted headers | **39,498** |
+| Production instrumented lines executed | **39,498 (100%)** |
+
+Two of the 45 core bug groups were confined to the Lua runtime: negative
+integer casts and partition-key encoding. The remaining **43 native
+compiler/runtime groups** give approximately **1.09 bugs per instrumented
+C KLOC**, split into **0.18 security** and **0.91 other correctness**.
+This is a rough normalisation using the post-fix coverage build as a size
+reference, rather than a reconstructed pre-audit executable-line count.
+The numerator includes host-specific bugs; conditional code absent from
+that build, such as Windows-only paths, has no instrumented-line contribution.
+Lua runtime lines aren't in that report.
+
+Code-bearing lines include declarations and other text that needn't produce
+an instrumented line. Neither measure is interchangeable with total physical
+lines. Keeping the denominators explicit matters in a codebase with this much
+commentary.
 
 I think the code held up pretty well. This was a concentrated examination
 of a mature implementation, including features with very little use.
@@ -145,6 +175,36 @@ multiple faster. The useful comparison is the additional cases this
 examination reached after years of development, testing, and operational use.
 
 The counting notes near the end explain the grouping decisions.
+
+### Users and maintainers
+
+The hundreds of developers using CQL supplied many use-cases. The public
+maintenance history was much more concentrated. Counting primary authors
+of first-parent, non-merge commits through the studied endpoint:
+
+| Period, by author date | All commits | Mine | My share |
+|---|---:|---:|---:|
+| Entire public history | 2,251 | 1,746 | 77.6% |
+| November 2, 2022 onward | 1,211 | 1,108 | 91.5% |
+| January 1, 2024 onward | 733 | 722 | 98.5% |
+
+The two largest other primary-author totals are Winnie Quinn's 126 and Raoul
+Foaleng's 104. Their last mainline commits were
+[July 28, 2022](https://github.com/ricomariani/CG-SQL-author/commit/4bb2e0f03b9f)
+and [March 15, 2023](https://github.com/ricomariani/CG-SQL-author/commit/790e6f7b7738),
+respectively.
+
+There were important later contributions too. Joris Garonian introduced the
+[SQLite extension generator in 2024](https://github.com/ricomariani/CG-SQL-author/commit/fad49eeef3d5),
+and `amyworrall` contributed
+[UTF-8 encoding work in 2025](https://github.com/ricomariani/CG-SQL-author/commit/8818eb4520ee).
+Recent maintenance was overwhelmingly mine, with a few substantial outside
+contributions.
+
+These are authorship counts, not counts of reviewers or internal Meta work.
+AI-assisted changes also remain under my author name. The initial public
+import already contained a mature implementation, so commit shares don't
+measure who originally wrote every line.
 
 ---
 
@@ -978,10 +1038,10 @@ declarations/implementations are each the wrapper's responsibility. The repair
 kept that policy local to the customizable samples rather than adding a new
 compiler JSON naming contract.
 
-The burndown list and TDD helped a great deal. I still missed places that
-assumed the old rule. I'd use an AI pass to check the next burndown list
-against the actual consumers in the code. That could find omitted paths
-before their first real use.
+The burndown list and TDD helped a great deal. I had also made dozens of
+passes over the QID work. Some missed consumers survived all of that.
+The AI analysis found failures those reviews had missed, before a user
+supplied the missing example.
 
 ---
 
@@ -2062,6 +2122,22 @@ The human-era scale comparison uses 12 / 89.419 = 0.13 per year.
 The operational estimate remains my recollection; the public history isn't
 a complete incident ledger.
 
+The coverage-size calculation uses the November 2 report from `sources/cov.sh`:
+39,789 instrumented lines minus 291 in `unit_tests.c` gives 39,498 production
+lines. Using that post-fix size reference, 43 / 39.498 = 1.09 native bug
+groups per instrumented KLOC; 7 / 39.498 = 0.18 security and
+36 / 39.498 = 0.91 other correctness. This report isn't a measurement of
+the historical pre-audit build.
+
+The authorship table comes from:
+
+```text
+git log --first-parent --no-merges --format='%aN%x09%as' 837956ba
+```
+
+I grouped by the primary author name and filtered on the printed author
+calendar date. Merge commits and coauthor trailers aren't additional rows.
+
 ---
 
 ## What we learned about testing
@@ -2072,20 +2148,39 @@ invariant. Heavily used features still had gaps in encoding and test diversity.
 Checks I'd intended for another layer never got implemented, and some test
 drivers could hide failures.
 
-That suggests several useful additions to the tests. Lightly used serializers
-and bindings need complete use-cases that move real data, including NULL,
-empty, and nonempty values. Malformed-data tests should vary counts, offsets,
-types, and overlapping fields independently. QIDs show why even a careful
-consumer inventory needs another pass against the code.
+Some weaknesses were systematic. I'd intended validation to happen at
+another layer without making sure the check actually existed. Test drivers
+didn't always propagate errors. Some tests checked generated text or
+successful parsing without checking the resulting value. Those findings
+support specific improvements to validation ownership, error propagation,
+and result checks.
 
-In established features, I'd expand along the dimensions we missed here:
-allocation growth, negative values, numeric representation, quoting and
-encoding combinations, repeated calls, and feature interactions. Checks
-should compare decoded values and actual execution results. SQLite and the
-other backend give us independent references for some of those checks. The
-drivers have to propagate errors for the results to be reliable.
+The new regressions also prove that the missed cases were testable.
+The difficult question is how to be inspired to create the tests you
+haven't thought of. A list of cases is easy to produce after seeing the
+failures. QIDs already had TDD, a burndown list, and dozens of passes by me.
+Another pass by me was unlikely to find the remaining consumers; I had
+already tried that repeatedly. Even ruthless test discipline left cases
+behind.
 
-An AI pass could help trace the consumers of the next invariant change and
-compare them with the test inventory. I'd also use it to look for
-counterexamples to specific assumptions, then turn the useful examples into
-regression tests.
+This shows the limits of what I was getting from repeated review by the
+same person. It doesn't establish a limit on what any determined human
+could find. More contributors could have supplied different experience
+and independent scrutiny. But recruiting a new maintainer to learn the
+whole compiler and meticulously work through this many findings is a
+substantial commitment. That breadth of familiarity and review might
+develop over years. It wasn't help I could simply assume would arrive.
+
+More usage would plainly have helped, especially with the first-use
+failures in lightly used features. Under our usual process, many of these
+bugs were waiting for a user to stumble into the right combination.
+Hostile-data cases need deliberate examination too: the overlapping
+payloads, for example, aren't produced by the normal writer.
+
+The AI supplied an independent examination of code and assumptions I had
+already reviewed repeatedly. We could ask it to keep looking across the
+implementation, reproduce the useful counterexamples, and work through
+the repairs. We still had to review the diagnoses, reject unsupported
+security claims, and decline uneconomical changes. The accepted examples
+became regression tests. That is a practical addition to the testing
+process: another way to discover cases before a user supplies them.

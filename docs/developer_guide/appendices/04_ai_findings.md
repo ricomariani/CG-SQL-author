@@ -61,8 +61,8 @@ during review.
 
 ## How much did we find?
 
-I count **68 finding groups** in this work: **52 bugs in the compiler,
-runtimes, and samples; 8 test/tooling problems; and 8 preventive changes**.
+I count **68 finding groups** in this work: **52 compiler, runtime, build,
+and sample bugs; 8 test/tooling problems; and 8 preventive changes**.
 A group can affect several entry points or backends. I count the shared
 canonical-name mistake once, for example, rather than once per emitter.
 
@@ -115,8 +115,8 @@ comments and blanks, consistent with the earlier appendix's measurements.
 | Core security bugs per pre-audit physical KLOC | **0.08** |
 | Core other correctness bugs per pre-audit physical KLOC | **0.42** |
 
-The other seven correctness groups belong to samples and tools outside that
-denominator. Dividing all 68 findings by the compiler's size would mix
+The other seven correctness groups belong to build support, samples, and tools
+outside that denominator. Dividing all 68 findings by the compiler's size would mix
 different code populations and count preventive work as bugs.
 
 We also have counts that distinguish code from physical file length. At the
@@ -140,9 +140,8 @@ compiler/runtime groups** give approximately **1.09 bugs per instrumented
 C KLOC**, split into **0.18 security** and **0.91 other correctness**.
 This is a rough normalisation using the post-fix coverage build as a size
 reference, rather than a reconstructed pre-audit executable-line count.
-The numerator includes host-specific bugs; conditional code absent from
-that build, such as Windows-only paths, has no instrumented-line contribution.
-Lua runtime lines aren't in that report.
+Coverage also depends on the platform and build configuration; this isn't a
+measurement of every conditional path. Lua runtime lines aren't in that report.
 
 Code-bearing lines include declarations and other text that needn't produce
 an instrumented line. Neither measure is interchangeable with total physical
@@ -155,6 +154,118 @@ The repairs were generally local, and many of the failures required inputs
 or combinations that the existing tests had never tried. The findings below
 show where the tests were too narrow.
 
+### Where the findings clustered
+
+The aggregate density hides quite a bit. Here is the file-level heatmap:
+**one `*` per bug family affecting that file**, with preventive work excluded
+from the stars. All paths are relative to `sources/`.
+
+**Pre-audit KLOC** means thousands of physical lines at `8793b00f`, including
+comments and blanks. **Instrumented KLOC** comes from the post-fix November 2
+coverage report described above, not from the historical checkout. A dash
+means the file isn't represented in that report. These are different size
+measures, shown separately rather than silently mixed.
+
+The core table includes every root C implementation file except `unit_tests.c`,
+plus the lexer, grammar, and Lua runtime. Headers contribute to the aggregate
+denominator above but have no separate bug sites in this inventory.
+
+| Core implementation file | Pre-audit KLOC | Instrumented KLOC | Bugs | Theme |
+|---|---:|---:|---|---|
+| `cqlrt_common.c` | 7.228 | 3.406 | `**********` | Blob validation, arithmetic, update sizing, serializer growth |
+| `sem.c` | 27.347 | 13.533 | `******` | Numeric ranges, empty sets, aliasing, rowid and scalar properties |
+| `cg_lua.c` | 5.892 | 2.902 | `*****` | Comment boundaries, canonical names, conversions, wrapper locals |
+| `encoders.c` | 0.545 | 0.352 | `*****` | Scan bounds, C escapes, UTF-8/JSON bytes, canonical names |
+| `cg_c.c` | 9.027 | 4.375 | `****` | Provenance comments, signed hex, trace strings, canonical names |
+| `cg_query_plan.c` | 1.040 | 0.423 | `***` | CQL/JSON name encoding, statistics scope |
+| `cg_schema.c` | 2.263 | 1.316 | `***` | Dynamic/static DROP names, recreate checksums |
+| `cql.l` | 0.709 | 0.514 | `***` | Include-path bounds, scanner ownership, integer literals |
+| `gen_sql.c` | 6.704 | 3.843 | `***` | Signed hex, expression grouping, virtual-table names |
+| `ast.c` | 2.577 | 1.058 | `**` | Indentation bounds, recursive macro expansion |
+| `cg_json_schema.c` | 2.944 | 1.777 | `**` | Constraint identity, expression string encoding |
+| `cql.y` | 4.170 | 1.573 | `**` | Scanner ownership, CLI and line-directive numbers |
+| `cqlrt.lua` | 1.965 | - | `**` | Negative integer casts, partition-key collisions |
+| `eval.c` | 1.226 | 0.529 | `*` | Signed hexadecimal interpretation |
+| `flow.c` | 0.724 | 0.224 | `*` | Jumping branches and inherited facts |
+| `bytebuf.c` | 0.066 | 0.036 | 0 | Preventive self-append contract only |
+| `cg_common.c` | 0.236 | 0.099 | 0 | No counted bug |
+| `cg_stats.c` | 0.188 | 0.076 | 0 | No counted bug |
+| `cg_test_helpers.c` | 1.302 | 0.625 | 0 | No counted bug |
+| `charbuf.c` | 0.200 | 0.096 | 0 | Preventive format-alias contract only |
+| `compat.c` | 0.101 | 0.043 | 0 | No counted bug |
+| `cqlrt.c` | 0.310 | 0.140 | 0 | No counted bug |
+| `crc64xz.c` | 0.110 | 0.007 | 0 | No counted bug |
+| `list.c` | 0.035 | 0.017 | 0 | No counted bug |
+| `minipool.c` | 0.113 | 0.044 | 0 | No counted bug |
+| `printf.c` | 0.490 | 0.242 | 0 | No counted bug |
+| `result_set_extension.c` | 0.142 | - | 0 | No counted bug |
+| `rewrite.c` | 6.309 | 1.591 | 0 | No counted bug |
+| `rt.c` | 0.167 | 0.011 | 0 | No counted bug |
+| `sha256.c` | 0.183 | 0.089 | 0 | Preventive digest-storage change only |
+| `symtab.c` | 0.323 | 0.149 | 0 | No counted bug |
+
+The other affected production/build files are below. Their lines aren't in
+the core denominator. The binding-name family appears both here and in the
+core encoder. These rows cover eight families, seven additional to the core.
+
+| Other production/build file | Pre-audit KLOC | Bugs | Theme |
+|---|---:|---|---|
+| `cqljson/cqljson.py` | 0.694 | `**` | SQL encoding, reconstructed attribute values |
+| `dotnet_demo/cqlcs.py` | 1.013 | `**` | Projection names, actual blob marshalling |
+| `sqlite3_cql_extension/cql_sqlite_extension.c` | 0.501 | `**` | Unsupported OBJECTs, repeated-filter ownership |
+| `cqlrt_cf/cqlobjc.py` | 0.314 | `*` | Projection names, wrapper-member collisions |
+| `dotnet_demo/CQLInterop.cs` | 0.227 | `*` | NULL/empty blob results and native-buffer cleanup |
+| `dotnet_demo/cql_interop.c` | 0.129 | `*` | NULL/empty blob ABI and native copying |
+| `java_demo/cqljava.py` | 1.031 | `*` | Projection identifier encoding and member collisions |
+| `make_amalgam.sh` | 0.240 | `*` | Windows path-buffer size emitted into the amalgam |
+| `objc_full/cql_objc_full.py` | 0.921 | `*` | Projection names, matching declarations and definitions |
+| `sqlite3_cql_extension/cqlsqlite3extension.py` | 0.710 | `*` | SQL/C name and literal encoding |
+
+Test/tooling findings are separate. Here both size columns count physical
+lines; a dash means the file didn't exist before the audit. Two drivers and
+some checks were added during this work, so these aren't all defects in the
+pre-audit checkout.
+
+| Test/tooling file | Pre-audit KLOC | Post-fix KLOC | Bugs | Theme |
+|---|---:|---:|---|---|
+| `test/run_test_client.c` | 1.228 | 1.248 | `***` | Incomplete results, physical schema checks, PRNG overflow |
+| `cql-verify/make.sh` | 0.002 | 0.003 | `*` | Regeneration errors ignored |
+| `json_test/json_test.l` | 0.175 | 0.175 | `*` | Over-permissive key casing |
+| `test.sh` | 1.208 | 1.519 | `*` | Encoding check omitted from default run |
+| `test/cqltest.c` | 0.041 | 0.054 | `*` | Close errors ignored |
+| `test/query_plan_encoding_test.c` | - | 0.047 | `*` | Close errors ignored |
+| `test/query_plan_statistics_test.c` | - | 0.034 | `*` | Close errors ignored |
+| `test/query_plan_test.c` | 0.030 | 0.036 | `*` | Close errors ignored |
+| `test/test_helpers_test.c` | 0.086 | 0.092 | `*` | Close errors ignored |
+| `upgrade/upgrade_test.c` | 0.214 | 0.255 | `*` | Transaction errors lost or ignored |
+
+A family can have faulty implementations in several files. The integer
+literal repair, for example, spans the lexer, semantic analysis, constant
+evaluation, C emission, and SQL emission. I count it once in the 52, but once
+in each affected file here. The production/build tables therefore contain
+**65 stars for 52 unique families**; the test/tooling table has **12 for 8**.
+New helpers, regression files, and mechanical caller adaptations don't get
+stars merely because the patch touched them. The C hex-escape repair, for
+example, belongs to `encoders.c`, not every generator that uses its helpers.
+
+Attribution also explains two less obvious placements. The Windows buffer
+mismatch came from the definition emitted by `make_amalgam.sh`, outside the
+core source denominator. Conversely, #245's binding-name family includes
+the core `encoders.c` correction for ordinary capital-X identifiers. That
+family belongs in the core count as well as in the sample rows.
+
+The small encoder has five families; the 27-KLOC semantic analyzer has six.
+The 6-KLOC rewrite implementation has none in this inventory. The blob
+runtime alone has ten, including all seven security families. Much of the
+concentration is at representation boundaries: stored bytes, target-language
+text, and names crossing between systems.
+
+That is more informative than treating 0.50 bugs/KLOC as a uniform rate.
+A zero means no counted bug in this review, not proof of no defects. Nor did
+we measure equal review effort per file or equal exposure in use. These are
+the locations of the findings we accepted, not an estimate of every file's
+remaining defect rate.
+
 ### Compared with the human-found era
 
 My recollection of the heavily used Meta version is roughly **12 operational
@@ -164,7 +275,7 @@ denominator, 82.575 KLOC, gives about **0.15**.
 
 | Human-era observation | AI-assisted audit |
 |---|---|
-| Roughly 12 operational bugs per year, from maintainer recollection | 52 compiler/runtime/sample bug groups over this review |
+| Roughly 12 operational bugs per year, from maintainer recollection | 52 compiler/runtime/build/sample bug groups over this review |
 | Daily use by hundreds of developers at Meta | Targeted examination of the OSS fork, including lightly used features |
 | About 0.13 operational bugs/KLOC/year at the reference size | 0.50 core bug groups/KLOC in a concentrated pass |
 
@@ -1037,6 +1148,12 @@ Legal-name encoding, collisions, reserved wrapper members, and matching
 declarations/implementations are each the wrapper's responsibility. The repair
 kept that policy local to the customizable samples rather than adding a new
 compiler JSON naming contract.
+
+That review also found a compiler inconsistency: the quoted-name encoder
+escaped an ordinary capital `X` even when the name needed no encoding.
+Quoted `XName` and unquoted `XName` could therefore acquire different
+canonical spellings. The repair decides whether encoding is needed first;
+only encoded names need to escape literal `X` bytes.
 
 The burndown list and TDD helped a great deal. I had also made dozens of
 passes over the QID work. Some missed consumers survived all of that.
@@ -2062,9 +2179,9 @@ format-alias contract is separate.
 There are 47 PRs from #207 through #253. Excluding #228's comment-only declined
 optimization and #247's newly introduced fixture regression leaves 45.
 #238, #241, and #242 each repair two distinct failures; #251 repairs three.
-That gives 45 + 3 + 2 = 50 groups. The four binding generators in #245 count
-as one naming family, and the canonical C/Lua emitter error in #232 counts
-once.
+That gives 45 + 3 + 2 = 50 groups. The four binding generators and core
+identifier-encoding correction in #245 count as one naming family, and the
+canonical C/Lua emitter error in #232 counts once.
 
 Routine release, documentation, build-maintenance, and signature-alignment
 changes are excluded, as are declined proposals and ancillary renamings.
@@ -2115,6 +2232,12 @@ for revision in ("8793b00f", "837956ba"):
 ```
 
 It prints 89,419 and 90,377, counting a final unterminated line as a line.
+For each heatmap file, the same
+`len(git("show", f"{revision}:{path}").splitlines()) / 1000` calculation gives
+physical KLOC, rounded to three decimal places. Pre-audit sizes use
+`8793b00f`; post-fix sizes use `837956ba`. Instrumented sizes use the matching
+file's `Lines` column in the November 2 coverage report, divided by 1,000.
+
 The density uses the pre-audit 89.419 KLOC:
 45 / 89.419 = 0.50, split into 7 / 89.419 = 0.08 security and
 38 / 89.419 = 0.42 other correctness groups per KLOC.

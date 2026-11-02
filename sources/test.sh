@@ -1335,6 +1335,13 @@ dotnet_blob_test() {
   run_test_expect_success
 }
 
+sqlite3_cql_extension_test() {
+  TEST_NAME="sqlite3_cql_extension_encoding"
+  TEST_DESC="Testing SQLite extension SQL and C encoding"
+  TEST_CMD="python3 sqlite3_cql_extension/cqlsqlite3extension_test.py"
+  run_test_expect_success
+}
+
 comment_safety_test() {
   TEST_NAME="comment_safety_c"
   TEST_DESC="Generating C with hostile provenance text"
@@ -1446,6 +1453,7 @@ if [ -n "$SPECIFIC_TEST" ]; then
     echo "  cqljson_test"
     echo "  binding_accessors_test"
     echo "  dotnet_blob_test"
+    echo "  sqlite3_cql_extension_test"
     echo "  comment_safety_test"
     echo "  macro_test"
     echo "  semantic_test"
@@ -1482,6 +1490,7 @@ else
   cqljson_test
   binding_accessors_test
   dotnet_blob_test
+  sqlite3_cql_extension_test
   macro_test
   semantic_test
   code_gen_c_test

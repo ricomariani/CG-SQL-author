@@ -68,6 +68,7 @@ cql_code create_test_module(sqlite3 *db)
   return sqlite3_create_module(db, "test_virtual_table_A", &module, 0);
 }
 
+// No rollback is needed on failure: main immediately exits without committing.
 cql_code upgrade(sqlite3* db, bool should_use_virtual) {
   cql_code rv;
 
@@ -75,17 +76,18 @@ cql_code upgrade(sqlite3* db, bool should_use_virtual) {
   sqlite3_trace_v2(db, SQLITE_TRACE_PROFILE, sqlite_trace_callback, NULL);
 #endif
 
-
-  if (begin_transaction(db)) {
-    fprintf(stderr, "failed to begin transaction\n");
+  rv = begin_transaction(db);
+  if (rv != SQLITE_OK) {
+    fprintf(stderr, "failed to begin transaction: %s (%d)\n", sqlite3_errmsg(db), rv);
+    return rv;
   }
 
   if (should_use_virtual) {
     rv = create_test_module(db);
     if (rv != SQLITE_OK) {
       fprintf(stderr, "failed sqlite3_create_module for test module\n");
-    return rv;
-  }
+      return rv;
+    }
 
     test_result_set_ref result_set;
     rv = test_fetch_results(db, &result_set);
@@ -105,10 +107,10 @@ cql_code upgrade(sqlite3* db, bool should_use_virtual) {
     cql_result_set_release(result_set);
   }
 
-  if (commit_transaction(db)) {
-    fprintf(stderr, "failed to commit transaction\n");
+  rv = commit_transaction(db);
+  if (rv != SQLITE_OK) {
+    fprintf(stderr, "failed to commit transaction: %s (%d)\n", sqlite3_errmsg(db), rv);
   }
-
   return rv;
 }
 

@@ -110,6 +110,9 @@ From `sources`, run `./test.sh --test dotnet_blob_test --non_interactive` for
 actual .NET/native round trips, including embedded zero bytes, differing lengths,
 NULL versus empty, inout replacement, and projected results. The native fixtures
 always build; managed execution is explicitly skipped without a .NET SDK.
+The .NET-loaded fixture is built without AddressSanitizer, even in an ASan run,
+because the .NET host does not supply the ASan runtime. Other native tests and
+the compiler retain their selected instrumentation.
 
 ## Building Tools
 

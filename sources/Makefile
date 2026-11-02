@@ -208,8 +208,10 @@ $O/cqlrt_diag.o: cqlrt.c cqlrt.h cqlrt_common.c cqlrt_common.h
 $O/cqlrt_contract_test: $T/cqlrt_contract_test.c cqlrt.c cqlrt.h cqlrt_common.c cqlrt_common.h
 	$(CC) $(CFLAGS:--coverage=) -DNDEBUG -o $@ $T/cqlrt_contract_test.c cqlrt.c $(SQLITE_LINK)
 
-$O/dotnet_blob/cql_interop.dll: $O/dotnet_blob/blobs.c $O/dotnet_blob/BlobInterop.c dotnet_demo/cql_interop.c cqlrt.c cqlrt.h cqlrt_common.c cqlrt_common.h $(SQLITE_OBJ)
-	$(CC) $(CFLAGS:--coverage=) -fPIC -shared -I$O/dotnet_blob -o $@ dotnet_demo/cql_interop.c cqlrt.c $O/dotnet_blob/blobs.c $O/dotnet_blob/BlobInterop.c $(SQLITE_LINK)
+# The .NET host has no ASan runtime. Compile the entire fixture without ASan,
+# including optional SQLite source rather than its instrumented, non-PIC object.
+$O/dotnet_blob/cql_interop.dll: $O/dotnet_blob/blobs.c $O/dotnet_blob/BlobInterop.c dotnet_demo/cql_interop.c cqlrt.c cqlrt.h cqlrt_common.c cqlrt_common.h $(if $(SQLITE_OBJ),$(SQLITE_PATH)/sqlite3.c)
+	$(CC) $(filter-out --coverage -fsanitize=address,$(CFLAGS)) -fPIC -shared -I$O/dotnet_blob -o $@ dotnet_demo/cql_interop.c cqlrt.c $O/dotnet_blob/blobs.c $O/dotnet_blob/BlobInterop.c $(filter-out $(SQLITE_OBJ),$(SQLITE_LINK)) $(if $(SQLITE_OBJ),$(SQLITE_PATH)/sqlite3.c)
 
 $O/cqlrt_cf_contract_test.o: $T/cqlrt_cf_contract_test.c cqlrt_cf/cqlrt_cf.h
 	$(CC) $(CFLAGS:--coverage=) -DNDEBUG -c -o $@ $T/cqlrt_cf_contract_test.c

@@ -193,9 +193,11 @@ correctness bug. Calling the mechanism "memory corruption" or "injection"
 doesn't establish the security case.
 
 That was a recurring problem with the AI's security reports. It could find
-a real bug and attach a dumb security argument. Giving the supposed attacker
-control of trusted program text or internal call arguments doesn't establish
-an attack. I still wanted many of those correctness fixes.
+a real bug without establishing a security case: no trust boundary was
+crossed, or the analysis hadn't correctly identified the boundary. Giving
+the supposed attacker control of trusted program text or internal call
+arguments doesn't by itself establish an attack. I still wanted many of
+those correctness fixes.
 
 The compiler processes application code. Its source author already controls
 what program they are asking it to generate. We need to establish what the

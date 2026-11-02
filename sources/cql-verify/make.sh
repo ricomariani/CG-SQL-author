@@ -1,2 +1,3 @@
-./regen.sh
-(cd ..;make cql-verify)
+#!/bin/bash
+
+./regen.sh && make -C .. cql-verify

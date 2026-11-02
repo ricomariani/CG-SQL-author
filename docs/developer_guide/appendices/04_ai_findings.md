@@ -75,17 +75,17 @@ work; I keep that follow-up separate from the 68 original findings.
 ### Priority and security are separate questions
 
 These are my retrospective **fix priorities**. They aren't exploit-severity
-scores. I use **Critical** for an urgent, broadly disruptive failure in
-ordinary supported use, or a demonstrated major security impact.
-**Important** covers the hostile-data memory failures and serious wrong-code,
-wrong-result, or storage failures. **Medium** covers more limited features,
+scores. **Critical** covers hostile-data memory failures, urgent and broadly
+disruptive failures in ordinary supported use, and demonstrated major security
+impacts. **Important** covers serious wrong-code, wrong-result, or storage
+failures. **Medium** covers more limited features,
 inputs, and configurations. **Low** covers small test gaps and preventive
 work with no known failing ordinary caller.
 
 | Priority | Security bugs | Other correctness bugs | Test/tooling | Preventive | Total |
 |---|---:|---:|---:|---:|---:|
-| Critical | 0 | 0 | 0 | 0 | 0 |
-| Important | 6 | 16 | 0 | 0 | 22 |
+| Critical | 6 | 0 | 0 | 0 | 6 |
+| Important | 0 | 16 | 0 | 0 | 16 |
 | Medium | 1 | 29 | 4 | 2 | 36 |
 | Low | 0 | 0 | 4 | 6 | 10 |
 | **Total** | **7** | **45** | **8** | **8** | **68** |
@@ -1891,8 +1891,8 @@ The seven security groups are the initial backed-blob shape/range checks,
 the initial stream-word bound, retained-field validation, unknown-type
 rejection, overlapping-field output sizing, complete stream-table validation,
 and field-counter limits. The unknown-type abort is Medium priority; the
-other six are Important. These classifications apply to the less-trusted
-blob boundary described earlier.
+six hostile-data memory failures are Critical. These classifications apply
+to the less-trusted blob boundary described earlier.
 
 For the other bugs, Important includes stale serialization pointers,
 incorrect numeric interpretation, flow/alias/type-property failures,

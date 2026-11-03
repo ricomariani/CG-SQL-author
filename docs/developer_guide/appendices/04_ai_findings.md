@@ -811,6 +811,10 @@ The Windows `Realpath` wrapper passed that buffer to `_fullpath` with
 destination could hold. The fix was `#define PATH_MAX _MAX_PATH`, so the
 allocation matches the limit passed to `_fullpath`.
 
+The faulty line was a `#define`, so it wasn't even an executable line for
+coverage to count. The size mismatch could survive complete coverage of the
+code that used it.
+
 The diagnostic printer had yet another size dimension: a 2,100-`NOT` AST
 could exhaust its indentation buffer. Its
 [#215](https://github.com/ricomariani/CG-SQL-author/pull/215) repair truncates

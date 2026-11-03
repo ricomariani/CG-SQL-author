@@ -831,9 +831,9 @@ diagnostic descent with a marker while leaving accepted SQL nesting alone.
 ## The QID invariant changed, and I missed some consumers
 
 I developed QIDs test-first, with a burndown list of every major identifier
-usage I could think of, and made dozens of passes over the work. I tested
-the crap out of them, and on the whole I think we did well. But even I can't
-remember all the places identifiers can creep in.
+usage I could think of, and made dozens of passes over the work. That gave
+me reasonable confidence in the implementation, but some uses of identifiers
+still escaped the tests and review.
 
 This was a major invariant change. Many emitters used to print a stored
 name directly; with QIDs, each one has to turn that name into the right form

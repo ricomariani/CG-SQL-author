@@ -20,10 +20,10 @@ weight: 4
 **Repository:** `ricomariani/CG-SQL-author`
 
 [The Bugs of CQL](./02_bugs_of_cql.md) describes the human-found era. This
-appendix picks up on May 15, 2026. Essentially all the new findings from
-that point came from AI-assisted analysis. Some were security problems, some
+appendix picks up on May 15, 2026, when essentially all the new findings
+started coming from AI-assisted analysis. Some were security problems, some
 were ordinary bugs, and some were improvements to the tests themselves.
-There were also a few proposals I declined. I'll get to those.
+There were also a few proposals I declined, and I'll get to those.
 
 The earlier article describes a compiler getting regular daily use from
 hundreds of developers at Meta. CQL still gets that use, but not through this
@@ -34,15 +34,15 @@ Those differences in use explain quite a bit of what follows.
 
 ### How I put this together
 
-I used an AI coding agent to review the history and individual fixes and help
-write this appendix. I checked the results and supplied the context about how
-we built and used CQL.
+An AI coding agent helped me review the history and individual fixes and
+write this appendix. I checked its account against the code and supplied
+the context about how we built and used CQL.
 
-The window starts **on May 15**, including that day's first blob and extension
-findings. The last preceding mainline commit is
+The window includes May 15's first blob and extension findings. The last
+preceding mainline commit is
 [`8793b00f`](https://github.com/ricomariani/CG-SQL-author/commit/8793b00f), dated
-January 28. There were no intervening mainline commits. The comparison is
-therefore reproducible as:
+January 28, with no intervening mainline commits, so the comparison is
+reproducible as:
 
 ```text
 git log --first-parent 8793b00f..837956ba
@@ -52,10 +52,10 @@ git show <commit> -- <affected files>
 The range has 73 first-parent commits, including documentation, releases,
 tooling, and follow-ups to earlier fixes.
 
-We split the large correctness proposal, #205, into smaller changes. Those
+We split the large correctness proposal, #205, into smaller changes that
 landed in PRs #207 through #253, along with additional security follow-ups.
-I've used the final fixes for this account; several changed considerably
-during review.
+I've used the final fixes for this account because several changed
+considerably during review.
 
 ---
 
@@ -66,21 +66,20 @@ and sample bugs; 8 test/tooling problems; and 8 preventive changes**.
 A group can affect several entry points or backends. I count the shared
 canonical-name mistake once, for example, rather than once per emitter.
 
-These are reviewed groups, not a count of commits or failing assertions.
-The UTF-8 work also completed earlier human-reported problems. Including
+The UTF-8 work completed some earlier human-reported problems, so including
 those repairs here doesn't give AI credit for the original reports.
-The .NET fixture's ASan load failure was a regression introduced during this
-work; I keep that follow-up separate from the 68 original findings.
+I also keep the .NET fixture's ASan load failure separate from the 68
+findings because it was a regression introduced during this work.
 
 ### Priority and security are separate questions
 
-These are my retrospective **fix priorities**. They aren't exploit-severity
+These are my retrospective **fix priorities**, rather than exploit-severity
 scores. **Critical** covers hostile-data memory failures, urgent and broadly
 disruptive failures in ordinary supported use, and demonstrated major security
 impacts. **Important** covers serious wrong-code, wrong-result, or storage
-failures. **Medium** covers more limited features,
-inputs, and configurations. **Low** covers small test gaps and preventive
-work with no known failing ordinary caller.
+failures. **Medium** covers more limited features, inputs, and configurations.
+**Low** covers small test gaps and preventive work with no known failing
+ordinary caller.
 
 | Priority | Security bugs | Other correctness bugs | Test/tooling | Preventive | Total |
 |---|---:|---:|---:|---:|---:|
@@ -91,17 +90,17 @@ work with no known failing ordinary caller.
 | **Total** | **7** | **45** | **8** | **8** | **68** |
 
 The security column is limited to the hostile-blob reader/update boundary
-described below. Compiler crashes, bad generated text, and missing internal
-contracts haven't been promoted into that column on the strength of their
-failure mechanism.
+described below. I haven't put compiler crashes, bad generated text, or
+missing internal contracts in that column without establishing a security
+case.
 
 ### Bugs per KLOC
 
-For physical-line density, I use a matching source surface: the root `sources/*.c` and
-`*.h` files except `unit_tests.c`, plus the grammar, lexer, and Lua runtime.
-This excludes tests, generated distributions, vendored SQLite, Python
-bindings, and the extension bridge. Counts are physical lines, including
-comments and blanks, consistent with the earlier appendix's measurements.
+For physical-line density, I count bugs and lines in the same set of files:
+the root `sources/*.c` and `*.h` files except `unit_tests.c`, plus the grammar,
+lexer, and Lua runtime. This excludes tests, generated distributions,
+vendored SQLite, Python bindings, and the extension bridge. As in the
+earlier appendix, physical lines include comments and blanks.
 
 | Measure | Count |
 |---|---:|
@@ -115,17 +114,16 @@ comments and blanks, consistent with the earlier appendix's measurements.
 | Core security bugs per pre-audit physical KLOC | **0.08** |
 | Core other correctness bugs per pre-audit physical KLOC | **0.42** |
 
-The other seven correctness groups belong to build support, samples, and tools
-outside that denominator. Dividing all 68 findings by the compiler's size would mix
-different code populations and count preventive work as bugs.
+The other seven correctness groups belong to build support, samples, and
+tools outside that denominator. Dividing all 68 findings by the compiler's
+size would mix different sets of code and count preventive work as bugs.
 
-We also have counts that distinguish code from physical file length. At the
-pre-audit endpoint, **52,289 C/header lines carry code**: 51,092 code-only
-lines plus 1,197 mixed code/comment lines. The earlier appendix gives the
-lexical counting method.
+There are other useful ways to measure the code's size. At the pre-audit
+endpoint, **52,289 C/header lines carry code**: 51,092 code-only lines plus
+1,197 mixed code/comment lines, using the lexical counting method in the
+earlier appendix.
 
-Coverage gives another useful measure. The November 2 coverage report
-records:
+The November 2 coverage report counts the instrumented lines:
 
 | Coverage-report measure | Lines |
 |---|---:|
@@ -139,32 +137,28 @@ integer casts and partition-key encoding. The remaining **43 native
 compiler/runtime groups** give approximately **1.09 bugs per instrumented
 C KLOC**, split into **0.18 security** and **0.91 other correctness**.
 This is a rough normalisation using the post-fix coverage build as a size
-reference, rather than a reconstructed pre-audit executable-line count.
-Coverage also depends on the platform and build configuration; this isn't a
-measurement of every conditional path. Lua runtime lines aren't in that report.
+reference. It depends on that platform and build configuration, doesn't
+include Lua runtime lines, and isn't a reconstructed pre-audit
+executable-line count.
 
 Code-bearing lines include declarations and other text that needn't produce
-an instrumented line. Neither measure is interchangeable with total physical
-lines. Keeping the denominators explicit matters in a codebase with this much
-commentary.
+an instrumented line, so the three size measures answer different questions.
+There's enough commentary in this codebase for that distinction to matter.
 
 I think the code held up pretty well. This was a concentrated examination
 of a mature implementation, including features with very little use.
 The repairs were generally local, and many of the failures required inputs
-or combinations that the existing tests had never tried. The findings below
-show where the tests were too narrow.
+or combinations that the existing tests had never tried.
 
 ### Where the findings clustered
 
-The aggregate density hides quite a bit. Here is the file-level heatmap:
-**one `*` per bug family affecting that file**, with preventive work excluded
-from the stars. All paths are relative to `sources/`.
+The aggregate density hides quite a bit. In this file-level heatmap,
+**each `*` represents a bug family affecting that file**; preventive work
+doesn't get a star. All paths are relative to `sources/`.
 
-**Pre-audit KLOC** means thousands of physical lines at `8793b00f`, including
-comments and blanks. **Instrumented KLOC** comes from the post-fix November 2
-coverage report described above, not from the historical checkout. A dash
-means the file isn't represented in that report. These are different size
-measures, shown separately rather than silently mixed.
+The size columns use the measures above: **pre-audit KLOC** is physical size
+at `8793b00f`, and **instrumented KLOC** comes from the post-fix November 2
+coverage report. A dash means the file isn't represented in that report.
 
 The core table includes every root C implementation file except `unit_tests.c`,
 plus the lexer, grammar, and Lua runtime. Headers contribute to the aggregate
@@ -204,9 +198,9 @@ denominator above but have no separate bug sites in this inventory.
 | `sha256.c` | 0.183 | 0.089 | 0 | Preventive digest-storage change only |
 | `symtab.c` | 0.323 | 0.149 | 0 | No counted bug |
 
-The other affected production/build files are below. Their lines aren't in
-the core denominator. The binding-name family appears both here and in the
-core encoder. These rows cover eight families, seven additional to the core.
+The other affected production/build files cover eight families, seven
+additional to the core. The binding-name family also appears in the core
+encoder, but these files' lines aren't in the core denominator.
 
 | Other production/build file | Pre-audit KLOC | Bugs | Theme |
 |---|---:|---|---|
@@ -221,9 +215,9 @@ core encoder. These rows cover eight families, seven additional to the core.
 | `objc_full/cql_objc_full.py` | 0.921 | `*` | Projection names, matching declarations and definitions |
 | `sqlite3_cql_extension/cqlsqlite3extension.py` | 0.710 | `*` | SQL/C name and literal encoding |
 
-Test/tooling findings are separate. Here both size columns count physical
-lines; a dash means the file didn't exist before the audit. Two drivers and
-some checks were added during this work, so these aren't all defects in the
+For test/tooling findings, both size columns count physical lines, and a
+dash means the file didn't exist before the audit. Two drivers and some
+checks were added during this work, so these aren't all defects in the
 pre-audit checkout.
 
 | Test/tooling file | Pre-audit KLOC | Post-fix KLOC | Bugs | Theme |
@@ -239,14 +233,15 @@ pre-audit checkout.
 | `test/test_helpers_test.c` | 0.086 | 0.092 | `*` | Close errors ignored |
 | `upgrade/upgrade_test.c` | 0.214 | 0.255 | `*` | Transaction errors lost or ignored |
 
-A family can have faulty implementations in several files. The integer
-literal repair, for example, spans the lexer, semantic analysis, constant
-evaluation, C emission, and SQL emission. I count it once in the 52, but once
-in each affected file here. The production/build tables therefore contain
+A family can affect several files, as the integer literal repair did across
+the lexer, semantic analysis, constant evaluation, C emission, and SQL
+emission. I count it once in the 52, but once in each affected file here.
+The production/build tables therefore contain
 **65 stars for 52 unique families**; the test/tooling table has **12 for 8**.
-New helpers, regression files, and mechanical caller adaptations don't get
-stars merely because the patch touched them. The C hex-escape repair, for
-example, belongs to `encoders.c`, not every generator that uses its helpers.
+I haven't assigned stars to new helpers, regression files, or mechanical
+caller adaptations merely because the patch touched them. The C hex-escape
+repair, for example, belongs to `encoders.c`, not every generator that uses
+its helpers.
 
 Attribution also explains two less obvious placements. The Windows buffer
 mismatch came from the definition emitted by `make_amalgam.sh`, outside the
@@ -260,11 +255,10 @@ runtime alone has ten, including all seven security families. Much of the
 concentration is at representation boundaries: stored bytes, target-language
 text, and names crossing between systems.
 
-That is more informative than treating 0.50 bugs/KLOC as a uniform rate.
-A zero means no counted bug in this review, not proof of no defects. Nor did
-we measure equal review effort per file or equal exposure in use. These are
-the locations of the findings we accepted, not an estimate of every file's
-remaining defect rate.
+I find that distribution more informative than a uniform 0.50 bugs/KLOC.
+We didn't measure equal review effort or equal exposure in use, and a zero
+only means we found no bug there in this review. The table can't tell us
+each file's remaining defect rate.
 
 ### Compared with the human-found era
 
@@ -279,19 +273,19 @@ denominator, 82.575 KLOC, gives about **0.15**.
 | Daily use by hundreds of developers at Meta | Targeted examination of the OSS fork, including lightly used features |
 | About 0.13 operational bugs/KLOC/year at the reference size | 0.50 core bug groups/KLOC in a concentrated pass |
 
-We don't have a comparable census of every human-found development-time bug.
-The annual field rate and the audit yield have different units and different
-inputs. I wouldn't turn them into a claim that one method found bugs some
-multiple faster. The useful comparison is the additional cases this
-examination reached after years of development, testing, and operational use.
+We don't have a comparable census of every human-found development-time bug,
+and an annual field rate has different units and inputs from an audit yield.
+I wouldn't turn these numbers into a speed multiplier. What interests me is
+the additional cases this examination reached after years of development,
+testing, and operational use.
 
 The counting notes near the end explain the grouping decisions.
 
 ### Users and maintainers
 
-The hundreds of developers using CQL supplied many use-cases. The public
-maintenance history was much more concentrated. Counting primary authors
-of first-parent, non-merge commits through the studied endpoint:
+The hundreds of developers using CQL supplied many use-cases, but the public
+maintenance history was much more concentrated. Here are the primary-author
+counts for first-parent, non-merge commits through the studied endpoint:
 
 | Period, by author date | All commits | Mine | My share |
 |---|---:|---:|---:|
@@ -309,8 +303,6 @@ There were important later contributions too. Joris Garonian introduced the
 [SQLite extension generator in 2024](https://github.com/ricomariani/CG-SQL-author/commit/fad49eeef3d5),
 and `amyworrall` contributed
 [UTF-8 encoding work in 2025](https://github.com/ricomariani/CG-SQL-author/commit/8818eb4520ee).
-Recent maintenance was overwhelmingly mine, with a few substantial outside
-contributions.
 
 These are authorship counts, not counts of reviewers or internal Meta work.
 AI-assisted changes also remain under my author name. The initial public
@@ -319,7 +311,7 @@ measure who originally wrote every line.
 
 ---
 
-## Summary
+## The recurring themes
 
 Several things kept coming up:
 
@@ -340,16 +332,14 @@ Several things kept coming up:
 
 ### Fresh eyes
 
-The AI analysis was ruthless and tireless. It was fresh eyes on code I had
-been looking at for years, and it kept reconsidering assumptions. Does this
-count really fit? Is this name already encoded? Who checked this argument?
-What did the test actually verify?
+The AI analysis was ruthless and tireless, bringing fresh eyes to code I
+had been looking at for years and reconsidering assumptions along the way.
+Does this count really fit? Is this name already encoded? Who checked this
+argument? What did the test actually verify?
 
-Most of the findings were worth fixing. Only a few proposals were unwise,
+Most of the findings were worth fixing, though a few proposals were unwise,
 beyond what I expect the system to do, or truly uneconomical. I spent a fair
-amount of the review working out the smallest sensible fix. A repeated graph
-traversal, for instance, wasn't worth extra state given the schema graphs
-we actually see.
+amount of the review working out the smallest sensible fix.
 
 ---
 
@@ -359,38 +349,35 @@ we actually see.
 
 A security finding needs an attacker, something they control, and a trust
 boundary they can cross. A buffer overrun or broken quoting can be a horrible
-correctness bug. Calling the mechanism "memory corruption" or "injection"
-doesn't establish the security case.
+correctness bug without giving anyone new authority, so calling the mechanism
+"memory corruption" or "injection" doesn't establish the security case.
 
-That was a recurring problem with the AI's security reports. It could find
-a real bug without establishing a security case: no trust boundary was
-crossed, or the analysis hadn't correctly identified the boundary. Giving
-the supposed attacker control of trusted program text or internal call
-arguments doesn't by itself establish an attack. I still wanted many of
-those correctness fixes.
+The AI sometimes found a real bug but hadn't established that a trust boundary
+was crossed, or hadn't correctly identified the boundary. I still wanted
+those correctness fixes; I just needed a reason to call them security
+findings.
 
-The compiler processes application code. Its source author already controls
-what program they are asking it to generate. We need to establish what the
-compiler is expected to protect from that author before calling a failure
-a vulnerability. Inventing a build service that accepts contributed source
-doesn't answer that question.
+For example, the compiler's source author already controls the program they
+are asking it to generate. Giving that author control of trusted program
+text or internal call arguments doesn't establish an attack. What is the
+compiler expected to protect from them? Inventing a build service that
+accepts contributed source doesn't answer that question.
 
 ### Serialized data: validate the whole representation
 
-The blob readers have an explicit requirement to handle hostile bytes.
+The blob readers do have an explicit requirement to handle hostile bytes.
 An attacker who can supply a blob controls its counts, offsets, types, and
-payload. The reader has to reject malformed input without out-of-bounds reads
-or writes. That is the trust boundary for the bounds failures below. The
-security claim applies where an application accepts blobs from less-trusted
-sources.
+payload, and the reader has to reject malformed input without out-of-bounds
+reads or writes. That is the trust boundary in applications that accept
+blobs from less-trusted sources.
 
 The backed-table UDF sequence began on May 15 with
 [`2ed3ac9e`](https://github.com/ricomariani/CG-SQL-author/commit/2ed3ac9e).
 It checked computed blob shapes and selected payload ranges and corrected
 inconsistent type-code handling between creation passes. July's
 [`1432fa66`](https://github.com/ricomariani/CG-SQL-author/commit/1432fa66)
-then validated **retained** variable fields before updates copied them.
-An update has to check the fields it preserves as well as the replacement.
+then extended validation to **retained** variable fields before updates
+copied them.
 
 The old reader made the assumption explicit:
 
@@ -400,10 +387,10 @@ The old reader made the assumption explicit:
 // the internal offsets (blobs are assumed to be well formed for now)
 ```
 
-That comment came from code which had started as a test implementation.
-The cursor serializer had expected hostile input from the beginning; the
-public backed-table UDFs acquired that requirement as they became useful
-outside the original tests. Both facilities were lightly used.
+The backed-table UDFs had started as a test implementation and acquired the
+hostile-input requirement as they became useful outside those tests. The
+cursor serializer had expected hostile input from the beginning, but both
+facilities were lightly used.
 
 Here is the May correction at the shape check:
 
@@ -429,46 +416,34 @@ result:
 
 `header.column_count`, `offset`, and `len` come from the supplied blob.
 Checking the fixed header alone cannot establish that the computed table or
-payload fits. Updating one field adds another obligation: every preserved
-variable field will also be read and copied. July's correction checked those
-fields, including their string terminators.
+payload fits. An update also reads and copies every preserved variable
+field, so July's correction checked those fields and their string terminators
+as well as the replacement.
 
 Almost always, I'd intended to do these checks at another level and then
-forgot to check at all. The missing branch cannot show up as an uncovered
-line. The review question has to be: which function actually establishes
-this precondition?
+forgot to check at all. A missing branch can't show up as an uncovered line,
+so I had to go back and ask which function actually established the
+precondition.
 
 [`3b2b0228`](https://github.com/ricomariani/CG-SQL-author/commit/3b2b0228)
-rejected unknown serialized type codes.
+rejected unknown serialized type codes, and
 [`2c3b89d0`](https://github.com/ricomariani/CG-SQL-author/commit/2c3b89d0)
 completed an important error-policy change: malformed arguments or storage
-produce `SQLITE_ERROR`, not a successful SQL `NULL`. A valid sparse value blob
-with an absent nullable field can still return `NULL`.
-
-Returning NULL for corruption let a query continue as though the value were
-merely absent. This error-reporting fix also matters for ordinary corrupt data,
-with no attacker involved.
+produce `SQLITE_ERROR`, rather than letting a query continue as though the
+value were merely absent. A valid sparse value blob with an absent nullable
+field can still return `NULL`. That distinction matters for ordinary corrupt
+data too, with no attacker involved.
 
 #### Overlapping fields
 
 The later overlap repair, [#211](https://github.com/ricomariani/CG-SQL-author/pull/211),
-found another assumption. Two serialized fields could each describe a
-valid range while sharing some or all of their bytes. Starting from the
-physical input length and adjusting changed fields underestimated the output
-when the updater copied each logical field separately.
+found another assumption: two serialized fields could each describe a
+valid range while sharing some or all of their bytes. The updater copied
+each logical field separately, but sized the output by starting from the
+physical input length and adjusting changed fields.
 
-For example, two strings sharing one payload need that payload twice when
-rewritten into separate storage. Every source read can be in bounds while
-the destination is too small.
-
-I chose to keep accepting overlapping fields. We size the output from the
-sum of validated logical field lengths in both key and value updates,
-including deletions. The regression inputs were only 47 bytes for a key blob
-and 71 bytes for a value blob.
-
-The allocation mistake can be seen without a large binary dump. Suppose
-two string descriptors share `"abc"` and its terminator. The stored string
-length is three; each output copy needs four bytes:
+Suppose two string descriptors share `"abc"` and its terminator. The stored
+string length is three, but each output copy needs four bytes:
 
 ```text
 Input:
@@ -482,18 +457,19 @@ Rewritten output, with separate copies:
   payload: 61 62 63 00 61 62 63 00
 ```
 
-Both source ranges pass a bounds check. Copying them needs eight payload
+Both source ranges pass a bounds check, but copying them needs eight payload
 bytes. Starting from the four physical input bytes underallocates the
 destination even when no field is being replaced.
 
-The validator therefore also computes the sum of logical field lengths.
-The updater starts with that sum and adjusts for replacements and deletions.
-Rejecting overlap would have been a larger compatibility change than fixing
-the allocation.
+I chose to keep accepting overlap rather than make a larger compatibility
+change. The validator now computes the sum of validated logical field
+lengths, and both key and value updates start with that sum before adjusting
+for replacements and deletions. The regression inputs were only 47 bytes
+for a key blob and 71 bytes for a value blob.
 
-This case added a test dimension that ordinary round trips could never
-produce: the normal writer emits separate payloads. A reader of hostile
-data has to handle representations outside its own writer's output.
+The normal writer emits separate payloads, so ordinary round-trip tests
+could never produce this case. A reader of hostile data has to handle
+representations outside its own writer's output.
 
 #### A four-byte header was enough to defeat the old stream arithmetic
 
@@ -502,21 +478,17 @@ The May 15 stream fix,
 corrected a check that proved only the start of an offset word was present.
 The October follow-up,
 [#214](https://github.com/ricomariani/CG-SQL-author/pull/214), found that the
-new `(index + 2) * 4` expression could itself overflow.
+new `(index + 2) * 4` expression could itself overflow. A four-byte blob
+declaring a huge count was enough to reach the bad arithmetic.
 
-The repair first proves that the count and complete offset table fit, using
-division before multiplication. It then validates:
+We needed to prove that the complete offset table fit before reading from
+it, then validate the selected range:
 
 ```text
 table_end <= selected_start <= selected_end <= blob_length
 ```
 
-Count and offset loads use `memcpy`, avoiding alignment and aliasing
-assumptions. Rejection also clears an existing cursor row and its references.
-
-A four-byte blob declaring a huge count was enough to reach the bad arithmetic.
-
-The old guard was:
+The old guard tried to check the length after doing the arithmetic:
 
 ```c
 if (index < 0 || index >= count || (index + 2) * 4 > len) {
@@ -524,8 +496,8 @@ if (index < 0 || index >= count || (index + 2) * 4 > len) {
 }
 ```
 
-For `index = 536870910`, `(index + 2) * 4` exceeds signed 32-bit range.
-Checking the length after doing that arithmetic is too late.
+For `index = 536870910`, `(index + 2) * 4` exceeds signed 32-bit range before
+the length comparison can protect us.
 
 Here is the corrected read path from
 [`957db34a`](https://github.com/ricomariani/CG-SQL-author/commit/957db34a).
@@ -599,7 +571,7 @@ cursor cases for
   select x'FFFFFFFF' as b, 0 as idx;
 ```
 
-Those byte spellings describe the little-endian test environment. None
+Those byte spellings describe the little-endian test environment, and none
 contains enough bytes for its declared offset table. Each must fail before
 an offset is read.
 
@@ -612,10 +584,10 @@ EXPECT_EQ!(C, false);   -- The old row is no longer present.
 EXPECT_EQ!(C.z, null);  -- Its string reference has been cleared.
 ```
 
-The useful test categories are visible here: truncated shape, arithmetic
-overflow, an offset inside the table, invalid indices, and rejection while
-the destination already owns data. Random byte corruption alone would be
-unlikely to cover all of them.
+Between them, the regressions exercise truncated shapes, arithmetic overflow,
+offsets inside the table, invalid indices, and rejection while the destination
+already owns data. Random byte corruption alone would be unlikely to cover
+all of those cases.
 
 #### Counter width was a separate representation limit
 
@@ -624,47 +596,44 @@ headers beyond 65,535 fields **before** 16-bit counters wrapped and extra fields
 could be checked against metadata beyond the destination. A roughly 64 KiB
 hostile header makes that boundary realistic.
 
-We kept the existing format limit.
-Compiler-side narrowing is protected by a contract; malformed wire input
-returns an error. Bit indices were widened separately because a nullable
-Boolean can contribute both a presence bit and a value bit. C and Lua use the
-same field-count policy.
+We kept the existing format limit, with a contract protecting compiler-side
+narrowing and an error for malformed wire input. Bit indices needed a
+separate widening because a nullable Boolean can contribute both a presence
+bit and a value bit. C and Lua use the same field-count policy.
 
 ---
 
 ## Coverage left input dimensions untested
 
-The compiler's 100% line coverage was useful throughout this work. It forces
-reachable syntax and AST shapes through fail-fast handlers. It doesn't tell
-us which values, sizes, configurations, or combinations have passed through
-an executed line.
+The compiler's 100% line coverage was useful throughout this work because it
+forces reachable syntax and AST shapes through fail-fast handlers. But an
+executed line doesn't tell us which values, sizes, configurations, or
+combinations have passed through it.
 
-The most useful failures here exposed dimensions missing from the tests.
-A serializer had seen every field type without seeing a moving allocation.
-A string helper had seen comment markers without seeing an empty buffer.
-JSON tests had exercised an encoder without comparing the decoded Unicode
-text on both signed- and unsigned-char hosts.
+The failures exposed some very different gaps: a serializer had seen every
+field type without seeing a moving allocation, a string helper had seen
+comment markers without seeing an empty buffer, and JSON tests had exercised
+an encoder without comparing decoded Unicode text on both signed- and
+unsigned-char hosts.
 
 ### A moving allocation changes the meaning of a saved pointer
 
-The cursor serializer writes type information, a bit vector, then field
-payloads. The bit vector records nullable-field presence and Boolean values.
-The old code retained its address:
+The cursor serializer writes type information, a bit vector recording
+nullable-field presence and Boolean values, and then the field payloads.
+The old code retained the bit vector's address:
 
 ```c
 uint8_t *bits = cql_bytebuf_alloc(b, bitvector_bytes_needed);
 memset(bits, 0, bitvector_bytes_needed);
 ```
 
-Later, a string or blob append could grow `b`, freeing the allocation that
-contained `bits`. The next nullable or Boolean field still did:
+Small rows didn't grow the buffer, but a long string or blob append could
+grow `b` and free the allocation containing `bits`. The next nullable or
+Boolean field still did:
 
 ```c
 cql_setbit(bits, nullable_index);
 ```
-
-Every read of that code is plausible if the rows stay small. A single long
-first field makes the pointer stale before the next bit write.
 
 The repair in [#218](https://github.com/ricomariani/CG-SQL-author/pull/218)
 retained the offset and resolved the address at each write:
@@ -685,11 +654,11 @@ static void cql_setbit(
 }
 ```
 
-The later field-count repair widened that last index to 32 bits. The lifetime
-repair itself was to stop carrying an interior pointer across appends.
+The later field-count repair widened that last index to 32 bits; this repair
+addressed the lifetime of the interior pointer across appends.
 
-Here is the first half of the runtime regression. The declared field order
-is important:
+The declared field order matters in this first half of the runtime
+regression:
 
 ```sql
 [[blob_storage]]
@@ -725,28 +694,28 @@ begin
 end);
 ```
 
-The 1,025-byte string exceeds the initial 1,024-byte buffer. The longer
-string and blob force further growth, with bit writes after each. The
-second half of the actual test repeats growth with absent nullable fields;
+The 1,025-byte string exceeds the initial 1,024-byte buffer, and the longer
+string and blob force further growth with bit writes after each. The
+second half of the test repeats that growth with absent nullable fields:
 their presence bits must remain clear while the later nonnull Boolean
 still writes to the current allocation.
 
-This is a test-design improvement we can reuse. Small/large is a weak size
-classification for a growable buffer. Before growth, across one growth,
-and across several growths with later writes are distinct cases.
+Calling a row "small" or "large" misses what matters here. We needed writes
+before growth, after one growth, and after several growths.
 
 ### Empty after filtering is still empty
 
 The comment-marker scanner had a much smaller version of the same coverage
-problem. Its buffer length includes the terminating zero. An empty buffer
-therefore has `used == 1`:
+problem. Its buffer length includes the terminating zero, so an empty buffer
+has `used == 1`:
 
 ```diff
 -for (uint32_t i = 0; i < b->used - 2; i++) {
 +for (uint32_t i = 0; i + 2 < b->used; i++) {
 ```
 
-Unsigned subtraction made the old empty-input bound enormous.
+Unsigned subtraction made the old empty-input bound enormous, which ASan
+reproduced as an out-of-bounds scan.
 [#210](https://github.com/ricomariani/CG-SQL-author/pull/210) added this
 complete helper test:
 
@@ -772,8 +741,8 @@ static bool test_comment_marker_scan() {
 }
 ```
 
-ASan reproduced the old out-of-bounds scan. The test also checks that changing
-comment markers preserves the logical length.
+Along with the empty case, the test checks that changing comment markers
+preserves the logical length.
 
 Filtering supplied another empty case in
 [#222](https://github.com/ricomariani/CG-SQL-author/pull/222). An enum could
@@ -784,7 +753,7 @@ all-hidden declaration and the ordinary diagnostic for the resulting switch.
 
 ### A heavily used format still had untested paths
 
-JSON schema was heavily used. The full-string encoder had learned to
+JSON schema had heavy use, and its full-string encoder had learned to
 preserve valid UTF-8, but the pretty-quoted SQL path still encoded individual
 bytes. For the UTF-8 sequence `E2 80 A2`, representing U+2022, it emitted:
 
@@ -792,8 +761,8 @@ bytes. For the UTF-8 sequence `E2 80 A2`, representing U+2022, it emitted:
 "\u00e2\u0080\u00a2"
 ```
 
-That JSON parses. Its value has three characters in place of the intended
-one. A syntax validator could approve every output while missing the damage.
+A syntax validator accepts that JSON even though its value has three
+characters in place of the intended one.
 
 There was a separate host-configuration assumption in the byte fallback.
 Here is the reduced change to that logic:
@@ -815,16 +784,16 @@ raw. The UTF-8 repair and the signedness repair are separate entries in the
 count even though they landed together in
 [#238](https://github.com/ricomariani/CG-SQL-author/pull/238).
 
-Users had been reporting JSON problems for years. I hadn't followed through
-with enough test diversity. The final tests compare decoded attribute and
-SQL strings, exercise both encoders, and run unsigned-char configurations.
-They retain the established malformed-byte policy, including escaping a
-sequence followed by an extra continuation byte.
+Users had been reporting JSON problems for years, and I hadn't followed
+through with enough test diversity. The final tests compare decoded
+attribute and SQL strings through both encoders and run unsigned-char
+configurations. They retain the established malformed-byte policy, including
+escaping a sequence followed by an extra continuation byte.
 
-This is where usage and coverage both ran out of variety. Ordinary JSON
-consumers supplied lots of use without supplying these combinations of
-encoding path, input bytes, and host signedness. Schema upgrade needed a
-long period of additional diversity after reaching 100% coverage too.
+Ordinary JSON consumers supplied lots of use without supplying these
+combinations of encoding path, input bytes, and host signedness. I had
+much the same experience with schema upgrade: reaching 100% coverage was
+followed by a long period of discovering more input combinations.
 
 ### Bounds belong to the representation actually used
 
@@ -844,24 +813,18 @@ dimension: a 2,100-`NOT` AST could exhaust its indentation buffer. Its
 [#215](https://github.com/ricomariani/CG-SQL-author/pull/215) repair truncates
 diagnostic descent with a marker while leaving accepted SQL nesting alone.
 
-These are memory-safety bugs. Their security classification still requires
-an attacker-controlled input and a protection the compiler is expected to
-provide. The cases establish why the bounds were wrong.
-
 ---
 
-## A changed invariant has consumers I forgot
-
-Quoted identifiers are lightly used and exist in my fork, not in the internal
-version whose use at Meta supplied so much of CQL's earlier feedback.
+## The QID invariant changed, and I missed some consumers
 
 I developed QIDs test-first, with a burndown list of every major identifier
-usage I could think of. I tested the crap out of them, and on the whole I
-think we did well. But even I can't remember all the places identifiers can
-creep in. It's a major invariant change.
+usage I could think of, and made dozens of passes over the work. I tested
+the crap out of them, and on the whole I think we did well. But even I can't
+remember all the places identifiers can creep in.
 
-Many emitters used to print a stored name directly. With QIDs, each one has
-to turn that name into the right form for its output.
+This was a major invariant change. Many emitters used to print a stored
+name directly; with QIDs, each one has to turn that name into the right form
+for its output.
 
 There are several representations to keep straight:
 
@@ -875,26 +838,17 @@ There are several representations to keep straight:
 | JSON metadata | Use the decoded name consistently with declarations |
 | Host-language accessor | Apply that sample binding's legal-name and collision policy |
 
-A feature can be correct in the ordinary `CREATE TABLE` path and still be
-wrong in virtual tables, constraint metadata, generated drops, query-plan
-programs, or one language wrapper.
-
-The important failure mode was an incomplete inventory. Each ordinary
-table test could pass while a forgotten consumer kept the old rule. More
-examples through the already-correct emitter would do nothing for that
-consumer.
+An ordinary `CREATE TABLE` test could pass while virtual tables, constraint
+metadata, generated drops, query-plan programs, or a language wrapper still
+used the old rule. Adding more examples through the already-correct emitter
+would do nothing for those forgotten consumers.
 
 ### Successful execution can use the wrong name
 
-[#240](https://github.com/ricomariani/CG-SQL-author/pull/240) fixed virtual-table
-creation that printed the stored string directly. For `doc store`, SQLite
-successfully created `X_docX20store`; subsequent correctly quoted inserts into
-`doc store` failed.
-
-The repaired test checks the actual catalog name, inserts and reads data,
-and drops the intended table.
-
-Here is a complete CQL declaration of the kind that failed:
+Virtual-table creation was one such consumer.
+[#240](https://github.com/ricomariani/CG-SQL-author/pull/240) fixed a path that
+printed the stored string directly. Here is a complete CQL declaration of
+the kind that failed:
 
 ```sql
 create virtual table if not exists `doc store`
@@ -907,8 +861,8 @@ The old SQLite output used the internal name:
 CREATE VIRTUAL TABLE IF NOT EXISTS X_docX20store USING fts4(content);
 ```
 
-That statement succeeds. The next operation, correctly rendered for the
-same source name, fails:
+SQLite happily creates `X_docX20store`, so the correctly rendered insert for
+the same source name fails:
 
 ```sql
 INSERT INTO [doc store](content) VALUES ('hello');
@@ -930,8 +884,8 @@ The compiler had retained the wrong thing for printing:
 spelling for CQL or SQLite output. A quoted ordinary name or keyword also
 needs that status even when its stored bytes don't contain a hex encoding.
 
-The single-case integration check can be written as this complete function.
-Its argument is the compiler's emitted SQLite schema:
+This integration check takes the compiler's emitted SQLite schema and
+verifies the catalog name, data operations, and removal:
 
 ```python
 import sqlite3
@@ -959,9 +913,8 @@ def check_virtual_table(sql):
 ```
 
 The actual regression also reparses emitted CQL and varies seven name
-classes across three module-argument forms. Those are different consumers
-of the same source declaration. SQLite's catalog supplies the independent
-answer about the object we actually created.
+classes across three module-argument forms, exercising other consumers of
+the same source declaration.
 
 [#230](https://github.com/ricomariani/CG-SQL-author/pull/230) found the same
 representation mistake in deleted or unsubscribed recreate-table drops.
@@ -970,10 +923,11 @@ without deleting an unrelated table with the internal-looking spelling.
 
 ### A name can be encoded correctly in the wrong language
 
+The query-plan code fixed in
 [#242](https://github.com/ricomariani/CG-SQL-author/pull/242) decoded
 `no_table_scan` names but then put them between raw CQL quotes. A literal
-backslash followed by `t` became a tab. The generated program could compile
-yet stop matching the actual plan text, silently losing its alert.
+backslash followed by `t` became a tab, so the generated program could compile
+yet stop matching the actual plan text and silently lose its alert.
 
 The same PR fixed runtime graph and alert strings inserted into JSON without
 JSON escaping. We had escaped statement text and missed these other fields.
@@ -986,29 +940,29 @@ generated CQL strings are:
 "backslash\\t"  -- Correct: CQL decodes a backslash and the letter t.
 ```
 
-Both strings are legal source. Only one can match the literal name in
-SQLite's plan text. A test that stops at successful generation or compilation
-misses the loss of the scan alert.
+Both strings are legal source, but only one can match the literal name in
+SQLite's plan text. Successful generation or compilation wouldn't catch
+the missing scan alert.
 
 The runtime helper is ordinary C/Lua string encoding. It does not depend on
 SQLite JSON support or database access.
 
-[#241](https://github.com/ricomariani/CG-SQL-author/pull/241) normalized
-constraint names so foreign-key and primary-key metadata referred to the same
-decoded names as the table and column declarations. It separately JSON-encoded
-index and predicate expressions, where raw quote wrapping could produce
-invalid JSON or silently reinterpret backslashes.
-
-The metadata identity problem is just as concrete:
+Constraint metadata had another name mismatch, fixed in
+[#241](https://github.com/ricomariani/CG-SQL-author/pull/241):
 
 ```text
 Table declaration's JSON name:       parent table
 Foreign key's referenceTable:        X_parentX20table
 ```
 
-Neither JSON parsing nor testing each field's string type can establish
-that these refer to the same table. The regression resolves each foreign-key
-reference against the emitted table and column declarations.
+The repair normalized foreign-key and primary-key metadata to use the same
+decoded names as the table and column declarations. The regression resolves
+each foreign-key reference against those declarations, because parsing JSON
+or checking a field's string type can't establish that identity.
+
+The same PR separately JSON-encoded index and predicate expressions, where
+raw quote wrapping could produce invalid JSON or silently reinterpret
+backslashes.
 
 ### Names also reach dynamic SQL
 
@@ -1087,7 +1041,7 @@ upgrade at the relevant version boundary and verification immediately after.
 The host table remains subscribed, so its row must survive while the
 unmanaged objects disappear.
 
-The targeted table-helper test separately covers both quote classes:
+The targeted table-helper test separately covers brackets and double quotes:
 
 ```sql
 create proc verify_quoted_table_drops()
@@ -1109,12 +1063,11 @@ end;
 
 `test_drop_table_helper` is the generated table-drop helper under the test
 prefix. Its C harness temporarily installs the helper's dictionary, runs
-this procedure, and restores the previous dictionary. Setup is important:
-otherwise a test could fail before reaching the identifier operation.
+this procedure, and restores the previous dictionary. Without that setup,
+the test could fail before reaching the identifier operation.
 
-These are correctness examples. Reading a name from the catalog doesn't
-establish attacker control or a gain in SQL authority. We fixed the quoting
-without treating every unusual name as a demonstrated security attack.
+These tests demonstrate that valid catalog names broke the generated
+statements; they don't establish attacker control or a gain in SQL authority.
 
 ### Identity and output spelling are different
 
@@ -1124,8 +1077,7 @@ canonical name. CQL resolves names without case sensitivity; C and Lua do not.
 The same cursor field referred to with different case could therefore produce
 an undeclared C name or the wrong Lua field/global.
 
-This one needs only a case change in an ordinary name. At the target-language
-level the mistake is equivalent to:
+At the target-language level, the mistake is equivalent to:
 
 ```c
 struct row {
@@ -1137,10 +1089,9 @@ void update(struct row *r) {
 }
 ```
 
-CQL accepted the reference because its semantic lookup had resolved it.
-Printing the reference's original spelling threw that work away. Tests
-need declaration/reference case variation even when every character is an
-ordinary letter.
+The fix uses the canonical spelling already established by semantic lookup.
+The tests vary declaration and reference case even when every character is
+an ordinary letter; no exotic QID is needed to expose this one.
 
 [#245](https://github.com/ricomariani/CG-SQL-author/pull/245) brought projection
 accessors into agreement across Java, C#, and the two Objective-C generators.
@@ -1155,19 +1106,14 @@ Quoted `XName` and unquoted `XName` could therefore acquire different
 canonical spellings. The repair decides whether encoding is needed first;
 only encoded names need to escape literal `X` bytes.
 
-The burndown list and TDD helped a great deal. I had also made dozens of
-passes over the QID work. Some missed consumers survived all of that.
-The AI analysis found failures those reviews had missed, before a user
-supplied the missing example.
-
 ---
 
 ## Target-language rules and missed conversions
 
 The compiler already handles many differences between CQL, C, and Lua.
-Some failures missed a conversion in one path; others came from a rule I
-had wrong. Golden output can preserve either mistake unless the test checks
-what the generated program does.
+Some failures came from a missed conversion in one path; others came from
+a rule I had wrong. Golden output can preserve either mistake unless the
+test checks what the generated program does.
 
 ### C escape syntax surprised the C programmer
 
@@ -1196,8 +1142,7 @@ Ordinary constants, quoted SQL, and compressed SQL dictionary pieces all
 needed the C rule. `#line` filenames are not an ordinary adjacent-string
 context and were not treated as one.
 
-The test has to inspect the bytes used by generated C code.
-
+The regression compiles the generated C and checks the resulting bytes.
 Sometimes you're just wrong.
 
 ### Comments are generated text too
@@ -1236,10 +1181,6 @@ SELECT "]]";
 --]=]
 ```
 
-The review had to include non-executable output as well as ordinary strings.
-These are generated-program correctness cases; the source author already
-controls the program.
-
 ### A plausible conversion can be wrong for half the number line
 
 Lua's integer conversion helper used `math.floor`. Positive fractions
@@ -1266,17 +1207,16 @@ The complete helper correction in
 ```
 
 The new runtime cases cover negative nonnull INT/LONG conversions, nullable
-fractions becoming zero, and NULL preservation. Both C and Lua can run the
-same CQL cases. A collection of positive fractions adds little after the
-first; crossing zero tests the rule we had actually missed.
+fractions becoming zero, and NULL preservation, and can run in both C and Lua.
+More positive fractions wouldn't have exposed the problem; crossing zero
+tests the rule we had actually missed.
 
 ### Existing Lua conversions still had missing callers
 
-Lua's truthiness is well known. The backend is full of conversions between
-CQL's numeric and Boolean values: assignments, arithmetic, comparisons,
-`IN`, ordinary `IF`, and loops all use them. We already had
-`cg_lua_to_bool` and `cg_lua_to_num`. It's easy to miss one place that needs
-them.
+Lua's truthiness is well known, and the backend is full of conversions between
+CQL's numeric and Boolean values. Assignments, arithmetic, comparisons,
+`IN`, ordinary `IF`, and loops already use `cg_lua_to_bool` and
+`cg_lua_to_num`, but it's easy to miss one place that needs them.
 
 For example, the ordinary IF emitter already did this:
 
@@ -1285,9 +1225,8 @@ cg_lua_to_bool(sem_type_expr, &expr_value);
 bprintf(cg_main_output, "if %s then\n", expr_value.ptr);
 ```
 
-The two gaps in
-[#233](https://github.com/ricomariani/CG-SQL-author/pull/233) needed the
-same existing helpers.
+The fixes in [#233](https://github.com/ricomariani/CG-SQL-author/pull/233)
+covered two separate emitters.
 
 #### Simple CASE had its own comparison emitter
 
@@ -1312,8 +1251,8 @@ with the source comment omitted and the long output line wrapped:
 
 For a Boolean selector, the emitted comparison changes from
 `if selector == 1 then` to `if cql_to_num(selector) == 1 then`.
-The helper leaves numeric operands alone. The surrounding CASE code retains
-its NULL guard.
+The helper leaves numeric operands alone, and the surrounding CASE code
+retains its NULL guard.
 
 The runtime regression includes:
 
@@ -1340,8 +1279,7 @@ end);
 
 `EXPECT_SQL_TOO!` checks the CQL expression and its SQLite evaluation.
 The middle cases prevent an overcorrection: converting every operand to a
-Boolean would make true equal to 2 or 0.5. CASE needs Boolean-to-number
-normalization.
+Boolean would make true equal to 2 or 0.5.
 
 #### Fragment selection had its own IF emitter
 
@@ -1375,15 +1313,14 @@ end;
 ```
 
 With `(x, y, flag) = (0, 0.0, false)`, the old Lua selected 10 because zero
-is truthy. CQL requires 40. The existing helper converts numeric zero to
-false, preserves NULL, and leaves Boolean predicates alone. Negative integers
-and nonzero fractions must still select their branches; the tests include
-those controls too.
+is truthy, while CQL requires 40. The existing helper converts numeric zero
+to false, preserves NULL, and leaves Boolean predicates alone. Negative
+integers and nonzero fractions must still select their branches, so the
+tests include those controls too.
 
 The normal harness checked generated Lua text without executing its runtime
-suite. Running these cases in Lua exposed results the goldens had approved.
-The rule was already understood and implemented in many other places.
-The tests and review needed to reach these two emitters as well.
+suite, so running these cases in Lua exposed wrong results the goldens had
+approved.
 
 ### A readable tuple isn't necessarily an unambiguous key
 
@@ -1399,9 +1336,9 @@ end
 assert(old_key("a:b", "c") == old_key("a", "b:c"))
 ```
 
-Both produce `a:b:c`. The resulting partition contains children from two
-different parents. Doubling the separator also leaves an ambiguity over
-which field owns a boundary colon.
+Both produce `a:b:c`, putting children from two different parents in the same
+partition. Doubling the separator still leaves an ambiguity over which
+field owns a boundary colon.
 
 Length prefixes in
 [#236](https://github.com/ricomariani/CG-SQL-author/pull/236) distinguish them:
@@ -1458,7 +1395,7 @@ begin
 end;
 ```
 
-The first branch reaches the call with `a` still NULL. The compiler must
+The first branch reaches the call with `a` still NULL, so the compiler must
 reject it. The ELSE IF and ELSE branches both know `a` is nonnull because
 the first condition was false, but the ELSE IF returns.
 
@@ -1515,9 +1452,9 @@ end;
 ```
 
 Now the first branch repairs `a`, and every path reaching the call has a
-nonnull value. We needed both tests, plus local overwrites, empty branches,
-and other jumping statements. Executing the merge code had never established
-that these combinations gave it the right accounting model.
+nonnull value. The regressions include both tests along with local
+overwrites, empty branches, and other jumping statements, checking the
+accounting across combinations that hadn't been exercised before.
 
 ### Identity and scope need to survive the shortcut paths
 
@@ -1529,13 +1466,13 @@ resolved mutable storage instead. An evaluated IN expression can share its
 source spelling with an OUT target without being a second mutable alias;
 that distinction needs its own control cases.
 
-Rowid and JSON-function repairs exposed another carried property.
-An unmatched row from the right side of an outer join has a NULL rowid,
-even though a real row's rowid is nonnull. Some sources have no implicit
-rowid at all. The tests in
+Nullability also has to survive transformations. An unmatched row from the
+right side of an outer join has a NULL rowid, even though a real row's rowid
+is nonnull. Some sources have no implicit rowid at all. The tests in
 [#225](https://github.com/ricomariani/CG-SQL-author/pull/225) cover source
-eligibility and the join transformation. Likewise,
-[#226](https://github.com/ricomariani/CG-SQL-author/pull/226) makes JSON
+eligibility and the join transformation.
+
+Likewise, [#226](https://github.com/ricomariani/CG-SQL-author/pull/226) makes JSON
 scalar functions preserve the appropriate nullability and sensitivity
 flags, including nullable results from missing paths.
 
@@ -1545,10 +1482,9 @@ only the usual higher-level route is insufficient. Rewritten DML supplies
 assignment and layout checks. A direct call must also establish consistent
 partitions, unique columns, and complete primary-key order. The first field
 selects the storage operation, so accepting an inconsistent later field
-can send the operation down the wrong storage path.
-
-This is compile-time validation of the requested operation. The binary
-reader's malformed-data checks cannot supply it later.
+can send the operation down the wrong storage path. Those are compile-time
+checks of the requested operation; the binary reader's malformed-data checks
+cannot supply them later.
 
 ### Numeric spelling also carries a type
 
@@ -1556,40 +1492,32 @@ reader's malformed-data checks cannot supply it later.
 literal ranges rather than accepting silent conversion saturation. It retained
 the exceptional magnitude needed to spell `INT64_MIN` under unary minus and
 preserved high-bit hexadecimal patterns through folding, JSON, and generated C.
-Emitting a high-bit pattern as an unsigned C expression can change comparison
-and division behavior even when its bits look right.
-
-[#221](https://github.com/ricomariani/CG-SQL-author/pull/221) replaced unchecked
-numeric conversion for `--min_schema_version` and line directives. It rejected
-empty, negative, junk-suffixed, and out-of-range values and reserved line-number
-headroom before installing a source mapping.
-
-I declined the broader arithmetic and shift proposals discussed below.
-
-For example, the C expressions below have the same low 64 bits for the
-hexadecimal operand but different comparison behavior:
+The C expressions below show why preserving the bits alone wasn't enough:
 
 ```c
 0xffffffffffffffffLL < 0  /* false: the literal has unsigned type */
 (-1LL) < 0              /* true: the intended signed value */
 ```
 
-CQL's high-bit hex pattern is signed. Preserving its bits while emitting an
-unsigned C expression loses that semantic fact. The test therefore compares
-raw, folded, and generated results, rather than only the printed digits.
+CQL's high-bit hex pattern is signed, so emitting an unsigned C expression
+can change comparison and division behavior. The test compares raw, folded,
+and generated results to catch that loss of meaning.
+
+[#221](https://github.com/ricomariani/CG-SQL-author/pull/221) addressed unchecked
+numeric conversion for `--min_schema_version` and line directives, rejecting
+empty, negative, junk-suffixed, and out-of-range values. It also reserved
+line-number headroom before installing a source mapping. I declined the
+broader arithmetic and shift proposals discussed below.
 
 ---
 
 ## The tests need an independent answer
 
-Several failures survived because the check established something weaker
-than the property the application needed. Generated text could be stable,
-JSON could parse, and a helper could return success while the requested
-object, value, or physical change was wrong.
-
-The virtual-table test above illustrates this well: SQLite's catalog and
-an insert into the intended name tell us more than CREATE's return code.
-The schema and reporting cases supplied two further examples.
+Several tests established something weaker than what the application needed.
+Generated text could be stable, JSON could parse, and a helper could return
+success while the requested object, value, or physical change was wrong.
+We saw this with virtual tables, and it showed up in schema checksums and
+reporting too.
 
 ### A checksum test needs a physical schema change
 
@@ -1609,8 +1537,8 @@ after B: index buffer still contains I; hash H(I) into the group again
 index contribution = H(I) XOR H(I) = 0
 ```
 
-Changing I can leave the group checksum unchanged. Creating a fresh database
-works, but upgrading an existing one can omit the new uniqueness constraint.
+Creating a fresh database works, but upgrading an existing one can omit the
+new uniqueness constraint.
 
 The old loop included:
 
@@ -1623,10 +1551,10 @@ table_crc ^= crc_charbuf(&update_indices);
 Only the first line belongs to each table. The repair moved the cumulative
 drop/index hashes to the end of the group.
 
-The regression checks physical state. The upgrade fixture defines
-`g1(id integer primary key, name text)` in a two-table recreate group. Version
-1 adds `g1_name`, an index on its first table. Before each upgrade, the test
-inserts a probe:
+The upgrade fixture checks physical state using
+`g1(id integer primary key, name text)` in a two-table recreate group.
+Version 1 adds `g1_name`, an index on its first table, and before each
+upgrade the test inserts a probe:
 
 ```sql
 create proc prepare_recreate_crc_test(old_version long!)
@@ -1672,22 +1600,20 @@ index-only change or new member must really recreate the group, removing
 the probe with the bundled runtime. A return-code check wouldn't establish
 either behavior.
 
-Compatibility mattered: corrected group hashes can cause a one-time maintenance
-recreate after a later schema change opens the outer complete-schema gate.
-The bundled runtime recreates a called group, discarding its data. It does not
-compare actual SQL and automatically decide that nothing needs doing.
-Single-table hashes were preserved, and recompiling an identical complete
-schema does not alone open the outer gate.
+Compatibility mattered because corrected group hashes can cause a one-time
+maintenance recreate after a later schema change opens the outer
+complete-schema gate. The bundled runtime recreates a called group and
+discards its data; it doesn't compare actual SQL to decide that nothing
+needs doing. We preserved single-table hashes, and recompiling an identical
+complete schema doesn't by itself open the outer gate.
 
 ### Query-local numbers aren't global identities
 
-The query-plan statistics in
-[#243](https://github.com/ricomariani/CG-SQL-author/pull/243) had correct
-graphs and query text, which made a visual inspection reassuring. The search
-count could still be wrong.
-
-Plan node IDs are local to a statement. A simplified pair of stored plan rows
-shows the problem:
+The statistics bug in
+[#243](https://github.com/ricomariani/CG-SQL-author/pull/243) was easy to miss
+in a visual inspection because the graphs and query text were correct.
+Plan node IDs are local to a statement, but the search-count query treated
+them as global. A simplified pair of stored plan rows shows the problem:
 
 | sql_id | iselectid | zdetail |
 |---:|---:|---|
@@ -1706,18 +1632,16 @@ The fix scopes the subquery to the statement being counted:
 +WHERE zdetail LIKE '%search%using%covering%' AND sql_id = id_
 ```
 
-The regression needs multiple statements with reused node IDs, including
-different kinds of search. Running each statement in isolation cannot
-expose this contamination.
+The regression puts different kinds of search in statements with reused
+node IDs, because running each statement in isolation can't expose this
+contamination.
 
 ### Parseable output can still describe a different program
 
-The UTF-8 case already showed why parsing output is too weak a check.
-SQL expression grouping supplied an independent version of the problem.
-[#239](https://github.com/ricomariani/CG-SQL-author/pull/239) fixed another
-way we could change the meaning of emitted SQL. It preserved
-right-nested grouping among `||`, `->`, and `->>`. They share left-associative
-precedence, but mixed pairs are not associative.
+SQL expression grouping gave us another way to emit a valid but different
+program. [#239](https://github.com/ricomariani/CG-SQL-author/pull/239)
+preserved right-nested grouping among `||`, `->`, and `->>`, which share
+left-associative precedence but aren't associative in mixed pairs.
 
 With the CQL cast removed, SQLite can show the difference directly:
 
@@ -1751,19 +1675,19 @@ CQL -> compiler JSON -> sample SQL -> SQLite
     -> reconstructed CQL -> compiler JSON -> original values
 ```
 
-This tests the meaning at each end. Producer/consumer agreement alone can
-also be misleading if both share the same bad convention, as the older
-C/Lua serialization mismatch showed. SQLite execution, the actual CQL parser,
-and cross-backend checks supply useful independent answers.
+SQLite execution and the actual CQL parser give us independent checks along
+that route. Producer/consumer agreement alone can be misleading if both
+share the same bad convention, as the older C/Lua serialization mismatch
+showed; cross-backend checks help with that too.
 
 ---
 
 ## Lightly used integrations need complete use-cases
 
 Some failures were spectacular enough to say something about use. The
-nullable-binary failures discussed in the human-era appendix could hardly
-survive an application that actually stored and retrieved nullable values.
-The .NET sample supplied an equally direct example in this review.
+nullable-binary failures in the human-era appendix could hardly survive an
+application that actually stored and retrieved nullable values, and the .NET
+sample supplied an equally direct example in this review.
 
 ### The binary argument was never sent
 
@@ -1777,8 +1701,8 @@ int len_value = 2;
 blob_ref_value = cql_blob_ref_new(bytes_value, (cql_uint32)len_value);
 ```
 
-Every supplied blob became the same two bytes. A generator golden could
-approve that output forever. Any actual binary use-case would expose it.
+Every supplied blob became the same two bytes, something a generator golden
+could approve forever but an actual binary use-case would expose immediately.
 
 The replacement passes the data pointer, size, and NULL presence separately.
 An empty managed array can marshal as a NULL pointer, so pointer presence
@@ -1806,10 +1730,10 @@ byte[]?[] values = {binary, new byte[] {1}, Array.Empty<byte>(),
 The `"xx"` input is intentional: it belongs alongside values that the old
 placeholder could never return correctly. The fixture checks actual payloads
 through nullable and nonnull calls, INOUT replacement, native comparison,
-and projected result sets. NULL and empty remain distinct in both directions.
-It reads returned data twice and releases the owning result set, respecting
-the borrowed handle in a projection. Copying bytes back and freeing native
-storage are part of a complete binding example too.
+and projected result sets, with NULL and empty distinct in both directions.
+It reads returned data twice using the borrowed projection handle, then
+releases the owning result set. The interop code also has to free each native
+buffer after copying it back.
 
 That work also produced a real follow-up failure:
 [#247](https://github.com/ricomariani/CG-SQL-author/pull/247). The fixture
@@ -1838,35 +1762,32 @@ cleanup. The core emitter correction is one keyword:
 +bprintf(d, "  local %s = %s(%s)\n", returns.ptr, proc_sym.ptr, args.ptr);
 ```
 
-The returned tuple now belongs to this invocation. Lua evaluates forwarded
-arguments before the newly declared locals can shadow parameter names.
-A one-call test has nothing to overwrite. The regression exercises nested
-calls, checks application globals, and verifies input/INOUT forwarding.
+The returned tuple now belongs to this invocation, and Lua evaluates
+forwarded arguments before the newly declared locals can shadow parameter
+names. Since a one-call test has nothing to overwrite, the regression
+exercises nested calls, checks application globals, and verifies input/INOUT
+forwarding.
 
-Scanner ownership needed repeated calls too.
+Repeated invocations also exposed scanner ownership problems, repaired in
+[#217](https://github.com/ricomariani/CG-SQL-author/pull/217). A compiler-owned
+main/include file or Flex buffer must be released, while a borrowed caller
+stream or buffer must remain the caller's to release, including after an
+error. The ordinary command-line process exits after one compilation, making
+leaks easy to miss.
 
-[#217](https://github.com/ricomariani/CG-SQL-author/pull/217) repaired ownership
-of main/include files and current/suspended Flex buffers. A compiler-owned
-input must be released; a borrowed caller stream or buffer must remain the
-caller's to release, including after an error.
-
-The repair closed include files at EOF, released remaining owned handles
-during cleanup, and deleted saved parent buffers exactly once while leaving
-the current scanner state to Flex's destruction path. A separate regression
-ran repeated compilations under a small descriptor limit, including nested
-includes, failures, recovery, and borrowed inputs.
-
-The ordinary command-line process exits after one compilation. The repeated
-compilation tests made these leaks visible. Repeated compiler invocations
-and SQLite's cursor lifecycle need tests that outlive one successful call.
+The repair closes include files at EOF, releases remaining owned handles
+and buffers exactly once during cleanup, and resets Flex's scanner state
+without destroying borrowed input. The regression runs repeated
+compilations under a small descriptor limit, including nested includes,
+failures, recovery, and borrowed inputs.
 
 ---
 
 ## The test infrastructure had bugs and blind spots too
 
-Ignoring a failed transaction or building stale generated code can undermine
-the checks that follow. These drivers often got very basic error treatment.
-The fixes here were ordinary error checking and better assertions.
+The test drivers often got very basic error treatment, and ignoring a failed
+transaction or building stale generated code can undermine all the checks
+that follow.
 
 ### A printed error isn't a failed test
 
@@ -1905,9 +1826,9 @@ The verifier wrapper had the same problem one level higher:
 
 If regeneration failed, the old wrapper could build stale files and finish
 successfully. [#250](https://github.com/ricomariani/CG-SQL-author/pull/250)
-ties the build to successful regeneration. A useful negative test makes
-regeneration fail while leaving old generated files in place. Otherwise
-we're only retesting the successful route.
+ties the build to successful regeneration. To check that failure path, old
+generated files need to remain in place when regeneration fails; otherwise
+a build might fail simply because its inputs are missing.
 
 ### The assertion has to describe the complete result
 
@@ -1939,9 +1860,6 @@ rand_state = (rand_state * UINT32_C(1302475243) + UINT32_C(21493))
   & UINT32_C(0x7fffffff);
 ```
 
-This defines the private C test generator's wraparound. It doesn't establish
-a new arithmetic policy for CQL programs.
-
 ### A permissive or disconnected checker leaves a hole
 
 The schema JSON validator used a case-insensitive scanner. That let
@@ -1954,22 +1872,20 @@ global option:
 +%option noyywrap nodefault yylineno
 ```
 
-Canonical uppercase `CRC` remains uppercase. JSON numbers still accept
-either exponent letter through an explicit `[Ee]` rule. This was a hole in
-the validator; it wasn't evidence that the compiler was emitting wrong-case
-JSON keys.
+Canonical uppercase `CRC` remains uppercase, and JSON numbers still accept
+either exponent letter through an explicit `[Ee]` rule. This was a validator
+bug; we hadn't found wrong-case JSON keys in the compiler's output.
 
-The default harness also omitted an existing extension-encoding check.
-[#252](https://github.com/ricomariani/CG-SQL-author/pull/252) wired it in.
-That test already ran in the extension suite and CI, so calling it a new
-test would overstate the change.
+The extension-encoding check already ran in the extension suite and CI, but
+the default harness had left it out.
+[#252](https://github.com/ricomariani/CG-SQL-author/pull/252) added it to
+that path.
 
-There was a more subtle configuration gap in global-procedure tracing.
-The emitter used a function name where `_PROC_` needed a C string. The normal
-no-op tracing macro never consumed that argument.
+Global-procedure tracing had a subtler configuration gap: the emitter used
+a function name where `_PROC_` needed a C string, and the normal no-op tracing
+macro never consumed the argument.
 [#231](https://github.com/ricomariani/CG-SQL-author/pull/231) tests a tracing
-configuration that actually uses it. Exercising the emitter with the default
-macro had given us no check of the emitted value's type.
+configuration that actually uses it and exposes the wrong type.
 
 ---
 
@@ -2012,7 +1928,7 @@ and rederives the pointer afterward:
 +memmove(mem, bytes, count);
 ```
 
-The test deliberately constructs the precondition:
+The regression checks full self-append and an interior slice:
 
 ```c
 static bool test_bytebuf_self_append() {
@@ -2040,8 +1956,8 @@ static bool test_bytebuf_self_append() {
 }
 ```
 
-The seed forces growth when duplicated; the final append tests an interior
-slice. This locks down a useful invariant for future callers.
+The seed is large enough to force growth when duplicated, so the test
+actually exercises pointer relocation.
 
 For formatted text, I chose a smaller contract. Supporting a format string
 inside the destination buffer would complicate a two-pass formatter. The
@@ -2054,8 +1970,9 @@ uintptr_t start = (uintptr_t)b->ptr;
 Contract(source < start || source - start >= b->max);
 ```
 
-String arguments retain a documented non-aliasing precondition too. This
-doesn't offer arbitrary self-formatting. We had no known caller needing it.
+String arguments retain a documented non-aliasing precondition too, giving
+us a deliberately limited contract for a helper that had no known need for
+self-formatting.
 
 ### A contract must survive the configuration that relies on it
 
@@ -2066,7 +1983,7 @@ Before this work the compiler macros were:
 #define Contract assert
 ```
 
-Compiling with `NDEBUG` removed them. The runtime had the same dependency.
+Both the compiler and runtime lost those checks when compiled with `NDEBUG`.
 The small always-on compiler replacement is:
 
 ```c
@@ -2076,26 +1993,20 @@ The small always-on compiler replacement is:
 
 The runtime change landed in
 [#204](https://github.com/ricomariani/CG-SQL-author/pull/204), with the
-compiler completed in #208. This keeps fail-fast checks meaningful in release
-builds. It doesn't establish that every caller formerly reached a bad
-unchecked access.
+compiler completed in #208, keeping fail-fast checks meaningful in release
+builds.
 
 Other preventive checks make the intended contracts explicit: runtime
 result-set/list bounds in #204, matching row sizes before result-set equality
 in [#213](https://github.com/ricomariani/CG-SQL-author/pull/213), and extension
 callback/ownership conditions in
 [`11e277c2`](https://github.com/ricomariani/CG-SQL-author/commit/11e277c2).
-None supplied a demonstrated ordinary-use failure in this review.
 
 The SHA-256 code in
 [#209](https://github.com/ricomariani/CG-SQL-author/pull/209) had a
 portability assumption: it allocated a byte array and read it through an
-`int64_t *`. The fix allocates integer storage and gives the digest writer a
-byte view, preserving the bytes while guaranteeing alignment and the right
-object type. A convenient stack address on the machines we happened to use
-had hidden that requirement.
-
-The code change shows both obligations:
+`int64_t *`. Convenient stack addresses on the machines we happened to use
+had hidden the alignment requirement, and the object type was wrong too:
 
 ```diff
 -SHA256_BYTE hash_bytes[64];
@@ -2107,8 +2018,9 @@ The code change shows both obligations:
 +int64_t hash = words[0] ^ words[1] ^ words[2] ^ words[3];
 ```
 
-Writing through a byte view of the words is allowed. Reading a byte array
-as though it had been allocated as aligned integer objects wasn't justified.
+The digest writer is allowed a byte view of the integer objects; the integer
+reads now have the required alignment and object type without changing the
+bytes.
 
 ### Bound the actual operation without building a new subsystem
 
@@ -2124,14 +2036,11 @@ The verifier's
 change likewise moved line-sized scratch storage from `alloca` to the heap.
 This is a robustness improvement in a test utility.
 
-We simplified several proposals during review: size blob output by logical
-length, use a depth guard for macros, length-prefix Lua keys, and share a
-runtime cast helper. The first proposals for these had considerably more
-machinery.
+Several of the first proposals had considerably more machinery than we
+needed. Working through the designs was as much a part of the review as
+checking the diagnoses.
 
 ### Proposals we did not adopt
-
-I declined these proposals.
 
 | Proposal | Why it was declined |
 |---|---|
@@ -2142,18 +2051,16 @@ I declined these proposals.
 | A generated-C symbol registry and reserved-name rejection (25) | The C compiler already diagnoses symbol conflicts. Tracking every generated symbol and scope was too much machinery. Banning only `_rc_` would miss other collisions; broad underscore bans would reject legitimate conventions. |
 | Lua keyword/name mangling (remainder of 27) | I didn't approve a new mangling scheme or naming restrictions. [#232](https://github.com/ricomariani/CG-SQL-author/pull/232) fixes canonical spelling only. |
 
-I also left numeric/Boolean validation of edited JSON out of #244. The sample
-normally consumes compiler JSON, and the attribute fix was about preserving
-those values. It doesn't provide comprehensive validation of hostile JSON.
-Diagram modes were outside that fix too.
+I also left numeric/Boolean validation of edited JSON out of #244 because
+the sample normally consumes compiler JSON and the attribute fix was about
+preserving those values. It doesn't comprehensively validate hostile JSON,
+and diagram modes were outside the fix too.
 
 ---
 
 ## Counting notes
 
-The counts describe the fixes reviewed here, including completed repairs to
-human-reported problems. They don't measure how many independent discoveries
-an AI made without help. I used these grouping rules:
+The 68 groups come from three batches:
 
 | Source of findings | Groups |
 |---|---:|
@@ -2195,16 +2102,14 @@ The seven security groups are the initial backed-blob shape/range checks,
 the initial stream-word bound, retained-field validation, unknown-type
 rejection, overlapping-field output sizing, complete stream-table validation,
 and field-counter limits. The unknown-type abort is Medium priority; the
-six hostile-data memory failures are Critical. These classifications apply
-to the less-trusted blob boundary described earlier.
+six hostile-data memory failures are Critical.
 
 For the other bugs, Important includes stale serialization pointers,
 incorrect numeric interpretation, flow/alias/type-property failures,
 cancelled schema checksums, Lua results and wrapper state, generated C escapes,
 SQL grouping, .NET marshalling, and the include/Windows memory bounds.
 More limited encoding, metadata, source-validation, diagnostic, and lifecycle
-failures are Medium. These are engineering judgments about fix priority,
-not observed incident frequencies or exploit scores.
+failures are Medium.
 
 ### Reproducing the source denominator
 
@@ -2242,15 +2147,12 @@ The density uses the pre-audit 89.419 KLOC:
 45 / 89.419 = 0.50, split into 7 / 89.419 = 0.08 security and
 38 / 89.419 = 0.42 other correctness groups per KLOC.
 The human-era scale comparison uses 12 / 89.419 = 0.13 per year.
-The operational estimate remains my recollection; the public history isn't
-a complete incident ledger.
 
 The coverage-size calculation uses the November 2 report from `sources/cov.sh`:
 39,789 instrumented lines minus 291 in `unit_tests.c` gives 39,498 production
 lines. Using that post-fix size reference, 43 / 39.498 = 1.09 native bug
 groups per instrumented KLOC; 7 / 39.498 = 0.18 security and
-36 / 39.498 = 0.91 other correctness. This report isn't a measurement of
-the historical pre-audit build.
+36 / 39.498 = 0.91 other correctness.
 
 The authorship table comes from:
 
@@ -2265,45 +2167,37 @@ calendar date. Merge commits and coauthor trailers aren't additional rows.
 
 ## What we learned about testing
 
-We found bounds and allocation errors in readers of hostile data, basic
-first-use failures in lightly used code, and missed consumers of the QID
-invariant. Heavily used features still had gaps in encoding and test diversity.
-Checks I'd intended for another layer never got implemented, and some test
-drivers could hide failures.
+So was I making a systematic mistake, or had I run out of useful passes
+over code I knew too well?
 
 Some weaknesses were systematic. I'd intended validation to happen at
-another layer without making sure the check actually existed. Test drivers
-didn't always propagate errors. Some tests checked generated text or
-successful parsing without checking the resulting value. Those findings
-support specific improvements to validation ownership, error propagation,
-and result checks.
+another layer without making sure the check actually existed, test drivers
+didn't always propagate errors, and some tests checked generated text or
+successful parsing without checking the resulting value.
 
-The new regressions also prove that the missed cases were testable.
-The difficult question is how to be inspired to create the tests you
-haven't thought of. A list of cases is easy to produce after seeing the
-failures. QIDs already had TDD, a burndown list, and dozens of passes by me.
-Another pass by me was unlikely to find the remaining consumers; I had
-already tried that repeatedly. Even ruthless test discipline left cases
-behind.
+The regressions prove that the missed cases were testable, but how do you
+get inspired to write the tests you haven't thought of? A list of cases
+is easy to produce after seeing the failures. QIDs had already had that
+kind of disciplined attention, and I don't think another pass by me was
+likely to supply the missing examples.
 
-This shows the limits of what I was getting from repeated review by the
-same person. It doesn't establish a limit on what any determined human
-could find. More contributors could have supplied different experience
-and independent scrutiny. But recruiting a new maintainer to learn the
-whole compiler and meticulously work through this many findings is a
-substantial commitment. That breadth of familiarity and review might
-develop over years. It wasn't help I could simply assume would arrive.
+I can't turn that into a general limit on what one human can accomplish,
+but I can see the diminishing returns from my own repeated reviews.
+More contributors could have supplied different experience and independent
+scrutiny, but could I recruit someone to learn the whole compiler and
+meticulously work through this many findings? That might take years, and
+it wasn't help I could simply assume would arrive.
 
-More usage would plainly have helped, especially with the first-use
-failures in lightly used features. Under our usual process, many of these
-bugs were waiting for a user to stumble into the right combination.
-Hostile-data cases need deliberate examination too: the overlapping
-payloads, for example, aren't produced by the normal writer.
+More usage would plainly have helped with the first-use failures in lightly
+used features. Under our usual process, many of these bugs were waiting for
+a user to stumble into the right combination. The hostile-data cases also
+needed deliberate examination: overlapping payloads aren't produced by the
+normal writer.
 
-The AI supplied an independent examination of code and assumptions I had
-already reviewed repeatedly. We could ask it to keep looking across the
-implementation, reproduce the useful counterexamples, and work through
-the repairs. We still had to review the diagnoses, reject unsupported
-security claims, and decline uneconomical changes. The accepted examples
-became regression tests. That is a practical addition to the testing
-process: another way to discover cases before a user supplies them.
+The AI gave us a practical way to ask for independent scrutiny across the
+whole implementation. It could keep looking, help reproduce the useful
+counterexamples, and work through the repairs with me. My part was still
+substantial, including reviewing the diagnoses, rejecting unsupported
+security claims, and declining uneconomical changes. We could turn the
+accepted counterexamples into fixes and regression tests before a user had
+to find them.

@@ -206,7 +206,7 @@ encoder, but these files' lines aren't in the core denominator.
 | `dotnet_demo/CQLInterop.cs` | 0.227 | `*` | NULL/empty blob results and native-buffer cleanup |
 | `dotnet_demo/cql_interop.c` | 0.129 | `*` | NULL/empty blob ABI and native copying |
 | `java_demo/cqljava.py` | 1.031 | `*` | Projection identifier encoding and member collisions |
-| `make_amalgam.sh` | 0.240 | `*` | Windows path-buffer size emitted into the amalgam |
+| `make_amalgam.sh` | 0.240 | `*` | Windows amalgam's `PATH_MAX`/`_MAX_PATH` mismatch |
 | `objc_full/cql_objc_full.py` | 0.921 | `*` | Projection names, matching declarations and definitions |
 | `sqlite3_cql_extension/cqlsqlite3extension.py` | 0.710 | `*` | SQL/C name and literal encoding |
 
@@ -239,9 +239,10 @@ caller adaptations merely because the patch touched them. The C hex-escape
 repair, for example, belongs to `encoders.c`, not every generator that uses
 its helpers.
 
-Attribution also explains two less obvious placements. The Windows buffer
-mismatch came from the definition emitted by `make_amalgam.sh`, outside the
-core source denominator. Conversely, #245's binding-name finding includes
+Attribution also explains two less obvious placements. The Windows
+`PATH_MAX`/`_MAX_PATH` mismatch came from the definition emitted by
+`make_amalgam.sh`, outside the core source denominator. Conversely, #245's
+binding-name finding includes
 the core `encoders.c` correction for ordinary capital-X identifiers. That
 finding belongs in the core count as well as in the sample rows.
 
@@ -803,9 +804,15 @@ path. Pool-backed storage removed the fixed destination.
 
 The Windows/amalgam path in
 [#204](https://github.com/ricomariani/CG-SQL-author/pull/204) had a related
-size disagreement: an amalgam destination used 255 bytes while `_fullpath`
-was allowed `_MAX_PATH`. The diagnostic printer had yet another size
-dimension: a 2,100-`NOT` AST could exhaust its indentation buffer. Its
+size disagreement between two macros. `make_amalgam.sh` emitted
+`#define PATH_MAX 255`, and the lexer allocated `char resolved_path[PATH_MAX]`.
+The Windows `Realpath` wrapper passed that buffer to `_fullpath` with
+`_MAX_PATH` as the size limit, allowing it to write more bytes than the
+destination could hold. The fix was `#define PATH_MAX _MAX_PATH`, so the
+allocation matches the limit passed to `_fullpath`.
+
+The diagnostic printer had yet another size dimension: a 2,100-`NOT` AST
+could exhaust its indentation buffer. Its
 [#215](https://github.com/ricomariani/CG-SQL-author/pull/215) repair truncates
 diagnostic descent with a marker while leaving accepted SQL nesting alone.
 
@@ -2074,7 +2081,7 @@ because one concerns constructing a consistent value and the other concerns
 accepting hostile stored bytes.
 
 The seven #204 findings are runtime collection bounds, non-elidable contracts,
-Windows destination sizing, provenance line-comment encoding, Lua long-comment
+Windows `PATH_MAX` sizing, provenance line-comment encoding, Lua long-comment
 delimiters, sample SQL encoding, and extension SQL/C encoding. The compiler
 contract completion in #208 stays with the runtime contract finding; the
 format-alias contract is separate.

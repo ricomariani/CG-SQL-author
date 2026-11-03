@@ -96,11 +96,15 @@ case.
 
 ### Bugs per KLOC
 
-For physical-line density, I count bugs and lines in the same set of files:
+**Raw KLOC** counts all source lines, including comments, blank lines,
+`#define`s, and other non-executable text. **Executable KLOC** counts source
+lines with generated machine code associated with them, as reported by
+coverage for a particular build.
+
+For raw-line density, I count bugs and lines in the same set of files:
 the root `sources/*.c` and `*.h` files except `unit_tests.c`, plus the grammar,
 lexer, and Lua runtime. This excludes tests, generated distributions,
-vendored SQLite, Python bindings, and the extension bridge. As in the
-earlier appendix, physical lines include comments and blanks.
+vendored SQLite, Python bindings, and the extension bridge.
 
 | Measure | Count |
 |---|---:|
@@ -110,40 +114,31 @@ earlier appendix, physical lines include comments and blanks.
 | Of those, security groups | 7 |
 | Of those, other correctness groups | 38 |
 | Additional preventive groups within that surface | 6 |
-| Core bugs found per pre-audit physical KLOC | **0.50** |
-| Core security bugs per pre-audit physical KLOC | **0.08** |
-| Core other correctness bugs per pre-audit physical KLOC | **0.42** |
+| Core bugs found per pre-audit raw KLOC | **0.50** |
+| Core security bugs per pre-audit raw KLOC | **0.08** |
+| Core other correctness bugs per pre-audit raw KLOC | **0.42** |
 
 The other seven correctness groups belong to build support, samples, and
 tools outside that denominator. Dividing all 68 findings by the compiler's
 size would mix different sets of code and count preventive work as bugs.
 
-There are other useful ways to measure the code's size. At the pre-audit
-endpoint, **52,289 C/header lines carry code**: 51,092 code-only lines plus
-1,197 mixed code/comment lines, using the lexical counting method in the
-earlier appendix.
-
-The November 2 coverage report counts the instrumented lines:
+The November 2 coverage report gives us the executable-line count:
 
 | Coverage-report measure | Lines |
 |---|---:|
-| All instrumented lines | 39,789 |
+| All executable lines | 39,789 |
 | Of those, `unit_tests.c` | 291 |
-| Production instrumented C lines, including grammar/lexer actions and counted headers | **39,498** |
-| Production instrumented lines executed | **39,498 (100%)** |
+| Production executable C lines, including grammar/lexer actions and code in headers | **39,498** |
+| Production executable lines covered | **39,498 (100%)** |
 
 Two of the 45 core bug groups were confined to the Lua runtime: negative
 integer casts and partition-key encoding. The remaining **43 native
-compiler/runtime groups** give approximately **1.09 bugs per instrumented
+compiler/runtime groups** give approximately **1.09 bugs per executable
 C KLOC**, split into **0.18 security** and **0.91 other correctness**.
 This is a rough normalisation using the post-fix coverage build as a size
 reference. It depends on that platform and build configuration, doesn't
 include Lua runtime lines, and isn't a reconstructed pre-audit
 executable-line count.
-
-Code-bearing lines include declarations and other text that needn't produce
-an instrumented line, so the three size measures answer different questions.
-There's enough commentary in this codebase for that distinction to matter.
 
 I think the code held up pretty well. This was a concentrated examination
 of a mature implementation, including features with very little use.
@@ -156,15 +151,15 @@ The aggregate density hides quite a bit. In this file-level heatmap,
 **each `*` represents a bug family affecting that file**; preventive work
 doesn't get a star. All paths are relative to `sources/`.
 
-The size columns use the measures above: **pre-audit KLOC** is physical size
-at `8793b00f`, and **instrumented KLOC** comes from the post-fix November 2
+The size columns use the measures above: **raw KLOC** is the file size
+at `8793b00f`, and **executable KLOC** comes from the post-fix November 2
 coverage report. A dash means the file isn't represented in that report.
 
 The core table includes every root C implementation file except `unit_tests.c`,
 plus the lexer, grammar, and Lua runtime. Headers contribute to the aggregate
 denominator above but have no separate bug sites in this inventory.
 
-| Core implementation file | Pre-audit KLOC | Instrumented KLOC | Bugs | Theme |
+| Core implementation file | Raw KLOC | Executable KLOC | Bugs | Theme |
 |---|---:|---:|---|---|
 | `cqlrt_common.c` | 7.228 | 3.406 | `**********` | Blob validation, arithmetic, update sizing, serializer growth |
 | `sem.c` | 27.347 | 13.533 | `******` | Numeric ranges, empty sets, aliasing, rowid and scalar properties |
@@ -202,7 +197,7 @@ The other affected production/build files cover eight families, seven
 additional to the core. The binding-name family also appears in the core
 encoder, but these files' lines aren't in the core denominator.
 
-| Other production/build file | Pre-audit KLOC | Bugs | Theme |
+| Other production/build file | Raw KLOC | Bugs | Theme |
 |---|---:|---|---|
 | `cqljson/cqljson.py` | 0.694 | `**` | SQL encoding, reconstructed attribute values |
 | `dotnet_demo/cqlcs.py` | 1.013 | `**` | Projection names, actual blob marshalling |
@@ -215,12 +210,12 @@ encoder, but these files' lines aren't in the core denominator.
 | `objc_full/cql_objc_full.py` | 0.921 | `*` | Projection names, matching declarations and definitions |
 | `sqlite3_cql_extension/cqlsqlite3extension.py` | 0.710 | `*` | SQL/C name and literal encoding |
 
-For test/tooling findings, both size columns count physical lines, and a
+For test/tooling findings, both size columns count raw lines, and a
 dash means the file didn't exist before the audit. Two drivers and some
 checks were added during this work, so these aren't all defects in the
 pre-audit checkout.
 
-| Test/tooling file | Pre-audit KLOC | Post-fix KLOC | Bugs | Theme |
+| Test/tooling file | Raw KLOC (pre-audit) | Raw KLOC (post-fix) | Bugs | Theme |
 |---|---:|---:|---|---|
 | `test/run_test_client.c` | 1.228 | 1.248 | `***` | Incomplete results, physical schema checks, PRNG overflow |
 | `cql-verify/make.sh` | 0.002 | 0.003 | `*` | Regeneration errors ignored |
@@ -249,13 +244,13 @@ core source denominator. Conversely, #245's binding-name family includes
 the core `encoders.c` correction for ordinary capital-X identifiers. That
 family belongs in the core count as well as in the sample rows.
 
-The small encoder has five families; the 27-KLOC semantic analyzer has six.
-The 6-KLOC rewrite implementation has none in this inventory. The blob
+The small encoder has five families; the semantic analyzer has six in
+27 raw KLOC. The rewrite implementation has none in 6 raw KLOC. The blob
 runtime alone has ten, including all seven security families. Much of the
 concentration is at representation boundaries: stored bytes, target-language
 text, and names crossing between systems.
 
-I find that distribution more informative than a uniform 0.50 bugs/KLOC.
+I find that distribution more informative than a uniform 0.50 bugs per raw KLOC.
 We didn't measure equal review effort or equal exposure in use, and a zero
 only means we found no bug there in this review. The table can't tell us
 each file's remaining defect rate.
@@ -263,15 +258,15 @@ each file's remaining defect rate.
 ### Compared with the human-found era
 
 My recollection of the heavily used Meta version is roughly **12 operational
-bugs per year**. Using the same 89.419 KLOC merely as a scale reference gives
-about **0.13 bugs/KLOC/year**. The earlier appendix's narrower C/header
-denominator, 82.575 KLOC, gives about **0.15**.
+bugs per year**. Using the same 89.419 raw KLOC merely as a scale reference
+gives about **0.13 bugs per raw KLOC per year**. The earlier appendix's
+narrower C/header denominator, 82.575 raw KLOC, gives about **0.15**.
 
 | Human-era observation | AI-assisted audit |
 |---|---|
 | Roughly 12 operational bugs per year, from maintainer recollection | 52 compiler/runtime/build/sample bug groups over this review |
 | Daily use by hundreds of developers at Meta | Targeted examination of the OSS fork, including lightly used features |
-| About 0.13 operational bugs/KLOC/year at the reference size | 0.50 core bug groups/KLOC in a concentrated pass |
+| About 0.13 operational bugs per raw KLOC/year at the reference size | 0.50 core bug groups per raw KLOC in a concentrated pass |
 
 We don't have a comparable census of every human-found development-time bug,
 and an annual field rate has different units and inputs from an audit yield.
@@ -2139,19 +2134,19 @@ for revision in ("8793b00f", "837956ba"):
 It prints 89,419 and 90,377, counting a final unterminated line as a line.
 For each heatmap file, the same
 `len(git("show", f"{revision}:{path}").splitlines()) / 1000` calculation gives
-physical KLOC, rounded to three decimal places. Pre-audit sizes use
-`8793b00f`; post-fix sizes use `837956ba`. Instrumented sizes use the matching
+raw KLOC, rounded to three decimal places. Pre-audit sizes use
+`8793b00f`; post-fix sizes use `837956ba`. Executable sizes use the matching
 file's `Lines` column in the November 2 coverage report, divided by 1,000.
 
-The density uses the pre-audit 89.419 KLOC:
+The raw-line density uses the pre-audit 89.419 raw KLOC:
 45 / 89.419 = 0.50, split into 7 / 89.419 = 0.08 security and
-38 / 89.419 = 0.42 other correctness groups per KLOC.
-The human-era scale comparison uses 12 / 89.419 = 0.13 per year.
+38 / 89.419 = 0.42 other correctness groups per raw KLOC.
+The human-era scale comparison uses 12 / 89.419 = 0.13 per raw KLOC per year.
 
-The coverage-size calculation uses the November 2 report from `sources/cov.sh`:
-39,789 instrumented lines minus 291 in `unit_tests.c` gives 39,498 production
+The executable-line count comes from the November 2 `sources/cov.sh` report:
+39,789 executable lines minus 291 in `unit_tests.c` gives 39,498 production
 lines. Using that post-fix size reference, 43 / 39.498 = 1.09 native bug
-groups per instrumented KLOC; 7 / 39.498 = 0.18 security and
+groups per executable KLOC; 7 / 39.498 = 0.18 security and
 36 / 39.498 = 0.91 other correctness.
 
 The authorship table comes from:

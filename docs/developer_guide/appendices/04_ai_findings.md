@@ -278,11 +278,15 @@ testing, and operational use.
 
 The counting notes near the end explain the grouping decisions.
 
-### Users and maintainers
+### Fewer maintainers, fewer users
 
-The hundreds of developers using CQL supplied many use-cases, but the public
-maintenance history was much more concentrated. Here are the primary-author
-counts for first-parent, non-merge commits through the studied endpoint:
+As the public fork lost active maintainers and users, it also lost independent
+review and ad hoc testing. Fewer people were questioning changes, and fewer
+applications were exercising combinations I hadn't thought to put in the
+test suite.
+
+The primary-author counts for first-parent, non-merge commits through the
+studied endpoint show how concentrated maintenance became:
 
 | Period, by author date | All commits | Mine | My share |
 |---|---:|---:|---:|
@@ -301,10 +305,12 @@ There were important later contributions too. Joris Garonian introduced the
 and `amyworrall` contributed
 [UTF-8 encoding work in 2025](https://github.com/ricomariani/CG-SQL-author/commit/8818eb4520ee).
 
-These are authorship counts, not counts of reviewers or internal Meta work.
-AI-assisted changes also remain under my author name. The initial public
-import already contained a mature implementation, so commit shares don't
-measure who originally wrote every line.
+These are authorship counts, not counts of reviewers, users, or internal
+Meta work. AI-assisted changes also remain under my author name.
+
+Keeping the compiler at 100% line coverage didn't replace that lost feedback.
+The AI supplied another detailed examination of code that was increasingly
+being written, tested, and reviewed by the same person.
 
 ---
 
@@ -2169,6 +2175,8 @@ git log --first-parent --no-merges --format='%aN%x09%as' 837956ba
 
 I grouped by the primary author name and filtered on the printed author
 calendar date. Merge commits and coauthor trailers aren't additional rows.
+The initial public import already contained a mature implementation, so
+these commit shares don't measure who originally wrote every line.
 
 ---
 

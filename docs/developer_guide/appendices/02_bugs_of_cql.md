@@ -9,24 +9,34 @@ weight: 2
 -- LICENSE file in the root directory of this source tree.
 -->
 
-## A point-in-time study of defects in the public history of CG/SQL
+## The human-found era in the public history of CG/SQL
 
-**Study date:** October 13, 2026
+**Study date:** October 13, 2026; scope revised November 2, 2026
 
-**Public-history window:** October 7, 2020 through October 10, 2026
+**Discovery-era window:** October 7, 2020 through May 14, 2026
 
-**Analyzed endpoint:** [`957db34adb4337afb4498d9feabea7cdb4f9036a`](https://github.com/ricomariani/CG-SQL-author/commit/957db34adb4337afb4498d9feabea7cdb4f9036a)
+**Analyzed endpoint:** [`8793b00f`](https://github.com/ricomariani/CG-SQL-author/commit/8793b00f4f8813fc1df884b6519ccf26b3235889)
 
 **Repository:** `ricomariani/CG-SQL-author`
 
 ### How to read this appendix
 
-Read this as a historical snapshot. It is not a live quality dashboard. The
-counts, file sizes, examples, and conclusions describe the public repository
-at the analyzed endpoint on October 10, 2026. I did not read later fixes or
-architectural changes back into the results.
+This appendix covers the **human-found era**: failures reported by users,
+observed in ordinary use, or found during human-directed feature development.
+The AI-assisted discovery period beginning May 15, 2026 is covered separately in
+[The AI-Found Bugs of CQL](./04_ai_findings.md).
 
-The public history also begins with an already mature compiler. It does not
+During the era described here, CQL was getting regular daily use from hundreds
+of developers at Meta. It still gets that use, but not with this open-source
+version. The core compiler and schema-upgrade paths got a great deal of use.
+QIDs and the two public blob serialization facilities were lightly used.
+
+There were no mainline commits between January 28 and May 15, so the endpoint
+is the last public mainline state before the discovery boundary. Source and
+test measurements below have been recomputed there. I removed the earlier
+fix counts and correlations that mixed the two eras.
+
+The public history begins with an already mature compiler. It does not
 contain CQL's earlier internal development, when the architecture and defect
 profile would have been substantially different. This appendix is about the
 maintenance history of the mature, open-source codebase.
@@ -50,7 +60,7 @@ That changed several conclusions:
 - I corrected the interpretation of CQL's fail-fast AST and tree-shape
   development model;
 - I separated observed operational bugs from development-time failures,
-  CI-prevented pushes, and prophylactic audit hardening;
+  CI-prevented pushes, and changes that did not represent field incidents;
 - I added what I remember from sustained production use: roughly 12 real bugs
   per year;
 - I corrected an overbroad interpretation of compiler global state and
@@ -59,8 +69,8 @@ That changed several conclusions:
 - I audited every code sample and expanded examples that did not show enough
   setup, operation, or test evidence.
 
-So the agent did a lot of the research and drafting. I checked and rewrote the
-result, and I own it. The appendix is in my voice and these are my conclusions.
+The agent did a lot of the research and drafting. I checked and rewrote the
+result, and I own it.
 
 Use this as an engineering study. There is no authoritative incident ledger
 behind these numbers, so read them with the limits stated below.
@@ -69,15 +79,9 @@ behind these numbers, so read them with the limits stated below.
 
 ## Summary
 
-The short version: CG/SQL's public history looks like a mature compiler with a
-very specific defect shape. The bugs cluster at **boundaries between otherwise
-well-structured subsystems**.
-
-Here is the pattern that matters most:
-
-> The code usually gets each local operation right. Bugs recur when one fact
-> must remain true across several compiler phases, representations, backends, or
-> ownership conventions.
+The bugs cluster where a fact has to survive several compiler phases,
+representations, backends, or ownership conventions. Individual operations
+usually work; keeping them in agreement is harder.
 
 I came away with seven ideas that organize the history:
 
@@ -105,7 +109,7 @@ I came away with seven ideas that organize the history:
    against tempting changes preserve the WHY that the C type system cannot
    express.
 6. **Coverage-driven fail-fast development plus independent tests** - 100%
-   coverage and always-on contracts force new tree shapes through every stage
+   coverage and fail-fast contracts force new tree shapes through every stage
    that can see them. Golden output is still only a consistency oracle, so the
    hardest remaining bugs survived when the compiler and its expected outputs
    shared the same mistaken assumption.
@@ -114,18 +118,14 @@ I came away with seven ideas that organize the history:
    backends. Their required standard changed when their job changed.
 
 CQL is also a useful counterexample to a fair amount of conventional C advice.
-It has a 27,000-line semantic-analysis file, hundreds of file-static variables,
-large macros, and several very long functions. At the same time, the median
-function is only 14 lines, naming is exceptionally regular, the comment corpus
-is unusually large and purposeful, contracts are dense and always on, arenas
-simplify allocation lifetimes, and the test suite compiles and executes
-generated code through several independent paths.
+It has a 27,000-line semantic-analysis file, extensive file-static state,
+large macros, and several very long functions. At the same time, many handlers
+are small, naming is exceptionally regular, the comment corpus is unusually
+large and purposeful, contracts are dense, arenas simplify allocation
+lifetimes, and the test suite compiles and executes generated code through
+several independent paths.
 
-The apparent contradiction is the interesting part:
-
-> CQL succeeds because its departures from conventional structural advice are
-> consistent, and because the compensating mechanisms fit the compiler it
-> actually is.
+The naming, contracts, comments, and tests make this arrangement practical.
 
 ---
 
@@ -140,31 +140,21 @@ I examined only the public Git history. The root commit is:
 | Subject | `Initial commit` |
 | Initial import | 249 files, 184,612 inserted lines |
 
-At the analyzed mainline tip, I found:
+At the human-era endpoint, I found:
 
 | Measure | Count |
 |---|---:|
-| Mainline commits | 2,238 |
-| Mainline non-merge commits | 2,233 |
-| Mainline merge commits | 5 |
-| Unique commits across local public refs | 2,266 |
-| Mainline activity span | 2020-10-07 to 2026-10-10 |
+| First-parent mainline commits | 2,182 |
+| First-parent non-merge commits | 2,178 |
+| First-parent merge commits | 4 |
+| All commits reachable from the endpoint | 2,209 |
+| Mainline activity span | 2020-10-07 to 2026-01-28 |
 
-I screened commit messages conservatively:
-
-- 809 commits contained some possible defect language.
-- 284 subjects used stronger defect language.
-- 88 commits remained after requiring production-code changes and excluding
-  obvious documentation, formatting, build-only, and coverage-only work.
-
-The number **88 is not a bug count**. Commit subjects overcount and undercount
-in equal-opportunity fashion. Some commits called "fix" are cleanup. Some real
-fixes are titled "Handle", "Require", "Validate", "Coverage", or simply state a
-new invariant. A large audit commit can also contain several independent
-corrections. Recent audit work also includes theoretical invariant hardening
-that had no known failing caller. Rapid revert/reapply chains can record one
-real bug plus a bad attempted fix that CI prevented from progressing. I use the
-screen for trends and candidate selection, not as an exact defect ledger.
+These are history counts, not bug counts. Some commits called "fix" are cleanup.
+Some real fixes are titled "Handle", "Coverage", or simply state a new rule.
+Rapid revert/reapply chains can record one real bug plus a bad attempted fix
+that CI prevented from progressing. I use commit messages to locate evidence,
+not as an exact defect ledger.
 
 I then inspected representative commits by patch, affected production files,
 tests, and generated-reference changes. The safety boundary is deliberate:
@@ -177,43 +167,24 @@ exploitability.
 
 ### Activity by year
 
-| Year | Mainline commits | Conservative production-fix candidates | Approximate share |
-|---|---:|---:|---:|
-| 2020 | 131 | 4 | 3.1% |
-| 2021 | 541 | 23 | 4.3% |
-| 2022 | 416 | 13 | 3.1% |
-| 2023 | 461 | 22 | 4.8% |
-| 2024 | 410 | 14 | 3.4% |
-| 2025 | 182 | 2 | 1.1% |
-| 2026 through October 10 | 97 | 10 | 10.3% |
+| Year | First-parent mainline commits |
+|---|---:|
+| 2020 | 131 |
+| 2021 | 541 |
+| 2022 | 416 |
+| 2023 | 434 |
+| 2024 | 410 |
+| 2025 | 182 |
+| 2026 through January 28 | 68 |
 
-The 2025 number shows why message-based classification needs some humility. An
-important reentrancy fix was hidden in a commit whose subject began with
-coverage work. The 2026 screen likewise misses plainly corrective commits
-titled "Validate", "Require", "Handle", and "Size". What I can say is that 2026
-contains a concentrated correctness-audit spike. Much of that spike came from
-AI-assisted review, and several findings are prophylactic rather than observed
-failures. Calling these "exactly ten bugs" would give the heuristic precision
-it does not have.
-
-### Observed bugs versus audit hardening
-
-The late-2026 changes need their own bucket.
-
-For most older fixes, the history and my recollection are consistent with a
-reported failure, something I personally observed, or a failure found while
-developing a feature. I treated the recent AI-assisted audit work differently.
-I let the agent ask, "What assumption here is not enforced?" That is a useful
-question, and it produces a different kind of change.
-
-Representative late-audit changes added buffer-aliasing contracts and
-whole-shape representation checks. These are prophylactic hardening, not
-evidence of field failures; detailed examples appear below.
+Commit messages can be misleading. An important 2025 reentrancy fix,
+for example, was hidden in a commit whose subject began with coverage work.
+Activity is useful context, but neither a commit count nor a keyword screen
+establishes how many defects users experienced.
 
 ### CI-caught changes are bugs prevented
 
-Git history records what was pushed, not what survived the delivery process.
-Those are not the same thing.
+Git history includes bad pushes that CI caught before they went any further.
 
 The `cql_multinull` object-handling chain is the cleanest example:
 
@@ -237,20 +208,12 @@ prevention machinery, not counted as additional field failures.
 
 ### Where fixes occurred
 
-The following counts overlap because a commit can affect several phases:
+The cases below span semantic analysis, code generation, runtime behavior,
+SQL rewriting, schema migration, parsing, and downstream tools. They often
+cross phase boundaries, so even a manually classified fix is not necessarily
+one subsystem's bug.
 
-| Phase or file family | Candidates in the conservative 88-commit screen |
-|---|---:|
-| Code generation | 25 |
-| Runtime | 24 |
-| Semantic analysis | 22 |
-| Other tools and bindings | 16 |
-| Core AST, buffer, and symbol utilities | 9 |
-| Parser | 9 |
-| Lexer | 7 |
-| SQL echo and rewriting | 6 |
-
-This distribution looks right for a compiler, with one CQL-specific twist.
+There is one CQL-specific twist.
 Traditional optimizing compilers often find many wrong-code bugs in
 optimization passes. CQL has extensive rewrites and code generation, without a
 GCC/LLVM-style tower of aggressive machine-level optimization passes. CQL's
@@ -264,22 +227,17 @@ machine-level optimization.
 
 Yes.
 
-My recollection from the years of constant use at Meta is about **12 real bugs
-per year**. The public history lines up with that number.
+My recollection from the years of constant daily use by hundreds of developers
+at Meta is about **12 real bugs per year**. That is operational context from
+the maintainer, not a number derived by counting public fix commits.
 
-The conservative screen found 88 production-fix candidates over roughly six
-public years, or about 14.6 candidate commits per year. Using the five complete
-years from 2021 through 2025 gives 14.8 per year. Candidate commits mix
-hardening, pre-check-in failures, CI-rejected attempts, cleanup, multi-commit
-fixes, and bugs hidden by neutral or bundled commit subjects, so the screen
-cannot establish an incident count.
-
-Given those effects, roughly 12 real bugs per year is entirely plausible. Git
-cannot prove the exact number; that would require a complete issue and incident
-ledger. Still, the number is supportable and fits the public evidence.
+The historical cases fit the character of that experience, but Git cannot
+prove the exact incident rate. That would require a complete issue and
+incident ledger. In particular, findings from a different discovery process
+must not be added to this era and divided by its years of operational use.
 
 Even if I set my recollection aside, I judge that rate to be exceptionally
-low. The system is roughly 83,000 lines of current core C and headers, with a
+low. The endpoint has roughly 83,000 lines of core C and headers, with a
 grammar, multiple generators, a runtime, schema migration, several
 representation formats, and years of sustained production use. About one
 observed bug a month across that surface is a very strong result.
@@ -411,8 +369,8 @@ This commit likewise added no dedicated regression test. These definitions had
 already served their semantic purpose, so the correct backend evidence was the
 explicit no-op classification rather than generated output.
 
-The details matter here. These nodes were deliberately ignored by codegen.
-They are the awkward edge of the fail-fast scheme: the correct handler is
+These nodes were deliberately ignored by codegen.
+They are an awkward case for the fail-fast scheme: the correct handler is
 `NO_OP`, so there may be no ordinary generated output to make the omission
 obvious except the assertion itself.
 
@@ -545,12 +503,10 @@ begin
 end;
 ```
 
-The details matter here. This repeated defect says more about the abstraction
-than the care of the person writing the code. The architecture had two distinct
-operations, `report_error` and `record_error`, and convention was responsible
-for keeping them paired.
+We had two operations, `report_error` and `record_error`, that callers had to
+remember to pair. We kept making the same mistake.
 
-#### Semantic flags are a lattice, not a single property
+#### Combining semantic flags
 
 The 2021 `substr` fix combined nullability and sensitivity from all arguments
 instead of copying flags from only the text operand:
@@ -787,7 +743,7 @@ legitimate answers:
 Each one is locally reasonable. Trouble starts when code reuses one where
 another is required.
 
-#### The first problem was the model, not merely the comparator
+#### The version-history model was wrong
 
 The original theory treated schema versions as a durable history. Each version
 had a CRC, so parallel development could add different work to the same version
@@ -1092,158 +1048,34 @@ Its regression used the kind of interleaving that declaration order could not
 solve: one group contained a table that depended on another group, followed by
 another table from the first group.
 
-Every recreate-group correction I found predates the first public version tag,
+Every recreate-group correction I found within this human-found window
+predates the first public version tag,
 `v1.0.0`, on February 25, 2024. I found no later functional recreate-group fix
-and no public issue or commit describing a released recreate-group incident.
+within the window and no public issue or commit describing a released
+recreate-group incident.
 That absence cannot prove private deployment history, but it corroborates my
 recollection that the issues were found before release and that the feature
 produced no customer incident.
 
-This is the positive counterexample. The earlier migration failures repeatedly
-revealed missing concepts in the state model. Recreate-group failures were
-bounded implementation edges around an explicit dependency graph and an
-end-to-end physical-schema oracle. Each counterexample produced a focused fix
-and a durable regression rather than another redesign of the subsystem.
+By then we had an explicit dependency graph and tests that checked the
+physical schema end to end. We could fix each recreate-group failure and
+add a regression without redesigning the subsystem again.
 
 #### Identifier correctness was distributed
 
-Quoted identifiers recur in schema and SQL-generation fixes. The October 2026
-schema-drop correction touched all four dynamic emitters:
+The October 2023 quoted-identifier work,
+[`ead444bf`](https://github.com/ricomariani/CG-SQL-author/commit/ead444bf),
+changed a major invariant: an internal name was no longer necessarily a
+ready-to-print SQL identifier. The compiler had to preserve quoted status,
+canonical identity, and target-language spelling across many consumers.
 
-```diff
--  bprintf(decls, "  CALL cql_exec_internal(printf('DROP TABLE IF EXISTS [%%s]', table_name));\n");
-+  // SQLite identifiers escape embedded double quotes by doubling them.
-+  bprintf(decls, "  CALL cql_exec_internal(printf('DROP TABLE IF EXISTS \"%%s\"', replace(table_name, '\"', '\"\"')));\n");
+This fork-only feature was developed test-first, with an explicit burndown
+list of major identifier usages. It was well tested but lightly used. Those
+are compatible facts: even a systematic list depends on remembering all the
+places a name can appear.
 
-@@
--    bprintf(output, "    CALL cql_exec_internal(printf('DROP TRIGGER [%%s];', C.name));\n");
-+    bprintf(output, "    CALL cql_exec_internal(printf('DROP TRIGGER \"%%s\";', replace(C.name, '\"', '\"\"')));\n");
-
-@@
--    bprintf(output, "    CALL cql_exec_internal(printf('DROP VIEW [%%s];', C.name));\n");
-+    bprintf(output, "    CALL cql_exec_internal(printf('DROP VIEW \"%%s\";', replace(C.name, '\"', '\"\"')));\n");
-
-@@
--    bprintf(output, "    CALL cql_exec_internal(printf('DROP INDEX [%%s];', C.name));\n");
-+    bprintf(output, "    CALL cql_exec_internal(printf('DROP INDEX \"%%s\";', replace(C.name, '\"', '\"\"')));\n");
-```
-
-Commit:
-[`8500516b9efa7f35e9406210600adb8efce4fb9a`](https://github.com/ricomariani/CG-SQL-author/commit/8500516b9efa7f35e9406210600adb8efce4fb9a)
-
-The executable upgrade tests create names containing both `]` and `"`. They
-exercise a targeted table-drop helper plus an unmanaged view, trigger, and
-index discovered during exclusive upgrade, then verify the targeted objects
-are gone and unrelated table data survived:
-
-```sql
-create proc verify_quoted_table_drops()
-begin
-  declare names cursor for select 'identifier_table]bracket' name
-    union all select 'identifier_table"quote' name;
-  loop fetch names
-  begin
-    call cql_exec_internal(printf('CREATE TABLE "%s"(value)',
-      replace(names.name, '"', '""')));
-    call test_drop_table_helper(names.name);
-    if (select exists(select 1 from sqlite_master where name = names.name)) then
-      printf_stderr("ERROR! quoted table %s was not dropped\n", names.name);
-      throw;
-    end if;
-  end;
-end;
-
-create proc prepare_quoted_schema_objects()
-begin
-  create table identifier_host (value int);
-  insert into identifier_host values (42);
-  declare names cursor for select ']bracket' suffix
-    union all select '"quote' suffix;
-  loop fetch names
-  begin
-    let view_name := printf('identifier_view%s', names.suffix);
-    let trigger_name := printf('identifier_trigger%s', names.suffix);
-    let index_name := printf('identifier_index%s', names.suffix);
-    call cql_exec_internal(printf('CREATE VIEW "%s" AS SELECT * FROM identifier_host',
-      replace(view_name, '"', '""')));
-    call cql_exec_internal(printf(
-      'CREATE TRIGGER "%s" AFTER INSERT ON identifier_host BEGIN SELECT 1; END',
-      replace(trigger_name, '"', '""')));
-    call cql_exec_internal(printf('CREATE INDEX "%s" ON identifier_host(value)',
-      replace(index_name, '"', '""')));
-  end;
-end;
-
-create proc verify_quoted_schema_drops()
-begin
-  if (select exists(select 1 from sqlite_master
-    where name in ('identifier_view]bracket', 'identifier_view"quote',
-      'identifier_trigger]bracket', 'identifier_trigger"quote',
-      'identifier_index]bracket', 'identifier_index"quote'))) then
-    printf_stderr("ERROR! quoted schema objects were not dropped\n");
-    throw;
-  end if;
-  if (select count(*) from identifier_host) != 1 or
-     (select value from identifier_host) != 42 then
-    printf_stderr("ERROR! schema drops modified unrelated data\n");
-    throw;
-  end if;
-  drop table identifier_host;
-end;
-```
-
-The table-drop helper is packaged in the C harness:
-
-```c
-static cql_code test_drop_quoted_tables(sqlite3 *db) {
-  cql_object_ref saved_dictionary = test_tables_dict_;
-  cql_object_retain(saved_dictionary);
-  cql_set_created_object_ref(&test_tables_dict_, cql_string_dictionary_create());
-  cql_code rc = verify_quoted_table_drops(db);
-
-  cql_set_object_ref(&test_tables_dict_, saved_dictionary);
-  cql_object_release(saved_dictionary);
-  if (rc != SQLITE_OK) {
-    fprintf(stderr, "Quoted table-drop helper regression failed: %s\n", sqlite3_errmsg(db));
-  }
-  return rc;
-}
-```
-
-In `main`, only the unmanaged schema-object setup and verification are gated to
-the relevant upgrade boundary:
-
-```c
-bool check_identifiers = proposed_version == 4 && current_version != 4;
-if (check_identifiers && prepare_quoted_schema_objects(db) != SQLITE_OK) {
-  fprintf(stderr, "Unable to prepare quoted schema objects.\n");
-  return SQLITE_ERROR;
-}
-
-if (upgrade(db, should_use_virtual_tables)) {
-  fprintf(stderr, "Unable to upgrade DB.\n");
-  return SQLITE_ERROR;
-}
-
-if (check_identifiers && verify_quoted_schema_drops(db) != SQLITE_OK) {
-  fprintf(stderr, "Quoted schema-drop regression failed.\n");
-  return SQLITE_ERROR;
-}
-```
-
-After the ordinary post-upgrade version and content checks, the same harness
-invokes the table helper unconditionally:
-
-```c
-if (test_drop_quoted_tables(db) != SQLITE_OK) {
-  return SQLITE_ERROR;
-}
-```
-
-The lesson is simple:
-
-> Static SQL generation and dynamic SQL construction must share one identifier
-> model or one escaping primitive.
+Static SQL generation and dynamic SQL construction need the same identifier
+model and escaping helpers.
 
 Subsystem tests can stop the exact bug from coming back while the same family
 continues in another emitter.
@@ -1505,12 +1337,8 @@ only its text.
 Conventional advice says to avoid global mutable state and pass explicit
 contexts. CQL mostly keeps each compiler phase's state in globals.
 
-My approximate current scan found:
-
-- about 214 file-static state declarations;
-- about 80 in `sem.c`;
-- about 38 in `cg_c.c`;
-- about 36 in `cg_lua.c`.
+The phase files carry substantial file-static state, especially semantic
+analysis and the C and Lua generators.
 
 There are real advantages:
 
@@ -1521,7 +1349,7 @@ There are real advantages:
 - the implementation avoids passing a very large context through thousands of
   calls.
 
-The details matter: recursion almost never needs all of that state. Most nested
+Recursion almost never needs all of that state. Most nested
 contexts save one or two symbol tables, a join scope, or a callback and output
 buffer. For example:
 
@@ -1960,13 +1788,8 @@ classes, or when code spells out the protocol by hand.
 
 ### 5. Representation boundaries expose hidden assumptions
 
-This family has two layers: a longer serializer history and a concentrated
-late-2026 AI-assisted correctness audit.
-
-I weight the late audit changes differently from observed operational bugs.
-Several strengthened an invariant that no known production caller violated.
-They make the code better and expose low-level preconditions that had been
-implicit. They do not show that buffers were routinely failing in operation.
+The two public binary facilities started with different contracts. Both were
+lightly used.
 
 #### Two serializers, two starting contracts
 
@@ -1983,8 +1806,7 @@ said so directly:
 > The blob reading code is hardened so that it assumes the content of the blob
 > is hostile. There are tests for this.
 
-That was not an aspiration added years later. It was in the first change.
-`cql_cursor_from_bytes` still puts the contract next to the implementation:
+`cql_cursor_from_bytes` still puts that contract next to the implementation:
 
 ```c
 // This is the inverse of cql_cursor_to_bytebuf, it takes a byte stream and
@@ -2076,307 +1898,20 @@ and its failure path returned SQL `NULL` with the comment:
 // We could probably do better than this.
 ```
 
-That history explains the 2026 sequence much better than a flat list of bounds
-bugs. The code's job changed in stages:
+At this endpoint the public backed serializer had grown well beyond its
+original test stub, but still carried a well-formed-input assumption. That
+is a different starting contract from the cursor serializer's explicit
+hostile-input requirement.
 
-1. exercise the backed-table rewrites;
-2. provide a convenient general binary implementation;
-3. produce canonical durable keys and sparse values;
-4. survive arbitrary persisted input;
-5. distinguish an absent nullable value from malformed storage by returning
-   `NULL` for the former and `SQLITE_ERROR` for the latter.
+The human-era defects already exposed representation obligations. In August
+2023, [`9e9a4e09`](https://github.com/ricomariani/CG-SQL-author/commit/9e9a4e099897cbeb0bb45cccb447b542e7b9f22e)
+corrected variable payloads emitted in update order rather than canonical
+field order. Equivalent logical keys need equivalent bytes; a successful
+decode alone does not establish that property.
 
-CQL now offers the configurable binary UDF implementation and SQLite
-JSON/JSONB backing as ready-made choices, while custom implementations remain
-part of the design.
-
-The different histories matter to the conclusions. The cursor serializer
-started with hostile-input and version-skew requirements, so its later defects
-show the limits of strong defenses and shared round-trip tests. The backed
-serializer started as visible test scaffolding. Its repeated upgrades show what
-happens when useful sample code gradually acquires a production contract.
-
-#### `bytebuf` self-append was a prophylactic invariant change
-
-In October 2026, `bytebuf_append` was changed to support a source range inside
-the same buffer even when growth moves the allocation:
-
-```diff
-+ uint32_t offset = 0;
-+ bool_t aliases_buffer = false;
-+
-+ if (buf->ptr) {
-+   uintptr_t source = (uintptr_t)bytes;
-+   uintptr_t start = (uintptr_t)buf->ptr;
-+   if (source >= start && source - start < buf->used) {
-+     offset = (uint32_t)(source - start);
-+     aliases_buffer = true;
-+   }
-+ }
-+
-  void *mem = bytebuf_alloc(buf, count);
-- memcpy(mem, bytes, count);
-+ if (aliases_buffer) {
-+   bytes = buf->ptr + offset;
-+ }
-+ memmove(mem, bytes, count);
-```
-
-Commit:
-[`25f48ef5985a15b805f2dda66347c7c33bb71ef9`](https://github.com/ricomariani/CG-SQL-author/commit/25f48ef5985a15b805f2dda66347c7c33bb71ef9)
-
-The regression test forces growth and then tests both whole-buffer and
-interior-slice aliasing:
-
-```c
-static bool test_bytebuf_self_append() {
-bytebuf buffer;
-bytebuf_open(&buffer);
-
-// Duplicating this seed forces growth while the source aliases the buffer.
-char seed[BYTEBUF_GROWTH_SIZE + 1];
-for (uint32_t i = 0; i < sizeof(seed); i++) {
-  seed[i] = (char)(i & 0x7f);
-}
-bytebuf_append(&buffer, seed, sizeof(seed));
-bytebuf_append(&buffer, buffer.ptr, buffer.used);
-
-bool result =
-  buffer.used == 2 * sizeof(seed) &&
-  !memcmp(buffer.ptr, seed, sizeof(seed)) &&
-  !memcmp(buffer.ptr + sizeof(seed), seed, sizeof(seed));
-
-bytebuf_append(&buffer, buffer.ptr + 17, 31);
-result &= buffer.used == 2 * sizeof(seed) + 31;
-result &= !memcmp(buffer.ptr + 2 * sizeof(seed), seed + 17, 31);
-
-bytebuf_close(&buffer);
-return result;
-}
-```
-
-It is registered in `run_unit_tests` with the literal assertion
-`TEST_ASSERT(test_bytebuf_self_append());`.
-
-I searched the repository and checked what I know about the call sites. I found
-no known caller appending an overlapping range. The shown code does not
-establish that negative-history claim; the test constructs the case
-deliberately. I would call this an invariant test rather than a regression for
-an observed compiler failure.
-
-The old helper had an unenforced assumption: source storage would not be
-invalidated by destination growth. The new helper removes that assumption and
-defines self-append as supported behavior. That is good prophylactic work.
-
-#### `bprintf` format aliasing was prohibited explicitly
-
-The same audit added an always-on contract to `vbprintf`:
-
-```c
-uintptr_t source = (uintptr_t)format;
-uintptr_t start = (uintptr_t)b->ptr;
-Contract(source < start || source - start >= b->max);
-```
-
-Commit:
-[`14b0eaa75cba729abe3e16bacbbca417990a6c13`](https://github.com/ricomariani/CG-SQL-author/commit/14b0eaa75cba729abe3e16bacbbca417990a6c13)
-
-I found no call where the dynamic format string lives inside the destination
-allocation. The snippet itself proves only the new precondition. The contract
-prevents a future caller from depending on storage that can move during
-formatting. The commit added no test. Righteous fix, hidden assumption, no
-observed bug.
-
-#### Unsigned loop bounds make empty input special
-
-Another audit fix changed:
-
-```diff
-- for (uint32_t i = 0; i < b->used - 2; i++) {
-+ for (uint32_t i = 0; i + 2 < b->used; i++) {
-```
-
-Commit:
-[`89f2879b74b3dff61fd40afccad8f9ccc6a11fd3`](https://github.com/ricomariani/CG-SQL-author/commit/89f2879b74b3dff61fd40afccad8f9ccc6a11fd3)
-
-The original arithmetic looks natural when read locally, but it underflows for
-short buffers. The repaired form says what the code actually needs: three
-positions must fit. This was boundary hardening found by inspection, not
-evidence that empty comment buffers had caused field failures.
-
-The complete table-driven test starts with a truly empty buffer, then covers
-one-character, two-character, and ordinary inputs while checking that the
-logical buffer length is unchanged:
-
-```c
-static bool test_comment_marker_scan() {
-  CHARBUF_OPEN(temp);
-
-  cg_remove_slash_star_and_star_slash(&temp);
-  bool result = temp.used == 1 && !strcmp(temp.ptr, "");
-
-  const char *inputs[] = { "/", "*", "/*", "*/", "/* */", "text/*", "text*/" };
-  const char *outputs[] = { "/", "*", "/+", "+/", "/+ +/", "text/+", "text+/" };
-  for (uint32_t i = 0; i < sizeof(inputs) / sizeof(inputs[0]); i++) {
-    bclear(&temp);
-    bprintf(&temp, "%s", inputs[i]);
-    uint32_t used = temp.used;
-    cg_remove_slash_star_and_star_slash(&temp);
-    result &= temp.used == used && !strcmp(temp.ptr, outputs[i]);
-  }
-
-  CHARBUF_CLOSE(temp);
-  return result;
-}
-```
-
-It is registered in `run_unit_tests` with
-`TEST_ASSERT(test_comment_marker_scan());`.
-
-#### Serialized blobs need whole-shape validation
-
-By 2026 the two serializer histories converged on the same mechanical lesson,
-even though they arrived there from different starting contracts. The
-backed-blob and blob-stream fixes form a recognizable family:
-
-- canonical field ordering;
-- offset-table off-by-one errors;
-- incomplete stored-field validation;
-- confusion between physical trailing bytes and logical field lengths;
-- arithmetic performed before validating the entire offset table.
-
-The October 2026 blob-stream audit moved toward a better pattern. The complete
-read path proves the table shape, validates both ends of the selected range,
-and clears any existing cursor row on rejection:
-
-```c
-cql_code cql_cursor_from_blob_stream(
-  sqlite3 *_Nonnull db,
-  cql_dynamic_cursor *_Nonnull dyn_cursor,
-  cql_blob_ref _Nonnull b,
-  cql_int32 index)
-{
-  cql_contract(b);
-  cql_bool *has_row = dyn_cursor->cursor_has_row;
-
-  const uint8_t *bytes = (const uint8_t *)cql_get_blob_bytes(b);
-  const uint32_t len = (uint32_t)cql_get_blob_size(b);
-
-  if (len < 4) {
-    goto error;
-  }
-
-  // the first 4 bytes are the count of blobs
-  // note that we're assuming little endian here, this could be generalized
-  uint32_t count;
-  memcpy(&count, bytes, sizeof(count));
-
-  // Prove the entire count/offset table fits before any count or index arithmetic.
-  if (count > len / sizeof(uint32_t) - 1) {
-    goto error;
-  }
-
-  if (index < 0 || (uint32_t)index >= count) {
-    goto error;
-  }
-
-  // note that we're assuming little endian here, this could be generalized
-  uint32_t end;
-  memcpy(&end, bytes + ((uint32_t)index + 1) * sizeof(end), sizeof(end));
-  if (end > len) {
-    goto error;
-  }
-
-  // the first blob starts after the offsets and count
-  uint32_t table_end = (count + 1) * sizeof(uint32_t);
-  uint32_t start = table_end;
-
-  if (index > 0) {
-    // Subsequent blobs start at the preceding exclusive end.
-    // note that we're assuming little endian here, this could be generalized
-    memcpy(&start, bytes + (uint32_t)index * sizeof(start), sizeof(start));
-  }
-
-  if (start < table_end || start > end) {
-    goto error;
-  }
-
-  return cql_cursor_from_bytes(dyn_cursor, bytes + start, end - start);
-
-error:
-  *has_row = false;
-  cql_clear_references_before_deserialization(dyn_cursor);
-  return SQLITE_ERROR;
-}
-```
-
-Commit:
-[`957db34adb4337afb4498d9feabea7cdb4f9036a`](https://github.com/ricomariani/CG-SQL-author/commit/957db34adb4337afb4498d9feabea7cdb4f9036a)
-
-The regression table covers huge counts, arithmetic-overflow indices, zero
-count, an offset inside the table, and negative and high indices. Before every
-attempt it seeds a row containing a string reference; every rejection must
-clear both the cursor and `C.z`:
-
-```sql
-TEST!(blob_stream_table_bounds__,
-begin
-  let control := control_blob();
-  cursor cases for
-    -- Four-byte little-endian count INT32_MAX (2,147,483,647), with no
-    -- offsets or payload. Index INT32_MAX-1 overflowed the old index+2.
-    select x'FFFFFF7F' as b, 2147483646 as idx
-    union all
-    -- Four-byte count 536,870,912, no offsets or payload. Index 536,870,910
-    -- made the old (index+2)*4 overflow signed INT32 despite this tiny input.
-    select x'00000020' as b, 536870910 as idx
-    union all
-    -- Four-byte unsigned count UINT32_MAX, no offsets or payload.
-    -- The old (count+1)*4 wrapped to zero; the full table cannot fit.
-    select x'FFFFFFFF' as b, 0 as idx
-    union all
-    -- Four-byte count zero: a complete empty stream, with no row 0.
-    select x'00000000' as b, 0 as idx
-    union all
-    -- 23-byte stream: count 2 at 0..3, ends 8 and 23 at 4..11.
-    -- Bytes 12..22 encode my_blob (0,0,"z_0"): "iis\0", presence bits 07,
-    -- zigzag integers 00,00, then "z_0\0". For index 1, start 8 is inside
-    -- the 12-byte table; it must not be treated as serialized row data.
-    select x'020000000800000017000000696973000700007A5F3000' as b, 1 as idx
-    union all
-    -- Complete valid five-row control stream; only the indices are invalid.
-    select control as b, -1 as idx
-    union all
-    select control as b, 5 as idx;
-
-  cursor C like my_blob;
-  loop fetch cases
-  begin
-    fetch C() from values () @dummy_seed(42) @dummy_nullables;
-    let hit := false;
-    try
-      cql_cursor_from_blob_stream(C, cases.b, cases.idx);
-    catch
-      EXPECT_EQ!(@rc, 1); -- SQLITE_ERROR
-      hit := true;
-    end;
-    EXPECT_EQ!(hit, true);
-    EXPECT_EQ!(C, false);
-    EXPECT_EQ!(C.z, null);
-  end;
-end);
-```
-
-Two things improve at once:
-
-1. `memcpy` avoids alignment and aliasing assumptions.
-2. The complete table shape is established before offsets are trusted.
-
-The validation got better here: early checks made the next read safe; later
-checks prove the whole shape before trusting offsets. These malformed-input
-checks are defensive hardening unless there is a corrupt persisted blob or an
-external caller supplying one; they should not be counted automatically as
-observed compiler failures.
+The nullable Boolean cursor defect is even stronger evidence of light use.
+An actual use-case for nullable Booleans would have exposed it quickly.
+Coverage and same-implementation round trips had not supplied that feedback.
 
 #### Platform width assumptions appeared at the lexer boundary
 
@@ -2652,21 +2187,17 @@ header no longer describes its real role particularly well.
 The quality standard changed as the role changed.
 [`ec3da9eb`](https://github.com/ricomariani/CG-SQL-author/commit/ec3da9eb020d7a80d438e3c1ec83ac070ab0f3b2)
 explicitly said that `cqljson.py` was sample code and manual testing was
-enough. By
-[`eaa48be3`](https://github.com/ricomariani/CG-SQL-author/commit/eaa48be31c4a44b37a0a80c2abead5f58aeec70b)
-in 2026, its SQL output had a focused escaping regression that executed the
-generated SQL against SQLite. The output format could still evolve, but
-malformed output, unsafe quoting, and crashes were no longer acceptable
-sample-code behavior.
+enough. That is a different testing obligation from an integrated compiler
+backend or a tool used in normal delivery. The status of the Python examples
+and their promotion into infrastructure must be made explicit.
 
-This is another reason raw bug counts need context. A fix in a promoted example
-can mean that a once-optional tool acquired a real compatibility or safety
-contract. The code did not necessarily get sloppier. The standard of
-excellence moved because the tool became important.
+A sample that becomes part of normal delivery needs stronger compatibility
+and safety guarantees. The standard of excellence moved because the tool
+became important.
 
-There is a testing lesson too. When a Python consumer replaces a C backend, the
-old backend's coverage should not simply disappear with the deleted code. The
-replacement needs its own direct regression surface. JSON provides an
+When a Python consumer replaces a C backend, the old backend's coverage
+should not simply disappear with the deleted code. The replacement needs
+its own direct regression surface. JSON provides an
 excellent intermediate contract, but the contract does not test every consumer
 by itself.
 
@@ -2674,30 +2205,21 @@ by itself.
 
 ### 8. The tests are unusually layered; independence matters more than volume
 
-The current corpus is large:
+The human-era endpoint's corpus is large. These counts include nested files
+under `sources/test`:
 
-| Measure | Current count |
+| Measure | Endpoint count |
 |---|---:|
-| Files under `sources/test` | 151 |
-| SQL test files | 57 |
+| Files under `sources/test` | 146 |
+| SQL test files | 56 |
 | Golden `.ref` files | 82 |
-| SQL test lines | 48,465 |
-| Golden-output lines | 227,046 |
-| `-- TEST:` labels | 4,191 |
-| Positive `-- +...` directives | 15,415 |
-| Negative `-- -...` directives | 1,702 |
-| Named shell test cases | 132 |
-| Golden diff operations in `test.sh` | 81 |
+| SQL test lines | 55,279 |
+| Golden-output lines | 266,073 |
+| `-- TEST:` labels | 4,172 |
+| Positive `-- +...` directives | 15,409 |
+| Negative `-- -...` directives | 1,650 |
 
-I also found that production fixes usually get tests:
-
-- 1,089 of 2,266 public-ref commits touched test assets.
-- 975 touched both production and test code.
-- 106 bug-like commits touched both.
-- 101 of those 106 added test lines.
-
-The count is useful context. What matters more is that CQL uses several
-different kinds of oracle.
+CQL uses several different kinds of checks:
 
 #### Layer 1: directive-level semantic expectations
 
@@ -2918,11 +2440,8 @@ begin
 end);
 ```
 
-The key testing point is:
-
-> More checks derived from the same implementation increase sensitivity to
-> change, but not necessarily correctness. Independent oracles increase
-> correctness.
+More golden output would have preserved this mistake. Executing the SQL
+through SQLite caught it.
 
 #### Short-circuit logic needed more than a complete truth table
 
@@ -3005,11 +2524,8 @@ else
 end
 ```
 
-The durable lesson is compact:
-
-> A complete truth table is not a complete execution model.
-
-Result value, left/right evaluation count, nullable versus non-null paths,
+The truth table covered only part of what we needed. Result value,
+left/right evaluation count, nullable versus non-null paths,
 value versus branch context, nesting, temporary lifetime, and cleanup
 continuation are separate semantic dimensions. Coverage can execute the same
 generator lines while missing one of those dimensions entirely.
@@ -3040,7 +2556,7 @@ rewrites and removes shapes, and some declarations intentionally become no-ops
 after they have served their semantic purpose. Coverage plus fail-fast dispatch
 checks the shape set that actually reaches each phase, which is the useful set.
 
-The current coverage script always runs the tests and produces reports, though
+The endpoint's coverage script always runs the tests and produces reports, though
 it does not pass a numeric `--fail-under-line 100` threshold to `gcovr`. The
 project convention is doing the enforcement work in practice.
 
@@ -3053,31 +2569,31 @@ state, restrained macro use, explicit ownership, portable integer and string
 handling, and tests that exercise failure paths. Sources used for comparison
 are listed at the end of this appendix.
 
-That advice is useful, but the details matter here. A compiler can violate the
-surface rule while still preserving the property the rule was trying to buy.
+CQL departs from several of these recommendations. The organization and
+safeguards are worth looking at before deciding how well that worked.
 
-### File size: CQL violates the letter, but often not the purpose
+### File size and compiler phases
 
-Current core inventory:
+Human-era endpoint core inventory:
 
 | Category | Files | Lines |
 |---|---:|---:|
-| Core compiler/runtime C and headers, excluding unit tests | 57 | 82,838 |
-| Core `.c` files | 28 | 78,049 |
-| Core headers | 29 | 4,789 |
+| Core compiler/runtime C and headers, excluding unit tests | 58 | 82,575 |
+| Core `.c` files | 28 | 77,792 |
+| Core headers | 30 | 4,783 |
 | Grammar `cql.y` | 1 | 4,170 |
-| Lexer `cql.l` | 1 | 716 |
+| Lexer `cql.l` | 1 | 709 |
 
 Largest core files:
 
 | Lines | File |
 |---:|---|
 | 27,347 | `sources/sem.c` |
-| 9,034 | `sources/cg_c.c` |
-| 7,384 | `sources/cqlrt_common.c` |
+| 9,027 | `sources/cg_c.c` |
+| 7,228 | `sources/cqlrt_common.c` |
 | 6,704 | `sources/gen_sql.c` |
 | 6,309 | `sources/rewrite.c` |
-| 5,933 | `sources/cg_lua.c` |
+| 5,892 | `sources/cg_lua.c` |
 
 Large files draw criticism because they often mix unrelated responsibilities,
 hide dependencies, and become hard to navigate. CQL's large files mostly map to
@@ -3107,29 +2623,17 @@ The history says:
 
 ### Function size: the code mostly follows the advice
 
-Approximate current function distribution:
-
-| Function length | Count | Share |
-|---|---:|---:|
-| 1-20 lines | 1,492 | 63.9% |
-| 21-50 | 528 | 22.6% |
-| 51-100 | 211 | 9.0% |
-| 101-200 | 83 | 3.6% |
-| 201-500 | 21 | 0.9% |
-| 501+ | 1 | less than 0.1% |
-
-- Median: **14 lines**
-- Mean: **26.7 lines**
-- 90th percentile: **64 lines**
-- Maximum: **about 549 lines**
+The large phase files contain many small handlers and helper functions, not
+just a few monolithic routines. File size and individual function size are
+different measures.
 
 The Linux kernel's coding-style guidance says functions should usually fit on
 one or two screenfuls, while allowing longer simple switch-like functions.
 NASA/JPL's "Power of Ten" is stricter and uses roughly one printed page, often
 interpreted as about 60 lines.
 
-CQL's median and broad distribution compare well. The exceptional functions
-need a little sorting:
+CQL's regular handlers fit that advice well. The exceptional functions need
+a little sorting:
 
 - some are long, low-branch orchestration or registration sequences;
 - some combine length and high branching and are genuine cognitive hotspots.
@@ -3141,7 +2645,7 @@ mere existence of a few long initialization functions.
 
 ### Naming: a major success
 
-Approximately 99.5% of functions use lowercase snake case. Prefixes reliably
+Functions overwhelmingly use lowercase snake case. Prefixes reliably
 identify subsystem ownership:
 
 - `sem_`
@@ -3173,7 +2677,7 @@ obvious C. Regular mechanics can be light. Transformations, invariants,
 ordering, ownership exceptions, representation boundaries, and phase
 transitions should explain why the code has to be the way it is.
 
-That distinction matters. A comment that says "increment `i`" has almost no
+A comment that says "increment `i`" has almost no
 value. A comment that says an ordinal is reverse dependency order, that a
 target cannot be released before evaluating a create call, or that a child
 setter must also repair the parent link is part of the implementation. It is
@@ -3196,23 +2700,19 @@ I wanted to answer three questions directly:
 2. Did it help prevent bugs?
 3. Do bugs cluster where comments were light or missing?
 
-The short answers are **substantially yes as knowledge organization**,
-**sometimes locally but not provably as a density effect**, and **no at file
-level**. The details are more useful than the short answers.
-
 #### How much commentary is actually there?
 
-The core C/header surface has 57 files, excluding unit tests, and 82,838
+The endpoint's core C/header surface has 58 files, excluding unit tests, and 82,575
 physical line records:
 
 | Physical line class | Count |
 |---|---:|
-| Blank | 12,378 |
-| Code-only | 51,311 |
-| Comment-only | 17,952 |
+| Blank | 12,362 |
+| Code-only | 51,092 |
+| Comment-only | 17,924 |
 | Mixed code/comment | 1,197 |
-| Nonblank | 70,460 |
-| Comment-bearing | 19,149 |
+| Nonblank | 70,213 |
+| Comment-bearing | 19,121 |
 
 For comparison with Oliver Arafat and Dirk Riehle's
 [OOPSLA 2009 study of open-source commenting](https://dirkriehle.com/wp-content/uploads/2009/08/oni0017-arafat.pdf),
@@ -3223,13 +2723,8 @@ comment-only / (comment-only + code-only + mixed)
 ```
 
 Blank lines are excluded and mixed lines count as source. On that basis CQL is
-**25.48%**. After heuristically excluding license text and generated or
-pro-forma blocks, it is **24.70%**.
-
-The narrow boilerplate-like set is only 724 comment-bearing lines, or **3.78%**
-of all comment-bearing volume. Removing it changes density by only **0.77
-percentage points**. So the large comment corpus is not mostly licenses,
-generated headers, or template text.
+**25.53%**. This is the raw physical density, including license and other
+header comments; no heuristic boilerplate adjustment is claimed here.
 
 Function and API header comments are substantial, but even many of those are
 not public API boilerplate. They document internal compiler protocols,
@@ -3238,36 +2733,22 @@ changes.
 
 Arafat and Riehle used 2007 data from 1,621 C/C++ open-source projects. Their
 C/C++ mean was **17.60%**, median **16.52%**, and standard deviation **8.32
-percentage points**. CQL is **7.88 points above the mean**, **8.96 points above
-the median**, and about **0.95 standard deviations above the mean**. The
-adjusted CQL number remains **7.10 points above the mean**.
+percentage points**. CQL is about **7.93 points above the mean** and
+**9.01 points above the median**.
 
 That is an old descriptive reference population. It is not an industry target,
 an optimum, or a quality grade. I use it only to establish that CQL carries an
 unusually large physical comment corpus for C/C++.
 
-Coverage gives another useful scale, but it is a different measurement.
-`cov.sh` reports **39,386 executable lines**, all covered at 100%. The exact
-matched 32-file coverage scope contains 84,521 physical line records, including
-17,375 comment-only lines, 1,106 mixed lines, and 18,481 comment-bearing lines.
-That works out to:
-
-- **44.1 comment-only physical lines per 100 executable lines**; or
-- **46.9 comment-bearing physical lines per 100 executable lines**.
-
-I want to be emphatic about the denominator: those are contextual ratios, not
-conventional comment density and certainly not coverage percentages. The
-57-file C/header surface and its 25.48% physical density are the right numbers
-for the industry comparison. Mixing the two scopes would produce a
-meaningless statistic.
+Coverage and physical comment density have different denominators. An
+executable-line count from a later coverage run must not be used to calculate
+this historical source's comment density.
 
 #### Where the comments live
 
-The top six files contain about **77.0%** of comment-bearing lines and **75.7%**
-of physical lines. In absolute terms the concentration mostly follows module
-size. `rewrite.c` is the true density outlier among the large modules;
-`flow.c` is similarly dense but much smaller and almost entirely about a
-protocol.
+In absolute terms the concentration mostly follows module size. `rewrite.c`
+is the true density outlier among the large modules; `flow.c` is similarly
+dense but much smaller and almost entirely about a protocol.
 
 Here is the compact file view using the same Arafat-style physical density:
 
@@ -3275,20 +2756,16 @@ Here is the compact file view using the same Arafat-style physical density:
 |---|---:|
 | `rewrite.c` | 51.24% |
 | `flow.c` | 49.18% |
-| `cg_lua.c` | 27.84% |
-| `cg_c.c` | 27.36% |
+| `cg_lua.c` | 27.74% |
+| `cg_c.c` | 27.33% |
 | `ast.c` | 25.94% |
 | `sem.c` | 21.97% |
-| `cqlrt_common.c` | 20.16% |
+| `cqlrt_common.c` | 20.83% |
 | `gen_sql.c` | 19.51% |
-| `cg_schema.c` | 14.29% |
+| `cg_schema.c` | 14.25% |
 | `cg_json_schema.c` | 14.24% |
-| `cql.y` | 7.92% |
 
-`cql.y` is shown for orientation; it is not part of the 57-file C/header
-comparison surface.
-
-The interesting result is localization, not the file ranking:
+Within those files, the comments tend to be where I'd want them:
 
 - `cg_schema.c` is light overall, but becomes dense around comparators and
   create/drop order.
@@ -3299,25 +2776,10 @@ The interesting result is localization, not the file ranking:
 - rewrite and flow code explain transformations because the before/after
   protocol cannot be recovered from one assignment.
 
-The same contrast appears inside functions. These are representative
-Arafat-style physical densities restricted to function bodies:
-
-| Function body | Comment density |
-|---|---:|
-| `_flow_pop_context_jump` | 67.3% |
-| `_flow_pop_context_branch` | 62.7% |
-| `rewrite_child_partition_creation` | 55.3% |
-| `rewrite_one_param` | 50.9% |
-| `rewrite_insert_statement_for_backed_table` | 40.2% |
-| `bupdatekey` | 24.9% |
-| `gen_init` | 0% |
-| `cql_multibind_v` | 0% |
-| `cg_json_col_key_list` | 0% |
-| `cg_c_init` | 2.1% |
-
-This matches the intended style. Important or non-self-evident steps are dense.
-Regular registration, copying, dispatch, and emission are often intentionally
-light.
+The same contrast appears inside functions: flow rollback and partition
+rewrites explain their protocols, while regular registration and dispatch
+often need little commentary. Important or non-self-evident steps are dense;
+regular mechanics are intentionally light.
 
 The comments are also placed at the rule they protect. In `sources/ast.c`,
 around `ast_set_right`, the helper and the reason to use it are inseparable:
@@ -3355,33 +2817,10 @@ statement-specific exceptions.
 
 #### Did the comments prevent bugs?
 
-The history cannot prove that a density prevented defects. I used the 21
-representative patch-inspected fixes in this appendix for a cautious
-cross-tabulation against the current source:
-
-| Current file measure versus representative fix touches | Pearson | Spearman |
-|---|---:|---:|
-| Physical comment density | -0.177 | -0.225 |
-| Rationale-signal density | -0.085 | -0.025 |
-| Code-bearing file size | +0.816 | +0.763 |
-
-File size, not low current comment density, tracks raw fix touches. That is the
-result I would expect after looking at the patches. Larger files expose more
-behavior, current comments postdate many fixes, complex code attracts both
-comments and bugs, commits overlap files, and the 21 fixes are representative
-rather than a random sample.
-
-So file-level density does not show bugs clustering in lightly commented files.
-The lexer/parser subsystem is the coarse exception: its density is about
-**9.63%** and it has a high normalized representative touch rate. But narrow
-token and grammar rules carry disproportionate behavior. That is not enough
-evidence to say that more prose would have prevented those bugs.
-
-The stronger result is local:
-
-- **13 of 21** representative fixes added at least one source comment;
-- **12 of 21** added a rationale-signal comment;
-- about **16 of 21** are protocol or invariant categories.
+The history cannot prove that a density prevented defects. The original
+cross-tabulation mixed the two discovery eras and is not retained here.
+Larger files expose more behavior, complex code attracts both comments and
+bugs, and comments can postdate the failures they now explain.
 
 The patches repeatedly expose one local WHY that was absent, incomplete, stale,
 wrong, or documented but unfinished, even inside heavily commented files:
@@ -3400,11 +2839,9 @@ wrong, or documented but unfinished, even inside heavily commented files:
   case and the durable fix was mostly mechanical. Broad new rationale would
   not have improved that dispatch.
 
-My conclusion is straightforward. The goal was substantially achieved as
-knowledge organization. The history cannot prove that a particular density
-prevented defects, and bugs did not generally cluster in lightly commented
-files. They clustered at local protocol boundaries where the specific WHY was
-missing, incorrect, incomplete, stale, or not yet implemented.
+I think we largely met the commenting goal. The bugs still turned up where
+the particular WHY was missing, wrong, incomplete, stale, or documented but
+not yet implemented.
 
 Comments work best when they are coupled with a helper, contract, fail-fast
 invariant, or focused test. Accurate placement matters more than volume. A
@@ -3473,21 +2910,21 @@ shapes transformed away before that phase runs.
 
 ### Contracts compensate for an intentionally weak static representation
 
-Current core files contain approximately:
+The human-era endpoint's core files contain:
 
-- 1,702 `Contract` calls;
-- 496 `Invariant` calls;
-- about 26.5 always-on checks per thousand lines of core code.
+- 1,700 `Contract` calls;
+- 495 `Invariant` calls.
 
-They are not disabled by `NDEBUG`:
+At this historical endpoint both compiler macros were aliases for `assert`:
 
 ```c
-#define Invariant(condition) \
-  do { if (!(condition)) abort(); } while (0)
-
-#define Contract(condition) \
-  do { if (!(condition)) abort(); } while (0)
+#define Invariant assert
+#define Contract assert
 ```
+
+The fail-fast development model depended on builds with assertions enabled.
+It would be inaccurate to describe this implementation as non-elidable under
+`NDEBUG`.
 
 CQL's AST uses several structs with a common initial layout:
 
@@ -3516,7 +2953,7 @@ typedef struct str_ast_node {
 This pseudo-object model gives up some static safety compared with a tagged
 union and distinct typed visitors. It also removes a great deal of verbosity
 from a large grammar. Generated `is_ast_*` predicates, extraction macros,
-canonical type strings, and always-on contracts make the trade workable.
+canonical type strings, and checked development builds make the trade workable.
 
 The question is what a failed condition represents:
 
@@ -3618,7 +3055,7 @@ Rapid CI corrections mean the delivery system caught the mistake.
 | Identifier rendering | Centralize quoting and escaping across emitters. |
 | Ownership and context cleanup | Replace manual sequences with named ownership, lifetime, and context helpers. |
 | Schema order | Name each order domain and test dependency behavior as a graph. |
-| Serialization | Validate the whole representation before arithmetic, copying, or mutation; classify audit hardening separately from observed failures. |
+| Serialization | Treat hostile-input validation, canonical bytes, and cross-runtime agreement as separate obligations. |
 
 ---
 
@@ -3639,7 +3076,7 @@ a checklist somebody has to remember.
 Arena allocation reduces ordinary AST lifetime risk and makes pointer stability
 a design property.
 
-### 3. Always-on contracts
+### 3. Fail-fast contracts in checked builds
 
 Contracts catch violations close to their source. They are especially valuable
 with the intentionally weakly typed AST representation.
@@ -3678,16 +3115,16 @@ practical and deleted thousands of lines of specialized C and golden output.
 `cql_set_*_ref` and `cql_set_created_*_ref` put the retain/release contract in
 one place instead of relying on memory at every call site.
 
-### 9. Exact regression and invariant tests
+### 9. Exact behavior regressions
 
-The best test forces the failed or newly enforced invariant rather than merely
+The best test establishes the behavior that failed rather than merely
 executing the affected code.
 
 ---
 
 ## What those mitigations do not prove
 
-### 1. Coverage and goldens are not semantic oracles
+### 1. Limits of coverage and goldens
 
 Coverage forces reachable shapes through fail-fast machinery, and goldens
 detect textual changes. Neither independently proves handler semantics, feature
@@ -3717,7 +3154,7 @@ or two symbol tables or scopes.
 creation plus matching cleanup remain vulnerable while the pairing is spread
 across multiple operations.
 
-### 5. Comments are not executable
+### 5. Comments can be wrong or unfinished
 
 The old `substr` comment accurately described the same wrong model implemented
 by the code: it copied nullability and sensitivity from the first argument.
@@ -3727,7 +3164,7 @@ the work remained missing until a nested `SELECT` reached the path.
 Comments preserve reasoning and unfinished obligations. They cannot substitute
 for helpers, contracts, or focused tests that make the rule executable.
 
-### 6. A stable intermediate format does not validate every consumer
+### 6. Testing the JSON consumers
 
 The JSON grammar can be stable and well tested while a Python generator still
 has its own identifier, escaping, or ABI mistake. Each promoted consumer needs
@@ -3773,7 +3210,6 @@ These examples cover the range; they are not ranked by severity.
 | 2024-12-24 | [`3163e93e`](https://github.com/ricomariani/CG-SQL-author/commit/3163e93e7f01) | SQLite syntax | All internal goldens agreed on invalid `RETURNING` syntax | Independent execution is stronger than consistent output |
 | 2024-12-25 | [`cf546d7e`](https://github.com/ricomariani/CG-SQL-author/commit/cf546d7ed13edb2642abb75addcd6d5b48479c53) | Rewrites | Backed-table/upsert/returning features composed incorrectly | Cross-product tests matter for interacting rewrites |
 | 2025-03-28 | [`7dadf83a`](https://github.com/ricomariani/CG-SQL-author/commit/7dadf83af8d84f3d5d7450769e5520b80efb65cf) | Reentrant codegen | Nested `SELECT` clobbered shared-fragment generator state | Finish documented re-entry protocols; use a focused helper for the exceptional wider context |
-| 2026-08 to 2026-10 | [`eaa48be3`](https://github.com/ricomariani/CG-SQL-author/commit/eaa48be31c4a44b37a0a80c2abead5f58aeec70b), [`25f48ef5`](https://github.com/ricomariani/CG-SQL-author/commit/25f48ef5985a15b805f2dda66347c7c33bb71ef9), [`14b0eaa7`](https://github.com/ricomariani/CG-SQL-author/commit/14b0eaa75cba729abe3e16bacbbca417990a6c13), [`8500516b`](https://github.com/ricomariani/CG-SQL-author/commit/8500516b9efa7f35e9406210600adb8efce4fb9a), and related audit commits | AI-assisted correctness audit | Mix of latent functional issues, defensive validation, and theoretical invariant hardening | Classify separately from reported or observed operational bugs |
 
 ---
 
@@ -3821,9 +3257,6 @@ current bug exists.
 
 ## Recommendations suggested by the history
 
-These recommendations follow from the history.
-Nothing in this section reports a new bug.
-
 ### 1. Keep fail-fast shape coverage and the 100% norm non-negotiable
 
 The existing design is the right one: dispatch has no permissive default,
@@ -3869,8 +3302,8 @@ tables, a join scope, or the three-pointer `gen_sql_state`.
 
 The shared-fragment argument path is the exception. It should have one helper
 that pushes and pops its fragment buffers, counters, predicates, and generator
-callbacks for both C and Lua. That removes the duplicated manual list without
-pretending the entire compiler phase needs to become one giant context object.
+callbacks for both C and Lua. That would give the two backends one shared
+save/restore list.
 
 ### 4. Centralize identifier rendering
 
@@ -4013,10 +3446,14 @@ Primary evidence comes from:
 
 - File counts use tracked files. Generated release/beta distributions and
   vendored SQLite are excluded unless explicitly stated.
-- The production source in the current checkout is equivalent to analyzed
-  endpoint `957db34` for this study. The only later repository change is the
-  addition of this appendix, so the current source measurements and the
-  historical endpoint refer to the same production source.
+- Measurements use `git show 8793b00f:<path>`, not the current checkout.
+  Mainline counts use `git rev-list --first-parent`; reachable history uses
+  `git rev-list` without that restriction. Year counts use author dates.
+- Core source means directly contained `sources/*.c` and `sources/*.h`,
+  excluding `unit_tests.c`. Test-file counts recursively include tracked
+  files under `sources/test`; line counts use physical line records.
+- Positive and negative directive counts count lines beginning `-- +` and
+  `-- -`; `-- TEST:` labels are counted separately.
 - The initial open-source release already contains a tested JSON generator, but
   public Git does show its subsequent expansion into a much richer downstream
   contract. Downstream usage moving from light consumption to Meta build
@@ -4030,42 +3467,23 @@ Primary evidence comes from:
   are also maintainer context. Public Git independently shows the CRC model
   change, the operational frequency reports, the physical-schema integration
   oracle, the pre-`v1.0.0` recreate-group corrections, and no later targeted
-  functional correction.
+  functional correction within this study's human-era window.
 - Comment measurements use a character-by-character lexical scan with states
   for normal text, string literals, character literals, `//` comments, and
   `/* ... */` comments. Comment markers inside literals are ignored. Each
   physical line is classified as blank, code-only, comment-only, or mixed;
   mixed lines are disclosed separately and count as source in the
   Arafat/Riehle-compatible density.
-- The boilerplate adjustment is heuristic. It removes narrow license,
-  generated, and pro-forma patterns; it cannot decide whether every header
-  sentence is valuable design content. The rationale-signal classifier is
-  likewise heuristic: it looks for explanatory, constraint, warning,
-  transformation, and design-history signals and will miss some rationale
-  while admitting some ordinary description.
-- Function-body comment densities use the same lexical classification
-  restricted to the body. Generated or conditional code and macro boundaries
-  can make body attribution approximate.
-- Function counts and lengths come from a lightweight C lexical scan. It
-  removes comments, strings, and preprocessor directives before identifying
-  top-level brace-delimited functions. Macro-generated and conditionally
-  compiled functions make the values approximate.
-- The branch proxy counts control-flow tokens; it is not full McCabe
-  complexity.
-- Commit-screen counts are deliberately labeled conservative candidates. They
-  should not be read as exact bug counts.
-- Those candidates mix observed failures, development-time omissions,
-  prophylactic audit hardening, and sometimes multiple commits for one issue.
+- Physical comment counts are lexical measurements, not judgments about the
+  accuracy or value of the prose. No boilerplate-adjusted, function-body,
+  correlation, or keyword-screen statistic from the mixed-era study is reused.
 - Rapid CI-driven revert/reapply chains are prevention successes and should be
   collapsed into the originating issue rather than counted as extra bugs.
 - I checked my recollection of roughly 12 real bugs per year against the Git
   history; I am not presenting it as a count derived from Git alone.
 - Generated-reference churn can greatly inflate changed-file and changed-line
   counts for a small production correction.
-- Current comments may have arrived after the defects they now explain. Raw
+- Endpoint comments may have arrived after the defects they now explain. Raw
   comment density says nothing by itself about correctness, comment accuracy,
   causal prevention, or the quality of the underlying design.
-- Correlations against the 21 patch-inspected fixes are descriptive only. The
-  fixes are representative rather than random, commits can touch several
-  files, and current file measurements are later than many of the patches.
 - I make no conclusion about defect severity or exploitability.

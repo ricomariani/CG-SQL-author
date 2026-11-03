@@ -61,10 +61,10 @@ considerably during review.
 
 ## How much did we find?
 
-I count **68 finding groups** in this work: **52 compiler, runtime, build,
+I count **68 findings** in this work: **52 compiler, runtime, build,
 and sample bugs; 8 test/tooling problems; and 8 preventive changes**.
-A group can affect several entry points or backends. I count the shared
-canonical-name mistake once, for example, rather than once per emitter.
+The shared canonical-name mistake counts once, for example, even though
+it needed repairs in both emitters.
 
 The UTF-8 work completed some earlier human-reported problems, so including
 those repairs here doesn't give AI credit for the original reports.
@@ -110,15 +110,15 @@ vendored SQLite, Python bindings, and the extension bridge.
 |---|---:|
 | Core source before the audit, `8793b00f` | 89,419 lines |
 | Core source after the fixes, `837956ba` | 90,377 lines |
-| Bug groups within that source surface | 45 |
-| Of those, security groups | 7 |
-| Of those, other correctness groups | 38 |
-| Additional preventive groups within that surface | 6 |
+| Bug findings within that source surface | 45 |
+| Of those, security findings | 7 |
+| Of those, other correctness findings | 38 |
+| Additional preventive findings within that surface | 6 |
 | Core bugs found per pre-audit raw KLOC | **0.50** |
 | Core security bugs per pre-audit raw KLOC | **0.08** |
 | Core other correctness bugs per pre-audit raw KLOC | **0.42** |
 
-The other seven correctness groups belong to build support, samples, and
+The other seven correctness findings belong to build support, samples, and
 tools outside that denominator. Dividing all 68 findings by the compiler's
 size would mix different sets of code and count preventive work as bugs.
 
@@ -131,9 +131,9 @@ The November 2 coverage report gives us the executable-line count:
 | Production executable C lines, including grammar/lexer actions and code in headers | **39,498** |
 | Production executable lines covered | **39,498 (100%)** |
 
-Two of the 45 core bug groups were confined to the Lua runtime: negative
+Two of the 45 core bug findings were confined to the Lua runtime: negative
 integer casts and partition-key encoding. The remaining **43 native
-compiler/runtime groups** give approximately **1.09 bugs per executable
+compiler/runtime findings** give approximately **1.09 bugs per executable
 C KLOC**, split into **0.18 security** and **0.91 other correctness**.
 This is a rough normalisation using the post-fix coverage build as a size
 reference. It depends on that platform and build configuration, doesn't
@@ -148,7 +148,7 @@ or combinations that the existing tests had never tried.
 ### Where the findings clustered
 
 The aggregate density hides quite a bit. In this file-level heatmap,
-**each `*` represents a bug family affecting that file**; preventive work
+**each `*` represents a finding affecting that file**; preventive work
 doesn't get a star. All paths are relative to `sources/`.
 
 The size columns use the measures above: **raw KLOC** is the file size
@@ -159,7 +159,7 @@ The core table includes every root C implementation file except `unit_tests.c`,
 plus the lexer, grammar, and Lua runtime. Headers contribute to the aggregate
 denominator above but have no separate bug sites in this inventory.
 
-| Core implementation file | Raw KLOC | Executable KLOC | Bugs | Theme |
+| Core implementation file | Raw KLOC | Executable KLOC | Findings | Theme |
 |---|---:|---:|---|---|
 | `cqlrt_common.c` | 7.228 | 3.406 | `**********` | Blob validation, arithmetic, update sizing, serializer growth |
 | `sem.c` | 27.347 | 13.533 | `******` | Numeric ranges, empty sets, aliasing, rowid and scalar properties |
@@ -193,11 +193,11 @@ denominator above but have no separate bug sites in this inventory.
 | `sha256.c` | 0.183 | 0.089 | 0 | Preventive digest-storage change only |
 | `symtab.c` | 0.323 | 0.149 | 0 | No counted bug |
 
-The other affected production/build files cover eight families, seven
-additional to the core. The binding-name family also appears in the core
+The other affected production/build files cover eight findings, seven
+additional to the core. The binding-name finding also appears in the core
 encoder, but these files' lines aren't in the core denominator.
 
-| Other production/build file | Raw KLOC | Bugs | Theme |
+| Other production/build file | Raw KLOC | Findings | Theme |
 |---|---:|---|---|
 | `cqljson/cqljson.py` | 0.694 | `**` | SQL encoding, reconstructed attribute values |
 | `dotnet_demo/cqlcs.py` | 1.013 | `**` | Projection names, actual blob marshalling |
@@ -215,7 +215,7 @@ dash means the file didn't exist before the audit. Two drivers and some
 checks were added during this work, so these aren't all defects in the
 pre-audit checkout.
 
-| Test/tooling file | Raw KLOC (pre-audit) | Raw KLOC (post-fix) | Bugs | Theme |
+| Test/tooling file | Raw KLOC (pre-audit) | Raw KLOC (post-fix) | Findings | Theme |
 |---|---:|---:|---|---|
 | `test/run_test_client.c` | 1.228 | 1.248 | `***` | Incomplete results, physical schema checks, PRNG overflow |
 | `cql-verify/make.sh` | 0.002 | 0.003 | `*` | Regeneration errors ignored |
@@ -228,11 +228,12 @@ pre-audit checkout.
 | `test/test_helpers_test.c` | 0.086 | 0.092 | `*` | Close errors ignored |
 | `upgrade/upgrade_test.c` | 0.214 | 0.255 | `*` | Transaction errors lost or ignored |
 
-A family can affect several files, as the integer literal repair did across
-the lexer, semantic analysis, constant evaluation, C emission, and SQL
-emission. I count it once in the 52, but once in each affected file here.
+A single finding can require changes in several files, as the integer literal
+repair did across the lexer, semantic analysis, constant evaluation, C
+emission, and SQL emission. I count it once in the 52, but once in each
+affected file here.
 The production/build tables therefore contain
-**65 stars for 52 unique families**; the test/tooling table has **12 for 8**.
+**65 stars for 52 unique findings**; the test/tooling table has **12 for 8**.
 I haven't assigned stars to new helpers, regression files, or mechanical
 caller adaptations merely because the patch touched them. The C hex-escape
 repair, for example, belongs to `encoders.c`, not every generator that uses
@@ -240,13 +241,13 @@ its helpers.
 
 Attribution also explains two less obvious placements. The Windows buffer
 mismatch came from the definition emitted by `make_amalgam.sh`, outside the
-core source denominator. Conversely, #245's binding-name family includes
+core source denominator. Conversely, #245's binding-name finding includes
 the core `encoders.c` correction for ordinary capital-X identifiers. That
-family belongs in the core count as well as in the sample rows.
+finding belongs in the core count as well as in the sample rows.
 
-The small encoder has five families; the semantic analyzer has six in
+The small encoder has five findings; the semantic analyzer has six in
 27 raw KLOC. The rewrite implementation has none in 6 raw KLOC. The blob
-runtime alone has ten, including all seven security families. Much of the
+runtime alone has ten, including all seven security findings. Much of the
 concentration is at representation boundaries: stored bytes, target-language
 text, and names crossing between systems.
 
@@ -264,9 +265,9 @@ narrower C/header denominator, 82.575 raw KLOC, gives about **0.15**.
 
 | Human-era observation | AI-assisted audit |
 |---|---|
-| Roughly 12 operational bugs per year, from maintainer recollection | 52 compiler/runtime/build/sample bug groups over this review |
+| Roughly 12 operational bugs per year, from maintainer recollection | 52 compiler/runtime/build/sample bug findings over this review |
 | Daily use by hundreds of developers at Meta | Targeted examination of the OSS fork, including lightly used features |
-| About 0.13 operational bugs per raw KLOC/year at the reference size | 0.50 core bug groups per raw KLOC in a concentrated pass |
+| About 0.13 operational bugs per raw KLOC/year at the reference size | 0.50 core bug findings per raw KLOC in a concentrated pass |
 
 We don't have a comparable census of every human-found development-time bug,
 and an annual field rate has different units and inputs from an audit yield.
@@ -1364,8 +1365,8 @@ which relies on it, including NULL, binary, and numeric cases.
 ## A local fact can be lost when paths meet
 
 Some failures came from correctly established facts being carried into a
-context where they no longer held. This family was familiar from the
-human-found era. The missing tests combined conditions, exits, aliases, and
+context where they no longer held. I'd seen this family of bugs in the
+human-found era too. The missing tests combined conditions, exits, aliases, and
 rewrites in ways our earlier examples hadn't.
 
 ### A returning branch cannot prove a fact about a continuing path
@@ -2055,9 +2056,9 @@ and diagram modes were outside the fix too.
 
 ## Counting notes
 
-The 68 groups come from three batches:
+The 68 findings come from three batches:
 
-| Source of findings | Groups |
+| Source of findings | Findings |
 |---|---:|
 | May/July fixes before the October batch | 11 |
 | The grouped changes in #204 | 7 |
@@ -2072,28 +2073,28 @@ error reporting. The two constructor/reader issues in `2ed3ac9e` are separate
 because one concerns constructing a consistent value and the other concerns
 accepting hostile stored bytes.
 
-The seven #204 groups are runtime collection bounds, non-elidable contracts,
+The seven #204 findings are runtime collection bounds, non-elidable contracts,
 Windows destination sizing, provenance line-comment encoding, Lua long-comment
 delimiters, sample SQL encoding, and extension SQL/C encoding. The compiler
-contract completion in #208 stays with the runtime contract group; the
+contract completion in #208 stays with the runtime contract finding; the
 format-alias contract is separate.
 
 There are 47 PRs from #207 through #253. Excluding #228's comment-only declined
 optimization and #247's newly introduced fixture regression leaves 45.
 #238, #241, and #242 each repair two distinct failures; #251 repairs three.
-That gives 45 + 3 + 2 = 50 groups. The four binding generators and core
-identifier-encoding correction in #245 count as one naming family, and the
+That gives 45 + 3 + 2 = 50 findings. The four binding generators and core
+identifier-encoding correction in #245 count as one finding, and the
 canonical C/Lua emitter error in #232 counts once.
 
 Routine release, documentation, build-maintenance, and signature-alignment
 changes are excluded, as are declined proposals and ancillary renamings.
-The three #251 groups remain test/tooling findings. The eight preventive
-groups have no demonstrated ordinary-use failure in this review: extension
+#251 contributes three test/tooling findings. The eight preventive findings
+have no demonstrated ordinary-use failure in this review: extension
 contracts, verifier heap storage, collection bounds, always-on contracts,
 byte-buffer self-append, the format-alias contract, digest storage, and the
 result-set row-size contract.
 
-The seven security groups are the initial backed-blob shape/range checks,
+The seven security findings are the initial backed-blob shape/range checks,
 the initial stream-word bound, retained-field validation, unknown-type
 rejection, overlapping-field output sizing, complete stream-table validation,
 and field-counter limits. The unknown-type abort is Medium priority; the
@@ -2140,13 +2141,13 @@ file's `Lines` column in the November 2 coverage report, divided by 1,000.
 
 The raw-line density uses the pre-audit 89.419 raw KLOC:
 45 / 89.419 = 0.50, split into 7 / 89.419 = 0.08 security and
-38 / 89.419 = 0.42 other correctness groups per raw KLOC.
+38 / 89.419 = 0.42 other correctness findings per raw KLOC.
 The human-era scale comparison uses 12 / 89.419 = 0.13 per raw KLOC per year.
 
 The executable-line count comes from the November 2 `sources/cov.sh` report:
 39,789 executable lines minus 291 in `unit_tests.c` gives 39,498 production
 lines. Using that post-fix size reference, 43 / 39.498 = 1.09 native bug
-groups per executable KLOC; 7 / 39.498 = 0.18 security and
+findings per executable KLOC; 7 / 39.498 = 0.18 security and
 36 / 39.498 = 0.91 other correctness.
 
 The authorship table comes from:

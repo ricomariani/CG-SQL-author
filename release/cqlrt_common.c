@@ -1430,7 +1430,7 @@ cql_hash_code cql_row_hash(
   cql_int32 row)
 {
   cql_int32 count = cql_result_set_get_count(result_set);
-  cql_contract(row < count);
+  cql_contract(row >= 0 && row < count);
 
   cql_result_set_meta *meta = cql_result_set_get_meta(result_set);
   cql_uint16 refs_count = meta->refsCount;
@@ -1490,10 +1490,10 @@ cql_bool cql_rows_equal(
 {
   cql_int32 count1 = cql_result_set_get_count(rs1);
   cql_int32 count2 = cql_result_set_get_count(rs2);
-  cql_contract(row1 < count1);
-  cql_contract(row2 < count2);
+  cql_contract(row1 >= 0 && row1 < count1);
+  cql_contract(row2 >= 0 && row2 < count2);
 
-  // get offsets and verify this is the SAME metadata
+  // Verify the physical layout used to address and compare both rows.
   cql_result_set_meta *meta1 = cql_result_set_get_meta(rs1);
   cql_result_set_meta *meta2 = cql_result_set_get_meta(rs2);
   cql_uint16 refs_count = meta1->refsCount;
@@ -1502,6 +1502,7 @@ cql_bool cql_rows_equal(
   cql_contract(meta2->refsOffset == refs_offset);
 
   size_t row_size = meta1->rowsize;
+  cql_contract(meta2->rowsize == row_size);
   char *data1 = ((char *)cql_result_set_get_data(rs1)) + ((size_t)row1) * row_size;
   char *data2 = ((char *)cql_result_set_get_data(rs2)) + ((size_t)row2) * row_size;
 
@@ -1544,8 +1545,8 @@ cql_bool cql_rows_same(
 {
   cql_int32 count1 = cql_result_set_get_count(rs1);
   cql_int32 count2 = cql_result_set_get_count(rs2);
-  cql_contract(row1 < count1);
-  cql_contract(row2 < count2);
+  cql_contract(row1 >= 0 && row1 < count1);
+  cql_contract(row2 >= 0 && row2 < count2);
 
   cql_result_set_meta *meta1 = cql_result_set_get_meta(rs1);
   cql_result_set_meta *meta2 = cql_result_set_get_meta(rs2);
@@ -1606,7 +1607,10 @@ void cql_rowset_copy(
   cql_int32 count)
 {
   cql_contract(from >= 0);
-  cql_contract(from + count <= cql_result_set_get_count(result_set));
+  cql_contract(count >= 0);
+  cql_int32 total = cql_result_set_get_count(result_set);
+  cql_contract(from <= total);
+  cql_contract(count <= total - from);
 
   // get offsets and rowsize metadata
   cql_result_set_meta *meta = cql_result_set_get_meta(result_set);
@@ -1675,8 +1679,9 @@ char *_Nonnull cql_address_of_col(
 {
   // Check to make sure the requested row is a valid row
   // See above for reasons why this might fail.
+  cql_contract(result_set);
   cql_int32 count = cql_result_set_get_count(result_set);
-  cql_contract(row < count);
+  cql_contract(row >= 0 && row < count);
 
   // Check to make sure the meta data has column data
   // See above for reasons why this might fail.
@@ -1686,7 +1691,7 @@ char *_Nonnull cql_address_of_col(
   // Check to make sure the requested column is a valid column
   // See above for reasons why this might fail.
   cql_int32 columnCount = meta->columnCount;
-  cql_contract(col < columnCount);
+  cql_contract(col >= 0 && col < columnCount);
 
   // Check to make sure the requested column is of the correct type
   // See above for reasons why this might fail.
@@ -1970,16 +1975,14 @@ void cql_result_set_set_blob_col(
 // CQLABI
 cql_bool cql_result_set_get_is_null_col(
   cql_result_set_ref _Nonnull result_set,
-  cql_int32 row_,
-  cql_int32 col_)
+  cql_int32 row,
+  cql_int32 col)
 {
-  cql_uint32 row = (cql_uint32)row_;
-  cql_uint32 col = (cql_uint32)col_;
-
   // Check to make sure the requested row is a valid row See cql_address_of_col
   // for reasons why this might fail.
+  cql_contract(result_set);
   cql_int32 count = cql_result_set_get_count(result_set);
-  cql_contract(row < count);
+  cql_contract(row >= 0 && row < count);
 
   // Check to make sure the meta data has column data See cql_address_of_col for
   // reasons why this might fail.
@@ -1989,13 +1992,13 @@ cql_bool cql_result_set_get_is_null_col(
   // Check to make sure the requested column is a valid column See
   // cql_address_of_col for reasons why this might fail.
   cql_int32 columnCount = meta->columnCount;
-  cql_contract(col < columnCount);
+  cql_contract(col >= 0 && col < columnCount);
 
   uint8_t data_type = meta->dataTypes[col];
 
   cql_uint16 offset = meta->columnOffsets[col + 1];
   size_t row_size = meta->rowsize;
-  char *data =((char *)cql_result_set_get_data(result_set)) + row * row_size + offset;
+  char *data =((char *)cql_result_set_get_data(result_set)) + ((size_t)row) * row_size + offset;
 
   cql_int32 core_data_type = CQL_CORE_DATA_TYPE_OF(data_type);
 
@@ -2037,16 +2040,14 @@ cql_bool cql_result_set_get_is_null_col(
 // This is the helper method that sets a nullable column to null
 void cql_result_set_set_to_null_col(
   cql_result_set_ref _Nonnull result_set,
-  cql_int32 row_,
-  cql_int32 col_)
+  cql_int32 row,
+  cql_int32 col)
 {
-  cql_uint32 row = (cql_uint32)row_;
-  cql_uint32 col = (cql_uint32)col_;
-
   // Check to make sure the requested row is a valid row See cql_address_of_col
   // for reasons why this might fail.
+  cql_contract(result_set);
   cql_int32 count = cql_result_set_get_count(result_set);
-  cql_contract(row < count);
+  cql_contract(row >= 0 && row < count);
 
   // Check to make sure the meta data has column data See cql_address_of_col for
   // reasons why this might fail.
@@ -2056,13 +2057,13 @@ void cql_result_set_set_to_null_col(
   // Check to make sure the requested column is a valid column See
   // cql_address_of_col for reasons why this might fail.
   cql_int32 columnCount = meta->columnCount;
-  cql_contract(col < columnCount);
+  cql_contract(col >= 0 && col < columnCount);
 
   uint8_t data_type = meta->dataTypes[col];
 
   cql_uint16 offset = meta->columnOffsets[col + 1];
   size_t row_size = meta->rowsize;
-  char *data =((char *)cql_result_set_get_data(result_set)) + row * row_size + offset;
+  char *data =((char *)cql_result_set_get_data(result_set)) + ((size_t)row) * row_size + offset;
 
   cql_int32 core_data_type = CQL_CORE_DATA_TYPE_OF(data_type);
 
@@ -2604,17 +2605,17 @@ cql_bool cql_facet_upsert(
 
 #define cql_append_value(b, var) cql_bytebuf_append(b, &var, sizeof(var))
 
-#define cql_append_nullable_value(b, var) \
-  if (!var.is_null) { \
-    cql_setbit(bits, nullable_index); \
-    cql_append_value(b, var.value); \
-  }
-
-static void cql_setbit(uint8_t *_Nonnull bytes, uint16_t index) {
+// The bit vector precedes the payloads, whose appends can grow the byte buffer
+// and free its old allocation. Accept the buffer and offset rather than an
+// interior pointer so every bit write finds the current allocation; retaining
+// the original bit-vector pointer across appends would cause a use-after-free.
+// Each of up to UINT16_MAX fields can contribute both a presence and a value bit.
+static void cql_setbit(cql_bytebuf *_Nonnull b, uint32_t bits_offset, uint32_t index) {
+  uint8_t *bytes = (uint8_t *)b->ptr + bits_offset;
   bytes[index / 8] |= (1 << (index % 8));
 }
 
-static cql_bool cql_getbit(const uint8_t *_Nonnull bytes, uint16_t index) {
+static cql_bool cql_getbit(const uint8_t *_Nonnull bytes, uint32_t index) {
   return !!(bytes[index / 8] & (1 << (index % 8)));
 }
 
@@ -2821,8 +2822,11 @@ void cql_cursor_to_bytebuf(
   cql_append_value(b, code);
 
   uint16_t bitvector_bytes_needed = (nullable_count + bool_count + 7) / 8;
-  uint8_t *bits = cql_bytebuf_alloc(b, bitvector_bytes_needed);
-  memset(bits, 0, bitvector_bytes_needed);
+  // Appending field payloads below can grow b and free its previous allocation.
+  // Keep the bit vector's offset, not an interior pointer; each later bit write
+  // must derive its address from the current b->ptr after any intervening growth.
+  uint32_t bits_offset = b->used;
+  memset(cql_bytebuf_alloc(b, bitvector_bytes_needed), 0, bitvector_bytes_needed);
   uint16_t nullable_index = 0;
   uint16_t bool_index = 0;
 
@@ -2855,7 +2859,7 @@ void cql_cursor_to_bytebuf(
         case CQL_DATA_TYPE_BOOL: {
           cql_bool bool_data = *(cql_bool *)(cursor + offset);
           if (bool_data) {
-            cql_setbit(bits, nullable_count + bool_index);
+            cql_setbit(b, bits_offset, nullable_count + bool_index);
           }
           bool_index++;
           break;
@@ -2882,7 +2886,7 @@ void cql_cursor_to_bytebuf(
         case CQL_DATA_TYPE_INT32: {
           cql_nullable_int32 int32_data = *(cql_nullable_int32 *)(cursor + offset);
           if (!int32_data.is_null) {
-            cql_setbit(bits, nullable_index);
+            cql_setbit(b, bits_offset, nullable_index);
             cql_write_varint_32(b, int32_data.value);
           }
           break;
@@ -2890,7 +2894,7 @@ void cql_cursor_to_bytebuf(
         case CQL_DATA_TYPE_INT64: {
           cql_nullable_int64 int64_data = *(cql_nullable_int64 *)(cursor + offset);
           if (!int64_data.is_null) {
-            cql_setbit(bits, nullable_index);
+            cql_setbit(b, bits_offset, nullable_index);
             cql_write_varint_64(b, int64_data.value);
           }
           break;
@@ -2900,15 +2904,18 @@ void cql_cursor_to_bytebuf(
           // good enough for SQLite so it's good enough for us. We're punting on
           // their ARM7 mixed endian support, we don't care about ARM7
           cql_nullable_double double_data = *(cql_nullable_double *)(cursor + offset);
-          cql_append_nullable_value(b, double_data);
+          if (!double_data.is_null) {
+            cql_setbit(b, bits_offset, nullable_index);
+            cql_append_value(b, double_data.value);
+          }
           break;
         }
         case CQL_DATA_TYPE_BOOL: {
           cql_nullable_bool bool_data = *(cql_nullable_bool *)(cursor + offset);
           if (!bool_data.is_null) {
-            cql_setbit(bits, nullable_index);
+            cql_setbit(b, bits_offset, nullable_index);
             if (bool_data.value) {
-              cql_setbit(bits, nullable_count + bool_index);
+              cql_setbit(b, bits_offset, nullable_count + bool_index);
             }
           }
           bool_index++;
@@ -2917,7 +2924,7 @@ void cql_cursor_to_bytebuf(
         case CQL_DATA_TYPE_STRING: {
           cql_string_ref str_ref = *(cql_string_ref *)(cursor + offset);
           if (str_ref) {
-            cql_setbit(bits, nullable_index);
+            cql_setbit(b, bits_offset, nullable_index);
             cql_alloc_cstr(temp, str_ref);
             cql_bytebuf_append(b, temp, (uint32_t)(strlen(temp) + 1));
             cql_free_cstr(temp, str_ref);
@@ -2927,7 +2934,7 @@ void cql_cursor_to_bytebuf(
         case CQL_DATA_TYPE_BLOB: {
           cql_blob_ref blob_ref = *(cql_blob_ref *)(cursor + offset);
           if (blob_ref) {
-            cql_setbit(bits, nullable_index);
+            cql_setbit(b, bits_offset, nullable_index);
             const void *bytes = cql_get_blob_bytes(blob_ref);
             cql_int32 size = cql_get_blob_size(blob_ref);
             cql_write_varint_32(b, size);
@@ -3116,6 +3123,12 @@ cql_code cql_cursor_from_bytes(
 
     if (!code) {
       break;
+    }
+
+    // Reject oversized headers before any 16-bit counter can wrap and cause
+    // extra fields to be checked against metadata beyond the destination.
+    if (actual_count == UINT16_MAX) {
+      goto error;
     }
 
     bool nullable_code = (code >= 'a' && code <= 'z');
@@ -3378,8 +3391,12 @@ cql_int32 cql_blob_stream_count(cql_blob_ref _Nonnull b)
   const uint8_t *bytes = (const uint8_t *)cql_get_blob_bytes(b);
   const uint32_t len = (uint32_t)cql_get_blob_size(b);
 
-  // the first 4 bytes are the count of blobs
-  return len >= 4 ? *(cql_int32 *)bytes : 0;
+  // Preserve the native-byte-order count without alignment or aliasing assumptions.
+  cql_int32 count = 0;
+  if (len >= sizeof(count)) {
+    memcpy(&count, bytes, sizeof(count));
+  }
+  return count;
 }
 
 
@@ -3403,31 +3420,36 @@ cql_code cql_cursor_from_blob_stream(
 
   // the first 4 bytes are the count of blobs
   // note that we're assuming little endian here, this could be generalized
-  uint32_t count = *(uint32_t *)bytes;
+  uint32_t count;
+  memcpy(&count, bytes, sizeof(count));
 
-  // We need to read 4 bytes at offset (index+1)*4, so we need (index+1)*4 + 4 <= len,
-  // i.e. (index+2)*4 <= len.  Using (index+1)*4 >= len would only verify the start of
-  // the read is in bounds, leaving up to 3 bytes readable past the end of the blob.
-  if (index < 0 || index >= count || (index + 2) * 4 > len) {
+  // Prove the entire count/offset table fits before any count or index arithmetic.
+  if (count > len / sizeof(uint32_t) - 1) {
+    goto error;
+  }
+
+  if (index < 0 || (uint32_t)index >= count) {
     goto error;
   }
 
   // note that we're assuming little endian here, this could be generalized
-  uint32_t end = *(uint32_t *)(bytes + (index + 1) * 4);
+  uint32_t end;
+  memcpy(&end, bytes + ((uint32_t)index + 1) * sizeof(end), sizeof(end));
   if (end > len) {
     goto error;
   }
 
   // the first blob starts after the offsets and count
-  uint32_t start = (count + 1) * sizeof(cql_int32);
+  uint32_t table_end = (count + 1) * sizeof(uint32_t);
+  uint32_t start = table_end;
 
   if (index > 0) {
-    // the first blob starts at 0 which is not recorded
+    // Subsequent blobs start at the preceding exclusive end.
     // note that we're assuming little endian here, this could be generalized
-    start = *(uint32_t *)(bytes + index * 4);
+    memcpy(&start, bytes + (uint32_t)index * sizeof(start), sizeof(start));
   }
 
-  if (start > end) {
+  if (start < table_end || start > end) {
     goto error;
   }
 
@@ -4158,11 +4180,12 @@ cql_string_ref _Nonnull cql_string_list_get_at(
 {
   cql_contract(list);
   cql_string_ref result = NULL;
+  cql_contract(index_ >= 0);
   cql_uint32 index = (cql_uint32)index_; // CQL ABI has no unsigned
 
   cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
   cql_uint32 count = self->used / sizeof(cql_string_ref);
-  cql_contract(index >= 0 && index < count);
+  cql_contract(index < count);
   cql_invariant(self->ptr);
   size_t offset = index * sizeof(cql_string_ref);
   result = *(cql_string_ref *)(self->ptr + offset);
@@ -4179,11 +4202,12 @@ cql_object_ref _Nonnull cql_string_list_set_at(
   cql_contract(list);
   cql_contract(value);
 
+  cql_contract(index_ >= 0);
   cql_uint32 index = (cql_uint32)index_; // CQL ABI has no unsigned
 
   cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
   cql_uint32 count = self->used / sizeof(cql_string_ref);
-  cql_contract(index >= 0 && index < count);
+  cql_contract(index < count);
   cql_invariant(self->ptr);
   size_t offset = index * sizeof(cql_string_ref);
   cql_string_ref *data = (cql_string_ref *)(self->ptr + offset);
@@ -4314,11 +4338,12 @@ cql_int64 cql_long_list_get_at(
   cql_int32 index_)
 {
   cql_contract(list);
+  cql_contract(index_ >= 0);
   cql_uint32 index = (cql_uint32)index_; // CQL ABI has no unsigned
 
   cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
   cql_uint32 count = self->used / sizeof(cql_int64);
-  cql_contract(index >= 0 && index < count);
+  cql_contract(index < count);
   cql_invariant(self->ptr);
   size_t offset = index * sizeof(cql_int64);
   return *(cql_int64 *)(self->ptr + offset);
@@ -4332,12 +4357,12 @@ cql_object_ref _Nonnull cql_long_list_set_at(
   cql_int64 value)
 {
   cql_contract(list);
-  cql_contract(value);
+  cql_contract(index_ >= 0);
   cql_uint32 index = (cql_uint32)index_; // CQL ABI has no unsigned
 
   cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
   cql_uint32 count = self->used / sizeof(cql_int64);
-  cql_contract(index >= 0 && index < count);
+  cql_contract(index < count);
   cql_invariant(self->ptr);
   size_t offset = index * sizeof(cql_int64);
   *(cql_int64 *)(self->ptr + offset) = value;
@@ -4382,11 +4407,12 @@ cql_double cql_real_list_get_at(
   cql_int32 index_)
 {
   cql_contract(list);
+  cql_contract(index_ >= 0);
   cql_uint32 index = (cql_uint32)index_; // CQL ABI has no unsigned
 
   cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
   cql_uint32 count = self->used / sizeof(cql_double);
-  cql_contract(index >= 0 && index < count);
+  cql_contract(index < count);
   cql_invariant(self->ptr);
   size_t offset = index * sizeof(cql_double);
   return *(cql_double *)(self->ptr + offset);
@@ -4400,12 +4426,12 @@ cql_object_ref _Nonnull cql_real_list_set_at(
   cql_double value)
 {
   cql_contract(list);
-  cql_contract(value);
+  cql_contract(index_ >= 0);
   cql_uint32 index = (cql_uint32)index_; // CQL ABI has no unsigned
 
   cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
   cql_uint32 count = self->used / sizeof(cql_double);
-  cql_contract(index >= 0 && index < count);
+  cql_contract(index < count);
   cql_invariant(self->ptr);
   size_t offset = index * sizeof(cql_double);
   *(cql_double *)(self->ptr + offset) = value;
@@ -4566,6 +4592,102 @@ static void cql_format_one_cursor_column(
       }
     }
   }
+}
+
+static int32_t cql_utf8_sequence_length(unsigned char lead_byte) {
+  if ((lead_byte & 0x80) == 0x00) return 1;
+  if ((lead_byte & 0xE0) == 0xC0) return 2;
+  if ((lead_byte & 0xF0) == 0xE0) return 3;
+  if ((lead_byte & 0xF8) == 0xF0) return 4;
+  return 0;
+}
+
+static bool cql_is_utf8_continuation(unsigned char byte) {
+  return (byte & 0xC0) == 0x80;
+}
+
+// Deliberately copy encoders.c's validator rather than add a runtime distribution
+// dependency. Preserve its malformed-byte and extra-continuation policy.
+static int32_t cql_valid_utf8_sequence(const unsigned char *_Nonnull p) {
+  int32_t len = cql_utf8_sequence_length(p[0]);
+  if (len == 0) return 0;
+  if (len == 1) return 1;
+
+  for (int32_t i = 1; i < len; i++) {
+    if (!p[i] || !cql_is_utf8_continuation(p[i])) {
+      return 0;
+    }
+  }
+
+  if (cql_is_utf8_continuation(p[len])) {
+    return 0;
+  }
+
+  uint32_t codepoint = 0;
+  switch (len) {
+    case 2:
+      codepoint = (uint32_t)(((p[0] & 0x1F) << 6) | (p[1] & 0x3F));
+      if (codepoint < 0x80) return 0;
+      break;
+    case 3:
+      codepoint = (uint32_t)(((p[0] & 0x0F) << 12) | ((p[1] & 0x3F) << 6) | (p[2] & 0x3F));
+      if (codepoint < 0x800) return 0;
+      if (codepoint >= 0xD800 && codepoint <= 0xDFFF) return 0;
+      break;
+    case 4:
+      codepoint = (uint32_t)(((p[0] & 0x07) << 18) | ((p[1] & 0x3F) << 12) | ((p[2] & 0x3F) << 6) | (p[3] & 0x3F));
+      if (codepoint < 0x10000) return 0;
+      if (codepoint > 0x10FFFF) return 0;
+      break;
+  }
+
+  return len;
+}
+
+// CQLABI
+cql_string_ref _Nonnull cql_create_json_escaped_str(cql_string_ref _Nonnull value) {
+  cql_contract(value);
+  cql_alloc_cstr(str, value);
+  const unsigned char *p = (const unsigned char *)str;
+  cql_bytebuf b;
+  cql_bytebuf_open(&b);
+
+  while (*p) {
+    uint32_t c = *p;
+    if (c >= 0x80) {
+      int32_t len = cql_valid_utf8_sequence(p);
+      if (len > 1) {
+        cql_bytebuf_append(&b, p, (cql_uint32)len);
+        p += len;
+        continue;
+      }
+    }
+
+    switch (c) {
+      case '"': cql_bytebuf_append(&b, "\\\"", 2); break;
+      case '\\': cql_bytebuf_append(&b, "\\\\", 2); break;
+      case '\b': cql_bytebuf_append(&b, "\\b", 2); break;
+      case '\f': cql_bytebuf_append(&b, "\\f", 2); break;
+      case '\n': cql_bytebuf_append(&b, "\\n", 2); break;
+      case '\r': cql_bytebuf_append(&b, "\\r", 2); break;
+      case '\t': cql_bytebuf_append(&b, "\\t", 2); break;
+      default:
+        if (c < 32 || c >= 0x80) {
+          cql_bprintf(&b, "\\u%04x", c);
+        }
+        else {
+          cql_bytebuf_append(&b, p, 1);
+        }
+        break;
+    }
+    p++;
+  }
+
+  cql_bytebuf_append_null(&b);
+  cql_string_ref result = cql_string_ref_new(b.ptr);
+  cql_bytebuf_close(&b);
+  cql_free_cstr(str, value);
+  return result;
 }
 
 // The cursor formatting logic is really super simple
@@ -5531,15 +5653,18 @@ static void cql_compute_key_blob_shape(
 }
 
 // Verifies every stored variable field before an update uses its offset or
-// length to size or copy a replacement blob.
+// length to size or copy a replacement blob. Optionally returns the sum of
+// field lengths, counting overlapping storage once per logical field.
 static cql_bool cql_validate_blob_variable_fields(
   const uint8_t *_Nonnull b,
   uint64_t original_bytes,
   uint64_t column_count,
   uint64_t storage_offset,
   uint64_t type_codes_offset,
-  uint64_t variable_offset)
+  uint64_t variable_offset,
+  uint64_t *_Nullable variable_size)
 {
+  uint64_t total_variable_size = 0;
   for (uint64_t icol = 0; icol < column_count; icol++) {
     uint8_t blob_column_type = b[type_codes_offset + icol];
 
@@ -5564,6 +5689,7 @@ static cql_bool cql_validate_blob_variable_fields(
         if (b[offset + len] != 0) {
           return 0;
         }
+        total_variable_size += bytes;
         break;
       }
 
@@ -5576,6 +5702,7 @@ static cql_bool cql_validate_blob_variable_fields(
         if (offset < variable_offset || offset + len > original_bytes) {
           return 0;
         }
+        total_variable_size += len;
         break;
       }
 
@@ -5584,6 +5711,10 @@ static cql_bool cql_validate_blob_variable_fields(
     }
   }
 
+  if (variable_size) {
+    // Shared payload ranges still need one copy per field in an updated blob.
+    *variable_size = total_variable_size;
+  }
   return 1;
 }
 
@@ -5783,7 +5914,7 @@ void bgetkey(
         header.column_count,
         shape.storage_offset,
         shape.type_codes_offset,
-        shape.variable_offset)) {
+        shape.variable_offset, NULL)) {
     goto cql_error;
   }
   uint64_t type_code_offset = shape.type_codes_offset + icol;
@@ -5884,7 +6015,7 @@ void bgetkey_type(
         header.column_count,
         shape.storage_offset,
         shape.type_codes_offset,
-        shape.variable_offset)) {
+        shape.variable_offset, NULL)) {
     goto cql_error;
   }
   sqlite3_result_int64(context, (int64_t)header.record_type);
@@ -5946,7 +6077,7 @@ void bupdatekey(
         header.column_count,
         shape.storage_offset,
         shape.type_codes_offset,
-        shape.variable_offset)) {
+        shape.variable_offset, &shape.variable_size)) {
     goto cql_error;
   }
 
@@ -6026,7 +6157,7 @@ void bupdatekey(
   }
 
   // adjust for change in length of variable length payload
-  uint64_t total_bytes = (uint64_t)(original_bytes + variable_size_adjustment);
+  uint64_t total_bytes = (uint64_t)((int64_t)(shape.variable_offset + shape.variable_size) + variable_size_adjustment);
 
   // we don't support records this big, they are insane already
   cql_contract(total_bytes == (cql_int32)total_bytes);
@@ -6529,7 +6660,7 @@ void bgetval(
         header.column_count,
         shape.storage_offset,
         shape.type_codes_offset,
-        shape.variable_offset)) {
+        shape.variable_offset, NULL)) {
     goto cql_error;
   }
 
@@ -6647,7 +6778,7 @@ void bgetval_type(
         header.column_count,
         shape.storage_offset,
         shape.type_codes_offset,
-        shape.variable_offset)) {
+        shape.variable_offset, NULL)) {
     goto cql_error;
   }
   sqlite3_result_int64(context, (int64_t)header.record_type);
@@ -6711,11 +6842,10 @@ void bupdateval(
         header.column_count,
         original_shape.storage_offset,
         original_shape.type_codes_offset,
-        original_shape.variable_offset)) {
+        original_shape.variable_offset, &original_shape.variable_size)) {
     goto cql_error;
   }
   original_shape.total_bytes = original_bytes;
-  original_shape.variable_size = original_bytes - original_shape.variable_offset;
 
   // We need to track how much variable space we need to add or remove we'll do
   // it here.  Likewise we track if columns were added or removed.
@@ -6813,36 +6943,31 @@ void bupdateval(
       if (!compat) {
         goto cql_error;
       }
-
-      switch (blob_column_type) {
-        // String field is stored in the variable space. The int64 storage
-        // encodes the length and offset. Length does not include the trailing
-        // null.
-        case CQL_BLOB_TYPE_STRING:
-        {
-          uint64_t val = cql_read_big_endian_u64(b + storage_offset);
-          uint32_t len = val & 0xffffffff;
-          variable_size_stored = len + 1;
-          break;
-        }
-
-        // Blob field is stored in the variable space. The int64 storage encodes
-        // the length and offset.
-        case CQL_BLOB_TYPE_BLOB:
-        {
-          uint64_t val = cql_read_big_endian_u64(b + storage_offset);
-          uint32_t len = val & 0xffffffff;
-          variable_size_stored = len;
-        }
-      }
     }
     else {
-      // The provided value is null, so we're deleting this column. There will
-      // be one less column in the result.
+      // The provided value is null, so we're deleting this column.
       col_adjustment--;
     }
 
-    variable_size_adjustment += variable_size_new - variable_size_stored;
+    switch (blob_column_type) {
+      // Subtract the old payload for replacements and deletions alike.
+      case CQL_BLOB_TYPE_STRING:
+      {
+        uint64_t val = cql_read_big_endian_u64(b + storage_offset);
+        uint32_t len = val & 0xffffffff;
+        variable_size_stored = (uint64_t)len + 1;
+        break;
+      }
+
+      case CQL_BLOB_TYPE_BLOB:
+      {
+        uint64_t val = cql_read_big_endian_u64(b + storage_offset);
+        uint32_t len = val & 0xffffffff;
+        variable_size_stored = len;
+      }
+    }
+
+    variable_size_adjustment += (int64_t)variable_size_new - (int64_t)variable_size_stored;
   }
 
   // compute the final shape parameters of the updated blob

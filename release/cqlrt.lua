@@ -452,6 +452,63 @@ function cql_clone_row(row)
   return result
 end
 
+local function cql_valid_utf8_sequence(str, i)
+  local c = str:byte(i)
+  local len
+  if c >= 0xc0 and c <= 0xdf then len = 2
+  elseif c >= 0xe0 and c <= 0xef then len = 3
+  elseif c >= 0xf0 and c <= 0xf7 then len = 4
+  else return 0 end
+
+  if i + len - 1 > #str then return 0 end
+  local codepoint = c & (0x7f >> len)
+  for j = i + 1, i + len - 1 do
+    local next_byte = str:byte(j)
+    if next_byte < 0x80 or next_byte > 0xbf then return 0 end
+    codepoint = (codepoint << 6) | (next_byte & 0x3f)
+  end
+  local next_byte = str:byte(i + len)
+  if next_byte and next_byte >= 0x80 and next_byte <= 0xbf then return 0 end
+
+  if len == 2 and codepoint < 0x80 then return 0 end
+  if len == 3 and (codepoint < 0x800 or (codepoint >= 0xd800 and codepoint <= 0xdfff)) then return 0 end
+  if len == 4 and (codepoint < 0x10000 or codepoint > 0x10ffff) then return 0 end
+  return len
+end
+
+local cql_json_escapes = {
+  [34] = '\\\"',
+  [92] = '\\\\',
+  [8] = '\\b',
+  [12] = '\\f',
+  [10] = '\\n',
+  [13] = '\\r',
+  [9] = '\\t',
+}
+
+function cql_create_json_escaped_str(value)
+  local result = {}
+  local i = 1
+  while i <= #value do
+    local c = value:byte(i)
+    local len = c >= 0x80 and cql_valid_utf8_sequence(value, i) or 0
+    if len > 1 then
+      result[#result + 1] = value:sub(i, i + len - 1)
+      i = i + len
+    else
+      if cql_json_escapes[c] then
+        result[#result + 1] = cql_json_escapes[c]
+      elseif c < 32 or c >= 0x80 then
+        result[#result + 1] = string.format("\\u%04x", c)
+      else
+        result[#result + 1] = string.char(c)
+      end
+      i = i + 1
+    end
+  end
+  return table.concat(result)
+end
+
 function cql_get_blob_size(blob)
   return #blob
 end
@@ -677,7 +734,8 @@ function cql_to_integer(num)
   if num == true then return 1 end
   if num == false then return 0 end
   if num == nil then return nil end
-  return math.floor(num);
+  -- CQL/SQLite truncate toward zero; floor alone rounds negative fractions away.
+  return num < 0 and math.ceil(num) or math.floor(num);
 end;
 
 function cql_to_float(num)
@@ -711,13 +769,65 @@ function cql_partition_create()
   return {};
 end;
 
+-- Encode cursor field VALUES, in the order given by fields, as a Lua table key.
+-- cql_partition_cursor uses this key to group child rows, and
+-- cql_extract_partition uses it to find the group for a parent's key cursor.
+-- These calls appear in compiler-generated parent/child result-set assembly
+-- and can also be made explicitly by CQL code. cql_cursor_hash shares the
+-- encoding as input to its hash; this is not a persisted serialization format.
+--
+-- Partition tables use the encoded string directly, without a subsequent
+-- cursor-equality check. An encoding collision would therefore merge unrelated
+-- groups and give a parent another parent's children. Hash collisions are
+-- permissible for cql_cursor_hash, but encoding collisions are not permissible
+-- for partition lookup.
+--
+-- The inputs are application/database values, not identifier spellings. TEXT
+-- and BLOB values can contain colons, digits, marker-looking text, and zero
+-- bytes, so no chosen separator alone can establish field boundaries. For
+-- example, joining with ":" makes ("a:b", "c") and ("a", "b:c") identical.
+-- Instead, each non-NULL field is byte_length:value. The length determines
+-- exactly where its payload ends and the next field begins, regardless of
+-- payload contents. Lua string lengths count bytes, including embedded zeroes.
+-- There is no need to escape or otherwise change TEXT/BLOB payload bytes.
+--
+-- NULL is the standalone marker N, where a non-NULL field starts with decimal
+-- length digits. Thus NULL, empty text (0:), and literal "nil" (3:nil) remain
+-- distinct. Literal "N" is also unambiguous (1:N).
+--
+-- Callers compare keys of the same cursor shape: corresponding fields have
+-- the same declared CQL types and order, though their names may differ.
+-- Consequently this encoding needs no type tags or field names; it is not a
+-- general cross-schema value encoding. Numeric spellings must still preserve
+-- distinct values and agree for equal Lua integer/float representations.
 function cql_make_str_key(key_table, fields)
   local key = ""
   for i = 1, #fields
   do
-    k = fields[i]
-    v = key_table[k]
-    key = key .. ":" .. tostring(v)
+    local value = key_table[fields[i]]
+    if value == nil then
+      -- Non-NULL fields start with a byte length, so this marker is distinct.
+      key = key .. "N"
+    else
+      if type(value) == "number" then
+        -- A CQL REAL can arrive as either a Lua integer or float. Equal values
+        -- such as 1 and 1.0 must select the same partition and hash identically.
+        -- math.tointeger succeeds only for exactly representable integers in
+        -- range; tostring then preserves every digit of a full-width LONG.
+        -- Converting all numbers to floats would collapse adjacent LONGs above
+        -- 2^53. For other doubles, 17 significant digits preserve distinct
+        -- finite values that Lua's default tostring rounding could collapse.
+        local integer = math.tointeger(value)
+        if integer ~= nil then
+          value = tostring(integer)
+        else
+          value = string.format("%.17g", value)
+        end
+      else
+        value = tostring(value)
+      end
+      key = key .. #value .. ":" .. value
+    end
   end
   return key
 end
@@ -1404,6 +1514,7 @@ function cql_int_encode_64(x)
 end
 
 function cql_cursor_to_blob(db, C, C_types, C_fields)
+  assert(#C_types <= 0xffff)
   local bool_count = 0
   local var_encoding_count = 0
   local nullable_count = 0
@@ -1650,7 +1761,7 @@ function cql_cursor_from_blob(db, C, C_types, C_fields, buffer)
 
   local pos = 1
   local types, pos = cql_unpack_z(buffer, pos)
-  if types == nil then
+  if types == nil or #types > 0xffff then
     return -104
   end
 

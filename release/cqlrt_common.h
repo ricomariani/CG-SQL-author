@@ -386,6 +386,9 @@ CQL_EXPORT void cql_bprintf(
 
 CQL_EXPORT void cql_bytebuf_append_null(cql_bytebuf *_Nonnull buffer);
 
+// CQLABI: returns created JSON string contents, without surrounding quotes.
+CQL_EXPORT cql_string_ref _Nonnull cql_create_json_escaped_str(cql_string_ref _Nonnull value);
+
 // CQLABI
 CQL_EXPORT cql_string_ref _Nonnull cql_cursor_format(cql_dynamic_cursor *_Nonnull dyn_cursor);
 
@@ -433,7 +436,7 @@ CQL_EXPORT cql_string_ref _Nonnull cql_cursor_format_column(
   cql_dynamic_cursor *_Nonnull dyn_cursor,
   cql_int32 i);
 
-// compare two rows for equality
+// compare two rows for equality; row sizes and reference layouts must match
 CQL_EXPORT cql_bool cql_rows_equal(
   cql_result_set_ref _Nonnull rs1,
   cql_int32 row1,
@@ -455,6 +458,8 @@ CQL_EXPORT void cql_rowset_copy(
   cql_int32 count);
 
 // getters
+// Row and column indexes must be nonnegative and within the result-set shape.
+// Invalid indexes are contract violations that terminate in all builds.
 
 // Generic is_null value getter on base result set object.
 // @param result_set The cql result_set object.
@@ -778,6 +783,8 @@ CQL_EXPORT cql_object_ref _Nullable cql_object_dictionary_find(
   cql_string_ref _Nullable key);
 
 // String list helpers
+// List indexes must be nonnegative and less than the current element count.
+// Invalid indexes are contract violations that terminate in all builds.
 // CQLABI
 CQL_EXPORT cql_object_ref _Nonnull cql_string_list_create(void);
 

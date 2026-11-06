@@ -35,7 +35,8 @@
 #ifndef _MSC_VER
 #include <libgen.h>
 #else
-#define PATH_MAX 255
+// Realpath passes _MAX_PATH to _fullpath, so its destination must match.
+#define PATH_MAX _MAX_PATH
 #endif
 
 #endif
@@ -197,6 +198,8 @@ typedef struct bytebuf {
 cql_noexport void bytebuf_open(bytebuf *_Nonnull buf);
 cql_noexport void bytebuf_close(bytebuf *_Nonnull buf);
 cql_noexport void *_Nonnull bytebuf_alloc(bytebuf *_Nonnull buf, uint32_t needed);
+
+// The source may be a range within the buffer's used bytes, even when appending grows it.
 cql_noexport void bytebuf_append(bytebuf *_Nonnull buf, const void *_Nonnull bytes, uint32_t count);
 
 // helper macro for new from a bufferß
@@ -240,6 +243,9 @@ cql_noexport void bopen(charbuf* b);
 cql_noexport void bclose(charbuf *b);
 cql_noexport void bclear(charbuf *b);
 cql_noexport void release_open_charbufs(void);
+
+// The format must not point into the destination allocation (always-on contract).
+// String arguments must not alias it either; callers enforce this precondition.
 cql_noexport void vbprintf(charbuf *b, const char *format, va_list args);
 cql_noexport void bprintf(charbuf *b, const char *format, ...) _printf_checking_(2, 3);
 cql_noexport CSTR dup_printf(const char *format, ...) _printf_checking_(1, 2);
@@ -749,6 +755,9 @@ cql_noexport CSTR _Nonnull get_compound_operator_name(int32_t compound_operator)
 */
 
 #define has_hex_prefix(s) (s[0] == '0' && (s[1] == 'x' || s[1] == 'X'))
+
+// Decode an already range-checked integer literal, preserving hex bit patterns.
+cql_noexport int64_t ast_int64_from_literal(CSTR _Nonnull literal);
 
 #define EXPR_PRI_ROOT -999
 #define EXPR_PRI_ASSIGN 0
@@ -1595,6 +1604,7 @@ typedef struct sem_struct {
   CSTR *names;                    // field names
   CSTR *kinds;                    // the "kind" text of each column, if any, e.g. integer<foo> foo is the kind
   sem_t *semtypes;                // typecode for each field
+  sem_t rowid_type;               // implicit rowid type, or zero if this source has no implicit rowid
   bool_t is_backed;               // original backed table source
 } sem_struct;
 
@@ -1997,8 +2007,8 @@ typedef struct cmd_options {
 
 cql_data_decl( cmd_options options );
 
-#define Invariant assert
-#define Contract assert
+#define Invariant(condition) do { if (!(condition)) abort(); } while (0)
+#define Contract(condition) do { if (!(condition)) abort(); } while (0)
 
 #define _new(x) ((x*)malloc(sizeof(x)))
 #define _new_array(x,c) ((x*)malloc(c*sizeof(x)))
@@ -2093,6 +2103,7 @@ typedef struct rtdata {
 cql_data_decl( rtdata *rt );
 
 cql_noexport void cql_cleanup_and_exit(int32_t code);
+cql_noexport void cql_set_input_file(FILE *file);
 
 // output to "stderr"
 cql_noexport void cql_error(const char *format, ...) _printf_checking_(1, 2);
@@ -2139,16 +2150,23 @@ cql_noexport bool_t cql_is_defined(CSTR name);
 
 #define PRETTY_QUOTE_SINGLE_LINE 0
 #define PRETTY_QUOTE_MULTI_LINE 1
-#define PRETTY_QUOTE_C 0
 #define PRETTY_QUOTE_JSON 2
+#define PRETTY_QUOTE_C 4
+#define PRETTY_QUOTE_LUA 8
+#define PRETTY_QUOTE_CQL 16
 
 cql_noexport void cg_decode_string_literal(CSTR _Nonnull str, charbuf *_Nonnull output);
 cql_noexport void cg_encode_string_literal(CSTR _Nonnull str, charbuf *_Nonnull output);
-cql_noexport void cg_encode_char_as_c_string_literal(char c, charbuf *_Nonnull output);
+cql_noexport void cg_encode_char_as_c_string_literal(char c, char next, charbuf *_Nonnull output);
+cql_noexport void cg_encode_char_as_lua_string_literal(char c, charbuf *_Nonnull output);
 cql_noexport void cg_encode_char_as_json_string_literal(char c, charbuf *_Nonnull output);
 
 cql_noexport void cg_encode_json_string_literal(CSTR _Nonnull str, charbuf *_Nonnull output);
 cql_noexport void cg_encode_c_string_literal(CSTR _Nonnull str, charbuf *_Nonnull output);
+cql_noexport void cg_encode_lua_string_literal(CSTR _Nonnull str, charbuf *_Nonnull output);
+cql_noexport void cg_encode_cql_string_literal(CSTR _Nonnull str, charbuf *_Nonnull output);
+// Append text safe for a generated C "//" or Lua "--" line comment.
+cql_noexport void cg_encode_comment_text(CSTR _Nonnull str, charbuf *_Nonnull output);
 cql_noexport void cg_decode_c_string_literal(CSTR _Nonnull str, charbuf *_Nonnull output);
 cql_noexport void cg_pretty_quote_plaintext(CSTR _Nonnull str, charbuf *_Nonnull output, uint32_t flags);
 cql_noexport void cg_remove_slash_star_and_star_slash(charbuf *_Nonnull b);
@@ -3229,9 +3247,9 @@ cql_noexport sem_t printf_iterator_next(printf_iterator *iterator);
   _flow_pop_context_branch_group();
 
 // Pushes a branch context. This must only be used within a branch group context
-// and must be used for all branches within it. (For empty branches with no
-// statements, one may use `flow_context_branch_group_add_empty_branch` instead
-// of pushing and immediately popping a new branch context.)
+// and must be used for all nonempty branches within it. Use
+// `flow_context_branch_group_add_empty_branch` for empty branches, which are
+// conservatively treated as neutral even if earlier conditions imply improvements.
 #define FLOW_PUSH_CONTEXT_BRANCH() \
   void *flow_context_branch; \
   _flow_push_context_branch();
@@ -3270,9 +3288,9 @@ cql_noexport void flow_unset_flag_for_type(sem_t flag, sem_t *type);
 // not called, it will be assumed that all cases are not covered.
 cql_noexport void flow_set_context_branch_group_covers_all_cases(bool_t covers_all_cases);
 
-// Adds an empty branch to the current branch group context. It is equivalent to
-// `FLOW_PUSH_CONTEXT_BRANCH` immediately followed by `FLOW_POP_CONTEXT_BRANCH`
-// and exists only for the sake of convenience.
+// Adds an empty branch to the current branch group context without contributing
+// inherited improvements. Unlike pushing and popping a branch context, this
+// conservatively prevents improvements from persisting after the branch group.
 cql_noexport void flow_context_branch_group_add_empty_branch();
 
 // Records the fact that the current context *always* jumps until the end of the
@@ -3332,6 +3350,7 @@ typedef struct macro_state_t {
   CSTR name;
   CSTR file;
   int32_t line;
+  int32_t depth;
   struct macro_state_t *parent;
   symtab *args;
 } macro_state_t;
@@ -3341,6 +3360,8 @@ static CSTR expanding_proc;
 static bool in_macro_args;
 static int32_t current_macro_count;
 static int32_t next_macro_count;
+
+#define MAX_MACRO_EXPANSION_DEPTH 256
 
 // Helper object to just hold info in find_attribute_str(...) and
 // find_attribute_num(...)
@@ -3784,6 +3805,7 @@ cql_noexport void ast_init() {
   macro_state.line = -1;
   macro_state.file = "<Unknown>";
   macro_state.name = "None";
+  macro_state.depth = 0;
   macro_state.parent = NULL;
   expanding_proc = NULL;
   in_macro_args = false;
@@ -4034,6 +4056,14 @@ cql_noexport ast_node *new_ast_str(CSTR value) {
   sast->sem = NULL;
   sast->str_type = STRING_TYPE_SQL;
   return (ast_node *)sast;
+}
+
+cql_noexport int64_t ast_int64_from_literal(CSTR literal) {
+  uint64_t bits = strtoull(literal, NULL, has_hex_prefix(literal) ? 16 : 10);
+  int64_t value;
+  // Avoid signed-parser saturation and implementation-defined unsigned casts.
+  memcpy(&value, &bits, sizeof(value));
+  return value;
 }
 
 // Create a new numeric node.  As discussed above the numeric is encoded in
@@ -4622,6 +4652,11 @@ cql_noexport void print_ast(
   }
 
   if (!node) {
+    return;
+  }
+
+  if ((uint32_t)pad + 2 >= sizeof(padbuffer)) {
+    cql_output("%s{AST print depth limit reached}\n", padbuffer);
     return;
   }
 
@@ -5567,6 +5602,18 @@ static void expand_macro_refs(ast_node *ast) {
   }
 
   Invariant(minfo);
+
+  // is_ref means a named macro call, not a reference to one of its arguments.
+  // Only named calls enter a new macro frame; argument references reuse it.
+  // Check before cloning and expanding another body to bound recursion such as:
+  //   @macro(expr) loop!() begin loop!() end;
+  //   let result := loop!();
+  // Each loop!() in the body is another named call that increases the depth.
+  if (is_ref && macro_state.depth >= MAX_MACRO_EXPANSION_DEPTH) {
+    report_macro_error(ast, "macro expansion nesting limit exceeded", name);
+    return;
+  }
+
   ast_node *copy = ast_clone_tree(minfo->def);
 
   // the body is handing off the right if we copied a macro def
@@ -5593,6 +5640,7 @@ static void expand_macro_refs(ast_node *ast) {
     macro_state.line = ast->lineno;
     macro_state.file = ast->filename;
     macro_state.name = macro_name;
+    macro_state.depth = macro_state_saved.depth + 1;
     macro_arg_table = macro_state.args = symtab_new();
 
     // Loop over each formal, we match the type of the argument
@@ -5927,8 +5975,23 @@ cql_noexport void bytebuf_append(
   const void *_Nonnull bytes,
   uint32_t count)
 {
+  uint32_t offset = 0;
+  bool_t aliases_buffer = false;
+
+  if (buf->ptr) {
+    uintptr_t source = (uintptr_t)bytes;
+    uintptr_t start = (uintptr_t)buf->ptr;
+    if (source >= start && source - start < buf->used) {
+      offset = (uint32_t)(source - start);
+      aliases_buffer = true;
+    }
+  }
+
   void *mem = bytebuf_alloc(buf, count);
-  memcpy(mem, bytes, count);
+  if (aliases_buffer) {
+    bytes = buf->ptr + offset;
+  }
+  memmove(mem, bytes, count);
 }
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
@@ -6157,7 +6220,8 @@ static void cg_line_directive(CSTR filename, int32_t lineno, charbuf *output) {
   }
 
   CHARBUF_OPEN(tmp);
-  cg_encode_c_string_literal(filename, &tmp);
+  // #line requires a single literal token, not adjacent C string literals.
+  cg_encode_cql_string_literal(filename, &tmp);
   bprintf(output, "#line %d %s\n", lineno, tmp.ptr);
   CHARBUF_CLOSE(tmp);
 }
@@ -6682,7 +6746,7 @@ static void cg_scratch_var(ast_node *ast, sem_t sem_type, charbuf *var, charbuf 
   if (is_assignment_target_reusable(ast, sem_type)) {
     Invariant(ast && ast->parent && ast->parent->left);
     EXTRACT_NAME_AST(name_ast, ast->parent->left);
-    EXTRACT_STRING(name, name_ast);
+    CSTR name = name_ast->sem->name;
     if (is_out_parameter(name_ast->sem->sem_type)) {
       bprintf(var, "*%s", name);
     }
@@ -8746,6 +8810,16 @@ static void cg_expr_num(ast_node *expr, CSTR op, charbuf *is_null, charbuf *valu
   // a numeric literal
   bprintf(is_null, "0");
 
+  if (num_type == NUM_LONG && has_hex_prefix(lit)) {
+    eval_node result = EVAL_NIL;
+    eval(expr, &result);
+    if (result.int64_value < 0) {
+      // C otherwise treats high-bit hex literals as unsigned expressions.
+      eval_format_number(&result, EVAL_FORMAT_FOR_C, value);
+      return;
+    }
+  }
+
   if (num_type == NUM_LONG) {
     // add long suffix if needed
     bprintf(value, "_64(%s)", lit);
@@ -9482,6 +9556,8 @@ static int32_t refs_count_sptr(sem_struct *sptr) {
 // Emit the offsets for the given struct type into the output with the given name
 static void cg_col_offsets(charbuf *output, sem_struct *sptr, CSTR sym_name, CSTR struct_name) {
   uint32_t count = sptr->count;
+  // The runtime field count must fit before it is narrowed into the metadata.
+  Contract(count <= UINT16_MAX);
 
   CSTR prefix = in_var_group_emit ? "" : "static ";
 
@@ -10585,7 +10661,7 @@ static void cg_flush_piece(CSTR start, CSTR cur, charbuf *output) {
   int32_t len = (int32_t)(cur - start);
 
   while (start < cur) {
-    cg_encode_char_as_c_string_literal(*start, &temp);
+    cg_encode_char_as_c_string_literal(*start, start + 1 < cur ? start[1] : '\0', &temp);
     start++;
   }
 
@@ -11983,8 +12059,8 @@ static void cg_set_from_cursor(ast_node *ast) {
   Contract(is_ast_set_from_cursor(ast));
   EXTRACT_ANY_NOTNULL(variable, ast->left);
   EXTRACT_ANY_NOTNULL(cursor, ast->right);
-  EXTRACT_STRING(cursor_name, cursor);
-  EXTRACT_STRING(var_name, variable);
+  CSTR cursor_name = cursor->sem->name;
+  CSTR var_name = variable->sem->name;
 
   CHARBUF_OPEN(value);
   bprintf(&value, "%s_object_", cursor_name);
@@ -12082,7 +12158,7 @@ static void cg_fetch_values_stmt(ast_node *ast) {
   for (ast_node *item = name_list ; item; item = item->right, value = value->right) {
     EXTRACT_ANY_NOTNULL(expr, value->left);
     EXTRACT_ANY_NOTNULL(col, item->left);
-    EXTRACT_STRING(var, col);
+    CSTR var = col->sem->name;
 
     CG_PUSH_EVAL(expr, C_EXPR_PRI_ROOT);
     CHARBUF_OPEN(temp);
@@ -12168,7 +12244,7 @@ static void cg_fetch_stmt(ast_node *ast) {
 
     for (ast_node *item = name_list; item; item = item->right, i++) {
       EXTRACT_NAME_AST(name_ast, item->left);
-      EXTRACT_STRING(var, name_ast);
+      CSTR var = name_ast->sem->name;
       sem_t sem_type_var = name_ast->sem->sem_type;
       bprintf(cg_main_output, "%s", newline);
       cg_fetch_column(sem_type_var, var);
@@ -12191,7 +12267,7 @@ static void cg_fetch_stmt(ast_node *ast) {
 
 static void cg_fetch_call_stmt(ast_node *ast) {
   Contract(is_ast_fetch_call_stmt(ast));
-  EXTRACT_STRING(cursor_name, ast->left);
+  CSTR cursor_name = ast->left->sem->name;
   EXTRACT_ANY_NOTNULL(call_stmt, ast->right);
 
   cg_call_stmt_with_cursor(call_stmt, cursor_name);
@@ -12208,7 +12284,7 @@ static void cg_fetch_call_stmt(ast_node *ast) {
 static void cg_update_cursor_stmt(ast_node *ast) {
   Contract(is_ast_update_cursor_stmt(ast));
   EXTRACT_ANY(cursor, ast->left);
-  EXTRACT_STRING(name, cursor);
+  CSTR name = cursor->sem->name;
   EXTRACT_NOTNULL(columns_values, ast->right);
   EXTRACT_NOTNULL(column_spec, columns_values->left);
   EXTRACT_ANY_NOTNULL(name_list, column_spec->left);
@@ -12553,7 +12629,7 @@ static void cg_commit_return_stmt(ast_node *ast) {
 static void cg_close_stmt(ast_node *ast) {
   Contract(is_ast_close_stmt(ast));
   EXTRACT_ANY_NOTNULL(cursor_ast, ast->left);
-  EXTRACT_STRING(name, cursor_ast);
+  CSTR name = cursor_ast->sem->name;
 
   // CLOSE [name]
 
@@ -13603,8 +13679,15 @@ static void cg_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
         bprintf(out, "\n// The statement ending at line %d\n", stmt->lineno);
       }
       else {
-        bprintf(cg_header_output, "\n// Generated from %s:%d\n", stmt->filename, stmt->lineno);
-        bprintf(cg_declarations_output, "\n// Generated from %s:%d\n", stmt->filename, stmt->lineno);
+        CHARBUF_OPEN(filename);
+        // A #line filename is source-controlled and has already been decoded,
+        // so it may contain newlines or other control characters.  Encode
+        // those characters before placing the filename in a C line comment;
+        // otherwise the filename could end the comment and expose text as C.
+        cg_encode_comment_text(stmt->filename, &filename);
+        bprintf(cg_header_output, "\n// Generated from %s:%d\n", filename.ptr, stmt->lineno);
+        bprintf(cg_declarations_output, "\n// Generated from %s:%d\n", filename.ptr, stmt->lineno);
+        CHARBUF_CLOSE(filename);
       }
       // emit source comment
       bprintf(out, "\n/*\n");
@@ -14055,14 +14138,14 @@ static void cg_fetch_info(fetch_result_info *info, charbuf *output)
       bprintf(&tmp, "cql_fetch_info info = {\n");
     }
     if (info->dml_proc) {
-      bprintf(&tmp, "  .rc = rc,\n");
+      bprintf(&tmp, "  .rc = _rc_,\n");
       bprintf(&tmp, "  .db = _db_,\n");
     }
     else {
       bprintf(&tmp, "  .rc = SQLITE_OK,\n"); // this case can't fail, there are no db ops
     }
     if (info->use_stmt) {
-      bprintf(&tmp, "  .stmt = stmt,\n");
+      bprintf(&tmp, "  .stmt = _stmt_,\n");
     }
     bprintf(&tmp, "  .data_types = %s,\n", info->data_types_sym);
     bprintf(&tmp, "  .col_offsets = %s,\n", info->col_offsets_sym);
@@ -14330,7 +14413,7 @@ static void cg_proc_result_set(ast_node *ast) {
 
     // optional db arg and return code
     if (dml_proc) {
-      bprintf(d, "cql_code rc = %s(_db_, ", proc_sym.ptr);
+      bprintf(d, "cql_code _rc_ = %s(_db_, ", proc_sym.ptr);
     }
     else {
       bprintf(d, "%s(", proc_sym.ptr);
@@ -14381,13 +14464,13 @@ static void cg_proc_result_set(ast_node *ast) {
     // object of course has exactly the right type for each column.
     bprintf(h, "%s%s);\n", rt->symbol_visibility, temp.ptr);
     bprintf(d, "\n%s) {\n", temp.ptr);
-    bprintf(d, "  sqlite3_stmt *stmt = NULL;\n");
+    bprintf(d, "  sqlite3_stmt *_stmt_ = NULL;\n");
 
     // emit profiling start signal
     bprintf(d, "  cql_profile_start(CRC_%s, &%s);\n", proc_sym.ptr, perf_index.ptr);
 
     // Invoke the base proc to get the statement
-    bprintf(d, "  cql_code rc = %s(_db_, &stmt", proc_sym.ptr);
+    bprintf(d, "  cql_code _rc_ = %s(_db_, &_stmt_", proc_sym.ptr);
     if (params) {
       bprintf(d, ", ");
       cg_param_names(params, d);
@@ -14662,7 +14745,7 @@ cql_noexport void cg_c_main(ast_node *head) {
   if (global_proc_needed) {
     exit_on_no_global_proc();
 
-    bprintf(&body_file, "#define _PROC_ %s\n", global_proc_name);
+    bprintf(&body_file, "#define _PROC_ \"%s\"\n", global_proc_name);
 
     bindent(&indent, cg_scratch_vars_output, 2);
     bprintf(&body_file, "\ncql_code %s(sqlite3 *_Nonnull _db_) {\n", global_proc_name);
@@ -15095,10 +15178,12 @@ cql_noexport int64_t sha256_charbuf(charbuf *input) {
   SHA256_CTX ctx;
   sha256_init(&ctx);
   sha256_update(&ctx, (const SHA256_BYTE *)input->ptr, input->used - 1);
-  SHA256_BYTE hash_bytes[64];
-  sha256_final(&ctx, hash_bytes);
-  int64_t *h = (int64_t *)hash_bytes;
-  int64_t hash = h[0] ^ h[1] ^h[2] ^ h[3];
+  // Allocate as int64_t so the reduction reads properly aligned, correctly
+  // typed words. sha256_final writes through their byte view, which is allowed
+  // to alias the words. The digest bytes and native-endian XOR are unchanged.
+  int64_t words[SHA256_BLOCK_SIZE / sizeof(int64_t)];
+  sha256_final(&ctx, (SHA256_BYTE *)words);
+  int64_t hash = words[0] ^ words[1] ^ words[2] ^ words[3];
   return hash;
 }
 
@@ -16031,7 +16116,9 @@ static void cg_json_col_attrs(charbuf *output, col_info *info) {
       }
       bprintf(output, "{\n");
       BEGIN_INDENT(fk, 2)
-      bprintf(output, "\"columns\" : [ \"%s\" ]", name);
+      bprintf(output, "\"columns\" : [ ");
+      cg_json_sql_name_ex(output, name, !!(sem_type & SEM_TYPE_QID));
+      bprintf(output, " ]");
       cg_json_fk_target_options(output, attr->left);
       END_INDENT(fk);
       bprintf(output,"\n}");
@@ -16148,36 +16235,50 @@ static void cg_json_name_list(charbuf *output, ast_node *list) {
   Contract(is_ast_name_list(list));
 
   for (ast_node *item = list; item; item = item->right) {
-    bprintf(output, "\"");
-    cg_json_name(output, item->left);
-    bprintf(output, "\"");
+    cg_json_sql_name(output, item->left);
     if (item->right) {
       bprintf(output, ", ");
     }
   }
 }
 
-// This is useful for expressions known to have no parameters (e.g. constraint expressions)
-// variables are illegal in such things so there can be no binding needed
+// Expressions have no parameters here, but their echoed text still needs JSON
+// escaping. The 2021 expression support wrapped raw text in quotes: '\t' silently
+// became a tab on JSON parsing, and a double quote could make invalid JSON.
+// Preserve the expression spelling, then use the established UTF-8/byte policy.
 static void cg_json_vanilla_expr(charbuf *output, ast_node *expr) {
+  CHARBUF_OPEN(sql);
   gen_sql_callbacks callbacks;
   init_gen_sql_callbacks(&callbacks);
   callbacks.mode = gen_mode_echo; // we want all the text, unexpanded, so NOT for sqlite output (this is raw echo)
-  gen_set_output_buffer(output);
+  gen_set_output_buffer(&sql);
   gen_with_callbacks(expr, gen_root_expr, &callbacks);
+  cg_encode_json_string_literal(sql.ptr, output);
+  gen_set_output_buffer(output);
+  CHARBUF_CLOSE(sql);
 }
+
+typedef enum {
+  JSON_PRESERVE_EXPRESSION_SPELLING = 0,
+  JSON_NORMALIZE_COLUMN_NAMES = 1
+} json_name_mode;
 
 // Similar to the above, this is also a list of names but we emit two arrays
 // one array for the names and another array for the sort orders specified if any.
 // Note unspecified sort orders are emitted as "".
-static void cg_json_indexed_columns(charbuf *cols, charbuf *orders, ast_node *list) {
+static void cg_json_indexed_columns(charbuf *cols, charbuf *orders, ast_node *list, json_name_mode name_mode) {
   for (ast_node *item = list; item; item = item->right) {
     Contract(is_ast_indexed_columns(list));
     EXTRACT_NOTNULL(indexed_column, item->left);
 
-    bprintf(cols, "\"");
-    cg_json_vanilla_expr(cols, indexed_column->left);
-    bprintf(cols, "\"");
+    // PK/unique metadata names must match column declarations. Index entries,
+    // and nontrivial constraint expressions, retain their existing CQL spelling.
+    if (name_mode == JSON_NORMALIZE_COLUMN_NAMES && is_id(indexed_column->left)) {
+      cg_json_sql_name(cols, indexed_column->left);
+    }
+    else {
+      cg_json_vanilla_expr(cols, indexed_column->left);
+    }
 
     if (is_ast_asc(indexed_column->right)) {
       bprintf(orders, "\"asc\"");
@@ -16205,7 +16306,7 @@ static void cg_json_pk_def(charbuf *output, ast_node *def) {
   CHARBUF_OPEN(cols);
   CHARBUF_OPEN(orders);
 
-  cg_json_indexed_columns(&cols, &orders, indexed_columns);
+  cg_json_indexed_columns(&cols, &orders, indexed_columns, JSON_NORMALIZE_COLUMN_NAMES);
 
   bprintf(output, "\"primaryKey\" : [ %s ]", cols.ptr);
   bprintf(output, ",\n\"primaryKeySortOrders\" : [ %s ],\n", orders.ptr);
@@ -16257,10 +16358,13 @@ static void cg_json_fk_target_options(charbuf *output, ast_node *ast) {
 
   EXTRACT_NOTNULL(fk_target, ast->left);
   EXTRACT_DETAIL(flags, ast->right);
-  EXTRACT_STRING(table_name, fk_target->left);
+  EXTRACT_NAME_AST(table_name_ast, fk_target->left);
   EXTRACT_NAMED_NOTNULL(ref_list, name_list, fk_target->right);
 
-  bprintf(output, ",\n\"referenceTable\" : \"%s\"", table_name);
+  // QID support in 2023 added the name helper, but FK and PK-name metadata
+  // retained raw internal names. Use the same decoded names as declarations.
+  bprintf(output, ",\n\"referenceTable\" : ");
+  cg_json_sql_name(output, table_name_ast);
 
   bprintf(output, ",\n\"referenceColumns\" : [ ");
   cg_json_name_list(output, ref_list);
@@ -16310,7 +16414,7 @@ static void cg_json_unq_def(charbuf *output, ast_node *def) {
   CHARBUF_OPEN(cols);
   CHARBUF_OPEN(orders);
 
-  cg_json_indexed_columns(&cols, &orders, indexed_columns);
+  cg_json_indexed_columns(&cols, &orders, indexed_columns, JSON_NORMALIZE_COLUMN_NAMES);
 
   bprintf(output, "\"columns\" : [ %s ]", cols.ptr);
   bprintf(output, ",\n\"sortOrders\" : [ %s ]", orders.ptr);
@@ -16400,8 +16504,10 @@ static void cg_json_col_key_list(charbuf *output, ast_node *ast) {
 
 
   if (pk_def && pk_def->left) {
-    EXTRACT_STRING(pk_name, pk_def->left);
-    bprintf(output, "\"primaryKeyName\" : \"%s\",\n", pk_name);
+    EXTRACT_NAME_AST(pk_name_ast, pk_def->left);
+    bprintf(output, "\"primaryKeyName\" : ");
+    cg_json_sql_name(output, pk_name_ast);
+    bprintf(output, ",\n");
   }
 
   {
@@ -16524,9 +16630,8 @@ static void cg_json_indices(charbuf *output) {
     }
 
     if (opt_where) {
-      bprintf(output, ",\n\"where\" : \"");
+      bprintf(output, ",\n\"where\" : ");
       cg_json_vanilla_expr(output, opt_where->left);
-      bprintf(output, "\"");
     }
 
     if (misc_attrs) {
@@ -16537,7 +16642,7 @@ static void cg_json_indices(charbuf *output) {
     CHARBUF_OPEN(cols);
     CHARBUF_OPEN(orders);
 
-    cg_json_indexed_columns(&cols, &orders, indexed_columns);
+    cg_json_indexed_columns(&cols, &orders, indexed_columns, JSON_PRESERVE_EXPRESSION_SPELLING);
 
     bprintf(output, ",\n\"columns\" : [ %s ]", cols.ptr);
     bprintf(output, ",\n\"sortOrders\" : [ %s ]", orders.ptr);
@@ -18577,7 +18682,7 @@ static void cg_lua_scratch_var(ast_node *ast, sem_t sem_type, charbuf *var, char
   if (lua_is_assignment_target_reusable(ast, sem_type)) {
     Invariant(ast && ast->parent && ast->parent->left);
     EXTRACT_NAME_AST(name_ast, ast->parent->left);
-    EXTRACT_STRING(name, name_ast);
+    CSTR name = name_ast->sem->name;
     bprintf(var, "%s", name);
   }
   else {
@@ -19287,7 +19392,7 @@ static void cg_lua_expr_in_pred_or_not_in(
 // expression the temporary holding the expression is in expr.  Expr has
 // already been tested for null if that was a possibility so we only need its
 // value at this point.
-static void cg_lua_case_list(ast_node *head, CSTR expr, CSTR result, sem_t sem_type_result) {
+static void cg_lua_case_list(ast_node *head, CSTR expr, sem_t sem_type_expr, CSTR result, sem_t sem_type_result) {
   Contract(is_ast_case_list(head));
 
   for (ast_node *ast = head; ast; ast = ast->right) {
@@ -19304,7 +19409,13 @@ static void cg_lua_case_list(ast_node *head, CSTR expr, CSTR result, sem_t sem_t
     CG_LUA_PUSH_EVAL(case_expr, LUA_EXPR_PRI_EQ_NE);
 
     if (expr) {
-      bprintf(cg_main_output, "if %s == %s then\n", expr, case_expr_value.ptr);
+      // SQL compares BOOL as 0/1; Lua equality keeps booleans and numbers distinct.
+      CHARBUF_OPEN(expr_comparable);
+      bprintf(&expr_comparable, "%s", expr);
+      cg_lua_to_num(sem_type_expr, &expr_comparable);
+      cg_lua_to_num(sem_type_case_expr, &case_expr_value);
+      bprintf(cg_main_output, "if %s == %s then\n", expr_comparable.ptr, case_expr_value.ptr);
+      CHARBUF_CLOSE(expr_comparable);
     }
     else {
       cg_lua_to_bool(sem_type_case_expr, &case_expr_value);
@@ -19410,14 +19521,14 @@ static void cg_lua_expr_case(ast_node *case_expr, CSTR str, charbuf *value, int3
       bprintf(cg_main_output, "goto case_else_%d end\n", else_label_number);
     }
 
-    cg_lua_case_list(case_list, temp_value.ptr, result_var.ptr, sem_type_result);
+    cg_lua_case_list(case_list, temp_value.ptr, sem_type_expr, result_var.ptr, sem_type_result);
 
     CG_LUA_POP_EVAL(expr);
     CG_LUA_POP_TEMP(temp);
   }
   else {
     // Otherwise do the case list with no expression...
-    cg_lua_case_list(case_list, NULL, result_var.ptr, sem_type_result);
+    cg_lua_case_list(case_list, NULL, 0, result_var.ptr, sem_type_result);
   }
 
   if (else_label_number >= 0) {
@@ -19504,14 +19615,14 @@ static void cg_lua_expr_type_check(ast_node *type_check_expr, CSTR str, charbuf 
   CG_LUA_POP_EVAL(expr);
 }
 
-// This converts from SQL string literal format to C literal format.
+// This converts from SQL string literal format to Lua literal format.
 //  * the single quotes around the string become double quotes
 //  * escaped single quote becomes just single quote
 //  * backslash escapes are preserved
 static void cg_lua_requote_literal(CSTR str, charbuf *output) {
   CHARBUF_OPEN(plaintext);
   cg_decode_string_literal(str, &plaintext);
-  cg_encode_c_string_literal(plaintext.ptr, output);
+  cg_encode_lua_string_literal(plaintext.ptr, output);
   CHARBUF_CLOSE(plaintext);
 }
 
@@ -21041,6 +21152,7 @@ static void cg_lua_fragment_cond_action(ast_node *ast, charbuf *buffer) {
 
   CG_LUA_PUSH_EVAL(expr, LUA_EXPR_PRI_ROOT);
 
+  cg_lua_to_bool(expr->sem->sem_type, &expr_value);
   bprintf(cg_main_output, "if %s then\n", expr_value.ptr);
 
   CG_LUA_POP_EVAL(expr);
@@ -21590,7 +21702,7 @@ static int32_t cg_lua_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_
     }
 
     if (!lua_has_shared_fragments) {
-      cg_pretty_quote_plaintext(sql.ptr, cg_main_output, PRETTY_QUOTE_C);
+      cg_pretty_quote_plaintext(sql.ptr, cg_main_output, PRETTY_QUOTE_LUA);
     }
     else {
       uint32_t scount = cg_lua_fragment_count();
@@ -21611,7 +21723,7 @@ static int32_t cg_lua_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_
       CSTR *strs = (CSTR *)(lua_shared_fragment_strings.ptr);
       for (size_t i = 0; i < scount; i++) {
         bprintf(cg_main_output, "  ");
-        cg_pretty_quote_plaintext(strs[i], cg_main_output, PRETTY_QUOTE_C);
+        cg_pretty_quote_plaintext(strs[i], cg_main_output, PRETTY_QUOTE_LUA);
         if (i + 1 < scount) {
           bprintf(cg_main_output, ",\n");
         }
@@ -21918,8 +22030,8 @@ static void cg_lua_set_from_cursor(ast_node *ast) {
   Contract(is_ast_set_from_cursor(ast));
   EXTRACT_ANY_NOTNULL(variable, ast->left);
   EXTRACT_ANY_NOTNULL(cursor, ast->right);
-  EXTRACT_STRING(cursor_name, cursor);
-  EXTRACT_STRING(var_name, variable);
+  CSTR cursor_name = cursor->sem->name;
+  CSTR var_name = variable->sem->name;
 
   // in LUA the statement is already an object, we just store it
   bprintf(cg_main_output, "%s = %s_stmt\n", var_name, cursor_name);
@@ -21998,7 +22110,7 @@ static void cg_lua_fetch_values_stmt(ast_node *ast) {
   for (ast_node *item = name_list ; item; item = item->right, value = value->right) {
     EXTRACT_ANY_NOTNULL(expr, value->left);
     EXTRACT_ANY_NOTNULL(col, item->left);
-    EXTRACT_STRING(var, col);
+    CSTR var = col->sem->name;
 
     CG_LUA_PUSH_EVAL(expr, LUA_EXPR_PRI_ROOT);
     CHARBUF_OPEN(temp);
@@ -22061,7 +22173,7 @@ static void cg_lua_fetch_stmt(ast_node *ast) {
 
     for (ast_node *item = name_list; item; item = item->right, i++) {
       EXTRACT_NAME_AST(name_ast, item->left);
-      EXTRACT_STRING(var, name_ast);
+      CSTR var = name_ast->sem->name;
       bprintf(cg_main_output, "%s = %s.", var, cursor_name);
       if (strcmp(sptr->names[i], "_anon")) {
         bprintf(cg_main_output, "%s", sptr->names[i]);
@@ -22076,7 +22188,7 @@ static void cg_lua_fetch_stmt(ast_node *ast) {
 
 static void cg_lua_fetch_call_stmt(ast_node *ast) {
   Contract(is_ast_fetch_call_stmt(ast));
-  EXTRACT_STRING(cursor_name, ast->left);
+  CSTR cursor_name = ast->left->sem->name;
   EXTRACT_ANY_NOTNULL(call_stmt, ast->right);
 
   cg_lua_call_stmt_with_cursor(call_stmt, cursor_name);
@@ -22092,7 +22204,7 @@ static void cg_lua_fetch_call_stmt(ast_node *ast) {
 static void cg_lua_update_cursor_stmt(ast_node *ast) {
   Contract(is_ast_update_cursor_stmt(ast));
   EXTRACT_ANY(cursor, ast->left);
-  EXTRACT_STRING(name, cursor);
+  CSTR name = cursor->sem->name;
   EXTRACT_NOTNULL(columns_values, ast->right);
   EXTRACT_NOTNULL(column_spec, columns_values->left);
   EXTRACT_ANY_NOTNULL(name_list, column_spec->left);
@@ -22476,7 +22588,7 @@ static void cg_lua_commit_return_stmt(ast_node *ast) {
 static void cg_lua_close_stmt(ast_node *ast) {
   Contract(is_ast_close_stmt(ast));
   EXTRACT_ANY_NOTNULL(cursor_ast, ast->left);
-  EXTRACT_STRING(name, cursor_ast);
+  CSTR name = cursor_ast->sem->name;
 
   // CLOSE [name]
 
@@ -23424,20 +23536,63 @@ static void cg_lua_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
       }
       else {
         if (!options.compress) {
-          bprintf(cg_declarations_output, "\n-- Generated from %s:%d\n", stmt->filename, stmt->lineno);
+          CHARBUF_OPEN(filename);
+          // A decoded #line filename may contain a newline or another control
+          // character.  Encode it before placing it in this Lua line comment
+          // so the filename cannot terminate the comment and create Lua code.
+          cg_encode_comment_text(stmt->filename, &filename);
+          bprintf(cg_declarations_output, "\n-- Generated from %s:%d\n", filename.ptr, stmt->lineno);
+          CHARBUF_CLOSE(filename);
         }
       }
       if (!options.compress) {
         // emit source comment
         gen_sql_callbacks lua_escape = { .escape_attributes_for_lua = true };
-        bprintf(out, "\n--[[\n");
+        CHARBUF_OPEN(source);
         gen_stmt_level = 1;
-        gen_set_output_buffer(out);
+        gen_set_output_buffer(&source);
         if (misc_attrs) {
           gen_with_callbacks(misc_attrs, gen_misc_attrs, &lua_escape);
         }
         gen_with_callbacks(stmt, gen_one_stmt, &lua_escape);
-        bprintf(out, ";\n--]]\n");
+        gen_set_output_buffer(out);
+
+        // Lua long comments use matching delimiters with any number of equal
+        // signs: --[[...]], --[=[...]=], --[==[...]==], and so on.  The CQL
+        // source can contain any of those closing sequences in string literals
+        // or identifiers.  Using a fixed delimiter would let such a sequence
+        // end this comment early and expose the remaining text as Lua code.
+        //
+        // Find the first closing delimiter that does not occur in the source.
+        // Looking only for the closing form is sufficient because the opening
+        // form has no special meaning after Lua has entered the long comment.
+        int32_t equals_count = 0;
+        CHARBUF_OPEN(close_delimiter);
+        for (;;) {
+          bclear(&close_delimiter);
+          bputc(&close_delimiter, ']');
+          for (int32_t i = 0; i < equals_count; i++) {
+            bputc(&close_delimiter, '=');
+          }
+          bputc(&close_delimiter, ']');
+          if (!strstr(source.ptr, close_delimiter.ptr)) {
+            break;
+          }
+          equals_count++;
+        }
+
+        // Emit the opening delimiter with the same number of equal signs as
+        // close_delimiter.  The "--" before the closing delimiter is retained
+        // as part of the generated CQL text; Lua ignores it inside the long
+        // comment, and the following delimiter still closes the comment.
+        bprintf(out, "\n--[");
+        for (int32_t i = 0; i < equals_count; i++) {
+          bputc(out, '=');
+        }
+        bprintf(out, "[\n%s;\n--", source.ptr);
+        bprintf(out, "%s\n", close_delimiter.ptr);
+        CHARBUF_CLOSE(close_delimiter);
+        CHARBUF_CLOSE(source);
       }
     }
   }
@@ -23580,7 +23735,8 @@ static void cg_lua_proc_result_set(ast_node *ast) {
   // but it is hiding the cql_result_set implementation detail from the API of the generated
   // code by providing a proc-scoped function for it with the typedef for the result set.
 
-  // Generate fetch result function
+  // Declare returned tuples at the call: Lua evaluates forwarded arguments before
+  // these locals shadow any parameter names.
   if (uses_out) {
     // Emit foo_fetch_results, it has the same signature as foo only with a result set
     // instead of a statement.
@@ -23595,7 +23751,6 @@ static void cg_lua_proc_result_set(ast_node *ast) {
 
     // optional db arg and return code
     if (dml_proc) {
-      bprintf(d, "  local _rc_\n");
       bprintf(&args, "_db_");
       bprintf(&returns, "_rc_, _result_");
     }
@@ -23607,7 +23762,7 @@ static void cg_lua_proc_result_set(ast_node *ast) {
       cg_lua_params(params, &args, &returns);
     }
 
-    bprintf(d, "  %s = %s(%s)\n", returns.ptr, proc_sym.ptr, args.ptr);
+    bprintf(d, "  local %s = %s(%s)\n", returns.ptr, proc_sym.ptr, args.ptr);
     bprintf(d, "  ");
     if (dml_proc) {
       cg_lua_error_on_not_sqlite_ok();
@@ -23645,24 +23800,23 @@ static void cg_lua_proc_result_set(ast_node *ast) {
       cg_lua_emit_fetch_results_prototype(dml_proc, params, name, d);
 
       bprintf(d, "  local result_set = nil\n");
-      bprintf(d, "  local _rc_\n");
 
       CHARBUF_OPEN(args);
       CHARBUF_OPEN(returns);
 
       // fixed db arg and return code
       bprintf(&args, "_db_");
-      bprintf(&returns, "_rc_, stmt");
+      bprintf(&returns, "_rc_, _stmt_");
 
       if (params) {
         cg_lua_params(params, &args, &returns);
       }
 
-      bprintf(d, "  %s = %s(%s)\n", returns.ptr, proc_sym.ptr, args.ptr);
+      bprintf(d, "  local %s = %s(%s)\n", returns.ptr, proc_sym.ptr, args.ptr);
       bprintf(d, "  ");
       cg_lua_error_on_not_sqlite_ok();
 
-      bprintf(d, "  _rc_, result_set = cql_fetch_all_rows(stmt, ");
+      bprintf(d, "  _rc_, result_set = cql_fetch_all_rows(_stmt_, ");
       cg_lua_emit_field_types(d, ast->sem->sptr);
       bprintf(d, ", ");
       cg_lua_emit_field_names(d, ast->sem->sptr);
@@ -23677,8 +23831,8 @@ static void cg_lua_proc_result_set(ast_node *ast) {
       }
 
       bprintf(d, "\n::cql_cleanup::\n");
-      bprintf(d, "  cql_finalize_stmt(stmt)\n");
-      bprintf(d, "  stmt = nil\n");
+      bprintf(d, "  cql_finalize_stmt(_stmt_)\n");
+      bprintf(d, "  _stmt_ = nil\n");
 
       cg_lua_emit_autodrops(d, misc_attrs);
 
@@ -23985,8 +24139,6 @@ cql_noexport void cg_lua_cleanup() {
 
 
 #endif
-
-
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
@@ -24277,7 +24429,8 @@ static void cg_qp_explain_query_stmt(ast_node *stmt) {
   bprintf(&c_str, "\"");
   for (uint32_t i = 1; i < json_str.used - 2; i++) {
     // json_str can have no control characters, but it might have quotes and backslashes
-    cg_encode_char_as_c_string_literal(json_str.ptr[i], &c_str);
+    // This is generated CQL, whose two-digit byte escapes match Lua's.
+    cg_encode_char_as_lua_string_literal(json_str.ptr[i], &c_str);
   }
   bprintf(&c_str, "\"");
 
@@ -24503,6 +24656,7 @@ static void cg_qp_stmt_list(ast_node *head) {
 // We use the multi-value form of insert to load all the rows we need.
 static void emit_populate_no_table_scan_proc(charbuf *output) {
   CHARBUF_OPEN(no_scan_tables_buf);
+  CHARBUF_OPEN(table_name);
 
   for (list_item *item = all_tables_list; item; item = item->next) {
     if (is_ast_create_table_stmt(item->ast)) {
@@ -24517,14 +24671,17 @@ static void emit_populate_no_table_scan_proc(charbuf *output) {
           if (no_scan_tables_buf.used > 1) {
             bprintf(&no_scan_tables_buf, ",\n");
           }
-          bprintf(&no_scan_tables_buf, "    (\"");
+          bclear(&table_name);
           if (is_qid(name_ast)) {
-            cg_unquote_encoded_qstr(&no_scan_tables_buf, name);
+            cg_unquote_encoded_qstr(&table_name, name);
           }
           else {
-             bprintf(&no_scan_tables_buf, "%s", name);
+            bprintf(&table_name, "%s", name);
           }
-          bprintf(&no_scan_tables_buf, "\")");
+          bprintf(&no_scan_tables_buf, "    (");
+          // QID decoding alone does not make the name safe inside a CQL literal.
+          cg_encode_cql_string_literal(table_name.ptr, &no_scan_tables_buf);
+          bprintf(&no_scan_tables_buf, ")");
         }
       }
     }
@@ -24539,6 +24696,7 @@ static void emit_populate_no_table_scan_proc(charbuf *output) {
 
   bprintf(output, "END;\n");
 
+  CHARBUF_CLOSE(table_name);
   CHARBUF_CLOSE(no_scan_tables_buf);
 }
 
@@ -24702,7 +24860,7 @@ static void emit_print_query_violation_proc(charbuf *output) {
     "    IF C2.info_list IS NOT NULL THEN\n"
     "      CALL printf(\"%s\", IIF(first, \"\", \",\\n\"));\n"
     "      CALL printf(\"  \\\"%s\\\" : \", C2.key);\n"
-    "      CALL printf(\"\\\"%s\\\"\", C2.info_list);\n"
+    "      CALL printf(\"\\\"%s\\\"\", cql_create_json_escaped_str(C2.info_list));\n"
     "      SET first := false;\n"
     "    END IF;\n"
     "  END;\n"
@@ -24746,7 +24904,7 @@ static void emit_print_query_plan_stat_proc(charbuf *output) {
     "        WHERE zdetail LIKE '%search%' AND iselectid NOT IN (\n"
     "          SELECT iselectid \n"
     "          FROM plan_temp \n"
-    "          WHERE zdetail LIKE '%search%using%covering%'\n"
+    "          WHERE zdetail LIKE '%search%using%covering%' AND sql_id = id_\n"
     "        ) AND sql_id = id_\n"
     "    ),\n"
     "    search_fast(name, count, priority) AS (\n"
@@ -24807,7 +24965,7 @@ static void emit_print_query_plan_graph_proc(charbuf *output) {
     "  CALL printf(\"   \\\"plan\\\" : \\\"\");\n"
     "  LOOP FETCH C\n"
     "  BEGIN\n"
-    "    CALL printf(\"%s%s\", IIF(C.level, \"\\\\n\", \"\"), C.graph_line);\n"
+    "    CALL printf(\"%s%s\", IIF(C.level, \"\\\\n\", \"\"), cql_create_json_escaped_str(C.graph_line));\n"
     "  END;\n"
     "  CALL printf(\"\\\"\\n\");\n"
     "END;\n"
@@ -24925,6 +25083,7 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
   }
 
   bprintf(&output_buf, "declare proc cql_create_udf_stub(name TEXT!) using transaction;\n\n");
+  bprintf(&output_buf, "declare func cql_create_json_escaped_str(value_ TEXT!) create TEXT!;\n\n");
 
   bprintf(&output_buf,
     "proc trivial_object()\n"
@@ -25259,7 +25418,7 @@ static void cg_schema_name_as_cql_string(charbuf *output, ast_node *ast) {
   }
 }
 
-// we're converting an identifier to a quoted C string literal
+// we're converting an identifier to a quoted CQL string literal
 // it could be a quoted identifier or a normal one (i.e. `foo bar` or foo_bar)
 static void cg_schema_name_quoted(charbuf *output, ast_node *ast) {
   EXTRACT_STRING(name, ast);
@@ -25272,8 +25431,8 @@ static void cg_schema_name_quoted(charbuf *output, ast_node *ast) {
     bprintf(&tmp, "%s", name);
   }
 
-  // the raw text is now ready for quoting and C escaping.
-  cg_encode_c_string_literal(tmp.ptr, output);
+  // The upgrader is CQL source, not C, so retain CQL's two-digit byte escapes.
+  cg_encode_cql_string_literal(tmp.ptr, output);
   CHARBUF_CLOSE(tmp);
 }
 
@@ -25521,7 +25680,8 @@ static void cg_schema_helpers(charbuf *decls) {
 
   bprintf(decls, "PROC %s_drop_table_helper(table_name TEXT!)\n", global_proc_name);
   bprintf(decls, "BEGIN\n");
-  bprintf(decls, "  CALL cql_exec_internal(printf('DROP TABLE IF EXISTS [%%s]', table_name));\n");
+  // SQLite identifiers escape embedded double quotes by doubling them.
+  bprintf(decls, "  CALL cql_exec_internal(printf('DROP TABLE IF EXISTS \"%%s\"', replace(table_name, '\"', '\"\"')));\n");
   bprintf(decls, "  -- remove the table from our dictionary marking it dropped\n");
   bprintf(decls, "  IF %s_tables_dict_ IS NULL THROW;\n", global_proc_name);
   bprintf(decls, "  LET added := cql_string_dictionary_add(%s_tables_dict_, table_name, '');\n", global_proc_name);
@@ -26158,7 +26318,7 @@ static void cg_schema_manage_triggers(charbuf *output, int32_t *drops, int32_t *
     bprintf(output, "  DECLARE C CURSOR FOR CALL %s_cql_get_all_triggers();\n", global_proc_name);
     bprintf(output, "  LOOP FETCH C\n");
     bprintf(output, "  BEGIN\n");
-    bprintf(output, "    CALL cql_exec_internal(printf('DROP TRIGGER [%%s];', C.name));\n");
+    bprintf(output, "    CALL cql_exec_internal(printf('DROP TRIGGER \"%%s\";', replace(C.name, '\"', '\"\"')));\n");
     bprintf(output, "  END;\n");
     bprintf(output, "END;\n\n");
 
@@ -26253,7 +26413,7 @@ static void cg_schema_manage_views(charbuf *output, int32_t *drops, int32_t *cre
     bprintf(output, "  DECLARE C CURSOR FOR CALL %s_cql_get_all_views();\n", global_proc_name);
     bprintf(output, "  LOOP FETCH C\n");
     bprintf(output, "  BEGIN\n");
-    bprintf(output, "    CALL cql_exec_internal(printf('DROP VIEW [%%s];', C.name));\n");
+    bprintf(output, "    CALL cql_exec_internal(printf('DROP VIEW \"%%s\";', replace(C.name, '\"', '\"\"')));\n");
     bprintf(output, "  END;\n");
     bprintf(output, "END;\n\n");
 
@@ -26404,7 +26564,7 @@ static void cg_schema_manage_indices(charbuf *output, int32_t *drops, int32_t *c
     bprintf(output, "  DECLARE C CURSOR FOR CALL %s_cql_get_unknown_indices();\n", global_proc_name);
     bprintf(output, "  LOOP FETCH C\n");
     bprintf(output, "  BEGIN\n");
-    bprintf(output, "    CALL cql_exec_internal(printf('DROP INDEX [%%s];', C.name));\n");
+    bprintf(output, "    CALL cql_exec_internal(printf('DROP INDEX \"%%s\";', replace(C.name, '\"', '\"\"')));\n");
     bprintf(output, "  END;\n");
     bprintf(output, "END;\n\n");
 
@@ -26583,7 +26743,8 @@ static void cg_schema_manage_recreate_tables(
 
     EXTRACT_NOTNULL(create_table_name_flags, ast->left);
     EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
-    EXTRACT_STRING(table_name, create_table_name_flags->right);
+    EXTRACT_NAME_AST(table_name_ast, create_table_name_flags->right);
+    EXTRACT_STRING(table_name, table_name_ast);
 
     // recreate if needed
 
@@ -26601,7 +26762,11 @@ static void cg_schema_manage_recreate_tables(
       // explicitly drop only tables that are unsubscribed or deleted
       // others dropped inside cql_rebuild_recreate_group
       if (strlen(delete_tables.ptr) != 0) bprintf(&delete_tables, "\n");
-      bprintf(&delete_tables, "DROP TABLE IF EXISTS %s;", table_name);
+      // Restore quoted SQL spelling: the internal name can target a different
+      // table, and even an unencoded name may be a keyword requiring quotes.
+      bprintf(&delete_tables, "DROP TABLE IF EXISTS ");
+      cg_schema_name_as_cql_string(&delete_tables, table_name_ast);
+      bprintf(&delete_tables, ";");
     }
 
     // if the table is deleted or unsubscribed don't restore its indices
@@ -26626,8 +26791,6 @@ static void cg_schema_manage_recreate_tables(
       }
     }
     table_crc ^= crc_charbuf(&make_table);
-    table_crc ^= crc_charbuf(&delete_tables);
-    table_crc ^= crc_charbuf(&update_indices);
 
     bprintf(&pending_table_creates, "%s", make_table.ptr);
     CHARBUF_CLOSE(make_table);
@@ -26639,6 +26802,12 @@ static void cg_schema_manage_recreate_tables(
     if (i + 1 < count && gname[0] && !StrCaseCmp(gname, (note+1)->group_name)) {
       continue;
     }
+
+    // These buffers accumulate across the whole group, so hash them only once.
+    // Hashing after each table can cancel earlier SQL when a later table adds
+    // none, hiding an index-only change in a two-table group.
+    table_crc ^= crc_charbuf(&delete_tables);
+    table_crc ^= crc_charbuf(&update_indices);
 
     bprintf(&update_tables, "%s", pending_table_creates.ptr);
     bclear(&pending_table_creates);
@@ -28793,6 +28962,10 @@ cql_noexport void bclear(charbuf *b) {
 // count is arbitrary. We use vsnprintf twice to get the size and then
 // to do the actual append.
 cql_noexport void vbprintf(charbuf *b, const char *format, va_list args) {
+  uintptr_t source = (uintptr_t)format;
+  uintptr_t start = (uintptr_t)b->ptr;
+  Contract(source < start || source - start >= b->max);
+
   va_list pass1, pass2;
   va_copy(pass1, args);
   va_copy(pass2, args);
@@ -29197,8 +29370,44 @@ static void emit_hex_digit(uint32_t ch, charbuf *output) {
   }
 }
 
-// This converts from a plain string to C string literal
-cql_noexport void cg_encode_char_as_c_string_literal(char c, charbuf *output) {
+// C hex escapes consume all following hex digits. Callers are already inside
+// quotes; close and reopen the literal when the next character would be absorbed.
+// Adjacent C literals preserve the bytes without runtime concatenation.
+cql_noexport void cg_encode_char_as_c_string_literal(char c, char next, charbuf *output) {
+  const char quote = '"';
+  const char backslash = '\\';
+
+  switch (c) {
+    case '\"':  bputc(output, backslash); bputc(output, quote); break;
+    case '\a':  bputc(output, backslash); bputc(output, 'a'); break;
+    case '\b':  bputc(output, backslash); bputc(output, 'b'); break;
+    case '\f':  bputc(output, backslash); bputc(output, 'f'); break;
+    case '\n':  bputc(output, backslash); bputc(output, 'n'); break;
+    case '\r':  bputc(output, backslash); bputc(output, 'r'); break;
+    case '\t':  bputc(output, backslash); bputc(output, 't'); break;
+    case '\v':  bputc(output, backslash); bputc(output, 'v'); break;
+    case '\\':  bputc(output, c); bputc(output, c); break;
+    default  :
+      // note: 0x80 - 0xff will be negative and are hence covered by this test
+      if (c < 32) {
+        uint32_t ch = (uint32_t)c;
+        ch &= 0xff;
+        bprintf(output, "\\x");
+        emit_hex_digit(ch >> 4, output);
+        emit_hex_digit(ch & 0xf, output);
+        if (IsXDigit(next)) {
+          bprintf(output, "\" \"");
+        }
+      }
+      else {
+        bputc(output, c);
+      }
+  }
+}
+
+// Lua consumes exactly two hex digits, so no lookahead or literal boundary is
+// needed. CQL's double-quoted literals accept the same escape spelling.
+cql_noexport void cg_encode_char_as_lua_string_literal(char c, charbuf *output) {
   const char quote = '"';
   const char backslash = '\\';
 
@@ -29227,24 +29436,35 @@ cql_noexport void cg_encode_char_as_c_string_literal(char c, charbuf *output) {
   }
 }
 
-// This converts from a plain string to json string literal (fewer escapes available/needed)
+// JSON escaping history and policy:
 //
-// From the spec, the valid single escape characters are
-// SingleEscapeCharacter :: one of
-//      ' " \ b f n r t v
+// In December 2021 (f1d3ece0), escaping high bytes fixed invalid JSON, but it
+// treated every UTF-8 byte as a separate Unicode codepoint and assumed signed
+// char. JSON \u00e2\u0080\u00a2 is three characters, not the bullet U+2022
+// represented by UTF-8 bytes E2 80 A2.
 //
-// \v should be legal but it is avoided because the python validator
-// doesn't support it. We generate all of the others if needed
-// but \' is never needed as we always use double quotes.
+// In December 2025 (8818eb45, #195), the full-string encoder learned to validate
+// and preserve complete UTF-8 sequences. The JSON pretty-quoting path still
+// called this byte encoder directly, so SQL fragments retained that corruption.
+// In January 2026 (7306a9bc), malformed-input tests established the fallback:
+// escape invalid bytes individually as \u00xx, including an entire sequence
+// followed by an extra continuation byte. Do not reinterpret or replace them.
 //
-// likewise the spec says:
+// Both string paths must apply the same validator before this byte fallback.
+// Valid UTF-8 remains byte-for-byte unchanged; ASCII keeps its existing escapes.
+// The fallback tests unsigned byte values explicitly, so its output does not
+// depend on the implementation-defined signedness of plain char. This does not
+// change the malformed-input policy or C/CQL/Lua escaping.
 //
-// UnicodexEscapeSequence ::
-//      u HexDigit HexDigit HexDigit HexDigit
-//
+// This converts one ASCII or invalid byte to JSON string literal text.
+// JSON permits \", \\, \b, \f, \n, \r, \t, and four-digit \u escapes.
+// Unlike C/Lua, JSON has no \a or \v: these controls require \u0007/\u000b.
+// Single quotes need no JSON escaping. Other ASCII bytes at or above 32,
+// including DEL, retain their existing literal spelling.
 cql_noexport void cg_encode_char_as_json_string_literal(char c, charbuf *output) {
   const char quote = '"';
   const char backslash = '\\';
+  uint32_t ch = (uint32_t)(unsigned char)c;
 
   switch (c) {
     case '\"':  bputc(output, backslash); bputc(output, quote); break;
@@ -29255,10 +29475,7 @@ cql_noexport void cg_encode_char_as_json_string_literal(char c, charbuf *output)
     case '\r':  bputc(output, backslash); bputc(output, 'r'); break;
     case '\t':  bputc(output, backslash); bputc(output, 't'); break;
     default  :
-      // note: 0x80 - 0xff will be negative and are hence covered by this test
-      if (c < 32) {
-        uint32_t ch = (uint32_t)c;
-        ch &= 0xff;
+      if (ch < 32 || ch >= 0x80) {
         bprintf(output, "\\u00");
         emit_hex_digit(ch >> 4, output);
         emit_hex_digit(ch & 0xf, output);
@@ -29269,7 +29486,7 @@ cql_noexport void cg_encode_char_as_json_string_literal(char c, charbuf *output)
   }
 }
 
-// This converts from a plain string to C string literal
+// Generated C needs literal boundaries after hex escapes before hex digits.
 cql_noexport void cg_encode_c_string_literal(CSTR str, charbuf *output) {
   const char quote = '"';
   const char *p = str;
@@ -29277,9 +29494,66 @@ cql_noexport void cg_encode_c_string_literal(CSTR str, charbuf *output) {
   bputc(output, quote);
 
   for ( ;p[0]; p++) {
-    cg_encode_char_as_c_string_literal(p[0], output);
+    cg_encode_char_as_c_string_literal(p[0], p[1], output);
   }
   bputc(output, quote);
+}
+
+// Lua does not accept C's adjacent-literal syntax.
+cql_noexport void cg_encode_lua_string_literal(CSTR str, charbuf *output) {
+  const char quote = '"';
+  const char *p = str;
+
+  bputc(output, quote);
+
+  for ( ;p[0]; p++) {
+    cg_encode_char_as_lua_string_literal(p[0], output);
+  }
+  bputc(output, quote);
+}
+
+// CQL double-quoted strings use the same byte escapes as Lua. This single-token
+// spelling also preserves #line filenames, where adjacent tokens are not legal.
+cql_noexport void cg_encode_cql_string_literal(CSTR str, charbuf *output) {
+  const char quote = '"';
+  const char *p = str;
+
+  bputc(output, quote);
+
+  for ( ;p[0]; p++) {
+    cg_encode_char_as_lua_string_literal(p[0], output);
+  }
+  bputc(output, quote);
+}
+
+// Append text that is safe to place after a C "//" or Lua "--" line-comment
+// marker.  The input can include decoded source-controlled text such as a
+// #line filename.  In particular, an embedded carriage return or newline must
+// not reach the generated output because it would end the comment and allow
+// the remaining text to be interpreted as generated C or Lua.
+//
+// Common whitespace controls use their familiar visible spellings.  Other C0
+// controls and DEL use \xNN so generated comments remain single-line and
+// inspectable.  These spellings are comment text, not C or Lua string escapes,
+// so no second decoding occurs.  Printable ASCII and non-ASCII UTF-8 bytes pass
+// through unchanged because they cannot terminate a line comment.  This helper
+// appends to output and does not clear any existing content.
+cql_noexport void cg_encode_comment_text(CSTR str, charbuf *output) {
+  for (const unsigned char *p = (const unsigned char *)str; *p; p++) {
+    switch (*p) {
+      case '\n': bprintf(output, "\\n"); break;
+      case '\r': bprintf(output, "\\r"); break;
+      case '\t': bprintf(output, "\\t"); break;
+      default:
+        if (*p < 32 || *p == 127) {
+          bprintf(output, "\\x%02x", *p);
+        }
+        else {
+          bputc(output, (char)*p);
+        }
+        break;
+    }
+  }
 }
 
 // Returns the expected length of a UTF-8 sequence based on its lead byte.
@@ -29471,6 +29745,7 @@ cql_noexport void cg_pretty_quote_plaintext(CSTR str, charbuf *output, uint32_t 
   bool_t inQuote = 0;
   bool_t multi_line = !!(flags & PRETTY_QUOTE_MULTI_LINE);
   bool_t for_json = !!(flags & PRETTY_QUOTE_JSON);
+  bool_t for_c = !!(flags & PRETTY_QUOTE_C);
 
   bputc(output, '"');
   for (CSTR p = str; p[0]; p++) {
@@ -29520,10 +29795,27 @@ cql_noexport void cg_pretty_quote_plaintext(CSTR str, charbuf *output, uint32_t 
     }
     else {
       if (for_json) {
+        // Pretty-quoted SQL must preserve whole UTF-8 sequences just like the
+        // full-string JSON encoder. They cannot contain ASCII quotes or line
+        // breaks, so consuming the whole sequence does not change SQL formatting.
+        const unsigned char *utf8 = (const unsigned char *)p;
+        if (*utf8 >= 0x80) {
+          int32_t seq_len = valid_utf8_sequence(utf8);
+          if (seq_len > 1) {
+            for (int32_t i = 0; i < seq_len; i++) {
+              bputc(output, (char)utf8[i]);
+            }
+            p += seq_len - 1;
+            continue;
+          }
+        }
         cg_encode_char_as_json_string_literal(p[0], output);
       }
+      else if (for_c) {
+        cg_encode_char_as_c_string_literal(p[0], p[1], output);
+      }
       else {
-        cg_encode_char_as_c_string_literal(p[0], output);
+        cg_encode_char_as_lua_string_literal(p[0], output);
       }
     }
   }
@@ -29545,7 +29837,8 @@ cql_noexport void cg_pretty_quote_plaintext(CSTR str, charbuf *output, uint32_t 
 // into a comment block.
 cql_noexport void cg_remove_slash_star_and_star_slash(charbuf *_Nonnull b) {
   char *p = b->ptr;
-  for (uint32_t i = 0; i < b->used - 2; i++) {
+  // Require two text bytes before the NUL without subtracting from an empty buffer's used count.
+  for (uint32_t i = 0; i + 2 < b->used; i++) {
     if (p[i] == '*' && p[i+1] == '/') {
       p[i] = '+';
     }
@@ -29561,14 +29854,14 @@ cql_noexport void cg_pretty_quote_compressed_text(CSTR _Nonnull str, charbuf *_N
   // In the case of an empty compressed string - cql_compressed("") we do not want
   // extra newlines
   if (strlen(str) == 0) {
-    cg_pretty_quote_plaintext(str, output, PRETTY_QUOTE_C | PRETTY_QUOTE_MULTI_LINE);
+    cg_pretty_quote_plaintext(str, output, PRETTY_QUOTE_CQL | PRETTY_QUOTE_MULTI_LINE);
     return;
   }
 
   // Otherwise, we want the SQL string to be new-line separated and indented for readability
   CHARBUF_OPEN(temp_output);
   bprintf(&temp_output, "\n  ");
-  cg_pretty_quote_plaintext(str, &temp_output, PRETTY_QUOTE_C | PRETTY_QUOTE_MULTI_LINE);
+  cg_pretty_quote_plaintext(str, &temp_output, PRETTY_QUOTE_CQL | PRETTY_QUOTE_MULTI_LINE);
   bindent(output, &temp_output, 6);
   bclear(&temp_output);
   bprintf(&temp_output, "\n      ");
@@ -29576,11 +29869,11 @@ cql_noexport void cg_pretty_quote_compressed_text(CSTR _Nonnull str, charbuf *_N
   CHARBUF_CLOSE(temp_output);
 }
 
-// Preserve back-quoted identifiers while making them SQL-safe: allowed chars
-// pass through, disallowed bytes become Xhh, and we synthesize the X_ prefix
-// in-place to keep already-emitted text contiguous without extra buffers.
+// Preserve ordinary identifiers, including capital X. Encoding is needed only
+// for non-identifiers or the reserved X_ prefix. Once encoding is needed, escape
+// every literal X so it cannot be confused with an Xhh byte escape.
 //
-// For instance "X_helloX20worldX21" becomes "`hello world!`"
+// For instance "`hello world!`" becomes "X_helloX20worldX21".
 cql_noexport void cg_encode_qstr(charbuf *_Nonnull output, CSTR _Nonnull qstr) {
   Contract(qstr);
   Contract(qstr[0] == '`');
@@ -29589,14 +29882,26 @@ cql_noexport void cg_encode_qstr(charbuf *_Nonnull output, CSTR _Nonnull qstr) {
   Contract(qstr[len-1] == '`');
   uint32_t used = output->used;
 
-  bool_t used_hex = false;
+  bool_t needs_encoding = (qstr[1] == 'X' && qstr[2] == '_') ||
+    (qstr[1] >= '0' && qstr[1] <= '9');
+  for (uint32_t i = 1; i < len - 1; i++) {
+    uint8_t ch = (uint8_t)qstr[i];
+    if (!(
+      (ch >= 'a' && ch <= 'z') ||
+      (ch >= 'A' && ch <= 'Z') ||
+      (ch >= '0' && ch <= '9') ||
+      ch == '_')) {
+        needs_encoding = true;
+    }
+  }
+
   len--;
   uint32_t i;
   for (i = 1; i < len; i++) {
     uint8_t ch = (uint8_t)qstr[i];
     if (
       (ch >= 'a' && ch <= 'z') ||
-      (ch >= 'A' && ch <= 'Z' && ch != 'X') ||
+      (ch >= 'A' && ch <= 'Z' && (ch != 'X' || !needs_encoding)) ||
       (ch >= '0' && ch <= '9') ||
       ch == '_') {
         bputc(output, qstr[i]);
@@ -29613,10 +29918,9 @@ cql_noexport void cg_encode_qstr(charbuf *_Nonnull output, CSTR _Nonnull qstr) {
     bputc(output, 'X');
     emit_hex_digit(ch >> 4, output);
     emit_hex_digit(ch & 0xf, output);
-    used_hex = true;
   }
 
-  if (used_hex) {
+  if (needs_encoding) {
     // place holders to make space
     bputc(output, '$');
     bputc(output, '$');
@@ -29729,18 +30033,13 @@ static void eval_num_str(CSTR lit, int32_t num_type, eval_node *result) {
     break;
 
   case NUM_INT:
-    // strtol/strtoll with an explicit radix determined by has_hex_prefix keeps
-    // the integer parsing branch centralized; overflow checking for constants
-    // is deferred to later semantic phases so we don't duplicate it here.
+    // The scanner has already checked the literal's range.
     result->int32_value = (int32_t)strtol(lit, NULL, has_hex_prefix(lit) ? 16 : 10);
     result->sem_type = SEM_TYPE_INTEGER;
     break;
 
   case NUM_LONG:
-    // 64-bit path mirrors the 32-bit logic; we rely on the host C library's
-    // parsing so platform-specific edge nuances (e.g. leading +) are consistent
-    // everywhere rather than re-specifying integer grammar in the evaluator.
-    result->int64_value = (int64_t)strtoll(lit, NULL, has_hex_prefix(lit) ? 16 : 10);
+    result->int64_value = ast_int64_from_literal(lit);
     result->sem_type = SEM_TYPE_LONG_INTEGER;
     break;
 
@@ -31369,9 +31668,8 @@ cql_noexport void flow_set_context_branch_group_covers_all_cases(bool_t covers_a
   current_context->branch_group.covers_all_cases = covers_all_cases;
 }
 
-// Records the presence of an empty branch within the branch group. This is
-// equivalent to calling `_flow_push_context_branch` immediately followed by
-// `_flow_pop_context_branch` and exists only for the sake of convenience.
+// Records an empty branch as neutral: it counts against improvements persisting
+// after the group, without contributing inherited facts from earlier conditions.
 cql_noexport void flow_context_branch_group_add_empty_branch() {
   Contract(current_context);
   Contract(current_context->kind == FLOW_CONTEXT_KIND_BRANCH_GROUP);
@@ -31411,8 +31709,8 @@ cql_noexport void _flow_pop_context_branch_group() {
 }
 
 // Pushes a new branch context. This must only be done within a branch group
-// context. It is critical that this be done for ALL branches of a given
-// conditional, including any "else" or catch-all branch, otherwise
+// context. ALL branches, including any "else" or catch-all branch, must be
+// represented here or by flow_context_branch_group_add_empty_branch; otherwise
 // `_flow_pop_context_branch_group` may improve something too optimistically due
 // to a lack of sufficient information.
 cql_noexport void _flow_push_context_branch() {
@@ -31422,34 +31720,6 @@ cql_noexport void _flow_push_context_branch() {
   push_context_with_kind(FLOW_CONTEXT_KIND_BRANCH);
 
   current_context->branch.always_jumps = false;
-
-  // Clone the current history of (typically negative) improvements within the
-  // branch group itself and add it to the accumulated history of its branches.
-  // The reason we do this is so that we can calculate the correct delta sum
-  // later on.
-  //
-  // Consider the following code:
-  //
-  // IF x IS NULL THEN
-  //   SET x := 42;
-  // ELSE IF y THEN
-  //   -- do nothing
-  // ELSE
-  //   -- do nothing
-  // END IF;
-  //
-  // Here, even though the second and third branches have not improved the type
-  // of `x` to be nonnull themselves, it is still the case that x is nonnull
-  // at the end of the second and third branches due to the condition of the
-  // first branch. It is therefore safe and appropriate to treat the branches as
-  // though they each made the improvement themselves so that x can be treated
-  // as nonnull after END IF.
-  //
-  // To put it more plainly, we want a delta sum of 3 for the improvement to x.
-  // If we didn't perform this step, it would only be 1.
-  flow_history branch_group_history = clone_history(current_context->parent->history);
-  append_history(&branch_group_history, current_context->parent->branch_group.branch_histories);
-  current_context->parent->branch_group.branch_histories = branch_group_history;
 
   // Increment the branch count of the parent branch group so that it can be
   // later compared against delta sums.
@@ -31539,8 +31809,23 @@ cql_noexport void _flow_pop_context_branch() {
     current_context->parent->branch_group.branch_count--;
   }
   else {
-    // Add the history of the branch to the total set of branch histories for
-    // the current branch group.
+    // A continuing branch inherits improvements from the false conditions of
+    // earlier branches. Its local history records changes relative to those
+    // improvements, so both histories must contribute to the merge. For example,
+    // assigning NULL locally must cancel an inherited nonnull improvement.
+    //
+    // Include inherited facts only after we know the branch does not always
+    // jump. Recording them at push time leaves stale contributions when a
+    // jumping branch is removed from branch_count, potentially making a fact
+    // appear true on every continuing path when it is not.
+    //
+    // The parent's history is unchanged while this branch runs, so delaying
+    // the snapshot preserves continuing-branch contributions. Append only after
+    // rollback: inherited improvements belong to the parent and must not be
+    // undone as branch-local changes. Clone rather than splice the original
+    // because the parent still needs its own history when the group is popped.
+    append_history(&current_context->history, clone_history(current_context->parent->history));
+
     append_history(&current_context->history, current_context->parent->branch_group.branch_histories);
     current_context->parent->branch_group.branch_histories = current_context->history;
   }
@@ -32772,13 +33057,18 @@ static void gen_uminus(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
 // {concat}
 //   | {expr}                     -- left operand
 //   | {expr}                     -- right operand (||)
+// ||, ->, and ->> share left-associative precedence. The JSON emitters added in
+// September 2024 copied concat's equal-priority right emission, but mixed pairs
+// are not associative: json ->> ('a' || 'b') must not become json ->> 'a' || 'b'.
+// All three use gen_binary's stronger right-child priority to preserve grouping,
+// including harmless parentheses around right-nested pure concatenation.
 static void gen_concat(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_concat(ast));
 
   if (pri_new < pri) gen_printf("(");
   gen_expr(ast->left, pri_new);
   gen_printf(" %s ", op);
-  gen_expr(ast->right, pri_new);
+  gen_expr(ast->right, pri_new + 1);
   if (pri_new < pri) gen_printf(")");
 }
 
@@ -32791,7 +33081,7 @@ static void gen_jex1(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   if (pri_new < pri) gen_printf("(");
   gen_expr(ast->left, pri_new);
   gen_printf(" %s ", op);
-  gen_expr(ast->right, pri_new);
+  gen_expr(ast->right, pri_new + 1);
   if (pri_new < pri) gen_printf(")");
 }
 
@@ -32811,7 +33101,7 @@ static void gen_jex2(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
     gen_data_type(ast->right->left);
     gen_printf("~ ");
   }
-  gen_expr(ast->right->right, pri_new);
+  gen_expr(ast->right->right, pri_new + 1);
   if (pri_new < pri) gen_printf(")");
 }
 
@@ -32932,7 +33222,7 @@ static void gen_expr_num(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(val);
 
   if (has_hex_prefix(val) && gen_callbacks && gen_callbacks->convert_hex) {
-    int64_t v = strtol(val, NULL, 16);
+    int64_t v = ast_int64_from_literal(val);
     gen_printf("%lld", (llint_t)v);
   }
   else {
@@ -33107,7 +33397,7 @@ static void gen_expr_str(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
       CHARBUF_OPEN(decoded);
       CHARBUF_OPEN(encoded);
       cg_decode_string_literal(str, &decoded);
-      cg_encode_c_string_literal(decoded.ptr, &encoded);
+      cg_encode_cql_string_literal(decoded.ptr, &encoded);
 
       gen_literal(encoded.ptr);
       CHARBUF_CLOSE(encoded);
@@ -35500,7 +35790,7 @@ static void gen_create_virtual_table_stmt(ast_node *ast) {
   EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
   EXTRACT_DETAIL(flags, table_flags_attrs->left);
   EXTRACT_ANY(table_attrs, table_flags_attrs->right);
-  EXTRACT_STRING(name, create_table_name_flags->right);
+  EXTRACT_NAME_AST(table_name_ast, create_table_name_flags->right);
   EXTRACT_NOTNULL(col_key_list, create_table_stmt->right);
   EXTRACT_STRING(module_name, module_info->left);
   EXTRACT_ANY(module_args, module_info->right);
@@ -35511,7 +35801,11 @@ static void gen_create_virtual_table_stmt(ast_node *ast) {
   gen_printf("CREATE VIRTUAL TABLE ");
   gen_if_not_exists(ast, if_not_exist);
   gen_eponymous(ast, is_eponymous);
-  gen_printf("%s USING %s", name, module_name);
+  // QID support in 2023 updated the grammar but missed this emitter. The stored
+  // name may be encoded (e.g. X_docX20store), or need quoting without encoding.
+  // Use the same identifier emitter as ordinary tables in both CQL and SQLite.
+  gen_name(table_name_ast);
+  gen_printf(" USING %s", module_name);
 
   if (!for_sqlite()) {
     if (is_ast_following(module_args)) {
@@ -47455,6 +47749,9 @@ CSTR create_group_id(CSTR group_name, CSTR table_name) {
 // Helper function to walk the graph stored in recreate_group_deps from a
 // starting group name to an ending group name. We perform a simple depth first
 // search.
+// Duplicate foreign keys cause repeated traversals, but they are infrequent
+// and dependency depth is short, so tracking visited groups is not worthwhile.
+// If that changes, a per-search visited set can be added here.
 static bool_t walk_recreate_group_deps (CSTR start, CSTR end) {
   if (!StrCaseCmp(start, end)) {
     return true;
@@ -47963,6 +48260,7 @@ static sem_struct * new_sem_struct(CSTR name, uint32_t count) {
   sptr->names = _ast_pool_new_array(CSTR, count);
   sptr->kinds = _ast_pool_new_array(CSTR, count);
   sptr->semtypes = _ast_pool_new_array(sem_t, count);
+  sptr->rowid_type = 0;
   sptr->is_backed = false;
 
   for (uint32_t i = 0; i < count; i++) {
@@ -48000,6 +48298,7 @@ static sem_join * new_sem_join(uint32_t count) {
 // with the indicated removals.
 static sem_struct *sem_clone_struct_strip_flags(sem_struct *sptr, sem_t strip) {
   sem_struct *result = new_sem_struct(sptr->struct_name, sptr->count);
+  result->rowid_type = sptr->rowid_type & sem_not(strip);
   for (uint32_t i = 0; i < sptr->count; i++) {
     result->names[i] = sptr->names[i];
     result->kinds[i] = sptr->kinds[i];
@@ -51748,7 +52047,7 @@ static sem_resolve sem_try_resolve_column(
   return SEM_RESOLVE_STOP;
 }
 
-// rowid is a special name (with 2 aliases) that exists in every table.
+// Implicit rowid (with 2 aliases) exists only on rowid-capable sources.
 static sem_resolve sem_try_resolve_rowid(
   ast_node *ast,
   CSTR name,
@@ -51772,56 +52071,46 @@ static sem_resolve sem_try_resolve_rowid(
     return SEM_RESOLVE_CONTINUE;
   }
 
-  // Now we have to make sure it is a specific rowid that we can infer, directly or indirectly.
+  // Follow the ordinary column scope chain, considering only sources with an
+  // implicit rowid.  Its type already reflects outer-join null extension.
+  for (sem_joinscope *jscp = current_joinscope; jscp; jscp = jscp->parent) {
+    sem_join *jptr = jscp->jptr;
 
-  sem_join *jptr = current_joinscope->jptr;
-  if (scope == NULL && jptr && jptr->count == 1) {
-    // if only one table then that's the rowid
-    col = name;
-    sem_type = SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL;
-  }
-  else if (scope != NULL) {
-    // We walk the chain of scopes until we find a stop frame or else we run out
-    // this allows nested joins to see their parent scopes.
-    for (sem_joinscope *jscp = current_joinscope; jscp; jscp = jscp->parent) {
-      jptr = jscp->jptr;
+    if (!jptr) {
+      continue;
+    }
 
-      // an empty jptr has no names, skip it
-      if (!jptr) {
-        continue;
-      }
+    if (jptr == &join_block) {
+      break;
+    }
 
-      // stop if we find the sentinel
-      if (jptr == &join_block) {
-        break;
-      }
-
-      // more than one table but the name is scoped, still have a chance
-      for (uint32_t i = 0; i < jptr->count; i++) {
-        if (!StrCaseCmp(scope, jptr->names[i])) {
-          col = name;
-          kind = NULL;
-          sem_type = SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL;
-
-          // Insert table alias name override if enabled.
-          if (keep_table_name_in_aliases && !in_trigger && !in_trigger_when_expr && ast && scope) {
-            Invariant(is_ast_dot(ast));
-            insert_table_alias_string_overide(ast->left, jptr->tables[i]->struct_name);
-          }
-
-          break;
-        }
-      }
-
-      if (col) {
-        break;
+    uint32_t candidates = 0;
+    uint32_t candidate_index = 0;
+    for (uint32_t i = 0; i < jptr->count; i++) {
+      if ((scope == NULL || !StrCaseCmp(scope, jptr->names[i])) &&
+          jptr->tables[i]->rowid_type) {
+        candidates++;
+        candidate_index = i;
       }
     }
-  }
-  else {
-    report_resolve_error(ast, "CQL0066: identifier is ambiguous", name);
-    record_resolve_error(ast);
-    return SEM_RESOLVE_STOP;
+
+    if (candidates > 1) {
+      report_resolve_error(ast, "CQL0066: identifier is ambiguous", name);
+      record_resolve_error(ast);
+      return SEM_RESOLVE_STOP;
+    }
+
+    if (candidates == 1) {
+      sem_struct *table = jptr->tables[candidate_index];
+      col = name;
+      sem_type = table->rowid_type;
+
+      if (keep_table_name_in_aliases && !in_trigger && !in_trigger_when_expr && ast && scope) {
+        Invariant(is_ast_dot(ast));
+        insert_table_alias_string_overide(ast->left, table->struct_name);
+      }
+      break;
+    }
   }
 
   if (!col) {
@@ -53313,6 +53602,125 @@ static void sem_special_func_cql_blob_get_type(ast_node *ast, uint32_t arg_count
   name_ast->sem = ast->sem = new_sem_std(SEM_TYPE_LONG_INTEGER, arg_list->right);
 }
 
+enum {
+  BLOB_COLUMNS_UPDATE = 0,
+  BLOB_COLUMNS_CREATE = 1,
+};
+
+// Direct calls must enforce the same column assignments as rewritten DML:
+// nullability, sensitivity, safe numeric conversion, and domain kinds, not
+// merely broad type compatibility.
+// One call addresses one key/value partition: code generation selects the
+// operation from the first column and assumes every later column belongs there.
+// Duplicate fields would give the blob an ambiguous layout or repeated updates.
+static bool_t sem_validate_blob_columns(
+  ast_node *ast,
+  ast_node *backed_table_ast,
+  ast_node *args,
+  uint32_t flags)
+{
+  bool_t creating = flags & BLOB_COLUMNS_CREATE;
+  CSTR function_name = creating ? "cql_blob_create" : "cql_blob_update";
+  CSTR assignment_subject = creating ? "cql_blob_create" : "cql_blob_update value";
+  sem_struct *sptr = backed_table_ast->sem->sptr;
+  table_node *table_info = backed_table_ast->sem->table_info;
+  Invariant(table_info);
+  symtab *seen_columns = symtab_new();
+  uint32_t column_count = 0;
+  bool_t key_partition = false;
+
+  // Both callers have checked the argument count, so value/column pairs exist.
+  for (ast_node *next_arg = args; next_arg; next_arg = next_arg->right->right) {
+    EXTRACT_ANY_NOTNULL(val_expr, next_arg->left);
+    EXTRACT_ANY_NOTNULL(table_expr, next_arg->right->left);
+
+    sem_expr(val_expr);
+    if (is_error(val_expr)) {
+      goto error;
+    }
+
+    if (!is_ast_dot(table_expr) || !is_ast_str(table_expr->left) || !is_ast_str(table_expr->right)) {
+      report_error(table_expr, "CQL0490: argument must be table.column where table is a backed table", function_name);
+      goto error;
+    }
+
+    EXTRACT_STRING(t_name, table_expr->left);
+    EXTRACT_STRING(c_name, table_expr->right);
+    ast_node *table_ast = find_usable_and_not_deleted_table_or_view(
+      t_name, table_expr->left, "CQL0095: table/view not defined");
+    if (!table_ast) {
+      goto error;
+    }
+
+    if (backed_table_ast != table_ast) {
+      CSTR message = dup_printf(
+        "CQL0488: the indicated table is not consistently used through all of %s", function_name);
+      report_error(table_expr, message, t_name);
+      goto error;
+    }
+
+    int32_t column_index = find_col_in_sptr(sptr, c_name);
+    if (column_index < 0) {
+      report_error(table_expr, "CQL0489: the indicated column is not present in the named backed storage",
+        dup_printf("%s.%s", t_name, c_name));
+      goto error;
+    }
+
+    sem_t sem_type = sptr->semtypes[column_index];
+    bool_t is_key = is_primary_key(sem_type) || is_partial_pk(sem_type);
+    if (!column_count) {
+      key_partition = is_key;
+    }
+    else if (key_partition != is_key) {
+      CSTR message = dup_printf("CQL0488: key and value columns may not be mixed in %s", function_name);
+      report_error(table_expr, message, c_name);
+      goto error;
+    }
+
+    if (!symtab_add(seen_columns, c_name, NULL)) {
+      report_error(table_expr, "CQL0206: duplicate name in list", c_name);
+      goto error;
+    }
+
+    // Key creation is positional, unlike sparse value creation and updates:
+    // enforce declared primary-key order so fields cannot be silently swapped.
+    if (creating && key_partition &&
+        (column_count >= (uint32_t)table_info->key_count || table_info->key_cols[column_count] != column_index)) {
+      report_error(table_expr,
+        "CQL0488: key columns must appear exactly once in primary key order in cql_blob_create", c_name);
+      goto error;
+    }
+
+    if (!sem_verify_assignment(val_expr, sem_type, val_expr->sem->sem_type, assignment_subject)) {
+      goto error;
+    }
+    sem_combine_kinds(val_expr, sptr->kinds[column_index]);
+    if (is_error(val_expr)) {
+      goto error;
+    }
+
+    table_expr->sem = new_sem(sem_type);
+    table_expr->sem->kind = sptr->kinds[column_index];
+    column_count++;
+  }
+
+  // A positional key must also be complete; an empty/partial value blob or
+  // a partial-key update is valid and must not acquire this restriction.
+  if (creating && key_partition && column_count != (uint32_t)table_info->key_count) {
+    report_error(ast,
+      "CQL0488: all key columns must appear exactly once in primary key order in cql_blob_create", sptr->struct_name);
+    goto error;
+  }
+
+  symtab_delete(seen_columns);
+  return true;
+
+error:
+  symtab_delete(seen_columns);
+  record_error(ast);
+  return false;
+}
+
 // cql_blob_create(backed_type, value, backed_type.col, value2, backed_type.col, ...),
 // this will ultimately expand into something like
 //
@@ -53320,12 +53728,11 @@ static void sem_special_func_cql_blob_get_type(ast_node *ast, uint32_t arg_count
 // or
 // blob_create(12345 /* blob type */, value, 12345 /* field hash*/, 5 /* field type */, etc.)
 //
-// All we have to do here is ensure that count of columns is 2n+1
-// All the types are from the same backed type
-// all the values are type compatible with the indicated column type
-// normally this is generated by an automatic rewrite so that basically always happens
+// Require 2n+1 arguments and validate the pairs with sem_validate_blob_columns,
+// including complete ordered keys. Value blobs may be empty or sparse.
+// Normally this is generated by an automatic rewrite so that basically always happens
 // but it is possible to call the function directly -- the rewrite is only sugar after all
-// we we have to check even if it's usually redundant.
+// so we have to check even if it's usually redundant.
 //
 static void sem_special_func_cql_blob_create(ast_node *ast, uint32_t arg_count, bool_t *is_aggregate) {
   Contract(is_ast_call(ast));
@@ -53373,56 +53780,8 @@ static void sem_special_func_cql_blob_create(ast_node *ast, uint32_t arg_count, 
     return;
   }
 
-  // already verified 2n + 1 args so this is safe!
-  for (ast_node *next_arg = arg_list->right; next_arg; next_arg = next_arg->right->right) {
-    EXTRACT_ANY_NOTNULL(val_expr, next_arg->left);
-    EXTRACT_ANY_NOTNULL(table_expr, next_arg->right->left);
-
-    sem_expr(val_expr);
-    if (is_error(val_expr)) {
-      record_error(ast);
-      return;
-    }
-
-    if (!is_ast_dot(table_expr) || !is_ast_str(table_expr->left) || !is_ast_str(table_expr->right)) {
-      report_error(table_expr, "CQL0490: argument must be table.column where table is a backed table", "cql_blob_create");
-      record_error(ast);
-      return;
-    }
-
-    EXTRACT_STRING(t_name, table_expr->left);
-    EXTRACT_STRING(c_name, table_expr->right);
-
-    // give a better error if the table is not found
-    ast_node *table_ast = find_usable_and_not_deleted_table_or_view(
-        t_name,
-        table_expr->left,
-        "CQL0095: table/view not defined");
-    if (!table_ast) {
-      record_error(ast);
-      return;
-    }
-
-    if (backed_table_ast != table_ast) {
-      report_error(table_expr, "CQL0488: the indicated table is not consistently used through all of cql_blob_create", t_name);
-      record_error(ast);
-      return;
-    }
-
-    sem_t sem_type = find_column_type(t_name, c_name);
-    if (!sem_type) {
-      CSTR err_data = dup_printf("%s.%s", t_name, c_name);
-      report_error(table_expr, "CQL0489: the indicated column is not present in the named backed storage", err_data);
-      record_error(ast);
-      return;
-    }
-
-    if (!sem_verify_compat(val_expr, val_expr->sem->sem_type, sem_type, "cql_blob_create")) {
-      record_error(ast);
-      return;
-    }
-
-    table_expr->sem = new_sem(sem_type);
+  if (!sem_validate_blob_columns(ast, backed_table_ast, arg_list->right, BLOB_COLUMNS_CREATE)) {
+    return;
   }
 
   name_ast->sem = ast->sem = new_sem(SEM_TYPE_BLOB | SEM_TYPE_NOTNULL);
@@ -53435,12 +53794,11 @@ static void sem_special_func_cql_blob_create(ast_node *ast, uint32_t arg_count, 
 // or
 // blob_update(blob, value, 12345 /* field hash*/, 5 /* field type */, etc.)
 //
-// All we have to do here is ensure that count of columns is 2n+1
-// All the types are from the same backed type
-// all the values are type compatible with the indicated column type
-// normally this is generated by an automatic rewrite so that basically always happens
+// Require 2n+1 arguments and validate the pairs with sem_validate_blob_columns.
+// Partial updates are valid because each field's offset/hash is explicit.
+// Normally this is generated by an automatic rewrite so that basically always happens
 // but it is possible to call the function directly -- the rewrite is only sugar after all
-// we we have to check even if it's usually redundant.
+// so we have to check even if it's usually redundant.
 //
 static void sem_special_func_cql_blob_update(ast_node *ast, uint32_t arg_count, bool_t *is_aggregate) {
   Contract(is_ast_call(ast));
@@ -53504,56 +53862,8 @@ static void sem_special_func_cql_blob_update(ast_node *ast, uint32_t arg_count, 
     return;
   }
 
-  // already verified 2n + 1 args so this is safe!
-  for (ast_node *next_arg = arg_list->right; next_arg; next_arg = next_arg->right->right) {
-    EXTRACT_ANY_NOTNULL(val_expr, next_arg->left);
-    EXTRACT_ANY_NOTNULL(table_expr, next_arg->right->left);
-
-    sem_expr(val_expr);
-    if (is_error(val_expr)) {
-      record_error(ast);
-      return;
-    }
-
-    if (!is_ast_dot(table_expr) || !is_ast_str(table_expr->left) || !is_ast_str(table_expr->right)) {
-      report_error(table_expr, "CQL0257: argument must be table.column where table is a backed table", "cql_blob_update");
-      record_error(ast);
-      return;
-    }
-
-    EXTRACT_STRING(t_name, table_expr->left);
-    EXTRACT_STRING(c_name, table_expr->right);
-
-    // give a better error if the table is not found
-    ast_node *table_ast = find_usable_and_not_deleted_table_or_view(
-        t_name,
-        table_expr->left,
-        "CQL0095: table/view not defined");
-    if (!table_ast) {
-      record_error(ast);
-      return;
-    }
-
-    if (backed_table_ast != table_ast) {
-      report_error(table_expr, "CQL0488: the indicated table is not consistently used through all of cql_blob_update", t_name);
-      record_error(ast);
-      return;
-    }
-
-    sem_t sem_type = find_column_type(t_name, c_name);
-    if (!sem_type) {
-      CSTR err_data = dup_printf("%s.%s", t_name, c_name);
-      report_error(table_expr, "CQL0489: the indicated column is not present in the named backed storage", err_data);
-      record_error(ast);
-      return;
-    }
-
-    if (!sem_verify_compat(val_expr, val_expr->sem->sem_type, sem_type, "cql_blob_update value")) {
-      record_error(ast);
-      return;
-    }
-
-    table_expr->sem = new_sem(sem_type);
+  if (!sem_validate_blob_columns(ast, backed_table_ast, arg_list->right, BLOB_COLUMNS_UPDATE)) {
+    return;
   }
 
   name_ast->sem = ast->sem = new_sem(SEM_TYPE_BLOB | SEM_TYPE_NOTNULL);
@@ -54167,6 +54477,8 @@ static void sem_func_jsonb_array(ast_node *ast, uint32_t arg_count) {
 static void sem_func_json_item_path_helper(ast_node *ast, uint32_t arg_count, sem_t sem_type_result) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
 
   // json functions can only appear inside of SQL, they are rewritten if elsewhere
   Contract(sem_validate_appear_inside_sql_stmt(ast));
@@ -54175,12 +54487,15 @@ static void sem_func_json_item_path_helper(ast_node *ast, uint32_t arg_count, se
     return;
   }
 
-  if (arg_count == 1) {
-    sem_type_result |= SEM_TYPE_NOTNULL;
-  }
+  // Kind is not preserved: the result is a length or type name, not a value
+  // of the JSON input's kind.
+  name_ast->sem = ast->sem = new_sem_std(sem_type_result, arg_list);
 
-  // kind is not preserved
-  name_ast->sem = ast->sem = new_sem(sem_type_result);
+  // A missing path can return NULL even with nonnull arguments, so clear the
+  // NOT NULL flag inferred by new_sem_std for path forms, retaining sensitivity.
+  if (arg_count == 2) {
+    copy_nullability(ast, 0);
+  }
 }
 
 static void sem_func_json_array_length(ast_node *ast, uint32_t arg_count) {
@@ -54205,8 +54520,9 @@ static void sem_func_json_error_position(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
-  // kind is not preserved, there is normally more than one
-  name_ast->sem = ast->sem = new_sem(SEM_TYPE_INTEGER | SEM_TYPE_NOTNULL);
+  // Kind is not preserved: an error offset is not a value of the input's kind.
+  // NULL input stays NULL; valid JSON instead returns error position zero.
+  name_ast->sem = ast->sem = new_sem_std(SEM_TYPE_INTEGER, arg_list);
 }
 
 // helper for json_extract() jsonb_extract() as well as json_remove() and jsonb_remove()
@@ -60436,6 +60752,13 @@ static void sem_create_trigger_stmt(ast_node *ast) {
   sem_join *jptr;
   sem_struct *sptr = target->sem->sptr;
 
+  // Preserve OLD/NEW rowid compatibility for INSTEAD OF triggers without
+  // giving ordinary queries on the view an implicit rowid.
+  if (is_ast_create_view_stmt(target)) {
+    sptr = sem_clone_struct_strip_flags(sptr, 0);
+    sptr->rowid_type = SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL;
+  }
+
   if (flags & TRIGGER_INSERT) {
     jptr = new_sem_join(1);
     jptr->names[0] = "new";
@@ -61384,6 +61707,9 @@ static void sem_create_table_stmt(ast_node *ast) {
   // the types have already been computed so all we have to do is
   // check for duplicates
   sem_struct *sptr = new_sem_struct(name, cols);
+  if (!no_rowid) {
+    sptr->rowid_type = SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL;
+  }
 
   symtab *columns = symtab_new();
 
@@ -66669,7 +66995,12 @@ static void sem_declare_enum_stmt(ast_node *ast) {
        expr = left ? parent->left : parent->right;
 
        // we're ready to evaluate constants having replaced enums and consts
-       eval(expr, &result);
+       if (is_error(expr)) {
+         result.sem_type = SEM_TYPE_ERROR;
+       }
+       else {
+         eval(expr, &result);
+       }
 
        if (result.sem_type == SEM_TYPE_ERROR || result.sem_type == SEM_TYPE_NULL) {
          report_error(enum_value, "CQL0355: evaluation failed", enum_name);
@@ -67909,28 +68240,33 @@ static void sem_check_all_values_condition(ast_node *expr, bytebuf *case_buffer)
 
   size_t enum_count = enum_buffer->used / sizeof(case_val);
   case_val *enum_vals = (case_val *)enum_buffer->ptr;
-  qsort(enum_vals, enum_count, sizeof(case_val), case_val_comparator);
-
-  // dedupe the enumeration cases, there are sometimes aliases
-  // e.g. declare enum integer ( x = 1, another_name_for_x = 1);
 
   uint32_t i = 0;
   uint32_t j = 0;
 
-  for (i = 0; i < enum_count - 1; i++) {
-    Invariant(j <= i);
-    if (enum_vals[i].value == enum_vals[i+1].value) {
-      continue;
+  // An all-hidden enum leaves an empty, possibly null buffer. Skip sorting
+  // and deduplication (including enum_count - 1); the extra-case check below
+  // will report the first WHEN value because no public values exist.
+  if (enum_count) {
+    qsort(enum_vals, enum_count, sizeof(case_val), case_val_comparator);
+
+    // dedupe the enumeration cases, there are sometimes aliases
+    // e.g. declare enum integer ( x = 1, another_name_for_x = 1);
+    for (i = 0; i < enum_count - 1; i++) {
+      Invariant(j <= i);
+      if (enum_vals[i].value == enum_vals[i+1].value) {
+        continue;
+      }
+      enum_vals[j++] = enum_vals[i];
     }
+
+    Invariant(j < enum_count);
     enum_vals[j++] = enum_vals[i];
+    enum_count = j;
   }
 
   // Now do a merge to find the differences
   // NOTE: we only need one index since we stop at the first difference
-
-  Invariant(j < enum_count);
-  enum_vals[j++] = enum_vals[i];
-  enum_count = j;
 
   i = 0;
   while (i < case_count && i < enum_count) {
@@ -68513,45 +68849,56 @@ static bool_t sem_validate_arg_vs_formal(ast_node *arg, ast_node *param) {
   return true;
 }
 
-// Pointer tag indicating an id that is passed as an OUT or INOUT argument.
-static const uintptr_t id_out_tag_bit = 0x1;
-
-// Given a (possibly) tagged id, return an untagged, deferencable pointer.
-static ast_node *id_from_out_tagged_id(ast_node *tagged_id) {
-  return (ast_node *)((uintptr_t)tagged_id & ~id_out_tag_bit);
-}
-
-// Given an id, return the tagged version.
-static ast_node *out_tagged_id_from_id(ast_node *id) {
- return (ast_node *)((uintptr_t)id | id_out_tag_bit);
-}
-
-// Returns true if `id` is tagged, else false.
-static bool_t is_id_out_tagged(ast_node *id) {
-  return !!((uintptr_t)id & id_out_tag_bit);
-}
-
 cql_noexport bool_t is_alias_ast(ast_node *_Nonnull ast) {
  Contract(ast);
  return ast->sem && (ast->sem->sem_type & SEM_TYPE_ALIAS);
 }
 
-// Compares the names of two (possibly) tagged ids in a manner such that
-// `out_tagged_id_comparator` can be used as a comparator for `qsort`. If the
-// names match, we then compare by line number so that, if we later report an
-// error, we can easily point to the first use.
-static int out_tagged_id_comparator(const void *a, const void *b) {
-  ast_node *id_a = id_from_out_tagged_id(*(ast_node **)a);
-  ast_node *id_b = id_from_out_tagged_id(*(ast_node **)b);
-  EXTRACT_STRING(a_name, id_a);
-  EXTRACT_STRING(b_name, id_b);
+typedef struct call_arg_binding {
+  ast_node *arg;
+  sem_t *type;
+  uint32_t ordinal;
+  bool_t is_out;
+} call_arg_binding;
 
-  int result = strcmp(a_name, b_name);
-  if (!result) {
-    return id_a->lineno > id_b->lineno ? 1 : id_a->lineno < id_b->lineno ? -1 : 0;
+// Only top-level mutable bindings alias: an IN expression that reads an output
+// variable is an evaluated value, not another reference to its storage.
+static sem_t *sem_find_call_arg_binding(ast_node *arg) {
+  if (!is_id_or_dot(arg) || !is_variable(arg->sem->sem_type)) {
+    return NULL;
   }
 
-  return result;
+  if (is_id(arg)) {
+    // Use the already-resolved name rather than repeating expression lookup,
+    // which can involve SQL column scopes. Bare cursor expressions instead
+    // denote synthetic has-row values, which have no corresponding variable.
+    ast_node *variable = find_local_or_global_variable(arg->sem->name);
+    return variable ? &variable->sem->sem_type : NULL;
+  }
+
+  // Cursor fields have distinct type slots; argument-bundle dot and underscore
+  // spellings deliberately share one slot. Neither source text nor the type
+  // value itself distinguishes these identities.
+  EXTRACT_NAME_AND_SCOPE(arg);
+  return find_mutable_type(name, scope);
+}
+
+// Group by storage identity, not spelling. Within each group, preserve source
+// argument order even when several arguments occur on the same source line.
+static int call_arg_binding_comparator(const void *a, const void *b) {
+  const call_arg_binding *binding_a = (const call_arg_binding *)a;
+  const call_arg_binding *binding_b = (const call_arg_binding *)b;
+  uintptr_t type_a = (uintptr_t)binding_a->type;
+  uintptr_t type_b = (uintptr_t)binding_b->type;
+
+  if (type_a < type_b) {
+    return -1;
+  }
+  if (type_a > type_b) {
+    return 1;
+  }
+  return (binding_a->ordinal > binding_b->ordinal) -
+         (binding_a->ordinal < binding_b->ordinal);
 }
 
 // Returns true if all OUT and INOUT arguments in `arg_list` are unique with
@@ -68563,27 +68910,18 @@ static bool_t sem_validate_out_args_are_unique(ast_node *arg_list, ast_node *par
   Contract(!arg_list || is_ast_arg_list(arg_list) || is_ast_expr_list(arg_list));
   Contract(!params || is_ast_params(params));
 
-  // Count up the ids passed as arguments so that we can allocate an array of
-  // the correct size to hold all of them. As a minor optimization, we also
-  // check whether we have at least one OUT or INOUT argument so we can bail out
-  // early if we don't.
-  //
-  // NOTE: Technically, we only count ids with an associated parameter. If this
-  // procedure is called after checking that the correct number of arguments
-  // were provided, we'll always have enough parameters to count all of the ids
-  // and will check all of the arguments for aliasing. If not, we'll check just
-  // the arguments that have parameters and the caller can then fail due to
-  // excess arguments later on. The caller decides which behavior it prefers.
-  uint32_t ids_count = 0;
+  // Argument types and counts have already been checked. Count an upper bound
+  // without resolving bindings yet, preserving the fast exit for input-only
+  // calls. Computed cursor booleans can later reduce the actual binding count.
+  uint32_t binding_capacity = 0;
   bool_t has_out_argument = false;
   ast_node *arg_item = arg_list;
   ast_node *param_item = params;
   for (; arg_item && param_item; arg_item = arg_item->right, param_item = param_item->right) {
     EXTRACT_ANY_NOTNULL(arg, arg_item->left);
-    if (!is_id(arg)) {
-      continue;
+    if (is_id_or_dot(arg) && is_variable(arg->sem->sem_type)) {
+      binding_capacity++;
     }
-    ids_count++;
     EXTRACT_NOTNULL(param, param_item->left);
     if (is_out_parameter(param->sem->sem_type)) {
       has_out_argument = true;
@@ -68591,50 +68929,58 @@ static bool_t sem_validate_out_args_are_unique(ast_node *arg_list, ast_node *par
   }
 
   // If there isn't at least one OUT or INOUT argument, or if we don't have at
-  // least two ids, there can be no aliasing.
-  if (!has_out_argument || ids_count < 2) {
+  // least two possible bindings, there can be no aliasing.
+  if (!has_out_argument || binding_capacity < 2) {
     return true;
   }
 
-  // Put all of the ids into an array, tagging the ones that were used for OUT
-  // or INOUT arguments. We do this because the arguments themselves do not
-  // contain whether or not they were used as OUT or INOUT arguments in their
-  // sem nodes: That information is only present in the associated parameter.
-  // Tagging ids gives us an easy way to track OUT/INOUT usage without having to
-  // later unset anything on the ids themselves.
-  ast_node **ids = _ast_pool_new_array(ast_node *, ids_count);
-  ast_node **ids_ptr = ids;
+  // OUT/INOUT mode belongs to the formal, not the argument's semantic type.
+  // Keep it alongside the binding without tagging pointers or modifying ASTs.
+  call_arg_binding *bindings = _ast_pool_new_array(call_arg_binding, binding_capacity);
+  uint32_t binding_count = 0;
   arg_item = arg_list;
   param_item = params;
-  for (; arg_item && param_item; arg_item = arg_item->right, param_item = param_item->right) {
+  uint32_t ordinal = 0;
+  for (; arg_item && param_item; arg_item = arg_item->right, param_item = param_item->right, ordinal++) {
     EXTRACT_ANY_NOTNULL(arg, arg_item->left);
-    if (!is_id(arg)) {
+    sem_t *type = sem_find_call_arg_binding(arg);
+    if (!type) {
       continue;
     }
     EXTRACT_NOTNULL(param, param_item->left);
-    *ids_ptr++ = is_out_parameter(param->sem->sem_type) ? out_tagged_id_from_id(arg) : arg;
+    Invariant(binding_count < binding_capacity);
+    call_arg_binding *binding = &bindings[binding_count++];
+    binding->arg = arg;
+    binding->type = type;
+    binding->ordinal = ordinal;
+    binding->is_out = is_out_parameter(param->sem->sem_type);
   }
 
-  // Sort them by name, then by line number.
-  qsort(ids, ids_count, sizeof(ast_node *), out_tagged_id_comparator);
+  qsort(bindings, binding_count, sizeof(call_arg_binding), call_arg_binding_comparator);
 
-  // Look for duplicates involving an OUT or INOUT usage.
-  for (uint32_t i = 1; i < ids_count; i++) {
-    // If either the current id or previous id is tagged, and if their names
-    // match, it must be the case that an OUT or INOUT argument is aliased.
-    if (is_id_out_tagged(ids[i - 1]) || is_id_out_tagged(ids[i])) {
-      ast_node *previous_id = id_from_out_tagged_id(ids[i - 1]);
-      ast_node *id = id_from_out_tagged_id(ids[i]);
-      EXTRACT_STRING(previous_id_name, previous_id);
-      EXTRACT_STRING(id_name, id);
-      if (!strcmp(previous_id_name, id_name)) {
-        // We sorted by name and then by line number, so `previous_id` is
-        // guaranteed to contain the earliest line number we could report.
-        CSTR msg = "CQL0426: OUT or INOUT argument cannot be used again in same call";
-        report_error(previous_id, msg, id_name);
-        return false;
+  // Repeated IN uses are allowed; any OUT/INOUT use makes the group an alias.
+  // Report the earliest source use across all aliased groups, even when several
+  // IN uses precede an output. Pointer order must not choose the diagnostic.
+  call_arg_binding *aliased = NULL;
+  uint32_t first = 0;
+  for (uint32_t i = 1; i < binding_count; i++) {
+    if (bindings[first].type != bindings[i].type) {
+      first = i;
+    }
+    else if (bindings[first].is_out || bindings[i].is_out) {
+      if (!aliased || bindings[first].ordinal < aliased->ordinal) {
+        aliased = &bindings[first];
       }
     }
+  }
+
+  if (aliased) {
+    ast_node *arg = aliased->arg;
+    EXTRACT_NAME_AND_SCOPE(arg);
+    CSTR arg_name = scope ? dup_printf("%s.%s", scope, name) : name;
+    CSTR msg = "CQL0426: OUT or INOUT argument cannot be used again in same call";
+    report_error(arg, msg, arg_name);
+    return false;
   }
 
   return true;
@@ -70079,10 +70425,8 @@ cql_noexport void sem_one_stmt(ast_node *stmt) {
   CHARBUF_CLOSE(errbuf);
 }
 
-// We're just going to walk the tree of attribute values here
-// looking for any CONST expressions.  If we find one, we evaluate
-// that.  Anything that's not a CONST express is known to be a literal
-// or just a name.
+// Validate numeric literals and evaluate CONST expressions while walking the
+// attribute values. Names and other literals do not require expression analysis.
 static void sem_misc_attr_value(ast_node *ast) {
   // nested attributes, we just recurse on those
   if (is_ast_misc_attr_value_list(ast)) {
@@ -70095,7 +70439,7 @@ static void sem_misc_attr_value(ast_node *ast) {
       }
     }
   }
-  else if (is_ast_const(ast)) {
+  else if (is_ast_const(ast) || is_ast_num(ast) || is_ast_uminus(ast)) {
     // if the ast is bad the error will prop, this evaluates the const
     sem_root_expr(ast, SEM_EXPR_CONTEXT_NONE);
     if (is_error(ast)) {
@@ -70107,8 +70451,8 @@ static void sem_misc_attr_value(ast_node *ast) {
 }
 
 // This is the basic checking of misc attributes we always do.
-// The point of this is to find any constant expressions and replace
-// them with actual literals and reveal any errors in those expressions.
+// The point is to validate numeric literals and replace constant expressions
+// with actual literals, revealing any errors in those expressions.
 // Most attributes don't need any processing because they are arbitrary names
 // or regular literals.
 static void sem_misc_attrs_basic(ast_node *ast) {
@@ -70282,6 +70626,23 @@ static void sem_expr_num(ast_node *ast, CSTR cstr) {
     break;
 
   case NUM_LONG:
+    {
+      EXTRACT_NUM_VALUE(value, ast);
+      if (!strcmp(value, "9223372036854775808")) {
+        // This exceptional decimal magnitude only represents INT64_MIN when
+        // directly negated. Macro expansion has already established its parent.
+        ast_node *parent = ast->parent;
+        bool_t valid = parent &&
+          is_ast_uminus(parent) &&
+          parent->left == ast &&
+          !(parent->parent && is_ast_uminus(parent->parent));
+        if (!valid) {
+          report_error(ast, "CQL0505: integer literal out of range", NULL);
+          record_error(ast);
+          return;
+        }
+      }
+    }
     ast->sem = new_sem(SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL);
     break;
 
@@ -73470,7 +73831,8 @@ static bool test_badly_formed_utf8() {
   cg_encode_json_string_literal("\x81", &temp);
   result &= !strcmp(temp.ptr, "\"\\u0081\"");
 
-  // case 2: overlong sequence
+  // case 2: a valid prefix followed by an extra continuation byte. The January
+  // 2026 correction deliberately escapes the entire malformed run.
   bclear(&temp);
   cg_encode_json_string_literal(" \xe2\x80\xa2\xa2 ", &temp);
   result &= !strcmp(temp.ptr, "\" \\u00e2\\u0080\\u00a2\\u00a2 \"");
@@ -73485,41 +73847,386 @@ static bool test_badly_formed_utf8() {
   return result;
 }
 
+static void test_json_pretty_utf8() {
+  const struct {
+    CSTR name;
+    CSTR input;
+    CSTR expected;
+  } cases[] = {
+    // Printable text, quoting, and named control escapes must not change.
+    { "ASCII and controls", "'\"\\\b\f\n\r\t\a\v'",
+      "\"'\\\"\\\\\\b\\f\\n\\r\\t\\u0007\\u000b'\"" },
+    // C0 still needs escaping, but DEL is legal raw JSON text. Do not expand
+    // the fix into an output-spelling change for otherwise valid ASCII.
+    { "ASCII escape boundary", "'\x1f\x7f'", "\"'\\u001f\x7f'\"" },
+    // All UTF-8 widths must survive as the original bytes, not Latin-1 escapes.
+    { "two-byte UTF-8", "'\xc3\xa9'", "\"'\xc3\xa9'\"" },
+    { "three-byte UTF-8", "'\xe2\x80\xa2'", "\"'\xe2\x80\xa2'\"" },
+    { "four-byte UTF-8", "'\xf0\x9f\x98\x80'", "\"'\xf0\x9f\x98\x80'\"" },
+    // Codepoint boundaries catch validators that accept only common examples.
+    { "lowest two-byte codepoint", "'\xc2\x80'", "\"'\xc2\x80'\"" },
+    { "lowest three-byte codepoint", "'\xe0\xa0\x80'", "\"'\xe0\xa0\x80'\"" },
+    { "lowest four-byte codepoint", "'\xf0\x90\x80\x80'", "\"'\xf0\x90\x80\x80'\"" },
+    { "highest Unicode codepoint", "'\xf4\x8f\xbf\xbf'", "\"'\xf4\x8f\xbf\xbf'\"" },
+    // The fallback intentionally maps malformed bytes to \u00xx, not to
+    // replacement characters or unchecked raw bytes. Preserve ASCII around them.
+    { "isolated continuation", "'a\x81z'", "\"'a\\u0081z'\"" },
+    { "invalid lead byte", "'\xff'", "\"'\\u00ff'\"" },
+    // Preserve the January 2026 rule: an extra continuation invalidates the
+    // preceding sequence too, even when that prefix alone would be valid.
+    { "extra continuation", "'\xe2\x80\xa2\xa2'",
+      "\"'\\u00e2\\u0080\\u00a2\\u00a2'\"" },
+    // Each sequence width can be truncated at the terminating zero. These
+    // fixtures end there, rather than supplying a quote as an accidental sentinel.
+    { "truncated two-byte sequence", "\xc2", "\"\\u00c2\"" },
+    { "truncated three-byte sequence", "\xe2\x80", "\"\\u00e2\\u0080\"" },
+    { "truncated four-byte sequence", "\xf0\x9f\x98", "\"\\u00f0\\u009f\\u0098\"" },
+    // Overlong forms, surrogate codepoints, and values above Unicode's maximum
+    // must stay on the malformed-byte path rather than pass as valid UTF-8.
+    { "overlong two-byte sequence", "'\xc0\xaf'", "\"'\\u00c0\\u00af'\"" },
+    { "overlong three-byte sequence", "'\xe0\x80\xaf'", "\"'\\u00e0\\u0080\\u00af'\"" },
+    { "overlong four-byte sequence", "'\xf0\x80\x80\xaf'", "\"'\\u00f0\\u0080\\u0080\\u00af'\"" },
+    { "surrogate codepoint", "'\xed\xa0\x80'", "\"'\\u00ed\\u00a0\\u0080'\"" },
+    { "above Unicode maximum", "'\xf4\x90\x80\x80'", "\"'\\u00f4\\u0090\\u0080\\u0080'\"" },
+    // Consecutive valid sequences must advance by their full widths; following
+    // quote/backslash/newline characters must still go through JSON escaping.
+    { "mixed UTF-8 and escapes", "'\xc3\xa9\xe2\x80\xa2\xf0\x9f\x98\x80\"\\\n'",
+      "\"'\xc3\xa9\xe2\x80\xa2\xf0\x9f\x98\x80\\\"\\\\\\n'\"" },
+  };
+
+  CHARBUF_OPEN(encoded);
+  for (uint32_t i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
+    printf("Checking JSON UTF-8 case: %s\n", cases[i].name);
+    // Assertion failure aborts without flushing redirected stdout.
+    fflush(stdout);
+    bclear(&encoded);
+    cg_encode_json_string_literal(cases[i].input, &encoded);
+    TEST_ASSERT(!strcmp(encoded.ptr, cases[i].expected));
+    bclear(&encoded);
+    cg_pretty_quote_plaintext(cases[i].input, &encoded, PRETTY_QUOTE_JSON);
+    TEST_ASSERT(!strcmp(encoded.ptr, cases[i].expected));
+  }
+  CHARBUF_CLOSE(encoded);
+}
+
+static void test_identifier_encoding() {
+  static const struct {
+    CSTR input;
+    CSTR encoded;
+  } cases[] = {
+    { "`XName`", "XName" },
+    { "`aXb`", "aXb" },
+    { "`X`", "X" },
+    { "`X_Name`", "X_X58_Name" },
+    { "`X_X58Name`", "X_X58_X5858Name" },
+    { "`aX b`", "X_aX58X20b" },
+    { "`1field`", "X_1field" },
+    { "`a``b`", "X_aX60b" },
+    { "`caf\xc3\xa9`", "X_cafXc3Xa9" },
+    { "`safe_123`", "safe_123" },
+  };
+  CHARBUF_OPEN(encoded);
+  CHARBUF_OPEN(decoded);
+  for (uint32_t i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
+    bclear(&encoded);
+    bclear(&decoded);
+    // The encoder appends into existing output; prefix insertion must preserve it.
+    bprintf(&encoded, "prefix:");
+    cg_encode_qstr(&encoded, cases[i].input);
+    TEST_ASSERT(!strncmp(encoded.ptr, "prefix:", 7));
+    TEST_ASSERT(!strcmp(encoded.ptr + 7, cases[i].encoded));
+    cg_decode_qstr(&decoded, encoded.ptr + 7);
+    TEST_ASSERT(!strcmp(decoded.ptr, cases[i].input));
+  }
+  CHARBUF_CLOSE(decoded);
+  CHARBUF_CLOSE(encoded);
+}
+
+static bool test_c_hex_escape_boundaries() {
+  bool result = true;
+  CHARBUF_OPEN(temp);
+  CSTR bytes = "\x01" "f\x02" "9\xa1" "A";
+
+  // Lowercase/uppercase hex letters and digits all extend C's hex escapes.
+  // Adjacent literal tokens must stop the scan while preserving the byte values.
+  cg_encode_c_string_literal(bytes, &temp);
+  result &= !strcmp(temp.ptr, "\"\\x01\" \"f\\x02\" \"9\\xa1\" \"A\"");
+
+  // Do not split before non-hex characters, after named escapes, inside text
+  // spelling a literal backslash-x, or after an escape at the end of the string.
+  bclear(&temp);
+  cg_encode_c_string_literal("\x01" "g\nf\\x01f\x02", &temp);
+  result &= !strcmp(temp.ptr, "\"\\x01g\\nf\\\\x01f\\x02\"");
+
+  // The Lua encoder must keep its existing spelling; in particular,
+  // Lua cannot concatenate adjacent literals by the C syntax.
+  bclear(&temp);
+  cg_encode_lua_string_literal(bytes, &temp);
+  result &= !strcmp(temp.ptr, "\"\\x01f\\x029\\xa1A\"");
+
+  // Forking the encoders must preserve named escapes and quote/backslash
+  // handling, rather than treating these characters as generic byte escapes.
+  bclear(&temp);
+  cg_encode_lua_string_literal("\"\\\a\b\f\n\r\t\v", &temp);
+  result &= !strcmp(temp.ptr, "\"\\\"\\\\\\a\\b\\f\\n\\r\\t\\v\"");
+  bclear(&temp);
+  cg_encode_c_string_literal("\"\\\a\b\f\n\r\t\v", &temp);
+  result &= !strcmp(temp.ptr, "\"\\\"\\\\\\a\\b\\f\\n\\r\\t\\v\"");
+
+  // SQL text is quoted through a separate path and needs the same C boundaries.
+  bclear(&temp);
+  cg_pretty_quote_plaintext("SELECT '\x01" "f'", &temp, PRETTY_QUOTE_C);
+  result &= !strcmp(temp.ptr, "\"SELECT '\\x01\" \"f'\"");
+  bclear(&temp);
+  cg_pretty_quote_plaintext("SELECT '\x01" "f'", &temp, PRETTY_QUOTE_LUA);
+  result &= !strcmp(temp.ptr, "\"SELECT '\\x01f'\"");
+
+  CHARBUF_CLOSE(temp);
+  return result;
+}
+
+static bool test_comment_text_encoding() {
+  bool result = true;
+  CHARBUF_OPEN(temp);
+
+  // Ordinary printable text must be preserved exactly.  Filenames should stay
+  // readable, and line-comment punctuation is harmless within a line comment.
+  cg_encode_comment_text("safe [] -- // text", &temp);
+  result &= !strcmp(temp.ptr, "safe [] -- // text");
+
+  // CR and LF are the security-critical cases: either could terminate the
+  // generated line comment and expose the rest of a filename as source code.
+  bclear(&temp);
+  cg_encode_comment_text("a\nb\rc", &temp);
+  result &= !strcmp(temp.ptr, "a\\nb\\rc");
+
+  // A tab does not terminate the comment, but making it visible keeps generated
+  // provenance single-line and prevents invisible formatting surprises.
+  bclear(&temp);
+  cg_encode_comment_text("a\tb", &temp);
+  result &= !strcmp(temp.ptr, "a\\tb");
+
+  // Other C0 controls have no familiar spelling, so they use fixed-width hex.
+  // This verifies both ends of the encoded C0 range.
+  bclear(&temp);
+  cg_encode_comment_text("\x01\x1f", &temp);
+  result &= !strcmp(temp.ptr, "\\x01\\x1f");
+
+  // DEL sits outside the C0 range but is also non-printing and must be encoded.
+  bclear(&temp);
+  cg_encode_comment_text("\x7f", &temp);
+  result &= !strcmp(temp.ptr, "\\x7f");
+
+  // UTF-8 bytes cannot end a line comment and should remain readable rather
+  // than being expanded into byte escapes.
+  bclear(&temp);
+  cg_encode_comment_text("\xe2\x80\xa2", &temp);
+  result &= !strcmp(temp.ptr, "\xe2\x80\xa2");
+
+  // Encoders append to caller-owned buffers.  Verify this helper does not clear
+  // content that the caller emitted before the comment text.
+  bclear(&temp);
+  bprintf(&temp, "prefix:");
+  cg_encode_comment_text("value", &temp);
+  result &= !strcmp(temp.ptr, "prefix:value");
+
+  CHARBUF_CLOSE(temp);
+  return result;
+}
+
+static bool test_comment_marker_scan() {
+  CHARBUF_OPEN(temp);
+
+  cg_remove_slash_star_and_star_slash(&temp);
+  bool result = temp.used == 1 && !strcmp(temp.ptr, "");
+
+  const char *inputs[] = { "/", "*", "/*", "*/", "/* */", "text/*", "text*/" };
+  const char *outputs[] = { "/", "*", "/+", "+/", "/+ +/", "text/+", "text+/" };
+  for (uint32_t i = 0; i < sizeof(inputs) / sizeof(inputs[0]); i++) {
+    bclear(&temp);
+    bprintf(&temp, "%s", inputs[i]);
+    uint32_t used = temp.used;
+    cg_remove_slash_star_and_star_slash(&temp);
+    result &= temp.used == used && !strcmp(temp.ptr, outputs[i]);
+  }
+
+  CHARBUF_CLOSE(temp);
+  return result;
+}
+
+static bool test_bytebuf_self_append() {
+  bytebuf buffer;
+  bytebuf_open(&buffer);
+
+  // Duplicating this seed forces growth while the source aliases the buffer.
+  char seed[BYTEBUF_GROWTH_SIZE + 1];
+  for (uint32_t i = 0; i < sizeof(seed); i++) {
+    seed[i] = (char)(i & 0x7f);
+  }
+  bytebuf_append(&buffer, seed, sizeof(seed));
+  bytebuf_append(&buffer, buffer.ptr, buffer.used);
+
+  bool result =
+    buffer.used == 2 * sizeof(seed) &&
+    !memcmp(buffer.ptr, seed, sizeof(seed)) &&
+    !memcmp(buffer.ptr + sizeof(seed), seed, sizeof(seed));
+
+  bytebuf_append(&buffer, buffer.ptr + 17, 31);
+  result &= buffer.used == 2 * sizeof(seed) + 31;
+  result &= !memcmp(buffer.ptr + 2 * sizeof(seed), seed + 17, 31);
+
+  bytebuf_close(&buffer);
+  return result;
+}
+
 cql_noexport void run_unit_tests() {
+  // An empty duplicate must still be a valid, NUL-terminated allocation.
+  // Callers rely on receiving a string rather than NULL for empty input.
   TEST_ASSERT(test_strdup__empty_string());
+
+  // The smallest non-empty input verifies that Strdup produces the expected
+  // byte and terminator without truncation.
   TEST_ASSERT(test_strdup__one_character_string());
+
+  // A multi-byte input verifies that Strdup copies the complete string rather
+  // than accidentally handling only the first character.
   TEST_ASSERT(test_strdup__long_string());
+
+  // Two empty strings establish the equality base case without reading beyond
+  // either terminator.
   TEST_ASSERT(test_strcasecmp_empty_strings());
+
+  // Case-insensitive ordering must still report a lexical less-than result
+  // when the folded characters differ.
   TEST_ASSERT(test_strcasecmp_one_char_strings__result_is_less_than());
+
+  // Reverse operands verify the corresponding greater-than result and catch
+  // implementations that return only equality versus inequality.
   TEST_ASSERT(test_strcasecmp_one_char_strings__result_is_greater_than());
+
+  // Mixed casing at several positions must compare equal after case folding.
   TEST_ASSERT(test_strcasecmp_one_char_strings__result_is_equals());
+
+  // A difference after a shared multi-character prefix must determine
+  // less-than ordering, not just the first character.
   TEST_ASSERT(test_strcasecmp_long_strings__result_is_less_than());
+
+  // The reverse shared-prefix case verifies greater-than ordering at a later
+  // character in the strings.
   TEST_ASSERT(test_strcasecmp_long_strings__result_is_greater_than());
+
+  // The long-string comparison group also verifies equality when every folded
+  // character matches through the terminator.
   TEST_ASSERT(test_strcasecmp_long_strings__result_is_equals());
+
+  // When one folded string is a prefix of the other, the shorter string must
+  // sort first.
   TEST_ASSERT(test_strcasecmp_different_length_strings__result_is_less_than());
+
+  // Reversing a prefix pair must make the longer string sort after the shorter
+  // one.
   TEST_ASSERT(test_strcasecmp_different_length_strings__result_is_greater_than());
+
+  // A zero comparison limit must report equality without inspecting even empty
+  // input.
   TEST_ASSERT(test_strncasecmp__empty_strings__zero_cmp_size__result_is_equals());
+
+  // A limit beyond both empty strings verifies that comparison stops safely at
+  // their terminators.
   TEST_ASSERT(test_strncasecmp__empty_strings__past_length_cmp_size__result_is_equals());
+
+  // A zero limit must ignore differing non-empty input, matching strncasecmp
+  // semantics.
   TEST_ASSERT(test_strncasecmp__one_char_strings__zero_cmp_size__result_is_equals());
+
+  // With a limit beyond one-character inputs, folded lexical less-than must be
+  // reported before the terminators are reached.
   TEST_ASSERT(test_strncasecmp__one_char_strings__past_length_cmp_size__result_is_less_than());
+
+  // Reversing the one-character operands verifies greater-than with a limit
+  // larger than both strings.
   TEST_ASSERT(test_strncasecmp__one_char_strings__past_length_cmp_size__result_is_greater_than());
+
+  // Equal folded one-character strings must remain equal when the requested
+  // limit extends past their terminators.
   TEST_ASSERT(test_strncasecmp__one_char_strings__past_length_cmp_size__result_is_equals());
+
+  // Longer inputs verify less-than at a later character while the limit extends
+  // past the complete strings.
   TEST_ASSERT(test_strncasecmp__long_strings__past_length_cmp_size__result_is_less_than());
+
+  // The corresponding longer-input reverse case verifies greater-than after a
+  // shared prefix.
   TEST_ASSERT(test_strncasecmp__long_strings__past_length_cmp_size__result_is_greater_than());
+
+  // Mixed-case longer strings must compare equal and stop at the terminator
+  // even when the limit permits another byte.
   TEST_ASSERT(test_strncasecmp__long_strings__past_length_cmp_size__result_is_equals());
+
+  // A short comparison limit must return less-than using only the compared
+  // prefix and must ignore later characters.
   TEST_ASSERT(test_strncasecmp__long_strings__shorter_than_length_cmp_size__result_is_less_than());
+
+  // Reversing the compared prefix verifies greater-than without consulting the
+  // ignored suffix.
   TEST_ASSERT(test_strncasecmp__long_strings__shorter_than_length_cmp_size__result_is_greater_than());
+
+  // Equal folded prefixes must report equality even when characters after the
+  // limit differ.
   TEST_ASSERT(test_strncasecmp__long_strings__shorter_than_length_cmp_size__result_is_equals());
+
+  // A statement ending in one trailing space previously risked scanning past
+  // the buffer and inventing an extra fragment; exactly two tokens must remain.
   TEST_ASSERT(test_frag_tricky_case());
+
+  // This known hash vector protects the stable schema-signature encoding for a
+  // required string field.
   TEST_ASSERT(test_sha256_example1());
+
+  // This vector covers nullable integer type syntax so changes in punctuation
+  // or type spelling cannot silently alter stable hashes.
   TEST_ASSERT(test_sha256_example2());
+
+  // A shorter field description verifies hashing without dependence on the
+  // preceding examples' lengths or buffer contents.
   TEST_ASSERT(test_sha256_example3());
+
+  // Mixed-case field names and nullable integer syntax provide another stable
+  // real-world signature vector.
   TEST_ASSERT(test_sha256_example4());
+
+  // This input crosses a SHA-256 block boundary, protecting multi-block update
+  // and finalization behavior.
   TEST_ASSERT(test_sha256_example5());
+
+  // This input exercises final-block padding near the SHA-256 block boundary,
+  // where length and padding mistakes commonly occur.
   TEST_ASSERT(test_sha256_example6());
+
+  // Unknown macro arguments and definitions require distinct AST node tags so
+  // later parser and semantic phases can distinguish their roles.
   TEST_ASSERT(test_unknown_macro());
+
+  // Dirname must handle NULL, empty and separator-free names plus Windows and
+  // Unix separators, including the Unix root special case.
   TEST_ASSERT(test_Dirname());
+
+  // Invalid UTF-8 must be escaped into valid JSON rather than copied as malformed
+  // output or read past truncated byte sequences.
   TEST_ASSERT(test_badly_formed_utf8());
+  // Both JSON paths must preserve valid codepoints and the established malformed
+  // byte policy; syntactically valid JSON alone does not prove string fidelity.
+  test_json_pretty_utf8();
+  test_identifier_encoding();
+
+  // Generated C must delimit greedy hex escapes without changing CQL/Lua output.
+  TEST_ASSERT(test_c_hex_escape_boundaries());
+
+  // Source-controlled provenance text must remain inside generated line
+  // comments while preserving printable and UTF-8 content.
+  TEST_ASSERT(test_comment_text_encoding());
+  TEST_ASSERT(test_comment_marker_scan());
+  TEST_ASSERT(test_bytebuf_self_append());
 }
 
 #endif
@@ -74010,6 +74717,8 @@ static ast_node *make_statement_node(ast_node *misc_attrs, ast_node *any_stmt);
 static ast_node *make_coldef_node(ast_node *col_def_tye_attrs, ast_node *misc_attrs);
 static ast_node *reduce_str_chain(ast_node *str_chain);
 static ast_node *new_simple_call_from_name(ast_node *name);
+static bool_t parse_decimal_int32_prefix(CSTR text, int32_t min_value, int32_t max_value, int32_t *result, CSTR *end);
+static bool_t parse_decimal_int32(CSTR text, int32_t min_value, int32_t max_value, int32_t *result);
 
 // Set to true upon a call to `yyerror`.
 static bool_t parse_error_occurred;
@@ -74021,9 +74730,7 @@ static void cql_add_define(CSTR name);
 
 int yylex();
 void yyerror(const char *s, ...);
-void yyset_in(FILE *);
 void yyset_lineno(int);
-void yyrestart(FILE *);
 
 #ifndef _MSC_VER
 #pragma clang diagnostic push
@@ -84818,22 +85525,16 @@ static void parse_cmd(int argc, char **argv) {
         cql_error("unable to open '%s' for read\n", argv[a]);
         cql_cleanup_and_exit(1);
       }
-      yyset_in(f);
-      // reset the scanner to point to the newly input file (yyset_in(f)). Otherwise the scanner
-      // might continue to point to the input file from the previous run in case there are still
-      // a stream to read.
-      // Usually when the parser encouter a syntax error, it stops reading the input file.
-      // On the next run the scanner will want to continue and finish from where it stops
-      // before moving to the file of the current run.
-      // Therefore it's important to always do this because we're in a new run and should ignore
-      // previous run because a result were already produced for that prevous run.
-      yyrestart(f);
+      cql_set_input_file(f);
 
       current_file = argv[a];
     }
     else if (strcmp(arg, "--min_schema_version") == 0) {
       a = gather_arg_param(a, argc, argv, NULL, "for the minimum schema version");
-      options.min_schema_version = atoi(argv[a]);
+      if (!parse_decimal_int32(argv[a], 0, INT32_MAX, &options.min_schema_version)) {
+        cql_error("invalid minimum schema version '%s'\n", argv[a]);
+        cql_cleanup_and_exit(1);
+      }
     }
     else if (strcmp(arg, "--global_proc") == 0) {
       a = gather_arg_param(a, argc, argv, NULL,  "for the global proc name");
@@ -85308,12 +86009,14 @@ int cql_main(int argc, char **argv) {
   cql_ifdef_state = NULL;
 
   if (!setjmp(cql_for_exit)) {
+    // Capture any borrowed scanner buffer before --in or an argument error can
+    // change the input state. Cleanup must honor that ownership on every exit.
+    cql_reset_open_includes();
     parse_cmd(argc, argv);
     ast_init();
 
     // add the builtin declares before we process the real input
     cql_setup_defines();
-    cql_reset_open_includes();
     cql_setup_for_builtins();
 
     if (options.run_unit_tests) {
@@ -85396,12 +86099,74 @@ static int32_t gather_arg_param(int32_t a, int32_t argc, char **argv, char **out
 
 extern int yylineno;
 
+// Both callers require unsigned decimal spelling, not atoi's optional sign,
+// whitespace, or silently ignored suffix. The prefix form leaves the delimiter
+// for #line to check; the CLI form below requires the entire argument.
+static bool_t parse_decimal_int32_prefix(
+  CSTR text,
+  int32_t min_value,
+  int32_t max_value,
+  int32_t *result,
+  CSTR *end) {
+  if (text[0] < '0' || text[0] > '9') {
+    return false;
+  }
+
+  int32_t value = 0;
+  CSTR p = text;
+  for (; *p >= '0' && *p <= '9'; p++) {
+    int32_t digit = *p - '0';
+    // Prove the next multiply/add fits before performing it, including when
+    // max_value is INT32_MAX and the input is longer than any integer type.
+    if (value > max_value / 10 ||
+        (value == max_value / 10 && digit > max_value % 10)) {
+      return false;
+    }
+    value = value * 10 + digit;
+  }
+
+  if (value < min_value) {
+    return false;
+  }
+
+  *result = value;
+  *end = p;
+  return true;
+}
+
+static bool_t parse_decimal_int32(
+  CSTR text,
+  int32_t min_value,
+  int32_t max_value,
+  int32_t *result) {
+  int32_t value;
+  CSTR end;
+  if (!parse_decimal_int32_prefix(text, min_value, max_value, &value, &end) || *end) {
+    return false;
+  }
+  *result = value;
+  return true;
+}
+
+// A directive must not put the scanner next to signed overflow: reserve over
+// a billion subsequent line increments rather than allowing INT32_MAX itself.
+#define MAX_LINE_DIRECTIVE_NUMBER (INT32_MAX / 2)
+
 void line_directive(const char *directive) {
   char *directive_start = strchr(directive, '#');
   Invariant(directive_start != NULL);
   char *line_start = strchr(directive_start + 1, ' ');
   Invariant(line_start != NULL);
-  int line = atoi(line_start + 1);
+  int32_t line;
+  CSTR line_end;
+  if (!parse_decimal_int32_prefix(
+        line_start + 1, 1, MAX_LINE_DIRECTIVE_NUMBER, &line, &line_end) ||
+      *line_end != ' ') {
+    // Keep the existing line/file state on failure so later tokens cannot
+    // inherit a zero, wrapped, or nearly overflowing scanner line number.
+    yyerror("invalid #line directive line number");
+    return;
+  }
   yyset_lineno(line -1);  // we are about to process the linefeed
 
   char *q1 = strchr(directive_start +1, '"');
@@ -85621,6 +86386,7 @@ static void cql_usage() {
     "  used with --rt schema_upgrade\n"
     "--min_schema_version n\n"
     "  the schema upgrade script will not include upgrade steps for schema older than the version specified\n"
+    "  n must contain decimal digits only, in the range 0..2147483647\n"
     "  used with --rt schema_upgrade\n"
     "--schema_exclusive\n"
     "  the schema upgrade script assumes it owns all the schema in the database, it aggressively removes other things\n"
@@ -87544,6 +88310,8 @@ cql_noexport char *Dirname(char *path) {
 void yyerror(const char *s, ...);
 void line_directive(const char *);
 char *Strdup(const char *);
+int yylex_destroy(void);
+void yyrestart(FILE *);
 static CSTR last_doc_comment = NULL;
 
 static bool_t cql_already_processed_file(CSTR);
@@ -87581,8 +88349,13 @@ cql_noexport CSTR get_last_doc_comment() {
 }
 
 static bool cql_builtins_processing = false;
+// A caller-installed Flex buffer is borrowed. Buffers created for --in or
+// stdin are ours, independently of whether the underlying FILE is borrowed.
 static bool cql_delete_main_buffer = false;
 static YY_BUFFER_STATE cql_main_buffer;
+// Only files opened by --in transfer ownership here; never close yyin blindly,
+// since it may be stdin, a caller's stream, or the most recent include stream.
+static FILE *cql_owned_main_file;
 
 // this remembers the directory in which we found the most recent file
 // later paths are relative to this by default.  It points into the string
@@ -87598,14 +88371,13 @@ static CSTR ambient_path;
 // economical to process those as text than to record the various ast fragments
 // we would need (and they might change over time).
 cql_noexport void cql_setup_for_builtins() {
-  // stash a buffer for the main input, note that we might already have a buffer
-  // in the amalgam case, if we do then use that.
+  // Preserve the ownership captured before command parsing: an existing buffer
+  // may be borrowed from the caller or owned because --in created it.
   if (YY_CURRENT_BUFFER) {
     cql_main_buffer = YY_CURRENT_BUFFER;
-    cql_delete_main_buffer = false;
   }
   else {
-    // if we don't already have a buffer make one using yyin or stdin
+    // The FILE is borrowed, but this newly allocated Flex buffer is ours.
     cql_main_buffer = yy_create_buffer(yyin ? yyin : stdin, YY_BUF_SIZE);
     cql_delete_main_buffer = true;
   }
@@ -87627,7 +88399,10 @@ cql_noexport void cql_setup_for_builtins() {
 #define MAX_INCLUDES 10
 
 typedef struct {
+  // buf is the suspended parent; file is the owned child stream, not buf's
+  // stream. Keep both so an early exit can release the entire include chain.
   YY_BUFFER_STATE buf;
+  FILE *file;
   int32_t line_saved;
   char *filename_saved;
   CSTR ambient_saved;
@@ -87638,12 +88413,17 @@ static int cql_include_index = 0;
 
 static symtab *processed_files;
 
-// set things up for start of a new compile.  All memory
-// of previously processed files is removed.  The include stack
-// is cleared.
+// Called before command parsing so even a bad command line preserves a
+// caller-installed buffer. With no --in, that buffer must remain borrowed.
+// Cleanup also calls this after detaching/releasing the scanner buffers.
 cql_noexport void cql_reset_open_includes() {
   ambient_path = NULL;
   cql_include_index = 0;
+  cql_builtins_processing = false;
+  cql_main_buffer = YY_CURRENT_BUFFER;
+  cql_delete_main_buffer = false;
+  // This points into the previous compilation's string pool.
+  last_doc_comment = NULL;
   memset(cql_includes, 0, sizeof(cql_includes));
   if (processed_files) {
     symtab_delete(processed_files);
@@ -87651,14 +88431,89 @@ cql_noexport void cql_reset_open_includes() {
   }
 }
 
-// cleanup the memory associated with any pending files
-// in the include stack.
+// Includes and builtins suspend buffers outside Flex's own stack. Consequently
+// yylex_destroy alone leaks those parents, while blindly deleting every buffer
+// would free the caller's borrowed input. Account for each role explicitly.
 cql_noexport void cql_cleanup_open_includes() {
+  YY_BUFFER_STATE current_buffer = YY_CURRENT_BUFFER;
+  YY_BUFFER_STATE borrowed_buffer = cql_delete_main_buffer ? NULL : cql_main_buffer;
+
+  // Detach the active buffer first. We delete owned buffers ourselves below;
+  // this prevents Flex from deleting either a borrowed buffer or an owned one
+  // a second time when we destroy its bookkeeping.
+  if (current_buffer) {
+    YY_CURRENT_BUFFER_LVALUE = NULL;
+  }
+
   for (int32_t i = 0; i < cql_include_index; i++) {
      cql_include_state *inc = &cql_includes[i];
-     yy_delete_buffer(inc->buf);
+     // A failed include open leaves its saved parent as the current buffer.
+     // Skip that alias and any borrowed main buffer; neither is ours to free
+     // here. All other suspended parents were created by this compilation.
+     if (inc->buf && inc->buf != current_buffer && inc->buf != borrowed_buffer) {
+       if (inc->buf == cql_main_buffer) {
+         // The main buffer can also be an include's parent. Consume that role
+         // now so the separate main-buffer cleanup cannot delete it again.
+         cql_main_buffer = NULL;
+       }
+       yy_delete_buffer(inc->buf);
+     }
+  }
+
+  // Unit-test mode can exit while reading builtins, before main input was
+  // activated. That owned main buffer is not necessarily an include parent.
+  if (cql_delete_main_buffer && cql_main_buffer && cql_main_buffer != current_buffer) {
+    yy_delete_buffer(cql_main_buffer);
+  }
+  cql_main_buffer = NULL;
+
+  // The current buffer may be an include, builtins, or main input. Only the
+  // caller-installed main buffer survives; its caller can still delete it.
+  if (current_buffer && current_buffer != borrowed_buffer) {
+    yy_delete_buffer(current_buffer);
+  }
+
+  // No buffers remain on Flex's active stack. Release its stack allocation and
+  // reset lexer state (including an interrupted @include start condition).
+  yylex_destroy();
+
+  // EOF already closed completed includes. Only interrupted child streams
+  // remain in these frames; their buffers have now all been released.
+  for (int32_t i = 0; i < cql_include_index; i++) {
+    cql_include_state *inc = &cql_includes[i];
+    if (inc->file) {
+      fclose(inc->file);
+      inc->file = NULL;
+    }
+  }
+
+  if (cql_owned_main_file) {
+    // This is separate from yyin, which may have changed during include lookup.
+    fclose(cql_owned_main_file);
+    cql_owned_main_file = NULL;
   }
   cql_reset_open_includes();
+}
+
+// --in transfers the opened FILE to the scanner, but does not transfer an
+// already-installed caller buffer. yyrestart reuses that buffer when present.
+cql_noexport void cql_set_input_file(FILE *file) {
+  FILE *previous_file = cql_owned_main_file;
+  if (!YY_CURRENT_BUFFER) {
+    // yyrestart will create a buffer, so this compilation must release it.
+    cql_delete_main_buffer = true;
+  }
+  // Restart before closing the previous stream so Flex cannot retain it as the
+  // input backing the reused buffer. Repeated --in must not leak earlier files.
+  yyrestart(file);
+  cql_main_buffer = YY_CURRENT_BUFFER;
+  cql_owned_main_file = file;
+
+  // Replacing a stream ends our ownership of the old one. Reinstalling the
+  // same stream must not close the file we have just selected.
+  if (previous_file && previous_file != file) {
+    fclose(previous_file);
+  }
 }
 
 // Set the ambient path (the directory used to resolve later relative
@@ -87689,6 +88544,9 @@ static void cql_setup_for_include(CSTR str) {
   cql_include_state *inc = &cql_includes[cql_include_index];
 
   inc->buf = YY_CURRENT_BUFFER;
+  // Include lookup can fail or skip an already-processed file before opening
+  // anything. Those frames must never inherit a FILE from an earlier include.
+  inc->file = NULL;
   inc->line_saved = yylineno;
   inc->filename_saved = current_file;
   inc->ambient_saved = ambient_path;
@@ -87764,6 +88622,9 @@ static void cql_setup_for_include(CSTR str) {
 
   // we have a file and path now, so mark it as processed and make the buffer
   cql_record_processed_file(abspath);
+  // Record ownership before switching buffers so cleanup can find this stream
+  // independently of Flex's mutable yyin and the saved parent buffer.
+  inc->file = yyin;
   yy_switch_to_buffer(yy_create_buffer(yyin, YY_BUF_SIZE));
 
 done:
@@ -87794,6 +88655,60 @@ static void cql_record_processed_file(CSTR str) {
 static bool_t cql_already_processed_file(CSTR str) {
   Contract(processed_files);
   return !!symtab_find(processed_files, str);
+}
+
+#define INTEGER_LITERAL_DEFAULT    0
+#define INTEGER_LITERAL_HEX        1
+#define INTEGER_LITERAL_FORCE_LONG 2
+
+// Decimal INT64_MAX+1 is retained so semantic analysis can recognize INT64_MIN.
+// Hexadecimal literals describe unsigned 64-bit patterns, not magnitudes.
+static int32_t cql_integer_literal_token(char *text, uint32_t flags) {
+  bool_t is_hex = !!(flags & INTEGER_LITERAL_HEX);
+  bool_t force_long = !!(flags & INTEGER_LITERAL_FORCE_LONG);
+
+  if (force_long) {
+    text[strlen(text) - 1] = 0;
+  }
+
+  uint64_t value = 0;
+  uint32_t base = is_hex ? 16 : 10;
+  CSTR digits = is_hex ? text + 2 : text;
+
+  for (CSTR p = digits; *p; p++) {
+    uint32_t digit;
+    if (*p >= '0' && *p <= '9') {
+      digit = (uint32_t)(*p - '0');
+    }
+    else if (*p >= 'a' && *p <= 'f') {
+      digit = (uint32_t)(*p - 'a' + 10);
+    }
+    else {
+      Contract(*p >= 'A' && *p <= 'F');
+      digit = (uint32_t)(*p - 'A' + 10);
+    }
+
+    if (value > (UINT64_MAX - digit) / base) {
+      yylval.sval = text;
+      yyerror("integer literal out of range");
+      return LONGLIT;
+    }
+    value = value * base + digit;
+  }
+
+  if (!is_hex && value > (uint64_t)INT64_MAX + 1) {
+    yylval.sval = text;
+    yyerror("integer literal out of range");
+    return LONGLIT;
+  }
+
+  if (!is_hex && value == (uint64_t)INT64_MAX + 1) {
+    // The existing unary-minus handlers recognize this exact spelling.
+    text = Strdup("9223372036854775808");
+  }
+
+  yylval.sval = text;
+  return !force_long && value <= INT32_MAX ? INTLIT : LONGLIT;
 }
 
 
@@ -89290,31 +90205,19 @@ YY_RULE_SETUP
 	YY_BREAK
 case 269:
 YY_RULE_SETUP
-{ char *s = Strdup(yytext);
-                                   yylval.sval = s;
-                                   errno = 0;
-                                   return (strtoll(s+2, NULL, 16) <= 0x7fffffff  && errno == 0) ? INTLIT: LONGLIT; }
+{ return cql_integer_literal_token(Strdup(yytext), INTEGER_LITERAL_HEX); }
 	YY_BREAK
 case 270:
 YY_RULE_SETUP
-{ char *s = Strdup(yytext);
-                                   s[strlen(s)-1] = 0; /* remove the L */
-                                   yylval.sval = s;
-                                   return LONGLIT; }
+{ return cql_integer_literal_token(Strdup(yytext), INTEGER_LITERAL_HEX | INTEGER_LITERAL_FORCE_LONG); }
 	YY_BREAK
 case 271:
 YY_RULE_SETUP
-{ char *s = Strdup(yytext);
-                                   yylval.sval = s;
-                                   errno = 0;
-                                   return (strtoll(s, NULL, 10) <= 0x7fffffff  && errno == 0) ? INTLIT: LONGLIT; }
+{ return cql_integer_literal_token(Strdup(yytext), INTEGER_LITERAL_DEFAULT); }
 	YY_BREAK
 case 272:
 YY_RULE_SETUP
-{ char *s = Strdup(yytext);
-                                   s[strlen(s)-1] = 0; /* remove the L */
-                                   yylval.sval = s;
-                                   return LONGLIT; }
+{ return cql_integer_literal_token(Strdup(yytext), INTEGER_LITERAL_FORCE_LONG); }
 	YY_BREAK
 case 273:
 YY_RULE_SETUP
@@ -89420,15 +90323,20 @@ case YY_STATE_EOF(at_inc):
                                      cql_finish_builtin_stream();
                                    }
                                    else if (!cql_include_index) {
-                                     if (cql_delete_main_buffer) {
-                                        yy_delete_buffer(YY_CURRENT_BUFFER);
-                                        cql_delete_main_buffer = false;
-                                     }
+                                     // Defer main-buffer disposal to cleanup,
+                                     // which knows whether it is owned or borrowed.
                                      yyterminate();
                                    }
                                    else {
                                      yy_delete_buffer(YY_CURRENT_BUFFER);
                                      cql_include_state *inc = &cql_includes[--cql_include_index];
+                                     // The child buffer is gone, so close its
+                                     // owned stream before restoring the parent.
+                                     // Skipped duplicate includes have no FILE.
+                                     if (inc->file) {
+                                       fclose(inc->file);
+                                       inc->file = NULL;
+                                     }
                                      yy_switch_to_buffer(inc->buf);
                                      yylineno = inc->line_saved;
                                      current_file = inc->filename_saved;

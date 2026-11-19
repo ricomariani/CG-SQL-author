@@ -13,6 +13,9 @@ LICENSE file in the root directory of this source tree.
 package.loadlib("/usr/local/opt/sqlite/lib/libsqlite3.dylib","*")
 sqlite3 = require('lsqlite3')
 
+-- CQLABI marks entry points callable from CQL, as in cqlrt_common.h.
+-- Cursor parameters expand to a row, type string, and field-name table here.
+-- Transaction procedures take a database and return the result code first.
 
 -- we know about these codes, everything else is some error
 CQL_OK = sqlite3.OK
@@ -127,6 +130,7 @@ end
 
 -- cql_printf is the SQLite printf and it is far too expensive for general use
 -- use only when demanded by printf function calls
+-- CQLABI
 function printf(...)
   io.write(cql_printf(...))
 end
@@ -169,6 +173,31 @@ end
 function cql_blob_is_eq(x,y)
   -- identity comparison for now
   return x == y
+end
+
+-- CQLABI
+cql_blob_equal = cql_blob_is_eq
+
+-- Match strcmp's byte order and terminator semantics, independently of locale.
+-- CQLABI
+function cql_string_compare(s1, s2)
+  local i = 1
+  while true do
+    local b1 = string.byte(s1, i) or 0
+    local b2 = string.byte(s2, i) or 0
+    if b1 ~= b2 or b1 == 0 then
+      return b1 - b2
+    end
+    i = i + 1
+  end
+end
+
+-- CQLABI
+function cql_string_equal(s1, s2)
+  if s1 == nil or s2 == nil then
+    return s1 == s2
+  end
+  return cql_string_compare(s1, s2) == 0
 end
 
 function cql_ne(x,y)
@@ -402,6 +431,12 @@ function cql_like(x, y)
   return cql_to_bool(result)
 end;
 
+-- As in sqlite3_strlike, zero means a match.
+-- CQLABI
+function cql_string_like(value, pattern)
+  return cql_like(value, pattern) and 0 or 1
+end
+
 function cql_unary_sign(x)
   if x == nil then return nil end
   if x == true then return 1 end
@@ -486,6 +521,7 @@ local cql_json_escapes = {
   [9] = '\\t',
 }
 
+-- CQLABI
 function cql_create_json_escaped_str(value)
   local result = {}
   local i = 1
@@ -509,6 +545,7 @@ function cql_create_json_escaped_str(value)
   return table.concat(result)
 end
 
+-- CQLABI
 function cql_get_blob_size(blob)
   return #blob
 end
@@ -765,6 +802,7 @@ function cql_contract(b)
   end
 end
 
+-- CQLABI
 function cql_partition_create()
   return {};
 end;
@@ -843,6 +881,7 @@ function cql_hash_string(str)
   return hash
 end
 
+-- CQLABI
 function cql_cursor_hash(key, key_types, key_fields)
   if key == nil or not key._has_row_ then
      return 0
@@ -851,6 +890,7 @@ function cql_cursor_hash(key, key_types, key_fields)
   return cql_hash_string(cql_make_str_key(key, key_fields))
 end
 
+-- CQLABI
 function cql_cursors_equal(k1, k1_types, k1_fields, k2, k2_types, k2_fields)
   if k1_types ~= k2_types then return false end
   if k1 == nil and k2 == nil then return true end
@@ -867,6 +907,7 @@ function cql_cursors_equal(k1, k1_types, k1_fields, k2, k2_types, k2_fields)
   return true
 end
 
+-- CQLABI
 function cql_cursor_diff_index(k1, k1_types, k1_fields, k2, k2_types, k2_fields)
   -- one has a row and the other doesn't
   if k1._has_row_ ~= k2._has_row_ then
@@ -899,6 +940,7 @@ function cql_cursor_diff_index(k1, k1_types, k1_fields, k2, k2_types, k2_fields)
   return -1
 end
 
+-- CQLABI
 function cql_cursor_diff_col(k1, k1_types, k1_fields, k2, k2_types, k2_fields)
   if (not k1._has_row_) and not k2._has_row_ then
     return nil
@@ -925,6 +967,7 @@ function cql_cursor_diff_col(k1, k1_types, k1_fields, k2, k2_types, k2_fields)
   return nil
 end
 
+-- CQLABI
 function cql_cursor_diff_val(k1, k1_types, k1_fields, k2, k2_types, k2_fields)
   local i = cql_cursor_diff_index(k1, k1_types, k1_fields, k2, k2_types, k2_fields)
 
@@ -948,6 +991,7 @@ function cql_cursor_diff_val(k1, k1_types, k1_fields, k2, k2_types, k2_fields)
       " c2:"..cql_format_one_field(code, value2)
 end
 
+-- CQLABI
 function cql_partition_cursor(partition, key, key_types, key_fields, cursor, cursor_types, cursor_fields)
   if not cursor._has_row_ then return false end
   key = cql_make_str_key(key, key_fields)
@@ -960,6 +1004,7 @@ function cql_partition_cursor(partition, key, key_types, key_fields, cursor, cur
   return true
 end;
 
+-- CQLABI
 function cql_extract_partition(partition, key, key_types, key_fields)
   key = cql_make_str_key(key, key_fields)
   if partition[key] ~= nil then
@@ -972,11 +1017,17 @@ function cql_extract_partition(partition, key, key_types, key_fields)
   end
 end
 
+-- Schema upgrader only. The global starts nil and is cleared after
+-- upgrade, so CQL parameters stay nullable. Operations require initialization;
+-- contracts distinguish misuse from an absent facet in an initialized table.
+-- CQLABI
 function cql_facets_create()
   return {}
 end
 
+-- CQLABI
 function cql_facet_find(facets, facet)
+   cql_contract(facets ~= nil)
    local result = facets[facet]
    if result ~= nil then
      return result
@@ -985,21 +1036,28 @@ function cql_facet_find(facets, facet)
    end
 end
 
+-- CQLABI
 function cql_facet_upsert(facets, facet, value)
+   cql_contract(facets ~= nil)
+   local added = facets[facet] == nil
    facets[facet] = value
-   return true
+   return added
 end
 
+-- CQLABI
 function cql_facet_add(facets, facet, value)
+   cql_contract(facets ~= nil)
    if facets[facet] ~= nil then return false end
    facets[facet] = value
    return true
 end
 
+-- CQLABI
 function cql_string_dictionary_create()
   return {}
 end
 
+-- CQLABI
 function cql_string_dictionary_add(dict, key, val)
   if dict[key] ~= nil then
     dict[key] = val
@@ -1009,48 +1067,66 @@ function cql_string_dictionary_add(dict, key, val)
   return true
 end
 
+-- CQLABI
 function cql_string_dictionary_find(dict, key)
   return dict[key]
 end
 
 -- in Lua, the string dictionary is the same, we can steal the implementation
+-- CQLABI
 cql_object_dictionary_create = cql_string_dictionary_create
+-- CQLABI
 cql_object_dictionary_add = cql_string_dictionary_add
+-- CQLABI
 cql_object_dictionary_find = cql_string_dictionary_find
 
 -- in Lua, the string dictionary is the same, we can steal the implementation
+-- CQLABI
 cql_long_dictionary_create = cql_string_dictionary_create
+-- CQLABI
 cql_long_dictionary_add = cql_string_dictionary_add
+-- CQLABI
 cql_long_dictionary_find = cql_string_dictionary_find
 
 -- in Lua, the string dictionary is the same, we can steal the implementation
+-- CQLABI
 cql_real_dictionary_create = cql_string_dictionary_create
+-- CQLABI
 cql_real_dictionary_add = cql_string_dictionary_add
+-- CQLABI
 cql_real_dictionary_find = cql_string_dictionary_find
 
 -- in Lua, the string dictionary is the same, we can steal the implementation
+-- CQLABI
 cql_blob_dictionary_create = cql_string_dictionary_create
+-- CQLABI
 cql_blob_dictionary_add = cql_string_dictionary_add
+-- CQLABI
 cql_blob_dictionary_find = cql_string_dictionary_find
 
+-- CQLABI
 function cql_string_list_create()
   return {}
 end
 
+-- CQLABI
 function cql_string_list_count(list)
   return #list
 end
 
+-- CQLABI
 function cql_string_list_add(list, str)
   table.insert(list, str)
   return list
 end
 
+-- CQLABI
 function cql_string_list_get_at(list, i)
   -- one based index
   return list[i+1]
 end
 
+-- CQLABI
 function cql_string_list_set_at(list, i, val)
   -- one based index
   list[i+1] = val
@@ -1058,34 +1134,58 @@ function cql_string_list_set_at(list, i, val)
 end
 
 -- the long/real/blob versions are the same in Lua
+-- CQLABI
 cql_long_list_create = cql_string_list_create;
+-- CQLABI
 cql_long_list_count = cql_string_list_count;
+-- CQLABI
 cql_long_list_add = cql_string_list_add;
+-- CQLABI
 cql_long_list_get_at = cql_string_list_get_at;
+-- CQLABI
 cql_long_list_set_at = cql_string_list_set_at;
 
+-- CQLABI
 cql_real_list_create = cql_string_list_create;
+-- CQLABI
 cql_real_list_count = cql_string_list_count;
+-- CQLABI
 cql_real_list_add = cql_string_list_add;
+-- CQLABI
 cql_real_list_get_at = cql_string_list_get_at;
+-- CQLABI
 cql_real_list_set_at = cql_string_list_set_at;
 
+-- CQLABI
 cql_blob_list_create = cql_string_list_create;
+-- CQLABI
 cql_blob_list_count = cql_string_list_count;
+-- CQLABI
 cql_blob_list_add = cql_string_list_add;
+-- CQLABI
 cql_blob_list_get_at = cql_string_list_get_at;
+-- CQLABI
 cql_blob_list_set_at = cql_string_list_set_at;
 
+-- CQLABI
 cql_object_list_create = cql_string_list_create;
+-- CQLABI
 cql_object_list_count = cql_string_list_count;
+-- CQLABI
 cql_object_list_add = cql_string_list_add;
+-- CQLABI
 cql_object_list_get_at = cql_string_list_get_at;
+-- CQLABI
 cql_object_list_set_at = cql_string_list_set_at;
 
+-- Schema upgrader only; declared by cg_schema.c rather than predeclared.
+-- CQLABI
 function cql_exec_internal(db, str)
   return db:exec(str)
 end
 
+-- Schema upgrader only; declared by cg_schema.c rather than predeclared.
+-- CQLABI
 function _cql_contains_column_def(haystack, needle)
   if haystack == nil or needle == nil then return false end
   local i
@@ -1112,10 +1212,12 @@ function cql_last_insert_rowid(db)
   return db:last_insert_rowid()
 end
 
+-- CQLABI
 function cql_cursor_column_count(C, types, fields)
   return #fields
 end
 
+-- CQLABI
 function cql_cursor_column_type(C, types, fields, i)
   local type = -1
   if i >= 0 and i < #fields then
@@ -1126,6 +1228,7 @@ function cql_cursor_column_type(C, types, fields, i)
   return type
 end
 
+-- CQLABI
 function cql_cursor_column_name(C, types, fields, i)
   if i < 0 or i >= #fields then
     return nil
@@ -1146,30 +1249,37 @@ function cql_cursor_get_any(C, types, fields, i, reqd)
   return null
 end;
 
+-- CQLABI
 function cql_cursor_get_bool(C, types, fields, i)
   return cql_cursor_get_any(C, types, fields, i, CQL_DATA_TYPE_BOOL)
 end
 
+-- CQLABI
 function cql_cursor_get_int(C, types, fields, i)
   return cql_cursor_get_any(C, types, fields, i, CQL_DATA_TYPE_INT32)
 end
 
+-- CQLABI
 function cql_cursor_get_long(C, types, fields, i)
   return cql_cursor_get_any(C, types, fields, i, CQL_DATA_TYPE_INT64)
 end
 
+-- CQLABI
 function cql_cursor_get_real(C, types, fields, i)
   return cql_cursor_get_any(C, types, fields, i, CQL_DATA_TYPE_DOUBLE)
 end
 
+-- CQLABI
 function cql_cursor_get_text(C, types, fields, i)
   return cql_cursor_get_any(C, types, fields, i, CQL_DATA_TYPE_STRING)
 end
 
+-- CQLABI
 function cql_cursor_get_blob(C, types, fields, i)
   return cql_cursor_get_any(C, types, fields, i, CQL_DATA_TYPE_BLOB)
 end
 
+-- CQLABI
 function cql_cursor_get_object(C, types, fields, i)
   return cql_cursor_get_any(C, types, fields, i, CQL_DATA_TYPE_OBJECT)
 end
@@ -1190,6 +1300,7 @@ function cql_format_one_field(code, value)
   return tostring(value)
 end
 
+-- CQLABI
 function cql_cursor_format(C, types, fields)
   local result = ""
   for i = 1, #fields
@@ -1203,6 +1314,7 @@ function cql_cursor_format(C, types, fields)
   return result
 end
 
+-- CQLABI
 function cql_cursor_format_column(C, types, fields, i)
   cql_contract(i >= 0);
   cql_contract(i < #fields);
@@ -1305,6 +1417,8 @@ function _cql_create_table_name_from_index_creation_statement(index_create)
 end
 
 
+-- Schema upgrader only; declared by cg_schema.c rather than predeclared.
+-- CQLABI
 function cql_rebuild_recreate_group(db, tables, indices, deletes)
   local tableList = _cql_create_upgrader_input_statement_list(tables, "CREATE ");
   local indexList = _cql_create_upgrader_input_statement_list(indices, "CREATE ");
@@ -1346,6 +1460,8 @@ end
 function cql_udf_stub(context)
 end
 
+-- Query plan generator only; declared by cg_query_plan.c rather than predeclared.
+-- CQLABI
 function cql_create_udf_stub(db, name)
   -- make a stub udf function that does nothing
   db:create_function(name, -1, cql_udf_stub)
@@ -1369,38 +1485,47 @@ function cql_emit_constants(type, name, values)
 end
 
 -- This will "throw" in the CQL sense if rc != 0
+-- CQLABI
 function cql_throw(db, rc)
    return rc;
 end;
 
+-- CQLABI
 function cql_box_int(x)
   return {[CQL_DATA_TYPE_INT32] = x}
 end
 
+-- CQLABI
 function cql_box_long(x)
   return {[CQL_DATA_TYPE_INT64] = x}
 end
 
+-- CQLABI
 function cql_box_real(x)
   return {[CQL_DATA_TYPE_DOUBLE] = x}
 end
 
+-- CQLABI
 function cql_box_bool(x)
   return {[CQL_DATA_TYPE_BOOL] = x}
 end
 
+-- CQLABI
 function cql_box_text(x)
   return {[CQL_DATA_TYPE_STRING] = x}
 end
 
+-- CQLABI
 function cql_box_blob(x)
   return {[CQL_DATA_TYPE_BLOB] = x}
 end
 
+-- CQLABI
 function cql_box_object(x)
   return {[CQL_DATA_TYPE_OBJECT] = x}
 end
 
+-- CQLABI
 function cql_box_get_type(x)
   if x == nil then
     return CQL_DATA_TYPE_NULL
@@ -1412,6 +1537,7 @@ function cql_box_get_type(x)
   return CQL_DATA_TYPE_NULL
 end
 
+-- CQLABI
 function cql_unbox_int(x)
   if x == nil then
     return nil
@@ -1419,6 +1545,7 @@ function cql_unbox_int(x)
   return x[CQL_DATA_TYPE_INT32]
 end
 
+-- CQLABI
 function cql_unbox_long(x)
   if x == nil then
     return nil
@@ -1426,6 +1553,7 @@ function cql_unbox_long(x)
   return x[CQL_DATA_TYPE_INT64]
 end
 
+-- CQLABI
 function cql_unbox_real(x)
   if x == nil then
     return nil
@@ -1433,6 +1561,7 @@ function cql_unbox_real(x)
   return x[CQL_DATA_TYPE_DOUBLE]
 end
 
+-- CQLABI
 function cql_unbox_bool(x)
   if x == nil then
     return nil
@@ -1440,6 +1569,7 @@ function cql_unbox_bool(x)
   return x[CQL_DATA_TYPE_BOOL]
 end
 
+-- CQLABI
 function cql_unbox_text(x)
   if x == nil then
     return nil
@@ -1447,6 +1577,7 @@ function cql_unbox_text(x)
   return x[CQL_DATA_TYPE_STRING]
 end
 
+-- CQLABI
 function cql_unbox_blob(x)
   if x == nil then
     return nil
@@ -1454,6 +1585,7 @@ function cql_unbox_blob(x)
   return x[CQL_DATA_TYPE_BLOB]
 end
 
+-- CQLABI
 function cql_unbox_object(x)
   if x == nil then
     return nil
@@ -1513,6 +1645,7 @@ function cql_int_encode_64(x)
   return cql_varint_encode(cql_zigzag_encode_64(x))
 end
 
+-- CQLABI
 function cql_cursor_to_blob(db, C, C_types, C_fields)
   assert(#C_types <= 0xffff)
   local bool_count = 0
@@ -1735,6 +1868,7 @@ function cql_unpack_c(str, pos, size)
   end
 end
 
+-- CQLABI
 function cql_cursor_from_blob(db, C, C_types, C_fields, buffer)
   if C == nil then
     return -100
@@ -1957,6 +2091,7 @@ end
 
 -- create a single blob for the whole stream of appended blobs
 -- with offsets for easy array style access.
+-- CQLABI
 function cql_make_blob_stream(blob_list)
   local count = #blob_list
 
@@ -1987,6 +2122,7 @@ function cql_make_blob_stream(blob_list)
 end
 
 -- the count of blobs is encoded at the head of the blob stream.
+-- CQLABI
 function cql_blob_stream_count(b)
   if #b < 4 then
     return 0
@@ -1995,6 +2131,7 @@ function cql_blob_stream_count(b)
 end
 
 -- fetch the cursor from the indicated blob stream
+-- CQLABI
 function cql_cursor_from_blob_stream(db, C, C_types, C_fields, b, index)
   C._has_row_ = false
 
@@ -2036,6 +2173,7 @@ function cql_cursor_from_blob_stream(db, C, C_types, C_fields, b, index)
   return cql_cursor_from_blob(db, C, C_types, C_fields, blob)
 end
 
+-- CQLABI
 function cql_blob_from_int(prefix, seed)
   if prefix == nil then
     prefix = ''
@@ -2043,34 +2181,42 @@ function cql_blob_from_int(prefix, seed)
   return prefix..seed
 end
 
+-- CQLABI
 function cql_format_bool(value)
   return cql_format_one_field(CQL_ENCODED_TYPE_BOOL, value)
 end
 
+-- CQLABI
 function cql_format_int(value)
   return cql_format_one_field(CQL_ENCODED_TYPE_INT32, value)
 end
 
+-- CQLABI
 function cql_format_long(value)
   return cql_format_one_field(CQL_ENCODED_TYPE_INT64, value)
 end
 
+-- CQLABI
 function cql_format_double(value)
   return cql_format_one_field(CQL_ENCODED_TYPE_DOUBLE, value)
 end
 
+-- CQLABI
 function cql_format_string(value)
   return cql_format_one_field(CQL_ENCODED_TYPE_STRING, value)
 end
 
+-- CQLABI
 function cql_format_blob(value)
   return cql_format_one_field(CQL_ENCODED_TYPE_BLOB, value)
 end
 
+-- CQLABI
 function cql_format_object(value)
   return cql_format_one_field(CQL_ENCODED_TYPE_OBJECT, value)
 end
 
+-- CQLABI
 function cql_format_null()
   return "null"
 end

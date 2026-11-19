@@ -90,6 +90,7 @@ cql_hash_code cql_blob_hash(cql_blob_ref _Nullable blob) {
 
 // Comparison for blobs, note that null blobs are equal, this is not
 // SQL semantics (!) it's normal C style semantics.
+// CQLABI
 cql_bool cql_blob_equal(cql_blob_ref _Nullable blob1, cql_blob_ref _Nullable blob2) {
   if (blob1 == blob2) {
     return cql_true;
@@ -130,6 +131,7 @@ cql_string_ref _Nonnull cql_string_ref_new(const char *_Nonnull cstr) {
 }
 
 // Comparison is via strcmp
+// CQLABI
 cql_int32 cql_string_compare(cql_string_ref _Nonnull s1, cql_string_ref _Nonnull s2) {
   cql_invariant(s1 != NULL);
   cql_invariant(s2 != NULL);
@@ -153,6 +155,7 @@ cql_hash_code cql_string_hash(cql_string_ref _Nullable str) {
 
 // String equality, null strings compare equal to each other and not equal
 // to all else.  Otherwise use string comparison.
+// CQLABI
 cql_bool cql_string_equal(cql_string_ref _Nullable s1, cql_string_ref _Nullable s2) {
   if (s1 == s2) {
     return cql_true;
@@ -165,6 +168,7 @@ cql_bool cql_string_equal(cql_string_ref _Nullable s1, cql_string_ref _Nullable 
 
 // Strings support the 'like' operation, we use the SQLite helper for this
 // we don't support SQLite verisons too old to offer this helper.
+// CQLABI
 int cql_string_like(cql_string_ref _Nonnull s1, cql_string_ref _Nonnull s2) {
   cql_invariant(s1 != NULL);
   cql_invariant(s2 != NULL);

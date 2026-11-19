@@ -954,7 +954,6 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
   }
 
   bprintf(&output_buf, "declare proc cql_create_udf_stub(name TEXT!) using transaction;\n\n");
-  bprintf(&output_buf, "declare func cql_create_json_escaped_str(value_ TEXT!) create TEXT!;\n\n");
 
   bprintf(&output_buf,
     "proc trivial_object()\n"

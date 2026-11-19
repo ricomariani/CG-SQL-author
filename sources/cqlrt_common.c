@@ -187,6 +187,8 @@ cql_code cql_exec_var(
 // cases where there are highly compressible patterns (like DROP TRIGGER %s for
 // 1000s of triggers). All we do is convert the incoming string reference into a
 // C string and then exec it.
+// Schema upgrader only; declared by cg_schema.c rather than predeclared.
+// CQLABI
 CQL_WARN_UNUSED cql_code cql_exec_internal(
   sqlite3 *_Nonnull db,
   cql_string_ref _Nonnull str_ref)
@@ -1710,7 +1712,7 @@ char *_Nonnull cql_address_of_col(
 // row and column. The same helper is used for reading the value from a nullable
 // or not nullable value, so the address helper has to report which kind of
 // datum it is.  All the error checking is in cql_address_of_col.
-// CQLABI
+// Direct compiler helper; not directly callable from CQL.
 cql_int32 cql_result_set_get_int32_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -1729,7 +1731,7 @@ cql_int32 cql_result_set_get_int32_col(
 // row and column. The same helper is used for writing the value from a nullable
 // or not nullable value, so the address helper has to report which kind of
 // datum it is.  All the error checking is in cql_address_of_col.
-// CQLABI
+// Direct compiler helper; not directly callable from CQL.
 void cql_result_set_set_int32_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -1752,7 +1754,7 @@ void cql_result_set_set_int32_col(
 // row and column. The same helper is used for reading the value from a nullable
 // or not nullable value, so the address helper has to report which kind of
 // datum it is.  All the error checking is in cql_address_of_col.
-// CQLABI
+// Direct compiler helper; not directly callable from CQL.
 cql_int64 cql_result_set_get_int64_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -1771,7 +1773,7 @@ cql_int64 cql_result_set_get_int64_col(
 // row and column. The same helper is used for writing the value from a nullable
 // or not nullable value, so the address helper has to report which kind of
 // datum it is.  All the error checking is in cql_address_of_col.
-// CQLABI
+// Direct compiler helper; not directly callable from CQL.
 void cql_result_set_set_int64_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -1794,7 +1796,7 @@ void cql_result_set_set_int64_col(
 // row and column. The same helper is used for reading the value from a nullable
 // or not nullable value, so the address helper has to report which kind of
 // datum it is.  All the error checking is in cql_address_of_col.
-// CQLABI
+// Direct compiler helper; not directly callable from CQL.
 cql_double cql_result_set_get_double_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -1813,7 +1815,7 @@ cql_double cql_result_set_get_double_col(
 // row and column. The same helper is used for writing the value from a nullable
 // or not nullable value, so the address helper has to report which kind of
 // datum it is.  All the error checking is in cql_address_of_col.
-// CQLABI
+// Direct compiler helper; not directly callable from CQL.
 void cql_result_set_set_double_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -1836,7 +1838,7 @@ void cql_result_set_set_double_col(
 // row and column. The same helper is used for reading the value from a nullable
 // or not nullable value, so the address helper has to report which kind of
 // datum it is.  All the error checking is in cql_address_of_col.
-// CQLABI
+// Direct compiler helper; not directly callable from CQL.
 cql_bool cql_result_set_get_bool_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -1855,7 +1857,7 @@ cql_bool cql_result_set_get_bool_col(
 // row and column. The same helper is used for writing the value from a nullable
 // or not nullable value, so the address helper has to report which kind of
 // datum it is.  All the error checking is in cql_address_of_col.
-// CQLABI
+// Direct compiler helper; not directly callable from CQL.
 void cql_result_set_set_bool_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -1878,7 +1880,7 @@ void cql_result_set_set_bool_col(
 // row and column. The same helper is used for reading the value from a nullable
 // or not nullable value, so the address helper has to report which kind of
 // datum it is.  All the error checking is in cql_address_of_col.
-// CQLABI
+// Direct compiler helper; not directly callable from CQL.
 cql_string_ref _Nullable cql_result_set_get_string_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -1893,7 +1895,7 @@ cql_string_ref _Nullable cql_result_set_get_string_col(
 // row and column. The same helper is used for writing the value from a nullable
 // or not nullable value, so the address helper has to report which kind of
 // datum it is.  All the error checking is in cql_address_of_col.
-// CQLABI
+// Direct compiler helper; not directly callable from CQL.
 void cql_result_set_set_string_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -1909,7 +1911,7 @@ void cql_result_set_set_string_col(
 // row and column. The same helper is used for reading the value from a nullable
 // or not nullable value, so the address helper has to report which kind of
 // datum it is.  All the error checking is in cql_address_of_col.
-// CQLABI
+// Direct compiler helper; not directly callable from CQL.
 cql_object_ref _Nullable cql_result_set_get_object_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -1924,7 +1926,7 @@ cql_object_ref _Nullable cql_result_set_get_object_col(
 // row and column. The same helper is used for writing the value from a nullable
 // or not nullable value, so the address helper has to report which kind of
 // datum it is.  All the error checking is in cql_address_of_col.
-// CQLABI
+// Direct compiler helper; not directly callable from CQL.
 void cql_result_set_set_object_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -1940,7 +1942,7 @@ void cql_result_set_set_object_col(
 // row and column. The same helper is used for reading the value from a nullable
 // or not nullable value, so the address helper has to report which kind of
 // datum it is.  All the error checking is in cql_address_of_col.
-// CQLABI
+// Direct compiler helper; not directly callable from CQL.
 cql_blob_ref _Nullable cql_result_set_get_blob_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -1955,7 +1957,7 @@ cql_blob_ref _Nullable cql_result_set_get_blob_col(
 // row and column. The same helper is used for writing the value from a nullable
 // or not nullable value, so the address helper has to report which kind of
 // datum it is.  All the error checking is in cql_address_of_col.
-// CQLABI
+// Direct compiler helper; not directly callable from CQL.
 void cql_result_set_set_blob_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -1972,7 +1974,7 @@ void cql_result_set_set_blob_col(
 // null value for the pointer in question If the data type is not nullable, we
 // return false. If the data type is nullable then we read the is_null value out
 // of the row
-// CQLABI
+// Direct compiler helper; not directly callable from CQL.
 cql_bool cql_result_set_get_is_null_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -2038,6 +2040,7 @@ cql_bool cql_result_set_get_is_null_col(
 }
 
 // This is the helper method that sets a nullable column to null
+// Direct compiler helper; not directly callable from CQL.
 void cql_result_set_set_to_null_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -2533,7 +2536,11 @@ static void cql_facets_finalize(void *_Nonnull data) {
   cql_hashtab_delete(self);
 }
 
-// create the facets storage using the hashtable
+// Schema upgrader only. The facets global cannot be initialized until
+// setup runs and is cleared after upgrade, so CQL declarations accept nullable
+// facets. Each operation requires initialization and enforces it with a contract.
+// Create the facets storage using the hashtable.
+// CQLABI
 cql_object_ref _Nonnull cql_facets_create(void) {
 
   cql_hashtab * self = cql_hashtab_new(
@@ -2550,54 +2557,52 @@ cql_object_ref _Nonnull cql_facets_create(void) {
 }
 
 // add a facet value to the hash table
+// CQLABI
 cql_bool cql_facet_add(
   cql_object_ref _Nullable facets,
   cql_string_ref _Nonnull name,
   cql_int64 crc)
 {
-  cql_bool result = false;
-  if (facets) {
-    cql_hashtab *_Nonnull self = _cql_generic_object_get_data(facets);
-    result = cql_hashtab_add(self, (cql_int64)name, crc);
-  }
-  return result;
+  cql_contract(facets);
+  cql_hashtab *_Nonnull self = _cql_generic_object_get_data(facets);
+  return cql_hashtab_add(self, (cql_int64)name, crc);
 }
 
 // Search for the facet value in the hash table, if not found return -1
+// CQLABI
 cql_int64 cql_facet_find(
   cql_object_ref _Nullable facets,
   cql_string_ref _Nonnull name)
 {
+  cql_contract(facets);
   cql_int64 result = -1;
-  if (facets) {
-    cql_hashtab *_Nonnull self = _cql_generic_object_get_data(facets);
-    cql_hashtab_entry *payload = cql_hashtab_find(self, (cql_int64)name);
-    if (payload) {
-      result = payload->val;
-    }
+  cql_hashtab *_Nonnull self = _cql_generic_object_get_data(facets);
+  cql_hashtab_entry *payload = cql_hashtab_find(self, (cql_int64)name);
+  if (payload) {
+    result = payload->val;
   }
   return result;
 }
 
 // Search for the facet value in the hash table, replace it if it exists add it
 // if it doesn't
+// CQLABI
 cql_bool cql_facet_upsert(
   cql_object_ref _Nullable facets,
   cql_string_ref _Nonnull name,
   cql_int64 crc)
 {
+  cql_contract(facets);
   cql_bool result = false;
-  if (facets) {
-    cql_hashtab *_Nonnull self = _cql_generic_object_get_data(facets);
-    cql_hashtab_entry *payload = cql_hashtab_find(self, (cql_int64)name);
-    if (!payload) {
-      // this will return true because we just checked and it's not there
-      result = cql_hashtab_add(self, (cql_int64)name, crc);
-    }
-    else {
-      // did not add path
-      payload->val = crc;
-    }
+  cql_hashtab *_Nonnull self = _cql_generic_object_get_data(facets);
+  cql_hashtab_entry *payload = cql_hashtab_find(self, (cql_int64)name);
+  if (!payload) {
+    // this will return true because we just checked and it's not there
+    result = cql_hashtab_add(self, (cql_int64)name, crc);
+  }
+  else {
+    // did not add path
+    payload->val = crc;
   }
 
   return result;
@@ -2979,6 +2984,7 @@ cql_code cql_cursor_to_blob(
 
 // create a single blob for the whole stream of appended blobs
 // with offsets for easy array style access.
+// CQLABI
 cql_blob_ref _Nonnull cql_make_blob_stream(cql_object_ref _Nonnull blob_list)
 {
   cql_contract(blob_list);
@@ -3583,6 +3589,7 @@ static bool cql_key_cursor_eq(
 // the one and only owner of this particular data.  However, we change the
 // finalization functions at shutdown to allow the hashtable to help us clean up
 // its contents when they are condemned.
+// CQLABI
 cql_object_ref _Nonnull cql_partition_create(void) {
 
   cql_partition *_Nonnull self = calloc(1, sizeof(cql_partition));
@@ -3616,6 +3623,7 @@ cql_object_ref _Nonnull cql_partition_create(void) {
 // and equality helpers to do the hash table work.  We use the usual
 // retain/release helpers for cursors to ensure that the right number of
 // retain/release calls happen on each key/value.
+// CQLABI
 cql_bool cql_partition_cursor(
   cql_object_ref _Nonnull obj,
   cql_dynamic_cursor *_Nonnull key,
@@ -3691,6 +3699,7 @@ cql_bool cql_partition_cursor(
 // result set out of that bunch of rows. If not, we return an empty result set
 // (0 rows).  To save space we only create one empty result set for all cases in
 // any given partition because all empty results are the same.
+// CQLABI
 cql_object_ref _Nonnull cql_extract_partition(
   cql_object_ref _Nonnull obj,
   cql_dynamic_cursor *_Nonnull key)
@@ -3781,6 +3790,8 @@ cql_object_ref _Nonnull cql_extract_partition(
 // Check the table definition "haystack" searching for the column definition
 // string "needle" The needle must start after a space or an open paren (start
 // of lexical unit) to match a possible column defintion.
+// Schema upgrader only; declared by cg_schema.c rather than predeclared.
+// CQLABI
 cql_bool _cql_contains_column_def(
   cql_string_ref _Nullable haystack_,
   cql_string_ref _Nullable needle_)
@@ -4222,6 +4233,7 @@ cql_object_ref _Nonnull cql_object_list_create(void) {
   return cql_string_list_create();
 }
 
+// CQLABI
 cql_object_ref _Nonnull cql_object_list_add(
   cql_object_ref _Nonnull list,
   cql_object_ref _Nonnull value)
@@ -5435,6 +5447,8 @@ static char *_Nonnull _cql_create_table_name_from_index_creation_statement(
 //
 // We currently always do recreate here (no rebuild). We just drop our tables,
 // and recreate the tables and any indices that might have been dropped.
+// Schema upgrader only; declared by cg_schema.c rather than predeclared.
+// CQLABI
 cql_code cql_rebuild_recreate_group(
   sqlite3 *_Nonnull db,
   cql_string_ref _Nonnull tables,
@@ -5518,6 +5532,8 @@ static void _stub_udf_callback(
 
 // set up a do nothing UDF, this is used to stub out UDFs in the query plan
 // generated code the function is not normally called
+// Query plan generator only; declared by cg_query_plan.c rather than predeclared.
+// CQLABI
 cql_code cql_create_udf_stub(
   sqlite3 *_Nonnull db,
   cql_string_ref _Nonnull name)
@@ -7478,12 +7494,19 @@ cql_string_ref _Nonnull cql_format_##name(type val) { \
   return cql_cursor_format_column(&c, 0); \
 }
 
+// CQLABI
 CQL_FORMAT_VAL(bool, cql_nullable_bool, CQL_DATA_TYPE_BOOL)
+// CQLABI
 CQL_FORMAT_VAL(int, cql_nullable_int32, CQL_DATA_TYPE_INT32)
+// CQLABI
 CQL_FORMAT_VAL(long, cql_nullable_int64, CQL_DATA_TYPE_INT64)
+// CQLABI
 CQL_FORMAT_VAL(double, cql_nullable_double, CQL_DATA_TYPE_DOUBLE)
+// CQLABI
 CQL_FORMAT_VAL(string, cql_string_ref _Nullable, CQL_DATA_TYPE_STRING)
+// CQLABI
 CQL_FORMAT_VAL(blob, cql_blob_ref _Nullable, CQL_DATA_TYPE_BLOB)
+// CQLABI
 CQL_FORMAT_VAL(object, cql_object_ref _Nullable, CQL_DATA_TYPE_OBJECT)
 
 // CQLABI

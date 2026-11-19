@@ -4,7 +4,7 @@ set -o errexit -o nounset -o pipefail
 
 readonly SCRIPT_DIR_RELATIVE=$(dirname "$0")
 
-RAILROAD_PATH=${RAILROAD_PATH:-~/rr-2.6-java11}
+RAILROAD_PATH=${RAILROAD_PATH:-~/rr}
 
 guard_against_missing_rr() {
   if [ ! -f $RAILROAD_PATH/rr.war ]; then
@@ -17,14 +17,14 @@ INSTALLATION INSTRUCTIONS:
 (1) Setup Java (Macos)
 $ brew install java
 Don't forget to create a symlink for the system Java wrappers to find this JDK.
-Follow the instructions provided after the installation. It should looke like this:
+Follow the instructions provided after the installation. It should look like this:
 $ sudo ln -sfn /opt/homebrew/opt/openjdk/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk.jdk
 
 (2) Install railroad diagram generator
 
-wget https://bottlecaps.de/rr/download/rr-2.6-java11.zip
-unzip rr-2.6-java11.zip -d ./rr-2.6-java11
-mv ./rr-2.6-java11 ~/rr-2.6-java11
+wget https://bottlecaps.de/rr/download/rr-2.8-SNAPSHOT-java17.zip -O rr.zip
+unzip rr.zip -d ./rr
+mv ./rr ~/rr
 
 Note:
 The above is not the official site for this software - that would be https://www.bottlecaps.de/rr/ui.

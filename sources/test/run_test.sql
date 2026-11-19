@@ -4211,10 +4211,41 @@ BEGIN
   EXPECT_EQ!(@proc, "test_at_proc");
 END);
 
+@op text : call runtime_equal as cql_string_equal;
+
+TEST!(runtime_comparers,
+begin
+  -- Direct calls and operator mappings must work without user declarations.
+  EXPECT!('same':runtime_equal('same'));
+  EXPECT!(cql_string_equal(null, null));
+  EXPECT!(not cql_string_equal(null, 'text'));
+  EXPECT!(not cql_string_equal('text', null));
+  EXPECT!(not cql_string_equal('a', 'b'));
+  EXPECT!(cql_string_compare('a', 'b') < 0);
+  EXPECT!(cql_string_compare('a', 'a') == 0);
+  EXPECT!(cql_string_compare('b', 'a') > 0);
+  EXPECT!(cql_string_compare('a', 'aa') < 0);
+
+  -- LIKE reports zero for a match, unlike the language's boolean operator.
+  EXPECT_EQ!(cql_string_like('Abc', 'a%'), 0);
+  EXPECT!(cql_string_like('Abc', 'z%') != 0);
+
+  -- Separate blob objects must compare by contents, including embedded zeros.
+  let b := (select x'0001');
+  let same_b := (select x'0001');
+  let different_b := (select x'0002');
+  EXPECT!(cql_blob_equal(b, same_b));
+  EXPECT!(not cql_blob_equal(b, different_b));
+  EXPECT!(cql_blob_equal(null, null));
+  EXPECT!(not cql_blob_equal(null, b));
+  EXPECT!(not cql_blob_equal(b, null));
+end);
+
 -- facet helper functions, used by the schema upgrade system
 declare facet_data TYPE OBJECT<facet_data>;
 func cql_facets_create() create facet_data!;
 func cql_facet_add(facets facet_data, facet text!, crc LONG not null) BOOL not null;
+func cql_facet_upsert(facets facet_data, facet text!, crc LONG not null) BOOL not null;
 func cql_facet_find(facets facet_data, facet text!) LONG not null;
 
 TEST!(facet_helpers,
@@ -4248,6 +4279,13 @@ begin
   begin
     EXPECT_EQ!(-1, cql_facet_find(facets, printf('fake_facet %d', i)));
   end;
+
+  -- The result reports insertion, not whether the stored value changed.
+  EXPECT!(cql_facet_upsert(facets, 'upserted facet', 42));
+  EXPECT_EQ!(42, cql_facet_find(facets, 'upserted facet'));
+  EXPECT!(not cql_facet_upsert(facets, 'upserted facet', 99));
+  EXPECT_EQ!(99, cql_facet_find(facets, 'upserted facet'));
+  EXPECT!(not cql_facet_upsert(facets, 'upserted facet', 99));
 
   -- NOTE the test infra is counting refs so that if we fail
   -- to clean up the test fails; no expectation is required

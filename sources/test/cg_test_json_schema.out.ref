@@ -5843,6 +5843,161 @@
     The statement ending at line XXXX
 
     [[builtin]]
+    FUNC cql_blob_equal (a BLOB, b BLOB) BOOL!
+
+    {
+      "name" : "cql_blob_equal",
+      "args" : [
+        {
+          "name" : "a",
+          "type" : "blob",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "b",
+          "type" : "blob",
+          "isNotNull" : 0
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "bool",
+        "isNotNull" : 1
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    [[builtin]]
+    FUNC cql_string_equal (a TEXT, b TEXT) BOOL!
+
+    {
+      "name" : "cql_string_equal",
+      "args" : [
+        {
+          "name" : "a",
+          "type" : "text",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "b",
+          "type" : "text",
+          "isNotNull" : 0
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "bool",
+        "isNotNull" : 1
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    [[builtin]]
+    FUNC cql_string_compare (a TEXT!, b TEXT!) INT!
+
+    {
+      "name" : "cql_string_compare",
+      "args" : [
+        {
+          "name" : "a",
+          "type" : "text",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "b",
+          "type" : "text",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "integer",
+        "isNotNull" : 1
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    [[builtin]]
+    FUNC cql_string_like (value_ TEXT!, pattern_ TEXT!) INT!
+
+    {
+      "name" : "cql_string_like",
+      "args" : [
+        {
+          "name" : "value_",
+          "type" : "text",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "pattern_",
+          "type" : "text",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "integer",
+        "isNotNull" : 1
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    [[builtin]]
+    FUNC cql_create_json_escaped_str (value_ TEXT!) CREATE TEXT!
+
+    {
+      "name" : "cql_create_json_escaped_str",
+      "args" : [
+        {
+          "name" : "value_",
+          "type" : "text",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "text",
+        "isNotNull" : 1
+      },
+      "createsObject" : 1
+    },
+
+    The statement ending at line XXXX
+
+    [[builtin]]
     FUNC cql_partition_create () CREATE OBJECT<partitioning>!
 
     {

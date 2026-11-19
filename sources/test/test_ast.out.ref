@@ -10,6 +10,132 @@ The statement ending at line XXXX
   |     | {name cql}
   |     | {name builtin}
   | {declare_func_stmt}
+    | {name cql_blob_equal}
+    | {func_params_return}
+      | {params}
+      | | {param}
+      | | | {param_detail}
+      | |   | {name a}
+      | |   | {type_blob}
+      | | {params}
+      |   | {param}
+      |     | {param_detail}
+      |       | {name b}
+      |       | {type_blob}
+      | {notnull}
+        | {type_bool}
+
+The statement ending at line XXXX
+
+[[builtin]]
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}
+    | {name cql_string_equal}
+    | {func_params_return}
+      | {params}
+      | | {param}
+      | | | {param_detail}
+      | |   | {name a}
+      | |   | {type_text}
+      | | {params}
+      |   | {param}
+      |     | {param_detail}
+      |       | {name b}
+      |       | {type_text}
+      | {notnull}
+        | {type_bool}
+
+The statement ending at line XXXX
+
+[[builtin]]
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}
+    | {name cql_string_compare}
+    | {func_params_return}
+      | {params}
+      | | {param}
+      | | | {param_detail}
+      | |   | {name a}
+      | |   | {notnull}
+      | |     | {type_text}
+      | | {params}
+      |   | {param}
+      |     | {param_detail}
+      |       | {name b}
+      |       | {notnull}
+      |         | {type_text}
+      | {notnull}
+        | {type_int}
+
+The statement ending at line XXXX
+
+[[builtin]]
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}
+    | {name cql_string_like}
+    | {func_params_return}
+      | {params}
+      | | {param}
+      | | | {param_detail}
+      | |   | {name value_}
+      | |   | {notnull}
+      | |     | {type_text}
+      | | {params}
+      |   | {param}
+      |     | {param_detail}
+      |       | {name pattern_}
+      |       | {notnull}
+      |         | {type_text}
+      | {notnull}
+        | {type_int}
+
+The statement ending at line XXXX
+
+[[builtin]]
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}
+    | {name cql_create_json_escaped_str}
+    | {func_params_return}
+      | {params}
+      | | {param}
+      |   | {param_detail}
+      |     | {name value_}
+      |     | {notnull}
+      |       | {type_text}
+      | {create_data_type}
+        | {notnull}
+          | {type_text}
+
+The statement ending at line XXXX
+
+[[builtin]]
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}
     | {name cql_partition_create}
     | {func_params_return}
       | {create_data_type}

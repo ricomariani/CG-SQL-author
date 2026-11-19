@@ -13,6 +13,11 @@
 #pragma clang diagnostic ignored "-Wunused-but-set-variable"
 #pragma clang diagnostic ignored "-Wunused-function"
 #endif
+extern cql_bool cql_blob_equal(cql_blob_ref _Nullable a, cql_blob_ref _Nullable b);
+extern cql_bool cql_string_equal(cql_string_ref _Nullable a, cql_string_ref _Nullable b);
+extern cql_int32 cql_string_compare(cql_string_ref _Nonnull a, cql_string_ref _Nonnull b);
+extern cql_int32 cql_string_like(cql_string_ref _Nonnull value_, cql_string_ref _Nonnull pattern_);
+extern cql_string_ref _Nonnull cql_create_json_escaped_str(cql_string_ref _Nonnull value_);
 extern cql_object_ref _Nonnull cql_partition_create(void);
 extern cql_bool cql_partition_cursor(cql_object_ref _Nonnull p, cql_dynamic_cursor *_Nonnull key, cql_dynamic_cursor *_Nonnull value);
 extern cql_object_ref _Nonnull cql_extract_partition(cql_object_ref _Nonnull p, cql_dynamic_cursor *_Nonnull key);

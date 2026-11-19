@@ -3,6 +3,142 @@
 The statement ending at line XXXX
 
 [[builtin]]
+FUNC cql_blob_equal (a BLOB, b BLOB) BOOL!;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: bool notnull
+    | {name cql_blob_equal}: bool notnull
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: a: blob variable in
+      | | | {param_detail}: a: blob variable in
+      | |   | {name a}: a: blob variable in
+      | |   | {type_blob}: blob
+      | | {params}
+      |   | {param}: b: blob variable in
+      |     | {param_detail}: b: blob variable in
+      |       | {name b}: b: blob variable in
+      |       | {type_blob}: blob
+      | {notnull}: bool notnull
+        | {type_bool}: bool
+
+The statement ending at line XXXX
+
+[[builtin]]
+FUNC cql_string_equal (a TEXT, b TEXT) BOOL!;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: bool notnull
+    | {name cql_string_equal}: bool notnull
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: a: text variable in
+      | | | {param_detail}: a: text variable in
+      | |   | {name a}: a: text variable in
+      | |   | {type_text}: text
+      | | {params}
+      |   | {param}: b: text variable in
+      |     | {param_detail}: b: text variable in
+      |       | {name b}: b: text variable in
+      |       | {type_text}: text
+      | {notnull}: bool notnull
+        | {type_bool}: bool
+
+The statement ending at line XXXX
+
+[[builtin]]
+FUNC cql_string_compare (a TEXT!, b TEXT!) INT!;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: integer notnull
+    | {name cql_string_compare}: integer notnull
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: a: text notnull variable in
+      | | | {param_detail}: a: text notnull variable in
+      | |   | {name a}: a: text notnull variable in
+      | |   | {notnull}: text notnull
+      | |     | {type_text}: text
+      | | {params}
+      |   | {param}: b: text notnull variable in
+      |     | {param_detail}: b: text notnull variable in
+      |       | {name b}: b: text notnull variable in
+      |       | {notnull}: text notnull
+      |         | {type_text}: text
+      | {notnull}: integer notnull
+        | {type_int}: integer
+
+The statement ending at line XXXX
+
+[[builtin]]
+FUNC cql_string_like (value_ TEXT!, pattern_ TEXT!) INT!;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: integer notnull
+    | {name cql_string_like}: integer notnull
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: value_: text notnull variable in
+      | | | {param_detail}: value_: text notnull variable in
+      | |   | {name value_}: value_: text notnull variable in
+      | |   | {notnull}: text notnull
+      | |     | {type_text}: text
+      | | {params}
+      |   | {param}: pattern_: text notnull variable in
+      |     | {param_detail}: pattern_: text notnull variable in
+      |       | {name pattern_}: pattern_: text notnull variable in
+      |       | {notnull}: text notnull
+      |         | {type_text}: text
+      | {notnull}: integer notnull
+        | {type_int}: integer
+
+The statement ending at line XXXX
+
+[[builtin]]
+FUNC cql_create_json_escaped_str (value_ TEXT!) CREATE TEXT!;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: text notnull create_func
+    | {name cql_create_json_escaped_str}: text notnull create_func
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: value_: text notnull variable in
+      |   | {param_detail}: value_: text notnull variable in
+      |     | {name value_}: value_: text notnull variable in
+      |     | {notnull}: text notnull
+      |       | {type_text}: text
+      | {create_data_type}: text notnull create_func
+        | {notnull}: text notnull
+          | {type_text}: text
+
+The statement ending at line XXXX
+
+[[builtin]]
 FUNC cql_partition_create () CREATE OBJECT<partitioning>!;
 
   {stmt_and_attr}: ok

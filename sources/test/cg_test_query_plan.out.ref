@@ -3,8 +3,6 @@ declare proc printf no check;
 @keep_table_name_in_aliases;
 declare proc cql_create_udf_stub(name TEXT!) using transaction;
 
-declare func cql_create_json_escaped_str(value_ TEXT!) create TEXT!;
-
 proc trivial_object()
 begin
   select 1 x;

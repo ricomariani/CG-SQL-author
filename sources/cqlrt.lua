@@ -323,22 +323,12 @@ function cql_idiv(x,y)
     return nil
   end
 
-  local sign = 1
-  if x < 0 then
-    sign =  -1
-    x = -x
+  -- Correct floor division toward zero without negating INT64_MIN.
+  local quotient = x // y
+  if (x < 0) ~= (y < 0) and x % y ~= 0 then
+    quotient = quotient + 1
   end
-
-  if y < 0 then
-    sign = -sign
-    y = -y
-  end
-
-  if sign < 0 then
-    return -(x // y)
-  else
-    return (x // y)
-  end
+  return quotient
 end
 
 function cql_mod(x,y)
@@ -346,21 +336,12 @@ function cql_mod(x,y)
     return nil
   end
 
-  local sign = 1
-  if x < 0 then
-    sign = -1
-    x = -x
+  -- Match the dividend's sign without negating INT64_MIN.
+  local remainder = x % y
+  if remainder ~= 0 and (x < 0) ~= (y < 0) then
+    remainder = remainder - y
   end
-
-  if y < 0 then
-    y = -y
-  end
-
-  if sign < 0 then
-    return -(x % y)
-  else
-    return (x % y)
-  end
+  return remainder
 end
 
 function cql_lshift(x,y)
@@ -569,11 +550,18 @@ function cql_printf(...)
   do
     stmt:bind(i, args[i])
   end;
-  stmt:step()
+  local rc = stmt:step()
+  if rc ~= sqlite3.ROW then
+    local message = db:errmsg()
+    stmt:finalize()
+    db:close()
+    error(message)
+  end
   local result = stmt:get_value(0)
   stmt:finalize()
   db:close()
-  return result
+  -- Some SQLite versions return NULL for an empty formatted result.
+  return result or ""
 end
 
 function cql_finalize_stmt(stmt)
@@ -1871,21 +1859,21 @@ end
 -- CQLABI
 function cql_cursor_from_blob(db, C, C_types, C_fields, buffer)
   if C == nil then
-    return -100
+    return CQL_ERROR
   end
 
   C._has_row_ = false
 
   if buffer == nil then
-    return -101
+    return CQL_ERROR
   end
 
   if C_types == nil then
-    return -102
+    return CQL_ERROR
   end
 
   if C_fields == nil then
-    return -103
+    return CQL_ERROR
   end
 
   -- this will help us with missing fields, we have to assume that the buffer
@@ -1896,7 +1884,7 @@ function cql_cursor_from_blob(db, C, C_types, C_fields, buffer)
   local pos = 1
   local types, pos = cql_unpack_z(buffer, pos)
   if types == nil or #types > 0xffff then
-    return -104
+    return CQL_ERROR
   end
 
   local nullable_count = 0
@@ -1931,7 +1919,7 @@ function cql_cursor_from_blob(db, C, C_types, C_fields, buffer)
         -- if the type doesn't match exactly we're still ok if the actual type
         -- is not nullable and the required type is nullable.
         if code + 32 ~= type then
-          rc = sqlite3.TYPE_MISMATCH
+          rc = sqlite3.MISMATCH
           goto cql_error
         end
       end
@@ -1943,13 +1931,16 @@ function cql_cursor_from_blob(db, C, C_types, C_fields, buffer)
   for i = actual_count +1, needed_count do
     local type = string.byte(C_types, i)
     if type < string.byte("a") then
-      rc = sqlite3.TYPE_MISMATCH
+      rc = sqlite3.MISMATCH
       goto cql_error
     end
     i = i + 1
   end
 
   bytes = (nullable_count + bool_count + 7) // 8
+  if bytes > #buffer - pos + 1 then
+    return CQL_ERROR
+  end
 
   bits = {}
   for i = 1, bytes do
@@ -1968,19 +1959,19 @@ function cql_cursor_from_blob(db, C, C_types, C_fields, buffer)
     if code == CQL_ENCODED_TYPE_BOOL_NOTNULL then
       bit = cql_getbit(bits, nullable_count + bool_index)
       if bit == nil then
-        return -1
+        return CQL_ERROR
       end
       C[field] = bit
       bool_index = bool_index + 1
     elseif code == CQL_ENCODED_TYPE_BOOL then
       bit = cql_getbit(bits, nullable_index)
       if bit == nil then
-        return -2
+        return CQL_ERROR
       end
       if bit then
         bit = cql_getbit(bits, nullable_count + bool_index)
         if bit == nil then
-          return -3
+          return CQL_ERROR
         end
         C[field] = bit
       end
@@ -1989,93 +1980,93 @@ function cql_cursor_from_blob(db, C, C_types, C_fields, buffer)
     elseif code == CQL_ENCODED_TYPE_INT_NOTNULL then
       C[field], pos = cql_varint_decode_32(buffer, pos)
       if pos == nil then
-        return -4
+        return CQL_ERROR
       end
     elseif code == CQL_ENCODED_TYPE_INT then
       bit = cql_getbit(bits, nullable_index)
       if bit == nil then
-        return -5
+        return CQL_ERROR
       end
       if bit then
         C[field], pos = cql_varint_decode_32(buffer, pos)
         if pos == nil then
-          return -6
+          return CQL_ERROR
         end
       end
       nullable_index = nullable_index + 1
     elseif code == CQL_ENCODED_TYPE_LONG_NOTNULL then
       C[field], pos = cql_varint_decode_64(buffer, pos)
       if pos == nil then
-        return -7
+        return CQL_ERROR
       end
     elseif code == CQL_ENCODED_TYPE_LONG then
       bit = cql_getbit(bits, nullable_index)
       if bit == nil then
-        return -8
+        return CQL_ERROR
       end
       if bit then
         C[field], pos = cql_varint_decode_64(buffer, pos)
         if pos == nil then
-          return -9
+          return CQL_ERROR
         end
       end
       nullable_index = nullable_index + 1
     elseif code == CQL_ENCODED_TYPE_DOUBLE_NOTNULL then
       C[field], pos = cql_unpack_d(buffer, pos)
       if pos == nil then
-        return -10
+        return CQL_ERROR
       end
     elseif code == CQL_ENCODED_TYPE_DOUBLE then
       bit = cql_getbit(bits, nullable_index)
       if bit == nil then
-        return -11
+        return CQL_ERROR
       end
       if bit then
         C[field], pos = cql_unpack_d(buffer, pos)
         if pos == nil then
-          return -12
+          return CQL_ERROR
         end
       end
       nullable_index = nullable_index + 1
     elseif code == CQL_ENCODED_TYPE_STRING_NOTNULL then
       C[field], pos = cql_unpack_z(buffer, pos)
       if pos == nil then
-        return -13
+        return CQL_ERROR
       end
     elseif code == CQL_ENCODED_TYPE_STRING then
       bit = cql_getbit(bits, nullable_index)
       if bit == nil then
-        return -14
+        return CQL_ERROR
       end
       if bit then
         C[field], pos = cql_unpack_z(buffer, pos)
         if pos == nil then
-          return -15
+          return CQL_ERROR
         end
       end
       nullable_index = nullable_index + 1
     elseif code == CQL_ENCODED_TYPE_BLOB_NOTNULL then
       chunk_size, pos = cql_varint_decode_32(buffer, pos)
       if pos == nil then
-        return -16
+        return CQL_ERROR
       end
       C[field], pos = cql_unpack_c(buffer, pos, chunk_size)
       if pos == nil then
-        return -17
+        return CQL_ERROR
       end
     elseif code == CQL_ENCODED_TYPE_BLOB then
       bit = cql_getbit(bits, nullable_index)
       if bit == nil then
-        return -18
+        return CQL_ERROR
       end
       if bit then
         chunk_size, pos = cql_varint_decode_32(buffer, pos)
         if pos == nil then
-          return -19
+          return CQL_ERROR
         end
         C[field], pos = cql_unpack_c(buffer, pos, chunk_size)
         if pos == nil then
-          return -20
+          return CQL_ERROR
         end
       end
       nullable_index = nullable_index + 1
@@ -2133,44 +2124,55 @@ end
 -- fetch the cursor from the indicated blob stream
 -- CQLABI
 function cql_cursor_from_blob_stream(db, C, C_types, C_fields, b, index)
-  C._has_row_ = false
+  cql_empty_cursor(C, C_types, C_fields)
 
   local len = #b
   if len < 4 then
-    return -1
+    return sqlite3.ERROR
   end
 
   -- the first 4 bytes are the count of blobs
-  local count = string.unpack("<i4", b)
+  local count = string.unpack("<I4", b)
 
-  if (index < 0 or index >= count or (index + 1) * 4 >= len) then
-    return -2
+  -- Validate the complete table before unpacking any offset.
+  if count > len // 4 - 1 then
+    return sqlite3.ERROR
+  end
+
+  if index < 0 or index >= count then
+    return sqlite3.ERROR
   end
 
   -- note that we're assuming little endian here, this could be generalized
-  local _end = string.unpack("<i4", b, 1 + (index + 1) * 4)
+  local _end = string.unpack("<I4", b, 1 + (index + 1) * 4)
 
   if _end > len then
-    return -3
+    return sqlite3.ERROR
   end
 
   -- the first blob starts after the offsets and count
-  local _start = (count + 1) * 4;
+  local table_end = (count + 1) * 4
+  local _start = table_end
 
   if index > 0 then
     -- the first blob starts at after the offsets, that offset is  not recorded
-    _start = string.unpack("<i4", b, 1 + index * 4)
+    _start = string.unpack("<I4", b, 1 + index * 4)
   end
 
   -- bogus offset order
-  if _start > _end then
-    return -4
+  if _start < table_end or _start > _end then
+    return sqlite3.ERROR
   end
 
   -- this can still fail during decode but that's par of the course
   -- we have to assume the blobs are hostile
-  local blob = string.sub(b, _start + 1, _end + 1)
-  return cql_cursor_from_blob(db, C, C_types, C_fields, blob)
+  local blob = string.sub(b, _start + 1, _end)
+  local rc = cql_cursor_from_blob(db, C, C_types, C_fields, blob)
+  if rc ~= CQL_OK then
+    cql_empty_cursor(C, C_types, C_fields)
+    return CQL_ERROR
+  end
+  return CQL_OK
 end
 
 -- CQLABI

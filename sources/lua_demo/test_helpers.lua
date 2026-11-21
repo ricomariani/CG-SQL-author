@@ -15,6 +15,40 @@ function cql_normalize_bool_to_int(val)
   return 0
 end
 
+-- Legacy Lua-only backing-store helpers. These preserve access to blobs written
+-- by the original Lua demo; the default SQL b* functions now use the compatible
+-- cql_b* callbacks in cqlrt.lua. _cql_init_extensions registers these originals
+-- under legacy_b* SQL names, selectable through backing-table attributes.
+--
+-- Both formats start with the same 16-byte, big-endian header:
+--   0..7   record type (eight-byte integer bit pattern)
+--   8..11  magic 0x524d3030 ("RM00")
+--   12..15 number of stored fields (four-byte unsigned integer)
+-- Sharing this header does NOT imply compatible contents: there is no version
+-- discriminator, so callers must select the right helpers for their stored data.
+-- Changing registrations does not convert existing blobs.
+--
+-- The legacy body is a sequential stream, not parallel metadata/storage arrays:
+--   key:   [one-byte type, encoded value] repeated in zero-based column order
+--   value: [one-byte type, eight-byte field ID, encoded value] per stored field
+-- The type codes have the same meanings as CQL_BLOB_TYPE_* in cqlrt.lua.
+-- Integer/bool values occupy eight bytes; doubles also occupy eight bytes.
+-- ALL multi-byte quantities, including doubles, are big endian here. The
+-- compatible format instead preserves the C runtime's native-endian doubles.
+--
+-- Legacy STRING and BLOB values both use Lua's >s4: a four-byte big-endian byte
+-- length immediately followed by exactly those bytes, with no trailing NUL.
+-- Embedded NULs count toward the length. There are no absolute offsets or fixed
+-- slots for variable fields. By contrast, the compatible format stores an
+-- eight-byte offset/length descriptor and separate payload, adding a final NUL
+-- for STRING only. Both formats omit SQL NULL fields from value blobs; keys
+-- cannot contain NULL.
+--
+-- Keep these implementations separate rather than "fixing" their encoding or
+-- behavior in place. Legacy rejection paths generally return SQL NULL, and
+-- truncated bodies can raise string.unpack errors; the compatible callbacks
+-- validate bounds and report SQL errors. Legacy getters also use generic
+-- result(), which returns Lua strings as SQL TEXT even for BLOB-typed fields.
 cql_required_val_type = {}
 
 CQL_BLOB_MAGIC = 0x524d3030
@@ -22,6 +56,8 @@ CQL_BLOB_MAGIC = 0x524d3030
 function cql_serialize_key_blob(t)
   result = string.pack(">I8I4I4", t.rtype, t.magic, t.cols)
 
+  -- The working table pairs tN (type) with vN (value), where N is a zero-based
+  -- key position. Walking positions keeps keys stable despite Lua table order.
   i = 0
   cols = t.cols
   while i < cols
@@ -57,6 +93,8 @@ function cql_deserialize_key_blob(b)
     return t
   end
 
+  -- Each value's type/length determines where the next field begins. Unlike
+  -- the compatible layout, this stream must be walked to locate later fields.
   i = 0
   while i < cols
   do
@@ -80,6 +118,9 @@ end
 function cql_serialize_val_blob(t)
   result = string.pack(">I8I4I4", t.rtype, t.magic, t.cols)
 
+  -- Value entries use t<ID>/v<ID> rather than key positions. pairs() leaves
+  -- their physical order unspecified; lookups depend on IDs, not that order.
+  -- Do not use multi-field legacy serialization as a canonical byte oracle.
   for k,v in pairs(t) do
     if string.sub(k, 1, 1) == 't'  then
       id = tonumber(string.sub(k, 2))
@@ -115,6 +156,9 @@ function cql_deserialize_val_blob(b)
     return t
   end
 
+  -- Rebuild an ID-indexed working table from the sequential records. This is
+  -- not an on-disk ID array like the compatible format; each ID follows its
+  -- type byte and precedes its variable-width encoded value.
   i = 0
   while i < cols
   do
@@ -258,6 +302,8 @@ function bupdatekey(context, b, ...)
     t["v"..icol] = val
     i = i + 2
   end
+  -- Rebuild the whole sequential stream: changing a variable-length value
+  -- shifts every later field, even though its logical key position is stable.
   context:result_blob(cql_serialize_key_blob(t))
   goto done
 
@@ -314,6 +360,8 @@ function bcreateval(context, rtype, ...)
      val = cql_normalize_bool_to_int(val)
     end
 
+    -- NULL is represented by absence, not a type marker. The header counts
+    -- only emitted fields, so adding a nullable column needs no stored entry.
     if val ~= nil then
       t["t"..id] = ctype
       t["v"..id] = val
@@ -410,6 +458,8 @@ function bupdateval(context, b, ...)
   end
   t.cols = cols
 
+  -- Re-serialization may reorder all fields via pairs(), unlike the compatible
+  -- updater's explicit replacements-first, retained-fields-second ordering.
   context:result_blob(cql_serialize_val_blob(t))
   goto done
 
@@ -452,6 +502,8 @@ function _cql_init_extensions(db)
 
   db:create_function("rscount", 1, rscount)
   db:create_function("rscol", 3, rscol)
+  -- Default SQL names select the C-compatible codec. Keep legacy registration
+  -- explicit: identical magic/header bytes cannot safely distinguish formats.
   db:create_function("bupdateval", -1, cql_bupdateval)
   db:create_function("bupdatekey", -1, cql_bupdatekey)
   db:create_function("bcreateval", -1, cql_bcreateval)

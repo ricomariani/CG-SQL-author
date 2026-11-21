@@ -226,6 +226,17 @@ declare select function bcreatekey no check blob;
 declare select function bupdateval no check blob;
 declare select function bupdatekey no check blob;
 
+@ifdef __rt__lua
+declare select function legacy_bgetkey_type no check long;
+declare select function legacy_bgetval_type no check long;
+declare select function legacy_bgetkey no check long;
+declare select function legacy_bgetval no check long;
+declare select function legacy_bcreatekey no check blob;
+declare select function legacy_bcreateval no check blob;
+declare select function legacy_bupdatekey no check blob;
+declare select function legacy_bupdateval no check blob;
+@endif
+
 -- some test helpers we will need
 func create_truncated_blob(b blob!, truncated_size int!) create blob!;
 func blob_from_string(str text @sensitive) create blob!;
@@ -6898,6 +6909,231 @@ end);
 
 @op blob : call key as bgetkey;
 
+[[blob_storage]]
+create table backed_blob_double(v real!);
+
+TEST!(backed_blob_binary_compatibility,
+begin
+  -- Shared C/Lua fixture: 76 bytes, with big-endian metadata and integers.
+  -- Header 0..15: record type -1, magic "RM00", count 6.
+  -- Storage 16..63: bool 1, int -42, INT64_MIN, double 0.0, then descriptors
+  -- (offset 70, length 3) and (offset 74, length 2). Types 64..69: 00..05.
+  -- Payload 70..75: "a\0b\0" (three text bytes plus terminator), then 00 ff.
+  -- Zero's double representation is all zero bytes in either byte order.
+  let key_control := (select x'ffffffffffffffff524d3030000000060000000000000001ffffffffffffffd68000000000000000000000000000000000000046000000030000004a000000020001020304056100620000ff');
+  -- Keep the embedded-NUL text inside SQL: CQL's C string values are
+  -- NUL-terminated, whereas these SQLite callbacks preserve explicit lengths.
+  let key := (select bcreatekey(-1L,
+    2, CQL_BLOB_TYPE_BOOL, -42, CQL_BLOB_TYPE_INT32,
+    0x8000000000000000, CQL_BLOB_TYPE_INT64, 0.0, CQL_BLOB_TYPE_FLOAT,
+    cast(x'610062' as text), CQL_BLOB_TYPE_STRING, x'00ff', CQL_BLOB_TYPE_BLOB));
+  EXPECT_EQ!(hex(key), hex(key_control));
+  EXPECT_EQ!((select bgetkey_type(key_control)), -1L);
+  EXPECT_EQ!((select bgetkey(key_control, 0)), 1);
+  EXPECT_EQ!((select bgetkey(key_control, 1)), -42);
+  EXPECT_EQ!((select bgetkey(key_control, 2)), 0x8000000000000000);
+  EXPECT_EQ!((select bgetkey(key_control, 3) ~real~), 0.0);
+  EXPECT_EQ!((select hex(bgetkey(key_control, 4) ~text~)), '610062');
+  EXPECT!((select bgetkey(key_control, 5) ~blob~ == x'00ff'));
+  EXPECT_EQ!((select typeof(bgetkey(key_control, 5))), 'blob');
+
+  -- The corresponding 124-byte value adds IDs -7, 0, INT64_MIN, 3, 4, 5
+  -- at 16..63. Storage is at 64..111, types at 112..117, and payload
+  -- at 118..123. Its string/blob descriptors point to 118 and 122.
+  let val_control := (select x'ffffffffffffffff524d303000000006fffffffffffffff9000000000000000080000000000000000000000000000003000000000000000400000000000000050000000000000001ffffffffffffffd68000000000000000000000000000000000000076000000030000007a000000020001020304056100620000ff');
+  let val := (select bcreateval(-1L,
+    -7L, 2, CQL_BLOB_TYPE_BOOL, 0L, -42, CQL_BLOB_TYPE_INT32,
+    0x8000000000000000, 0x8000000000000000, CQL_BLOB_TYPE_INT64,
+    3L, 0.0, CQL_BLOB_TYPE_FLOAT, 4L, cast(x'610062' as text), CQL_BLOB_TYPE_STRING,
+    5L, x'00ff', CQL_BLOB_TYPE_BLOB, 6L, null, CQL_BLOB_TYPE_INT32));
+  EXPECT_EQ!(hex(val), hex(val_control));
+  EXPECT_EQ!((select bgetval_type(val_control)), -1L);
+  EXPECT_EQ!((select bgetval(val_control, -7L)), 1);
+  EXPECT_EQ!((select bgetval(val_control, 0L)), -42);
+  EXPECT_EQ!((select bgetval(val_control, 0x8000000000000000)), 0x8000000000000000);
+  EXPECT_EQ!((select bgetval(val_control, 3L) ~real~), 0.0);
+  EXPECT_EQ!((select hex(bgetval(val_control, 4L) ~text~)), '610062');
+  EXPECT!((select bgetval(val_control, 5L) ~blob~ == x'00ff'));
+  EXPECT_EQ!((select typeof(bgetval(val_control, 5L))), 'blob');
+  EXPECT_EQ!((select bgetval(val_control, 6L)), null);
+
+  -- C stores nonzero doubles in native order, just as cursor serialization
+  -- does. Compare the eight storage bytes to that already-shared encoding.
+  cursor D like backed_blob_double;
+  fetch D from values(1.5);
+  let double_blob := cql_cursor_to_blob(D);
+  key := (select bupdatekey(key_control, 3, 1.5));
+  val := (select bupdateval(val_control, 3L, 1.5, CQL_BLOB_TYPE_FLOAT));
+  EXPECT_EQ!((select substr(hex(key), 81, 16)), (select substr(hex(double_blob), -16)));
+  -- Updated value fields move to the front, ahead of the retained fields.
+  EXPECT_EQ!((select substr(hex(val), 129, 16)), (select substr(hex(double_blob), -16)));
+  EXPECT_EQ!((select bgetkey(key, 3) ~real~), 1.5);
+  EXPECT_EQ!((select bgetval(val, 3L) ~real~), 1.5);
+
+  -- Key updates must remain canonical even with variable fields supplied
+  -- out of column order. Value updates instead put updated/new fields first.
+  key := (select bupdatekey(key_control, 5, x'ff00ff', 4, ''));
+  EXPECT_EQ!(hex(key), hex((select bcreatekey(-1L,
+    1, CQL_BLOB_TYPE_BOOL, -42, CQL_BLOB_TYPE_INT32,
+    0x8000000000000000, CQL_BLOB_TYPE_INT64, 0.0, CQL_BLOB_TYPE_FLOAT,
+    '', CQL_BLOB_TYPE_STRING, x'ff00ff', CQL_BLOB_TYPE_BLOB))));
+  val := (select bupdateval(val_control,
+    4L, null, CQL_BLOB_TYPE_STRING, 6L, '', CQL_BLOB_TYPE_STRING,
+    5L, x'ff00ff', CQL_BLOB_TYPE_BLOB));
+  EXPECT_EQ!(hex(val), hex((select bcreateval(-1L,
+    6L, '', CQL_BLOB_TYPE_STRING, 5L, x'ff00ff', CQL_BLOB_TYPE_BLOB,
+    -7L, 1, CQL_BLOB_TYPE_BOOL, 0L, -42, CQL_BLOB_TYPE_INT32,
+    0x8000000000000000, 0x8000000000000000, CQL_BLOB_TYPE_INT64,
+    3L, 0.0, CQL_BLOB_TYPE_FLOAT))));
+end);
+
+@ifdef __rt__lua
+proc make_legacy_lua_backed_schema()
+begin
+  [[backing_table]]
+  [[get_type=legacy_bgetkey_type]]
+  [[get_key=legacy_bgetkey]]
+  [[get_val=legacy_bgetval]]
+  [[create_key=legacy_bcreatekey]]
+  [[create_val=legacy_bcreateval]]
+  [[update_key=legacy_bupdatekey]]
+  [[update_val=legacy_bupdateval]]
+  create table if not exists legacy_lua_backing(
+    k blob primary key,
+    v blob!
+  );
+end;
+
+[[backed_by=legacy_lua_backing]]
+create table legacy_lua_items(
+  id long! primary key,
+  name text,
+  code long,
+  flag bool,
+  rate real,
+  bl blob
+);
+
+[[backed_by=legacy_lua_backing]]
+create table legacy_lua_notes(
+  id int! primary key,
+  note text
+);
+
+TEST!(legacy_lua_backed_table_reads,
+begin
+  make_legacy_lua_backed_schema();
+  delete from legacy_lua_backing;
+
+  -- Seed the physical store rather than the logical tables to simulate
+  -- reopening existing legacy data. The blob builtins must honor its mappings.
+  insert into legacy_lua_backing values (
+    cql_blob_create(legacy_lua_items, 7L, legacy_lua_items.id),
+    cql_blob_create(legacy_lua_items,
+      'stored item', legacy_lua_items.name, 0x12345678912L, legacy_lua_items.code,
+      true, legacy_lua_items.flag, 1.5, legacy_lua_items.rate,
+      cast('stored blob' as blob), legacy_lua_items.bl));
+  insert into legacy_lua_backing values (
+    cql_blob_create(legacy_lua_notes, 7, legacy_lua_notes.id),
+    cql_blob_create(legacy_lua_notes, 'stored note', legacy_lua_notes.note));
+
+  -- Equal logical IDs in two backed tables must not leak across get_type's
+  -- record-type filter, despite sharing the same physical backing table.
+  EXPECT_EQ!((select count(*) from legacy_lua_items), 1);
+  EXPECT_EQ!((select count(*) from legacy_lua_notes), 1);
+  EXPECT_EQ!((select count(*) from legacy_lua_backing), 2);
+  cursor C for select * from legacy_lua_items;
+  fetch C;
+  EXPECT!(C);
+  EXPECT_EQ!(C.id, 7L);
+  EXPECT_EQ!(C.name, 'stored item');
+  EXPECT_EQ!(C.code, 0x12345678912L);
+  EXPECT_EQ!(C.flag, true);
+  EXPECT_EQ!(C.rate, 1.5);
+  EXPECT_EQ!(string_from_blob(C.bl), 'stored blob');
+  EXPECT_EQ!((select note from legacy_lua_notes where id = 7), 'stored note');
+
+  -- Both keys have the shared 16-byte header. Their final nine bytes must
+  -- be legacy type-before-value: 02 + int64(7), or 01 + int64(7), big endian.
+  -- Native C-layout keys put the type after the eight-byte value instead.
+  EXPECT_EQ!((select substr(hex(k), 33) from legacy_lua_backing
+    where k = cql_blob_create(legacy_lua_items, 7L, legacy_lua_items.id)),
+    '020000000000000007');
+  EXPECT_EQ!((select substr(hex(k), 33) from legacy_lua_backing
+    where k = cql_blob_create(legacy_lua_notes, 7, legacy_lua_notes.id)),
+    '010000000000000007');
+end);
+
+TEST!(legacy_lua_backed_table_writes,
+begin
+  make_legacy_lua_backed_schema();
+  delete from legacy_lua_backing;
+  insert into legacy_lua_items values
+    (7L, 'before', 0x12345678912L, true, 1.5, cast('old blob' as blob));
+  insert into legacy_lua_notes values (7, 'keep');
+
+  -- Exercise both configured update functions together: a key change must
+  -- move the row, while value changes must preserve legacy types and payloads.
+  update legacy_lua_items
+    set id = 8L, name = 'after', code = null, flag = false,
+        rate = 2.5, bl = cast('new blob' as blob)
+    where id = 7L;
+  EXPECT_EQ!((select count(*) from legacy_lua_items where id = 7L), 0);
+  EXPECT_EQ!((select count(*) from legacy_lua_items where id = 8L), 1);
+  cursor C for select * from legacy_lua_items;
+  fetch C;
+  EXPECT!(C);
+  EXPECT_EQ!(C.name, 'after');
+  EXPECT_EQ!(C.code, null);
+  EXPECT_EQ!(C.flag, false);
+  EXPECT_EQ!(C.rate, 2.5);
+  EXPECT_EQ!(string_from_blob(C.bl), 'new blob');
+  EXPECT_EQ!((select substr(hex(k), 33) from legacy_lua_backing
+    where k = cql_blob_create(legacy_lua_items, 8L, legacy_lua_items.id)),
+    '020000000000000008');
+
+  -- Restore an omitted field and remove variable-sized fields. A sparse
+  -- legacy value must survive both additions and deletions through UPDATE.
+  update legacy_lua_items set code = 0x12345678912L, name = null, bl = null;
+  EXPECT_EQ!((select code from legacy_lua_items), 0x12345678912L);
+  EXPECT_EQ!((select name from legacy_lua_items), null);
+  EXPECT_EQ!((select bl from legacy_lua_items), null);
+  delete from legacy_lua_items where id = 8L;
+  EXPECT_EQ!((select count(*) from legacy_lua_items), 0);
+  EXPECT_EQ!((select note from legacy_lua_notes where id = 7), 'keep');
+  EXPECT_EQ!((select count(*) from legacy_lua_backing), 1);
+  delete from legacy_lua_notes;
+  EXPECT_EQ!((select count(*) from legacy_lua_backing), 0);
+end);
+
+TEST!(legacy_lua_backed_blobs,
+begin
+  -- Legacy 25-byte key: shared 16-byte header (record type 9, "RM00",
+  -- count 1), type 03 at byte 16, big-endian double 1.5 at 17..24.
+  -- Unlike C, legacy Lua interleaves type/value and uses big-endian doubles.
+  let key_control := (select x'0000000000000009524d303000000001033ff8000000000000');
+  let key := (select legacy_bcreatekey(9L, 1.5, CQL_BLOB_TYPE_FLOAT));
+  EXPECT_EQ!(hex(key), hex(key_control));
+  EXPECT_EQ!((select legacy_bgetkey_type(key_control)), 9L);
+  EXPECT_EQ!((select legacy_bgetkey(key_control, 0) ~real~), 1.5);
+  key := (select legacy_bupdatekey(key_control, 0, 2.5));
+  EXPECT_EQ!(hex(key), '0000000000000009524D303000000001034004000000000000');
+  EXPECT_EQ!((select legacy_bgetkey(key, 0) ~real~), 2.5);
+
+  -- Legacy 32-byte value: record type 9, "RM00", count 1 at 0..15;
+  -- type 04 at 16, big-endian field ID -7 at 17..24, string length 3
+  -- at 25..28, then "abc" at 29..31 with no NUL terminator.
+  let val_control := (select x'0000000000000009524d30300000000104fffffffffffffff900000003616263');
+  let val := (select legacy_bcreateval(9L, -7L, 'abc', CQL_BLOB_TYPE_STRING));
+  EXPECT_EQ!(hex(val), hex(val_control));
+  EXPECT_EQ!((select legacy_bgetval_type(val_control)), 9L);
+  EXPECT_EQ!((select legacy_bgetval(val_control, -7L) ~text~), 'abc');
+  val := (select legacy_bupdateval(val_control, -7L, 'x', CQL_BLOB_TYPE_STRING));
+  EXPECT_EQ!(hex(val), '0000000000000009524D30300000000104FFFFFFFFFFFFFFF90000000178');
+  EXPECT_EQ!((select legacy_bgetval(val, -7L) ~text~), 'x');
+end);
+@endif
+
 TEST!(blob_key_funcs,
 begin
   let b := (select bcreatekey(112233, 1234, CQL_BLOB_TYPE_INT32, 5678, CQL_BLOB_TYPE_INT32));
@@ -7025,8 +7261,6 @@ begin
   -- lookup must reject it too, rather than bypass header validation.
   EXPECT_BLOB_FAILURE!(bgetkey_type(x'0000000000000000000000000000'));
 
-  -- These fixtures describe the native UDF layout, not the Lua test layout.
-  @ifndef __rt__lua
   -- Header-only 16-byte key: big-endian record type 0 at 0..7,
   -- magic 524d3030 ("RM00") at 8..11, count 1 at 12..15.
   -- Missing column storage at 16..23 and type at 24; minimum size is 25.
@@ -7053,11 +7287,8 @@ begin
   -- must validate the column types, not merely return record type 1.
   EXPECT_BLOB_FAILURE!(bgetkey_type(
     x'0000000000000001524d303000000002000000000000002a00000000000000000206'));
-  @endif
 end);
 
--- The Lua test UDFs use a different blob layout without offset descriptors.
-@ifndef __rt__lua
 TEST!(blob_updatekey_overlapping_fields,
 begin
   -- Hand-built 47-byte key blob; offsets below are decimal, ranges inclusive.
@@ -7095,7 +7326,6 @@ begin
   EXPECT!((select bgetkey(b, 2) ~blob~ == x'61626300'));
   EXPECT_EQ!(length(b), 51);
 end);
-@endif
 
 TEST!(blob_updatekey_func_errors,
 begin
@@ -7142,8 +7372,6 @@ begin
   -- deterministic rather than depending on argument order.
   EXPECT_BLOB_FAILURE!(bupdatekey(b, 0, 0, 0, 0));
 
-  -- These fixtures describe the native UDF layout, not the Lua test layout.
-  @ifndef __rt__lua
   -- Header-only 16-byte key: big-endian record type 0, "RM00" magic, count 1.
   -- Missing the eight storage bytes at 16..23 and type byte at 24;
   -- updating column 0 must reject the incomplete 25-byte minimum shape.
@@ -7164,7 +7392,6 @@ begin
   EXPECT_BLOB_FAILURE!(bupdatekey(
     x'0000000000000001524d303000000002000000000000002a00000000000000000206',
     0, 99));
-  @endif
 end);
 
 @op blob : call val as bgetval;
@@ -7302,8 +7529,6 @@ begin
   -- to represent NULL, so callers can distinguish it from corrupt input.
   EXPECT_EQ!((select b:val(1111)), null);
 
-  -- These fixtures describe the native UDF layout, not the Lua test layout.
-  @ifndef __rt__lua
   -- 50-byte value blob; all multi-byte values are big endian.
   -- Header 0..15: record type 1, magic "RM00", count 2.
   -- IDs 16..23 and 24..31: 1 and 2. Storage 32..39: integer 42;
@@ -7326,11 +7551,8 @@ begin
   -- prevent type-only lookup from returning its record type.
   EXPECT_BLOB_FAILURE!(bgetval_type(
     x'0000000000000001524d30300000000200000000000000010000000000000002000000000000000000000000000000000206'));
-  @endif
 end);
 
--- The Lua test UDFs use a different blob layout without offset descriptors.
-@ifndef __rt__lua
 TEST!(blob_updateval_overlapping_fields,
 begin
   -- Hand-built 71-byte value blob; offsets below are decimal, ranges inclusive.
@@ -7375,7 +7597,6 @@ begin
   EXPECT!((select bgetval(b, 3) ~blob~ == x'61626300'));
   EXPECT_EQ!(length(b), 75);
 end);
-@endif
 
 TEST!(blob_updateval_null_cases,
 begin
@@ -7492,13 +7713,10 @@ begin
   -- must reject it instead of treating the first eight zero bytes as a type.
   EXPECT_BLOB_FAILURE!(bgetval_type(x'0000000000000000000000000000'));
 
-  -- This fixture describes the native UDF layout, not the Lua test layout.
-  @ifndef __rt__lua
   -- Header-only 16-byte value blob: big-endian record type 0, "RM00", count 1.
   -- Missing ID 16..23, storage 24..31, and type byte 32 (minimum size 33).
   -- Reject the shape before searching for the absent field ID 99.
   EXPECT_BLOB_FAILURE!(bgetval(x'0000000000000000524d303000000001', 99));
-  @endif
 end);
 
 TEST!(blob_updateval_func_errors,
@@ -7551,8 +7769,6 @@ begin
   -- at 8..11. Reject before using the field ID or constructing output.
   EXPECT_BLOB_FAILURE!(bupdateval(x'0000000000000000000000000000', k1, 0, CQL_BLOB_TYPE_BOOL));
 
-  -- These fixtures describe the native UDF layout, not the Lua test layout.
-  @ifndef __rt__lua
   -- Header-only 16-byte value blob: big-endian record type 0, "RM00", count 1.
   -- Missing ID at 16..23, storage at 24..31, and type at 32.
   -- Updating field 99 must reject this, not add to an incomplete input shape.
@@ -7591,7 +7807,6 @@ begin
   EXPECT_BLOB_FAILURE!(bupdateval(
     x'0000000000000001524d30300000000200000000000000010000000000000002000000000000000000000000000000000206',
     1, 99, CQL_BLOB_TYPE_INT64));
-  @endif
 end);
 
 TEST!(backed_tables,

@@ -2175,6 +2175,253 @@ function cql_cursor_from_blob_stream(db, C, C_types, C_fields, b, index)
   return CQL_OK
 end
 
+local function cql_backed_blob_error(context)
+  context:result_error("invalid CQL blob or arguments")
+end
+
+local function cql_backed_blob_compatible(value, code)
+  if math.type(code) ~= "integer" or code < CQL_BLOB_TYPE_BOOL or code > CQL_BLOB_TYPE_BLOB then
+    return false
+  end
+  if code <= CQL_BLOB_TYPE_INT64 then
+    return math.type(value) == "integer"
+  elseif code == CQL_BLOB_TYPE_FLOAT then
+    return type(value) == "number"
+  end
+  return type(value) == "string"
+end
+
+local function cql_encode_backed_blob(rtype, fields, has_ids)
+  local ids, storage, types, payload = {}, {}, {}, {}
+  local offset = 16 + #fields * (has_ids and 17 or 9)
+
+  for _, field in ipairs(fields) do
+    local code, value = field.code, field.value
+    if has_ids then
+      ids[#ids + 1] = string.pack(">i8", field.id)
+    end
+    types[#types + 1] = string.char(code)
+    if code == CQL_BLOB_TYPE_STRING or code == CQL_BLOB_TYPE_BLOB then
+      storage[#storage + 1] = string.pack(">I4I4", offset, #value)
+      local bytes = value
+      if code == CQL_BLOB_TYPE_STRING then
+        bytes = bytes .. "\0"
+      end
+      payload[#payload + 1] = bytes
+      offset = offset + #bytes
+    elseif field.storage then
+      -- Retained fixed-width fields are copied verbatim, as in the C updater.
+      storage[#storage + 1] = field.storage
+    elseif code == CQL_BLOB_TYPE_FLOAT then
+      -- The established C format stores doubles in native byte order.
+      storage[#storage + 1] = string.pack("d", value)
+    else
+      if code == CQL_BLOB_TYPE_BOOL then
+        value = value ~= 0 and 1 or 0
+      end
+      storage[#storage + 1] = string.pack(">i8", value)
+    end
+  end
+
+  return string.pack(">i8I4I4", rtype, 0x524d3030, #fields) ..
+    table.concat(ids) .. table.concat(storage) .. table.concat(types) .. table.concat(payload)
+end
+
+local function cql_decode_backed_blob(b, has_ids)
+  if type(b) ~= "string" or #b < 16 then
+    return nil
+  end
+  local rtype, magic, count = string.unpack(">i8I4I4", b)
+  if magic ~= 0x524d3030 or count > (#b - 16) // (has_ids and 17 or 9) then
+    return nil
+  end
+
+  local storage_offset = 16 + (has_ids and count * 8 or 0)
+  local type_offset = storage_offset + count * 8
+  local variable_offset = type_offset + count
+  local fields = {}
+  for i = 0, count - 1 do
+    local code = string.byte(b, type_offset + i + 1)
+    local pos = storage_offset + i * 8 + 1
+    local field = {code = code}
+    if has_ids then
+      field.id = string.unpack(">i8", b, 17 + i * 8)
+    end
+
+    if code == CQL_BLOB_TYPE_STRING or code == CQL_BLOB_TYPE_BLOB then
+      local offset, length = string.unpack(">I4I4", b, pos)
+      local terminator = code == CQL_BLOB_TYPE_STRING and 1 or 0
+      if offset < variable_offset or offset + length + terminator > #b then
+        return nil
+      end
+      if terminator == 1 and string.byte(b, offset + length + 1) ~= 0 then
+        return nil
+      end
+      field.value = string.sub(b, offset + 1, offset + length)
+    elseif code <= CQL_BLOB_TYPE_FLOAT then
+      field.storage = string.sub(b, pos, pos + 7)
+      field.value = string.unpack(code == CQL_BLOB_TYPE_FLOAT and "d" or ">i8", b, pos)
+    else
+      return nil
+    end
+    fields[#fields + 1] = field
+  end
+  return rtype, fields
+end
+
+local function cql_backed_blob_result(context, field)
+  if not field then
+    context:result_null()
+  elseif field.code == CQL_BLOB_TYPE_BLOB then
+    context:result_blob(field.value)
+  elseif field.code == CQL_BLOB_TYPE_BOOL then
+    context:result(field.value ~= 0 and 1 or 0)
+  else
+    context:result(field.value)
+  end
+end
+
+-- These SQLite callbacks use the same backing-store layout as cqlrt_common.c.
+-- The original callbacks in lua_demo/test_helpers.lua remain available for
+-- applications explicitly configured to use their legacy Lua-only layout.
+function cql_bcreatekey(context, rtype, ...)
+  local args = table.pack(...)
+  if math.type(rtype) ~= "integer" or args.n == 0 or args.n % 2 ~= 0 then
+    return cql_backed_blob_error(context)
+  end
+  local fields = {}
+  for i = 1, args.n, 2 do
+    if not cql_backed_blob_compatible(args[i], args[i + 1]) then
+      return cql_backed_blob_error(context)
+    end
+    fields[#fields + 1] = {value = args[i], code = args[i + 1]}
+  end
+  context:result_blob(cql_encode_backed_blob(rtype, fields, false))
+end
+
+function cql_bgetkey(context, b, index)
+  local rtype, fields = cql_decode_backed_blob(b, false)
+  if not rtype or math.type(index) ~= "integer" or index < 0 or index >= #fields then
+    return cql_backed_blob_error(context)
+  end
+  cql_backed_blob_result(context, fields[index + 1])
+end
+
+function cql_bgetkey_type(context, b)
+  local rtype = cql_decode_backed_blob(b, false)
+  if not rtype then
+    return cql_backed_blob_error(context)
+  end
+  context:result(rtype)
+end
+
+function cql_bupdatekey(context, b, ...)
+  local rtype, fields = cql_decode_backed_blob(b, false)
+  local args = table.pack(...)
+  if not rtype or args.n == 0 or args.n % 2 ~= 0 then
+    return cql_backed_blob_error(context)
+  end
+  local updated = {}
+  for i = 1, args.n, 2 do
+    local index, value = args[i], args[i + 1]
+    if math.type(index) ~= "integer" or index < 0 or index >= #fields or updated[index] then
+      return cql_backed_blob_error(context)
+    end
+    local code = fields[index + 1].code
+    if not cql_backed_blob_compatible(value, code) then
+      return cql_backed_blob_error(context)
+    end
+    updated[index] = true
+    fields[index + 1] = {value = value, code = code}
+  end
+  -- Keys must retain column order, including their variable payloads.
+  context:result_blob(cql_encode_backed_blob(rtype, fields, false))
+end
+
+function cql_bcreateval(context, rtype, ...)
+  local args = table.pack(...)
+  if math.type(rtype) ~= "integer" or args.n % 3 ~= 0 then
+    return cql_backed_blob_error(context)
+  end
+  local fields = {}
+  for i = 1, args.n, 3 do
+    local id, value, code = args[i], args[i + 1], args[i + 2]
+    if math.type(id) ~= "integer" or math.type(code) ~= "integer" then
+      return cql_backed_blob_error(context)
+    end
+    if value ~= nil then
+      if not cql_backed_blob_compatible(value, code) then
+        return cql_backed_blob_error(context)
+      end
+      fields[#fields + 1] = {id = id, value = value, code = code}
+    end
+  end
+  context:result_blob(cql_encode_backed_blob(rtype, fields, true))
+end
+
+function cql_bgetval(context, b, id)
+  local rtype, fields = cql_decode_backed_blob(b, true)
+  if not rtype or math.type(id) ~= "integer" then
+    return cql_backed_blob_error(context)
+  end
+  for _, field in ipairs(fields) do
+    if field.id == id then
+      return cql_backed_blob_result(context, field)
+    end
+  end
+  context:result_null()
+end
+
+function cql_bgetval_type(context, b)
+  local rtype = cql_decode_backed_blob(b, true)
+  if not rtype then
+    return cql_backed_blob_error(context)
+  end
+  context:result(rtype)
+end
+
+function cql_bupdateval(context, b, ...)
+  local rtype, fields = cql_decode_backed_blob(b, true)
+  local args = table.pack(...)
+  if not rtype or args.n == 0 or args.n % 3 ~= 0 then
+    return cql_backed_blob_error(context)
+  end
+  local result, updated, changed, by_id = {}, {}, {}, {}
+  for _, field in ipairs(fields) do
+    if not by_id[field.id] then
+      by_id[field.id] = field
+    end
+  end
+  for i = 1, args.n, 3 do
+    local id, value, code = args[i], args[i + 1], args[i + 2]
+    if math.type(id) ~= "integer" or math.type(code) ~= "integer" or updated[id] then
+      return cql_backed_blob_error(context)
+    end
+    updated[id] = true
+    local old = by_id[id]
+    if old then
+      if old.code ~= code then
+        return cql_backed_blob_error(context)
+      end
+      changed[old] = true
+    end
+    if value ~= nil then
+      if not cql_backed_blob_compatible(value, code) then
+        return cql_backed_blob_error(context)
+      end
+      result[#result + 1] = {id = id, value = value, code = code}
+    end
+  end
+  -- C writes replacements/additions in argument order, then retained fields
+  -- in their original order. Unlike keys, values need not have canonical order.
+  for _, field in ipairs(fields) do
+    if not changed[field] then
+      result[#result + 1] = field
+    end
+  end
+  context:result_blob(cql_encode_backed_blob(rtype, result, true))
+end
+
 -- CQLABI
 function cql_blob_from_int(prefix, seed)
   if prefix == nil then

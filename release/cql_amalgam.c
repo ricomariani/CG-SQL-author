@@ -25083,7 +25083,6 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
   }
 
   bprintf(&output_buf, "declare proc cql_create_udf_stub(name TEXT!) using transaction;\n\n");
-  bprintf(&output_buf, "declare func cql_create_json_escaped_str(value_ TEXT!) create TEXT!;\n\n");
 
   bprintf(&output_buf,
     "proc trivial_object()\n"
@@ -85576,6 +85575,17 @@ static void parse_cmd(int argc, char **argv) {
 cql_noexport CSTR cql_builtin_text() {
   return
     "@@begin_include@@"
+    "[[builtin]]"
+    "func cql_blob_equal(a blob, b blob) bool!;"
+    "[[builtin]]"
+    "func cql_string_equal(a text, b text) bool!;"
+    "[[builtin]]"
+    "func cql_string_compare(a text!, b text!) int!;"
+    "[[builtin]]"
+    "func cql_string_like(value_ text!, pattern_ text!) int!;"
+    "[[builtin]]"
+    "func cql_create_json_escaped_str(value_ text!) create text!;"
+
     "[[builtin]]"
     "func cql_partition_create () CREATE OBJECT<partitioning>!;"
     "[[builtin]]"

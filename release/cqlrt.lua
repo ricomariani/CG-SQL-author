@@ -13,6 +13,9 @@ LICENSE file in the root directory of this source tree.
 package.loadlib("/usr/local/opt/sqlite/lib/libsqlite3.dylib","*")
 sqlite3 = require('lsqlite3')
 
+-- CQLABI marks entry points callable from CQL, as in cqlrt_common.h.
+-- Cursor parameters expand to a row, type string, and field-name table here.
+-- Transaction procedures take a database and return the result code first.
 
 -- we know about these codes, everything else is some error
 CQL_OK = sqlite3.OK
@@ -127,6 +130,7 @@ end
 
 -- cql_printf is the SQLite printf and it is far too expensive for general use
 -- use only when demanded by printf function calls
+-- CQLABI
 function printf(...)
   io.write(cql_printf(...))
 end
@@ -169,6 +173,31 @@ end
 function cql_blob_is_eq(x,y)
   -- identity comparison for now
   return x == y
+end
+
+-- CQLABI
+cql_blob_equal = cql_blob_is_eq
+
+-- Match strcmp's byte order and terminator semantics, independently of locale.
+-- CQLABI
+function cql_string_compare(s1, s2)
+  local i = 1
+  while true do
+    local b1 = string.byte(s1, i) or 0
+    local b2 = string.byte(s2, i) or 0
+    if b1 ~= b2 or b1 == 0 then
+      return b1 - b2
+    end
+    i = i + 1
+  end
+end
+
+-- CQLABI
+function cql_string_equal(s1, s2)
+  if s1 == nil or s2 == nil then
+    return s1 == s2
+  end
+  return cql_string_compare(s1, s2) == 0
 end
 
 function cql_ne(x,y)
@@ -294,22 +323,12 @@ function cql_idiv(x,y)
     return nil
   end
 
-  local sign = 1
-  if x < 0 then
-    sign =  -1
-    x = -x
+  -- Correct floor division toward zero without negating INT64_MIN.
+  local quotient = x // y
+  if (x < 0) ~= (y < 0) and x % y ~= 0 then
+    quotient = quotient + 1
   end
-
-  if y < 0 then
-    sign = -sign
-    y = -y
-  end
-
-  if sign < 0 then
-    return -(x // y)
-  else
-    return (x // y)
-  end
+  return quotient
 end
 
 function cql_mod(x,y)
@@ -317,21 +336,12 @@ function cql_mod(x,y)
     return nil
   end
 
-  local sign = 1
-  if x < 0 then
-    sign = -1
-    x = -x
+  -- Match the dividend's sign without negating INT64_MIN.
+  local remainder = x % y
+  if remainder ~= 0 and (x < 0) ~= (y < 0) then
+    remainder = remainder - y
   end
-
-  if y < 0 then
-    y = -y
-  end
-
-  if sign < 0 then
-    return -(x % y)
-  else
-    return (x % y)
-  end
+  return remainder
 end
 
 function cql_lshift(x,y)
@@ -401,6 +411,12 @@ function cql_like(x, y)
   db:close()
   return cql_to_bool(result)
 end;
+
+-- As in sqlite3_strlike, zero means a match.
+-- CQLABI
+function cql_string_like(value, pattern)
+  return cql_like(value, pattern) and 0 or 1
+end
 
 function cql_unary_sign(x)
   if x == nil then return nil end
@@ -486,6 +502,7 @@ local cql_json_escapes = {
   [9] = '\\t',
 }
 
+-- CQLABI
 function cql_create_json_escaped_str(value)
   local result = {}
   local i = 1
@@ -509,6 +526,7 @@ function cql_create_json_escaped_str(value)
   return table.concat(result)
 end
 
+-- CQLABI
 function cql_get_blob_size(blob)
   return #blob
 end
@@ -532,11 +550,18 @@ function cql_printf(...)
   do
     stmt:bind(i, args[i])
   end;
-  stmt:step()
+  local rc = stmt:step()
+  if rc ~= sqlite3.ROW then
+    local message = db:errmsg()
+    stmt:finalize()
+    db:close()
+    error(message)
+  end
   local result = stmt:get_value(0)
   stmt:finalize()
   db:close()
-  return result
+  -- Some SQLite versions return NULL for an empty formatted result.
+  return result or ""
 end
 
 function cql_finalize_stmt(stmt)
@@ -765,6 +790,7 @@ function cql_contract(b)
   end
 end
 
+-- CQLABI
 function cql_partition_create()
   return {};
 end;
@@ -843,6 +869,7 @@ function cql_hash_string(str)
   return hash
 end
 
+-- CQLABI
 function cql_cursor_hash(key, key_types, key_fields)
   if key == nil or not key._has_row_ then
      return 0
@@ -851,6 +878,7 @@ function cql_cursor_hash(key, key_types, key_fields)
   return cql_hash_string(cql_make_str_key(key, key_fields))
 end
 
+-- CQLABI
 function cql_cursors_equal(k1, k1_types, k1_fields, k2, k2_types, k2_fields)
   if k1_types ~= k2_types then return false end
   if k1 == nil and k2 == nil then return true end
@@ -867,6 +895,7 @@ function cql_cursors_equal(k1, k1_types, k1_fields, k2, k2_types, k2_fields)
   return true
 end
 
+-- CQLABI
 function cql_cursor_diff_index(k1, k1_types, k1_fields, k2, k2_types, k2_fields)
   -- one has a row and the other doesn't
   if k1._has_row_ ~= k2._has_row_ then
@@ -899,6 +928,7 @@ function cql_cursor_diff_index(k1, k1_types, k1_fields, k2, k2_types, k2_fields)
   return -1
 end
 
+-- CQLABI
 function cql_cursor_diff_col(k1, k1_types, k1_fields, k2, k2_types, k2_fields)
   if (not k1._has_row_) and not k2._has_row_ then
     return nil
@@ -925,6 +955,7 @@ function cql_cursor_diff_col(k1, k1_types, k1_fields, k2, k2_types, k2_fields)
   return nil
 end
 
+-- CQLABI
 function cql_cursor_diff_val(k1, k1_types, k1_fields, k2, k2_types, k2_fields)
   local i = cql_cursor_diff_index(k1, k1_types, k1_fields, k2, k2_types, k2_fields)
 
@@ -948,6 +979,7 @@ function cql_cursor_diff_val(k1, k1_types, k1_fields, k2, k2_types, k2_fields)
       " c2:"..cql_format_one_field(code, value2)
 end
 
+-- CQLABI
 function cql_partition_cursor(partition, key, key_types, key_fields, cursor, cursor_types, cursor_fields)
   if not cursor._has_row_ then return false end
   key = cql_make_str_key(key, key_fields)
@@ -960,6 +992,7 @@ function cql_partition_cursor(partition, key, key_types, key_fields, cursor, cur
   return true
 end;
 
+-- CQLABI
 function cql_extract_partition(partition, key, key_types, key_fields)
   key = cql_make_str_key(key, key_fields)
   if partition[key] ~= nil then
@@ -972,11 +1005,17 @@ function cql_extract_partition(partition, key, key_types, key_fields)
   end
 end
 
+-- Schema upgrader only. The global starts nil and is cleared after
+-- upgrade, so CQL parameters stay nullable. Operations require initialization;
+-- contracts distinguish misuse from an absent facet in an initialized table.
+-- CQLABI
 function cql_facets_create()
   return {}
 end
 
+-- CQLABI
 function cql_facet_find(facets, facet)
+   cql_contract(facets ~= nil)
    local result = facets[facet]
    if result ~= nil then
      return result
@@ -985,21 +1024,28 @@ function cql_facet_find(facets, facet)
    end
 end
 
+-- CQLABI
 function cql_facet_upsert(facets, facet, value)
+   cql_contract(facets ~= nil)
+   local added = facets[facet] == nil
    facets[facet] = value
-   return true
+   return added
 end
 
+-- CQLABI
 function cql_facet_add(facets, facet, value)
+   cql_contract(facets ~= nil)
    if facets[facet] ~= nil then return false end
    facets[facet] = value
    return true
 end
 
+-- CQLABI
 function cql_string_dictionary_create()
   return {}
 end
 
+-- CQLABI
 function cql_string_dictionary_add(dict, key, val)
   if dict[key] ~= nil then
     dict[key] = val
@@ -1009,48 +1055,66 @@ function cql_string_dictionary_add(dict, key, val)
   return true
 end
 
+-- CQLABI
 function cql_string_dictionary_find(dict, key)
   return dict[key]
 end
 
 -- in Lua, the string dictionary is the same, we can steal the implementation
+-- CQLABI
 cql_object_dictionary_create = cql_string_dictionary_create
+-- CQLABI
 cql_object_dictionary_add = cql_string_dictionary_add
+-- CQLABI
 cql_object_dictionary_find = cql_string_dictionary_find
 
 -- in Lua, the string dictionary is the same, we can steal the implementation
+-- CQLABI
 cql_long_dictionary_create = cql_string_dictionary_create
+-- CQLABI
 cql_long_dictionary_add = cql_string_dictionary_add
+-- CQLABI
 cql_long_dictionary_find = cql_string_dictionary_find
 
 -- in Lua, the string dictionary is the same, we can steal the implementation
+-- CQLABI
 cql_real_dictionary_create = cql_string_dictionary_create
+-- CQLABI
 cql_real_dictionary_add = cql_string_dictionary_add
+-- CQLABI
 cql_real_dictionary_find = cql_string_dictionary_find
 
 -- in Lua, the string dictionary is the same, we can steal the implementation
+-- CQLABI
 cql_blob_dictionary_create = cql_string_dictionary_create
+-- CQLABI
 cql_blob_dictionary_add = cql_string_dictionary_add
+-- CQLABI
 cql_blob_dictionary_find = cql_string_dictionary_find
 
+-- CQLABI
 function cql_string_list_create()
   return {}
 end
 
+-- CQLABI
 function cql_string_list_count(list)
   return #list
 end
 
+-- CQLABI
 function cql_string_list_add(list, str)
   table.insert(list, str)
   return list
 end
 
+-- CQLABI
 function cql_string_list_get_at(list, i)
   -- one based index
   return list[i+1]
 end
 
+-- CQLABI
 function cql_string_list_set_at(list, i, val)
   -- one based index
   list[i+1] = val
@@ -1058,34 +1122,58 @@ function cql_string_list_set_at(list, i, val)
 end
 
 -- the long/real/blob versions are the same in Lua
+-- CQLABI
 cql_long_list_create = cql_string_list_create;
+-- CQLABI
 cql_long_list_count = cql_string_list_count;
+-- CQLABI
 cql_long_list_add = cql_string_list_add;
+-- CQLABI
 cql_long_list_get_at = cql_string_list_get_at;
+-- CQLABI
 cql_long_list_set_at = cql_string_list_set_at;
 
+-- CQLABI
 cql_real_list_create = cql_string_list_create;
+-- CQLABI
 cql_real_list_count = cql_string_list_count;
+-- CQLABI
 cql_real_list_add = cql_string_list_add;
+-- CQLABI
 cql_real_list_get_at = cql_string_list_get_at;
+-- CQLABI
 cql_real_list_set_at = cql_string_list_set_at;
 
+-- CQLABI
 cql_blob_list_create = cql_string_list_create;
+-- CQLABI
 cql_blob_list_count = cql_string_list_count;
+-- CQLABI
 cql_blob_list_add = cql_string_list_add;
+-- CQLABI
 cql_blob_list_get_at = cql_string_list_get_at;
+-- CQLABI
 cql_blob_list_set_at = cql_string_list_set_at;
 
+-- CQLABI
 cql_object_list_create = cql_string_list_create;
+-- CQLABI
 cql_object_list_count = cql_string_list_count;
+-- CQLABI
 cql_object_list_add = cql_string_list_add;
+-- CQLABI
 cql_object_list_get_at = cql_string_list_get_at;
+-- CQLABI
 cql_object_list_set_at = cql_string_list_set_at;
 
+-- Schema upgrader only; declared by cg_schema.c rather than predeclared.
+-- CQLABI
 function cql_exec_internal(db, str)
   return db:exec(str)
 end
 
+-- Schema upgrader only; declared by cg_schema.c rather than predeclared.
+-- CQLABI
 function _cql_contains_column_def(haystack, needle)
   if haystack == nil or needle == nil then return false end
   local i
@@ -1112,10 +1200,12 @@ function cql_last_insert_rowid(db)
   return db:last_insert_rowid()
 end
 
+-- CQLABI
 function cql_cursor_column_count(C, types, fields)
   return #fields
 end
 
+-- CQLABI
 function cql_cursor_column_type(C, types, fields, i)
   local type = -1
   if i >= 0 and i < #fields then
@@ -1126,6 +1216,7 @@ function cql_cursor_column_type(C, types, fields, i)
   return type
 end
 
+-- CQLABI
 function cql_cursor_column_name(C, types, fields, i)
   if i < 0 or i >= #fields then
     return nil
@@ -1146,30 +1237,37 @@ function cql_cursor_get_any(C, types, fields, i, reqd)
   return null
 end;
 
+-- CQLABI
 function cql_cursor_get_bool(C, types, fields, i)
   return cql_cursor_get_any(C, types, fields, i, CQL_DATA_TYPE_BOOL)
 end
 
+-- CQLABI
 function cql_cursor_get_int(C, types, fields, i)
   return cql_cursor_get_any(C, types, fields, i, CQL_DATA_TYPE_INT32)
 end
 
+-- CQLABI
 function cql_cursor_get_long(C, types, fields, i)
   return cql_cursor_get_any(C, types, fields, i, CQL_DATA_TYPE_INT64)
 end
 
+-- CQLABI
 function cql_cursor_get_real(C, types, fields, i)
   return cql_cursor_get_any(C, types, fields, i, CQL_DATA_TYPE_DOUBLE)
 end
 
+-- CQLABI
 function cql_cursor_get_text(C, types, fields, i)
   return cql_cursor_get_any(C, types, fields, i, CQL_DATA_TYPE_STRING)
 end
 
+-- CQLABI
 function cql_cursor_get_blob(C, types, fields, i)
   return cql_cursor_get_any(C, types, fields, i, CQL_DATA_TYPE_BLOB)
 end
 
+-- CQLABI
 function cql_cursor_get_object(C, types, fields, i)
   return cql_cursor_get_any(C, types, fields, i, CQL_DATA_TYPE_OBJECT)
 end
@@ -1190,6 +1288,7 @@ function cql_format_one_field(code, value)
   return tostring(value)
 end
 
+-- CQLABI
 function cql_cursor_format(C, types, fields)
   local result = ""
   for i = 1, #fields
@@ -1203,6 +1302,7 @@ function cql_cursor_format(C, types, fields)
   return result
 end
 
+-- CQLABI
 function cql_cursor_format_column(C, types, fields, i)
   cql_contract(i >= 0);
   cql_contract(i < #fields);
@@ -1305,6 +1405,8 @@ function _cql_create_table_name_from_index_creation_statement(index_create)
 end
 
 
+-- Schema upgrader only; declared by cg_schema.c rather than predeclared.
+-- CQLABI
 function cql_rebuild_recreate_group(db, tables, indices, deletes)
   local tableList = _cql_create_upgrader_input_statement_list(tables, "CREATE ");
   local indexList = _cql_create_upgrader_input_statement_list(indices, "CREATE ");
@@ -1346,6 +1448,8 @@ end
 function cql_udf_stub(context)
 end
 
+-- Query plan generator only; declared by cg_query_plan.c rather than predeclared.
+-- CQLABI
 function cql_create_udf_stub(db, name)
   -- make a stub udf function that does nothing
   db:create_function(name, -1, cql_udf_stub)
@@ -1369,38 +1473,47 @@ function cql_emit_constants(type, name, values)
 end
 
 -- This will "throw" in the CQL sense if rc != 0
+-- CQLABI
 function cql_throw(db, rc)
    return rc;
 end;
 
+-- CQLABI
 function cql_box_int(x)
   return {[CQL_DATA_TYPE_INT32] = x}
 end
 
+-- CQLABI
 function cql_box_long(x)
   return {[CQL_DATA_TYPE_INT64] = x}
 end
 
+-- CQLABI
 function cql_box_real(x)
   return {[CQL_DATA_TYPE_DOUBLE] = x}
 end
 
+-- CQLABI
 function cql_box_bool(x)
   return {[CQL_DATA_TYPE_BOOL] = x}
 end
 
+-- CQLABI
 function cql_box_text(x)
   return {[CQL_DATA_TYPE_STRING] = x}
 end
 
+-- CQLABI
 function cql_box_blob(x)
   return {[CQL_DATA_TYPE_BLOB] = x}
 end
 
+-- CQLABI
 function cql_box_object(x)
   return {[CQL_DATA_TYPE_OBJECT] = x}
 end
 
+-- CQLABI
 function cql_box_get_type(x)
   if x == nil then
     return CQL_DATA_TYPE_NULL
@@ -1412,6 +1525,7 @@ function cql_box_get_type(x)
   return CQL_DATA_TYPE_NULL
 end
 
+-- CQLABI
 function cql_unbox_int(x)
   if x == nil then
     return nil
@@ -1419,6 +1533,7 @@ function cql_unbox_int(x)
   return x[CQL_DATA_TYPE_INT32]
 end
 
+-- CQLABI
 function cql_unbox_long(x)
   if x == nil then
     return nil
@@ -1426,6 +1541,7 @@ function cql_unbox_long(x)
   return x[CQL_DATA_TYPE_INT64]
 end
 
+-- CQLABI
 function cql_unbox_real(x)
   if x == nil then
     return nil
@@ -1433,6 +1549,7 @@ function cql_unbox_real(x)
   return x[CQL_DATA_TYPE_DOUBLE]
 end
 
+-- CQLABI
 function cql_unbox_bool(x)
   if x == nil then
     return nil
@@ -1440,6 +1557,7 @@ function cql_unbox_bool(x)
   return x[CQL_DATA_TYPE_BOOL]
 end
 
+-- CQLABI
 function cql_unbox_text(x)
   if x == nil then
     return nil
@@ -1447,6 +1565,7 @@ function cql_unbox_text(x)
   return x[CQL_DATA_TYPE_STRING]
 end
 
+-- CQLABI
 function cql_unbox_blob(x)
   if x == nil then
     return nil
@@ -1454,6 +1573,7 @@ function cql_unbox_blob(x)
   return x[CQL_DATA_TYPE_BLOB]
 end
 
+-- CQLABI
 function cql_unbox_object(x)
   if x == nil then
     return nil
@@ -1513,6 +1633,7 @@ function cql_int_encode_64(x)
   return cql_varint_encode(cql_zigzag_encode_64(x))
 end
 
+-- CQLABI
 function cql_cursor_to_blob(db, C, C_types, C_fields)
   assert(#C_types <= 0xffff)
   local bool_count = 0
@@ -1735,23 +1856,24 @@ function cql_unpack_c(str, pos, size)
   end
 end
 
+-- CQLABI
 function cql_cursor_from_blob(db, C, C_types, C_fields, buffer)
   if C == nil then
-    return -100
+    return CQL_ERROR
   end
 
   C._has_row_ = false
 
   if buffer == nil then
-    return -101
+    return CQL_ERROR
   end
 
   if C_types == nil then
-    return -102
+    return CQL_ERROR
   end
 
   if C_fields == nil then
-    return -103
+    return CQL_ERROR
   end
 
   -- this will help us with missing fields, we have to assume that the buffer
@@ -1762,7 +1884,7 @@ function cql_cursor_from_blob(db, C, C_types, C_fields, buffer)
   local pos = 1
   local types, pos = cql_unpack_z(buffer, pos)
   if types == nil or #types > 0xffff then
-    return -104
+    return CQL_ERROR
   end
 
   local nullable_count = 0
@@ -1797,7 +1919,7 @@ function cql_cursor_from_blob(db, C, C_types, C_fields, buffer)
         -- if the type doesn't match exactly we're still ok if the actual type
         -- is not nullable and the required type is nullable.
         if code + 32 ~= type then
-          rc = sqlite3.TYPE_MISMATCH
+          rc = sqlite3.MISMATCH
           goto cql_error
         end
       end
@@ -1809,13 +1931,16 @@ function cql_cursor_from_blob(db, C, C_types, C_fields, buffer)
   for i = actual_count +1, needed_count do
     local type = string.byte(C_types, i)
     if type < string.byte("a") then
-      rc = sqlite3.TYPE_MISMATCH
+      rc = sqlite3.MISMATCH
       goto cql_error
     end
     i = i + 1
   end
 
   bytes = (nullable_count + bool_count + 7) // 8
+  if bytes > #buffer - pos + 1 then
+    return CQL_ERROR
+  end
 
   bits = {}
   for i = 1, bytes do
@@ -1834,19 +1959,19 @@ function cql_cursor_from_blob(db, C, C_types, C_fields, buffer)
     if code == CQL_ENCODED_TYPE_BOOL_NOTNULL then
       bit = cql_getbit(bits, nullable_count + bool_index)
       if bit == nil then
-        return -1
+        return CQL_ERROR
       end
       C[field] = bit
       bool_index = bool_index + 1
     elseif code == CQL_ENCODED_TYPE_BOOL then
       bit = cql_getbit(bits, nullable_index)
       if bit == nil then
-        return -2
+        return CQL_ERROR
       end
       if bit then
         bit = cql_getbit(bits, nullable_count + bool_index)
         if bit == nil then
-          return -3
+          return CQL_ERROR
         end
         C[field] = bit
       end
@@ -1855,93 +1980,93 @@ function cql_cursor_from_blob(db, C, C_types, C_fields, buffer)
     elseif code == CQL_ENCODED_TYPE_INT_NOTNULL then
       C[field], pos = cql_varint_decode_32(buffer, pos)
       if pos == nil then
-        return -4
+        return CQL_ERROR
       end
     elseif code == CQL_ENCODED_TYPE_INT then
       bit = cql_getbit(bits, nullable_index)
       if bit == nil then
-        return -5
+        return CQL_ERROR
       end
       if bit then
         C[field], pos = cql_varint_decode_32(buffer, pos)
         if pos == nil then
-          return -6
+          return CQL_ERROR
         end
       end
       nullable_index = nullable_index + 1
     elseif code == CQL_ENCODED_TYPE_LONG_NOTNULL then
       C[field], pos = cql_varint_decode_64(buffer, pos)
       if pos == nil then
-        return -7
+        return CQL_ERROR
       end
     elseif code == CQL_ENCODED_TYPE_LONG then
       bit = cql_getbit(bits, nullable_index)
       if bit == nil then
-        return -8
+        return CQL_ERROR
       end
       if bit then
         C[field], pos = cql_varint_decode_64(buffer, pos)
         if pos == nil then
-          return -9
+          return CQL_ERROR
         end
       end
       nullable_index = nullable_index + 1
     elseif code == CQL_ENCODED_TYPE_DOUBLE_NOTNULL then
       C[field], pos = cql_unpack_d(buffer, pos)
       if pos == nil then
-        return -10
+        return CQL_ERROR
       end
     elseif code == CQL_ENCODED_TYPE_DOUBLE then
       bit = cql_getbit(bits, nullable_index)
       if bit == nil then
-        return -11
+        return CQL_ERROR
       end
       if bit then
         C[field], pos = cql_unpack_d(buffer, pos)
         if pos == nil then
-          return -12
+          return CQL_ERROR
         end
       end
       nullable_index = nullable_index + 1
     elseif code == CQL_ENCODED_TYPE_STRING_NOTNULL then
       C[field], pos = cql_unpack_z(buffer, pos)
       if pos == nil then
-        return -13
+        return CQL_ERROR
       end
     elseif code == CQL_ENCODED_TYPE_STRING then
       bit = cql_getbit(bits, nullable_index)
       if bit == nil then
-        return -14
+        return CQL_ERROR
       end
       if bit then
         C[field], pos = cql_unpack_z(buffer, pos)
         if pos == nil then
-          return -15
+          return CQL_ERROR
         end
       end
       nullable_index = nullable_index + 1
     elseif code == CQL_ENCODED_TYPE_BLOB_NOTNULL then
       chunk_size, pos = cql_varint_decode_32(buffer, pos)
       if pos == nil then
-        return -16
+        return CQL_ERROR
       end
       C[field], pos = cql_unpack_c(buffer, pos, chunk_size)
       if pos == nil then
-        return -17
+        return CQL_ERROR
       end
     elseif code == CQL_ENCODED_TYPE_BLOB then
       bit = cql_getbit(bits, nullable_index)
       if bit == nil then
-        return -18
+        return CQL_ERROR
       end
       if bit then
         chunk_size, pos = cql_varint_decode_32(buffer, pos)
         if pos == nil then
-          return -19
+          return CQL_ERROR
         end
         C[field], pos = cql_unpack_c(buffer, pos, chunk_size)
         if pos == nil then
-          return -20
+          return CQL_ERROR
         end
       end
       nullable_index = nullable_index + 1
@@ -1957,6 +2082,7 @@ end
 
 -- create a single blob for the whole stream of appended blobs
 -- with offsets for easy array style access.
+-- CQLABI
 function cql_make_blob_stream(blob_list)
   local count = #blob_list
 
@@ -1987,6 +2113,7 @@ function cql_make_blob_stream(blob_list)
 end
 
 -- the count of blobs is encoded at the head of the blob stream.
+-- CQLABI
 function cql_blob_stream_count(b)
   if #b < 4 then
     return 0
@@ -1995,47 +2122,404 @@ function cql_blob_stream_count(b)
 end
 
 -- fetch the cursor from the indicated blob stream
+-- CQLABI
 function cql_cursor_from_blob_stream(db, C, C_types, C_fields, b, index)
-  C._has_row_ = false
+  cql_empty_cursor(C, C_types, C_fields)
 
   local len = #b
   if len < 4 then
-    return -1
+    return sqlite3.ERROR
   end
 
   -- the first 4 bytes are the count of blobs
-  local count = string.unpack("<i4", b)
+  local count = string.unpack("<I4", b)
 
-  if (index < 0 or index >= count or (index + 1) * 4 >= len) then
-    return -2
+  -- Validate the complete table before unpacking any offset.
+  if count > len // 4 - 1 then
+    return sqlite3.ERROR
+  end
+
+  if index < 0 or index >= count then
+    return sqlite3.ERROR
   end
 
   -- note that we're assuming little endian here, this could be generalized
-  local _end = string.unpack("<i4", b, 1 + (index + 1) * 4)
+  local _end = string.unpack("<I4", b, 1 + (index + 1) * 4)
 
   if _end > len then
-    return -3
+    return sqlite3.ERROR
   end
 
   -- the first blob starts after the offsets and count
-  local _start = (count + 1) * 4;
+  local table_end = (count + 1) * 4
+  local _start = table_end
 
   if index > 0 then
     -- the first blob starts at after the offsets, that offset is  not recorded
-    _start = string.unpack("<i4", b, 1 + index * 4)
+    _start = string.unpack("<I4", b, 1 + index * 4)
   end
 
   -- bogus offset order
-  if _start > _end then
-    return -4
+  if _start < table_end or _start > _end then
+    return sqlite3.ERROR
   end
 
   -- this can still fail during decode but that's par of the course
   -- we have to assume the blobs are hostile
-  local blob = string.sub(b, _start + 1, _end + 1)
-  return cql_cursor_from_blob(db, C, C_types, C_fields, blob)
+  local blob = string.sub(b, _start + 1, _end)
+  local rc = cql_cursor_from_blob(db, C, C_types, C_fields, blob)
+  if rc ~= CQL_OK then
+    cql_empty_cursor(C, C_types, C_fields)
+    return CQL_ERROR
+  end
+  return CQL_OK
 end
 
+-- Backing-store blobs use the existing cqlrt_common.c format, not the cursor
+-- serialization format. Keys identify columns by position; values use stable
+-- 64-bit field IDs so adding/removing value columns does not renumber old data.
+--
+-- The typical workload is many tiny logical tables, each holding only a few
+-- values such as settings. Separate SQLite tables can cost more in metadata
+-- than the data they hold; sharing a backing table reduces that overhead.
+-- These stores are often in memory, too. Optimizations aimed at large,
+-- persistent datasets are therefore often not useful for this workload.
+-- The backing helpers are replaceable via backing-table attributes: workloads
+-- that need different tradeoffs can select their own encoding, including
+-- simpler, specialized formats for faster access. The format below is the
+-- default, not a requirement for custom helpers.
+--
+-- All offsets below are zero-based byte offsets from the start of the blob.
+-- The common 16-byte header is:
+--   0..7   record type (signed 64-bit bit pattern)
+--   8..11  magic 0x524d3030 ("RM00")
+--   12..15 number of stored fields N (unsigned 32-bit)
+--
+-- The remaining sections are parallel arrays, NOT interleaved field records:
+--                 key                         value
+--   field IDs     absent                      16 .. 16+8*N-1
+--   storage       16 .. 16+8*N-1              16+8*N .. 16+16*N-1
+--   type bytes    16+8*N .. 16+9*N-1          16+16*N .. 16+17*N-1
+--   payload       16+9*N onward               16+17*N onward
+--
+-- Each storage slot is eight bytes; its interpretation comes from its type:
+--   0 BOOL     signed int64, normalized to 0/1 when created or replaced
+--   1 INT32    signed int64, NOT a four-byte slot
+--   2 INT64    signed int64
+--   3 FLOAT    native-order IEEE double, matching the existing C runtime
+--   4 STRING   unsigned uint32 offset + uint32 byte length, then payload + NUL
+--   5 BLOB     unsigned uint32 offset + uint32 byte length, then payload
+-- Header words, IDs, integers, and descriptors are big endian. Doubles are the
+-- deliberate native-endian exception: changing them would break stored C data.
+-- Consequently C/Lua interchange of doubles assumes matching native byte order.
+--
+-- The original Lua encoding shares the header/magic but interleaves fields and
+-- uses different string/double encodings. Do not guess the format from the
+-- header: legacy data must select the original callbacks explicitly.
+
+-- A malformed blob/argument must fail the SQL statement, not look like the
+-- legitimate SQL NULL returned for an absent nullable value field.
+local function cql_backed_blob_error(context)
+  context:result_error("invalid CQL blob or arguments")
+end
+
+local function cql_backed_blob_compatible(value, code)
+  if math.type(code) ~= "integer" or code < CQL_BLOB_TYPE_BOOL or code > CQL_BLOB_TYPE_BLOB then
+    return false
+  end
+  if code <= CQL_BLOB_TYPE_INT64 then
+    -- SQLite supplies booleans as integers too. Reject reals instead of silently
+    -- truncating them, and reject nil here because keys cannot contain NULL.
+    return math.type(value) == "integer"
+  elseif code == CQL_BLOB_TYPE_FLOAT then
+    return type(value) == "number"
+  end
+  -- Lua represents both SQL TEXT and BLOB as byte strings; code distinguishes
+  -- them on disk and when returning a value to SQLite.
+  return type(value) == "string"
+end
+
+-- Callers provide a dense, ordered array of validated {code, value} fields,
+-- with an additional signed id for value blobs (has_ids=true). SQL NULL values
+-- are omitted entirely; there is no NULL type code or NULL storage slot.
+-- Decoded fixed-width fields also carry storage, their original eight bytes,
+-- so updates can retain representations without a decode/re-encode round trip.
+local function cql_encode_backed_blob(rtype, fields, has_ids)
+  local ids, storage, types, payload = {}, {}, {}, {}
+  -- All fixed-size arrays precede payload, so its first absolute offset is
+  -- known before walking fields: 8 storage + 1 type byte, plus 8 for a value ID.
+  local offset = 16 + #fields * (has_ids and 17 or 9)
+
+  for _, field in ipairs(fields) do
+    local code, value = field.code, field.value
+    if has_ids then
+      -- > means big endian; i8 preserves signed 64-bit IDs, including high-bit
+      -- hash values. I4 below denotes an unsigned four-byte descriptor word.
+      ids[#ids + 1] = string.pack(">i8", field.id)
+    end
+    types[#types + 1] = string.char(code)
+    if code == CQL_BLOB_TYPE_STRING or code == CQL_BLOB_TYPE_BLOB then
+      -- #value counts bytes, including embedded NULs, not Unicode characters.
+      -- A string's required final NUL occupies payload space but is excluded
+      -- from the descriptor length; blobs have no extra terminator.
+      storage[#storage + 1] = string.pack(">I4I4", offset, #value)
+      local bytes = value
+      if code == CQL_BLOB_TYPE_STRING then
+        bytes = bytes .. "\0"
+      end
+      payload[#payload + 1] = bytes
+      offset = offset + #bytes
+    elseif field.storage then
+      -- C copies untouched slots verbatim. Repacking could change a noncanonical
+      -- boolean or a floating-point bit pattern even though it was not updated.
+      storage[#storage + 1] = field.storage
+    elseif code == CQL_BLOB_TYPE_FLOAT then
+      -- The established C format stores doubles in native byte order.
+      storage[#storage + 1] = string.pack("d", value)
+    else
+      if code == CQL_BLOB_TYPE_BOOL then
+        value = value ~= 0 and 1 or 0
+      end
+      storage[#storage + 1] = string.pack(">i8", value)
+    end
+  end
+
+  -- Join whole sections, not one field at a time: descriptors already contain
+  -- offsets into the final blob. Each variable field gets its own payload copy,
+  -- even when the input decoder found overlapping/shared payload ranges.
+  return string.pack(">i8I4I4", rtype, 0x524d3030, #fields) ..
+    table.concat(ids) .. table.concat(storage) .. table.concat(types) .. table.concat(payload)
+end
+
+-- Return nil for corruption, otherwise rtype plus every decoded field. Even a
+-- type-only getter validates the entire blob: an intact header must not hide a
+-- truncated slot, invalid type, or bad variable-field descriptor elsewhere.
+local function cql_decode_backed_blob(b, has_ids)
+  if type(b) ~= "string" or #b < 16 then
+    return nil
+  end
+  local rtype, magic, count = string.unpack(">i8I4I4", b)
+  -- Establish that ALL metadata arrays fit before any per-field unpack. This
+  -- also bounds iteration; malformed counts must not raise a Lua unpack error.
+  if magic ~= 0x524d3030 or count > (#b - 16) // (has_ids and 17 or 9) then
+    return nil
+  end
+
+  local storage_offset = 16 + (has_ids and count * 8 or 0)
+  local type_offset = storage_offset + count * 8
+  local variable_offset = type_offset + count
+  local fields = {}
+  for i = 0, count - 1 do
+    -- Keep on-disk offsets zero-based; add one only at Lua string API boundaries.
+    local code = string.byte(b, type_offset + i + 1)
+    local pos = storage_offset + i * 8 + 1
+    local field = {code = code}
+    if has_ids then
+      field.id = string.unpack(">i8", b, 17 + i * 8)
+    end
+
+    if code == CQL_BLOB_TYPE_STRING or code == CQL_BLOB_TYPE_BLOB then
+      local offset, length = string.unpack(">I4I4", b, pos)
+      local terminator = code == CQL_BLOB_TYPE_STRING and 1 or 0
+      -- Payload cannot point into metadata. Count the string terminator when
+      -- checking bounds, then verify it separately; embedded NULs are allowed.
+      -- Do not require disjoint or increasing ranges: C accepts overlapping
+      -- fields, and re-encoding copies each logical field independently.
+      if offset < variable_offset or offset + length + terminator > #b then
+        return nil
+      end
+      if terminator == 1 and string.byte(b, offset + length + 1) ~= 0 then
+        return nil
+      end
+      field.value = string.sub(b, offset + 1, offset + length)
+    elseif code <= CQL_BLOB_TYPE_FLOAT then
+      field.storage = string.sub(b, pos, pos + 7)
+      field.value = string.unpack(code == CQL_BLOB_TYPE_FLOAT and "d" or ">i8", b, pos)
+    else
+      return nil
+    end
+    fields[#fields + 1] = field
+  end
+  return rtype, fields
+end
+
+-- Explicit result_blob is essential: generic result(string) produces SQL TEXT,
+-- even when those bytes originally came from a BLOB. Normalize booleans only
+-- for the returned SQL value; retain their raw storage for unrelated updates.
+local function cql_backed_blob_result(context, field)
+  if not field then
+    context:result_null()
+  elseif field.code == CQL_BLOB_TYPE_BLOB then
+    context:result_blob(field.value)
+  elseif field.code == CQL_BLOB_TYPE_BOOL then
+    context:result(field.value ~= 0 and 1 or 0)
+  else
+    context:result(field.value)
+  end
+end
+
+-- These SQLite callbacks use the same backing-store layout as cqlrt_common.c.
+-- The original callbacks in lua_demo/test_helpers.lua remain available for
+-- applications explicitly configured to use their legacy Lua-only layout.
+function cql_bcreatekey(context, rtype, ...)
+  -- Pairs are (value, type). table.pack.n retains trailing/interior SQL NULLs
+  -- so validation cannot mistake a truncated argument list for a valid one.
+  local args = table.pack(...)
+  if math.type(rtype) ~= "integer" or args.n == 0 or args.n % 2 ~= 0 then
+    return cql_backed_blob_error(context)
+  end
+  local fields = {}
+  for i = 1, args.n, 2 do
+    if not cql_backed_blob_compatible(args[i], args[i + 1]) then
+      return cql_backed_blob_error(context)
+    end
+    fields[#fields + 1] = {value = args[i], code = args[i + 1]}
+  end
+  context:result_blob(cql_encode_backed_blob(rtype, fields, false))
+end
+
+function cql_bgetkey(context, b, index)
+  local rtype, fields = cql_decode_backed_blob(b, false)
+  if not rtype or math.type(index) ~= "integer" or index < 0 or index >= #fields then
+    return cql_backed_blob_error(context)
+  end
+  -- The public key index is zero-based; fields is a dense one-based Lua array.
+  cql_backed_blob_result(context, fields[index + 1])
+end
+
+function cql_bgetkey_type(context, b)
+  local rtype = cql_decode_backed_blob(b, false)
+  if not rtype then
+    return cql_backed_blob_error(context)
+  end
+  context:result(rtype)
+end
+
+function cql_bupdatekey(context, b, ...)
+  local rtype, fields = cql_decode_backed_blob(b, false)
+  local args = table.pack(...)
+  if not rtype or args.n == 0 or args.n % 2 ~= 0 then
+    return cql_backed_blob_error(context)
+  end
+  local updated = {}
+  -- Updates are (index, value) pairs; the existing slot supplies the type.
+  -- Reject repeated positions rather than silently choosing one replacement.
+  for i = 1, args.n, 2 do
+    local index, value = args[i], args[i + 1]
+    if math.type(index) ~= "integer" or index < 0 or index >= #fields or updated[index] then
+      return cql_backed_blob_error(context)
+    end
+    local code = fields[index + 1].code
+    if not cql_backed_blob_compatible(value, code) then
+      return cql_backed_blob_error(context)
+    end
+    updated[index] = true
+    -- A fresh field deliberately drops raw storage so this slot is re-encoded.
+    fields[index + 1] = {value = value, code = code}
+  end
+  -- SQLite compares these primary keys as bytes. Both slots AND variable
+  -- payloads must retain column order, independent of update-argument order,
+  -- so updating a key matches creating the same key from scratch.
+  context:result_blob(cql_encode_backed_blob(rtype, fields, false))
+end
+
+function cql_bcreateval(context, rtype, ...)
+  -- Triples are (field ID, value, type); unlike keys, zero fields is valid.
+  local args = table.pack(...)
+  if math.type(rtype) ~= "integer" or args.n % 3 ~= 0 then
+    return cql_backed_blob_error(context)
+  end
+  local fields = {}
+  for i = 1, args.n, 3 do
+    local id, value, code = args[i], args[i + 1], args[i + 2]
+    if math.type(id) ~= "integer" or math.type(code) ~= "integer" then
+      return cql_backed_blob_error(context)
+    end
+    -- Omit NULL fields, including their IDs/types. Reading an absent ID returns
+    -- NULL, allowing old stored rows to survive additions of nullable columns.
+    if value ~= nil then
+      if not cql_backed_blob_compatible(value, code) then
+        return cql_backed_blob_error(context)
+      end
+      fields[#fields + 1] = {id = id, value = value, code = code}
+    end
+  end
+  context:result_blob(cql_encode_backed_blob(rtype, fields, true))
+end
+
+function cql_bgetval(context, b, id)
+  local rtype, fields = cql_decode_backed_blob(b, true)
+  if not rtype or math.type(id) ~= "integer" then
+    return cql_backed_blob_error(context)
+  end
+  for _, field in ipairs(fields) do
+    if field.id == id then
+      return cql_backed_blob_result(context, field)
+    end
+  end
+  -- This is a valid sparse value without that ID, not a decoding failure.
+  context:result_null()
+end
+
+function cql_bgetval_type(context, b)
+  local rtype = cql_decode_backed_blob(b, true)
+  if not rtype then
+    return cql_backed_blob_error(context)
+  end
+  context:result(rtype)
+end
+
+function cql_bupdateval(context, b, ...)
+  local rtype, fields = cql_decode_backed_blob(b, true)
+  local args = table.pack(...)
+  if not rtype or args.n == 0 or args.n % 3 ~= 0 then
+    return cql_backed_blob_error(context)
+  end
+  local result, updated, changed, by_id = {}, {}, {}, {}
+  -- Like C's linear search, target the first original occurrence of an ID.
+  -- Track changed field objects, not just IDs, to preserve any later duplicate
+  -- fields present in an existing blob.
+  for _, field in ipairs(fields) do
+    if not by_id[field.id] then
+      by_id[field.id] = field
+    end
+  end
+  for i = 1, args.n, 3 do
+    local id, value, code = args[i], args[i + 1], args[i + 2]
+    if math.type(id) ~= "integer" or math.type(code) ~= "integer" or updated[id] then
+      return cql_backed_blob_error(context)
+    end
+    updated[id] = true
+    local old = by_id[id]
+    if old then
+      -- Types of existing fields cannot change, even when deleting via NULL.
+      if old.code ~= code then
+        return cql_backed_blob_error(context)
+      end
+      changed[old] = true
+    end
+    -- NULL removes the old field without appending a replacement; a non-NULL
+    -- triple either replaces a field or adds a previously absent ID.
+    if value ~= nil then
+      if not cql_backed_blob_compatible(value, code) then
+        return cql_backed_blob_error(context)
+      end
+      result[#result + 1] = {id = id, value = value, code = code}
+    end
+  end
+  -- C writes replacements/additions in argument order, then retained fields
+  -- in their original order. Values are looked up by ID, not byte equality,
+  -- so they need not have canonical order; preserve C's order for identical
+  -- output bytes and rebuild descriptors for the newly positioned payloads.
+  for _, field in ipairs(fields) do
+    if not changed[field] then
+      result[#result + 1] = field
+    end
+  end
+  context:result_blob(cql_encode_backed_blob(rtype, result, true))
+end
+
+-- CQLABI
 function cql_blob_from_int(prefix, seed)
   if prefix == nil then
     prefix = ''
@@ -2043,34 +2527,42 @@ function cql_blob_from_int(prefix, seed)
   return prefix..seed
 end
 
+-- CQLABI
 function cql_format_bool(value)
   return cql_format_one_field(CQL_ENCODED_TYPE_BOOL, value)
 end
 
+-- CQLABI
 function cql_format_int(value)
   return cql_format_one_field(CQL_ENCODED_TYPE_INT32, value)
 end
 
+-- CQLABI
 function cql_format_long(value)
   return cql_format_one_field(CQL_ENCODED_TYPE_INT64, value)
 end
 
+-- CQLABI
 function cql_format_double(value)
   return cql_format_one_field(CQL_ENCODED_TYPE_DOUBLE, value)
 end
 
+-- CQLABI
 function cql_format_string(value)
   return cql_format_one_field(CQL_ENCODED_TYPE_STRING, value)
 end
 
+-- CQLABI
 function cql_format_blob(value)
   return cql_format_one_field(CQL_ENCODED_TYPE_BLOB, value)
 end
 
+-- CQLABI
 function cql_format_object(value)
   return cql_format_one_field(CQL_ENCODED_TYPE_OBJECT, value)
 end
 
+-- CQLABI
 function cql_format_null()
   return "null"
 end

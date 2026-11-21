@@ -18,10 +18,13 @@
 
 // CQLABI is used to mark functions that are called via the CQL ABI
 // These functions are callable from CQL as functions or procedures
-// so they must use only data types that CQL understands, i.e.
-// the CQL ABI.  This sometimes means things that you would expect
+// rather than merely being implementation helpers used by generated code.
+// They must use the CQL representations of parameters and results, including
+// nullable scalars, object references, dynamic cursors, and OUT parameters.
+// Procedures using transactions also take a database and return a result code.
+// This sometimes means things that you would expect
 // to be unsigned are signed because CQL has no unsigned types.
-// It also means there are no complex structure types etc.
+// Arbitrary C pointers, structures, and callbacks are not part of this ABI.
 
 #ifdef __cplusplus
 #define CQL_EXTERN_C_BEGIN extern "C" {
@@ -246,6 +249,8 @@ CQL_EXPORT cql_code cql_exec_var(
   cql_uint32 count,
   const char *_Nullable preds, ...);
 
+// Schema upgrader only; declared by cg_schema.c rather than predeclared.
+// CQLABI
 CQL_EXPORT CQL_WARN_UNUSED cql_code cql_exec_internal(
   sqlite3 *_Nonnull db,
   cql_string_ref _Nonnull str_ref);
@@ -466,7 +471,7 @@ CQL_EXPORT void cql_rowset_copy(
 // @param row The row number to fetch the value for.
 // @param col The column to fetch the value for.
 // @return cql_true if the value is null, otherwise cql_false.
-// CQLABI
+// Direct compiler helper; not directly callable from CQL.
 CQL_EXPORT cql_bool cql_result_set_get_is_null_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -477,7 +482,7 @@ CQL_EXPORT cql_bool cql_result_set_get_is_null_col(
 // @param row The row number to fetch the value for.
 // @param col The column to fetch the value for.
 // @return The bool value.
-// CQLABI
+// Direct compiler helper; not directly callable from CQL.
 CQL_EXPORT cql_bool cql_result_set_get_bool_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -488,7 +493,7 @@ CQL_EXPORT cql_bool cql_result_set_get_bool_col(
 // @param row The row number to fetch the value for.
 // @param col The column to fetch the value for.
 // @return The int32 value.
-// CQLABI
+// Direct compiler helper; not directly callable from CQL.
 CQL_EXPORT cql_int32 cql_result_set_get_int32_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -499,7 +504,7 @@ CQL_EXPORT cql_int32 cql_result_set_get_int32_col(
 // @param row The row number to fetch the value for.
 // @param col The column to fetch the value for.
 // @return The int64 value.ali
-// CQLABI
+// Direct compiler helper; not directly callable from CQL.
 CQL_EXPORT cql_int64 cql_result_set_get_int64_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -510,7 +515,7 @@ CQL_EXPORT cql_int64 cql_result_set_get_int64_col(
 // @param row The row number to fetch the value for.
 // @param col The column to fetch the value for.
 // @return The double value.
-// CQLABI
+// Direct compiler helper; not directly callable from CQL.
 CQL_EXPORT cql_double cql_result_set_get_double_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -521,7 +526,7 @@ CQL_EXPORT cql_double cql_result_set_get_double_col(
 // @param row The row number to fetch the value for.
 // @param col The column to fetch the value for.
 // @return The string value.
-// CQLABI
+// Direct compiler helper; not directly callable from CQL.
 CQL_EXPORT cql_string_ref _Nullable cql_result_set_get_string_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -532,7 +537,7 @@ CQL_EXPORT cql_string_ref _Nullable cql_result_set_get_string_col(
 // @param row The row number to fetch the value for.
 // @param col The column to fetch the value for.
 // @return The string value.
-// CQLABI
+// Direct compiler helper; not directly callable from CQL.
 CQL_EXPORT cql_blob_ref _Nullable cql_result_set_get_blob_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -543,7 +548,7 @@ CQL_EXPORT cql_blob_ref _Nullable cql_result_set_get_blob_col(
 // @param row The row number to fetch the value for.
 // @param col The column to fetch the value for.
 // @return The object value.
-// CQLABI
+// Direct compiler helper; not directly callable from CQL.
 CQL_EXPORT cql_object_ref _Nullable cql_result_set_get_object_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -555,7 +560,7 @@ CQL_EXPORT cql_object_ref _Nullable cql_result_set_get_object_col(
 // @param result_set The cql result_set object.
 // @param row The row number to set the value for.
 // @param col The column to set the value for.
-// CQLABI
+// Direct compiler helper; not directly callable from CQL.
 CQL_EXPORT void cql_result_set_set_to_null_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -566,7 +571,7 @@ CQL_EXPORT void cql_result_set_set_to_null_col(
 // @param row The row number to set the value for.
 // @param col The column to set the value for.
 // @param new_value the new boolean value to be set.
-// CQLABI
+// Direct compiler helper; not directly callable from CQL.
 CQL_EXPORT void cql_result_set_set_bool_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -578,7 +583,7 @@ CQL_EXPORT void cql_result_set_set_bool_col(
 // @param row The row number to set the value for.
 // @param col The column to set the value for.
 // @param new_value the new cql_int32 value to be set.
-// CQLABI
+// Direct compiler helper; not directly callable from CQL.
 CQL_EXPORT void cql_result_set_set_int32_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -590,7 +595,7 @@ CQL_EXPORT void cql_result_set_set_int32_col(
 // @param row The row number to set the value for.
 // @param col The column to set the value for.
 // @param new_value the new int64 value to be set.
-// CQLABI
+// Direct compiler helper; not directly callable from CQL.
 CQL_EXPORT void cql_result_set_set_int64_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -602,7 +607,7 @@ CQL_EXPORT void cql_result_set_set_int64_col(
 // @param row The row number to set the value for.
 // @param col The column to set the value for.
 // @param new_value the new boolean value to be set.
-// CQLABI
+// Direct compiler helper; not directly callable from CQL.
 CQL_EXPORT void cql_result_set_set_double_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -614,7 +619,7 @@ CQL_EXPORT void cql_result_set_set_double_col(
 // @param row The row number to set the value for.
 // @param col The column to set the value for.
 // @param new_value the new string value to be set.
-// CQLABI
+// Direct compiler helper; not directly callable from CQL.
 CQL_EXPORT void cql_result_set_set_string_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -626,7 +631,7 @@ CQL_EXPORT void cql_result_set_set_string_col(
 // @param row The row number to set the value for.
 // @param col The column to set the value for.
 // @param new_value the new blob value to be set.
-// CQLABI
+// Direct compiler helper; not directly callable from CQL.
 CQL_EXPORT void cql_result_set_set_blob_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -638,7 +643,7 @@ CQL_EXPORT void cql_result_set_set_blob_col(
 // @param row The row number to set the value for.
 // @param col The column to set the value for.
 // @param new_value the new object value to be set.
-// CQLABI
+// Direct compiler helper; not directly callable from CQL.
 CQL_EXPORT void cql_result_set_set_object_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
@@ -691,10 +696,17 @@ typedef struct cql_hashtab {
   void *_Nullable context;
 } cql_hashtab;
 
-// CQL friendly versions of the hash table things, easy to call from CQL
+// Schema upgrader only; declared by cg_schema_emit_facet_functions.
+// The upgrader's global starts NULL and is cleared after each upgrade, so its
+// type and these parameters remain nullable. Operations require an initialized
+// facets object; cql_contract enforces this runtime precondition.
+// CQLABI
 CQL_EXPORT cql_object_ref _Nonnull cql_facets_create(void);
+// CQLABI
 CQL_EXPORT cql_bool cql_facet_add(cql_object_ref _Nullable facets, cql_string_ref _Nonnull name, cql_int64 crc);
+// CQLABI
 CQL_EXPORT cql_bool cql_facet_upsert(cql_object_ref _Nullable facets, cql_string_ref _Nonnull name, cql_int64 crc);
+// CQLABI
 CQL_EXPORT cql_int64 cql_facet_find(cql_object_ref _Nullable  facets, cql_string_ref _Nonnull key);
 
 // For internal use by the runtime only
@@ -707,13 +719,16 @@ CQL_EXPORT void *_Nonnull _cql_generic_object_get_data(cql_object_ref _Nonnull o
 // dynamic cursor for the key defines the partitioning columns and the value is
 // the full child row.  When the partition is extracted the accumulated matching
 // rows are provided.  Once extraction begins no more rows can be added.
+// CQLABI
 CQL_EXPORT cql_object_ref _Nonnull cql_partition_create(void);
 
+// CQLABI
 CQL_EXPORT cql_bool cql_partition_cursor(
   cql_object_ref _Nonnull obj,
   cql_dynamic_cursor *_Nonnull key,
   cql_dynamic_cursor *_Nonnull val);
 
+// CQLABI
 CQL_EXPORT cql_object_ref _Nonnull cql_extract_partition(
   cql_object_ref _Nonnull obj,
   cql_dynamic_cursor *_Nonnull key);
@@ -808,6 +823,7 @@ CQL_EXPORT cql_object_ref _Nonnull cql_string_list_set_at(
   cql_string_ref _Nonnull value);
 
 // Blob list helpers
+// CQLABI
 CQL_EXPORT cql_object_ref _Nonnull cql_blob_list_create(void);
 
 // CQLABI
@@ -900,6 +916,7 @@ CQL_EXPORT cql_object_ref _Nonnull cql_real_list_set_at(
 
 // For internal use by the schema upgrader only, subject to change and generally
 // uninteresting because of its unusual matching rules.
+// CQLABI
 CQL_EXPORT cql_bool _cql_contains_column_def(
   cql_string_ref _Nullable haystack_,
   cql_string_ref _Nullable needle_);
@@ -967,6 +984,8 @@ CQL_EXPORT cql_string_ref _Nonnull cql_uncompress(
 // it.  If we have to do something more complicated then we have to drop the
 // whole thing and and rebuild it from scratch. This code handles the fallback
 // case.
+// Schema upgrader only; declared by cg_schema.c rather than predeclared.
+// CQLABI
 CQL_EXPORT cql_code cql_rebuild_recreate_group(
   sqlite3 *_Nonnull db,
   cql_string_ref _Nonnull tables,
@@ -980,6 +999,8 @@ CQL_EXPORT cql_code cql_rebuild_recreate_group(
 // anyway.  This code creates a stub UDF that does nothing so that the code
 // compiles as written allowing a plan to be created.  The query plan code calls
 // this function once for each required UDF.
+// Query plan generator only; declared by cg_query_plan.c rather than predeclared.
+// CQLABI
 CQL_EXPORT cql_code cql_create_udf_stub(
   sqlite3 *_Nonnull db,
   cql_string_ref _Nonnull name);

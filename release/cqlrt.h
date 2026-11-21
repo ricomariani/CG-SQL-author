@@ -145,6 +145,7 @@ cql_blob_ref _Nonnull cql_blob_ref_new(const void *_Nonnull data, cql_uint32 siz
 // NOTE: This macro is exposed to CQL code via sem_func_cql_get_blob_size /
 // cg_func_cql_get_blob_size.  CQL has no unsigned integer type, so the return
 // type must be cql_int32.  Blobs larger than INT32_MAX are not supported.
+// CQLABI
 #define cql_get_blob_size(data) (data->size)
 
 // Creates a hash code for the blob object.
@@ -158,6 +159,7 @@ cql_hash_code cql_blob_hash(cql_blob_ref _Nullable str);
 // @param str2 The second blob to compare.
 // @return cql_true if they are equal, otherwise cql_false.
 // cql_bool cql_blob_equal(cql_blob_ref _Nullable bl1, cql_blob_ref _Nullable bl2);
+// CQLABI
 cql_bool cql_blob_equal(cql_blob_ref _Nullable blob1, cql_blob_ref _Nullable blob2);
 
 // builtin string
@@ -224,6 +226,7 @@ cql_string_ref _Nonnull cql_string_ref_new(const char *_Nonnull cstr);
 // @param str2 The second string to compare.
 // @return < 0 if str1 is less than str2, > 0 if str2 is less than str1, = 0 if str1 is equal to str2.
 // int cql_string_compare(cql_string_ref str1, cql_string_ref str2);
+// CQLABI
 int cql_string_compare(cql_string_ref _Nonnull s1, cql_string_ref _Nonnull s2);
 
 // Creates a hash code for the string object.
@@ -237,6 +240,7 @@ cql_hash_code cql_string_hash(cql_string_ref _Nullable str);
 // @param str2 The second string to compare.
 // @return cql_true if they are equal, otherwise cql_false.
 // cql_bool cql_string_equal(cql_string_ref _Nullable str1, cql_string_ref _Nullable str2);
+// CQLABI
 cql_bool cql_string_equal(cql_string_ref _Nullable s1, cql_string_ref _Nullable s2);
 
 // Compares two string objects with SQL LIKE semantics.
@@ -245,6 +249,7 @@ cql_bool cql_string_equal(cql_string_ref _Nullable s1, cql_string_ref _Nullable 
 // @param str2 The second string to compare.
 // @return 0 if the str1 is LIKE str2, else != 0.
 // int cql_string_like(cql_string_ref str1, cql_string_ref str2);
+// CQLABI
 int cql_string_like(cql_string_ref _Nonnull s1, cql_string_ref _Nonnull s2);
 
 // Declare and allocate a C string from a string object.
@@ -377,7 +382,7 @@ cql_result_set_ref _Nonnull cql_result_set_create(
 // @param result_set The cql result set object.
 // @return The count that was previous stored on the result set.
 // cql_int32 cql_result_set_get_count(** result_set);
-// CQLABI
+// Direct compiler helper; not directly callable from CQL.
 #define cql_result_set_get_count(result_set) ((cql_result_set_ref)result_set)->count
 
 #ifdef CQL_RUN_TEST

@@ -1569,6 +1569,11 @@ TEST!(printf_expression,
 begin
   EXPECT_EQ!(printf("%d and %d", 12, 7), "12 and 7"); -- loose printf ok
   EXPECT_EQ!((select printf("%d and %d", 12, 7)), "12 and 7"); -- sql printf ok
+
+  -- Query-plan output uses an empty separator on its first iteration.
+  -- Both expression and statement forms must handle an empty result.
+  EXPECT_EQ!(printf("%s", ""), "");
+  printf("%s", "");
 end);
 
 TEST!(case_with_null,
@@ -4949,6 +4954,10 @@ begin
   try
     cursor_with_extras:from_blob(blob_with_extras);
   catch
+    @ifdef __rt__lua
+      -- Missing required fields must return SQLITE_MISMATCH, not a nil status.
+      EXPECT_EQ!(@rc, 20);
+    @endif
     EXPECT!(not cursor_with_extras);
     caught := true;
   end;
@@ -4993,6 +5002,10 @@ begin
   try
     test_cursor_not_nulls:from_blob(blob_not_nulls);
   catch
+    @ifdef __rt__lua
+      -- Incompatible stored types must return SQLITE_MISMATCH, not a nil status.
+      EXPECT_EQ!(@rc, 20);
+    @endif
     EXPECT!(not test_cursor_not_nulls);
     caught := true;
   end;
@@ -5081,6 +5094,7 @@ begin
       -- this is gonna fail
       cursor_both:from_blob(blob_broken);
     catch
+      EXPECT_EQ!(@rc, 1); -- Truncation must report SQLITE_ERROR, not a custom code.
       EXPECT!(not cursor_both);
       caught := true;
     end;
@@ -5510,6 +5524,23 @@ begin
   EXPECT_SQL_TOO!(0xffffffffffffffff < 0L);
   EXPECT_SQL_TOO!(0xffffffffffffffffL / 2 = 0L);
   EXPECT_SQL_TOO!(0x8000000000000000 / 2 = -4611686018427387904L);
+
+  -- INT64_MIN cannot be negated: division must preserve its sign and
+  -- truncate toward zero, including when it is the divisor.
+  EXPECT_SQL_TOO!(0x8000000000000000 / 3 = -3074457345618258602L);
+  EXPECT_SQL_TOO!(0x8000000000000000 / -2 = 4611686018427387904L);
+  EXPECT_SQL_TOO!(1L / 0x8000000000000000 = 0L);
+  EXPECT_SQL_TOO!(-1L / 0x8000000000000000 = 0L);
+  EXPECT_SQL_TOO!(0x8000000000000000 / 0x8000000000000000 = 1L);
+
+  -- Modulo must also avoid negating INT64_MIN in either operand.
+  -- Nonzero remainders retain the dividend's sign; exact divisions stay zero.
+  EXPECT_SQL_TOO!(0x8000000000000000 % 3 = -2L);
+  EXPECT_SQL_TOO!(0x8000000000000000 % -3 = -2L);
+  EXPECT_SQL_TOO!(1L % 0x8000000000000000 = 1L);
+  EXPECT_SQL_TOO!(-1L % 0x8000000000000000 = -1L);
+  EXPECT_SQL_TOO!(0x8000000000000000 % 2 = 0L);
+  EXPECT_SQL_TOO!(0x8000000000000000 % 0x8000000000000000 = 0L);
 
   EXPECT_SQL_TOO!(const(0x8000000000000000) = -9223372036854775808);
   EXPECT_SQL_TOO!(const(0xffffffffffffffff) = -1L);
@@ -6994,6 +7025,8 @@ begin
   -- lookup must reject it too, rather than bypass header validation.
   EXPECT_BLOB_FAILURE!(bgetkey_type(x'0000000000000000000000000000'));
 
+  -- These fixtures describe the native UDF layout, not the Lua test layout.
+  @ifndef __rt__lua
   -- Header-only 16-byte key: big-endian record type 0 at 0..7,
   -- magic 524d3030 ("RM00") at 8..11, count 1 at 12..15.
   -- Missing column storage at 16..23 and type at 24; minimum size is 25.
@@ -7020,8 +7053,11 @@ begin
   -- must validate the column types, not merely return record type 1.
   EXPECT_BLOB_FAILURE!(bgetkey_type(
     x'0000000000000001524d303000000002000000000000002a00000000000000000206'));
+  @endif
 end);
 
+-- The Lua test UDFs use a different blob layout without offset descriptors.
+@ifndef __rt__lua
 TEST!(blob_updatekey_overlapping_fields,
 begin
   -- Hand-built 47-byte key blob; offsets below are decimal, ranges inclusive.
@@ -7059,6 +7095,7 @@ begin
   EXPECT!((select bgetkey(b, 2) ~blob~ == x'61626300'));
   EXPECT_EQ!(length(b), 51);
 end);
+@endif
 
 TEST!(blob_updatekey_func_errors,
 begin
@@ -7105,6 +7142,8 @@ begin
   -- deterministic rather than depending on argument order.
   EXPECT_BLOB_FAILURE!(bupdatekey(b, 0, 0, 0, 0));
 
+  -- These fixtures describe the native UDF layout, not the Lua test layout.
+  @ifndef __rt__lua
   -- Header-only 16-byte key: big-endian record type 0, "RM00" magic, count 1.
   -- Missing the eight storage bytes at 16..23 and type byte at 24;
   -- updating column 0 must reject the incomplete 25-byte minimum shape.
@@ -7125,6 +7164,7 @@ begin
   EXPECT_BLOB_FAILURE!(bupdatekey(
     x'0000000000000001524d303000000002000000000000002a00000000000000000206',
     0, 99));
+  @endif
 end);
 
 @op blob : call val as bgetval;
@@ -7262,6 +7302,8 @@ begin
   -- to represent NULL, so callers can distinguish it from corrupt input.
   EXPECT_EQ!((select b:val(1111)), null);
 
+  -- These fixtures describe the native UDF layout, not the Lua test layout.
+  @ifndef __rt__lua
   -- 50-byte value blob; all multi-byte values are big endian.
   -- Header 0..15: record type 1, magic "RM00", count 2.
   -- IDs 16..23 and 24..31: 1 and 2. Storage 32..39: integer 42;
@@ -7284,8 +7326,11 @@ begin
   -- prevent type-only lookup from returning its record type.
   EXPECT_BLOB_FAILURE!(bgetval_type(
     x'0000000000000001524d30300000000200000000000000010000000000000002000000000000000000000000000000000206'));
+  @endif
 end);
 
+-- The Lua test UDFs use a different blob layout without offset descriptors.
+@ifndef __rt__lua
 TEST!(blob_updateval_overlapping_fields,
 begin
   -- Hand-built 71-byte value blob; offsets below are decimal, ranges inclusive.
@@ -7330,6 +7375,7 @@ begin
   EXPECT!((select bgetval(b, 3) ~blob~ == x'61626300'));
   EXPECT_EQ!(length(b), 75);
 end);
+@endif
 
 TEST!(blob_updateval_null_cases,
 begin
@@ -7446,10 +7492,13 @@ begin
   -- must reject it instead of treating the first eight zero bytes as a type.
   EXPECT_BLOB_FAILURE!(bgetval_type(x'0000000000000000000000000000'));
 
+  -- This fixture describes the native UDF layout, not the Lua test layout.
+  @ifndef __rt__lua
   -- Header-only 16-byte value blob: big-endian record type 0, "RM00", count 1.
   -- Missing ID 16..23, storage 24..31, and type byte 32 (minimum size 33).
   -- Reject the shape before searching for the absent field ID 99.
   EXPECT_BLOB_FAILURE!(bgetval(x'0000000000000000524d303000000001', 99));
+  @endif
 end);
 
 TEST!(blob_updateval_func_errors,
@@ -7502,6 +7551,8 @@ begin
   -- at 8..11. Reject before using the field ID or constructing output.
   EXPECT_BLOB_FAILURE!(bupdateval(x'0000000000000000000000000000', k1, 0, CQL_BLOB_TYPE_BOOL));
 
+  -- These fixtures describe the native UDF layout, not the Lua test layout.
+  @ifndef __rt__lua
   -- Header-only 16-byte value blob: big-endian record type 0, "RM00", count 1.
   -- Missing ID at 16..23, storage at 24..31, and type at 32.
   -- Updating field 99 must reject this, not add to an incomplete input shape.
@@ -7540,6 +7591,7 @@ begin
   EXPECT_BLOB_FAILURE!(bupdateval(
     x'0000000000000001524d30300000000200000000000000010000000000000002000000000000000000000000000000000206',
     1, 99, CQL_BLOB_TYPE_INT64));
+  @endif
 end);
 
 TEST!(backed_tables,
@@ -8587,6 +8639,8 @@ end);
 
 TEST!(blob_stream_truncated_index_read__,
 begin
+  @echo lua, "cql_disable_tracing = true\n";
+
   -- A 5-byte stream: little-endian count 1 at 0..3 (01 00 00 00).
   -- Byte 4 is 05, only the first byte of the exclusive end-offset entry,
   -- not payload. A complete one-row stream needs an 8-byte count/offset table.
@@ -8603,10 +8657,40 @@ begin
   end;
   EXPECT_EQ!(hit, 1);
   EXPECT_EQ!(C, false);
+  @echo lua, "cql_disable_tracing = false\n";
+end);
+
+TEST!(blob_stream_truncated_payload,
+begin
+  @echo lua, "cql_disable_tracing = true\n";
+
+  -- Eight-byte cursor payload: 0..2 are "sI\0" (nullable text, required int).
+  -- Byte 3 is the presence vector 01; 4..7 are "abc\0". The integer is
+  -- missing, so decoding fails after storing a string reference.
+  cursor C like (x text, y int!);
+  -- A complete 8-byte stream table, little endian: count 1 at 0..3,
+  -- exclusive end 16 at 4..7. The same truncated row occupies bytes 8..15.
+  -- Valid table bounds must not hide a failure in the nested decoder.
+  let stream := (select x'01000000100000007349000161626300');
+  fetch C from values('old', 42);
+  let caught := false;
+  try
+    cql_cursor_from_blob_stream(C, stream, 0);
+  catch
+    EXPECT_EQ!(@rc, 1);
+    caught := true;
+  end;
+  EXPECT!(caught);
+  EXPECT!(not C);
+  EXPECT_EQ!(C.x, null);
+
+  @echo lua, "cql_disable_tracing = false\n";
 end);
 
 TEST!(blob_stream_table_bounds__,
 begin
+  @echo lua, "cql_disable_tracing = true\n";
+
   let control := control_blob();
   cursor cases for
     -- Four-byte little-endian count INT32_MAX (2,147,483,647), with no
@@ -8651,6 +8735,7 @@ begin
     EXPECT_EQ!(C, false);
     EXPECT_EQ!(C.z, null);
   end;
+  @echo lua, "cql_disable_tracing = false\n";
 end);
 
 END_SUITE();

@@ -2175,6 +2175,50 @@ function cql_cursor_from_blob_stream(db, C, C_types, C_fields, b, index)
   return CQL_OK
 end
 
+-- Backing-store blobs use the existing cqlrt_common.c format, not the cursor
+-- serialization format. Keys identify columns by position; values use stable
+-- 64-bit field IDs so adding/removing value columns does not renumber old data.
+--
+-- The typical workload is many tiny logical tables, each holding only a few
+-- values such as settings. Separate SQLite tables can cost more in metadata
+-- than the data they hold; sharing a backing table reduces that overhead.
+-- These stores are often in memory, too. Optimizations aimed at large,
+-- persistent datasets are therefore often not useful for this workload.
+-- The backing helpers are replaceable via backing-table attributes: workloads
+-- that need different tradeoffs can select their own encoding, including
+-- simpler, specialized formats for faster access. The format below is the
+-- default, not a requirement for custom helpers.
+--
+-- All offsets below are zero-based byte offsets from the start of the blob.
+-- The common 16-byte header is:
+--   0..7   record type (signed 64-bit bit pattern)
+--   8..11  magic 0x524d3030 ("RM00")
+--   12..15 number of stored fields N (unsigned 32-bit)
+--
+-- The remaining sections are parallel arrays, NOT interleaved field records:
+--                 key                         value
+--   field IDs     absent                      16 .. 16+8*N-1
+--   storage       16 .. 16+8*N-1              16+8*N .. 16+16*N-1
+--   type bytes    16+8*N .. 16+9*N-1          16+16*N .. 16+17*N-1
+--   payload       16+9*N onward               16+17*N onward
+--
+-- Each storage slot is eight bytes; its interpretation comes from its type:
+--   0 BOOL     signed int64, normalized to 0/1 when created or replaced
+--   1 INT32    signed int64, NOT a four-byte slot
+--   2 INT64    signed int64
+--   3 FLOAT    native-order IEEE double, matching the existing C runtime
+--   4 STRING   unsigned uint32 offset + uint32 byte length, then payload + NUL
+--   5 BLOB     unsigned uint32 offset + uint32 byte length, then payload
+-- Header words, IDs, integers, and descriptors are big endian. Doubles are the
+-- deliberate native-endian exception: changing them would break stored C data.
+-- Consequently C/Lua interchange of doubles assumes matching native byte order.
+--
+-- The original Lua encoding shares the header/magic but interleaves fields and
+-- uses different string/double encodings. Do not guess the format from the
+-- header: legacy data must select the original callbacks explicitly.
+
+-- A malformed blob/argument must fail the SQL statement, not look like the
+-- legitimate SQL NULL returned for an absent nullable value field.
 local function cql_backed_blob_error(context)
   context:result_error("invalid CQL blob or arguments")
 end
@@ -2184,24 +2228,40 @@ local function cql_backed_blob_compatible(value, code)
     return false
   end
   if code <= CQL_BLOB_TYPE_INT64 then
+    -- SQLite supplies booleans as integers too. Reject reals instead of silently
+    -- truncating them, and reject nil here because keys cannot contain NULL.
     return math.type(value) == "integer"
   elseif code == CQL_BLOB_TYPE_FLOAT then
     return type(value) == "number"
   end
+  -- Lua represents both SQL TEXT and BLOB as byte strings; code distinguishes
+  -- them on disk and when returning a value to SQLite.
   return type(value) == "string"
 end
 
+-- Callers provide a dense, ordered array of validated {code, value} fields,
+-- with an additional signed id for value blobs (has_ids=true). SQL NULL values
+-- are omitted entirely; there is no NULL type code or NULL storage slot.
+-- Decoded fixed-width fields also carry storage, their original eight bytes,
+-- so updates can retain representations without a decode/re-encode round trip.
 local function cql_encode_backed_blob(rtype, fields, has_ids)
   local ids, storage, types, payload = {}, {}, {}, {}
+  -- All fixed-size arrays precede payload, so its first absolute offset is
+  -- known before walking fields: 8 storage + 1 type byte, plus 8 for a value ID.
   local offset = 16 + #fields * (has_ids and 17 or 9)
 
   for _, field in ipairs(fields) do
     local code, value = field.code, field.value
     if has_ids then
+      -- > means big endian; i8 preserves signed 64-bit IDs, including high-bit
+      -- hash values. I4 below denotes an unsigned four-byte descriptor word.
       ids[#ids + 1] = string.pack(">i8", field.id)
     end
     types[#types + 1] = string.char(code)
     if code == CQL_BLOB_TYPE_STRING or code == CQL_BLOB_TYPE_BLOB then
+      -- #value counts bytes, including embedded NULs, not Unicode characters.
+      -- A string's required final NUL occupies payload space but is excluded
+      -- from the descriptor length; blobs have no extra terminator.
       storage[#storage + 1] = string.pack(">I4I4", offset, #value)
       local bytes = value
       if code == CQL_BLOB_TYPE_STRING then
@@ -2210,7 +2270,8 @@ local function cql_encode_backed_blob(rtype, fields, has_ids)
       payload[#payload + 1] = bytes
       offset = offset + #bytes
     elseif field.storage then
-      -- Retained fixed-width fields are copied verbatim, as in the C updater.
+      -- C copies untouched slots verbatim. Repacking could change a noncanonical
+      -- boolean or a floating-point bit pattern even though it was not updated.
       storage[#storage + 1] = field.storage
     elseif code == CQL_BLOB_TYPE_FLOAT then
       -- The established C format stores doubles in native byte order.
@@ -2223,15 +2284,23 @@ local function cql_encode_backed_blob(rtype, fields, has_ids)
     end
   end
 
+  -- Join whole sections, not one field at a time: descriptors already contain
+  -- offsets into the final blob. Each variable field gets its own payload copy,
+  -- even when the input decoder found overlapping/shared payload ranges.
   return string.pack(">i8I4I4", rtype, 0x524d3030, #fields) ..
     table.concat(ids) .. table.concat(storage) .. table.concat(types) .. table.concat(payload)
 end
 
+-- Return nil for corruption, otherwise rtype plus every decoded field. Even a
+-- type-only getter validates the entire blob: an intact header must not hide a
+-- truncated slot, invalid type, or bad variable-field descriptor elsewhere.
 local function cql_decode_backed_blob(b, has_ids)
   if type(b) ~= "string" or #b < 16 then
     return nil
   end
   local rtype, magic, count = string.unpack(">i8I4I4", b)
+  -- Establish that ALL metadata arrays fit before any per-field unpack. This
+  -- also bounds iteration; malformed counts must not raise a Lua unpack error.
   if magic ~= 0x524d3030 or count > (#b - 16) // (has_ids and 17 or 9) then
     return nil
   end
@@ -2241,6 +2310,7 @@ local function cql_decode_backed_blob(b, has_ids)
   local variable_offset = type_offset + count
   local fields = {}
   for i = 0, count - 1 do
+    -- Keep on-disk offsets zero-based; add one only at Lua string API boundaries.
     local code = string.byte(b, type_offset + i + 1)
     local pos = storage_offset + i * 8 + 1
     local field = {code = code}
@@ -2251,6 +2321,10 @@ local function cql_decode_backed_blob(b, has_ids)
     if code == CQL_BLOB_TYPE_STRING or code == CQL_BLOB_TYPE_BLOB then
       local offset, length = string.unpack(">I4I4", b, pos)
       local terminator = code == CQL_BLOB_TYPE_STRING and 1 or 0
+      -- Payload cannot point into metadata. Count the string terminator when
+      -- checking bounds, then verify it separately; embedded NULs are allowed.
+      -- Do not require disjoint or increasing ranges: C accepts overlapping
+      -- fields, and re-encoding copies each logical field independently.
       if offset < variable_offset or offset + length + terminator > #b then
         return nil
       end
@@ -2269,6 +2343,9 @@ local function cql_decode_backed_blob(b, has_ids)
   return rtype, fields
 end
 
+-- Explicit result_blob is essential: generic result(string) produces SQL TEXT,
+-- even when those bytes originally came from a BLOB. Normalize booleans only
+-- for the returned SQL value; retain their raw storage for unrelated updates.
 local function cql_backed_blob_result(context, field)
   if not field then
     context:result_null()
@@ -2285,6 +2362,8 @@ end
 -- The original callbacks in lua_demo/test_helpers.lua remain available for
 -- applications explicitly configured to use their legacy Lua-only layout.
 function cql_bcreatekey(context, rtype, ...)
+  -- Pairs are (value, type). table.pack.n retains trailing/interior SQL NULLs
+  -- so validation cannot mistake a truncated argument list for a valid one.
   local args = table.pack(...)
   if math.type(rtype) ~= "integer" or args.n == 0 or args.n % 2 ~= 0 then
     return cql_backed_blob_error(context)
@@ -2304,6 +2383,7 @@ function cql_bgetkey(context, b, index)
   if not rtype or math.type(index) ~= "integer" or index < 0 or index >= #fields then
     return cql_backed_blob_error(context)
   end
+  -- The public key index is zero-based; fields is a dense one-based Lua array.
   cql_backed_blob_result(context, fields[index + 1])
 end
 
@@ -2322,6 +2402,8 @@ function cql_bupdatekey(context, b, ...)
     return cql_backed_blob_error(context)
   end
   local updated = {}
+  -- Updates are (index, value) pairs; the existing slot supplies the type.
+  -- Reject repeated positions rather than silently choosing one replacement.
   for i = 1, args.n, 2 do
     local index, value = args[i], args[i + 1]
     if math.type(index) ~= "integer" or index < 0 or index >= #fields or updated[index] then
@@ -2332,13 +2414,17 @@ function cql_bupdatekey(context, b, ...)
       return cql_backed_blob_error(context)
     end
     updated[index] = true
+    -- A fresh field deliberately drops raw storage so this slot is re-encoded.
     fields[index + 1] = {value = value, code = code}
   end
-  -- Keys must retain column order, including their variable payloads.
+  -- SQLite compares these primary keys as bytes. Both slots AND variable
+  -- payloads must retain column order, independent of update-argument order,
+  -- so updating a key matches creating the same key from scratch.
   context:result_blob(cql_encode_backed_blob(rtype, fields, false))
 end
 
 function cql_bcreateval(context, rtype, ...)
+  -- Triples are (field ID, value, type); unlike keys, zero fields is valid.
   local args = table.pack(...)
   if math.type(rtype) ~= "integer" or args.n % 3 ~= 0 then
     return cql_backed_blob_error(context)
@@ -2349,6 +2435,8 @@ function cql_bcreateval(context, rtype, ...)
     if math.type(id) ~= "integer" or math.type(code) ~= "integer" then
       return cql_backed_blob_error(context)
     end
+    -- Omit NULL fields, including their IDs/types. Reading an absent ID returns
+    -- NULL, allowing old stored rows to survive additions of nullable columns.
     if value ~= nil then
       if not cql_backed_blob_compatible(value, code) then
         return cql_backed_blob_error(context)
@@ -2369,6 +2457,7 @@ function cql_bgetval(context, b, id)
       return cql_backed_blob_result(context, field)
     end
   end
+  -- This is a valid sparse value without that ID, not a decoding failure.
   context:result_null()
 end
 
@@ -2387,6 +2476,9 @@ function cql_bupdateval(context, b, ...)
     return cql_backed_blob_error(context)
   end
   local result, updated, changed, by_id = {}, {}, {}, {}
+  -- Like C's linear search, target the first original occurrence of an ID.
+  -- Track changed field objects, not just IDs, to preserve any later duplicate
+  -- fields present in an existing blob.
   for _, field in ipairs(fields) do
     if not by_id[field.id] then
       by_id[field.id] = field
@@ -2400,11 +2492,14 @@ function cql_bupdateval(context, b, ...)
     updated[id] = true
     local old = by_id[id]
     if old then
+      -- Types of existing fields cannot change, even when deleting via NULL.
       if old.code ~= code then
         return cql_backed_blob_error(context)
       end
       changed[old] = true
     end
+    -- NULL removes the old field without appending a replacement; a non-NULL
+    -- triple either replaces a field or adds a previously absent ID.
     if value ~= nil then
       if not cql_backed_blob_compatible(value, code) then
         return cql_backed_blob_error(context)
@@ -2413,7 +2508,9 @@ function cql_bupdateval(context, b, ...)
     end
   end
   -- C writes replacements/additions in argument order, then retained fields
-  -- in their original order. Unlike keys, values need not have canonical order.
+  -- in their original order. Values are looked up by ID, not byte equality,
+  -- so they need not have canonical order; preserve C's order for identical
+  -- output bytes and rebuild descriptors for the newly positioned payloads.
   for _, field in ipairs(fields) do
     if not changed[field] then
       result[#result + 1] = field

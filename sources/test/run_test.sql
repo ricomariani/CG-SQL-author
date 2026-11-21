@@ -6915,12 +6915,25 @@ create table backed_blob_double(v real!);
 TEST!(backed_blob_binary_compatibility,
 begin
   -- Shared C/Lua fixture: 76 bytes, with big-endian metadata and integers.
-  -- Header 0..15: record type -1, magic "RM00", count 6.
-  -- Storage 16..63: bool 1, int -42, INT64_MIN, double 0.0, then descriptors
-  -- (offset 70, length 3) and (offset 74, length 2). Types 64..69: 00..05.
-  -- Payload 70..75: "a\0b\0" (three text bytes plus terminator), then 00 ff.
   -- Zero's double representation is all zero bytes in either byte order.
-  let key_control := (select x'ffffffffffffffff524d3030000000060000000000000001ffffffffffffffd68000000000000000000000000000000000000046000000030000004a000000020001020304056100620000ff');
+  -- Concatenate inside SQL, casting back to BLOB before it reaches CQL: blob
+  -- operands require text casts for ||, but CQL text locals would lose bytes
+  -- after the first NUL. Keep the fixture independent of the codec under test.
+  let key_control := (select cast(
+    cast(x'ffffffffffffffff' as text) || -- 0..7: record type -1
+    cast(x'524d3030' as text) ||         -- 8..11: magic "RM00"
+    cast(x'00000006' as text) ||         -- 12..15: six fields
+    cast(x'0000000000000001' as text) || -- 16..23: BOOL, normalized to 1
+    cast(x'ffffffffffffffd6' as text) || -- 24..31: INT32 -42, eight-byte slot
+    cast(x'8000000000000000' as text) || -- 32..39: INT64_MIN
+    cast(x'0000000000000000' as text) || -- 40..47: double 0.0
+    cast(x'0000004600000003' as text) || -- 48..55: string offset 70, length 3
+    cast(x'0000004a00000002' as text) || -- 56..63: blob offset 74, length 2
+    cast(x'000102030405' as text) ||     -- 64..69: types BOOL through BLOB
+    cast(x'610062' as text) ||           -- 70..72: text "a\0b", embedded NUL
+    cast(x'00' as text) ||               -- 73: required final string NUL
+    cast(x'00ff' as text)                -- 74..75: blob bytes, no terminator
+    as blob));
   -- Keep the embedded-NUL text inside SQL: CQL's C string values are
   -- NUL-terminated, whereas these SQLite callbacks preserve explicit lengths.
   let key := (select bcreatekey(-1L,
@@ -6937,10 +6950,29 @@ begin
   EXPECT!((select bgetkey(key_control, 5) ~blob~ == x'00ff'));
   EXPECT_EQ!((select typeof(bgetkey(key_control, 5))), 'blob');
 
-  -- The corresponding 124-byte value adds IDs -7, 0, INT64_MIN, 3, 4, 5
-  -- at 16..63. Storage is at 64..111, types at 112..117, and payload
-  -- at 118..123. Its string/blob descriptors point to 118 and 122.
-  let val_control := (select x'ffffffffffffffff524d303000000006fffffffffffffff9000000000000000080000000000000000000000000000003000000000000000400000000000000050000000000000001ffffffffffffffd68000000000000000000000000000000000000076000000030000007a000000020001020304056100620000ff');
+  -- The corresponding 124-byte value puts IDs before storage. Omitted NULL
+  -- field 6 must consume no ID, storage, type, or payload bytes.
+  let val_control := (select cast(
+    cast(x'ffffffffffffffff' as text) || -- 0..7: record type -1
+    cast(x'524d3030' as text) ||         -- 8..11: magic "RM00"
+    cast(x'00000006' as text) ||         -- 12..15: six stored (non-NULL) fields
+    cast(x'fffffffffffffff9' as text) || -- 16..23: field ID -7
+    cast(x'0000000000000000' as text) || -- 24..31: field ID 0
+    cast(x'8000000000000000' as text) || -- 32..39: field ID INT64_MIN
+    cast(x'0000000000000003' as text) || -- 40..47: field ID 3
+    cast(x'0000000000000004' as text) || -- 48..55: field ID 4
+    cast(x'0000000000000005' as text) || -- 56..63: field ID 5
+    cast(x'0000000000000001' as text) || -- 64..71: BOOL, normalized to 1
+    cast(x'ffffffffffffffd6' as text) || -- 72..79: INT32 -42, eight-byte slot
+    cast(x'8000000000000000' as text) || -- 80..87: INT64_MIN
+    cast(x'0000000000000000' as text) || -- 88..95: double 0.0
+    cast(x'0000007600000003' as text) || -- 96..103: string offset 118, length 3
+    cast(x'0000007a00000002' as text) || -- 104..111: blob offset 122, length 2
+    cast(x'000102030405' as text) ||     -- 112..117: types BOOL through BLOB
+    cast(x'610062' as text) ||           -- 118..120: text "a\0b"
+    cast(x'00' as text) ||               -- 121: required final string NUL
+    cast(x'00ff' as text)                -- 122..123: blob bytes
+    as blob));
   let val := (select bcreateval(-1L,
     -7L, 2, CQL_BLOB_TYPE_BOOL, 0L, -42, CQL_BLOB_TYPE_INT32,
     0x8000000000000000, 0x8000000000000000, CQL_BLOB_TYPE_INT64,
@@ -7111,25 +7143,47 @@ begin
   -- Legacy 25-byte key: shared 16-byte header (record type 9, "RM00",
   -- count 1), type 03 at byte 16, big-endian double 1.5 at 17..24.
   -- Unlike C, legacy Lua interleaves type/value and uses big-endian doubles.
-  let key_control := (select x'0000000000000009524d303000000001033ff8000000000000');
+  let key_control := (select cast(
+    cast(x'0000000000000009' as text) || -- 0..7: record type 9
+    cast(x'524d303000000001' as text) || -- 8..15: magic "RM00", one field
+    cast(x'03' as text) ||               -- 16: FLOAT type precedes storage
+    cast(x'3ff8000000000000' as text)    -- 17..24: big-endian double 1.5
+    as blob));
   let key := (select legacy_bcreatekey(9L, 1.5, CQL_BLOB_TYPE_FLOAT));
   EXPECT_EQ!(hex(key), hex(key_control));
   EXPECT_EQ!((select legacy_bgetkey_type(key_control)), 9L);
   EXPECT_EQ!((select legacy_bgetkey(key_control, 0) ~real~), 1.5);
   key := (select legacy_bupdatekey(key_control, 0, 2.5));
-  EXPECT_EQ!(hex(key), '0000000000000009524D303000000001034004000000000000');
+  EXPECT_EQ!(hex(key), (select
+    '0000000000000009' || -- 0..7: record type unchanged
+    '524D303000000001' || -- 8..15: magic and count unchanged
+    '03' ||               -- 16: still FLOAT
+    '4004000000000000')); -- 17..24: big-endian double 2.5
   EXPECT_EQ!((select legacy_bgetkey(key, 0) ~real~), 2.5);
 
   -- Legacy 32-byte value: record type 9, "RM00", count 1 at 0..15;
   -- type 04 at 16, big-endian field ID -7 at 17..24, string length 3
   -- at 25..28, then "abc" at 29..31 with no NUL terminator.
-  let val_control := (select x'0000000000000009524d30300000000104fffffffffffffff900000003616263');
+  let val_control := (select cast(
+    cast(x'0000000000000009' as text) || -- 0..7: record type 9
+    cast(x'524d303000000001' as text) || -- 8..15: magic "RM00", one field
+    cast(x'04' as text) ||               -- 16: STRING type precedes ID/value
+    cast(x'fffffffffffffff9' as text) || -- 17..24: field ID -7
+    cast(x'00000003' as text) ||         -- 25..28: string byte length 3
+    cast(x'616263' as text)              -- 29..31: "abc", no final NUL
+    as blob));
   let val := (select legacy_bcreateval(9L, -7L, 'abc', CQL_BLOB_TYPE_STRING));
   EXPECT_EQ!(hex(val), hex(val_control));
   EXPECT_EQ!((select legacy_bgetval_type(val_control)), 9L);
   EXPECT_EQ!((select legacy_bgetval(val_control, -7L) ~text~), 'abc');
   val := (select legacy_bupdateval(val_control, -7L, 'x', CQL_BLOB_TYPE_STRING));
-  EXPECT_EQ!(hex(val), '0000000000000009524D30300000000104FFFFFFFFFFFFFFF90000000178');
+  EXPECT_EQ!(hex(val), (select
+    '0000000000000009' || -- 0..7: record type unchanged
+    '524D303000000001' || -- 8..15: magic and count unchanged
+    '04' ||               -- 16: still STRING
+    'FFFFFFFFFFFFFFF9' || -- 17..24: still field ID -7
+    '00000001' ||         -- 25..28: replacement string byte length 1
+    '78'));               -- 29: "x", no final NUL
   EXPECT_EQ!((select legacy_bgetval(val, -7L) ~text~), 'x');
 end);
 @endif

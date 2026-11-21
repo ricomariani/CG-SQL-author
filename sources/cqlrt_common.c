@@ -5559,6 +5559,16 @@ cql_code cql_create_udf_stub(
   return rc;
 }
 
+// Backing-store blobs target many tiny logical tables, each holding only a few
+// values such as settings. Separate SQLite tables can cost more in metadata
+// than the data they hold; sharing a backing table reduces that overhead.
+// These stores are often in memory, too. Optimizations aimed at large,
+// persistent datasets are therefore often not useful for this workload.
+// The backing helpers are replaceable via backing-table attributes: workloads
+// that need different tradeoffs can select their own encoding, including
+// simpler, specialized formats for faster access. The format below is the
+// default, not a requirement for custom helpers.
+
 // two byte portable big endian encoding
 static void cql_write_big_endian_u16(uint8_t *_Nonnull b, uint16_t val) {
   b[0] = (uint8_t)(val >> 8);

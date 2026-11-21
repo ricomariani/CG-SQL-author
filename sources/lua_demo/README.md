@@ -26,6 +26,21 @@ C or Lua natively.
 the main test script does not execute lua code because that would require assumptions about
 lua install that we are not yet willing to make
 
+# Backing-store blob formats
+
+The default test registrations use the `cql_bcreatekey`, `cql_bgetkey`,
+`cql_bupdatekey` (and corresponding value/type) callbacks from `cqlrt.lua`.
+They read and write the established C backing-store format.
+
+The original `bcreatekey`, `bgetkey`, `bupdatekey` and value/type callbacks in
+`test_helpers.lua` are unchanged for applications with stored legacy Lua blobs.
+Backing-table functions are configurable: retain those callbacks for existing
+data rather than interpreting it with the new defaults. The tests register them
+under `legacy_b*` SQL names and retain fixed legacy-format fixtures.
+
+The two layouts share a header and cannot be reliably auto-detected. Selecting
+different functions does not migrate stored data.
+
 # License
 
 This source code is licensed under the MIT license found in the
